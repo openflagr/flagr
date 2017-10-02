@@ -92,6 +92,18 @@
   version = "v1.3.0"
 
 [[projects]]
+  name = "github.com/jinzhu/gorm"
+  packages = ["."]
+  revision = "5174cc5c242a728b435ea2be8a2f7f998e15429b"
+  version = "v1.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/jinzhu/inflection"
+  packages = ["."]
+  revision = "1c35d901db3da928c72a72d8458480cc9ade058f"
+
+[[projects]]
   branch = "master"
   name = "github.com/mailru/easyjson"
   packages = ["buffer","jlexer","jwriter"]
@@ -136,6 +148,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d28759715da1bd6ffbf46a4622a8b6f9757e7d2a6e1568aadf0be496c42cc19c"
+  inputs-digest = "e5b436f51f4028ed012d804c48866ea411d6aa87744ce36856f5344009419f27"
   solver-name = "gps-cdcl"
   solver-version = 1
