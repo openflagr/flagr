@@ -20,7 +20,7 @@ import (
 	"github.com/go-openapi/swag"
 
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/evaluation"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/flags"
+	"github.com/checkr/flagr/swagger_gen/restapi/operations/flag"
 )
 
 // NewFlagrAPI creates a new Flagr instance
@@ -38,8 +38,8 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		BearerAuthenticator: security.BearerAuth,
 		JSONConsumer:        runtime.JSONConsumer(),
 		JSONProducer:        runtime.JSONProducer(),
-		FlagsFindFlagsHandler: flags.FindFlagsHandlerFunc(func(params flags.FindFlagsParams) middleware.Responder {
-			return middleware.NotImplemented("operation FlagsFindFlags has not yet been implemented")
+		FlagFindFlagsHandler: flag.FindFlagsHandlerFunc(func(params flag.FindFlagsParams) middleware.Responder {
+			return middleware.NotImplemented("operation FlagFindFlags has not yet been implemented")
 		}),
 		EvaluationPostEvaluationHandler: evaluation.PostEvaluationHandlerFunc(func(params evaluation.PostEvaluationParams) middleware.Responder {
 			return middleware.NotImplemented("operation EvaluationPostEvaluation has not yet been implemented")
@@ -73,8 +73,8 @@ type FlagrAPI struct {
 	// JSONProducer registers a producer for a "application/json" mime type
 	JSONProducer runtime.Producer
 
-	// FlagsFindFlagsHandler sets the operation handler for the find flags operation
-	FlagsFindFlagsHandler flags.FindFlagsHandler
+	// FlagFindFlagsHandler sets the operation handler for the find flags operation
+	FlagFindFlagsHandler flag.FindFlagsHandler
 	// EvaluationPostEvaluationHandler sets the operation handler for the post evaluation operation
 	EvaluationPostEvaluationHandler evaluation.PostEvaluationHandler
 
@@ -140,8 +140,8 @@ func (o *FlagrAPI) Validate() error {
 		unregistered = append(unregistered, "JSONProducer")
 	}
 
-	if o.FlagsFindFlagsHandler == nil {
-		unregistered = append(unregistered, "flags.FindFlagsHandler")
+	if o.FlagFindFlagsHandler == nil {
+		unregistered = append(unregistered, "flag.FindFlagsHandler")
 	}
 
 	if o.EvaluationPostEvaluationHandler == nil {
@@ -241,7 +241,7 @@ func (o *FlagrAPI) initHandlerCache() {
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
-	o.handlers["GET"]["/flags"] = flags.NewFindFlags(o.context, o.FlagsFindFlagsHandler)
+	o.handlers["GET"]["/flags"] = flag.NewFindFlags(o.context, o.FlagFindFlagsHandler)
 
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)

@@ -67,7 +67,7 @@ func init() {
     "/flags": {
       "get": {
         "tags": [
-          "flags"
+          "flag"
         ],
         "operationId": "findFlags",
         "responses": {

@@ -21,7 +21,6 @@ import (
 	graceful "github.com/tylerb/graceful"
 
 	"github.com/checkr/flagr/swagger_gen/restapi/operations"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/flags"
 )
 
 const (

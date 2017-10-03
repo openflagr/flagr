@@ -13,7 +13,7 @@ import (
 
 	"github.com/checkr/flagr/swagger_gen/restapi/operations"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/evaluation"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/flags"
+	"github.com/checkr/flagr/swagger_gen/restapi/operations/flag"
 )
 
 // This file is safe to edit. Once it exists it will not be overwritten
@@ -38,8 +38,8 @@ func configureAPI(api *operations.FlagrAPI) http.Handler {
 
 	api.JSONProducer = runtime.JSONProducer()
 
-	api.FlagsFindFlagsHandler = flags.FindFlagsHandlerFunc(func(params flags.FindFlagsParams) middleware.Responder {
-		return middleware.NotImplemented("operation flags.FindFlags has not yet been implemented")
+	api.FlagFindFlagsHandler = flag.FindFlagsHandlerFunc(func(params flag.FindFlagsParams) middleware.Responder {
+		return middleware.NotImplemented("operation flag.FindFlags has not yet been implemented")
 	})
 	api.EvaluationPostEvaluationHandler = evaluation.PostEvaluationHandlerFunc(func(params evaluation.PostEvaluationParams) middleware.Responder {
 		return middleware.NotImplemented("operation evaluation.PostEvaluation has not yet been implemented")

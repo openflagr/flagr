@@ -15,7 +15,7 @@ paths:
   /flags:
     get:
       tags:
-        - flags
+        - flag
       operationId: findFlags
       responses:
         200:

@@ -72,7 +72,7 @@ coverage: build
 # Builds flagr locally.
 build: swagger
 	@echo "Building flagr to $(PWD)/flagr ..."
-	@CGO_ENABLED=0 go build -o $(PWD)/flagr
+	@CGO_ENABLED=0 go build -o $(PWD)/flagr github.com/checkr/flagr/swagger_gen/cmd/flagr-server
 
 clean:
 	@echo "Cleaning up all the generated files"
@@ -82,8 +82,9 @@ clean:
 
 swagger:
 	@echo "Regenerate swagger files"
-	@cp $(PWD)/swagger_gen/restapi/configure_flagr.go /tmp/configure_flagr.go
+	@rm -f /tmp/configure_flagr.go
+	@cp $(PWD)/swagger_gen/restapi/configure_flagr.go /tmp/configure_flagr.go 2>/dev/null || :
 	@rm -rf $(PWD)/swagger_gen
 	@mkdir $(PWD)/swagger_gen
 	@swagger generate server -t ./swagger_gen -f ./swagger.yml
-	@cp /tmp/configure_flagr.go $(PWD)/swagger_gen/restapi/configure_flagr.go
+	@cp /tmp/configure_flagr.go $(PWD)/swagger_gen/restapi/configure_flagr.go 2>/dev/null || :
