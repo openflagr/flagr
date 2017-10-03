@@ -12,88 +12,45 @@ schemes:
 - http
 basePath: "/api"
 paths:
-  /api/todo:
+  /flags:
     get:
       tags:
-        - todos
-      operationId: findTodos
-      parameters:
-        - name: since
-          in: query
-          type: integer
-          format: int64
-        - name: limit
-          in: query
-          type: integer
-          format: int32
-          default: 20
+        - flags
+      operationId: findFlags
       responses:
         200:
-          description: list the todo operations
+          description: list all the flags
           schema:
             type: array
             items:
-              $ref: "#/definitions/item"
+              $ref: "#/definitions/flag"
         default:
           description: generic error response
           schema:
             $ref: "#/definitions/error"
+  /eval:
     post:
       tags:
-        - todos
-      operationId: addOne
+        - eval
+      operationId: postEval
       parameters:
-        - name: body
-          in: body
+        - in: body
+          name: body
+          description: evalution context
+          required: true
           schema:
-            $ref: "#/definitions/item"
-      responses:
-        201:
-          description: Created
-          schema:
-            $ref: "#/definitions/item"
-        default:
-          description: error
-          schema:
-            $ref: "#/definitions/error"
-  /api/todo/{id}:
-    parameters:
-      - type: integer
-        format: int64
-        name: id
-        in: path
-        required: true
-    put:
-      tags:
-        - todos
-      operationId: updateOne
-      parameters:
-        - name: body
-          in: body
-          schema:
-            $ref: "#/definitions/item"
+            $ref: "#/definitions/evalContext"
       responses:
         200:
-          description: OK
+          description: evaluation result
           schema:
-            $ref: "#/definitions/item"
+            $ref: "#/definitions/evalResult"
         default:
-          description: error
-          schema:
-            $ref: "#/definitions/error"
-    delete:
-      tags:
-        - todos
-      operationId: destroyOne
-      responses:
-        204:
-          description: Deleted
-        default:
-          description: error
+          description: generic error response
           schema:
             $ref: "#/definitions/error"
 definitions:
-  item:
+  flag:
     type: object
     required:
       - description
@@ -105,10 +62,155 @@ definitions:
       description:
         type: string
         minLength: 1
-      completed:
-        type: boolean
-      extra:
+      segments:
+        type: array
+        items:
+          $ref: "#/definitions/segment"
+      variants:
+        type: array
+        items:
+          $ref: "#/definitions/variant"
+  segment:
+    type: object
+    required:
+      - description
+    properties:
+      id:
+        type: integer
+        format: int64
+        readOnly: true
+      description:
+        type: string
+        minLength: 1
+      constraints:
+        type: array
+        items:
+          $ref: "#/definitions/constraint"
+      distributions:
+        type: array
+        items:
+          $ref: "#/definitions/distribution"
+  variant:
+    type: object
+    required:
+      - key
+    properties:
+      id:
+        type: integer
+        format: int64
+        readOnly: true
+      key:
+        type: string
+        minLength: 1
+  constraint:
+    type: object
+    required:
+      - property
+      - operator
+      - value
+    properties:
+      id:
+        type: integer
+        format: int64
+        readOnly: true
+      property:
+        type: string
+        minLength: 1
+      operator:
+        type: string
+        minLength: 1
+      value:
+        type: string
+        minLength: 1
+  distribution:
+    type: object
+    required:
+      - rank
+      - percent
+      - bitmap
+      - variantID
+      - variantKey
+    properties:
+      id:
+        type: integer
+        format: int64
+        readOnly: true
+      rank:
+        type: integer
+        format: int32
+        minimum: 0
+      percent:
+        type: integer
+        format: int32
+        minimum: 0
+        maximum: 100
+      bitmap:
+        type: string
+        minLength: 1
+      variantKey:
+        type: string
+        minLength: 1
+      variantID:
+        type: integer
+        format: int64
+  evalContext:
+    type: object
+    required:
+      - entityID
+      - entityType
+    properties:
+      entityID:
+        type: string
+        minLength: 1
+      entityType:
+        type: string
+        minLength: 1
+      entityContext:
         type: object
+      enableDebug:
+        type: boolean
+  evalResult:
+    type: object
+    required:
+      - flagID
+      - segmentID
+      - variantID
+      - evalContext
+      - timestamp
+    properties:
+      flagID:
+        type: integer
+        format: int64
+      segmentID:
+        type: integer
+        format: int64
+      variantID:
+        type: integer
+        format: int64
+      evalContext:
+        $ref: "#/definitions/evalContext"
+      timestamp:
+        type: string
+        minLength: 1
+      evalDebugLog:
+        $ref: "#/definitions/evalDebugLog"
+  evalDebugLog:
+    type: object
+    properties:
+      segmentDebugLogs:
+        type: array
+        items:
+          $ref: "#/definitions/segmentDebugLog"
+      msg:
+        type: string
+  segmentDebugLog:
+    type: object
+    properties:
+      segmentID:
+        type: integer
+        format: int64
+      msg:
+        type: string
   error:
     type: object
     required:

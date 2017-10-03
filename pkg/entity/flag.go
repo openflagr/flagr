@@ -9,6 +9,6 @@ type Flag struct {
 	CreatedBy   string
 	UpdatedBy   string
 
-	Segments    []*Segment
-	Experiences []*Experience
+	Segments []*Segment
+	Variants []*Variant
 }

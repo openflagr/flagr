@@ -2,8 +2,9 @@ package entity
 
 import "github.com/jinzhu/gorm"
 
-// Experience is the struct of experience
-type Experience struct {
+// Variant is the struct that represent the experience/variant of the evaluation
+// entity
+type Variant struct {
 	gorm.Model
 	FlagID uint
 

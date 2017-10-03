@@ -31,34 +31,52 @@ func init() {
   },
   "basePath": "/api",
   "paths": {
-    "/api/todo": {
-      "get": {
+    "/eval": {
+      "post": {
         "tags": [
-          "todos"
+          "eval"
         ],
-        "operationId": "findTodos",
+        "operationId": "postEval",
         "parameters": [
           {
-            "type": "integer",
-            "format": "int64",
-            "name": "since",
-            "in": "query"
-          },
-          {
-            "type": "integer",
-            "format": "int32",
-            "default": 20,
-            "name": "limit",
-            "in": "query"
+            "description": "evalution context",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/evalContext"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "list the todo operations",
+            "description": "evaluation result",
+            "schema": {
+              "$ref": "#/definitions/evalResult"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
+    "/flags": {
+      "get": {
+        "tags": [
+          "flags"
+        ],
+        "operationId": "findFlags",
+        "responses": {
+          "200": {
+            "description": "list all the flags",
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/item"
+                "$ref": "#/definitions/flag"
               }
             }
           },
@@ -69,96 +87,77 @@ func init() {
             }
           }
         }
-      },
-      "post": {
-        "tags": [
-          "todos"
-        ],
-        "operationId": "addOne",
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "schema": {
-              "$ref": "#/definitions/item"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "Created",
-            "schema": {
-              "$ref": "#/definitions/item"
-            }
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
       }
-    },
-    "/api/todo/{id}": {
-      "put": {
-        "tags": [
-          "todos"
-        ],
-        "operationId": "updateOne",
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "schema": {
-              "$ref": "#/definitions/item"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/item"
-            }
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "todos"
-        ],
-        "operationId": "destroyOne",
-        "responses": {
-          "204": {
-            "description": "Deleted"
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
-      },
-      "parameters": [
-        {
-          "type": "integer",
-          "format": "int64",
-          "name": "id",
-          "in": "path",
-          "required": true
-        }
-      ]
     }
   },
   "definitions": {
+    "constraint": {
+      "type": "object",
+      "required": [
+        "property",
+        "operator",
+        "value"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "readOnly": true
+        },
+        "operator": {
+          "type": "string",
+          "minLength": 1
+        },
+        "property": {
+          "type": "string",
+          "minLength": 1
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "distribution": {
+      "type": "object",
+      "required": [
+        "rank",
+        "percent",
+        "bitmap",
+        "variantID",
+        "variantKey"
+      ],
+      "properties": {
+        "bitmap": {
+          "type": "string",
+          "minLength": 1
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "readOnly": true
+        },
+        "percent": {
+          "type": "integer",
+          "format": "int32",
+          "maximum": 100,
+          "minimum": 0
+        },
+        "rank": {
+          "type": "integer",
+          "format": "int32",
+          "minimum": 0
+        },
+        "variantID": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "variantKey": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
     "error": {
       "type": "object",
       "required": [
@@ -174,26 +173,161 @@ func init() {
         }
       }
     },
-    "item": {
+    "evalContext": {
+      "type": "object",
+      "required": [
+        "entityID",
+        "entityType"
+      ],
+      "properties": {
+        "enableDebug": {
+          "type": "boolean"
+        },
+        "entityContext": {
+          "type": "object"
+        },
+        "entityID": {
+          "type": "string",
+          "minLength": 1
+        },
+        "entityType": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "evalDebugLog": {
+      "type": "object",
+      "properties": {
+        "msg": {
+          "type": "string"
+        },
+        "segmentDebugLogs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/segmentDebugLog"
+          }
+        }
+      }
+    },
+    "evalResult": {
+      "type": "object",
+      "required": [
+        "flagID",
+        "segmentID",
+        "variantID",
+        "evalContext",
+        "timestamp"
+      ],
+      "properties": {
+        "evalContext": {
+          "$ref": "#/definitions/evalContext"
+        },
+        "evalDebugLog": {
+          "$ref": "#/definitions/evalDebugLog"
+        },
+        "flagID": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "segmentID": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "timestamp": {
+          "type": "string",
+          "minLength": 1
+        },
+        "variantID": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "flag": {
       "type": "object",
       "required": [
         "description"
       ],
       "properties": {
-        "completed": {
-          "type": "boolean"
-        },
         "description": {
           "type": "string",
           "minLength": 1
-        },
-        "extra": {
-          "type": "object"
         },
         "id": {
           "type": "integer",
           "format": "int64",
           "readOnly": true
+        },
+        "segments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/segment"
+          }
+        },
+        "variants": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/variant"
+          }
+        }
+      }
+    },
+    "segment": {
+      "type": "object",
+      "required": [
+        "description"
+      ],
+      "properties": {
+        "constraints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/constraint"
+          }
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "distributions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/distribution"
+          }
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "readOnly": true
+        }
+      }
+    },
+    "segmentDebugLog": {
+      "type": "object",
+      "properties": {
+        "msg": {
+          "type": "string"
+        },
+        "segmentID": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "variant": {
+      "type": "object",
+      "required": [
+        "key"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "readOnly": true
+        },
+        "key": {
+          "type": "string",
+          "minLength": 1
         }
       }
     }

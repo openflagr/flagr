@@ -19,7 +19,8 @@ import (
 	strfmt "github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/todos"
+	"github.com/checkr/flagr/swagger_gen/restapi/operations/eval"
+	"github.com/checkr/flagr/swagger_gen/restapi/operations/flags"
 )
 
 // NewFlagrAPI creates a new Flagr instance
@@ -37,17 +38,11 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		BearerAuthenticator: security.BearerAuth,
 		JSONConsumer:        runtime.JSONConsumer(),
 		JSONProducer:        runtime.JSONProducer(),
-		TodosAddOneHandler: todos.AddOneHandlerFunc(func(params todos.AddOneParams) middleware.Responder {
-			return middleware.NotImplemented("operation TodosAddOne has not yet been implemented")
+		FlagsFindFlagsHandler: flags.FindFlagsHandlerFunc(func(params flags.FindFlagsParams) middleware.Responder {
+			return middleware.NotImplemented("operation FlagsFindFlags has not yet been implemented")
 		}),
-		TodosDestroyOneHandler: todos.DestroyOneHandlerFunc(func(params todos.DestroyOneParams) middleware.Responder {
-			return middleware.NotImplemented("operation TodosDestroyOne has not yet been implemented")
-		}),
-		TodosFindTodosHandler: todos.FindTodosHandlerFunc(func(params todos.FindTodosParams) middleware.Responder {
-			return middleware.NotImplemented("operation TodosFindTodos has not yet been implemented")
-		}),
-		TodosUpdateOneHandler: todos.UpdateOneHandlerFunc(func(params todos.UpdateOneParams) middleware.Responder {
-			return middleware.NotImplemented("operation TodosUpdateOne has not yet been implemented")
+		EvalPostEvalHandler: eval.PostEvalHandlerFunc(func(params eval.PostEvalParams) middleware.Responder {
+			return middleware.NotImplemented("operation EvalPostEval has not yet been implemented")
 		}),
 	}
 }
@@ -78,14 +73,10 @@ type FlagrAPI struct {
 	// JSONProducer registers a producer for a "application/json" mime type
 	JSONProducer runtime.Producer
 
-	// TodosAddOneHandler sets the operation handler for the add one operation
-	TodosAddOneHandler todos.AddOneHandler
-	// TodosDestroyOneHandler sets the operation handler for the destroy one operation
-	TodosDestroyOneHandler todos.DestroyOneHandler
-	// TodosFindTodosHandler sets the operation handler for the find todos operation
-	TodosFindTodosHandler todos.FindTodosHandler
-	// TodosUpdateOneHandler sets the operation handler for the update one operation
-	TodosUpdateOneHandler todos.UpdateOneHandler
+	// FlagsFindFlagsHandler sets the operation handler for the find flags operation
+	FlagsFindFlagsHandler flags.FindFlagsHandler
+	// EvalPostEvalHandler sets the operation handler for the post eval operation
+	EvalPostEvalHandler eval.PostEvalHandler
 
 	// ServeError is called when an error is received, there is a default handler
 	// but you can set your own with this
@@ -149,20 +140,12 @@ func (o *FlagrAPI) Validate() error {
 		unregistered = append(unregistered, "JSONProducer")
 	}
 
-	if o.TodosAddOneHandler == nil {
-		unregistered = append(unregistered, "todos.AddOneHandler")
+	if o.FlagsFindFlagsHandler == nil {
+		unregistered = append(unregistered, "flags.FindFlagsHandler")
 	}
 
-	if o.TodosDestroyOneHandler == nil {
-		unregistered = append(unregistered, "todos.DestroyOneHandler")
-	}
-
-	if o.TodosFindTodosHandler == nil {
-		unregistered = append(unregistered, "todos.FindTodosHandler")
-	}
-
-	if o.TodosUpdateOneHandler == nil {
-		unregistered = append(unregistered, "todos.UpdateOneHandler")
+	if o.EvalPostEvalHandler == nil {
+		unregistered = append(unregistered, "eval.PostEvalHandler")
 	}
 
 	if len(unregistered) > 0 {
@@ -255,25 +238,15 @@ func (o *FlagrAPI) initHandlerCache() {
 		o.handlers = make(map[string]map[string]http.Handler)
 	}
 
-	if o.handlers["POST"] == nil {
-		o.handlers["POST"] = make(map[string]http.Handler)
-	}
-	o.handlers["POST"]["/api/todo"] = todos.NewAddOne(o.context, o.TodosAddOneHandler)
-
-	if o.handlers["DELETE"] == nil {
-		o.handlers["DELETE"] = make(map[string]http.Handler)
-	}
-	o.handlers["DELETE"]["/api/todo/{id}"] = todos.NewDestroyOne(o.context, o.TodosDestroyOneHandler)
-
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
-	o.handlers["GET"]["/api/todo"] = todos.NewFindTodos(o.context, o.TodosFindTodosHandler)
+	o.handlers["GET"]["/flags"] = flags.NewFindFlags(o.context, o.FlagsFindFlagsHandler)
 
-	if o.handlers["PUT"] == nil {
-		o.handlers["PUT"] = make(map[string]http.Handler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
 	}
-	o.handlers["PUT"]["/api/todo/{id}"] = todos.NewUpdateOne(o.context, o.TodosUpdateOneHandler)
+	o.handlers["POST"]["/eval"] = eval.NewPostEval(o.context, o.EvalPostEvalHandler)
 
 }
 

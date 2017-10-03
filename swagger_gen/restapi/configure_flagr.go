@@ -12,12 +12,13 @@ import (
 	graceful "github.com/tylerb/graceful"
 
 	"github.com/checkr/flagr/swagger_gen/restapi/operations"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/todos"
+	"github.com/checkr/flagr/swagger_gen/restapi/operations/eval"
+	"github.com/checkr/flagr/swagger_gen/restapi/operations/flags"
 )
 
 // This file is safe to edit. Once it exists it will not be overwritten
 
-//go:generate swagger generate server --target ../swagger_gen --name  --spec ../swagger_gen/swagger.yml
+//go:generate swagger generate server --target ../swagger_gen --name  --spec ../swagger.yml
 
 func configureFlags(api *operations.FlagrAPI) {
 	// api.CommandLineOptionsGroups = []swag.CommandLineOptionsGroup{ ... }
@@ -37,17 +38,11 @@ func configureAPI(api *operations.FlagrAPI) http.Handler {
 
 	api.JSONProducer = runtime.JSONProducer()
 
-	api.TodosAddOneHandler = todos.AddOneHandlerFunc(func(params todos.AddOneParams) middleware.Responder {
-		return middleware.NotImplemented("operation todos.AddOne has not yet been implemented")
+	api.FlagsFindFlagsHandler = flags.FindFlagsHandlerFunc(func(params flags.FindFlagsParams) middleware.Responder {
+		return middleware.NotImplemented("operation flags.FindFlags has not yet been implemented")
 	})
-	api.TodosDestroyOneHandler = todos.DestroyOneHandlerFunc(func(params todos.DestroyOneParams) middleware.Responder {
-		return middleware.NotImplemented("operation todos.DestroyOne has not yet been implemented")
-	})
-	api.TodosFindTodosHandler = todos.FindTodosHandlerFunc(func(params todos.FindTodosParams) middleware.Responder {
-		return middleware.NotImplemented("operation todos.FindTodos has not yet been implemented")
-	})
-	api.TodosUpdateOneHandler = todos.UpdateOneHandlerFunc(func(params todos.UpdateOneParams) middleware.Responder {
-		return middleware.NotImplemented("operation todos.UpdateOne has not yet been implemented")
+	api.EvalPostEvalHandler = eval.PostEvalHandlerFunc(func(params eval.PostEvalParams) middleware.Responder {
+		return middleware.NotImplemented("operation eval.PostEval has not yet been implemented")
 	})
 
 	api.ServerShutdown = func() {}
