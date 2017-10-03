@@ -9,15 +9,18 @@ checks:
 	@echo "Checking project is in GOPATH"
 	@(env bash $(PWD)/buildscripts/checkgopath.sh)
 
-getdeps: checks
+deps: checks
 	@echo "Installing golint" && go get github.com/golang/lint/golint
 	@echo "Installing gocyclo" && go get github.com/fzipp/gocyclo
 	@echo "Installing deadcode" && go get github.com/remyoudompheng/go-misc/deadcode
 	@echo "Installing misspell" && go get github.com/client9/misspell/cmd/misspell
 	@echo "Installing ineffassign" && go get github.com/gordonklaus/ineffassign
 	@echo "Installing go-swagger" && go get github.com/go-swagger/go-swagger/cmd/swagger
+	@echo "Installing goqueryset" && go get github.com/jirfag/go-queryset/cmd/goqueryset
+	@echo "Installing gt" && go get rsc.io/gt
+	@echo "Ensuring Deps" && dep ensure
 
-verifiers: getdeps vet fmt lint cyclo spelling verify_swagger
+verifiers: vet fmt lint cyclo spelling verify_swagger
 
 vet:
 	@echo "Running $@"
@@ -57,20 +60,12 @@ verify_swagger:
 	@echo "Running $@"
 	@swagger validate ./swagger.yml
 
-# Builds flagr, runs the verifiers then runs the tests.
-check: test
-test: verifiers build
-	@echo "Running unit tests"
-	@go test $(GOFLAGS) .
-	@go test $(GOFLAGS) github.com/checkr/flagr/cmd...
-	@go test $(GOFLAGS) github.com/checkr/flagr/pkg...
-
-coverage: build
+test: verifiers
 	@echo "Running all coverage for flagr"
 	@./buildscripts/go-coverage.sh
 
 # Builds flagr locally.
-build: swagger
+build: swagger goqueryset
 	@echo "Building flagr to $(PWD)/flagr ..."
 	@CGO_ENABLED=0 go build -o $(PWD)/flagr github.com/checkr/flagr/swagger_gen/cmd/flagr-server
 
@@ -88,3 +83,6 @@ swagger:
 	@mkdir $(PWD)/swagger_gen
 	@swagger generate server -t ./swagger_gen -f ./swagger.yml
 	@cp /tmp/configure_flagr.go $(PWD)/swagger_gen/restapi/configure_flagr.go 2>/dev/null || :
+
+goqueryset:
+	@go generate ./pkg/...

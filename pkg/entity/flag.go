@@ -1,8 +1,11 @@
+//go:generate goqueryset -in flag.go
+
 package entity
 
 import "github.com/jinzhu/gorm"
 
 // Flag is the unit of flags
+// gen:qs
 type Flag struct {
 	gorm.Model
 	Description string

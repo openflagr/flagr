@@ -1,8 +1,11 @@
+//go:generate goqueryset -in distribution.go
+
 package entity
 
 import "github.com/jinzhu/gorm"
 
-// Distribution is
+// Distribution is the struct represents distribution under segment and links to variant
+// gen:qs
 type Distribution struct {
 	gorm.Model
 	SegmentID uint
