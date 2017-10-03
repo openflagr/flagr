@@ -12,7 +12,7 @@ import (
 	graceful "github.com/tylerb/graceful"
 
 	"github.com/checkr/flagr/swagger_gen/restapi/operations"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/eval"
+	"github.com/checkr/flagr/swagger_gen/restapi/operations/evaluation"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/flags"
 )
 
@@ -41,8 +41,8 @@ func configureAPI(api *operations.FlagrAPI) http.Handler {
 	api.FlagsFindFlagsHandler = flags.FindFlagsHandlerFunc(func(params flags.FindFlagsParams) middleware.Responder {
 		return middleware.NotImplemented("operation flags.FindFlags has not yet been implemented")
 	})
-	api.EvalPostEvalHandler = eval.PostEvalHandlerFunc(func(params eval.PostEvalParams) middleware.Responder {
-		return middleware.NotImplemented("operation eval.PostEval has not yet been implemented")
+	api.EvaluationPostEvalHandler = evaluation.PostEvalHandlerFunc(func(params evaluation.PostEvalParams) middleware.Responder {
+		return middleware.NotImplemented("operation evaluation.PostEval has not yet been implemented")
 	})
 
 	api.ServerShutdown = func() {}

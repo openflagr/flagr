@@ -31,10 +31,10 @@ func init() {
   },
   "basePath": "/api",
   "paths": {
-    "/eval": {
+    "/evaluation": {
       "post": {
         "tags": [
-          "eval"
+          "evaluation"
         ],
         "operationId": "postEval",
         "parameters": [

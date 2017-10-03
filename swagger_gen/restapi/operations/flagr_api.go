@@ -19,7 +19,7 @@ import (
 	strfmt "github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/eval"
+	"github.com/checkr/flagr/swagger_gen/restapi/operations/evaluation"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/flags"
 )
 
@@ -41,8 +41,8 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		FlagsFindFlagsHandler: flags.FindFlagsHandlerFunc(func(params flags.FindFlagsParams) middleware.Responder {
 			return middleware.NotImplemented("operation FlagsFindFlags has not yet been implemented")
 		}),
-		EvalPostEvalHandler: eval.PostEvalHandlerFunc(func(params eval.PostEvalParams) middleware.Responder {
-			return middleware.NotImplemented("operation EvalPostEval has not yet been implemented")
+		EvaluationPostEvalHandler: evaluation.PostEvalHandlerFunc(func(params evaluation.PostEvalParams) middleware.Responder {
+			return middleware.NotImplemented("operation EvaluationPostEval has not yet been implemented")
 		}),
 	}
 }
@@ -75,8 +75,8 @@ type FlagrAPI struct {
 
 	// FlagsFindFlagsHandler sets the operation handler for the find flags operation
 	FlagsFindFlagsHandler flags.FindFlagsHandler
-	// EvalPostEvalHandler sets the operation handler for the post eval operation
-	EvalPostEvalHandler eval.PostEvalHandler
+	// EvaluationPostEvalHandler sets the operation handler for the post eval operation
+	EvaluationPostEvalHandler evaluation.PostEvalHandler
 
 	// ServeError is called when an error is received, there is a default handler
 	// but you can set your own with this
@@ -144,8 +144,8 @@ func (o *FlagrAPI) Validate() error {
 		unregistered = append(unregistered, "flags.FindFlagsHandler")
 	}
 
-	if o.EvalPostEvalHandler == nil {
-		unregistered = append(unregistered, "eval.PostEvalHandler")
+	if o.EvaluationPostEvalHandler == nil {
+		unregistered = append(unregistered, "evaluation.PostEvalHandler")
 	}
 
 	if len(unregistered) > 0 {
@@ -246,7 +246,7 @@ func (o *FlagrAPI) initHandlerCache() {
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
-	o.handlers["POST"]["/eval"] = eval.NewPostEval(o.context, o.EvalPostEvalHandler)
+	o.handlers["POST"]["/evaluation"] = evaluation.NewPostEval(o.context, o.EvaluationPostEvalHandler)
 
 }
 

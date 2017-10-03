@@ -28,10 +28,10 @@ paths:
           description: generic error response
           schema:
             $ref: "#/definitions/error"
-  /eval:
+  /evaluation:
     post:
       tags:
-        - eval
+        - evaluation
       operationId: postEval
       parameters:
         - in: body
