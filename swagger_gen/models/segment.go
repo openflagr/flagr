@@ -6,8 +6,6 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	"strconv"
-
 	strfmt "github.com/go-openapi/strfmt"
 
 	"github.com/go-openapi/errors"
@@ -21,7 +19,7 @@ import (
 type Segment struct {
 
 	// constraints
-	Constraints []*Constraint `json:"constraints"`
+	Constraints SegmentConstraints `json:"constraints"`
 
 	// description
 	// Required: true
@@ -29,7 +27,7 @@ type Segment struct {
 	Description *string `json:"description"`
 
 	// distributions
-	Distributions []*Distribution `json:"distributions"`
+	Distributions SegmentDistributions `json:"distributions"`
 
 	// id
 	// Read Only: true
@@ -48,17 +46,7 @@ type Segment struct {
 func (m *Segment) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateConstraints(formats); err != nil {
-		// prop
-		res = append(res, err)
-	}
-
 	if err := m.validateDescription(formats); err != nil {
-		// prop
-		res = append(res, err)
-	}
-
-	if err := m.validateDistributions(formats); err != nil {
 		// prop
 		res = append(res, err)
 	}
@@ -66,33 +54,6 @@ func (m *Segment) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (m *Segment) validateConstraints(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.Constraints) { // not required
-		return nil
-	}
-
-	for i := 0; i < len(m.Constraints); i++ {
-
-		if swag.IsZero(m.Constraints[i]) { // not required
-			continue
-		}
-
-		if m.Constraints[i] != nil {
-
-			if err := m.Constraints[i].Validate(formats); err != nil {
-				if ve, ok := err.(*errors.Validation); ok {
-					return ve.ValidateName("constraints" + "." + strconv.Itoa(i))
-				}
-				return err
-			}
-		}
-
-	}
-
 	return nil
 }
 
@@ -104,33 +65,6 @@ func (m *Segment) validateDescription(formats strfmt.Registry) error {
 
 	if err := validate.MinLength("description", "body", string(*m.Description), 1); err != nil {
 		return err
-	}
-
-	return nil
-}
-
-func (m *Segment) validateDistributions(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.Distributions) { // not required
-		return nil
-	}
-
-	for i := 0; i < len(m.Distributions); i++ {
-
-		if swag.IsZero(m.Distributions[i]) { // not required
-			continue
-		}
-
-		if m.Distributions[i] != nil {
-
-			if err := m.Distributions[i].Validate(formats); err != nil {
-				if ve, ok := err.(*errors.Validation); ok {
-					return ve.ValidateName("distributions" + "." + strconv.Itoa(i))
-				}
-				return err
-			}
-		}
-
 	}
 
 	return nil

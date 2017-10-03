@@ -41,8 +41,8 @@ func configureAPI(api *operations.FlagrAPI) http.Handler {
 	api.FlagsFindFlagsHandler = flags.FindFlagsHandlerFunc(func(params flags.FindFlagsParams) middleware.Responder {
 		return middleware.NotImplemented("operation flags.FindFlags has not yet been implemented")
 	})
-	api.EvaluationPostEvalHandler = evaluation.PostEvalHandlerFunc(func(params evaluation.PostEvalParams) middleware.Responder {
-		return middleware.NotImplemented("operation evaluation.PostEval has not yet been implemented")
+	api.EvaluationPostEvaluationHandler = evaluation.PostEvaluationHandlerFunc(func(params evaluation.PostEvaluationParams) middleware.Responder {
+		return middleware.NotImplemented("operation evaluation.PostEvaluation has not yet been implemented")
 	})
 
 	api.ServerShutdown = func() {}

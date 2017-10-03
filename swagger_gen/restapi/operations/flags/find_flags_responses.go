@@ -25,7 +25,7 @@ type FindFlagsOK struct {
 	/*
 	  In: Body
 	*/
-	Payload []*models.Flag `json:"body,omitempty"`
+	Payload models.FindFlagsOKBody `json:"body,omitempty"`
 }
 
 // NewFindFlagsOK creates FindFlagsOK with default headers values
@@ -34,13 +34,13 @@ func NewFindFlagsOK() *FindFlagsOK {
 }
 
 // WithPayload adds the payload to the find flags o k response
-func (o *FindFlagsOK) WithPayload(payload []*models.Flag) *FindFlagsOK {
+func (o *FindFlagsOK) WithPayload(payload models.FindFlagsOKBody) *FindFlagsOK {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the find flags o k response
-func (o *FindFlagsOK) SetPayload(payload []*models.Flag) {
+func (o *FindFlagsOK) SetPayload(payload models.FindFlagsOKBody) {
 	o.Payload = payload
 }
 
@@ -50,7 +50,7 @@ func (o *FindFlagsOK) WriteResponse(rw http.ResponseWriter, producer runtime.Pro
 	rw.WriteHeader(200)
 	payload := o.Payload
 	if payload == nil {
-		payload = make([]*models.Flag, 0, 50)
+		payload = make(models.FindFlagsOKBody, 0, 50)
 	}
 
 	if err := producer.Produce(rw, payload); err != nil {

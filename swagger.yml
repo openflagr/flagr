@@ -32,7 +32,7 @@ paths:
     post:
       tags:
         - evaluation
-      operationId: postEval
+      operationId: postEvaluation
       parameters:
         - in: body
           name: body

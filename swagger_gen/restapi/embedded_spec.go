@@ -36,7 +36,7 @@ func init() {
         "tags": [
           "evaluation"
         ],
-        "operationId": "postEval",
+        "operationId": "postEvaluation",
         "parameters": [
           {
             "description": "evalution context",
@@ -74,10 +74,7 @@ func init() {
           "200": {
             "description": "list all the flags",
             "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/flag"
-              }
+              "$ref": "#/definitions/findFlagsOKBody"
             }
           },
           "default": {
@@ -203,12 +200,16 @@ func init() {
           "type": "string"
         },
         "segmentDebugLogs": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/segmentDebugLog"
-          }
+          "$ref": "#/definitions/evalDebugLogSegmentDebugLogs"
         }
       }
+    },
+    "evalDebugLogSegmentDebugLogs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/segmentDebugLog"
+      },
+      "x-go-gen-location": "models"
     },
     "evalResult": {
       "type": "object",
@@ -244,6 +245,13 @@ func init() {
         }
       }
     },
+    "findFlagsOKBody": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/flag"
+      },
+      "x-go-gen-location": "operations"
+    },
     "flag": {
       "type": "object",
       "required": [
@@ -260,18 +268,26 @@ func init() {
           "readOnly": true
         },
         "segments": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/segment"
-          }
+          "$ref": "#/definitions/flagSegments"
         },
         "variants": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/variant"
-          }
+          "$ref": "#/definitions/flagVariants"
         }
       }
+    },
+    "flagSegments": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/segment"
+      },
+      "x-go-gen-location": "models"
+    },
+    "flagVariants": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/variant"
+      },
+      "x-go-gen-location": "models"
     },
     "segment": {
       "type": "object",
@@ -280,20 +296,14 @@ func init() {
       ],
       "properties": {
         "constraints": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/constraint"
-          }
+          "$ref": "#/definitions/segmentConstraints"
         },
         "description": {
           "type": "string",
           "minLength": 1
         },
         "distributions": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/distribution"
-          }
+          "$ref": "#/definitions/segmentDistributions"
         },
         "id": {
           "type": "integer",
@@ -301,6 +311,13 @@ func init() {
           "readOnly": true
         }
       }
+    },
+    "segmentConstraints": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/constraint"
+      },
+      "x-go-gen-location": "models"
     },
     "segmentDebugLog": {
       "type": "object",
@@ -313,6 +330,13 @@ func init() {
           "format": "int64"
         }
       }
+    },
+    "segmentDistributions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/distribution"
+      },
+      "x-go-gen-location": "models"
     },
     "variant": {
       "type": "object",

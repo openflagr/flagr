@@ -16,18 +16,18 @@ import (
 	"github.com/checkr/flagr/swagger_gen/models"
 )
 
-// NewPostEvalParams creates a new PostEvalParams object
+// NewPostEvaluationParams creates a new PostEvaluationParams object
 // with the default values initialized.
-func NewPostEvalParams() PostEvalParams {
+func NewPostEvaluationParams() PostEvaluationParams {
 	var ()
-	return PostEvalParams{}
+	return PostEvaluationParams{}
 }
 
-// PostEvalParams contains all the bound params for the post eval operation
+// PostEvaluationParams contains all the bound params for the post evaluation operation
 // typically these are obtained from a http.Request
 //
-// swagger:parameters postEval
-type PostEvalParams struct {
+// swagger:parameters postEvaluation
+type PostEvaluationParams struct {
 
 	// HTTP Request Object
 	HTTPRequest *http.Request
@@ -41,7 +41,7 @@ type PostEvalParams struct {
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
 // for simple values it will use straight method calls
-func (o *PostEvalParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
+func (o *PostEvaluationParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
 	o.HTTPRequest = r
 

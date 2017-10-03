@@ -41,8 +41,8 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		FlagsFindFlagsHandler: flags.FindFlagsHandlerFunc(func(params flags.FindFlagsParams) middleware.Responder {
 			return middleware.NotImplemented("operation FlagsFindFlags has not yet been implemented")
 		}),
-		EvaluationPostEvalHandler: evaluation.PostEvalHandlerFunc(func(params evaluation.PostEvalParams) middleware.Responder {
-			return middleware.NotImplemented("operation EvaluationPostEval has not yet been implemented")
+		EvaluationPostEvaluationHandler: evaluation.PostEvaluationHandlerFunc(func(params evaluation.PostEvaluationParams) middleware.Responder {
+			return middleware.NotImplemented("operation EvaluationPostEvaluation has not yet been implemented")
 		}),
 	}
 }
@@ -75,8 +75,8 @@ type FlagrAPI struct {
 
 	// FlagsFindFlagsHandler sets the operation handler for the find flags operation
 	FlagsFindFlagsHandler flags.FindFlagsHandler
-	// EvaluationPostEvalHandler sets the operation handler for the post eval operation
-	EvaluationPostEvalHandler evaluation.PostEvalHandler
+	// EvaluationPostEvaluationHandler sets the operation handler for the post evaluation operation
+	EvaluationPostEvaluationHandler evaluation.PostEvaluationHandler
 
 	// ServeError is called when an error is received, there is a default handler
 	// but you can set your own with this
@@ -144,8 +144,8 @@ func (o *FlagrAPI) Validate() error {
 		unregistered = append(unregistered, "flags.FindFlagsHandler")
 	}
 
-	if o.EvaluationPostEvalHandler == nil {
-		unregistered = append(unregistered, "evaluation.PostEvalHandler")
+	if o.EvaluationPostEvaluationHandler == nil {
+		unregistered = append(unregistered, "evaluation.PostEvaluationHandler")
 	}
 
 	if len(unregistered) > 0 {
@@ -246,7 +246,7 @@ func (o *FlagrAPI) initHandlerCache() {
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
-	o.handlers["POST"]["/evaluation"] = evaluation.NewPostEval(o.context, o.EvaluationPostEvalHandler)
+	o.handlers["POST"]["/evaluation"] = evaluation.NewPostEvaluation(o.context, o.EvaluationPostEvaluationHandler)
 
 }
 
