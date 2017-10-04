@@ -1,15 +1,22 @@
 PWD := $(shell pwd)
 GOPATH := $(shell go env GOPATH)
 
-all: build
+################################
+### Public
+################################
 
-checks:
-	@echo "Check deps"
-	@(env bash $(PWD)/buildscripts/checkdeps.sh)
-	@echo "Checking project is in GOPATH"
-	@(env bash $(PWD)/buildscripts/checkgopath.sh)
+test: verifiers
+	@echo "Running all coverage for flagr"
+	@./buildscripts/go-coverage.sh
+
+build:
+	@echo "Building flagr to $(PWD)/flagr ..."
+	@CGO_ENABLED=0 go build -o $(PWD)/flagr github.com/checkr/flagr/swagger_gen/cmd/flagr-server
+
+gen: swagger goqueryset
 
 deps: checks
+	@echo "Installing dep" && go get github.com/golang/dep/cmd/dep
 	@echo "Installing golint" && go get github.com/golang/lint/golint
 	@echo "Installing gocyclo" && go get github.com/fzipp/gocyclo
 	@echo "Installing deadcode" && go get github.com/remyoudompheng/go-misc/deadcode
@@ -18,7 +25,19 @@ deps: checks
 	@echo "Installing go-swagger" && go get github.com/go-swagger/go-swagger/cmd/swagger
 	@echo "Installing goqueryset" && go get github.com/jirfag/go-queryset/cmd/goqueryset
 	@echo "Installing gt" && go get rsc.io/gt
+	@echo "Installing gomock" && go get github.com/golang/mock/gomock && go get github.com/golang/mock/mockgen
 	@echo "Ensuring Deps" && dep ensure
+
+
+################################
+### Private
+################################
+
+checks:
+	@echo "Check deps"
+	@(env bash $(PWD)/buildscripts/checkdeps.sh)
+	@echo "Checking project is in GOPATH"
+	@(env bash $(PWD)/buildscripts/checkgopath.sh)
 
 verifiers: vet fmt lint cyclo spelling verify_swagger
 
@@ -59,15 +78,6 @@ spelling:
 verify_swagger:
 	@echo "Running $@"
 	@swagger validate ./swagger.yml
-
-test: verifiers
-	@echo "Running all coverage for flagr"
-	@./buildscripts/go-coverage.sh
-
-# Builds flagr locally.
-build: swagger goqueryset
-	@echo "Building flagr to $(PWD)/flagr ..."
-	@CGO_ENABLED=0 go build -o $(PWD)/flagr github.com/checkr/flagr/swagger_gen/cmd/flagr-server
 
 clean:
 	@echo "Cleaning up all the generated files"

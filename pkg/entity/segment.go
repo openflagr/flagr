@@ -10,6 +10,6 @@ type Segment struct {
 	gorm.Model
 	FlagID uint
 
-	Description string
+	Description string `sql:"type:text"`
 	Constraints []*Constraint
 }

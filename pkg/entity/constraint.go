@@ -12,5 +12,5 @@ type Constraint struct {
 
 	Property string
 	Operator string
-	Value    string
+	Value    string `sql:"type:text"`
 }

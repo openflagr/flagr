@@ -12,6 +12,6 @@ type Distribution struct {
 	VariantID uint
 
 	Rank    uint
-	Percent uint // Percent is an uint from 0 to 100, percent is always derived from Bitmap
-	Bitmap  string
+	Percent uint   // Percent is an uint from 0 to 100, percent is always derived from Bitmap
+	Bitmap  string `sql:"type:text"`
 }

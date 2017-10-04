@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  name = "github.com/BurntSushi/toml"
+  packages = ["."]
+  revision = "b26d9c308763d68093482582cea63d69be07a0f0"
+  version = "v0.3.0"
+
+[[projects]]
   name = "github.com/PuerkitoBio/purell"
   packages = ["."]
   revision = "0bcb03f4b4d0a9428594752bd2a3b9aa0a9d4bd4"
@@ -92,6 +98,12 @@
   version = "v1.3.0"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/jinzhu/configor"
+  packages = ["."]
+  revision = "6c409036e1aea1420f2e1a196f95c0e3c4aef091"
+
+[[projects]]
   name = "github.com/jinzhu/gorm"
   packages = ["."]
   revision = "5174cc5c242a728b435ea2be8a2f7f998e15429b"
@@ -148,6 +160,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "e5b436f51f4028ed012d804c48866ea411d6aa87744ce36856f5344009419f27"
+  inputs-digest = "fc400b1ce4e2281f6c3d195ce59140ca3ec4d1d687fa7dd6b2fb131e1ee59145"
   solver-name = "gps-cdcl"
   solver-version = 1

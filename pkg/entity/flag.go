@@ -8,7 +8,7 @@ import "github.com/jinzhu/gorm"
 // gen:qs
 type Flag struct {
 	gorm.Model
-	Description string
+	Description string `sql:"type:text"`
 	CreatedBy   string
 	UpdatedBy   string
 

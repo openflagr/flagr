@@ -8,5 +8,5 @@ import "github.com/jinzhu/gorm"
 // gen:qs
 type User struct {
 	gorm.Model
-	Email string
+	Email string `sql:"type:text"`
 }
