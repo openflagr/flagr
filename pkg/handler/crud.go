@@ -13,6 +13,7 @@ import (
 type CRUD interface {
 	FindFlags(flag.FindFlagsParams) middleware.Responder
 	CreateFlag(flag.CreateFlagParams) middleware.Responder
+	GetFlag(flag.GetFlagParams) middleware.Responder
 }
 
 // NewCRUD creates a new CRUD instance
@@ -45,6 +46,18 @@ func (c *crud) CreateFlag(params flag.CreateFlagParams) middleware.Responder {
 	}
 
 	resp := flag.NewCreateFlagOK()
+	resp.SetPayload(e2r.MapFlag(f))
+	return resp
+}
+
+func (c *crud) GetFlag(params flag.GetFlagParams) middleware.Responder {
+	f := &entity.Flag{}
+	q := entity.NewFlagQuerySet(repo.GetDB())
+	err := q.IDEq(uint(params.FlagID)).One(f)
+	if err != nil {
+		return flag.NewGetFlagDefault(500)
+	}
+	resp := flag.NewGetFlagOK()
 	resp.SetPayload(e2r.MapFlag(f))
 	return resp
 }
