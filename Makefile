@@ -93,7 +93,7 @@ clean:
 	@rm -rf build
 	@rm -rf release
 
-swagger:
+swagger: verify_swagger
 	@echo "Regenerate swagger files"
 	@rm -f /tmp/configure_flagr.go
 	@cp $(PWD)/swagger_gen/restapi/configure_flagr.go /tmp/configure_flagr.go 2>/dev/null || :

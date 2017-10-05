@@ -21,6 +21,7 @@ import (
 
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/evaluation"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/flag"
+	"github.com/checkr/flagr/swagger_gen/restapi/operations/segment"
 )
 
 // NewFlagrAPI creates a new Flagr instance
@@ -41,11 +42,17 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		FlagCreateFlagHandler: flag.CreateFlagHandlerFunc(func(params flag.CreateFlagParams) middleware.Responder {
 			return middleware.NotImplemented("operation FlagCreateFlag has not yet been implemented")
 		}),
+		SegmentCreateSegmentHandler: segment.CreateSegmentHandlerFunc(func(params segment.CreateSegmentParams) middleware.Responder {
+			return middleware.NotImplemented("operation SegmentCreateSegment has not yet been implemented")
+		}),
 		FlagDeleteFlagHandler: flag.DeleteFlagHandlerFunc(func(params flag.DeleteFlagParams) middleware.Responder {
 			return middleware.NotImplemented("operation FlagDeleteFlag has not yet been implemented")
 		}),
 		FlagFindFlagsHandler: flag.FindFlagsHandlerFunc(func(params flag.FindFlagsParams) middleware.Responder {
 			return middleware.NotImplemented("operation FlagFindFlags has not yet been implemented")
+		}),
+		SegmentFindSegmentsHandler: segment.FindSegmentsHandlerFunc(func(params segment.FindSegmentsParams) middleware.Responder {
+			return middleware.NotImplemented("operation SegmentFindSegments has not yet been implemented")
 		}),
 		FlagGetFlagHandler: flag.GetFlagHandlerFunc(func(params flag.GetFlagParams) middleware.Responder {
 			return middleware.NotImplemented("operation FlagGetFlag has not yet been implemented")
@@ -87,10 +94,14 @@ type FlagrAPI struct {
 
 	// FlagCreateFlagHandler sets the operation handler for the create flag operation
 	FlagCreateFlagHandler flag.CreateFlagHandler
+	// SegmentCreateSegmentHandler sets the operation handler for the create segment operation
+	SegmentCreateSegmentHandler segment.CreateSegmentHandler
 	// FlagDeleteFlagHandler sets the operation handler for the delete flag operation
 	FlagDeleteFlagHandler flag.DeleteFlagHandler
 	// FlagFindFlagsHandler sets the operation handler for the find flags operation
 	FlagFindFlagsHandler flag.FindFlagsHandler
+	// SegmentFindSegmentsHandler sets the operation handler for the find segments operation
+	SegmentFindSegmentsHandler segment.FindSegmentsHandler
 	// FlagGetFlagHandler sets the operation handler for the get flag operation
 	FlagGetFlagHandler flag.GetFlagHandler
 	// EvaluationPostEvaluationHandler sets the operation handler for the post evaluation operation
@@ -164,12 +175,20 @@ func (o *FlagrAPI) Validate() error {
 		unregistered = append(unregistered, "flag.CreateFlagHandler")
 	}
 
+	if o.SegmentCreateSegmentHandler == nil {
+		unregistered = append(unregistered, "segment.CreateSegmentHandler")
+	}
+
 	if o.FlagDeleteFlagHandler == nil {
 		unregistered = append(unregistered, "flag.DeleteFlagHandler")
 	}
 
 	if o.FlagFindFlagsHandler == nil {
 		unregistered = append(unregistered, "flag.FindFlagsHandler")
+	}
+
+	if o.SegmentFindSegmentsHandler == nil {
+		unregistered = append(unregistered, "segment.FindSegmentsHandler")
 	}
 
 	if o.FlagGetFlagHandler == nil {
@@ -279,6 +298,11 @@ func (o *FlagrAPI) initHandlerCache() {
 	}
 	o.handlers["POST"]["/flags"] = flag.NewCreateFlag(o.context, o.FlagCreateFlagHandler)
 
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/flags/{flagID}/segments"] = segment.NewCreateSegment(o.context, o.SegmentCreateSegmentHandler)
+
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
@@ -288,6 +312,11 @@ func (o *FlagrAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/flags"] = flag.NewFindFlags(o.context, o.FlagFindFlagsHandler)
+
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/flags/{flagID}/segments"] = segment.NewFindSegments(o.context, o.SegmentFindSegmentsHandler)
 
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)

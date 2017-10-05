@@ -217,6 +217,79 @@ func init() {
           }
         }
       }
+    },
+    "/flags/{flagID}/segments": {
+      "get": {
+        "tags": [
+          "segment"
+        ],
+        "operationId": "findSegments",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32",
+            "description": "numeric ID of the flag to get",
+            "name": "flagID",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "segments ordered by rank of the flag",
+            "schema": {
+              "$ref": "#/definitions/findSegmentsOKBody"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "segment"
+        ],
+        "operationId": "createSegment",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32",
+            "description": "numeric ID of the flag to get",
+            "name": "flagID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "create a segment under a flag",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/createSegmentRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "segments ordered by rank of the flag",
+            "schema": {
+              "$ref": "#/definitions/segment"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -248,6 +321,18 @@ func init() {
       }
     },
     "createFlagRequest": {
+      "type": "object",
+      "required": [
+        "description"
+      ],
+      "properties": {
+        "description": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "createSegmentRequest": {
       "type": "object",
       "required": [
         "description"
@@ -401,6 +486,13 @@ func init() {
       },
       "x-go-gen-location": "operations"
     },
+    "findSegmentsOKBody": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/segment"
+      },
+      "x-go-gen-location": "operations"
+    },
     "flag": {
       "type": "object",
       "required": [
@@ -453,7 +545,8 @@ func init() {
     "segment": {
       "type": "object",
       "required": [
-        "description"
+        "description",
+        "rank"
       ],
       "properties": {
         "constraints": {
@@ -470,6 +563,10 @@ func init() {
           "type": "integer",
           "format": "int64",
           "readOnly": true
+        },
+        "rank": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
