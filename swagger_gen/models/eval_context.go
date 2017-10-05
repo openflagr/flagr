@@ -33,6 +33,11 @@ type EvalContext struct {
 	// Required: true
 	// Min Length: 1
 	EntityType *string `json:"entityType"`
+
+	// flag ID
+	// Required: true
+	// Min Length: 1
+	FlagID *string `json:"flagID"`
 }
 
 /* polymorph evalContext enableDebug false */
@@ -42,6 +47,8 @@ type EvalContext struct {
 /* polymorph evalContext entityID false */
 
 /* polymorph evalContext entityType false */
+
+/* polymorph evalContext flagID false */
 
 // Validate validates this eval context
 func (m *EvalContext) Validate(formats strfmt.Registry) error {
@@ -53,6 +60,11 @@ func (m *EvalContext) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateEntityType(formats); err != nil {
+		// prop
+		res = append(res, err)
+	}
+
+	if err := m.validateFlagID(formats); err != nil {
 		// prop
 		res = append(res, err)
 	}
@@ -83,6 +95,19 @@ func (m *EvalContext) validateEntityType(formats strfmt.Registry) error {
 	}
 
 	if err := validate.MinLength("entityType", "body", string(*m.EntityType), 1); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *EvalContext) validateFlagID(formats strfmt.Registry) error {
+
+	if err := validate.Required("flagID", "body", m.FlagID); err != nil {
+		return err
+	}
+
+	if err := validate.MinLength("flagID", "body", string(*m.FlagID), 1); err != nil {
 		return err
 	}
 

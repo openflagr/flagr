@@ -187,6 +187,7 @@ definitions:
     required:
       - entityID
       - entityType
+      - flagID
     properties:
       entityID:
         type: string
@@ -198,6 +199,9 @@ definitions:
         type: object
       enableDebug:
         type: boolean
+      flagID:
+        type: string
+        minLength: 1
   evalResult:
     type: object
     required:

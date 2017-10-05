@@ -217,7 +217,8 @@ func init() {
       "type": "object",
       "required": [
         "entityID",
-        "entityType"
+        "entityType",
+        "flagID"
       ],
       "properties": {
         "enableDebug": {
@@ -231,6 +232,10 @@ func init() {
           "minLength": 1
         },
         "entityType": {
+          "type": "string",
+          "minLength": 1
+        },
+        "flagID": {
           "type": "string",
           "minLength": 1
         }
