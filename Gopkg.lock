@@ -158,6 +158,12 @@
   version = "v1.2.15"
 
 [[projects]]
+  name = "github.com/urfave/negroni"
+  packages = ["."]
+  revision = "fde5e16d32adc7ad637e9cd9ad21d4ebc6192535"
+  version = "v0.2.0"
+
+[[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context","idna"]
@@ -184,6 +190,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "75ab0fcb174a78f7f83472aa447b580c1f4ee72cf7f551c5e8e3fe2c122e5daf"
+  inputs-digest = "d966ec6be18e2ea46ac3e8d16d84d95d1f1a858c1a247e6f450ab2b2be1096a3"
   solver-name = "gps-cdcl"
   solver-version = 1

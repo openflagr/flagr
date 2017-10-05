@@ -7,8 +7,14 @@ Flagr delivers the right experience to the right entity and monitors the impact.
 Source installation is only intended for developers and advanced users.
 
 ```sh
+# get the source
 go get -u github.com/checkr/flagr
 cd $GOPATH/src/github.com/checkr/flagr
+
+# docker-compose with the infra
+docker-compose up
+
+# install dependencies, generated code, and run the app
 make all
 ```
 
