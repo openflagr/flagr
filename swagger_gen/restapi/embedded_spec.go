@@ -116,6 +116,39 @@ func init() {
           }
         }
       }
+    },
+    "/flags/{flagID}": {
+      "get": {
+        "tags": [
+          "flag"
+        ],
+        "operationId": "getFlag",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32",
+            "description": "numeric ID of the flag to get",
+            "name": "flagID",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "returns the flag",
+            "schema": {
+              "$ref": "#/definitions/flag"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {

@@ -44,6 +44,9 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		FlagFindFlagsHandler: flag.FindFlagsHandlerFunc(func(params flag.FindFlagsParams) middleware.Responder {
 			return middleware.NotImplemented("operation FlagFindFlags has not yet been implemented")
 		}),
+		FlagGetFlagHandler: flag.GetFlagHandlerFunc(func(params flag.GetFlagParams) middleware.Responder {
+			return middleware.NotImplemented("operation FlagGetFlag has not yet been implemented")
+		}),
 		EvaluationPostEvaluationHandler: evaluation.PostEvaluationHandlerFunc(func(params evaluation.PostEvaluationParams) middleware.Responder {
 			return middleware.NotImplemented("operation EvaluationPostEvaluation has not yet been implemented")
 		}),
@@ -80,6 +83,8 @@ type FlagrAPI struct {
 	FlagCreateFlagHandler flag.CreateFlagHandler
 	// FlagFindFlagsHandler sets the operation handler for the find flags operation
 	FlagFindFlagsHandler flag.FindFlagsHandler
+	// FlagGetFlagHandler sets the operation handler for the get flag operation
+	FlagGetFlagHandler flag.GetFlagHandler
 	// EvaluationPostEvaluationHandler sets the operation handler for the post evaluation operation
 	EvaluationPostEvaluationHandler evaluation.PostEvaluationHandler
 
@@ -151,6 +156,10 @@ func (o *FlagrAPI) Validate() error {
 
 	if o.FlagFindFlagsHandler == nil {
 		unregistered = append(unregistered, "flag.FindFlagsHandler")
+	}
+
+	if o.FlagGetFlagHandler == nil {
+		unregistered = append(unregistered, "flag.GetFlagHandler")
 	}
 
 	if o.EvaluationPostEvaluationHandler == nil {
@@ -256,6 +265,11 @@ func (o *FlagrAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/flags"] = flag.NewFindFlags(o.context, o.FlagFindFlagsHandler)
+
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/flags/{flagID}"] = flag.NewGetFlag(o.context, o.FlagGetFlagHandler)
 
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
