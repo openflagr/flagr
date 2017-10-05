@@ -8,9 +8,9 @@ import "github.com/jinzhu/gorm"
 // gen:qs
 type Constraint struct {
 	gorm.Model
-	SegmentID uint
 
-	Property string
-	Operator string
-	Value    string `sql:"type:text"`
+	SegmentID uint `gorm:"index:idx_segmentid"`
+	Property  string
+	Operator  string
+	Value     string `sql:"type:text"`
 }

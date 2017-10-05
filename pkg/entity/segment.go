@@ -8,8 +8,8 @@ import "github.com/jinzhu/gorm"
 // gen:qs
 type Segment struct {
 	gorm.Model
-	FlagID uint
 
+	FlagID      uint   `gorm:"index:idx_flagid"`
 	Description string `sql:"type:text"`
 	Rank        uint
 

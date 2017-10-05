@@ -167,6 +167,71 @@ paths:
           description: generic error response
           schema:
             $ref: "#/definitions/error"
+  /flags/{flagID}/segments/{segmentID}/constraints:
+    get:
+      tags:
+        - constraint
+      operationId: findConstraints
+      parameters:
+        - in: path
+          name: flagID
+          description: numeric ID of the flag
+          required: true
+          type: integer
+          format: int32
+          minimum: 1
+        - in: path
+          name: segmentID
+          description: numeric ID of the segment
+          required: true
+          type: integer
+          format: int32
+          minimum: 1
+      responses:
+        200:
+          description: constraints under the segment
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/constraint"
+        default:
+          description: generic error response
+          schema:
+            $ref: "#/definitions/error"
+    post:
+      tags:
+        - constraint
+      operationId: createConstraint
+      parameters:
+        - in: path
+          name: flagID
+          description: numeric ID of the flag
+          required: true
+          type: integer
+          format: int32
+          minimum: 1
+        - in: path
+          name: segmentID
+          description: numeric ID of the segment
+          required: true
+          type: integer
+          format: int32
+          minimum: 1
+        - in: body
+          name: body
+          description: create a constraint
+          required: true
+          schema:
+            $ref: "#/definitions/createConstraintRequest"
+      responses:
+        200:
+          description: the constraint created
+          schema:
+            $ref: "#/definitions/constraint"
+        default:
+          description: generic error response
+          schema:
+            $ref: "#/definitions/error"
   /evaluation:
     post:
       tags:
@@ -211,6 +276,22 @@ definitions:
       - description
     properties:
       description:
+        type: string
+        minLength: 1
+  createConstraintRequest:
+    type: object
+    required:
+      - property
+      - operator
+      - value
+    properties:
+      property:
+        type: string
+        minLength: 1
+      operator:
+        type: string
+        minLength: 1
+      value:
         type: string
         minLength: 1
   flag:

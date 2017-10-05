@@ -19,6 +19,7 @@ import (
 	strfmt "github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 
+	"github.com/checkr/flagr/swagger_gen/restapi/operations/constraint"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/evaluation"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/flag"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/segment"
@@ -39,6 +40,9 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		BearerAuthenticator: security.BearerAuth,
 		JSONConsumer:        runtime.JSONConsumer(),
 		JSONProducer:        runtime.JSONProducer(),
+		ConstraintCreateConstraintHandler: constraint.CreateConstraintHandlerFunc(func(params constraint.CreateConstraintParams) middleware.Responder {
+			return middleware.NotImplemented("operation ConstraintCreateConstraint has not yet been implemented")
+		}),
 		FlagCreateFlagHandler: flag.CreateFlagHandlerFunc(func(params flag.CreateFlagParams) middleware.Responder {
 			return middleware.NotImplemented("operation FlagCreateFlag has not yet been implemented")
 		}),
@@ -47,6 +51,9 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		}),
 		FlagDeleteFlagHandler: flag.DeleteFlagHandlerFunc(func(params flag.DeleteFlagParams) middleware.Responder {
 			return middleware.NotImplemented("operation FlagDeleteFlag has not yet been implemented")
+		}),
+		ConstraintFindConstraintsHandler: constraint.FindConstraintsHandlerFunc(func(params constraint.FindConstraintsParams) middleware.Responder {
+			return middleware.NotImplemented("operation ConstraintFindConstraints has not yet been implemented")
 		}),
 		FlagFindFlagsHandler: flag.FindFlagsHandlerFunc(func(params flag.FindFlagsParams) middleware.Responder {
 			return middleware.NotImplemented("operation FlagFindFlags has not yet been implemented")
@@ -92,12 +99,16 @@ type FlagrAPI struct {
 	// JSONProducer registers a producer for a "application/json" mime type
 	JSONProducer runtime.Producer
 
+	// ConstraintCreateConstraintHandler sets the operation handler for the create constraint operation
+	ConstraintCreateConstraintHandler constraint.CreateConstraintHandler
 	// FlagCreateFlagHandler sets the operation handler for the create flag operation
 	FlagCreateFlagHandler flag.CreateFlagHandler
 	// SegmentCreateSegmentHandler sets the operation handler for the create segment operation
 	SegmentCreateSegmentHandler segment.CreateSegmentHandler
 	// FlagDeleteFlagHandler sets the operation handler for the delete flag operation
 	FlagDeleteFlagHandler flag.DeleteFlagHandler
+	// ConstraintFindConstraintsHandler sets the operation handler for the find constraints operation
+	ConstraintFindConstraintsHandler constraint.FindConstraintsHandler
 	// FlagFindFlagsHandler sets the operation handler for the find flags operation
 	FlagFindFlagsHandler flag.FindFlagsHandler
 	// SegmentFindSegmentsHandler sets the operation handler for the find segments operation
@@ -171,6 +182,10 @@ func (o *FlagrAPI) Validate() error {
 		unregistered = append(unregistered, "JSONProducer")
 	}
 
+	if o.ConstraintCreateConstraintHandler == nil {
+		unregistered = append(unregistered, "constraint.CreateConstraintHandler")
+	}
+
 	if o.FlagCreateFlagHandler == nil {
 		unregistered = append(unregistered, "flag.CreateFlagHandler")
 	}
@@ -181,6 +196,10 @@ func (o *FlagrAPI) Validate() error {
 
 	if o.FlagDeleteFlagHandler == nil {
 		unregistered = append(unregistered, "flag.DeleteFlagHandler")
+	}
+
+	if o.ConstraintFindConstraintsHandler == nil {
+		unregistered = append(unregistered, "constraint.FindConstraintsHandler")
 	}
 
 	if o.FlagFindFlagsHandler == nil {
@@ -296,6 +315,11 @@ func (o *FlagrAPI) initHandlerCache() {
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
+	o.handlers["POST"]["/flags/{flagID}/segments/{segmentID}/constraints"] = constraint.NewCreateConstraint(o.context, o.ConstraintCreateConstraintHandler)
+
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
 	o.handlers["POST"]["/flags"] = flag.NewCreateFlag(o.context, o.FlagCreateFlagHandler)
 
 	if o.handlers["POST"] == nil {
@@ -307,6 +331,11 @@ func (o *FlagrAPI) initHandlerCache() {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
 	o.handlers["DELETE"]["/flags/{flagID}"] = flag.NewDeleteFlag(o.context, o.FlagDeleteFlagHandler)
+
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/flags/{flagID}/segments/{segmentID}/constraints"] = constraint.NewFindConstraints(o.context, o.ConstraintFindConstraintsHandler)
 
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)

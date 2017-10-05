@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/checkr/flagr/swagger_gen/restapi/operations"
+	"github.com/checkr/flagr/swagger_gen/restapi/operations/constraint"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/evaluation"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/flag"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/segment"
@@ -20,6 +21,10 @@ func Setup(api *operations.FlagrAPI) {
 	// segments
 	api.SegmentCreateSegmentHandler = segment.CreateSegmentHandlerFunc(c.CreateSegment)
 	api.SegmentFindSegmentsHandler = segment.FindSegmentsHandlerFunc(c.FindSegments)
+
+	// constraints
+	api.ConstraintCreateConstraintHandler = constraint.CreateConstraintHandlerFunc(c.CreateConstraint)
+	api.ConstraintFindConstraintsHandler = constraint.FindConstraintsHandlerFunc(c.FindConstraints)
 
 	// evaluation
 	e := NewEval()
