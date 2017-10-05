@@ -5,10 +5,12 @@ package restapi
 import (
 	"crypto/tls"
 	"net/http"
+	"os"
 
 	errors "github.com/go-openapi/errors"
 	runtime "github.com/go-openapi/runtime"
 	graceful "github.com/tylerb/graceful"
+	"github.com/urfave/negroni"
 
 	_ "github.com/checkr/flagr/pkg/config"
 	"github.com/checkr/flagr/pkg/handler"
@@ -18,6 +20,10 @@ import (
 // This file is safe to edit. Once it exists it will not be overwritten
 
 //go:generate swagger generate server --target ../swagger_gen --name  --spec ../swagger.yml
+
+var (
+	pwd, _ = os.Getwd()
+)
 
 func configureFlags(api *operations.FlagrAPI) {
 	// api.CommandLineOptionsGroups = []swag.CommandLineOptionsGroup{ ... }
@@ -62,5 +68,15 @@ func setupMiddlewares(handler http.Handler) http.Handler {
 // The middleware configuration happens before anything, this middleware also applies to serving the swagger.json document.
 // So this is a good place to plug in a panic handling middleware, logging and metrics
 func setupGlobalMiddleware(handler http.Handler) http.Handler {
-	return handler
+	n := negroni.New()
+
+	// ui route
+	ui := negroni.NewStatic(http.Dir(pwd + "/browser/flagr-ui/dist/"))
+	n.Use(ui)
+
+	// logger
+	n.Use(negroni.NewLogger())
+
+	n.UseHandler(handler)
+	return n
 }

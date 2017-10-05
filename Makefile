@@ -5,7 +5,7 @@ GOPATH := $(shell go env GOPATH)
 ### Public
 ################################
 
-all: deps gen build run
+all: deps gen run
 
 test: verifiers
 	@echo "Running all coverage for flagr"
@@ -15,8 +15,8 @@ build:
 	@echo "Building flagr to $(PWD)/flagr ..."
 	@CGO_ENABLED=0 go build -o $(PWD)/flagr github.com/checkr/flagr/swagger_gen/cmd/flagr-server
 
-run:
-	@./flagr
+run: build
+	@$(PWD)/flagr --port 18000
 
 gen: swagger goqueryset
 
@@ -32,6 +32,9 @@ deps: checks
 	@echo "Installing gt" && go get rsc.io/gt
 	@echo "Installing gomock" && go get github.com/golang/mock/gomock && go get github.com/golang/mock/mockgen
 	@echo "Ensuring Deps" && dep ensure
+
+api_docs:
+	@swagger serve $(PWD)/swagger.yml
 
 
 ################################
