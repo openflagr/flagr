@@ -14,6 +14,8 @@ type CRUD interface {
 	FindFlags(flag.FindFlagsParams) middleware.Responder
 	CreateFlag(flag.CreateFlagParams) middleware.Responder
 	GetFlag(flag.GetFlagParams) middleware.Responder
+	PutFlag(flag.PutFlagParams) middleware.Responder
+	DeleteFlag(flag.DeleteFlagParams) middleware.Responder
 }
 
 // NewCRUD creates a new CRUD instance
@@ -60,4 +62,36 @@ func (c *crud) GetFlag(params flag.GetFlagParams) middleware.Responder {
 	resp := flag.NewGetFlagOK()
 	resp.SetPayload(e2r.MapFlag(f))
 	return resp
+}
+
+func (c *crud) PutFlag(params flag.PutFlagParams) middleware.Responder {
+	q := entity.NewFlagQuerySet(repo.GetDB())
+
+	err := q.IDEq(uint(params.FlagID)).
+		GetUpdater().
+		SetDescription(util.SafeString(params.Body.Description)).
+		Update()
+	if err != nil {
+		return flag.NewGetFlagDefault(500)
+	}
+
+	f := &entity.Flag{}
+	err = q.IDEq(uint(params.FlagID)).One(f)
+	if err != nil {
+		return flag.NewGetFlagDefault(500)
+	}
+
+	resp := flag.NewGetFlagOK()
+	resp.SetPayload(e2r.MapFlag(f))
+	return resp
+}
+
+func (c *crud) DeleteFlag(params flag.DeleteFlagParams) middleware.Responder {
+	q := entity.NewFlagQuerySet(repo.GetDB())
+
+	err := q.IDEq(uint(params.FlagID)).Delete()
+	if err != nil {
+		return flag.NewGetFlagDefault(500)
+	}
+	return flag.NewDeleteFlagOK()
 }

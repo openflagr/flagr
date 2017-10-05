@@ -70,6 +70,52 @@ paths:
           description: generic error response
           schema:
             $ref: "#/definitions/error"
+    put:
+      tags:
+        - flag
+      operationId: putFlag
+      parameters:
+        - in: path
+          name: flagID
+          description: numeric ID of the flag to get
+          required: true
+          type: integer
+          format: int32
+          minimum: 1
+        - in: body
+          name: body
+          description: update a flag
+          required: true
+          schema:
+            $ref: "#/definitions/putFlagRequest"
+      responses:
+        200:
+          description: returns the flag
+          schema:
+            $ref: "#/definitions/flag"
+        default:
+          description: generic error response
+          schema:
+            $ref: "#/definitions/error"
+    delete:
+      tags:
+        - flag
+      operationId: deleteFlag
+      parameters:
+        - in: path
+          name: flagID
+          description: numeric ID of the flag to get
+          required: true
+          type: integer
+          format: int32
+          minimum: 1
+      responses:
+        200:
+          description: OK deleted
+        default:
+          description: generic error response
+          schema:
+            $ref: "#/definitions/error"
   /evaluation:
     post:
       tags:
@@ -93,6 +139,14 @@ paths:
             $ref: "#/definitions/error"
 definitions:
   createFlagRequest:
+    type: object
+    required:
+      - description
+    properties:
+      description:
+        type: string
+        minLength: 1
+  putFlagRequest:
     type: object
     required:
       - description
