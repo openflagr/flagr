@@ -41,6 +41,9 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		FlagCreateFlagHandler: flag.CreateFlagHandlerFunc(func(params flag.CreateFlagParams) middleware.Responder {
 			return middleware.NotImplemented("operation FlagCreateFlag has not yet been implemented")
 		}),
+		FlagDeleteFlagHandler: flag.DeleteFlagHandlerFunc(func(params flag.DeleteFlagParams) middleware.Responder {
+			return middleware.NotImplemented("operation FlagDeleteFlag has not yet been implemented")
+		}),
 		FlagFindFlagsHandler: flag.FindFlagsHandlerFunc(func(params flag.FindFlagsParams) middleware.Responder {
 			return middleware.NotImplemented("operation FlagFindFlags has not yet been implemented")
 		}),
@@ -49,6 +52,9 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		}),
 		EvaluationPostEvaluationHandler: evaluation.PostEvaluationHandlerFunc(func(params evaluation.PostEvaluationParams) middleware.Responder {
 			return middleware.NotImplemented("operation EvaluationPostEvaluation has not yet been implemented")
+		}),
+		FlagPutFlagHandler: flag.PutFlagHandlerFunc(func(params flag.PutFlagParams) middleware.Responder {
+			return middleware.NotImplemented("operation FlagPutFlag has not yet been implemented")
 		}),
 	}
 }
@@ -81,12 +87,16 @@ type FlagrAPI struct {
 
 	// FlagCreateFlagHandler sets the operation handler for the create flag operation
 	FlagCreateFlagHandler flag.CreateFlagHandler
+	// FlagDeleteFlagHandler sets the operation handler for the delete flag operation
+	FlagDeleteFlagHandler flag.DeleteFlagHandler
 	// FlagFindFlagsHandler sets the operation handler for the find flags operation
 	FlagFindFlagsHandler flag.FindFlagsHandler
 	// FlagGetFlagHandler sets the operation handler for the get flag operation
 	FlagGetFlagHandler flag.GetFlagHandler
 	// EvaluationPostEvaluationHandler sets the operation handler for the post evaluation operation
 	EvaluationPostEvaluationHandler evaluation.PostEvaluationHandler
+	// FlagPutFlagHandler sets the operation handler for the put flag operation
+	FlagPutFlagHandler flag.PutFlagHandler
 
 	// ServeError is called when an error is received, there is a default handler
 	// but you can set your own with this
@@ -154,6 +164,10 @@ func (o *FlagrAPI) Validate() error {
 		unregistered = append(unregistered, "flag.CreateFlagHandler")
 	}
 
+	if o.FlagDeleteFlagHandler == nil {
+		unregistered = append(unregistered, "flag.DeleteFlagHandler")
+	}
+
 	if o.FlagFindFlagsHandler == nil {
 		unregistered = append(unregistered, "flag.FindFlagsHandler")
 	}
@@ -164,6 +178,10 @@ func (o *FlagrAPI) Validate() error {
 
 	if o.EvaluationPostEvaluationHandler == nil {
 		unregistered = append(unregistered, "evaluation.PostEvaluationHandler")
+	}
+
+	if o.FlagPutFlagHandler == nil {
+		unregistered = append(unregistered, "flag.PutFlagHandler")
 	}
 
 	if len(unregistered) > 0 {
@@ -261,6 +279,11 @@ func (o *FlagrAPI) initHandlerCache() {
 	}
 	o.handlers["POST"]["/flags"] = flag.NewCreateFlag(o.context, o.FlagCreateFlagHandler)
 
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/flags/{flagID}"] = flag.NewDeleteFlag(o.context, o.FlagDeleteFlagHandler)
+
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
@@ -275,6 +298,11 @@ func (o *FlagrAPI) initHandlerCache() {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
 	o.handlers["POST"]["/evaluation"] = evaluation.NewPostEvaluation(o.context, o.EvaluationPostEvaluationHandler)
+
+	if o.handlers["PUT"] == nil {
+		o.handlers["PUT"] = make(map[string]http.Handler)
+	}
+	o.handlers["PUT"]["/flags/{flagID}"] = flag.NewPutFlag(o.context, o.FlagPutFlagHandler)
 
 }
 

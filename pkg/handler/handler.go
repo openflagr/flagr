@@ -19,6 +19,8 @@ func Setup(api *operations.FlagrAPI) {
 	api.FlagFindFlagsHandler = flag.FindFlagsHandlerFunc(c.FindFlags)
 	api.FlagCreateFlagHandler = flag.CreateFlagHandlerFunc(c.CreateFlag)
 	api.FlagGetFlagHandler = flag.GetFlagHandlerFunc(c.GetFlag)
+	api.FlagPutFlagHandler = flag.PutFlagHandlerFunc(c.PutFlag)
+	api.FlagDeleteFlagHandler = flag.DeleteFlagHandlerFunc(c.DeleteFlag)
 
 	e := NewEval()
 	api.EvaluationPostEvaluationHandler = evaluation.PostEvaluationHandlerFunc(e.PostEvaluation)
