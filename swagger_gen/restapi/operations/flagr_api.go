@@ -38,6 +38,9 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		BearerAuthenticator: security.BearerAuth,
 		JSONConsumer:        runtime.JSONConsumer(),
 		JSONProducer:        runtime.JSONProducer(),
+		FlagCreateFlagHandler: flag.CreateFlagHandlerFunc(func(params flag.CreateFlagParams) middleware.Responder {
+			return middleware.NotImplemented("operation FlagCreateFlag has not yet been implemented")
+		}),
 		FlagFindFlagsHandler: flag.FindFlagsHandlerFunc(func(params flag.FindFlagsParams) middleware.Responder {
 			return middleware.NotImplemented("operation FlagFindFlags has not yet been implemented")
 		}),
@@ -73,6 +76,8 @@ type FlagrAPI struct {
 	// JSONProducer registers a producer for a "application/json" mime type
 	JSONProducer runtime.Producer
 
+	// FlagCreateFlagHandler sets the operation handler for the create flag operation
+	FlagCreateFlagHandler flag.CreateFlagHandler
 	// FlagFindFlagsHandler sets the operation handler for the find flags operation
 	FlagFindFlagsHandler flag.FindFlagsHandler
 	// EvaluationPostEvaluationHandler sets the operation handler for the post evaluation operation
@@ -138,6 +143,10 @@ func (o *FlagrAPI) Validate() error {
 
 	if o.JSONProducer == nil {
 		unregistered = append(unregistered, "JSONProducer")
+	}
+
+	if o.FlagCreateFlagHandler == nil {
+		unregistered = append(unregistered, "flag.CreateFlagHandler")
 	}
 
 	if o.FlagFindFlagsHandler == nil {
@@ -237,6 +246,11 @@ func (o *FlagrAPI) initHandlerCache() {
 	if o.handlers == nil {
 		o.handlers = make(map[string]map[string]http.Handler)
 	}
+
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/flags"] = flag.NewCreateFlag(o.context, o.FlagCreateFlagHandler)
 
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)

@@ -28,6 +28,27 @@ paths:
           description: generic error response
           schema:
             $ref: "#/definitions/error"
+    post:
+      tags:
+        - flag
+      operationId: createFlag
+      parameters:
+        - in: body
+          name: body
+          description: create a flag
+          required: true
+          schema:
+            $ref: "#/definitions/createFlagRequest"
+      responses:
+        200:
+          description: returns the created flag
+          schema:
+            $ref: "#/definitions/flag"
+        default:
+          description: generic error response
+          schema:
+            $ref: "#/definitions/error"
+
   /evaluation:
     post:
       tags:
@@ -50,6 +71,14 @@ paths:
           schema:
             $ref: "#/definitions/error"
 definitions:
+  createFlagRequest:
+    type: object
+    required:
+      - description
+    properties:
+      description:
+        type: string
+        minLength: 1
   flag:
     type: object
     required:

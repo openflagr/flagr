@@ -4,7 +4,8 @@ import (
 	"sync"
 
 	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/mysql" // mysql driver
+	_ "github.com/jinzhu/gorm/dialects/mysql"    // mysql driver
+	_ "github.com/jinzhu/gorm/dialects/postgres" // postgres driver
 
 	"github.com/checkr/flagr/pkg/config"
 	"github.com/checkr/flagr/pkg/entity"
@@ -13,6 +14,15 @@ import (
 var (
 	singletonDB   *gorm.DB
 	singletonOnce sync.Once
+
+	autoMigrateTables = []interface{}{
+		entity.Constraint{},
+		entity.Distribution{},
+		entity.Flag{},
+		entity.Segment{},
+		entity.User{},
+		entity.Variant{},
+	}
 )
 
 // GetDB gets the db singleton
@@ -22,14 +32,7 @@ func GetDB() *gorm.DB {
 		if err != nil {
 			panic(err)
 		}
-		db.AutoMigrate(
-			entity.Constraint{},
-			entity.Distribution{},
-			entity.Flag{},
-			entity.Segment{},
-			entity.User{},
-			entity.Variant{},
-		)
+		db.AutoMigrate(autoMigrateTables...)
 		singletonDB = db
 	})
 

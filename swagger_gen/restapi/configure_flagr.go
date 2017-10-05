@@ -6,38 +6,18 @@ import (
 	"crypto/tls"
 	"net/http"
 
-	"github.com/davecgh/go-spew/spew"
 	errors "github.com/go-openapi/errors"
 	runtime "github.com/go-openapi/runtime"
-	middleware "github.com/go-openapi/runtime/middleware"
 	graceful "github.com/tylerb/graceful"
 
 	_ "github.com/checkr/flagr/pkg/config"
-	"github.com/checkr/flagr/pkg/entity"
-	"github.com/checkr/flagr/pkg/repo"
+	"github.com/checkr/flagr/pkg/handler"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/evaluation"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/flag"
 )
 
 // This file is safe to edit. Once it exists it will not be overwritten
 
 //go:generate swagger generate server --target ../swagger_gen --name  --spec ../swagger.yml
-
-func adhoc_test() {
-	db := repo.GetDB()
-	qs := entity.NewVariantQuerySet(db)
-	a := entity.Attachment{}
-	a["123"] = "456"
-	a["789"] = ""
-	v := entity.Variant{
-		Key:        "control",
-		Attachment: a,
-	}
-	v.Create(db)
-	qs.One(&v)
-	spew.Dump(v)
-}
 
 func configureFlags(api *operations.FlagrAPI) {
 	// api.CommandLineOptionsGroups = []swag.CommandLineOptionsGroup{ ... }
@@ -54,20 +34,10 @@ func configureAPI(api *operations.FlagrAPI) http.Handler {
 	// api.Logger = log.Printf
 
 	api.JSONConsumer = runtime.JSONConsumer()
-
 	api.JSONProducer = runtime.JSONProducer()
-
-	api.FlagFindFlagsHandler = flag.FindFlagsHandlerFunc(func(params flag.FindFlagsParams) middleware.Responder {
-		return middleware.NotImplemented("operation flag.FindFlags has not yet been implemented")
-	})
-	api.EvaluationPostEvaluationHandler = evaluation.PostEvaluationHandlerFunc(func(params evaluation.PostEvaluationParams) middleware.Responder {
-		return middleware.NotImplemented("operation evaluation.PostEvaluation has not yet been implemented")
-	})
-
 	api.ServerShutdown = func() {}
 
-	adhoc_test()
-
+	handler.Setup(api)
 	return setupGlobalMiddleware(api.Serve(setupMiddlewares))
 }
 

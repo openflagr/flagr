@@ -26,6 +26,12 @@
   version = "v7"
 
 [[projects]]
+  name = "github.com/davecgh/go-spew"
+  packages = ["spew"]
+  revision = "346938d642f2ec3594ed81d874461961cd0faa76"
+  version = "v1.1.0"
+
+[[projects]]
   name = "github.com/docker/go-units"
   packages = ["."]
   revision = "0dadbb0345b35ec7ef35e228dabb8de89a65bf52"
@@ -92,6 +98,12 @@
   revision = "dc8a684882cf70c9a529887104340f44e0e138e5"
 
 [[projects]]
+  name = "github.com/go-sql-driver/mysql"
+  packages = ["."]
+  revision = "a0583e0143b1624142adab07e0e97fe106d99561"
+  version = "v1.3"
+
+[[projects]]
   name = "github.com/jessevdk/go-flags"
   packages = ["."]
   revision = "96dc06278ce32a0e9d957d590bb987c81ee66407"
@@ -105,7 +117,7 @@
 
 [[projects]]
   name = "github.com/jinzhu/gorm"
-  packages = ["."]
+  packages = [".","dialects/mysql","dialects/postgres"]
   revision = "5174cc5c242a728b435ea2be8a2f7f998e15429b"
   version = "v1.0"
 
@@ -114,6 +126,18 @@
   name = "github.com/jinzhu/inflection"
   packages = ["."]
   revision = "1c35d901db3da928c72a72d8458480cc9ade058f"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/lib/pq"
+  packages = [".","hstore","oid"]
+  revision = "b77235e3890a962fe8a6f8c4c7198679ca7814e7"
+
+[[projects]]
+  name = "github.com/magiconair/properties"
+  packages = ["assert"]
+  revision = "be5ece7dd465ab0765a9682137865547526d1dfb"
+  version = "v1.7.3"
 
 [[projects]]
   branch = "master"
@@ -160,6 +184,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "fc400b1ce4e2281f6c3d195ce59140ca3ec4d1d687fa7dd6b2fb131e1ee59145"
+  inputs-digest = "75ab0fcb174a78f7f83472aa447b580c1f4ee72cf7f551c5e8e3fe2c122e5daf"
   solver-name = "gps-cdcl"
   solver-version = 1

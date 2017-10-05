@@ -84,6 +84,37 @@ func init() {
             }
           }
         }
+      },
+      "post": {
+        "tags": [
+          "flag"
+        ],
+        "operationId": "createFlag",
+        "parameters": [
+          {
+            "description": "create a flag",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/createFlagRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "returns the created flag",
+            "schema": {
+              "$ref": "#/definitions/flag"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
       }
     }
   },
@@ -110,6 +141,18 @@ func init() {
           "minLength": 1
         },
         "value": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "createFlagRequest": {
+      "type": "object",
+      "required": [
+        "description"
+      ],
+      "properties": {
+        "description": {
           "type": "string",
           "minLength": 1
         }
