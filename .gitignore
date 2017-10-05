@@ -8,7 +8,6 @@ site/
 **/*.sublime-workspace
 /.idea/
 **/access.log
-build
 vendor/**/*.js
 vendor/**/*.json
 release
