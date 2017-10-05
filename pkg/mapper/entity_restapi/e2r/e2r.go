@@ -13,3 +13,12 @@ func MapFlag(e *entity.Flag) *models.Flag {
 	r.Description = util.StringPtr(e.Description)
 	return r
 }
+
+// MapFlags maps flags
+func MapFlags(e []entity.Flag) []*models.Flag {
+	ret := make([]*models.Flag, len(e), len(e))
+	for i, f := range e {
+		ret[i] = MapFlag(&f)
+	}
+	return ret
+}

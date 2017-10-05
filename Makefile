@@ -34,7 +34,7 @@ deps: checks
 	@echo "Ensuring Deps" && dep ensure
 
 api_docs:
-	@swagger serve $(PWD)/swagger.yml
+	@swagger serve $(PWD)/swagger.yml --port 18101
 
 
 ################################
