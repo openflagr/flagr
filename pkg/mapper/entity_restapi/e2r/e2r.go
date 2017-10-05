@@ -32,11 +32,30 @@ func MapSegment(e *entity.Segment) *models.Segment {
 	return r
 }
 
-// MapSegments maps segment
+// MapSegments maps segments
 func MapSegments(e []entity.Segment) []*models.Segment {
 	ret := make([]*models.Segment, len(e), len(e))
 	for i, s := range e {
 		ret[i] = MapSegment(&s)
+	}
+	return ret
+}
+
+// MapConstraint maps constraint
+func MapConstraint(e *entity.Constraint) *models.Constraint {
+	r := &models.Constraint{}
+	r.ID = int64(e.ID)
+	r.Property = util.StringPtr(e.Property)
+	r.Operator = util.StringPtr(e.Operator)
+	r.Value = util.StringPtr(e.Value)
+	return r
+}
+
+// MapConstraints maps constraints
+func MapConstraints(e []entity.Constraint) []*models.Constraint {
+	ret := make([]*models.Constraint, len(e), len(e))
+	for i, c := range e {
+		ret[i] = MapConstraint(&c)
 	}
 	return ret
 }

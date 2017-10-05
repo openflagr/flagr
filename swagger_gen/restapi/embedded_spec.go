@@ -290,6 +290,97 @@ func init() {
           }
         }
       }
+    },
+    "/flags/{flagID}/segments/{segmentID}/constraints": {
+      "get": {
+        "tags": [
+          "constraint"
+        ],
+        "operationId": "findConstraints",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32",
+            "description": "numeric ID of the flag",
+            "name": "flagID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32",
+            "description": "numeric ID of the segment",
+            "name": "segmentID",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "constraints under the segment",
+            "schema": {
+              "$ref": "#/definitions/findConstraintsOKBody"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "constraint"
+        ],
+        "operationId": "createConstraint",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32",
+            "description": "numeric ID of the flag",
+            "name": "flagID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32",
+            "description": "numeric ID of the segment",
+            "name": "segmentID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "create a constraint",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/createConstraintRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "the constraint created",
+            "schema": {
+              "$ref": "#/definitions/constraint"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -306,6 +397,28 @@ func init() {
           "format": "int64",
           "readOnly": true
         },
+        "operator": {
+          "type": "string",
+          "minLength": 1
+        },
+        "property": {
+          "type": "string",
+          "minLength": 1
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "createConstraintRequest": {
+      "type": "object",
+      "required": [
+        "property",
+        "operator",
+        "value"
+      ],
+      "properties": {
         "operator": {
           "type": "string",
           "minLength": 1
@@ -478,6 +591,13 @@ func init() {
           "format": "int64"
         }
       }
+    },
+    "findConstraintsOKBody": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/constraint"
+      },
+      "x-go-gen-location": "operations"
     },
     "findFlagsOKBody": {
       "type": "array",

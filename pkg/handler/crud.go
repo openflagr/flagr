@@ -5,6 +5,7 @@ import (
 	"github.com/checkr/flagr/pkg/mapper/entity_restapi/e2r"
 	"github.com/checkr/flagr/pkg/repo"
 	"github.com/checkr/flagr/pkg/util"
+	"github.com/checkr/flagr/swagger_gen/restapi/operations/constraint"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/flag"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/segment"
 	"github.com/go-openapi/runtime/middleware"
@@ -22,6 +23,10 @@ type CRUD interface {
 	// Segments
 	FindSegments(segment.FindSegmentsParams) middleware.Responder
 	CreateSegment(segment.CreateSegmentParams) middleware.Responder
+
+	// Constraints
+	CreateConstraint(constraint.CreateConstraintParams) middleware.Responder
+	FindConstraints(constraint.FindConstraintsParams) middleware.Responder
 }
 
 // NewCRUD creates a new CRUD instance
@@ -129,5 +134,37 @@ func (c *crud) FindSegments(params segment.FindSegmentsParams) middleware.Respon
 
 	resp := segment.NewFindSegmentsOK()
 	resp.SetPayload(e2r.MapSegments(ss))
+	return resp
+}
+
+func (c *crud) CreateConstraint(params constraint.CreateConstraintParams) middleware.Responder {
+	cons := &entity.Constraint{}
+	cons.SegmentID = uint(params.SegmentID)
+	if params.Body != nil {
+		cons.Property = util.SafeString(params.Body.Property)
+		cons.Operator = util.SafeString(params.Body.Operator)
+		cons.Value = util.SafeString(params.Body.Value)
+	}
+	err := cons.Create(repo.GetDB())
+	if err != nil {
+		return constraint.NewCreateConstraintDefault(500)
+	}
+
+	resp := constraint.NewCreateConstraintOK()
+	resp.SetPayload(e2r.MapConstraint(cons))
+	return resp
+}
+
+func (c *crud) FindConstraints(params constraint.FindConstraintsParams) middleware.Responder {
+	cs := []entity.Constraint{}
+
+	q := entity.NewConstraintQuerySet(repo.GetDB())
+	err := q.SegmentIDEq(uint(params.SegmentID)).OrderAscByCreatedAt().All(&cs)
+	if err != nil {
+		return constraint.NewFindConstraintsDefault(500)
+	}
+
+	resp := constraint.NewFindConstraintsOK()
+	resp.SetPayload(e2r.MapConstraints(cs))
 	return resp
 }
