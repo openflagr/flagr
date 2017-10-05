@@ -11,5 +11,8 @@ type Segment struct {
 	FlagID uint
 
 	Description string `sql:"type:text"`
-	Constraints []*Constraint
+	Rank        uint
+
+	Constraints  []*Constraint
+	Distribution *Distribution
 }

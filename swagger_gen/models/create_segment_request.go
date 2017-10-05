@@ -13,51 +13,24 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// Segment segment
-// swagger:model segment
+// CreateSegmentRequest create segment request
+// swagger:model createSegmentRequest
 
-type Segment struct {
-
-	// constraints
-	Constraints SegmentConstraints `json:"constraints"`
+type CreateSegmentRequest struct {
 
 	// description
 	// Required: true
 	// Min Length: 1
 	Description *string `json:"description"`
-
-	// distributions
-	Distributions SegmentDistributions `json:"distributions"`
-
-	// id
-	// Read Only: true
-	ID int64 `json:"id,omitempty"`
-
-	// rank
-	// Required: true
-	Rank *int32 `json:"rank"`
 }
 
-/* polymorph segment constraints false */
+/* polymorph createSegmentRequest description false */
 
-/* polymorph segment description false */
-
-/* polymorph segment distributions false */
-
-/* polymorph segment id false */
-
-/* polymorph segment rank false */
-
-// Validate validates this segment
-func (m *Segment) Validate(formats strfmt.Registry) error {
+// Validate validates this create segment request
+func (m *CreateSegmentRequest) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateDescription(formats); err != nil {
-		// prop
-		res = append(res, err)
-	}
-
-	if err := m.validateRank(formats); err != nil {
 		// prop
 		res = append(res, err)
 	}
@@ -68,7 +41,7 @@ func (m *Segment) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *Segment) validateDescription(formats strfmt.Registry) error {
+func (m *CreateSegmentRequest) validateDescription(formats strfmt.Registry) error {
 
 	if err := validate.Required("description", "body", m.Description); err != nil {
 		return err
@@ -81,17 +54,8 @@ func (m *Segment) validateDescription(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *Segment) validateRank(formats strfmt.Registry) error {
-
-	if err := validate.Required("rank", "body", m.Rank); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // MarshalBinary interface implementation
-func (m *Segment) MarshalBinary() ([]byte, error) {
+func (m *CreateSegmentRequest) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -99,8 +63,8 @@ func (m *Segment) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *Segment) UnmarshalBinary(b []byte) error {
-	var res Segment
+func (m *CreateSegmentRequest) UnmarshalBinary(b []byte) error {
+	var res CreateSegmentRequest
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}
