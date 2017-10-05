@@ -23,7 +23,15 @@ func NewCRUD() CRUD {
 type crud struct{}
 
 func (c *crud) FindFlags(params flag.FindFlagsParams) middleware.Responder {
-	return nil
+	fs := []entity.Flag{}
+	q := entity.NewFlagQuerySet(repo.GetDB())
+	err := q.All(&fs)
+	if err != nil {
+		return flag.NewFindFlagsDefault(500)
+	}
+	resp := flag.NewFindFlagsOK()
+	resp.SetPayload(e2r.MapFlags(fs))
+	return resp
 }
 
 func (c *crud) CreateFlag(params flag.CreateFlagParams) middleware.Responder {
@@ -37,6 +45,6 @@ func (c *crud) CreateFlag(params flag.CreateFlagParams) middleware.Responder {
 	}
 
 	resp := flag.NewCreateFlagOK()
-	resp.Payload = e2r.MapFlag(f)
+	resp.SetPayload(e2r.MapFlag(f))
 	return resp
 }
