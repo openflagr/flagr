@@ -2,18 +2,14 @@
 
 Flagr delivers the right experience to the right entity and monitors the impact. It’s a micro service that provides the functionality of feature flags, experimentation (A/B testing), and dynamic configuration.
 
-## Docker Container
-###
-```
-docker pull checkr/flagr
-```
-
 ## Install from Source
 
 Source installation is only intended for developers and advanced users.
 
 ```sh
 go get -u github.com/checkr/flagr
+cd $GOPATH/src/github.com/checkr/flagr
+make all
 ```
 
 ## Test using Flagr UI
