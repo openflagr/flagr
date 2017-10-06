@@ -10,16 +10,6 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-// Variant is the struct that represent the experience/variant of the evaluation entity
-// gen:qs
-type Variant struct {
-	gorm.Model
-	FlagID uint
-
-	Key        string
-	Attachment Attachment `sql:"type:text"`
-}
-
 // Attachment supports dynamic configuration in variant
 type Attachment map[string]string
 
@@ -45,4 +35,14 @@ func (a Attachment) Value() (driver.Value, error) {
 		return nil, err
 	}
 	return string(bytes), nil
+}
+
+// Variant is the struct that represent the experience/variant of the evaluation entity
+// gen:qs
+type Variant struct {
+	gorm.Model
+	FlagID uint
+
+	Key        string
+	Attachment Attachment `sql:"type:text"`
 }

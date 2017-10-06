@@ -55,7 +55,11 @@ func (c *crud) FindFlags(params flag.FindFlagsParams) middleware.Responder {
 		return flag.NewFindFlagsDefault(500)
 	}
 	resp := flag.NewFindFlagsOK()
-	resp.SetPayload(e2r.MapFlags(fs))
+	payload, err := e2r.MapFlags(fs)
+	if err != nil {
+		return flag.NewFindFlagsDefault(500)
+	}
+	resp.SetPayload(payload)
 	return resp
 }
 
@@ -70,7 +74,11 @@ func (c *crud) CreateFlag(params flag.CreateFlagParams) middleware.Responder {
 	}
 
 	resp := flag.NewCreateFlagOK()
-	resp.SetPayload(e2r.MapFlag(f))
+	payload, err := e2r.MapFlag(f, true)
+	if err != nil {
+		return flag.NewCreateFlagDefault(500)
+	}
+	resp.SetPayload(payload)
 	return resp
 }
 
@@ -82,7 +90,11 @@ func (c *crud) GetFlag(params flag.GetFlagParams) middleware.Responder {
 		return flag.NewGetFlagDefault(500)
 	}
 	resp := flag.NewGetFlagOK()
-	resp.SetPayload(e2r.MapFlag(f))
+	payload, err := e2r.MapFlag(f, true)
+	if err != nil {
+		return flag.NewGetFlagDefault(500)
+	}
+	resp.SetPayload(payload)
 	return resp
 }
 
@@ -104,7 +116,11 @@ func (c *crud) PutFlag(params flag.PutFlagParams) middleware.Responder {
 	}
 
 	resp := flag.NewGetFlagOK()
-	resp.SetPayload(e2r.MapFlag(f))
+	payload, err := e2r.MapFlag(f, true)
+	if err != nil {
+		return flag.NewPutFlagDefault(500)
+	}
+	resp.SetPayload(payload)
 	return resp
 }
 
