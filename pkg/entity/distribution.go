@@ -2,14 +2,17 @@
 
 package entity
 
-import "github.com/jinzhu/gorm"
+import (
+	"github.com/jinzhu/gorm"
+)
 
 // Distribution is the struct represents distribution under segment and links to variant
 // gen:qs
 type Distribution struct {
 	gorm.Model
-	SegmentID uint
-	VariantID uint
+	SegmentID  uint
+	VariantID  uint
+	VariantKey string
 
 	Rank    uint
 	Percent uint   // Percent is an uint from 0 to 100, percent is always derived from Bitmap

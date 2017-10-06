@@ -22,15 +22,28 @@ type CreateSegmentRequest struct {
 	// Required: true
 	// Min Length: 1
 	Description *string `json:"description"`
+
+	// rollout percent
+	// Required: true
+	// Maximum: 100
+	// Minimum: 0
+	RolloutPercent *int32 `json:"rolloutPercent"`
 }
 
 /* polymorph createSegmentRequest description false */
+
+/* polymorph createSegmentRequest rolloutPercent false */
 
 // Validate validates this create segment request
 func (m *CreateSegmentRequest) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateDescription(formats); err != nil {
+		// prop
+		res = append(res, err)
+	}
+
+	if err := m.validateRolloutPercent(formats); err != nil {
 		// prop
 		res = append(res, err)
 	}
@@ -48,6 +61,23 @@ func (m *CreateSegmentRequest) validateDescription(formats strfmt.Registry) erro
 	}
 
 	if err := validate.MinLength("description", "body", string(*m.Description), 1); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *CreateSegmentRequest) validateRolloutPercent(formats strfmt.Registry) error {
+
+	if err := validate.Required("rolloutPercent", "body", m.RolloutPercent); err != nil {
+		return err
+	}
+
+	if err := validate.MinimumInt("rolloutPercent", "body", int64(*m.RolloutPercent), 0, false); err != nil {
+		return err
+	}
+
+	if err := validate.MaximumInt("rolloutPercent", "body", int64(*m.RolloutPercent), 100, false); err != nil {
 		return err
 	}
 
