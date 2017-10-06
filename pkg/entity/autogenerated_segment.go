@@ -616,7 +616,7 @@ var SegmentDBSchema = struct {
 	Rank           segmentDBSchemaField
 	RolloutPercent segmentDBSchemaField
 	Constraints    segmentDBSchemaField
-	Distribution   segmentDBSchemaField
+	Distributions  segmentDBSchemaField
 }{
 
 	ID:             segmentDBSchemaField("id"),
@@ -628,7 +628,7 @@ var SegmentDBSchema = struct {
 	Rank:           segmentDBSchemaField("rank"),
 	RolloutPercent: segmentDBSchemaField("rollout_percent"),
 	Constraints:    segmentDBSchemaField("constraints"),
-	Distribution:   segmentDBSchemaField("distribution"),
+	Distributions:  segmentDBSchemaField("distributions"),
 }
 
 // Update updates Segment fields by primary key
@@ -643,7 +643,7 @@ func (o *Segment) Update(db *gorm.DB, fields ...segmentDBSchemaField) error {
 		"rank":            o.Rank,
 		"rollout_percent": o.RolloutPercent,
 		"constraints":     o.Constraints,
-		"distribution":    o.Distribution,
+		"distributions":   o.Distributions,
 	}
 	u := map[string]interface{}{}
 	for _, f := range fields {

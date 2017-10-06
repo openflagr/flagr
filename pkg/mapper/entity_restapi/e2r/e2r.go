@@ -2,25 +2,38 @@ package e2r
 
 import (
 	"github.com/checkr/flagr/pkg/entity"
+	"github.com/checkr/flagr/pkg/repo"
 	"github.com/checkr/flagr/pkg/util"
 	"github.com/checkr/flagr/swagger_gen/models"
 )
 
 // MapFlag maps flag
-func MapFlag(e *entity.Flag) *models.Flag {
+func MapFlag(e *entity.Flag, preload bool) (*models.Flag, error) {
 	r := &models.Flag{}
 	r.ID = int64(e.ID)
 	r.Description = util.StringPtr(e.Description)
-	return r
+
+	if preload {
+		if err := e.Preload(repo.GetDB()); err != nil {
+			return nil, err
+		}
+		r.Segments = MapSegments(e.Segments)
+		r.Variants = MapVariants(e.Variants)
+	}
+	return r, nil
 }
 
 // MapFlags maps flags
-func MapFlags(e []entity.Flag) []*models.Flag {
+func MapFlags(e []entity.Flag) ([]*models.Flag, error) {
 	ret := make([]*models.Flag, len(e), len(e))
 	for i, f := range e {
-		ret[i] = MapFlag(&f)
+		rf, err := MapFlag(&f, false)
+		if err != nil {
+			return nil, err
+		}
+		ret[i] = rf
 	}
-	return ret
+	return ret, nil
 }
 
 // MapSegment maps segment
@@ -30,6 +43,8 @@ func MapSegment(e *entity.Segment) *models.Segment {
 	r.Description = util.StringPtr(e.Description)
 	r.Rank = util.Int32Ptr(int32(e.Rank))
 	r.RolloutPercent = util.Int32Ptr(int32(e.RolloutPercent))
+	r.Constraints = MapConstraints(e.Constraints)
+	r.Distributions = MapDistributions(e.Distributions)
 	return r
 }
 
