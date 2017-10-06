@@ -10,6 +10,7 @@ import (
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/distribution"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/flag"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/segment"
+	"github.com/checkr/flagr/swagger_gen/restapi/operations/variant"
 	"github.com/go-openapi/runtime/middleware"
 )
 
@@ -33,6 +34,10 @@ type CRUD interface {
 	// Distributions
 	FindDistributions(distribution.FindDistributionsParams) middleware.Responder
 	PutDistributions(distribution.PutDistributionsParams) middleware.Responder
+
+	// Variants
+	CreateVariant(variant.CreateVariantParams) middleware.Responder
+	FindVariants(variant.FindVariantsParams) middleware.Responder
 }
 
 // NewCRUD creates a new CRUD instance
@@ -121,7 +126,7 @@ func (c *crud) CreateSegment(params segment.CreateSegmentParams) middleware.Resp
 
 	err := s.Create(repo.GetDB())
 	if err != nil {
-		return segment.NewFindSegmentsDefault(500)
+		return segment.NewCreateSegmentDefault(500)
 	}
 
 	resp := segment.NewCreateSegmentOK()
@@ -216,5 +221,34 @@ func (c *crud) FindDistributions(params distribution.FindDistributionsParams) mi
 
 	resp := distribution.NewFindDistributionsOK()
 	resp.SetPayload(e2r.MapDistributions(ds))
+	return resp
+}
+
+func (c *crud) CreateVariant(params variant.CreateVariantParams) middleware.Responder {
+	v := &entity.Variant{}
+	v.FlagID = uint(params.FlagID)
+	v.Key = util.SafeString(params.Body.Key)
+
+	err := v.Create(repo.GetDB())
+	if err != nil {
+		return variant.NewCreateVariantDefault(500)
+	}
+
+	resp := variant.NewCreateVariantOK()
+	resp.SetPayload(e2r.MapVariant(v))
+	return resp
+}
+
+func (c *crud) FindVariants(params variant.FindVariantsParams) middleware.Responder {
+	vs := []entity.Variant{}
+
+	q := entity.NewVariantQuerySet(repo.GetDB())
+	err := q.FlagIDEq(uint(params.FlagID)).OrderAscByID().All(&vs)
+	if err != nil {
+		return variant.NewFindVariantsDefault(500)
+	}
+
+	resp := variant.NewFindVariantsOK()
+	resp.SetPayload(e2r.MapVariants(vs))
 	return resp
 }

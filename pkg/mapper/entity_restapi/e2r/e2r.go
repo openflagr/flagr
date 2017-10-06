@@ -81,3 +81,21 @@ func MapDistributions(e []entity.Distribution) []*models.Distribution {
 	}
 	return ret
 }
+
+// MapVariant maps variant
+func MapVariant(e *entity.Variant) *models.Variant {
+	r := &models.Variant{
+		ID:  int64(e.ID),
+		Key: util.StringPtr(e.Key),
+	}
+	return r
+}
+
+// MapVariants maps variant
+func MapVariants(e []entity.Variant) []*models.Variant {
+	ret := make([]*models.Variant, len(e), len(e))
+	for i, v := range e {
+		ret[i] = MapVariant(&v)
+	}
+	return ret
+}

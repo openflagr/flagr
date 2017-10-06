@@ -51,6 +51,9 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		SegmentCreateSegmentHandler: segment.CreateSegmentHandlerFunc(func(params segment.CreateSegmentParams) middleware.Responder {
 			return middleware.NotImplemented("operation SegmentCreateSegment has not yet been implemented")
 		}),
+		VariantCreateVariantHandler: variant.CreateVariantHandlerFunc(func(params variant.CreateVariantParams) middleware.Responder {
+			return middleware.NotImplemented("operation VariantCreateVariant has not yet been implemented")
+		}),
 		FlagDeleteFlagHandler: flag.DeleteFlagHandlerFunc(func(params flag.DeleteFlagParams) middleware.Responder {
 			return middleware.NotImplemented("operation FlagDeleteFlag has not yet been implemented")
 		}),
@@ -116,6 +119,8 @@ type FlagrAPI struct {
 	FlagCreateFlagHandler flag.CreateFlagHandler
 	// SegmentCreateSegmentHandler sets the operation handler for the create segment operation
 	SegmentCreateSegmentHandler segment.CreateSegmentHandler
+	// VariantCreateVariantHandler sets the operation handler for the create variant operation
+	VariantCreateVariantHandler variant.CreateVariantHandler
 	// FlagDeleteFlagHandler sets the operation handler for the delete flag operation
 	FlagDeleteFlagHandler flag.DeleteFlagHandler
 	// ConstraintFindConstraintsHandler sets the operation handler for the find constraints operation
@@ -209,6 +214,10 @@ func (o *FlagrAPI) Validate() error {
 
 	if o.SegmentCreateSegmentHandler == nil {
 		unregistered = append(unregistered, "segment.CreateSegmentHandler")
+	}
+
+	if o.VariantCreateVariantHandler == nil {
+		unregistered = append(unregistered, "variant.CreateVariantHandler")
 	}
 
 	if o.FlagDeleteFlagHandler == nil {
@@ -355,6 +364,11 @@ func (o *FlagrAPI) initHandlerCache() {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
 	o.handlers["POST"]["/flags/{flagID}/segments"] = segment.NewCreateSegment(o.context, o.SegmentCreateSegmentHandler)
+
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/flags/{flagID}/variants"] = variant.NewCreateVariant(o.context, o.VariantCreateVariantHandler)
 
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
