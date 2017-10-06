@@ -209,7 +209,7 @@ func (c *crud) FindDistributions(params distribution.FindDistributionsParams) mi
 	ds := []entity.Distribution{}
 
 	q := entity.NewDistributionQuerySet(repo.GetDB())
-	err := q.SegmentIDEq(uint(params.SegmentID)).OrderAscByRank().All(&ds)
+	err := q.SegmentIDEq(uint(params.SegmentID)).OrderAscByVariantID().All(&ds)
 	if err != nil {
 		return distribution.NewFindDistributionsDefault(500)
 	}

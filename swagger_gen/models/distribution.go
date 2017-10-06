@@ -32,11 +32,6 @@ type Distribution struct {
 	// Minimum: 0
 	Percent *int32 `json:"percent"`
 
-	// rank
-	// Required: true
-	// Minimum: 0
-	Rank *int32 `json:"rank"`
-
 	// variant ID
 	// Required: true
 	VariantID *int64 `json:"variantID"`
@@ -53,8 +48,6 @@ type Distribution struct {
 
 /* polymorph distribution percent false */
 
-/* polymorph distribution rank false */
-
 /* polymorph distribution variantID false */
 
 /* polymorph distribution variantKey false */
@@ -69,11 +62,6 @@ func (m *Distribution) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validatePercent(formats); err != nil {
-		// prop
-		res = append(res, err)
-	}
-
-	if err := m.validateRank(formats); err != nil {
 		// prop
 		res = append(res, err)
 	}
@@ -118,19 +106,6 @@ func (m *Distribution) validatePercent(formats strfmt.Registry) error {
 	}
 
 	if err := validate.MaximumInt("percent", "body", int64(*m.Percent), 100, false); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *Distribution) validateRank(formats strfmt.Registry) error {
-
-	if err := validate.Required("rank", "body", m.Rank); err != nil {
-		return err
-	}
-
-	if err := validate.MinimumInt("rank", "body", int64(*m.Rank), 0, false); err != nil {
 		return err
 	}
 

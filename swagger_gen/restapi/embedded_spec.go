@@ -199,7 +199,7 @@ func init() {
             "minimum": 1,
             "type": "integer",
             "format": "int32",
-            "description": "numeric ID of the flag to get",
+            "description": "numeric ID of the flag",
             "name": "flagID",
             "in": "path",
             "required": true
@@ -473,6 +473,39 @@ func init() {
           }
         }
       }
+    },
+    "/flags/{flagID}/variants": {
+      "get": {
+        "tags": [
+          "variant"
+        ],
+        "operationId": "findVariants",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32",
+            "description": "numeric ID of the flag",
+            "name": "flagID",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "variant ordered by variantID",
+            "schema": {
+              "$ref": "#/definitions/findVariantsOKBody"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -573,7 +606,6 @@ func init() {
     "distribution": {
       "type": "object",
       "required": [
-        "rank",
         "percent",
         "variantID",
         "variantKey"
@@ -592,11 +624,6 @@ func init() {
           "type": "integer",
           "format": "int32",
           "maximum": 100,
-          "minimum": 0
-        },
-        "rank": {
-          "type": "integer",
-          "format": "int32",
           "minimum": 0
         },
         "variantID": {
@@ -729,6 +756,13 @@ func init() {
       "type": "array",
       "items": {
         "$ref": "#/definitions/segment"
+      },
+      "x-go-gen-location": "operations"
+    },
+    "findVariantsOKBody": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/variant"
       },
       "x-go-gen-location": "operations"
     },

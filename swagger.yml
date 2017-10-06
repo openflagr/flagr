@@ -104,7 +104,7 @@ paths:
       parameters:
         - in: path
           name: flagID
-          description: numeric ID of the flag to get
+          description: numeric ID of the flag
           required: true
           type: integer
           format: int32
@@ -112,6 +112,30 @@ paths:
       responses:
         200:
           description: OK deleted
+        default:
+          description: generic error response
+          schema:
+            $ref: "#/definitions/error"
+  /flags/{flagID}/variants:
+    get:
+      tags:
+        - variant
+      operationId: findVariants
+      parameters:
+        - in: path
+          name: flagID
+          description: numeric ID of the flag
+          required: true
+          type: integer
+          format: int32
+          minimum: 1
+      responses:
+        200:
+          description: variant ordered by variantID
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/variant"
         default:
           description: generic error response
           schema:
@@ -475,7 +499,6 @@ definitions:
   distribution:
     type: object
     required:
-      - rank
       - percent
       - variantID
       - variantKey
@@ -484,10 +507,6 @@ definitions:
         type: integer
         format: int64
         readOnly: true
-      rank:
-        type: integer
-        format: int32
-        minimum: 0
       percent:
         type: integer
         format: int32
