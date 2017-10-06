@@ -105,6 +105,33 @@
         <div class="card--empty" v-else>
           No segments created for this feature flag yet
         </div>
+        <div class="variants-container">
+          <h2>Variants ({{ flag.variants.length }})</h2>
+          <div class="variants-container-inner" v-if="flag.variants.length">
+            <el-tag type="danger" v-for="variant in flag.variants">
+              {{ variant.key }}
+            </el-tag>
+          </div>
+          <div class="card--empty" v-else>
+            No variants created for this feature flag yet
+          </div>
+          <div class="variants-input">
+            <div class="flex-row equal-width constraints-inputs-container">
+              <div>
+                <el-input
+                  placeholder="Key"
+                  v-model="newVariant.key">  
+                </el-input>
+              </div>
+            </div>
+            <el-button
+              class="create-variant-button"
+              :disabled="!newVariant.key"
+              @click.prevent="createVariant">
+              Create Variant
+            </el-button>
+          </div>
+        </div>
         <hr/>
         <div>
           <p>
@@ -165,6 +192,10 @@ const DEFAULT_CONSTRAINT = {
   value: ''
 }
 
+const DEFAULT_VARIANT = {
+  key: ''
+}
+
 function processSegment (segment) {
   segment._expanded = false
   segment.newConstraint = clone(DEFAULT_CONSTRAINT)
@@ -187,6 +218,7 @@ export default {
       dialogVisible: false,
       flag: null,
       newSegment: clone(DEFAULT_SEGMENT),
+      newVariant: clone(DEFAULT_VARIANT),
       operatorOptions: operators,
       operatorValueToLabelMap: OPERATOR_VALUE_TO_LABEL_MAP
     }
@@ -201,6 +233,15 @@ export default {
         .then(() => {
           this.$router.replace({name: 'home'})
           this.$message(`You deleted flag ${flagId}`)
+        })
+    },
+    createVariant () {
+      const flagId = this.$route.params.flagId
+      postJson(`${API_URL}/flags/${flagId}/variants`, this.newVariant)
+        .then(variant => {
+          this.$message('You created a new variant')
+          this.newVariant = clone(DEFAULT_VARIANT)
+          this.flag.variants.push(variant)
         })
     },
     createConstraint (segment) {
@@ -231,22 +272,26 @@ export default {
 
     Promise.all([
       getJson(`${API_URL}/flags/${flagId}`),
-      getJson(`${API_URL}/flags/${flagId}/segments`)
-    ]).then(([flag, segments]) => {
-      results = {flag, segments}
+      getJson(`${API_URL}/flags/${flagId}/segments`),
+      getJson(`${API_URL}/flags/${flagId}/variants`)
+    ]).then(([flag, segments, variants]) => {
+      results = {flag, segments, variants}
       const segmentRequests = segments.map(segment => getJson(`${API_URL}/flags/${flagId}/segments/${segment.id}/constraints`))
       return Promise.all(segmentRequests)
     }).then((constraints) => {
+      const {flag, segments, variants} = results
+
       results.segments.forEach((segment, index) => {
         segment.constraints = constraints[index]
       })
 
-      results.segments.constraints = constraints
-      results.segments.forEach(segment => processSegment(segment))
+      segments.constraints = constraints
+      segments.forEach(segment => processSegment(segment))
 
-      results.flag.segments = results.segments
+      flag.variants = variants
+      flag.segments = segments
 
-      this.flag = results.flag
+      this.flag = flag
       this.loaded = true
     })
   }
@@ -308,7 +353,13 @@ ol.constraints-inner {
   padding: 5px 0;
 }
 
-.create-segment-button, .create-constraint-button {
+.variants-container-inner {
+  .el-tag {
+    margin-right: 5px;
+  }
+}
+
+.create-segment-button, .create-constraint-button, .create-variant-button {
   width: 100%;
 }
 </style>
