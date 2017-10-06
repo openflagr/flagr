@@ -67,7 +67,6 @@ func MapDistribution(e *entity.Distribution) *models.Distribution {
 		Bitmap:     e.Bitmap,
 		ID:         int64(e.ID),
 		Percent:    util.Int32Ptr(int32(e.Percent)),
-		Rank:       util.Int32Ptr(int32(e.Rank)),
 		VariantID:  util.Int64Ptr(int64(e.VariantID)),
 		VariantKey: util.StringPtr(e.VariantKey),
 	}

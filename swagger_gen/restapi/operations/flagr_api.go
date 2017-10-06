@@ -24,6 +24,7 @@ import (
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/evaluation"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/flag"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/segment"
+	"github.com/checkr/flagr/swagger_gen/restapi/operations/variant"
 )
 
 // NewFlagrAPI creates a new Flagr instance
@@ -64,6 +65,9 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		}),
 		SegmentFindSegmentsHandler: segment.FindSegmentsHandlerFunc(func(params segment.FindSegmentsParams) middleware.Responder {
 			return middleware.NotImplemented("operation SegmentFindSegments has not yet been implemented")
+		}),
+		VariantFindVariantsHandler: variant.FindVariantsHandlerFunc(func(params variant.FindVariantsParams) middleware.Responder {
+			return middleware.NotImplemented("operation VariantFindVariants has not yet been implemented")
 		}),
 		FlagGetFlagHandler: flag.GetFlagHandlerFunc(func(params flag.GetFlagParams) middleware.Responder {
 			return middleware.NotImplemented("operation FlagGetFlag has not yet been implemented")
@@ -122,6 +126,8 @@ type FlagrAPI struct {
 	FlagFindFlagsHandler flag.FindFlagsHandler
 	// SegmentFindSegmentsHandler sets the operation handler for the find segments operation
 	SegmentFindSegmentsHandler segment.FindSegmentsHandler
+	// VariantFindVariantsHandler sets the operation handler for the find variants operation
+	VariantFindVariantsHandler variant.FindVariantsHandler
 	// FlagGetFlagHandler sets the operation handler for the get flag operation
 	FlagGetFlagHandler flag.GetFlagHandler
 	// EvaluationPostEvaluationHandler sets the operation handler for the post evaluation operation
@@ -223,6 +229,10 @@ func (o *FlagrAPI) Validate() error {
 
 	if o.SegmentFindSegmentsHandler == nil {
 		unregistered = append(unregistered, "segment.FindSegmentsHandler")
+	}
+
+	if o.VariantFindVariantsHandler == nil {
+		unregistered = append(unregistered, "variant.FindVariantsHandler")
 	}
 
 	if o.FlagGetFlagHandler == nil {
@@ -370,6 +380,11 @@ func (o *FlagrAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/flags/{flagID}/segments"] = segment.NewFindSegments(o.context, o.SegmentFindSegmentsHandler)
+
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/flags/{flagID}/variants"] = variant.NewFindVariants(o.context, o.VariantFindVariantsHandler)
 
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)

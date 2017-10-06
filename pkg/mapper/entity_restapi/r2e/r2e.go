@@ -21,7 +21,6 @@ func MapDistribution(r *models.Distribution, segmentID uint) entity.Distribution
 		SegmentID:  segmentID,
 		VariantID:  uint(*r.VariantID),
 		VariantKey: util.SafeString(r.VariantKey),
-		Rank:       uint(*r.Rank),
 		Percent:    uint(*r.Percent),
 		Bitmap:     r.Bitmap,
 	}
