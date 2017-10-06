@@ -554,12 +554,19 @@ func init() {
     "createSegmentRequest": {
       "type": "object",
       "required": [
-        "description"
+        "description",
+        "rolloutPercent"
       ],
       "properties": {
         "description": {
           "type": "string",
           "minLength": 1
+        },
+        "rolloutPercent": {
+          "type": "integer",
+          "format": "int32",
+          "maximum": 100,
+          "minimum": 0
         }
       }
     },

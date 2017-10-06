@@ -1,5 +1,6 @@
 PWD := $(shell pwd)
 GOPATH := $(shell go env GOPATH)
+UIPATH := $(PWD)/browser/flagr-ui
 
 ################################
 ### Public
@@ -38,7 +39,6 @@ deps: checks
 
 api_docs:
 	@swagger serve $(PWD)/swagger.yml --port 18101
-
 
 ################################
 ### Private

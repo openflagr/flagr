@@ -3,9 +3,11 @@ package handler
 import (
 	"github.com/checkr/flagr/pkg/entity"
 	"github.com/checkr/flagr/pkg/mapper/entity_restapi/e2r"
+	"github.com/checkr/flagr/pkg/mapper/entity_restapi/r2e"
 	"github.com/checkr/flagr/pkg/repo"
 	"github.com/checkr/flagr/pkg/util"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/constraint"
+	"github.com/checkr/flagr/swagger_gen/restapi/operations/distribution"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/flag"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/segment"
 	"github.com/go-openapi/runtime/middleware"
@@ -21,12 +23,16 @@ type CRUD interface {
 	DeleteFlag(flag.DeleteFlagParams) middleware.Responder
 
 	// Segments
-	FindSegments(segment.FindSegmentsParams) middleware.Responder
 	CreateSegment(segment.CreateSegmentParams) middleware.Responder
+	FindSegments(segment.FindSegmentsParams) middleware.Responder
 
 	// Constraints
 	CreateConstraint(constraint.CreateConstraintParams) middleware.Responder
 	FindConstraints(constraint.FindConstraintsParams) middleware.Responder
+
+	// Distributions
+	FindDistributions(distribution.FindDistributionsParams) middleware.Responder
+	PutDistributions(distribution.PutDistributionsParams) middleware.Responder
 }
 
 // NewCRUD creates a new CRUD instance
@@ -110,9 +116,9 @@ func (c *crud) DeleteFlag(params flag.DeleteFlagParams) middleware.Responder {
 func (c *crud) CreateSegment(params segment.CreateSegmentParams) middleware.Responder {
 	s := &entity.Segment{}
 	s.FlagID = uint(params.FlagID)
-	if params.Body != nil {
-		s.Description = util.SafeString(params.Body.Description)
-	}
+	s.RolloutPercent = uint(*params.Body.RolloutPercent)
+	s.Description = util.SafeString(params.Body.Description)
+
 	err := s.Create(repo.GetDB())
 	if err != nil {
 		return segment.NewFindSegmentsDefault(500)
@@ -166,5 +172,49 @@ func (c *crud) FindConstraints(params constraint.FindConstraintsParams) middlewa
 
 	resp := constraint.NewFindConstraintsOK()
 	resp.SetPayload(e2r.MapConstraints(cs))
+	return resp
+}
+
+// PutDistributions puts the whole distributions and overwrite the old ones
+func (c *crud) PutDistributions(params distribution.PutDistributionsParams) middleware.Responder {
+	segmentID := uint(params.SegmentID)
+
+	tx := repo.GetDB().Begin()
+	err := tx.Delete(entity.Distribution{}, "segment_id = ?", segmentID).Error
+	if err != nil {
+		tx.Rollback()
+		return distribution.NewPutDistributionsDefault(500)
+	}
+
+	ds := r2e.MapDistributions(params.Body.Distributions, segmentID)
+	for _, d := range ds {
+		err := tx.Create(&d).Error
+		if err != nil {
+			tx.Rollback()
+			return distribution.NewPutDistributionsDefault(500)
+		}
+	}
+	err = tx.Commit().Error
+	if err != nil {
+		tx.Rollback()
+		return distribution.NewPutDistributionsDefault(500)
+	}
+
+	resp := distribution.NewPutDistributionsOK()
+	resp.SetPayload(e2r.MapDistributions(ds))
+	return resp
+}
+
+func (c *crud) FindDistributions(params distribution.FindDistributionsParams) middleware.Responder {
+	ds := []entity.Distribution{}
+
+	q := entity.NewDistributionQuerySet(repo.GetDB())
+	err := q.SegmentIDEq(uint(params.SegmentID)).OrderAscByRank().All(&ds)
+	if err != nil {
+		return distribution.NewFindDistributionsDefault(500)
+	}
+
+	resp := distribution.NewFindDistributionsOK()
+	resp.SetPayload(e2r.MapDistributions(ds))
 	return resp
 }
