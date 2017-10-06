@@ -7,6 +7,7 @@ import (
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/evaluation"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/flag"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/segment"
+	"github.com/checkr/flagr/swagger_gen/restapi/operations/variant"
 )
 
 // Setup initialize all the hanlder functions
@@ -30,6 +31,10 @@ func Setup(api *operations.FlagrAPI) {
 	// distributions
 	api.DistributionFindDistributionsHandler = distribution.FindDistributionsHandlerFunc(c.FindDistributions)
 	api.DistributionPutDistributionsHandler = distribution.PutDistributionsHandlerFunc(c.PutDistributions)
+
+	// variants
+	api.VariantCreateVariantHandler = variant.CreateVariantHandlerFunc(c.CreateVariant)
+	api.VariantFindVariantsHandler = variant.FindVariantsHandlerFunc(c.FindVariants)
 
 	// evaluation
 	e := NewEval()

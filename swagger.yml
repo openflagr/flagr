@@ -140,6 +140,33 @@ paths:
           description: generic error response
           schema:
             $ref: "#/definitions/error"
+    post:
+      tags:
+        - variant
+      operationId: createVariant
+      parameters:
+        - in: path
+          name: flagID
+          description: numeric ID of the flag
+          required: true
+          type: integer
+          format: int32
+          minimum: 1
+        - in: body
+          name: body
+          description: create a variant
+          required: true
+          schema:
+            $ref: "#/definitions/createVariantRequest"
+      responses:
+        200:
+          description: variant just created
+          schema:
+            $ref: "#/definitions/variant"
+        default:
+          description: generic error response
+          schema:
+            $ref: "#/definitions/error"
   /flags/{flagID}/segments:
     get:
       tags:
@@ -376,6 +403,14 @@ definitions:
         format: int32
         minimum: 0
         maximum: 100
+  createVariantRequest:
+    type: object
+    required:
+      - key
+    properties:
+      key:
+        type: string
+        minLength: 1
   createConstraintRequest:
     type: object
     required:

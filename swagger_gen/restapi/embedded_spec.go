@@ -505,6 +505,46 @@ func init() {
             }
           }
         }
+      },
+      "post": {
+        "tags": [
+          "variant"
+        ],
+        "operationId": "createVariant",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32",
+            "description": "numeric ID of the flag",
+            "name": "flagID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "create a variant",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/createVariantRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "variant just created",
+            "schema": {
+              "$ref": "#/definitions/variant"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
       }
     }
   },
@@ -600,6 +640,18 @@ func init() {
           "format": "int32",
           "maximum": 100,
           "minimum": 0
+        }
+      }
+    },
+    "createVariantRequest": {
+      "type": "object",
+      "required": [
+        "key"
+      ],
+      "properties": {
+        "key": {
+          "type": "string",
+          "minLength": 1
         }
       }
     },
