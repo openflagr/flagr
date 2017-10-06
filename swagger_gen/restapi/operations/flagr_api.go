@@ -20,6 +20,7 @@ import (
 	"github.com/go-openapi/swag"
 
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/constraint"
+	"github.com/checkr/flagr/swagger_gen/restapi/operations/distribution"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/evaluation"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/flag"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/segment"
@@ -55,6 +56,9 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		ConstraintFindConstraintsHandler: constraint.FindConstraintsHandlerFunc(func(params constraint.FindConstraintsParams) middleware.Responder {
 			return middleware.NotImplemented("operation ConstraintFindConstraints has not yet been implemented")
 		}),
+		DistributionFindDistributionsHandler: distribution.FindDistributionsHandlerFunc(func(params distribution.FindDistributionsParams) middleware.Responder {
+			return middleware.NotImplemented("operation DistributionFindDistributions has not yet been implemented")
+		}),
 		FlagFindFlagsHandler: flag.FindFlagsHandlerFunc(func(params flag.FindFlagsParams) middleware.Responder {
 			return middleware.NotImplemented("operation FlagFindFlags has not yet been implemented")
 		}),
@@ -66,6 +70,9 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		}),
 		EvaluationPostEvaluationHandler: evaluation.PostEvaluationHandlerFunc(func(params evaluation.PostEvaluationParams) middleware.Responder {
 			return middleware.NotImplemented("operation EvaluationPostEvaluation has not yet been implemented")
+		}),
+		DistributionPutDistributionsHandler: distribution.PutDistributionsHandlerFunc(func(params distribution.PutDistributionsParams) middleware.Responder {
+			return middleware.NotImplemented("operation DistributionPutDistributions has not yet been implemented")
 		}),
 		FlagPutFlagHandler: flag.PutFlagHandlerFunc(func(params flag.PutFlagParams) middleware.Responder {
 			return middleware.NotImplemented("operation FlagPutFlag has not yet been implemented")
@@ -109,6 +116,8 @@ type FlagrAPI struct {
 	FlagDeleteFlagHandler flag.DeleteFlagHandler
 	// ConstraintFindConstraintsHandler sets the operation handler for the find constraints operation
 	ConstraintFindConstraintsHandler constraint.FindConstraintsHandler
+	// DistributionFindDistributionsHandler sets the operation handler for the find distributions operation
+	DistributionFindDistributionsHandler distribution.FindDistributionsHandler
 	// FlagFindFlagsHandler sets the operation handler for the find flags operation
 	FlagFindFlagsHandler flag.FindFlagsHandler
 	// SegmentFindSegmentsHandler sets the operation handler for the find segments operation
@@ -117,6 +126,8 @@ type FlagrAPI struct {
 	FlagGetFlagHandler flag.GetFlagHandler
 	// EvaluationPostEvaluationHandler sets the operation handler for the post evaluation operation
 	EvaluationPostEvaluationHandler evaluation.PostEvaluationHandler
+	// DistributionPutDistributionsHandler sets the operation handler for the put distributions operation
+	DistributionPutDistributionsHandler distribution.PutDistributionsHandler
 	// FlagPutFlagHandler sets the operation handler for the put flag operation
 	FlagPutFlagHandler flag.PutFlagHandler
 
@@ -202,6 +213,10 @@ func (o *FlagrAPI) Validate() error {
 		unregistered = append(unregistered, "constraint.FindConstraintsHandler")
 	}
 
+	if o.DistributionFindDistributionsHandler == nil {
+		unregistered = append(unregistered, "distribution.FindDistributionsHandler")
+	}
+
 	if o.FlagFindFlagsHandler == nil {
 		unregistered = append(unregistered, "flag.FindFlagsHandler")
 	}
@@ -216,6 +231,10 @@ func (o *FlagrAPI) Validate() error {
 
 	if o.EvaluationPostEvaluationHandler == nil {
 		unregistered = append(unregistered, "evaluation.PostEvaluationHandler")
+	}
+
+	if o.DistributionPutDistributionsHandler == nil {
+		unregistered = append(unregistered, "distribution.PutDistributionsHandler")
 	}
 
 	if o.FlagPutFlagHandler == nil {
@@ -340,6 +359,11 @@ func (o *FlagrAPI) initHandlerCache() {
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
+	o.handlers["GET"]["/flags/{flagID}/segments/{segmentID}/distributions"] = distribution.NewFindDistributions(o.context, o.DistributionFindDistributionsHandler)
+
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
 	o.handlers["GET"]["/flags"] = flag.NewFindFlags(o.context, o.FlagFindFlagsHandler)
 
 	if o.handlers["GET"] == nil {
@@ -356,6 +380,11 @@ func (o *FlagrAPI) initHandlerCache() {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
 	o.handlers["POST"]["/evaluation"] = evaluation.NewPostEvaluation(o.context, o.EvaluationPostEvaluationHandler)
+
+	if o.handlers["PUT"] == nil {
+		o.handlers["PUT"] = make(map[string]http.Handler)
+	}
+	o.handlers["PUT"]["/flags/{flagID}/segments/{segmentID}/distributions"] = distribution.NewPutDistributions(o.context, o.DistributionPutDistributionsHandler)
 
 	if o.handlers["PUT"] == nil {
 		o.handlers["PUT"] = make(map[string]http.Handler)

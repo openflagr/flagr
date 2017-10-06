@@ -36,6 +36,12 @@ type Segment struct {
 	// rank
 	// Required: true
 	Rank *int32 `json:"rank"`
+
+	// rollout percent
+	// Required: true
+	// Maximum: 100
+	// Minimum: 0
+	RolloutPercent *int32 `json:"rolloutPercent"`
 }
 
 /* polymorph segment constraints false */
@@ -48,6 +54,8 @@ type Segment struct {
 
 /* polymorph segment rank false */
 
+/* polymorph segment rolloutPercent false */
+
 // Validate validates this segment
 func (m *Segment) Validate(formats strfmt.Registry) error {
 	var res []error
@@ -58,6 +66,11 @@ func (m *Segment) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateRank(formats); err != nil {
+		// prop
+		res = append(res, err)
+	}
+
+	if err := m.validateRolloutPercent(formats); err != nil {
 		// prop
 		res = append(res, err)
 	}
@@ -84,6 +97,23 @@ func (m *Segment) validateDescription(formats strfmt.Registry) error {
 func (m *Segment) validateRank(formats strfmt.Registry) error {
 
 	if err := validate.Required("rank", "body", m.Rank); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *Segment) validateRolloutPercent(formats strfmt.Registry) error {
+
+	if err := validate.Required("rolloutPercent", "body", m.RolloutPercent); err != nil {
+		return err
+	}
+
+	if err := validate.MinimumInt("rolloutPercent", "body", int64(*m.RolloutPercent), 0, false); err != nil {
+		return err
+	}
+
+	if err := validate.MaximumInt("rolloutPercent", "body", int64(*m.RolloutPercent), 100, false); err != nil {
 		return err
 	}
 

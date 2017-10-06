@@ -19,9 +19,8 @@ import (
 type Distribution struct {
 
 	// bitmap
-	// Required: true
 	// Min Length: 1
-	Bitmap *string `json:"bitmap"`
+	Bitmap string `json:"bitmap,omitempty"`
 
 	// id
 	// Read Only: true
@@ -97,11 +96,11 @@ func (m *Distribution) Validate(formats strfmt.Registry) error {
 
 func (m *Distribution) validateBitmap(formats strfmt.Registry) error {
 
-	if err := validate.Required("bitmap", "body", m.Bitmap); err != nil {
-		return err
+	if swag.IsZero(m.Bitmap) { // not required
+		return nil
 	}
 
-	if err := validate.MinLength("bitmap", "body", string(*m.Bitmap), 1); err != nil {
+	if err := validate.MinLength("bitmap", "body", string(m.Bitmap), 1); err != nil {
 		return err
 	}
 

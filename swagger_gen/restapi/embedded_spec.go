@@ -381,6 +381,98 @@ func init() {
           }
         }
       }
+    },
+    "/flags/{flagID}/segments/{segmentID}/distributions": {
+      "get": {
+        "tags": [
+          "distribution"
+        ],
+        "operationId": "findDistributions",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32",
+            "description": "numeric ID of the flag",
+            "name": "flagID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32",
+            "description": "numeric ID of the segment",
+            "name": "segmentID",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "distribution under the segment",
+            "schema": {
+              "$ref": "#/definitions/findDistributionsOKBody"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
+      "put": {
+        "description": "replace the distribution with the new setting",
+        "tags": [
+          "distribution"
+        ],
+        "operationId": "putDistributions",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32",
+            "description": "numeric ID of the flag",
+            "name": "flagID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32",
+            "description": "numeric ID of the segment",
+            "name": "segmentID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "array of distributions",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/putDistributionsRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "distribution under the segment",
+            "schema": {
+              "$ref": "#/definitions/putDistributionsOKBody"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -399,7 +491,21 @@ func init() {
         },
         "operator": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "enum": [
+            "EQ",
+            "NEQ",
+            "LT",
+            "LTE",
+            "GT",
+            "GTE",
+            "EREG",
+            "NEREG",
+            "IN",
+            "NOTIN",
+            "CONTAINS",
+            "NOTCONTAINS"
+          ]
         },
         "property": {
           "type": "string",
@@ -462,7 +568,6 @@ func init() {
       "required": [
         "rank",
         "percent",
-        "bitmap",
         "variantID",
         "variantKey"
       ],
@@ -599,6 +704,13 @@ func init() {
       },
       "x-go-gen-location": "operations"
     },
+    "findDistributionsOKBody": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/distribution"
+      },
+      "x-go-gen-location": "operations"
+    },
     "findFlagsOKBody": {
       "type": "array",
       "items": {
@@ -650,6 +762,31 @@ func init() {
       },
       "x-go-gen-location": "models"
     },
+    "putDistributionsOKBody": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/distribution"
+      },
+      "x-go-gen-location": "operations"
+    },
+    "putDistributionsRequest": {
+      "type": "object",
+      "required": [
+        "distributions"
+      ],
+      "properties": {
+        "distributions": {
+          "$ref": "#/definitions/putDistributionsRequestDistributions"
+        }
+      }
+    },
+    "putDistributionsRequestDistributions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/distribution"
+      },
+      "x-go-gen-location": "models"
+    },
     "putFlagRequest": {
       "type": "object",
       "required": [
@@ -666,7 +803,8 @@ func init() {
       "type": "object",
       "required": [
         "description",
-        "rank"
+        "rank",
+        "rolloutPercent"
       ],
       "properties": {
         "constraints": {
@@ -687,6 +825,12 @@ func init() {
         "rank": {
           "type": "integer",
           "format": "int32"
+        },
+        "rolloutPercent": {
+          "type": "integer",
+          "format": "int32",
+          "maximum": 100,
+          "minimum": 0
         }
       }
     },

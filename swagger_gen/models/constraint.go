@@ -6,6 +6,8 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"encoding/json"
+
 	strfmt "github.com/go-openapi/strfmt"
 
 	"github.com/go-openapi/errors"
@@ -71,6 +73,53 @@ func (m *Constraint) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
+var constraintTypeOperatorPropEnum []interface{}
+
+func init() {
+	var res []string
+	if err := json.Unmarshal([]byte(`["EQ","NEQ","LT","LTE","GT","GTE","EREG","NEREG","IN","NOTIN","CONTAINS","NOTCONTAINS"]`), &res); err != nil {
+		panic(err)
+	}
+	for _, v := range res {
+		constraintTypeOperatorPropEnum = append(constraintTypeOperatorPropEnum, v)
+	}
+}
+
+const (
+	// ConstraintOperatorEQ captures enum value "EQ"
+	ConstraintOperatorEQ string = "EQ"
+	// ConstraintOperatorNEQ captures enum value "NEQ"
+	ConstraintOperatorNEQ string = "NEQ"
+	// ConstraintOperatorLT captures enum value "LT"
+	ConstraintOperatorLT string = "LT"
+	// ConstraintOperatorLTE captures enum value "LTE"
+	ConstraintOperatorLTE string = "LTE"
+	// ConstraintOperatorGT captures enum value "GT"
+	ConstraintOperatorGT string = "GT"
+	// ConstraintOperatorGTE captures enum value "GTE"
+	ConstraintOperatorGTE string = "GTE"
+	// ConstraintOperatorEREG captures enum value "EREG"
+	ConstraintOperatorEREG string = "EREG"
+	// ConstraintOperatorNEREG captures enum value "NEREG"
+	ConstraintOperatorNEREG string = "NEREG"
+	// ConstraintOperatorIN captures enum value "IN"
+	ConstraintOperatorIN string = "IN"
+	// ConstraintOperatorNOTIN captures enum value "NOTIN"
+	ConstraintOperatorNOTIN string = "NOTIN"
+	// ConstraintOperatorCONTAINS captures enum value "CONTAINS"
+	ConstraintOperatorCONTAINS string = "CONTAINS"
+	// ConstraintOperatorNOTCONTAINS captures enum value "NOTCONTAINS"
+	ConstraintOperatorNOTCONTAINS string = "NOTCONTAINS"
+)
+
+// prop value enum
+func (m *Constraint) validateOperatorEnum(path, location string, value string) error {
+	if err := validate.Enum(path, location, value, constraintTypeOperatorPropEnum); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (m *Constraint) validateOperator(formats strfmt.Registry) error {
 
 	if err := validate.Required("operator", "body", m.Operator); err != nil {
@@ -78,6 +127,11 @@ func (m *Constraint) validateOperator(formats strfmt.Registry) error {
 	}
 
 	if err := validate.MinLength("operator", "body", string(*m.Operator), 1); err != nil {
+		return err
+	}
+
+	// value enum
+	if err := m.validateOperatorEnum("operator", "body", *m.Operator); err != nil {
 		return err
 	}
 

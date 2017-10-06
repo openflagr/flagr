@@ -9,10 +9,11 @@ import "github.com/jinzhu/gorm"
 type Segment struct {
 	gorm.Model
 
-	FlagID      uint   `gorm:"index:idx_flagid"`
-	Description string `sql:"type:text"`
-	Rank        uint
+	FlagID         uint   `gorm:"index:idx_flagid"`
+	Description    string `sql:"type:text"`
+	Rank           uint
+	RolloutPercent uint
 
 	Constraints  []*Constraint
-	Distribution *Distribution
+	Distribution []*Distribution
 }
