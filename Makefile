@@ -7,6 +7,8 @@ GOPATH := $(shell go env GOPATH)
 
 all: deps gen run
 
+rebuild: gen run
+
 test: verifiers
 	@echo "Running all coverage for flagr"
 	@./buildscripts/go-coverage.sh
@@ -28,6 +30,7 @@ deps: checks
 	@echo "Installing misspell" && go get github.com/client9/misspell/cmd/misspell
 	@echo "Installing ineffassign" && go get github.com/gordonklaus/ineffassign
 	@echo "Installing go-swagger" && go get github.com/go-swagger/go-swagger/cmd/swagger
+	@echo "Installing cors" && go get github.com/rs/cors
 	@echo "Installing goqueryset" && go get github.com/jirfag/go-queryset/cmd/goqueryset
 	@echo "Installing gt" && go get rsc.io/gt
 	@echo "Installing gomock" && go get github.com/golang/mock/gomock && go get github.com/golang/mock/mockgen

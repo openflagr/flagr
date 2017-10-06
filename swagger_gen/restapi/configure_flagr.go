@@ -11,6 +11,7 @@ import (
 	runtime "github.com/go-openapi/runtime"
 	graceful "github.com/tylerb/graceful"
 	"github.com/urfave/negroni"
+	"github.com/rs/cors"
 
 	_ "github.com/checkr/flagr/pkg/config"
 	"github.com/checkr/flagr/pkg/handler"
@@ -68,6 +69,14 @@ func setupMiddlewares(handler http.Handler) http.Handler {
 // The middleware configuration happens before anything, this middleware also applies to serving the swagger.json document.
 // So this is a good place to plug in a panic handling middleware, logging and metrics
 func setupGlobalMiddleware(handler http.Handler) http.Handler {
+	c := cors.New(cors.Options{
+    AllowedOrigins: []string{"*"},
+    AllowedHeaders: []string{"Content-Type", "Accepts"},
+    AllowedMethods: []string{"GET", "POST", "PUT", "DELETE"},
+	})
+
+	handler = c.Handler(handler)
+
 	n := negroni.New()
 
 	// ui route
@@ -78,5 +87,6 @@ func setupGlobalMiddleware(handler http.Handler) http.Handler {
 	n.Use(negroni.NewLogger())
 
 	n.UseHandler(handler)
+
 	return n
 }
