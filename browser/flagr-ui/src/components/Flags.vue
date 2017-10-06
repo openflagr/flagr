@@ -1,23 +1,47 @@
 <template>
   <div>
+    <el-breadcrumb separator="/">
+      <el-breadcrumb-item>Home page</el-breadcrumb-item>      
+    </el-breadcrumb>
+
     <spinner v-if="!loaded" />
-    <div v-if="loaded">
-      <ul >
-        <li v-for="flag in flags">
-          <router-link :to="{name: 'flag', params: {flagId: flag.id}}">
-            [{{flag.id}}] {{ flag.description }}
+    <div v-if="loaded" class="flags-container">
+      <el-alert
+        v-if="createSuccess"
+        title="Feature flag created!"
+        type="success"
+        show-icon>
+      </el-alert>
+      <h2>
+        Feature Flags
+        <span v-if="flags.length">({{ flags.length }})</span>
+      </h2>
+      <ul v-if="flags.length">
+        <li v-for="flag in flags" class="flag" v-bind:class="{new: flag._new}">
+          <router-link
+            class="flag-link"
+            :to="{name: 'flag', params: {flagId: flag.id}}">
+            <el-tag>{{ flag.id }}</el-tag> {{ flag.description }}
           </router-link>
         </li>
       </ul>
-      <form v-on:submit.prevent="createFlag">
+      <div class="card--empty" v-else>
+        No feature flags created yet
+      </div>
+      <div>
         <p>
-          <textarea
-            placeholder="description"
+          <el-input
+            placeholder="Feature flag description"
             v-model="newFlag.description">  
-          </textarea>
+          </el-input>
         </p>
-        <input type="submit" value="Create Feature Flag" />
-      </form>
+        <el-button
+          class="create-feature-flag-button"
+          :disabled="!newFlag.description"
+          @click.prevent="createFlag">
+          Create Feature Flag
+        </el-button>
+      </div>
     </div>
   </div>
 </template>
@@ -26,6 +50,7 @@
 import constants from '@/constants'
 import fetchHelpers from '@/helpers/fetch'
 import Spinner from '@/components/Spinner'
+import { Tag, Button, Input, Alert, Breadcrumb, BreadcrumbItem } from 'element-ui'
 
 const {
   getJson,
@@ -39,11 +64,18 @@ const {
 export default {
   name: 'flags',
   components: {
-    spinner: Spinner
+    spinner: Spinner,
+    'el-tag': Tag,
+    'el-input': Input,
+    'el-button': Button,
+    'el-alert': Alert,
+    'el-breadcrumb': Breadcrumb,
+    'el-breadcrumb-item': BreadcrumbItem
   },
   data () {
     return {
       loaded: false,
+      createSuccess: false,
       flags: [],
       newFlag: {
         description: ''
@@ -54,14 +86,23 @@ export default {
     getJson(`${API_URL}/flags`)
       .then(flags => {
         this.loaded = true
+        flags.reverse()
         this.flags = flags
       })
   },
   methods: {
     createFlag () {
+      if (!this.newFlag.description) {
+        return
+      }
+
       postJson(`${API_URL}/flags`, this.newFlag)
         .then(flag => {
-          this.flags.push(flag)
+          this.newFlag.description = ''
+          this.createSuccess = true
+
+          flag._new = true
+          this.flags.unshift(flag)
         })
     }
   }
@@ -69,23 +110,46 @@ export default {
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-h1, h2 {
-  font-weight: normal;
+<style lang="scss" scoped>
+
+.flags-container {
+  ul {
+    border-radius: 3px;
+    border: 1px solid #ddd;
+    background-color: white;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    max-height: 800px;
+    list-style-type: none;
+    padding: 0;
+    li.flag {
+      text-align: left;
+      display: block;
+      padding: 0;
+      border-bottom: 1px solid #ccc;
+      &.new {
+        background-color: #13ce66;
+        .flag-link {
+          color: white;
+        }
+      }
+      .flag-link {
+        display: inline-block;
+        padding: 8px 12px;
+        font-size: 1.1em;
+        width: 100%;
+        text-decoration: none;
+        color: #2c3e50;
+        &:hover {
+          background-color: #74E5E0;
+          color: white;
+        }
+      }
+    }
+  }
+  .create-feature-flag-button {
+    width: 100%;
+  }
 }
 
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-
-li {
-  text-align: left;
-  display: block;
-  margin: 0 10px;
-}
-
-a {
-  color: #42b983;
-}
 </style>
