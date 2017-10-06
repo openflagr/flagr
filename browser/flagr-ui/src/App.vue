@@ -50,6 +50,10 @@ ul {
   }
 }
 
+.width--full {
+  width: 100%;
+}
+
 #app {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -72,10 +76,12 @@ ul {
         flex: 1;      
       }
     }
+    &.align-items-top {
+      align-items: flex-start;
+    }
   }
 
-  .router-view-container {
-    width: 500px;
+  .container {
     margin: 0 auto;
     margin-top: 20px;
   }

@@ -1,11 +1,11 @@
 <template>
-  <div>
+  <div class="flags-container container">
     <el-breadcrumb separator="/">
       <el-breadcrumb-item>Home page</el-breadcrumb-item>      
     </el-breadcrumb>
 
     <spinner v-if="!loaded" />
-    <div v-if="loaded" class="flags-container">
+    <div v-if="loaded">
       <el-alert
         v-if="createSuccess"
         title="Feature flag created!"
@@ -36,7 +36,7 @@
           </el-input>
         </p>
         <el-button
-          class="create-feature-flag-button"
+          class="width--full"
           :disabled="!newFlag.description"
           @click.prevent="createFlag">
           Create Feature Flag
@@ -113,6 +113,7 @@ export default {
 <style lang="scss" scoped>
 
 .flags-container {
+  width: 400px;
   ul {
     border-radius: 3px;
     border: 1px solid #ddd;
@@ -146,9 +147,6 @@ export default {
         }
       }
     }
-  }
-  .create-feature-flag-button {
-    width: 100%;
   }
 }
 
