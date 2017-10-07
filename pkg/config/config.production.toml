@@ -3,4 +3,4 @@ DBDriver = "mysql"
 DBConnectionStr = "root:@tcp(127.0.0.1:18100)/flagr?parseTime=true"
 
 [CORS]
-Enabled = true
+Enabled = false

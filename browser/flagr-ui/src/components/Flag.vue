@@ -156,7 +156,7 @@
         <div class="variants-container">
           <h2>Variants ({{ flag.variants.length }})</h2>
           <div class="variants-container-inner" v-if="flag.variants.length">
-            <el-tag type="danger" v-for="variant in flag.variants">
+            <el-tag type="danger" v-for="variant in flag.variants" :key="variant.id">
               {{ variant.key }}
             </el-tag>
           </div>

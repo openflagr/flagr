@@ -12,6 +12,9 @@ var Config = struct {
 		DBDriver        string `required:"true"`
 		DBConnectionStr string `env:"DBConnectionStr"`
 	}
+	CORS struct {
+		Enabled bool
+	}
 }{}
 
 func init() {

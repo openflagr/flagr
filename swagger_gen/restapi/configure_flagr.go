@@ -9,11 +9,11 @@ import (
 
 	errors "github.com/go-openapi/errors"
 	runtime "github.com/go-openapi/runtime"
+	"github.com/rs/cors"
 	graceful "github.com/tylerb/graceful"
 	"github.com/urfave/negroni"
-	"github.com/rs/cors"
 
-	_ "github.com/checkr/flagr/pkg/config"
+	"github.com/checkr/flagr/pkg/config"
 	"github.com/checkr/flagr/pkg/handler"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations"
 )
@@ -23,7 +23,8 @@ import (
 //go:generate swagger generate server --target ../swagger_gen --name  --spec ../swagger.yml
 
 var (
-	pwd, _ = os.Getwd()
+	pwd, _     = os.Getwd()
+	enableCORS = config.Config.CORS.Enabled
 )
 
 func configureFlags(api *operations.FlagrAPI) {
@@ -69,13 +70,14 @@ func setupMiddlewares(handler http.Handler) http.Handler {
 // The middleware configuration happens before anything, this middleware also applies to serving the swagger.json document.
 // So this is a good place to plug in a panic handling middleware, logging and metrics
 func setupGlobalMiddleware(handler http.Handler) http.Handler {
-	c := cors.New(cors.Options{
-    AllowedOrigins: []string{"*"},
-    AllowedHeaders: []string{"Content-Type", "Accepts"},
-    AllowedMethods: []string{"GET", "POST", "PUT", "DELETE"},
-	})
-
-	handler = c.Handler(handler)
+	if enableCORS {
+		c := cors.New(cors.Options{
+			AllowedOrigins: []string{"*"},
+			AllowedHeaders: []string{"Content-Type", "Accepts"},
+			AllowedMethods: []string{"GET", "POST", "PUT", "DELETE"},
+		})
+		handler = c.Handler(handler)
+	}
 
 	n := negroni.New()
 
