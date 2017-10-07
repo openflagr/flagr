@@ -14,7 +14,8 @@
     <el-dialog title="Edit distribution" :visible.sync="dialogEditDistributionOpen">
       <ul class="edit-distribution-choose-variants" v-if="loaded && flag">
         <li
-          v-for="variant in flag.variants">
+          v-for="variant in flag.variants"
+          :key="variant.id">
           <div>
             <el-checkbox
               @change="(e) => selectVariant(e, variant)"
@@ -64,6 +65,7 @@
         <ul class="segments-container-inner" v-if="flag.segments.length">
           <li
             v-for="segment in flag.segments"
+            :key="segment.id"
             class="segment">
             <div
               class="flex-row highlightable"
@@ -86,7 +88,7 @@
                 <h4>Constraints ({{segment.constraints.length}})</h4>
                 <div class="constraints">
                   <ol class="constraints-inner" v-if="segment.constraints.length">
-                    <li v-for="constraint in segment.constraints">
+                    <li v-for="constraint in segment.constraints" :key="constraint.id">
                       <el-tag type="gray">{{ constraint.property }}</el-tag>
                       <el-tag type="primary">{{ operatorValueToLabelMap[constraint.operator] }}</el-tag>
                       <el-tag type="gray">{{ constraint.value }}</el-tag>
@@ -132,7 +134,7 @@
               <div class="segment-distributions">
                 <h4>Distribution</h4>
                 <ul class="segment-distributions-inner" v-if="segment.distributions.length">
-                  <li v-for="distribution in segment.distributions">
+                  <li v-for="distribution in segment.distributions" :key="distribution.id">
                     <el-tag type="danger">{{ distribution.variantKey }}</el-tag>
                     <span>{{ distribution.percent }} %</span>
                   </li>
