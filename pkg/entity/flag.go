@@ -3,6 +3,9 @@
 package entity
 
 import (
+	"bytes"
+	"encoding/gob"
+
 	"github.com/jinzhu/gorm"
 )
 
@@ -29,6 +32,9 @@ func (f *Flag) Preload(db *gorm.DB) error {
 		if err := s.Preload(db); err != nil {
 			return err
 		}
+		if err := s.PrepareEvaluation(); err != nil {
+			return err
+		}
 		ss[i] = s
 	}
 	f.Segments = ss
@@ -41,5 +47,28 @@ func (f *Flag) Preload(db *gorm.DB) error {
 	}
 	f.Variants = vs
 
+	return nil
+}
+
+// Encode serialize the flag
+func (f *Flag) Encode() ([]byte, error) {
+	var b bytes.Buffer
+	enc := gob.NewEncoder(&b)
+	err := enc.Encode(f)
+	if err != nil {
+		return nil, err
+	}
+	return b.Bytes(), nil
+}
+
+// Decode de-serialize the flag
+func (f *Flag) Decode(b []byte) error {
+	var bb bytes.Buffer
+	bb.Write(b)
+	dec := gob.NewDecoder(&bb)
+	err := dec.Decode(f)
+	if err != nil {
+		return err
+	}
 	return nil
 }

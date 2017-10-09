@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"encoding/gob"
+
 	"github.com/checkr/flagr/swagger_gen/restapi/operations"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/constraint"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/distribution"
@@ -8,10 +10,14 @@ import (
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/flag"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/segment"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/variant"
+	"github.com/zhouzhuojie/conditions"
 )
 
 // Setup initialize all the hanlder functions
 func Setup(api *operations.FlagrAPI) {
+	gob.Register(conditions.BinaryExpr{})
+	gob.Register(conditions.VarRef{})
+
 	c := NewCRUD()
 	// flags
 	api.FlagFindFlagsHandler = flag.FindFlagsHandlerFunc(c.FindFlags)

@@ -694,12 +694,9 @@ func init() {
         "message"
       ],
       "properties": {
-        "code": {
-          "type": "integer",
-          "format": "int64"
-        },
         "message": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1
         }
       }
     },

@@ -52,12 +52,14 @@ func (c *crud) FindFlags(params flag.FindFlagsParams) middleware.Responder {
 	q := entity.NewFlagQuerySet(repo.GetDB())
 	err := q.All(&fs)
 	if err != nil {
-		return flag.NewFindFlagsDefault(500)
+		return flag.NewFindFlagsDefault(500).WithPayload(
+			ErrorMessage("cannot query all flags. %s", err))
 	}
 	resp := flag.NewFindFlagsOK()
 	payload, err := e2r.MapFlags(fs)
 	if err != nil {
-		return flag.NewFindFlagsDefault(500)
+		return flag.NewFindFlagsDefault(500).WithPayload(
+			ErrorMessage("cannot map flags. %s", err))
 	}
 	resp.SetPayload(payload)
 	return resp
@@ -70,13 +72,15 @@ func (c *crud) CreateFlag(params flag.CreateFlagParams) middleware.Responder {
 	}
 	err := f.Create(repo.GetDB())
 	if err != nil {
-		return flag.NewCreateFlagDefault(500)
+		return flag.NewCreateFlagDefault(500).WithPayload(
+			ErrorMessage("cannot create flag. %s", err))
 	}
 
 	resp := flag.NewCreateFlagOK()
 	payload, err := e2r.MapFlag(f, true)
 	if err != nil {
-		return flag.NewCreateFlagDefault(500)
+		return flag.NewCreateFlagDefault(500).WithPayload(
+			ErrorMessage("cannot map flag. %s", err))
 	}
 	resp.SetPayload(payload)
 	return resp
@@ -87,14 +91,18 @@ func (c *crud) GetFlag(params flag.GetFlagParams) middleware.Responder {
 	q := entity.NewFlagQuerySet(repo.GetDB())
 	err := q.IDEq(uint(params.FlagID)).One(f)
 	if err != nil {
-		return flag.NewGetFlagDefault(500)
+		return flag.NewGetFlagDefault(500).WithPayload(
+			ErrorMessage("cannot find flag %v. %s", params.FlagID, err))
 	}
+
 	resp := flag.NewGetFlagOK()
 	payload, err := e2r.MapFlag(f, true)
 	if err != nil {
-		return flag.NewGetFlagDefault(500)
+		return flag.NewGetFlagDefault(500).WithPayload(
+			ErrorMessage("cannot map flag %v. %s", params.FlagID, err))
 	}
 	resp.SetPayload(payload)
+
 	return resp
 }
 
