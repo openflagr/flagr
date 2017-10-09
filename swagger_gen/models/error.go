@@ -18,15 +18,11 @@ import (
 
 type Error struct {
 
-	// code
-	Code int64 `json:"code,omitempty"`
-
 	// message
 	// Required: true
+	// Min Length: 1
 	Message *string `json:"message"`
 }
-
-/* polymorph error code false */
 
 /* polymorph error message false */
 
@@ -48,6 +44,10 @@ func (m *Error) Validate(formats strfmt.Registry) error {
 func (m *Error) validateMessage(formats strfmt.Registry) error {
 
 	if err := validate.Required("message", "body", m.Message); err != nil {
+		return err
+	}
+
+	if err := validate.MinLength("message", "body", string(*m.Message), 1); err != nil {
 		return err
 	}
 

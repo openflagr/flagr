@@ -18,6 +18,8 @@ type Segment struct {
 
 	Constraints   []Constraint
 	Distributions []Distribution
+
+	SegmentEvaluation SegmentEvaluation `gorm:"-"`
 }
 
 // Preload preloads the segment
