@@ -217,8 +217,8 @@ func (c *crud) PutDistributions(params distribution.PutDistributionsParams) midd
 
 	ds := r2e.MapDistributions(params.Body.Distributions, segmentID)
 	for _, d := range ds {
-		err := tx.Create(&d).Error
-		if err != nil {
+		err1 := tx.Create(&d).Error
+		if err1 != nil {
 			tx.Rollback()
 			return distribution.NewPutDistributionsDefault(500)
 		}

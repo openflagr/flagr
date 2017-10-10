@@ -15,7 +15,7 @@ import (
 	"github.com/zhouzhuojie/conditions"
 )
 
-// Setup initialize all the hanlder functions
+// Setup initialize all the handler functions
 func Setup(api *operations.FlagrAPI) {
 	setupRaven()
 	setupGob()
