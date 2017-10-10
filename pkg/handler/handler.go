@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/gob"
 
+	"github.com/checkr/flagr/pkg/config"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/constraint"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/distribution"
@@ -10,14 +11,30 @@ import (
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/flag"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/segment"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/variant"
+	raven "github.com/getsentry/raven-go"
 	"github.com/zhouzhuojie/conditions"
 )
 
 // Setup initialize all the hanlder functions
 func Setup(api *operations.FlagrAPI) {
+	setupRaven()
+	setupGob()
+	setupCRUD(api)
+	setupEvaluation(api)
+}
+
+func setupGob() {
 	gob.Register(conditions.BinaryExpr{})
 	gob.Register(conditions.VarRef{})
+}
 
+func setupRaven() {
+	if config.Config.Sentry.Enabled {
+		raven.SetDSN(config.Config.Sentry.DSN)
+	}
+}
+
+func setupCRUD(api *operations.FlagrAPI) {
 	c := NewCRUD()
 	// flags
 	api.FlagFindFlagsHandler = flag.FindFlagsHandlerFunc(c.FindFlags)
@@ -41,8 +58,12 @@ func Setup(api *operations.FlagrAPI) {
 	// variants
 	api.VariantCreateVariantHandler = variant.CreateVariantHandlerFunc(c.CreateVariant)
 	api.VariantFindVariantsHandler = variant.FindVariantsHandlerFunc(c.FindVariants)
+}
 
-	// evaluation
+func setupEvaluation(api *operations.FlagrAPI) {
+	ec := GetEvalCache()
+	ec.Start()
+
 	e := NewEval()
 	api.EvaluationPostEvaluationHandler = evaluation.PostEvaluationHandlerFunc(e.PostEvaluation)
 }

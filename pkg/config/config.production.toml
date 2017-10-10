@@ -4,3 +4,11 @@ DBConnectionStr = "root:@tcp(127.0.0.1:18100)/flagr?parseTime=true"
 
 [CORS]
 Enabled = false
+
+[Sentry]
+Enabled = true
+DSN = ""
+
+[EvalCache]
+RefreshTimeout = "59s"
+RefreshInterval = "60s"

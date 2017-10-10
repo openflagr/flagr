@@ -32,9 +32,6 @@ func (f *Flag) Preload(db *gorm.DB) error {
 		if err := s.Preload(db); err != nil {
 			return err
 		}
-		if err := s.PrepareEvaluation(); err != nil {
-			return err
-		}
 		ss[i] = s
 	}
 	f.Segments = ss
@@ -47,6 +44,16 @@ func (f *Flag) Preload(db *gorm.DB) error {
 	}
 	f.Variants = vs
 
+	return nil
+}
+
+// PrepareEvaluation prepares the information for evaluation
+func (f *Flag) PrepareEvaluation() error {
+	for i := range f.Segments {
+		if err := f.Segments[i].PrepareEvaluation(); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
