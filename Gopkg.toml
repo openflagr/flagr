@@ -88,3 +88,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/zhouzhuojie/conditions"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/getsentry/raven-go"

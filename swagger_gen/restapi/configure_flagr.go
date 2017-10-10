@@ -80,15 +80,10 @@ func setupGlobalMiddleware(handler http.Handler) http.Handler {
 	}
 
 	n := negroni.New()
-
-	// ui route
 	ui := negroni.NewStatic(http.Dir(pwd + "/browser/flagr-ui/dist/"))
 	n.Use(ui)
-
-	// logger
 	n.Use(negroni.NewLogger())
 
 	n.UseHandler(handler)
-
 	return n
 }
