@@ -1,11 +1,17 @@
 <template>
   <div class="flags-container container">
-    <el-breadcrumb separator="/">
+    <el-breadcrumb separator="/" v-if="loaded && !loadError">
       <el-breadcrumb-item>Home page</el-breadcrumb-item>      
     </el-breadcrumb>
 
     <spinner v-if="!loaded" />
-    <div v-if="loaded">
+
+    <div v-if="loadError" class="card--error">
+      <span class="el-icon-circle-close"></span>
+      Failed to load feature flags
+    </div>
+
+    <div v-if="loaded && !loadError">
       <el-alert
         v-if="createSuccess"
         title="Feature flag created!"
@@ -75,6 +81,7 @@ export default {
   data () {
     return {
       loaded: false,
+      loadError: false,
       createSuccess: false,
       flags: [],
       newFlag: {
@@ -88,6 +95,9 @@ export default {
         this.loaded = true
         flags.reverse()
         this.flags = flags
+      })
+      .catch(() => {
+        this.loadError = true
       })
   },
   methods: {
@@ -109,7 +119,6 @@ export default {
 }
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style lang="scss" scoped>
 
 .flags-container {

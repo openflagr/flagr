@@ -90,15 +90,27 @@ ul {
     height: 60px;
   }
 
-  .card--empty {
-    box-sizing: border-box;
-    background-color: #eee;
-    padding: 10px;
-    text-align: center;
-    color: #777;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-    width: 100%;
+  .card {
+    &--error {
+      box-sizing: border-box;
+      background-color: white;
+      padding: 10px;
+      text-align: center;
+      color: #ed2d2d;
+      border: 1px solid #ed2d2d;
+      border-radius: 3px;
+      width: 100%;
+    }
+    &--empty {
+      box-sizing: border-box;
+      background-color: #eee;
+      padding: 10px;
+      text-align: center;
+      color: #777;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      width: 100%;
+    }
   }
 }
 </style>
