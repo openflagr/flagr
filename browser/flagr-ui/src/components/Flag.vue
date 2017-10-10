@@ -15,11 +15,11 @@
       <ul class="edit-distribution-choose-variants" v-if="loaded && flag">
         <li
           v-for="variant in flag.variants"
-          :key="variant.id">
+          :key="'distribution-variant-' + variant.id">
           <div>
             <el-checkbox
               @change="(e) => selectVariant(e, variant)"
-              :checked="selectedVariants[variant.id]"
+              :checked="!!newDistributions[variant.id]"
             >  
             </el-checkbox>
             <el-tag type="danger">
@@ -27,17 +27,34 @@
             </el-tag>
           </div>
           <el-slider
-            :disabled="!selectedVariants[variant.id]"
-            v-model="distributionPercentages[variant.id]"
+            v-if="!newDistributions[variant.id]"
+            :value="0"
+            :disabled="true"
             show-input>
           </el-slider>
+          <div v-if="!!newDistributions[variant.id]">
+            <el-slider
+              v-model="newDistributions[variant.id].percent"
+              :disabled="false"
+              show-input>
+            </el-slider>
+          </div>
         </li>
       </ul>
       <el-button
         class="width--full"
+        :disabled="!newDistributionIsValid"
         @click.prevent="() => saveDistribution(selectedSegment)">
         Save
       </el-button>
+
+      <el-alert
+        class="edit-distribution-alert"
+        v-if="!newDistributionIsValid"
+        :title="'Percentages must add up to 100% (currently at ' + newDistributionPercentageSum + '%)'"
+        type="error"
+        show-icon>
+      </el-alert>
     </el-dialog>
 
     <el-breadcrumb separator="/">
@@ -143,7 +160,7 @@
                   No distribution yet
                 </div>
                 <div>
-                  <el-button class="width--full" @click="selectedSegment = segment; dialogEditDistributionOpen = true">
+                  <el-button class="width--full" @click="editDistribution(segment)">
                     <span class="el-icon-edit"></span>
                     Edit distribution
                   </el-button>
@@ -211,6 +228,7 @@
 
 <script>
 import constants from '@/constants'
+import helpers from '@/helpers/helpers'
 import fetchHelpers from '@/helpers/fetch'
 import Spinner from '@/components/Spinner'
 import clone from 'lodash.clone'
@@ -221,6 +239,11 @@ const OPERATOR_VALUE_TO_LABEL_MAP = operators.reduce((acc, el) => {
   acc[el.value] = el.label
   return acc
 }, {})
+
+const {
+  sum,
+  pluck
+} = helpers
 
 const {
   getJson,
@@ -280,18 +303,18 @@ export default {
       newSegment: clone(DEFAULT_SEGMENT),
       newVariant: clone(DEFAULT_VARIANT),
       selectedSegment: null,
-      newDistributions: [],
-      distributionPercentages: {},
+      newDistributions: {},
       operatorOptions: operators,
       operatorValueToLabelMap: OPERATOR_VALUE_TO_LABEL_MAP
     }
   },
   computed: {
-    selectedVariants () {
-      return this.newDistributions.reduce((acc, el) => {
-        acc[el.variantID] = true
-        return acc
-      }, {})
+    newDistributionPercentageSum () {
+      return sum(pluck(Object.values(this.newDistributions), 'percent'))
+    },
+    newDistributionIsValid () {
+      const percentageSum = sum(pluck(Object.values(this.newDistributions), 'percent'))
+      return percentageSum === 100
     }
   },
   methods: {
@@ -299,7 +322,7 @@ export default {
       segment._expanded = !segment._expanded
     },
     deleteFlag () {
-      const flagId = this.$route.params.flagId
+      const {flagId} = this.$route.params
       fetch(`${API_URL}/flags/${flagId}`, {method: 'delete'})
         .then(() => {
           this.$router.replace({name: 'home'})
@@ -314,22 +337,26 @@ export default {
           variantKey: variant.key,
           variantID: variant.id
         })
-
-        this.newDistributions.push(distribution)
+        this.$set(this.newDistributions, variant.id, distribution)
       } else {
-        this.newDistributions = this.newDistributions.filter(distribution => distribution.variantID !== variant.id)
+        this.$delete(this.newDistributions, variant.id)
       }
+    },
+    editDistribution (segment) {
+      this.selectedSegment = segment
+
+      this.$set(this, 'newDistributions', {})
+
+      segment.distributions.forEach(distribution => {
+        this.$set(this.newDistributions, distribution.variantID, clone(distribution))
+      })
+
+      this.dialogEditDistributionOpen = true
     },
     saveDistribution (segment) {
       const flagId = this.$route.params.flagId
 
-      const distributions = this.newDistributions.map(distribution => {
-        const percent = this.distributionPercentages[distribution.variantID]
-        if (percent) {
-          distribution.percent = percent
-        }
-        return distribution
-      })
+      const distributions = Object.values(this.newDistributions).filter(distribution => distribution.percent !== 0)
 
       putJson(`${API_URL}/flags/${flagId}/segments/${segment.id}/distributions`, {distributions})
         .then(distributions => {
@@ -450,8 +477,9 @@ ol.constraints-inner {
 
 .edit-distribution-choose-variants {
   padding: 10px 0;
-  li {
+}
 
-  }
+.edit-distribution-alert {
+  margin-top: 10px;
 }
 </style>
