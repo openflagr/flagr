@@ -24,7 +24,7 @@ export default {
 }
 </script>
 
-<style lang="scss">
+<style lang="less">
 body {
   background-color: #f7f7f7;
   margin: 0;

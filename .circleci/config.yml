@@ -9,5 +9,6 @@ jobs:
     working_directory: /go/src/github.com/checkr/flagr
     steps:
       - checkout
+      - run: make deps
       - run: make test
       - run: cd browser/flagr-ui && yarn install && yarn run test

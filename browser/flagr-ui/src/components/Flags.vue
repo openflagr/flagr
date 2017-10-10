@@ -119,7 +119,7 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 
 .flags-container {
   width: 400px;
