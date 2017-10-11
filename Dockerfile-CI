@@ -1,0 +1,5 @@
+FROM golang:1.9-alpine
+
+RUN apk --update add go curl git nodejs nodejs-npm bash build-base perl fontconfig openssh tar gzip ca-certificates
+
+RUN npm install -g yarn@latest

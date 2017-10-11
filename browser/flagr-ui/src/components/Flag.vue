@@ -406,7 +406,7 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 h4 {
   padding: 0;
   margin: 10px 0;

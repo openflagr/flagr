@@ -31,7 +31,6 @@ deps: checks
 	@echo "Installing misspell" && go get github.com/client9/misspell/cmd/misspell
 	@echo "Installing ineffassign" && go get github.com/gordonklaus/ineffassign
 	@echo "Installing go-swagger" && go get github.com/go-swagger/go-swagger/cmd/swagger
-	@echo "Installing cors" && go get github.com/rs/cors
 	@echo "Installing goqueryset" && go get github.com/jirfag/go-queryset/cmd/goqueryset
 	@echo "Installing gt" && go get rsc.io/gt
 	@echo "Installing gomock" && go get github.com/golang/mock/gomock && go get github.com/golang/mock/mockgen
@@ -54,17 +53,14 @@ verifiers: vet fmt lint cyclo spelling verify_swagger
 
 vet:
 	@echo "Running $@"
-	@go tool vet -atomic -bool -copylocks -nilfunc -printf -shadow -rangeloops -unreachable -unsafeptr -unusedresult cmd
 	@go tool vet -atomic -bool -copylocks -nilfunc -printf -shadow -rangeloops -unreachable -unsafeptr -unusedresult pkg
 
 fmt:
 	@echo "Running $@"
-	@gofmt -d cmd
 	@gofmt -d pkg
 
 lint:
 	@echo "Running $@"
-	@${GOPATH}/bin/golint -set_exit_status github.com/checkr/flagr/cmd...
 	@${GOPATH}/bin/golint -set_exit_status github.com/checkr/flagr/pkg...
 
 ineffassign:
@@ -73,7 +69,6 @@ ineffassign:
 
 cyclo:
 	@echo "Running $@"
-	@${GOPATH}/bin/gocyclo -over 100 cmd
 	@${GOPATH}/bin/gocyclo -over 100 pkg
 
 deadcode:
@@ -82,7 +77,6 @@ deadcode:
 
 spelling:
 	@echo "Running $@"
-	@${GOPATH}/bin/misspell -error `find cmd/`
 	@${GOPATH}/bin/misspell -error `find pkg/`
 	@${GOPATH}/bin/misspell -error `find docs/`
 
