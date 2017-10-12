@@ -12,6 +12,7 @@ func MapFlag(e *entity.Flag, preload bool) (*models.Flag, error) {
 	r := &models.Flag{}
 	r.ID = int64(e.ID)
 	r.Description = util.StringPtr(e.Description)
+	r.Enabled = util.BoolPtr(e.Enabled)
 
 	if preload {
 		if err := e.Preload(repo.GetDB()); err != nil {

@@ -116,6 +116,34 @@ paths:
           description: generic error response
           schema:
             $ref: "#/definitions/error"
+  /flags/{flagID}/enabled:
+    put:
+      tags:
+        - flag
+      operationId: setFlagEnabled
+      parameters:
+        - in: path
+          name: flagID
+          description: numeric ID of the flag to get
+          required: true
+          type: integer
+          format: int64
+          minimum: 1
+        - in: body
+          name: body
+          description: set flag enabled state
+          required: true
+          schema:
+            $ref: "#/definitions/setFlagEnabledRequest"
+      responses:
+        200:
+          description: returns the flag
+          schema:
+            $ref: "#/definitions/flag"
+        default:
+          description: generic error response
+          schema:
+            $ref: "#/definitions/error"
   /flags/{flagID}/variants:
     get:
       tags:
@@ -389,6 +417,13 @@ definitions:
       description:
         type: string
         minLength: 1
+  setFlagEnabledRequest:
+    type: object
+    required:
+      - enabled
+    properties:
+      enabled:
+        type: boolean
   createSegmentRequest:
     type: object
     required:
@@ -442,6 +477,7 @@ definitions:
     type: object
     required:
       - description
+      - enabled
     properties:
       id:
         type: integer
@@ -451,6 +487,8 @@ definitions:
       description:
         type: string
         minLength: 1
+      enabled:
+        type: boolean
       segments:
         type: array
         items:

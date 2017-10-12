@@ -218,6 +218,48 @@ func init() {
         }
       }
     },
+    "/flags/{flagID}/enabled": {
+      "put": {
+        "tags": [
+          "flag"
+        ],
+        "operationId": "setFlagEnabled",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the flag to get",
+            "name": "flagID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "set flag enabled state",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/setFlagEnabledRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "returns the flag",
+            "schema": {
+              "$ref": "#/definitions/flag"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
     "/flags/{flagID}/segments": {
       "get": {
         "tags": [
@@ -831,12 +873,16 @@ func init() {
     "flag": {
       "type": "object",
       "required": [
-        "description"
+        "description",
+        "enabled"
       ],
       "properties": {
         "description": {
           "type": "string",
           "minLength": 1
+        },
+        "enabled": {
+          "type": "boolean"
         },
         "id": {
           "type": "integer",
@@ -966,6 +1012,17 @@ func init() {
         "$ref": "#/definitions/distribution"
       },
       "x-go-gen-location": "models"
+    },
+    "setFlagEnabledRequest": {
+      "type": "object",
+      "required": [
+        "enabled"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        }
+      }
     },
     "variant": {
       "type": "object",

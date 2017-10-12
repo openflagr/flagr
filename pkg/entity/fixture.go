@@ -10,6 +10,7 @@ func GenFixtureFlag() Flag {
 	f := Flag{
 		Model:       gorm.Model{ID: 100},
 		Description: "",
+		Enabled:     true,
 		Segments:    []Segment{GenFixtureSegment()},
 		Variants: []Variant{
 			Variant{

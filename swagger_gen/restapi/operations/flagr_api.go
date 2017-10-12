@@ -84,6 +84,9 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		FlagPutFlagHandler: flag.PutFlagHandlerFunc(func(params flag.PutFlagParams) middleware.Responder {
 			return middleware.NotImplemented("operation FlagPutFlag has not yet been implemented")
 		}),
+		FlagSetFlagEnabledHandler: flag.SetFlagEnabledHandlerFunc(func(params flag.SetFlagEnabledParams) middleware.Responder {
+			return middleware.NotImplemented("operation FlagSetFlagEnabled has not yet been implemented")
+		}),
 	}
 }
 
@@ -141,6 +144,8 @@ type FlagrAPI struct {
 	DistributionPutDistributionsHandler distribution.PutDistributionsHandler
 	// FlagPutFlagHandler sets the operation handler for the put flag operation
 	FlagPutFlagHandler flag.PutFlagHandler
+	// FlagSetFlagEnabledHandler sets the operation handler for the set flag enabled operation
+	FlagSetFlagEnabledHandler flag.SetFlagEnabledHandler
 
 	// ServeError is called when an error is received, there is a default handler
 	// but you can set your own with this
@@ -258,6 +263,10 @@ func (o *FlagrAPI) Validate() error {
 
 	if o.FlagPutFlagHandler == nil {
 		unregistered = append(unregistered, "flag.PutFlagHandler")
+	}
+
+	if o.FlagSetFlagEnabledHandler == nil {
+		unregistered = append(unregistered, "flag.SetFlagEnabledHandler")
 	}
 
 	if len(unregistered) > 0 {
@@ -419,6 +428,11 @@ func (o *FlagrAPI) initHandlerCache() {
 		o.handlers["PUT"] = make(map[string]http.Handler)
 	}
 	o.handlers["PUT"]["/flags/{flagID}"] = flag.NewPutFlag(o.context, o.FlagPutFlagHandler)
+
+	if o.handlers["PUT"] == nil {
+		o.handlers["PUT"] = make(map[string]http.Handler)
+	}
+	o.handlers["PUT"]["/flags/{flagID}/enabled"] = flag.NewSetFlagEnabled(o.context, o.FlagSetFlagEnabledHandler)
 
 }
 
