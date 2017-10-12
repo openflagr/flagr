@@ -57,6 +57,29 @@
       </el-alert>
     </el-dialog>
 
+    <el-dialog title="Create segment" :visible.sync="dialogCreateSegmentOpen">
+      <div>
+        <p>
+          <el-input
+            placeholder="Segment description"
+            v-model="newSegment.description">  
+          </el-input>
+        </p>
+        <p>
+          <el-slider
+            v-model="newSegment.rolloutPercent"
+            show-input>
+          </el-slider>
+        </p>
+        <el-button
+          class="width--full"
+          :disabled="!newSegment.description"
+          @click.prevent="createSegment">
+          Create Segment
+        </el-button>
+      </div>
+    </el-dialog>
+
     <el-breadcrumb separator="/">
       <el-breadcrumb-item :to="{name: 'home'}">Home page</el-breadcrumb-item>
       <el-breadcrumb-item>Flag {{ $route.params.flagId }}</el-breadcrumb-item>
@@ -78,7 +101,17 @@
         {{ flag.description }}
       </div>
       <div class="segments-container">
-        <h2>Segments ({{ flag.segments.length }})</h2>
+        <div class="flex-row">
+          <div class="flex-row-left">
+            <h2>Segments ({{ flag.segments.length }})</h2>
+          </div>
+          <div class="flex-row-right">
+            <el-button @click="dialogCreateSegmentOpen = true">
+              <span class="el-icon-edit"></span>
+              Create
+            </el-button>
+          </div>
+        </div>
         <ul class="segments-container-inner" v-if="flag.segments.length">
           <li
             v-for="segment in flag.segments"
@@ -199,27 +232,6 @@
             </el-button>
           </div>
         </div>
-        <hr/>
-        <div>
-          <p>
-            <el-input
-              placeholder="Segment description"
-              v-model="newSegment.description">  
-            </el-input>
-          </p>
-          <p>
-            <el-slider
-              v-model="newSegment.rolloutPercent"
-              show-input>
-            </el-slider>
-          </p>
-          <el-button
-            class="width--full"
-            :disabled="!newSegment.description"
-            @click.prevent="createSegment">
-            Create Segment
-          </el-button>
-        </div>
       </div>
     </div>
     <spinner v-if="!loaded"></spinner>
@@ -299,6 +311,7 @@ export default {
       loaded: false,
       dialogDeleteFlagVisible: false,
       dialogEditDistributionOpen: false,
+      dialogCreateSegmentOpen: false,
       flag: null,
       newSegment: clone(DEFAULT_SEGMENT),
       newVariant: clone(DEFAULT_VARIANT),
@@ -391,6 +404,7 @@ export default {
           this.newSegment = clone(DEFAULT_SEGMENT)
           this.flag.segments.push(segment)
           this.$message('You created a new segment')
+          this.dialogCreateSegmentOpen = false
         })
     }
   },
