@@ -25,6 +25,7 @@ type Flag struct {
 
 	// id
 	// Read Only: true
+	// Minimum: 1
 	ID int64 `json:"id,omitempty"`
 
 	// segments
@@ -51,6 +52,11 @@ func (m *Flag) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
+	if err := m.validateID(formats); err != nil {
+		// prop
+		res = append(res, err)
+	}
+
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
@@ -64,6 +70,19 @@ func (m *Flag) validateDescription(formats strfmt.Registry) error {
 	}
 
 	if err := validate.MinLength("description", "body", string(*m.Description), 1); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *Flag) validateID(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.ID) { // not required
+		return nil
+	}
+
+	if err := validate.MinimumInt("id", "body", int64(m.ID), 1, false); err != nil {
 		return err
 	}
 

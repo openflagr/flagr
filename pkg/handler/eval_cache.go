@@ -27,7 +27,7 @@ type EvalCache struct {
 }
 
 // GetEvalCache gets the EvalCache
-func GetEvalCache() *EvalCache {
+var GetEvalCache = func() *EvalCache {
 	singletonEvalCacheOnce.Do(func() {
 		ec := &EvalCache{
 			mapCache:        make(map[uint]*entity.Flag),
@@ -74,6 +74,14 @@ func (ec *EvalCache) GetByFlagIDs(flagIDs []uint) map[uint]*entity.Flag {
 	return m
 }
 
+// GetByFlagID gets the flag by flagID
+func (ec *EvalCache) GetByFlagID(flagID uint) *entity.Flag {
+	ec.mapCacheLock.RLock()
+	f := ec.mapCache[flagID]
+	ec.mapCacheLock.RUnlock()
+	return f
+}
+
 func (ec *EvalCache) reloadMapCache() error {
 	fs := []entity.Flag{}
 	q := entity.NewFlagQuerySet(repo.GetDB())
@@ -102,6 +110,7 @@ func (ec *EvalCache) reloadMapCache() error {
 	return nil
 }
 
+// TODO implement the redis cache before hitting DB
 type redisCache struct {
 }
 

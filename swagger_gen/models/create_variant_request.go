@@ -18,11 +18,16 @@ import (
 
 type CreateVariantRequest struct {
 
+	// attachment
+	Attachment interface{} `json:"attachment,omitempty"`
+
 	// key
 	// Required: true
 	// Min Length: 1
 	Key *string `json:"key"`
 }
+
+/* polymorph createVariantRequest attachment false */
 
 /* polymorph createVariantRequest key false */
 

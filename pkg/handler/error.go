@@ -1,0 +1,24 @@
+package handler
+
+import "fmt"
+
+// Error is the handler error
+type Error struct {
+	StatusCode int
+	Message    string
+	Values     []interface{}
+}
+
+func (e *Error) Error() string {
+	msg := fmt.Sprintf(e.Message, e.Values...)
+	return fmt.Sprintf("status_code: %d. %s", e.StatusCode, msg)
+}
+
+// NewError creates Error
+func NewError(statusCode int, msg string, values ...interface{}) *Error {
+	return &Error{
+		StatusCode: statusCode,
+		Message:    msg,
+		Values:     values,
+	}
+}

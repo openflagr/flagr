@@ -16,7 +16,7 @@ import (
 
 // GetFlagURL generates an URL for the get flag operation
 type GetFlagURL struct {
-	FlagID int32
+	FlagID int64
 
 	_basePath string
 	// avoid unkeyed usage
@@ -44,7 +44,7 @@ func (o *GetFlagURL) Build() (*url.URL, error) {
 
 	var _path = "/flags/{flagID}"
 
-	flagID := swag.FormatInt32(o.FlagID)
+	flagID := swag.FormatInt64(o.FlagID)
 	if flagID != "" {
 		_path = strings.Replace(_path, "{flagID}", flagID, -1)
 	} else {

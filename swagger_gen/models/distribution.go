@@ -24,16 +24,18 @@ type Distribution struct {
 
 	// id
 	// Read Only: true
+	// Minimum: 1
 	ID int64 `json:"id,omitempty"`
 
 	// percent
 	// Required: true
 	// Maximum: 100
 	// Minimum: 0
-	Percent *int32 `json:"percent"`
+	Percent *int64 `json:"percent"`
 
 	// variant ID
 	// Required: true
+	// Minimum: 1
 	VariantID *int64 `json:"variantID"`
 
 	// variant key
@@ -57,6 +59,11 @@ func (m *Distribution) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateBitmap(formats); err != nil {
+		// prop
+		res = append(res, err)
+	}
+
+	if err := m.validateID(formats); err != nil {
 		// prop
 		res = append(res, err)
 	}
@@ -95,6 +102,19 @@ func (m *Distribution) validateBitmap(formats strfmt.Registry) error {
 	return nil
 }
 
+func (m *Distribution) validateID(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.ID) { // not required
+		return nil
+	}
+
+	if err := validate.MinimumInt("id", "body", int64(m.ID), 1, false); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (m *Distribution) validatePercent(formats strfmt.Registry) error {
 
 	if err := validate.Required("percent", "body", m.Percent); err != nil {
@@ -115,6 +135,10 @@ func (m *Distribution) validatePercent(formats strfmt.Registry) error {
 func (m *Distribution) validateVariantID(formats strfmt.Registry) error {
 
 	if err := validate.Required("variantID", "body", m.VariantID); err != nil {
+		return err
+	}
+
+	if err := validate.MinimumInt("variantID", "body", int64(*m.VariantID), 1, false); err != nil {
 		return err
 	}
 
