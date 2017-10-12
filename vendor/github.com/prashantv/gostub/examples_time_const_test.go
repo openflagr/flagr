@@ -1,0 +1,1 @@
+package gostub_test

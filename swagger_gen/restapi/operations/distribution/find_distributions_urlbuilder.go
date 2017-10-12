@@ -16,8 +16,8 @@ import (
 
 // FindDistributionsURL generates an URL for the find distributions operation
 type FindDistributionsURL struct {
-	FlagID    int32
-	SegmentID int32
+	FlagID    int64
+	SegmentID int64
 
 	_basePath string
 	// avoid unkeyed usage
@@ -45,13 +45,13 @@ func (o *FindDistributionsURL) Build() (*url.URL, error) {
 
 	var _path = "/flags/{flagID}/segments/{segmentID}/distributions"
 
-	flagID := swag.FormatInt32(o.FlagID)
+	flagID := swag.FormatInt64(o.FlagID)
 	if flagID != "" {
 		_path = strings.Replace(_path, "{flagID}", flagID, -1)
 	} else {
 		return nil, errors.New("FlagID is required on FindDistributionsURL")
 	}
-	segmentID := swag.FormatInt32(o.SegmentID)
+	segmentID := swag.FormatInt64(o.SegmentID)
 	if segmentID != "" {
 		_path = strings.Replace(_path, "{segmentID}", segmentID, -1)
 	} else {

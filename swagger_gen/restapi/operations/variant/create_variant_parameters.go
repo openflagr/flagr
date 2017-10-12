@@ -46,7 +46,7 @@ type CreateVariantParams struct {
 	  Minimum: 1
 	  In: path
 	*/
-	FlagID int32
+	FlagID int64
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -96,9 +96,9 @@ func (o *CreateVariantParams) bindFlagID(rawData []string, hasKey bool, formats 
 		raw = rawData[len(rawData)-1]
 	}
 
-	value, err := swag.ConvertInt32(raw)
+	value, err := swag.ConvertInt64(raw)
 	if err != nil {
-		return errors.InvalidType("flagID", "path", "int32", raw)
+		return errors.InvalidType("flagID", "path", "int64", raw)
 	}
 	o.FlagID = value
 

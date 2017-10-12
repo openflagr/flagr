@@ -18,8 +18,12 @@ import (
 
 type Variant struct {
 
+	// attachment
+	Attachment interface{} `json:"attachment,omitempty"`
+
 	// id
 	// Read Only: true
+	// Minimum: 1
 	ID int64 `json:"id,omitempty"`
 
 	// key
@@ -27,6 +31,8 @@ type Variant struct {
 	// Min Length: 1
 	Key *string `json:"key"`
 }
+
+/* polymorph variant attachment false */
 
 /* polymorph variant id false */
 
@@ -36,6 +42,11 @@ type Variant struct {
 func (m *Variant) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateID(formats); err != nil {
+		// prop
+		res = append(res, err)
+	}
+
 	if err := m.validateKey(formats); err != nil {
 		// prop
 		res = append(res, err)
@@ -44,6 +55,19 @@ func (m *Variant) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *Variant) validateID(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.ID) { // not required
+		return nil
+	}
+
+	if err := validate.MinimumInt("id", "body", int64(m.ID), 1, false); err != nil {
+		return err
+	}
+
 	return nil
 }
 

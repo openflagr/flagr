@@ -59,7 +59,7 @@ paths:
           description: numeric ID of the flag to get
           required: true
           type: integer
-          format: int32
+          format: int64
           minimum: 1
       responses:
         200:
@@ -80,7 +80,7 @@ paths:
           description: numeric ID of the flag to get
           required: true
           type: integer
-          format: int32
+          format: int64
           minimum: 1
         - in: body
           name: body
@@ -107,7 +107,7 @@ paths:
           description: numeric ID of the flag
           required: true
           type: integer
-          format: int32
+          format: int64
           minimum: 1
       responses:
         200:
@@ -127,7 +127,7 @@ paths:
           description: numeric ID of the flag
           required: true
           type: integer
-          format: int32
+          format: int64
           minimum: 1
       responses:
         200:
@@ -150,7 +150,7 @@ paths:
           description: numeric ID of the flag
           required: true
           type: integer
-          format: int32
+          format: int64
           minimum: 1
         - in: body
           name: body
@@ -178,7 +178,7 @@ paths:
           description: numeric ID of the flag to get
           required: true
           type: integer
-          format: int32
+          format: int64
           minimum: 1
       responses:
         200:
@@ -201,7 +201,7 @@ paths:
           description: numeric ID of the flag to get
           required: true
           type: integer
-          format: int32
+          format: int64
           minimum: 1
         - in: body
           name: body
@@ -229,14 +229,14 @@ paths:
           description: numeric ID of the flag
           required: true
           type: integer
-          format: int32
+          format: int64
           minimum: 1
         - in: path
           name: segmentID
           description: numeric ID of the segment
           required: true
           type: integer
-          format: int32
+          format: int64
           minimum: 1
       responses:
         200:
@@ -259,14 +259,14 @@ paths:
           description: numeric ID of the flag
           required: true
           type: integer
-          format: int32
+          format: int64
           minimum: 1
         - in: path
           name: segmentID
           description: numeric ID of the segment
           required: true
           type: integer
-          format: int32
+          format: int64
           minimum: 1
         - in: body
           name: body
@@ -294,14 +294,14 @@ paths:
           description: numeric ID of the flag
           required: true
           type: integer
-          format: int32
+          format: int64
           minimum: 1
         - in: path
           name: segmentID
           description: numeric ID of the segment
           required: true
           type: integer
-          format: int32
+          format: int64
           minimum: 1
       responses:
         200:
@@ -325,14 +325,14 @@ paths:
           description: numeric ID of the flag
           required: true
           type: integer
-          format: int32
+          format: int64
           minimum: 1
         - in: path
           name: segmentID
           description: numeric ID of the segment
           required: true
           type: integer
-          format: int32
+          format: int64
           minimum: 1
         - in: body
           name: body
@@ -400,7 +400,7 @@ definitions:
         minLength: 1
       rolloutPercent:
         type: integer
-        format: int32
+        format: int64
         minimum: 0
         maximum: 100
   createVariantRequest:
@@ -411,6 +411,8 @@ definitions:
       key:
         type: string
         minLength: 1
+      attachment:
+        type: object
   createConstraintRequest:
     type: object
     required:
@@ -444,6 +446,7 @@ definitions:
       id:
         type: integer
         format: int64
+        minimum: 1
         readOnly: true
       description:
         type: string
@@ -466,6 +469,7 @@ definitions:
       id:
         type: integer
         format: int64
+        minimum: 1
         readOnly: true
       description:
         type: string
@@ -480,10 +484,11 @@ definitions:
           $ref: "#/definitions/distribution"
       rank:
         type: integer
-        format: int32
+        format: int64
+        minimum: 0
       rolloutPercent:
         type: integer
-        format: int32
+        format: int64
         minimum: 0
         maximum: 100
   variant:
@@ -494,10 +499,13 @@ definitions:
       id:
         type: integer
         format: int64
+        minimum: 1
         readOnly: true
       key:
         type: string
         minLength: 1
+      attachment:
+        type: object
   constraint:
     type: object
     required:
@@ -508,6 +516,7 @@ definitions:
       id:
         type: integer
         format: int64
+        minimum: 1
         readOnly: true
       property:
         type: string
@@ -541,10 +550,11 @@ definitions:
       id:
         type: integer
         format: int64
+        minimum: 1
         readOnly: true
       percent:
         type: integer
-        format: int32
+        format: int64
         minimum: 0
         maximum: 100
       bitmap:
@@ -556,6 +566,7 @@ definitions:
       variantID:
         type: integer
         format: int64
+        minimum: 1
   evalContext:
     type: object
     required:
@@ -574,8 +585,9 @@ definitions:
       enableDebug:
         type: boolean
       flagID:
-        type: string
-        minLength: 1
+        type: integer
+        format: int64
+        minimum: 1
   evalResult:
     type: object
     required:
@@ -588,12 +600,15 @@ definitions:
       flagID:
         type: integer
         format: int64
+        minimum: 1
       segmentID:
         type: integer
         format: int64
+        minimum: 1
       variantID:
         type: integer
         format: int64
+        minimum: 1
       evalContext:
         $ref: "#/definitions/evalContext"
       timestamp:
@@ -601,6 +616,8 @@ definitions:
         minLength: 1
       evalDebugLog:
         $ref: "#/definitions/evalDebugLog"
+      variantAttachment:
+        type: object
   evalDebugLog:
     type: object
     properties:
@@ -616,6 +633,7 @@ definitions:
       segmentID:
         type: integer
         format: int64
+        minimum: 1
       msg:
         type: string
   error:

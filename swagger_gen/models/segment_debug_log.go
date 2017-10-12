@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // SegmentDebugLog segment debug log
@@ -21,6 +22,7 @@ type SegmentDebugLog struct {
 	Msg string `json:"msg,omitempty"`
 
 	// segment ID
+	// Minimum: 1
 	SegmentID int64 `json:"segmentID,omitempty"`
 }
 
@@ -32,9 +34,27 @@ type SegmentDebugLog struct {
 func (m *SegmentDebugLog) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateSegmentID(formats); err != nil {
+		// prop
+		res = append(res, err)
+	}
+
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *SegmentDebugLog) validateSegmentID(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.SegmentID) { // not required
+		return nil
+	}
+
+	if err := validate.MinimumInt("segmentID", "body", int64(m.SegmentID), 1, false); err != nil {
+		return err
+	}
+
 	return nil
 }
 

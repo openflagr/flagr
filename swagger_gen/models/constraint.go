@@ -22,6 +22,7 @@ type Constraint struct {
 
 	// id
 	// Read Only: true
+	// Minimum: 1
 	ID int64 `json:"id,omitempty"`
 
 	// operator
@@ -52,6 +53,11 @@ type Constraint struct {
 func (m *Constraint) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateID(formats); err != nil {
+		// prop
+		res = append(res, err)
+	}
+
 	if err := m.validateOperator(formats); err != nil {
 		// prop
 		res = append(res, err)
@@ -70,6 +76,19 @@ func (m *Constraint) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *Constraint) validateID(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.ID) { // not required
+		return nil
+	}
+
+	if err := validate.MinimumInt("id", "body", int64(m.ID), 1, false); err != nil {
+		return err
+	}
+
 	return nil
 }
 

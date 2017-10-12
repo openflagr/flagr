@@ -11,4 +11,4 @@ DSN = ""
 
 [EvalCache]
 RefreshTimeout = "59s"
-RefreshInterval = "60s"
+RefreshInterval = "5s"

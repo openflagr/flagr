@@ -127,7 +127,7 @@ func init() {
           {
             "minimum": 1,
             "type": "integer",
-            "format": "int32",
+            "format": "int64",
             "description": "numeric ID of the flag to get",
             "name": "flagID",
             "in": "path",
@@ -158,7 +158,7 @@ func init() {
           {
             "minimum": 1,
             "type": "integer",
-            "format": "int32",
+            "format": "int64",
             "description": "numeric ID of the flag to get",
             "name": "flagID",
             "in": "path",
@@ -198,7 +198,7 @@ func init() {
           {
             "minimum": 1,
             "type": "integer",
-            "format": "int32",
+            "format": "int64",
             "description": "numeric ID of the flag",
             "name": "flagID",
             "in": "path",
@@ -228,7 +228,7 @@ func init() {
           {
             "minimum": 1,
             "type": "integer",
-            "format": "int32",
+            "format": "int64",
             "description": "numeric ID of the flag to get",
             "name": "flagID",
             "in": "path",
@@ -259,7 +259,7 @@ func init() {
           {
             "minimum": 1,
             "type": "integer",
-            "format": "int32",
+            "format": "int64",
             "description": "numeric ID of the flag to get",
             "name": "flagID",
             "in": "path",
@@ -301,7 +301,7 @@ func init() {
           {
             "minimum": 1,
             "type": "integer",
-            "format": "int32",
+            "format": "int64",
             "description": "numeric ID of the flag",
             "name": "flagID",
             "in": "path",
@@ -310,7 +310,7 @@ func init() {
           {
             "minimum": 1,
             "type": "integer",
-            "format": "int32",
+            "format": "int64",
             "description": "numeric ID of the segment",
             "name": "segmentID",
             "in": "path",
@@ -341,7 +341,7 @@ func init() {
           {
             "minimum": 1,
             "type": "integer",
-            "format": "int32",
+            "format": "int64",
             "description": "numeric ID of the flag",
             "name": "flagID",
             "in": "path",
@@ -350,7 +350,7 @@ func init() {
           {
             "minimum": 1,
             "type": "integer",
-            "format": "int32",
+            "format": "int64",
             "description": "numeric ID of the segment",
             "name": "segmentID",
             "in": "path",
@@ -392,7 +392,7 @@ func init() {
           {
             "minimum": 1,
             "type": "integer",
-            "format": "int32",
+            "format": "int64",
             "description": "numeric ID of the flag",
             "name": "flagID",
             "in": "path",
@@ -401,7 +401,7 @@ func init() {
           {
             "minimum": 1,
             "type": "integer",
-            "format": "int32",
+            "format": "int64",
             "description": "numeric ID of the segment",
             "name": "segmentID",
             "in": "path",
@@ -433,7 +433,7 @@ func init() {
           {
             "minimum": 1,
             "type": "integer",
-            "format": "int32",
+            "format": "int64",
             "description": "numeric ID of the flag",
             "name": "flagID",
             "in": "path",
@@ -442,7 +442,7 @@ func init() {
           {
             "minimum": 1,
             "type": "integer",
-            "format": "int32",
+            "format": "int64",
             "description": "numeric ID of the segment",
             "name": "segmentID",
             "in": "path",
@@ -484,7 +484,7 @@ func init() {
           {
             "minimum": 1,
             "type": "integer",
-            "format": "int32",
+            "format": "int64",
             "description": "numeric ID of the flag",
             "name": "flagID",
             "in": "path",
@@ -515,7 +515,7 @@ func init() {
           {
             "minimum": 1,
             "type": "integer",
-            "format": "int32",
+            "format": "int64",
             "description": "numeric ID of the flag",
             "name": "flagID",
             "in": "path",
@@ -560,6 +560,7 @@ func init() {
         "id": {
           "type": "integer",
           "format": "int64",
+          "minimum": 1,
           "readOnly": true
         },
         "operator": {
@@ -637,7 +638,7 @@ func init() {
         },
         "rolloutPercent": {
           "type": "integer",
-          "format": "int32",
+          "format": "int64",
           "maximum": 100,
           "minimum": 0
         }
@@ -649,6 +650,9 @@ func init() {
         "key"
       ],
       "properties": {
+        "attachment": {
+          "type": "object"
+        },
         "key": {
           "type": "string",
           "minLength": 1
@@ -670,17 +674,19 @@ func init() {
         "id": {
           "type": "integer",
           "format": "int64",
+          "minimum": 1,
           "readOnly": true
         },
         "percent": {
           "type": "integer",
-          "format": "int32",
+          "format": "int64",
           "maximum": 100,
           "minimum": 0
         },
         "variantID": {
           "type": "integer",
-          "format": "int64"
+          "format": "int64",
+          "minimum": 1
         },
         "variantKey": {
           "type": "string",
@@ -723,8 +729,9 @@ func init() {
           "minLength": 1
         },
         "flagID": {
-          "type": "string",
-          "minLength": 1
+          "type": "integer",
+          "format": "int64",
+          "minimum": 1
         }
       }
     },
@@ -764,19 +771,25 @@ func init() {
         },
         "flagID": {
           "type": "integer",
-          "format": "int64"
+          "format": "int64",
+          "minimum": 1
         },
         "segmentID": {
           "type": "integer",
-          "format": "int64"
+          "format": "int64",
+          "minimum": 1
         },
         "timestamp": {
           "type": "string",
           "minLength": 1
         },
+        "variantAttachment": {
+          "type": "object"
+        },
         "variantID": {
           "type": "integer",
-          "format": "int64"
+          "format": "int64",
+          "minimum": 1
         }
       }
     },
@@ -828,6 +841,7 @@ func init() {
         "id": {
           "type": "integer",
           "format": "int64",
+          "minimum": 1,
           "readOnly": true
         },
         "segments": {
@@ -910,15 +924,17 @@ func init() {
         "id": {
           "type": "integer",
           "format": "int64",
+          "minimum": 1,
           "readOnly": true
         },
         "rank": {
           "type": "integer",
-          "format": "int32"
+          "format": "int64",
+          "minimum": 0
         },
         "rolloutPercent": {
           "type": "integer",
-          "format": "int32",
+          "format": "int64",
           "maximum": 100,
           "minimum": 0
         }
@@ -939,7 +955,8 @@ func init() {
         },
         "segmentID": {
           "type": "integer",
-          "format": "int64"
+          "format": "int64",
+          "minimum": 1
         }
       }
     },
@@ -956,9 +973,13 @@ func init() {
         "key"
       ],
       "properties": {
+        "attachment": {
+          "type": "object"
+        },
         "id": {
           "type": "integer",
           "format": "int64",
+          "minimum": 1,
           "readOnly": true
         },
         "key": {

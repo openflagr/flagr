@@ -1,10 +1,15 @@
 package util
 
+import "time"
+
 // SafeString safely dereference the string or string ptr
-func SafeString(s interface{}) string {
-	if s == nil {
-		return ""
-	}
+func SafeString(s interface{}) (r string) {
+	defer func() {
+		if r := recover(); r != nil {
+			r = ""
+		}
+	}()
+
 	switch s.(type) {
 	case string:
 		return s.(string)
@@ -12,6 +17,48 @@ func SafeString(s interface{}) string {
 		return *s.(*string)
 	}
 	return ""
+}
+
+// SafeUint returns the uint of the value
+func SafeUint(s interface{}) (r uint) {
+	defer func() {
+		if r := recover(); r != nil {
+			r = 0
+		}
+	}()
+
+	switch s.(type) {
+	case int64:
+		return uint(s.(int64))
+	case *int64:
+		return uint(*s.(*int64))
+	case int32:
+		return uint(s.(int32))
+	case *int32:
+		return uint(*s.(*int32))
+	case int:
+		return uint(s.(int))
+	case *int:
+		return uint(*s.(*int))
+	case uint64:
+		return uint(s.(uint64))
+	case *uint64:
+		return uint(*s.(*uint64))
+	case uint32:
+		return uint(s.(uint32))
+	case *uint32:
+		return uint(*s.(*uint32))
+	case uint:
+		return s.(uint)
+	case *uint:
+		return *s.(*uint)
+	}
+	return 0
+}
+
+// TimeNow follows RFC3339 time format
+func TimeNow() string {
+	return time.Now().UTC().Format(time.RFC3339)
 }
 
 // Float32Ptr ...
@@ -31,6 +78,9 @@ func Int64Ptr(v int64) *int64 { return &v }
 
 // StringPtr ...
 func StringPtr(v string) *string { return &v }
+
+// UintPtr ...
+func UintPtr(v uint) *uint { return &v }
 
 // Uint32Ptr ...
 func Uint32Ptr(v uint32) *uint32 { return &v }

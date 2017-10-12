@@ -41,8 +41,8 @@ func MapSegment(e *entity.Segment) *models.Segment {
 	r := &models.Segment{}
 	r.ID = int64(e.ID)
 	r.Description = util.StringPtr(e.Description)
-	r.Rank = util.Int32Ptr(int32(e.Rank))
-	r.RolloutPercent = util.Int32Ptr(int32(e.RolloutPercent))
+	r.Rank = util.Int64Ptr(int64(e.Rank))
+	r.RolloutPercent = util.Int64Ptr(int64(e.RolloutPercent))
 	r.Constraints = MapConstraints(e.Constraints)
 	r.Distributions = MapDistributions(e.Distributions)
 	return r
@@ -81,7 +81,7 @@ func MapDistribution(e *entity.Distribution) *models.Distribution {
 	r := &models.Distribution{
 		Bitmap:     e.Bitmap,
 		ID:         int64(e.ID),
-		Percent:    util.Int32Ptr(int32(e.Percent)),
+		Percent:    util.Int64Ptr(int64(e.Percent)),
 		VariantID:  util.Int64Ptr(int64(e.VariantID)),
 		VariantKey: util.StringPtr(e.VariantKey),
 	}
@@ -100,8 +100,9 @@ func MapDistributions(e []entity.Distribution) []*models.Distribution {
 // MapVariant maps variant
 func MapVariant(e *entity.Variant) *models.Variant {
 	r := &models.Variant{
-		ID:  int64(e.ID),
-		Key: util.StringPtr(e.Key),
+		ID:         int64(e.ID),
+		Key:        util.StringPtr(e.Key),
+		Attachment: e.Attachment,
 	}
 	return r
 }

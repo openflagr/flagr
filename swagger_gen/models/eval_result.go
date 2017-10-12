@@ -27,10 +27,12 @@ type EvalResult struct {
 
 	// flag ID
 	// Required: true
+	// Minimum: 1
 	FlagID *int64 `json:"flagID"`
 
 	// segment ID
 	// Required: true
+	// Minimum: 1
 	SegmentID *int64 `json:"segmentID"`
 
 	// timestamp
@@ -38,8 +40,12 @@ type EvalResult struct {
 	// Min Length: 1
 	Timestamp *string `json:"timestamp"`
 
+	// variant attachment
+	VariantAttachment interface{} `json:"variantAttachment,omitempty"`
+
 	// variant ID
 	// Required: true
+	// Minimum: 1
 	VariantID *int64 `json:"variantID"`
 }
 
@@ -52,6 +58,8 @@ type EvalResult struct {
 /* polymorph evalResult segmentID false */
 
 /* polymorph evalResult timestamp false */
+
+/* polymorph evalResult variantAttachment false */
 
 /* polymorph evalResult variantID false */
 
@@ -139,12 +147,20 @@ func (m *EvalResult) validateFlagID(formats strfmt.Registry) error {
 		return err
 	}
 
+	if err := validate.MinimumInt("flagID", "body", int64(*m.FlagID), 1, false); err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func (m *EvalResult) validateSegmentID(formats strfmt.Registry) error {
 
 	if err := validate.Required("segmentID", "body", m.SegmentID); err != nil {
+		return err
+	}
+
+	if err := validate.MinimumInt("segmentID", "body", int64(*m.SegmentID), 1, false); err != nil {
 		return err
 	}
 
@@ -167,6 +183,10 @@ func (m *EvalResult) validateTimestamp(formats strfmt.Registry) error {
 func (m *EvalResult) validateVariantID(formats strfmt.Registry) error {
 
 	if err := validate.Required("variantID", "body", m.VariantID); err != nil {
+		return err
+	}
+
+	if err := validate.MinimumInt("variantID", "body", int64(*m.VariantID), 1, false); err != nil {
 		return err
 	}
 

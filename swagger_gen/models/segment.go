@@ -31,17 +31,19 @@ type Segment struct {
 
 	// id
 	// Read Only: true
+	// Minimum: 1
 	ID int64 `json:"id,omitempty"`
 
 	// rank
 	// Required: true
-	Rank *int32 `json:"rank"`
+	// Minimum: 0
+	Rank *int64 `json:"rank"`
 
 	// rollout percent
 	// Required: true
 	// Maximum: 100
 	// Minimum: 0
-	RolloutPercent *int32 `json:"rolloutPercent"`
+	RolloutPercent *int64 `json:"rolloutPercent"`
 }
 
 /* polymorph segment constraints false */
@@ -61,6 +63,11 @@ func (m *Segment) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateDescription(formats); err != nil {
+		// prop
+		res = append(res, err)
+	}
+
+	if err := m.validateID(formats); err != nil {
 		// prop
 		res = append(res, err)
 	}
@@ -94,9 +101,26 @@ func (m *Segment) validateDescription(formats strfmt.Registry) error {
 	return nil
 }
 
+func (m *Segment) validateID(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.ID) { // not required
+		return nil
+	}
+
+	if err := validate.MinimumInt("id", "body", int64(m.ID), 1, false); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (m *Segment) validateRank(formats strfmt.Registry) error {
 
 	if err := validate.Required("rank", "body", m.Rank); err != nil {
+		return err
+	}
+
+	if err := validate.MinimumInt("rank", "body", int64(*m.Rank), 0, false); err != nil {
 		return err
 	}
 

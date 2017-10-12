@@ -27,7 +27,7 @@ type CreateSegmentRequest struct {
 	// Required: true
 	// Maximum: 100
 	// Minimum: 0
-	RolloutPercent *int32 `json:"rolloutPercent"`
+	RolloutPercent *int64 `json:"rolloutPercent"`
 }
 
 /* polymorph createSegmentRequest description false */

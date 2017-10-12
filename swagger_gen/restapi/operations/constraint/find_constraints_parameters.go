@@ -37,13 +37,13 @@ type FindConstraintsParams struct {
 	  Minimum: 1
 	  In: path
 	*/
-	FlagID int32
+	FlagID int64
 	/*numeric ID of the segment
 	  Required: true
 	  Minimum: 1
 	  In: path
 	*/
-	SegmentID int32
+	SegmentID int64
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -74,9 +74,9 @@ func (o *FindConstraintsParams) bindFlagID(rawData []string, hasKey bool, format
 		raw = rawData[len(rawData)-1]
 	}
 
-	value, err := swag.ConvertInt32(raw)
+	value, err := swag.ConvertInt64(raw)
 	if err != nil {
-		return errors.InvalidType("flagID", "path", "int32", raw)
+		return errors.InvalidType("flagID", "path", "int64", raw)
 	}
 	o.FlagID = value
 
@@ -102,9 +102,9 @@ func (o *FindConstraintsParams) bindSegmentID(rawData []string, hasKey bool, for
 		raw = rawData[len(rawData)-1]
 	}
 
-	value, err := swag.ConvertInt32(raw)
+	value, err := swag.ConvertInt64(raw)
 	if err != nil {
-		return errors.InvalidType("segmentID", "path", "int32", raw)
+		return errors.InvalidType("segmentID", "path", "int64", raw)
 	}
 	o.SegmentID = value
 

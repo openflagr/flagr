@@ -146,12 +146,6 @@
   revision = "b77235e3890a962fe8a6f8c4c7198679ca7814e7"
 
 [[projects]]
-  name = "github.com/magiconair/properties"
-  packages = ["assert"]
-  revision = "be5ece7dd465ab0765a9682137865547526d1dfb"
-  version = "v1.7.3"
-
-[[projects]]
   branch = "master"
   name = "github.com/mailru/easyjson"
   packages = ["buffer","jlexer","jwriter"]
@@ -168,6 +162,12 @@
   packages = ["difflib"]
   revision = "792786c7400a136282c1664665ae0a8db921c6c2"
   version = "v1.0.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/prashantv/gostub"
+  packages = ["."]
+  revision = "5c68b99bb08825598e70739c40603c901ee58dba"
 
 [[projects]]
   name = "github.com/rs/cors"
@@ -226,6 +226,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "5e48dbb23aeeaffa353b95eff39531b61adbf82d5aeea0783aabfca9fdda4457"
+  inputs-digest = "86fad21ca549fdec01719973a25060262c487e8802812c9c5f2fa90d4a31a52c"
   solver-name = "gps-cdcl"
   solver-version = 1

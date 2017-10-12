@@ -16,7 +16,7 @@ import (
 
 // DeleteFlagURL generates an URL for the delete flag operation
 type DeleteFlagURL struct {
-	FlagID int32
+	FlagID int64
 
 	_basePath string
 	// avoid unkeyed usage
@@ -44,7 +44,7 @@ func (o *DeleteFlagURL) Build() (*url.URL, error) {
 
 	var _path = "/flags/{flagID}"
 
-	flagID := swag.FormatInt32(o.FlagID)
+	flagID := swag.FormatInt64(o.FlagID)
 	if flagID != "" {
 		_path = strings.Replace(_path, "{flagID}", flagID, -1)
 	} else {

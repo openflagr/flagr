@@ -36,8 +36,8 @@ type EvalContext struct {
 
 	// flag ID
 	// Required: true
-	// Min Length: 1
-	FlagID *string `json:"flagID"`
+	// Minimum: 1
+	FlagID *int64 `json:"flagID"`
 }
 
 /* polymorph evalContext enableDebug false */
@@ -107,7 +107,7 @@ func (m *EvalContext) validateFlagID(formats strfmt.Registry) error {
 		return err
 	}
 
-	if err := validate.MinLength("flagID", "body", string(*m.FlagID), 1); err != nil {
+	if err := validate.MinimumInt("flagID", "body", int64(*m.FlagID), 1, false); err != nil {
 		return err
 	}
 
