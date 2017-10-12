@@ -16,6 +16,7 @@ type Flag struct {
 	Description string `sql:"type:text"`
 	CreatedBy   string
 	UpdatedBy   string
+	Enabled     bool
 
 	Segments []Segment
 	Variants []Variant

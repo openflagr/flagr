@@ -42,6 +42,7 @@ func setupCRUD(api *operations.FlagrAPI) {
 	api.FlagGetFlagHandler = flag.GetFlagHandlerFunc(c.GetFlag)
 	api.FlagPutFlagHandler = flag.PutFlagHandlerFunc(c.PutFlag)
 	api.FlagDeleteFlagHandler = flag.DeleteFlagHandlerFunc(c.DeleteFlag)
+	api.FlagSetFlagEnabledHandler = flag.SetFlagEnabledHandlerFunc(c.SetFlagEnabledState)
 
 	// segments
 	api.SegmentCreateSegmentHandler = segment.CreateSegmentHandlerFunc(c.CreateSegment)

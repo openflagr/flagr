@@ -108,6 +108,24 @@ func TestEvalFlag(t *testing.T) {
 			FlagID:        util.Int64Ptr(int64(100)),
 		})
 		assert.NotNil(t, result)
+		assert.NotNil(t, result.VariantID)
+		assert.Nil(t, err)
+	})
+
+	t.Run("test enabled=false", func(t *testing.T) {
+		f := entity.GenFixtureFlag()
+		f.Enabled = false
+		cache := &EvalCache{mapCache: map[uint]*entity.Flag{100: &f}}
+		defer gostub.StubFunc(&GetEvalCache, cache).Reset()
+		result, err := evalFlag(&models.EvalContext{
+			EnableDebug:   true,
+			EntityContext: map[string]interface{}{"dl_state": "CA"},
+			EntityID:      util.StringPtr("entityID1"),
+			EntityType:    util.StringPtr("entityType1"),
+			FlagID:        util.Int64Ptr(int64(100)),
+		})
+		assert.NotNil(t, result)
+		assert.Nil(t, result.VariantID)
 		assert.Nil(t, err)
 	})
 }

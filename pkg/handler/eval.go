@@ -42,6 +42,21 @@ func (e *eval) PostEvaluation(params evaluation.PostEvaluationParams) middleware
 	return resp
 }
 
+// BlankResult creates a blank result
+func BlankResult(f *entity.Flag, evalContext *models.EvalContext, msg string) *models.EvalResult {
+	return &models.EvalResult{
+		EvalContext: evalContext,
+		EvalDebugLog: &models.EvalDebugLog{
+			Msg:              msg,
+			SegmentDebugLogs: nil,
+		},
+		FlagID:    util.Int64Ptr(int64(f.ID)),
+		SegmentID: nil,
+		VariantID: nil,
+		Timestamp: util.StringPtr(util.TimeNow()),
+	}
+}
+
 func evalFlag(evalContext *models.EvalContext) (*models.EvalResult, *Error) {
 	if evalContext == nil {
 		return nil, NewError(400, "empty evalContext")
@@ -50,8 +65,12 @@ func evalFlag(evalContext *models.EvalContext) (*models.EvalResult, *Error) {
 	cache := GetEvalCache()
 	flagID := util.SafeUint(evalContext.FlagID)
 	f := cache.GetByFlagID(flagID)
+
 	if f == nil {
 		return nil, NewError(404, "flagID not found: %v", flagID)
+	}
+	if !f.Enabled {
+		return BlankResult(f, evalContext, fmt.Sprintf("flagID %v is not enabled", f.ID)), nil
 	}
 
 	logs := []*models.SegmentDebugLog{}
@@ -73,19 +92,10 @@ func evalFlag(evalContext *models.EvalContext) (*models.EvalResult, *Error) {
 			break
 		}
 	}
-
-	evalResult := &models.EvalResult{
-		EvalContext: evalContext,
-		EvalDebugLog: &models.EvalDebugLog{
-			Msg:              "",
-			SegmentDebugLogs: logs,
-		},
-		FlagID:    util.Int64Ptr(int64(f.ID)),
-		SegmentID: sID,
-		VariantID: vID,
-		Timestamp: util.StringPtr(util.TimeNow()),
-	}
-
+	evalResult := BlankResult(f, evalContext, "")
+	evalResult.EvalDebugLog.SegmentDebugLogs = logs
+	evalResult.SegmentID = sID
+	evalResult.VariantID = vID
 	return evalResult, nil
 }
 

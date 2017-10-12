@@ -22,6 +22,7 @@ type CRUD interface {
 	GetFlag(flag.GetFlagParams) middleware.Responder
 	PutFlag(flag.PutFlagParams) middleware.Responder
 	DeleteFlag(flag.DeleteFlagParams) middleware.Responder
+	SetFlagEnabledState(flag.SetFlagEnabledParams) middleware.Responder
 
 	// Segments
 	CreateSegment(segment.CreateSegmentParams) middleware.Responder
@@ -114,19 +115,45 @@ func (c *crud) PutFlag(params flag.PutFlagParams) middleware.Responder {
 		SetDescription(util.SafeString(params.Body.Description)).
 		Update()
 	if err != nil {
-		return flag.NewGetFlagDefault(500).WithPayload(ErrorMessage("%s", err))
+		return flag.NewPutFlagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
 	f := &entity.Flag{}
 	err = q.IDEq(uint(params.FlagID)).One(f)
 	if err != nil {
-		return flag.NewGetFlagDefault(500).WithPayload(ErrorMessage("%s", err))
+		return flag.NewPutFlagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
 	resp := flag.NewGetFlagOK()
 	payload, err := e2r.MapFlag(f, true)
 	if err != nil {
 		return flag.NewPutFlagDefault(500).WithPayload(ErrorMessage("%s", err))
+	}
+	resp.SetPayload(payload)
+	return resp
+}
+
+func (c *crud) SetFlagEnabledState(params flag.SetFlagEnabledParams) middleware.Responder {
+	q := entity.NewFlagQuerySet(repo.GetDB())
+
+	err := q.IDEq(uint(params.FlagID)).
+		GetUpdater().
+		SetEnabled(*params.Body.Enabled).
+		Update()
+	if err != nil {
+		return flag.NewSetFlagEnabledDefault(500).WithPayload(ErrorMessage("%s", err))
+	}
+
+	f := &entity.Flag{}
+	err = q.IDEq(uint(params.FlagID)).One(f)
+	if err != nil {
+		return flag.NewSetFlagEnabledDefault(500).WithPayload(ErrorMessage("%s", err))
+	}
+
+	resp := flag.NewSetFlagEnabledOK()
+	payload, err := e2r.MapFlag(f, true)
+	if err != nil {
+		return flag.NewSetFlagEnabledDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 	resp.SetPayload(payload)
 	return resp

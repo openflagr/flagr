@@ -23,6 +23,10 @@ type Flag struct {
 	// Min Length: 1
 	Description *string `json:"description"`
 
+	// enabled
+	// Required: true
+	Enabled *bool `json:"enabled"`
+
 	// id
 	// Read Only: true
 	// Minimum: 1
@@ -37,6 +41,8 @@ type Flag struct {
 
 /* polymorph flag description false */
 
+/* polymorph flag enabled false */
+
 /* polymorph flag id false */
 
 /* polymorph flag segments false */
@@ -48,6 +54,11 @@ func (m *Flag) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateDescription(formats); err != nil {
+		// prop
+		res = append(res, err)
+	}
+
+	if err := m.validateEnabled(formats); err != nil {
 		// prop
 		res = append(res, err)
 	}
@@ -70,6 +81,15 @@ func (m *Flag) validateDescription(formats strfmt.Registry) error {
 	}
 
 	if err := validate.MinLength("description", "body", string(*m.Description), 1); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *Flag) validateEnabled(formats strfmt.Registry) error {
+
+	if err := validate.Required("enabled", "body", m.Enabled); err != nil {
 		return err
 	}
 
