@@ -114,19 +114,19 @@ func (c *crud) PutFlag(params flag.PutFlagParams) middleware.Responder {
 		SetDescription(util.SafeString(params.Body.Description)).
 		Update()
 	if err != nil {
-		return flag.NewGetFlagDefault(500)
+		return flag.NewGetFlagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
 	f := &entity.Flag{}
 	err = q.IDEq(uint(params.FlagID)).One(f)
 	if err != nil {
-		return flag.NewGetFlagDefault(500)
+		return flag.NewGetFlagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
 	resp := flag.NewGetFlagOK()
 	payload, err := e2r.MapFlag(f, true)
 	if err != nil {
-		return flag.NewPutFlagDefault(500)
+		return flag.NewPutFlagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 	resp.SetPayload(payload)
 	return resp
@@ -137,7 +137,7 @@ func (c *crud) DeleteFlag(params flag.DeleteFlagParams) middleware.Responder {
 
 	err := q.IDEq(uint(params.FlagID)).Delete()
 	if err != nil {
-		return flag.NewGetFlagDefault(500)
+		return flag.NewGetFlagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 	return flag.NewDeleteFlagOK()
 }
@@ -150,7 +150,7 @@ func (c *crud) CreateSegment(params segment.CreateSegmentParams) middleware.Resp
 
 	err := s.Create(repo.GetDB())
 	if err != nil {
-		return segment.NewCreateSegmentDefault(500)
+		return segment.NewCreateSegmentDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
 	resp := segment.NewCreateSegmentOK()
@@ -164,7 +164,7 @@ func (c *crud) FindSegments(params segment.FindSegmentsParams) middleware.Respon
 	q := entity.NewSegmentQuerySet(repo.GetDB())
 	err := q.FlagIDEq(uint(params.FlagID)).OrderAscByRank().All(&ss)
 	if err != nil {
-		return segment.NewFindSegmentsDefault(500)
+		return segment.NewFindSegmentsDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
 	resp := segment.NewFindSegmentsOK()
@@ -182,7 +182,7 @@ func (c *crud) CreateConstraint(params constraint.CreateConstraintParams) middle
 	}
 	err := cons.Create(repo.GetDB())
 	if err != nil {
-		return constraint.NewCreateConstraintDefault(500)
+		return constraint.NewCreateConstraintDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
 	resp := constraint.NewCreateConstraintOK()
@@ -196,7 +196,7 @@ func (c *crud) FindConstraints(params constraint.FindConstraintsParams) middlewa
 	q := entity.NewConstraintQuerySet(repo.GetDB())
 	err := q.SegmentIDEq(uint(params.SegmentID)).OrderAscByCreatedAt().All(&cs)
 	if err != nil {
-		return constraint.NewFindConstraintsDefault(500)
+		return constraint.NewFindConstraintsDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
 	resp := constraint.NewFindConstraintsOK()
@@ -212,7 +212,7 @@ func (c *crud) PutDistributions(params distribution.PutDistributionsParams) midd
 	err := tx.Delete(entity.Distribution{}, "segment_id = ?", segmentID).Error
 	if err != nil {
 		tx.Rollback()
-		return distribution.NewPutDistributionsDefault(500)
+		return distribution.NewPutDistributionsDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
 	ds := r2e.MapDistributions(params.Body.Distributions, segmentID)
@@ -220,13 +220,13 @@ func (c *crud) PutDistributions(params distribution.PutDistributionsParams) midd
 		err1 := tx.Create(&d).Error
 		if err1 != nil {
 			tx.Rollback()
-			return distribution.NewPutDistributionsDefault(500)
+			return distribution.NewPutDistributionsDefault(500).WithPayload(ErrorMessage("%s", err))
 		}
 	}
 	err = tx.Commit().Error
 	if err != nil {
 		tx.Rollback()
-		return distribution.NewPutDistributionsDefault(500)
+		return distribution.NewPutDistributionsDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
 	resp := distribution.NewPutDistributionsOK()
@@ -240,7 +240,7 @@ func (c *crud) FindDistributions(params distribution.FindDistributionsParams) mi
 	q := entity.NewDistributionQuerySet(repo.GetDB())
 	err := q.SegmentIDEq(uint(params.SegmentID)).OrderAscByVariantID().All(&ds)
 	if err != nil {
-		return distribution.NewFindDistributionsDefault(500)
+		return distribution.NewFindDistributionsDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
 	resp := distribution.NewFindDistributionsOK()
@@ -253,9 +253,15 @@ func (c *crud) CreateVariant(params variant.CreateVariantParams) middleware.Resp
 	v.FlagID = uint(params.FlagID)
 	v.Key = util.SafeString(params.Body.Key)
 
-	err := v.Create(repo.GetDB())
+	a, err := r2e.MapAttachment(params.Body.Attachment)
 	if err != nil {
-		return variant.NewCreateVariantDefault(500)
+		return variant.NewCreateVariantDefault(400).WithPayload(ErrorMessage("%s", err))
+	}
+	v.Attachment = a
+
+	err = v.Create(repo.GetDB())
+	if err != nil {
+		return variant.NewCreateVariantDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
 	resp := variant.NewCreateVariantOK()
@@ -269,7 +275,7 @@ func (c *crud) FindVariants(params variant.FindVariantsParams) middleware.Respon
 	q := entity.NewVariantQuerySet(repo.GetDB())
 	err := q.FlagIDEq(uint(params.FlagID)).OrderAscByID().All(&vs)
 	if err != nil {
-		return variant.NewFindVariantsDefault(500)
+		return variant.NewFindVariantsDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
 	resp := variant.NewFindVariantsOK()
