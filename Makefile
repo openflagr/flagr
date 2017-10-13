@@ -34,8 +34,12 @@ deps: checks
 	@echo "Installing goqueryset" && go get github.com/jirfag/go-queryset/cmd/goqueryset
 	@echo "Installing gt" && go get rsc.io/gt
 	@echo "Installing gomock" && go get github.com/golang/mock/gomock && go get github.com/golang/mock/mockgen
+	@echo "Installing fswatch" && go get github.com/codeskyblue/fswatch
 	@echo "Ensuring Deps" && dep ensure
 	@echo "Installing swagger-merger" && yarn global add swagger-merger
+
+watch:
+	@fswatch
 
 api_docs:
 	@mkdir -p $(PWD)/browser/flagr-ui/dist/api_docs
