@@ -24,6 +24,8 @@ paths:
     $ref: ./flag_segments.yaml
   /flags/{flagID}/segments/{segmentID}/constraints:
     $ref: ./flag_segment_constraints.yaml
+  /flags/{flagID}/segments/{segmentID}/constraints/{constraintID}:
+    $ref: ./flag_segment_constraint.yaml
   /flags/{flagID}/segments/{segmentID}/distributions:
     $ref: ./flag_segment_distributions.yaml
   /evaluation:

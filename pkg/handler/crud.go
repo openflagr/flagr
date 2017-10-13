@@ -31,6 +31,8 @@ type CRUD interface {
 	// Constraints
 	CreateConstraint(constraint.CreateConstraintParams) middleware.Responder
 	FindConstraints(constraint.FindConstraintsParams) middleware.Responder
+	PutConstraint(params constraint.PutConstraintParams) middleware.Responder
+	DeleteConstraint(params constraint.DeleteConstraintParams) middleware.Responder
 
 	// Distributions
 	FindDistributions(distribution.FindDistributionsParams) middleware.Responder
@@ -228,6 +230,37 @@ func (c *crud) FindConstraints(params constraint.FindConstraintsParams) middlewa
 
 	resp := constraint.NewFindConstraintsOK()
 	resp.SetPayload(e2r.MapConstraints(cs))
+	return resp
+}
+
+func (c *crud) PutConstraint(params constraint.PutConstraintParams) middleware.Responder {
+	cons := entity.Constraint{}
+	err := entity.NewConstraintQuerySet(repo.GetDB()).IDEq(uint(params.ConstraintID)).One(&cons)
+	if err != nil {
+		return constraint.NewPutConstraintDefault(500).WithPayload(ErrorMessage("%s", err))
+	}
+	if params.Body != nil {
+		cons.Property = util.SafeString(params.Body.Property)
+		cons.Operator = util.SafeString(params.Body.Operator)
+		cons.Value = util.SafeString(params.Body.Value)
+	}
+
+	if err := repo.GetDB().Save(&cons).Error; err != nil {
+		return constraint.NewPutConstraintDefault(500).WithPayload(ErrorMessage("%s", err))
+	}
+
+	resp := constraint.NewPutConstraintOK()
+	resp.SetPayload(e2r.MapConstraint(&cons))
+	return resp
+}
+
+func (c *crud) DeleteConstraint(params constraint.DeleteConstraintParams) middleware.Responder {
+	err := entity.NewConstraintQuerySet(repo.GetDB()).IDEq(uint(params.ConstraintID)).Delete()
+	if err != nil {
+		return constraint.NewDeleteConstraintDefault(500).WithPayload(ErrorMessage("%s", err))
+	}
+
+	resp := constraint.NewDeleteConstraintOK()
 	return resp
 }
 
