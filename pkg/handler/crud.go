@@ -233,6 +233,10 @@ func (c *crud) FindConstraints(params constraint.FindConstraintsParams) middlewa
 
 // PutDistributions puts the whole distributions and overwrite the old ones
 func (c *crud) PutDistributions(params distribution.PutDistributionsParams) middleware.Responder {
+	if err := validatePutDistributions(params); err != nil {
+		return distribution.NewPutDistributionsDefault(err.StatusCode).WithPayload(ErrorMessage("%s", err))
+	}
+
 	segmentID := uint(params.SegmentID)
 
 	tx := repo.GetDB().Begin()

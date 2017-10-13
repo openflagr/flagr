@@ -1,6 +1,8 @@
 package util
 
-import "time"
+import (
+	"time"
+)
 
 // SafeString safely dereference the string or string ptr
 func SafeString(s interface{}) (r string) {
