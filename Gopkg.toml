@@ -92,3 +92,11 @@
 [[constraint]]
   branch = "master"
   name = "github.com/getsentry/raven-go"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/mistifyio/negroni-pprof"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/gohttp/pprof"

@@ -9,6 +9,7 @@ import (
 
 	errors "github.com/go-openapi/errors"
 	runtime "github.com/go-openapi/runtime"
+	"github.com/gohttp/pprof"
 	"github.com/rs/cors"
 	graceful "github.com/tylerb/graceful"
 	"github.com/urfave/negroni"
@@ -23,8 +24,9 @@ import (
 //go:generate swagger generate server --target ../swagger_gen --name  --spec ../swagger.yml
 
 var (
-	pwd, _     = os.Getwd()
-	enableCORS = config.Config.CORS.Enabled
+	pwd, _      = os.Getwd()
+	enableCORS  = config.Config.CORS.Enabled
+	enablePProf = config.Config.PProf.Enabled
 )
 
 func configureFlags(api *operations.FlagrAPI) {
@@ -80,10 +82,14 @@ func setupGlobalMiddleware(handler http.Handler) http.Handler {
 	}
 
 	n := negroni.New()
-	ui := negroni.NewStatic(http.Dir(pwd + "/browser/flagr-ui/dist/"))
-	n.Use(ui)
 	n.Use(negroni.NewLogger())
+	n.Use(negroni.NewStatic(http.Dir(pwd + "/browser/flagr-ui/dist/")))
 
-	n.UseHandler(handler)
+	if enablePProf {
+		n.UseHandler(pprof.New()(handler))
+	} else {
+		n.UseHandler(handler)
+	}
+
 	return n
 }

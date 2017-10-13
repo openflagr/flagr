@@ -11,4 +11,7 @@ DSN = ""
 
 [EvalCache]
 RefreshTimeout = "59s"
-RefreshInterval = "5s"
+RefreshInterval = "10s"
+
+[PProf]
+Enabled = true
