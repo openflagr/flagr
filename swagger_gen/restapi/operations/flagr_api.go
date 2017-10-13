@@ -54,6 +54,9 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		VariantCreateVariantHandler: variant.CreateVariantHandlerFunc(func(params variant.CreateVariantParams) middleware.Responder {
 			return middleware.NotImplemented("operation VariantCreateVariant has not yet been implemented")
 		}),
+		ConstraintDeleteConstraintHandler: constraint.DeleteConstraintHandlerFunc(func(params constraint.DeleteConstraintParams) middleware.Responder {
+			return middleware.NotImplemented("operation ConstraintDeleteConstraint has not yet been implemented")
+		}),
 		FlagDeleteFlagHandler: flag.DeleteFlagHandlerFunc(func(params flag.DeleteFlagParams) middleware.Responder {
 			return middleware.NotImplemented("operation FlagDeleteFlag has not yet been implemented")
 		}),
@@ -77,6 +80,9 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		}),
 		EvaluationPostEvaluationHandler: evaluation.PostEvaluationHandlerFunc(func(params evaluation.PostEvaluationParams) middleware.Responder {
 			return middleware.NotImplemented("operation EvaluationPostEvaluation has not yet been implemented")
+		}),
+		ConstraintPutConstraintHandler: constraint.PutConstraintHandlerFunc(func(params constraint.PutConstraintParams) middleware.Responder {
+			return middleware.NotImplemented("operation ConstraintPutConstraint has not yet been implemented")
 		}),
 		DistributionPutDistributionsHandler: distribution.PutDistributionsHandlerFunc(func(params distribution.PutDistributionsParams) middleware.Responder {
 			return middleware.NotImplemented("operation DistributionPutDistributions has not yet been implemented")
@@ -124,6 +130,8 @@ type FlagrAPI struct {
 	SegmentCreateSegmentHandler segment.CreateSegmentHandler
 	// VariantCreateVariantHandler sets the operation handler for the create variant operation
 	VariantCreateVariantHandler variant.CreateVariantHandler
+	// ConstraintDeleteConstraintHandler sets the operation handler for the delete constraint operation
+	ConstraintDeleteConstraintHandler constraint.DeleteConstraintHandler
 	// FlagDeleteFlagHandler sets the operation handler for the delete flag operation
 	FlagDeleteFlagHandler flag.DeleteFlagHandler
 	// ConstraintFindConstraintsHandler sets the operation handler for the find constraints operation
@@ -140,6 +148,8 @@ type FlagrAPI struct {
 	FlagGetFlagHandler flag.GetFlagHandler
 	// EvaluationPostEvaluationHandler sets the operation handler for the post evaluation operation
 	EvaluationPostEvaluationHandler evaluation.PostEvaluationHandler
+	// ConstraintPutConstraintHandler sets the operation handler for the put constraint operation
+	ConstraintPutConstraintHandler constraint.PutConstraintHandler
 	// DistributionPutDistributionsHandler sets the operation handler for the put distributions operation
 	DistributionPutDistributionsHandler distribution.PutDistributionsHandler
 	// FlagPutFlagHandler sets the operation handler for the put flag operation
@@ -225,6 +235,10 @@ func (o *FlagrAPI) Validate() error {
 		unregistered = append(unregistered, "variant.CreateVariantHandler")
 	}
 
+	if o.ConstraintDeleteConstraintHandler == nil {
+		unregistered = append(unregistered, "constraint.DeleteConstraintHandler")
+	}
+
 	if o.FlagDeleteFlagHandler == nil {
 		unregistered = append(unregistered, "flag.DeleteFlagHandler")
 	}
@@ -255,6 +269,10 @@ func (o *FlagrAPI) Validate() error {
 
 	if o.EvaluationPostEvaluationHandler == nil {
 		unregistered = append(unregistered, "evaluation.PostEvaluationHandler")
+	}
+
+	if o.ConstraintPutConstraintHandler == nil {
+		unregistered = append(unregistered, "constraint.PutConstraintHandler")
 	}
 
 	if o.DistributionPutDistributionsHandler == nil {
@@ -382,6 +400,11 @@ func (o *FlagrAPI) initHandlerCache() {
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
+	o.handlers["DELETE"]["/flags/{flagID}/segments/{segmentID}/constraints/{constraintID}"] = constraint.NewDeleteConstraint(o.context, o.ConstraintDeleteConstraintHandler)
+
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
 	o.handlers["DELETE"]["/flags/{flagID}"] = flag.NewDeleteFlag(o.context, o.FlagDeleteFlagHandler)
 
 	if o.handlers["GET"] == nil {
@@ -418,6 +441,11 @@ func (o *FlagrAPI) initHandlerCache() {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
 	o.handlers["POST"]["/evaluation"] = evaluation.NewPostEvaluation(o.context, o.EvaluationPostEvaluationHandler)
+
+	if o.handlers["PUT"] == nil {
+		o.handlers["PUT"] = make(map[string]http.Handler)
+	}
+	o.handlers["PUT"]["/flags/{flagID}/segments/{segmentID}/constraints/{constraintID}"] = constraint.NewPutConstraint(o.context, o.ConstraintPutConstraintHandler)
 
 	if o.handlers["PUT"] == nil {
 		o.handlers["PUT"] = make(map[string]http.Handler)
