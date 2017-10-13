@@ -29,7 +29,7 @@ func init() {
     "title": "Flagr",
     "version": "1.0.0"
   },
-  "basePath": "/api",
+  "basePath": "/api/v1",
   "paths": {
     "/evaluation": {
       "post": {
