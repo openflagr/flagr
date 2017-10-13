@@ -35,9 +35,13 @@ deps: checks
 	@echo "Installing gt" && go get rsc.io/gt
 	@echo "Installing gomock" && go get github.com/golang/mock/gomock && go get github.com/golang/mock/mockgen
 	@echo "Ensuring Deps" && dep ensure
+	@echo "Installing swagger-merger" && yarn global add swagger-merger
 
 api_docs:
-	@swagger serve $(PWD)/swagger.yml --port 18101
+	@mkdir -p $(PWD)/browser/flagr-ui/dist/api_docs
+	@swagger-merger -i $(PWD)/swagger/index.yaml -o $(PWD)/browser/flagr-ui/dist/api_docs/bundle.yaml
+	@cp $(PWD)/swagger/redoc.html $(PWD)/browser/flagr-ui/dist/api_docs/index.html
+	@echo "'make run' and then open http://127.0.0.1:18000/api_docs"
 
 ################################
 ### Private
@@ -82,7 +86,7 @@ spelling:
 
 verify_swagger:
 	@echo "Running $@"
-	@swagger validate ./swagger.yml
+	@swagger validate ./swagger/index.yaml
 
 clean:
 	@echo "Cleaning up all the generated files"
@@ -96,7 +100,7 @@ swagger: verify_swagger
 	@cp $(PWD)/swagger_gen/restapi/configure_flagr.go /tmp/configure_flagr.go 2>/dev/null || :
 	@rm -rf $(PWD)/swagger_gen
 	@mkdir $(PWD)/swagger_gen
-	@swagger generate server -t ./swagger_gen -f ./swagger.yml
+	@swagger generate server -t ./swagger_gen -f ./swagger/index.yaml
 	@cp /tmp/configure_flagr.go $(PWD)/swagger_gen/restapi/configure_flagr.go 2>/dev/null || :
 
 goqueryset:

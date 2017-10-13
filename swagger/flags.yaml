@@ -1,0 +1,35 @@
+get:
+  tags:
+    - flag
+  operationId: findFlags
+  responses:
+    200:
+      description: list all the flags
+      schema:
+        type: array
+        items:
+          $ref: "#/definitions/flag"
+    default:
+      description: generic error response
+      schema:
+        $ref: "#/definitions/error"
+post:
+  tags:
+    - flag
+  operationId: createFlag
+  parameters:
+    - in: body
+      name: body
+      description: create a flag
+      required: true
+      schema:
+        $ref: "#/definitions/createFlagRequest"
+  responses:
+    200:
+      description: returns the created flag
+      schema:
+        $ref: "#/definitions/flag"
+    default:
+      description: generic error response
+      schema:
+        $ref: "#/definitions/error"

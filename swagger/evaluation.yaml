@@ -1,0 +1,20 @@
+post:
+  tags:
+    - evaluation
+  operationId: postEvaluation
+  parameters:
+    - in: body
+      name: body
+      description: evalution context
+      required: true
+      schema:
+        $ref: "#/definitions/evalContext"
+  responses:
+    200:
+      description: evaluation result
+      schema:
+        $ref: "#/definitions/evalResult"
+    default:
+      description: generic error response
+      schema:
+        $ref: "#/definitions/error"

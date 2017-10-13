@@ -1,0 +1,50 @@
+get:
+  tags:
+    - segment
+  operationId: findSegments
+  parameters:
+    - in: path
+      name: flagID
+      description: numeric ID of the flag to get
+      required: true
+      type: integer
+      format: int64
+      minimum: 1
+  responses:
+    200:
+      description: segments ordered by rank of the flag
+      schema:
+        type: array
+        items:
+          $ref: "#/definitions/segment"
+    default:
+      description: generic error response
+      schema:
+        $ref: "#/definitions/error"
+post:
+  tags:
+    - segment
+  operationId: createSegment
+  parameters:
+    - in: path
+      name: flagID
+      description: numeric ID of the flag to get
+      required: true
+      type: integer
+      format: int64
+      minimum: 1
+    - in: body
+      name: body
+      description: create a segment under a flag
+      required: true
+      schema:
+        $ref: "#/definitions/createSegmentRequest"
+  responses:
+    200:
+      description: segments ordered by rank of the flag
+      schema:
+        $ref: "#/definitions/segment"
+    default:
+      description: generic error response
+      schema:
+        $ref: "#/definitions/error"
