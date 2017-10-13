@@ -10,19 +10,22 @@ import (
 // Config is the whole configuration of the app
 var Config = struct {
 	DB struct {
-		DBDriver        string `required:"true"`
+		DBDriver        string `env:"DBDriver"`
 		DBConnectionStr string `env:"DBConnectionStr"`
 	}
 	CORS struct {
-		Enabled bool
+		Enabled bool `env:"CORSEnabled"`
 	}
 	Sentry struct {
-		Enabled bool
+		Enabled bool   `env:"SentryEnabled"`
 		DSN     string `env:"SentryDSN"`
 	}
 	EvalCache struct {
-		RefreshTimeout  Duration
-		RefreshInterval Duration
+		RefreshTimeout  Duration `env:"EvalCacheRefreshTimeout"`
+		RefreshInterval Duration `env:"EvalCacheRefreshInterval"`
+	}
+	PProf struct {
+		Enabled bool `env:"PProfEnabled"`
 	}
 }{}
 
