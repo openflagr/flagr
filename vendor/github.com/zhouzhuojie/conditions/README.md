@@ -17,7 +17,7 @@ import (
 
 func main() {
     // Our condition to check
-    s := `([foo] > 0.45) AND ([bar] == "ON" OR [baz] == "ACTIVE")`
+    s := `({foo} > 0.45) AND ({bar} == "ON" OR {baz} IN ["ACTIVE", "CLEAR"])`
 
     // Parse the condition language and get expression
     p := conditions.NewParser(strings.NewReader(s))

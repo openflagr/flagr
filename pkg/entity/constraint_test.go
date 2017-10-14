@@ -27,7 +27,7 @@ func TestConstraintToExpr(t *testing.T) {
 		assert.Nil(t, expr)
 	})
 
-	t.Run("parse error", func(t *testing.T) {
+	t.Run("parse error - invalid ]", func(t *testing.T) {
 		c := Constraint{
 			SegmentID: 0,
 			Property:  "dl_state",
@@ -39,12 +39,48 @@ func TestConstraintToExpr(t *testing.T) {
 		assert.Nil(t, expr)
 	})
 
-	t.Run("happy code path", func(t *testing.T) {
+	t.Run("parse error - no quotes", func(t *testing.T) {
+		c := Constraint{
+			SegmentID: 0,
+			Property:  "dl_state",
+			Operator:  models.ConstraintOperatorEQ,
+			Value:     "NY", // Invalid string b/c no ""
+		}
+		expr, err := c.ToExpr()
+		assert.Error(t, err)
+		assert.Nil(t, expr)
+	})
+
+	t.Run("parse error - no quotes in array", func(t *testing.T) {
+		c := Constraint{
+			SegmentID: 0,
+			Property:  "dl_state",
+			Operator:  models.ConstraintOperatorIN,
+			Value:     "[NY]", // Invalid string b/c no ""
+		}
+		expr, err := c.ToExpr()
+		assert.Error(t, err)
+		assert.Nil(t, expr)
+	})
+
+	t.Run("happy code path - single EQ", func(t *testing.T) {
 		c := Constraint{
 			SegmentID: 0,
 			Property:  "dl_state",
 			Operator:  models.ConstraintOperatorEQ,
 			Value:     "\"CA\"",
+		}
+		expr, err := c.ToExpr()
+		assert.NoError(t, err)
+		assert.NotNil(t, expr)
+	})
+
+	t.Run("happy code path - IN", func(t *testing.T) {
+		c := Constraint{
+			SegmentID: 0,
+			Property:  "dl_state",
+			Operator:  models.ConstraintOperatorIN,
+			Value:     `["CA", "NY"]`,
 		}
 		expr, err := c.ToExpr()
 		assert.NoError(t, err)

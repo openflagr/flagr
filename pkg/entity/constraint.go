@@ -52,11 +52,12 @@ func (c *Constraint) ToExpr() (conditions.Expr, error) {
 	if !ok {
 		return nil, fmt.Errorf("not supported operator: %s", c.Operator)
 	}
-	s := fmt.Sprintf("[%s] %s %s", c.Property, o, c.Value)
+
+	s := fmt.Sprintf("{%s} %s %s", c.Property, o, c.Value)
 	p := conditions.NewParser(strings.NewReader(s))
 	expr, err := p.Parse()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s. Note: if it's string or array of string, warp it with quotes \"...\"", err)
 	}
 	return expr, nil
 }
@@ -64,8 +65,5 @@ func (c *Constraint) ToExpr() (conditions.Expr, error) {
 // Validate validates Constraint
 func (c *Constraint) Validate() error {
 	_, err := c.ToExpr()
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
