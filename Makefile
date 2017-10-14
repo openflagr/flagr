@@ -14,14 +14,14 @@ test: verifiers
 	@echo "Running all coverage for flagr"
 	@./buildscripts/go-coverage.sh
 
-build:
+build: api_docs
 	@echo "Building flagr to $(PWD)/flagr ..."
 	@CGO_ENABLED=0 go build -o $(PWD)/flagr github.com/checkr/flagr/swagger_gen/cmd/flagr-server
 
 run: build
 	@$(PWD)/flagr --port 18000
 
-gen: swagger goqueryset
+gen: swagger api_docs goqueryset
 
 deps: checks
 	@echo "Installing dep" && go get github.com/golang/dep/cmd/dep
@@ -41,15 +41,14 @@ deps: checks
 watch:
 	@fswatch
 
+################################
+### Private
+################################
+
 api_docs:
 	@mkdir -p $(PWD)/browser/flagr-ui/dist/api_docs
 	@swagger-merger -i $(PWD)/swagger/index.yaml -o $(PWD)/browser/flagr-ui/dist/api_docs/bundle.yaml
 	@cp $(PWD)/swagger/redoc.html $(PWD)/browser/flagr-ui/dist/api_docs/index.html
-	@echo "'make run' and then open http://127.0.0.1:18000/api_docs"
-
-################################
-### Private
-################################
 
 checks:
 	@echo "Check deps"
