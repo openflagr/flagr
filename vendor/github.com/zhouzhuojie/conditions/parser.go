@@ -9,6 +9,8 @@ import (
 	"text/scanner"
 )
 
+const maxArrayLen = 65536
+
 // Parser encapsulates the scanner and responsible for returning AST
 // composed from statements read from a given reader.
 type Parser struct {
@@ -90,21 +92,21 @@ func (p *Parser) scanWithMapping() (Token, string) {
 		} else {
 			tok = ILLEGAL
 		}
-	case '[':
-
-		// TODO : capter les tableau de string comme ["hello", "world", "foo"] => StringLiteral
+	case '{':
 		var err error
 		t, tt, err = p.scanArg()
 		if err != nil {
-			p.unscan()
-			t, tt, err = p.scanArray(tt)
-			if err == nil {
-				tok = ARRAY
-			} else {
-				tok = ILLEGAL
-			}
+			tok = ILLEGAL
 		} else {
 			tok = IDENT
+		}
+	case '[':
+		var err error
+		t, tt, err = p.scanArray("")
+		if err == nil {
+			tok = ARRAY
+		} else {
+			tok = ILLEGAL
 		}
 	case '!':
 		t, tt = p.scan()
@@ -197,8 +199,6 @@ func (p *Parser) scanWithMapping() (Token, string) {
 			tok = FALSE
 		} else if ttU == "CONTAINS" {
 			tok = CONTAINS
-		} else if strings.HasPrefix(ttU, "C") || strings.HasPrefix(ttU, "P") {
-			tok = IDENT
 		} else {
 			tok = ILLEGAL
 		}
@@ -296,13 +296,21 @@ func (p *Parser) parseUnaryExpr() (Expr, error) {
 		case string:
 			values := []string{}
 			for _, v := range mapVal {
-				values = append(values, v.(string))
+				str, ok := v.(string)
+				if !ok {
+					return nil, fmt.Errorf("the items in the array are not all string")
+				}
+				values = append(values, str)
 			}
 			return &SliceStringLiteral{Val: values}, err
 		case float64:
 			values := []float64{}
 			for _, v := range mapVal {
-				values = append(values, v.(float64))
+				f, ok := v.(float64)
+				if !ok {
+					return nil, fmt.Errorf("the items in the array are not all number")
+				}
+				values = append(values, f)
 			}
 			return &SliceNumberLiteral{Val: values}, err
 		default:
@@ -320,7 +328,7 @@ func (p *Parser) scanArray(tt string) (rune, string, error) {
 	var ttTmp string
 	var sep string
 
-	for {
+	for i := 0; i < maxArrayLen; i++ {
 		t, ttTmp = p.scan()
 		if t == ']' {
 			return t, tt, nil
@@ -328,10 +336,11 @@ func (p *Parser) scanArray(tt string) (rune, string, error) {
 
 		tt = tt + sep + ttTmp
 	}
+	return t, tt, fmt.Errorf("parsing error: no ] found in array syntax")
 }
 
-// extract [variable] to variable
-// extract [variable][key1][key1] to variable.key1.key2
+// extract {variable} to variable
+// extract {variable}{key1}{key2} to variable.key1.key2
 // handle variable name which start with a "@"
 func (p *Parser) scanArg() (rune, string, error) {
 	var t rune
@@ -348,9 +357,9 @@ func (p *Parser) scanArg() (rune, string, error) {
 			continue
 		}
 		t, _ := p.scan()
-		if t == ']' {
+		if t == '}' {
 			ti, _ := p.scan()
-			if ti == '[' {
+			if ti == '{' {
 				sep = "."
 				continue
 			} else {
@@ -359,7 +368,7 @@ func (p *Parser) scanArg() (rune, string, error) {
 			return t, tt, nil
 		}
 
-		if t != ']' {
+		if t != '}' {
 			return t, tt, fmt.Errorf("Args error")
 		}
 	}

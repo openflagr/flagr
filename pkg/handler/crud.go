@@ -209,8 +209,10 @@ func (c *crud) CreateConstraint(params constraint.CreateConstraintParams) middle
 		cons.Operator = util.SafeString(params.Body.Operator)
 		cons.Value = util.SafeString(params.Body.Value)
 	}
-	err := cons.Create(repo.GetDB())
-	if err != nil {
+	if err := cons.Validate(); err != nil {
+		return constraint.NewCreateConstraintDefault(400).WithPayload(ErrorMessage("%s", err))
+	}
+	if err := cons.Create(repo.GetDB()); err != nil {
 		return constraint.NewCreateConstraintDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
@@ -243,6 +245,9 @@ func (c *crud) PutConstraint(params constraint.PutConstraintParams) middleware.R
 		cons.Property = util.SafeString(params.Body.Property)
 		cons.Operator = util.SafeString(params.Body.Operator)
 		cons.Value = util.SafeString(params.Body.Value)
+	}
+	if err := cons.Validate(); err != nil {
+		return constraint.NewPutConstraintDefault(400).WithPayload(ErrorMessage("%s", err))
 	}
 
 	if err := repo.GetDB().Save(&cons).Error; err != nil {
