@@ -424,6 +424,112 @@ func init() {
         }
       }
     },
+    "/flags/{flagID}/segments/{segmentID}/constraints/{constraintID}": {
+      "put": {
+        "tags": [
+          "constraint"
+        ],
+        "operationId": "putConstraint",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the flag",
+            "name": "flagID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the segment",
+            "name": "segmentID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the constraint",
+            "name": "constraintID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "create a constraint",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/createConstraintRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "constraint just updated",
+            "schema": {
+              "$ref": "#/definitions/constraint"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "constraint"
+        ],
+        "operationId": "deleteConstraint",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the flag",
+            "name": "flagID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the segment",
+            "name": "segmentID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the constraint",
+            "name": "constraintID",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "deleted"
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
     "/flags/{flagID}/segments/{segmentID}/distributions": {
       "get": {
         "tags": [

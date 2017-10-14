@@ -1,0 +1,74 @@
+put:
+  tags:
+    - constraint
+  operationId: putConstraint
+  parameters:
+    - in: path
+      name: flagID
+      description: numeric ID of the flag
+      required: true
+      type: integer
+      format: int64
+      minimum: 1
+    - in: path
+      name: segmentID
+      description: numeric ID of the segment
+      required: true
+      type: integer
+      format: int64
+      minimum: 1
+    - in: path
+      name: constraintID
+      description: numeric ID of the constraint
+      required: true
+      type: integer
+      format: int64
+      minimum: 1
+    - in: body
+      name: body
+      description: create a constraint
+      required: true
+      schema:
+        $ref: "#/definitions/createConstraintRequest"
+  responses:
+    200:
+      description: constraint just updated
+      schema:
+        $ref: "#/definitions/constraint"
+    default:
+      description: generic error response
+      schema:
+        $ref: "#/definitions/error"
+delete:
+  tags:
+    - constraint
+  operationId: deleteConstraint
+  parameters:
+    - in: path
+      name: flagID
+      description: numeric ID of the flag
+      required: true
+      type: integer
+      format: int64
+      minimum: 1
+    - in: path
+      name: segmentID
+      description: numeric ID of the segment
+      required: true
+      type: integer
+      format: int64
+      minimum: 1
+    - in: path
+      name: constraintID
+      description: numeric ID of the constraint
+      required: true
+      type: integer
+      format: int64
+      minimum: 1
+  responses:
+    200:
+      description: deleted
+    default:
+      description: generic error response
+      schema:
+        $ref: "#/definitions/error"
