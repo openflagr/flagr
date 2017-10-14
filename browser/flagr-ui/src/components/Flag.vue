@@ -90,7 +90,15 @@
         <div class="flex-row-left">
           <h2>Flag #{{ $route.params.flagId }}</h2>
         </div>
-        <div class="flex-row-right">
+        <div class="flex-row-right" v-if="flag">
+          <el-switch
+            v-model="flag.enabled"
+            on-color="#13ce66"
+            off-color="#ff4949"
+            @change="setFlagEnabled"
+            :on-value="true"
+            :off-value="false">
+          </el-switch>
           <el-button @click="dialogDeleteFlagVisible = true">
             <span class="el-icon-delete2"></span>
             Delete
@@ -244,7 +252,7 @@ import helpers from '@/helpers/helpers'
 import fetchHelpers from '@/helpers/fetch'
 import Spinner from '@/components/Spinner'
 import clone from 'lodash.clone'
-import { Button, Dialog, Slider, Checkbox, Tag, Breadcrumb, BreadcrumbItem } from 'element-ui'
+import { Button, Dialog, Slider, Checkbox, Tag, Breadcrumb, BreadcrumbItem, Switch } from 'element-ui'
 import {operators} from '@/../config/operators.json'
 
 const OPERATOR_VALUE_TO_LABEL_MAP = operators.reduce((acc, el) => {
@@ -304,7 +312,8 @@ export default {
     'el-checkbox': Checkbox,
     'el-tag': Tag,
     'el-breadcrumb': Breadcrumb,
-    'el-breadcrumb-item': BreadcrumbItem
+    'el-breadcrumb-item': BreadcrumbItem,
+    'el-switch': Switch
   },
   data () {
     return {
@@ -340,6 +349,14 @@ export default {
         .then(() => {
           this.$router.replace({name: 'home'})
           this.$message(`You deleted flag ${flagId}`)
+        })
+    },
+    setFlagEnabled (checked) {
+      const flagId = this.$route.params.flagId
+      putJson(`${API_URL}/flags/${flagId}/enabled`, {enabled: checked})
+        .then(() => {
+          const checkedStr = checked ? 'on' : 'off'
+          this.$message(`You turned ${checkedStr} this feature flag`)
         })
     },
     selectVariant ($event, variant) {
