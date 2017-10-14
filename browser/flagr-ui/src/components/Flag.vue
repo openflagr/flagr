@@ -20,7 +20,7 @@
             <el-checkbox
               @change="(e) => selectVariant(e, variant)"
               :checked="!!newDistributions[variant.id]"
-            >  
+            >
             </el-checkbox>
             <el-tag type="danger">
               {{ variant.key }}
@@ -146,10 +146,20 @@
                 <h4>Constraints ({{segment.constraints.length}})</h4>
                 <div class="constraints">
                   <ol class="constraints-inner" v-if="segment.constraints.length">
-                    <li v-for="constraint in segment.constraints" :key="constraint.id">
-                      <el-tag type="gray">{{ constraint.property }}</el-tag>
-                      <el-tag type="primary">{{ operatorValueToLabelMap[constraint.operator] }}</el-tag>
-                      <el-tag type="gray">{{ constraint.value }}</el-tag>
+                    <li
+                      class="flex-row"
+                      v-for="constraint in segment.constraints"
+                      :key="constraint.id">
+                      <div class="flex-row-left">
+                        <el-tag type="gray">{{ constraint.property }}</el-tag>
+                        <el-tag type="primary">{{ operatorValueToLabelMap[constraint.operator] }}</el-tag>
+                        <el-tag type="gray">{{ constraint.value }}</el-tag>
+                      </div>
+                      <div class="flex-row-right">
+                        <el-button @click="deleteConstraint(segment, constraint)">
+                          <span class="el-icon-delete2"/>
+                        </el-button>
+                      </div>
                     </li>
                   </ol>
                   <div class="card--empty" v-else>
@@ -404,13 +414,28 @@ export default {
         })
     },
     createConstraint (segment) {
-      const flagId = this.$route.params.flagId
+      const {flagId} = this.$route.params
       postJson(`${API_URL}/flags/${flagId}/segments/${segment.id}/constraints`, segment.newConstraint)
         .then(constraint => {
           segment.constraints.push(constraint)
           segment.newConstraint = clone(DEFAULT_CONSTRAINT)
           this.$message('You created a new constraint')
         })
+    },
+    deleteConstraint (segment, constraint) {
+      const {flagId} = this.$route.params
+
+      if (!confirm('Are you sure you want to delete this constraint?')) {
+        return
+      }
+
+      fetch(
+        `${API_URL}/flags/${flagId}/segments/${segment.id}/constraints/${constraint.id}`,
+        {method: 'delete'}
+      ).then(() => {
+        const index = segment.constraints.findIndex(constraint => constraint.id === constraint.id)
+        segment.constraints.splice(index, 1)
+      })
     },
     createSegment () {
       const flagId = this.$route.params.flagId

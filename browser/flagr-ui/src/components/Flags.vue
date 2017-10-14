@@ -23,11 +23,18 @@
         <span v-if="flags.length">({{ flags.length }})</span>
       </h2>
       <ul v-if="flags.length">
-        <li v-for="flag in flags" class="flag" v-bind:class="{new: flag._new}">
+        <li
+          v-for="flag in flags" class="flag"
+          :class="{new: flag._new}">
           <router-link
-            class="flag-link"
+            class="flag-link flex-row"
             :to="{name: 'flag', params: {flagId: flag.id}}">
-            <el-tag>{{ flag.id }}</el-tag> {{ flag.description }}
+            <div class="flex-row-left">
+              <el-tag>{{ flag.id }}</el-tag> {{ flag.description }}
+            </div>
+            <div class="flex-row-right">
+              <span :class="{'flag-enabled-icon': true, enabled: flag.enabled}"></span>
+            </div>
           </router-link>
         </li>
       </ul>
@@ -145,6 +152,7 @@ export default {
       }
       .flag-link {
         display: inline-block;
+        box-sizing: border-box;
         padding: 8px 12px;
         font-size: 1.1em;
         width: 100%;
@@ -153,6 +161,16 @@ export default {
         &:hover {
           background-color: #74E5E0;
           color: white;
+        }
+      }
+      .flag-enabled-icon {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 5px;
+        background-color: #ff4949;
+        &.enabled {
+          background-color: #13ce66;
         }
       }
     }
