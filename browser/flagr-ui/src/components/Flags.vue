@@ -129,7 +129,7 @@ export default {
 <style lang="less" scoped>
 
 .flags-container {
-  width: 400px;
+  width: 700px;
   ul {
     border-radius: 3px;
     border: 1px solid #ddd;

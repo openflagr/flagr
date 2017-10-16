@@ -62,7 +62,7 @@
         <p>
           <el-input
             placeholder="Segment description"
-            v-model="newSegment.description">  
+            v-model="newSegment.description">
           </el-input>
         </p>
         <p>
@@ -86,64 +86,111 @@
     </el-breadcrumb>
 
     <div v-if="loaded && flag">
-      <div class="flex-row">
-        <div class="flex-row-left">
-          <h2>Flag #{{ $route.params.flagId }}</h2>
+      <el-card>
+        <div slot="header" class="el-card-header">
+          <div class="flex-row">
+            <div class="flex-row-left">
+              <h2>Flag ID: {{ $route.params.flagId }}</h2>
+            </div>
+            <div class="flex-row-right" v-if="flag">
+              <el-switch
+                v-model="flag.enabled"
+                on-color="#13ce66"
+                off-color="#ff4949"
+                @change="setFlagEnabled"
+                :on-value="true"
+                :off-value="false">
+              </el-switch>
+            </div>
+          </div>
         </div>
-        <div class="flex-row-right" v-if="flag">
-          <el-switch
-            v-model="flag.enabled"
-            on-color="#13ce66"
-            off-color="#ff4949"
-            @change="setFlagEnabled"
-            :on-value="true"
-            :off-value="false">
-          </el-switch>
-          <el-button @click="dialogDeleteFlagVisible = true">
-            <span class="el-icon-delete2"></span>
-            Delete
+        <div class="flag-description">
+          <div>
+            <el-input
+              placeholder="Key"
+              v-model="flag.description">
+              <template slot="prepend">Flag Description</template>
+            </el-input>
+          </div>
+        </div>
+      </el-card>
+
+      <el-card class="variants-container">
+        <div slot="header" class="clearfix">
+          <h2>Variants</h2>
+        </div>
+        <div class="variants-container-inner" v-if="flag.variants.length">
+          <div v-for="variant in flag.variants" :key="variant.id">
+            <el-card>
+              <el-form :label-position="right" label-width="100px">
+                <el-form-item label="Key">
+                  <el-input
+                    placeholder="Key"
+                    v-model="variant.key">
+                  </el-input>
+                </el-form-item>
+                <el-form-item label="Attachment">
+                  <el-input
+                    placeholder="{}"
+                    v-model="variant.attachment">
+                  </el-input>
+                </el-form-item>
+              </el-form>
+            </el-card>
+          </div>
+        </div>
+        <div class="card--empty" v-else>
+          No variants created for this feature flag yet
+        </div>
+        <div class="variants-input">
+          <div class="flex-row equal-width constraints-inputs-container">
+            <div>
+              <el-input
+                placeholder="Variant Key"
+                v-model="newVariant.key">
+              </el-input>
+            </div>
+          </div>
+          <el-button
+            class="width--full"
+            :disabled="!newVariant.key"
+            @click.prevent="createVariant">
+            Create Variant
           </el-button>
         </div>
-      </div>
-      <div class="flag-description">
-        {{ flag.description }}
-      </div>
-      <div class="segments-container">
-        <div class="flex-row">
-          <div class="flex-row-left">
-            <h2>Segments ({{ flag.segments.length }})</h2>
-          </div>
-          <div class="flex-row-right">
-            <el-button @click="dialogCreateSegmentOpen = true">
-              <span class="el-icon-edit"></span>
-              Create
-            </el-button>
+      </el-card>
+
+      <el-card class="segments-container">
+        <div slot="header" class="el-card-header">
+          <div class="flex-row">
+            <div class="flex-row-left">
+              <h2>Segments</h2>
+            </div>
+            <div class="flex-row-right">
+              <el-button @click="dialogCreateSegmentOpen = true">
+                <span class="el-icon-edit"></span>
+                Create
+              </el-button>
+            </div>
           </div>
         </div>
-        <ul class="segments-container-inner" v-if="flag.segments.length">
-          <li
+        <div class="segments-container-inner" v-if="flag.segments.length">
+          <el-card
             v-for="segment in flag.segments"
             :key="segment.id"
             class="segment">
-            <div
-              class="flex-row highlightable"
-              @click.prevent="() => expandSegment(segment)">
+            <div class="flex-row">
               <div class="flex-row-left">
-                <span
-                  v-bind:class="{'el-icon-caret-right': !segment._expanded, 'el-icon-caret-bottom': segment._expanded}">
-                </span>
-                <el-badge :value="segment.constraints.length" :hidden="!segment.constraints.length">
-                  <el-tag>{{ segment.id }}</el-tag>
-                </el-badge>
-                {{ segment.description }}
+                <el-tag>{{ segment.id }}</el-tag> {{ segment.description }}
               </div>
               <div class="flex-row-right">
                 {{ segment.rolloutPercent || 0 }}%
               </div>
             </div>
-            <div class="flex-row equal-width align-items-top" v-if="segment._expanded">
+            <hr>
+            <div class="flex-row equal-width align-items-top">
               <div class="segment-contraints">
-                <h4>Constraints ({{segment.constraints.length}})</h4>
+                <h4>Constraints</h4>
                 <div class="constraints">
                   <ol class="constraints-inner" v-if="segment.constraints.length">
                     <li
@@ -163,7 +210,7 @@
                     </li>
                   </ol>
                   <div class="card--empty" v-else>
-                    No constraints for this segment yet
+                    <span>No constraints for this segment yet</span>
                   </div>
                   <div>
                     <div class="flex-row equal-width constraints-inputs-container">
@@ -218,39 +265,21 @@
                 </div>
               </div>
             </div>
-          </li>
-        </ul>
+          </el-card>
+        </div>
         <div class="card--empty" v-else>
           No segments created for this feature flag yet
         </div>
-        <div class="variants-container">
-          <h2>Variants ({{ flag.variants.length }})</h2>
-          <div class="variants-container-inner" v-if="flag.variants.length">
-            <el-tag type="danger" v-for="variant in flag.variants" :key="variant.id">
-              {{ variant.key }}
-            </el-tag>
-          </div>
-          <div class="card--empty" v-else>
-            No variants created for this feature flag yet
-          </div>
-          <div class="variants-input">
-            <div class="flex-row equal-width constraints-inputs-container">
-              <div>
-                <el-input
-                  placeholder="Key"
-                  v-model="newVariant.key">  
-                </el-input>
-              </div>
-            </div>
-            <el-button
-              class="width--full"
-              :disabled="!newVariant.key"
-              @click.prevent="createVariant">
-              Create Variant
-            </el-button>
-          </div>
+      </el-card>
+      <el-card>
+        <div slot="header" class="el-card-header">
+          <h2>Flag Settings</h2>
         </div>
-      </div>
+        <el-button @click="dialogDeleteFlagVisible = true" type="danger">
+          <span class="el-icon-delete2"></span>
+          Delete Flag
+        </el-button>
+      </el-card>
     </div>
     <spinner v-if="!loaded"></spinner>
   </div>
@@ -308,7 +337,6 @@ const DEFAULT_DISTRIBUTION = {
 }
 
 function processSegment (segment) {
-  segment._expanded = false
   segment.newConstraint = clone(DEFAULT_CONSTRAINT)
 }
 
@@ -350,9 +378,6 @@ export default {
     }
   },
   methods: {
-    expandSegment (segment) {
-      segment._expanded = !segment._expanded
-    },
     deleteFlag () {
       const {flagId} = this.$route.params
       fetch(`${API_URL}/flags/${flagId}`, {method: 'delete'})
@@ -468,22 +493,17 @@ h4 {
   margin: 10px 0;
 }
 
+h2 {
+  margin: -0.2em;
+  color: white;
+}
+
 .flag-container {
-  width: 800px;
+  width: 700px;
 }
 
-.flag-description {
-  font-size: 1.2em;
-  padding: 10px 20px;
-  background-color: white;
-  border-radius: 3px;
-  border: 1px solid #ddd;
-}
-
-ul.segments-container-inner {
-  li {
-    padding: 5px 0;
-  }
+.el-breadcrumb {
+  margin-bottom: 2em;
 }
 
 .segment {
@@ -494,13 +514,6 @@ ul.segments-container-inner {
       background-color: #ddd;
     }
   }
-}
-
-hr {
-  border-color: #eee;
-  border-width: 1px;
-  background-color: #eee;
-  margin: 30px 0;
 }
 
 ol.constraints-inner {
@@ -522,8 +535,8 @@ ol.constraints-inner {
 }
 
 .variants-container-inner {
-  .el-tag {
-    margin-right: 5px;
+  .el-card {
+    margin-bottom: 1em;
   }
 }
 
@@ -537,5 +550,9 @@ ol.constraints-inner {
 
 .edit-distribution-alert {
   margin-top: 10px;
+} 
+
+.el-card {
+  margin-bottom: 1em;
 }
 </style>

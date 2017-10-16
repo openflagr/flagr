@@ -73,7 +73,7 @@ ul {
     }
     &.equal-width {
       > * {
-        flex: 1;      
+        flex: 1;
       }
     }
     &.align-items-top {
@@ -111,6 +111,10 @@ ul {
       border-radius: 3px;
       width: 100%;
     }
+  }
+
+  .el-card__header {
+    background-color: #74E5E0;
   }
 }
 </style>
