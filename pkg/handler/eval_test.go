@@ -6,6 +6,7 @@ import (
 	"github.com/checkr/flagr/pkg/entity"
 	"github.com/checkr/flagr/pkg/util"
 	"github.com/checkr/flagr/swagger_gen/models"
+	"github.com/jinzhu/gorm"
 
 	"github.com/prashantv/gostub"
 	"github.com/stretchr/testify/assert"
@@ -109,6 +110,72 @@ func TestEvalFlag(t *testing.T) {
 		})
 		assert.NotNil(t, result)
 		assert.NotNil(t, result.VariantID)
+		assert.Nil(t, err)
+	})
+
+	t.Run("test happy code path with multiple constraints", func(t *testing.T) {
+		f := entity.GenFixtureFlag()
+		f.Segments[0].Constraints = []entity.Constraint{
+			{
+				Model:     gorm.Model{ID: 500},
+				SegmentID: 200,
+				Property:  "dl_state",
+				Operator:  models.ConstraintOperatorEQ,
+				Value:     `"CA"`,
+			},
+			{
+				Model:     gorm.Model{ID: 500},
+				SegmentID: 200,
+				Property:  "state",
+				Operator:  models.ConstraintOperatorEQ,
+				Value:     `{dl_state}`,
+			},
+		}
+		f.PrepareEvaluation()
+		cache := &EvalCache{mapCache: map[uint]*entity.Flag{100: &f}}
+		defer gostub.StubFunc(&GetEvalCache, cache).Reset()
+		result, err := evalFlag(&models.EvalContext{
+			EnableDebug:   true,
+			EntityContext: map[string]interface{}{"dl_state": "CA", "state": "CA"},
+			EntityID:      util.StringPtr("entityID1"),
+			EntityType:    util.StringPtr("entityType1"),
+			FlagID:        util.Int64Ptr(int64(100)),
+		})
+		assert.NotNil(t, result)
+		assert.NotNil(t, result.VariantID)
+		assert.Nil(t, err)
+	})
+
+	t.Run("test no match path with multiple constraints", func(t *testing.T) {
+		f := entity.GenFixtureFlag()
+		f.Segments[0].Constraints = []entity.Constraint{
+			{
+				Model:     gorm.Model{ID: 500},
+				SegmentID: 200,
+				Property:  "dl_state",
+				Operator:  models.ConstraintOperatorEQ,
+				Value:     `"CA"`,
+			},
+			{
+				Model:     gorm.Model{ID: 500},
+				SegmentID: 200,
+				Property:  "state",
+				Operator:  models.ConstraintOperatorEQ,
+				Value:     `{dl_state}`,
+			},
+		}
+		f.PrepareEvaluation()
+		cache := &EvalCache{mapCache: map[uint]*entity.Flag{100: &f}}
+		defer gostub.StubFunc(&GetEvalCache, cache).Reset()
+		result, err := evalFlag(&models.EvalContext{
+			EnableDebug:   true,
+			EntityContext: map[string]interface{}{"dl_state": "CA", "state": "NY"},
+			EntityID:      util.StringPtr("entityID1"),
+			EntityType:    util.StringPtr("entityType1"),
+			FlagID:        util.Int64Ptr(int64(100)),
+		})
+		assert.NotNil(t, result)
+		assert.Nil(t, result.VariantID)
 		assert.Nil(t, err)
 	})
 

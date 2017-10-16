@@ -85,7 +85,6 @@ deadcode:
 spelling:
 	@echo "Running $@"
 	@${GOPATH}/bin/misspell -error `find pkg/`
-	@${GOPATH}/bin/misspell -error `find docs/`
 
 verify_swagger:
 	@echo "Running $@"

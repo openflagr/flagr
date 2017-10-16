@@ -1,7 +1,6 @@
 package config
 
 import (
-	"os"
 	"time"
 
 	"github.com/jinzhu/configor"
@@ -10,28 +9,27 @@ import (
 // Config is the whole configuration of the app
 var Config = struct {
 	DB struct {
-		DBDriver        string `env:"DBDriver"`
-		DBConnectionStr string `env:"DBConnectionStr"`
+		DBDriver        string `env:"DBDriver" default:"mysql"`
+		DBConnectionStr string `env:"DBConnectionStr" default:"root:@tcp(127.0.0.1:18100)/flagr?parseTime=true"`
 	}
 	CORS struct {
-		Enabled bool `env:"CORSEnabled"`
+		Enabled bool `env:"CORSEnabled" default:"true"`
 	}
 	Sentry struct {
-		Enabled bool   `env:"SentryEnabled"`
-		DSN     string `env:"SentryDSN"`
+		Enabled bool   `env:"SentryEnabled" default:"false"`
+		DSN     string `env:"SentryDSN" default:""`
 	}
 	EvalCache struct {
-		RefreshTimeout  Duration `env:"EvalCacheRefreshTimeout"`
-		RefreshInterval Duration `env:"EvalCacheRefreshInterval"`
+		RefreshTimeout  Duration `env:"EvalCacheRefreshTimeout" default:"59s"`
+		RefreshInterval Duration `env:"EvalCacheRefreshInterval" default:"10s"`
 	}
 	PProf struct {
-		Enabled bool `env:"PProfEnabled"`
+		Enabled bool `env:"PProfEnabled" default:"true"`
 	}
 }{}
 
 func init() {
-	pwd, _ := os.Getwd()
-	configor.Load(&Config, pwd+"/pkg/config/config.toml")
+	configor.Load(&Config)
 }
 
 // Duration is an alias type of time.Duration

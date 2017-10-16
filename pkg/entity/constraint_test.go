@@ -104,3 +104,23 @@ func TestConstraintValidate(t *testing.T) {
 		assert.NoError(t, c.Validate())
 	})
 }
+
+func TestConstraintArray(t *testing.T) {
+	cs := ConstraintArray{
+		{
+			SegmentID: 0,
+			Property:  "dl_state",
+			Operator:  models.ConstraintOperatorIN,
+			Value:     `["CA", "NY"]`,
+		},
+		{
+			SegmentID: 0,
+			Property:  "state",
+			Operator:  models.ConstraintOperatorEQ,
+			Value:     `{dl_state}`,
+		},
+	}
+	expr, err := cs.ToExpr()
+	assert.NoError(t, err)
+	assert.NotNil(t, expr)
+}

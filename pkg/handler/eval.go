@@ -107,33 +107,31 @@ func evalSegment(
 	log *models.SegmentDebugLog,
 	evalErr *Error,
 ) {
-	if len(segment.SegmentEvaluation.Conditions) != 0 {
+	if len(segment.Constraints) != 0 {
 		m, ok := evalContext.EntityContext.(map[string]interface{})
 		if !ok {
 			evalErr = NewError(400, "constraints are present in the segment_id %v, but got invalid entity_context: %s.", segment.ID, spew.Sdump(evalContext.EntityContext))
 			return nil, nil, evalErr
 		}
 
-		for _, expr := range segment.SegmentEvaluation.Conditions {
-
-			match, err := conditions.Evaluate(expr, m)
-			if err != nil {
-				evalErr = NewError(400, "invalid entity_context: %s. reason: %s.", spew.Sdump(evalContext.EntityContext), err)
-				return nil, nil, evalErr
+		expr := segment.SegmentEvaluation.ConditionsExpr
+		match, err := conditions.Evaluate(expr, m)
+		if err != nil {
+			evalErr = NewError(400, "invalid entity_context: %s. reason: %s.", spew.Sdump(evalContext.EntityContext), err)
+			return nil, nil, evalErr
+		}
+		if !match {
+			log = &models.SegmentDebugLog{
+				Msg:       debugConstraintMsg(expr, m),
+				SegmentID: int64(segment.ID),
 			}
-			if !match {
-				log = &models.SegmentDebugLog{
-					Msg:       debugConstraintMsg(expr, m),
-					SegmentID: int64(segment.ID),
-				}
-				return nil, log, nil
-			}
+			return nil, log, nil
 		}
 	}
 
 	vID, debugMsg := segment.SegmentEvaluation.DistributionArray.Rollout(
 		evalContext.EntityID,
-		fmt.Sprint(evalContext.FlagID), // default use the flagID as salt
+		fmt.Sprint(*evalContext.FlagID), // default use the flagID as salt
 		segment.RolloutPercent,
 	)
 
