@@ -694,6 +694,94 @@ func init() {
           }
         }
       }
+    },
+    "/flags/{flagID}/variants/{variantID}": {
+      "put": {
+        "tags": [
+          "variant"
+        ],
+        "operationId": "putVariant",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the flag",
+            "name": "flagID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the variant",
+            "name": "variantID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "update a variant",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/putVariantRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "variant just updated",
+            "schema": {
+              "$ref": "#/definitions/variant"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "variant"
+        ],
+        "operationId": "deleteVariant",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the flag",
+            "name": "flagID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the variant",
+            "name": "variantID",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "deleted"
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -1050,6 +1138,22 @@ func init() {
       ],
       "properties": {
         "description": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "putVariantRequest": {
+      "type": "object",
+      "required": [
+        "key",
+        "attachment"
+      ],
+      "properties": {
+        "attachment": {
+          "type": "object"
+        },
+        "key": {
           "type": "string",
           "minLength": 1
         }

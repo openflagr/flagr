@@ -5,6 +5,7 @@ import (
 	"github.com/checkr/flagr/pkg/repo"
 	"github.com/checkr/flagr/pkg/util"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/distribution"
+	"github.com/checkr/flagr/swagger_gen/restapi/operations/variant"
 )
 
 func validatePutDistributions(params distribution.PutDistributionsParams) *Error {
@@ -41,7 +42,32 @@ func validatePutDistributions(params distribution.PutDistributionsParams) *Error
 			return NewError(400, "error finding variantID %v under this flag. expecting %v", vID, vIDs)
 		}
 		if k != util.SafeString(v.VariantKey) {
-			return NewError(400, "error matching variantID %v with variantKey %s. expecting %s.", vID, util.SafeString(v.VariantKey), k)
+			return NewError(400, "error matching variantID %v with variantKey %s. expecting %s", vID, util.SafeString(v.VariantKey), k)
+		}
+	}
+
+	return nil
+}
+
+func validateDeleteVariant(params variant.DeleteVariantParams) *Error {
+	f := &entity.Flag{}
+	err := entity.NewFlagQuerySet(repo.GetDB()).IDEq(uint(params.FlagID)).One(f)
+	if err != nil {
+		return NewError(400, "error finding flagID %v. reason %s", params.FlagID, err)
+	}
+	f.Preload(repo.GetDB())
+
+	q := entity.NewDistributionQuerySet(repo.GetDB())
+	for _, s := range f.Segments {
+		for _, d := range s.Distributions {
+			if d.VariantID == util.SafeUint(params.VariantID) {
+				if d.Percent != uint(0) {
+					return NewError(400, "error deleting variant %v. distribution %v still has non-zero distribution %v", params.VariantID, d.ID, d.Percent)
+				}
+				if err := q.IDEq(d.ID).Delete(); err != nil {
+					return NewError(500, "error deleting distribution %v. reason: %s", d.ID, err)
+				}
+			}
 		}
 	}
 

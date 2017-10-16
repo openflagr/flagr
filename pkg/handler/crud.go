@@ -41,6 +41,8 @@ type CRUD interface {
 	// Variants
 	CreateVariant(variant.CreateVariantParams) middleware.Responder
 	FindVariants(variant.FindVariantsParams) middleware.Responder
+	PutVariant(variant.PutVariantParams) middleware.Responder
+	DeleteVariant(variant.DeleteVariantParams) middleware.Responder
 }
 
 // NewCRUD creates a new CRUD instance
@@ -350,4 +352,44 @@ func (c *crud) FindVariants(params variant.FindVariantsParams) middleware.Respon
 	resp := variant.NewFindVariantsOK()
 	resp.SetPayload(e2r.MapVariants(vs))
 	return resp
+}
+
+func (c *crud) PutVariant(params variant.PutVariantParams) middleware.Responder {
+	v := entity.Variant{}
+
+	q := entity.NewVariantQuerySet(repo.GetDB())
+	err := q.IDEq(uint(params.VariantID)).One(&v)
+	if err != nil {
+		return variant.NewPutVariantDefault(500).WithPayload(ErrorMessage("%s", err))
+	}
+
+	v.Key = util.SafeString(params.Body.Key)
+	if params.Body.Attachment != nil {
+		a, err := r2e.MapAttachment(params.Body.Attachment)
+		if err != nil {
+			return variant.NewPutVariantDefault(400).WithPayload(ErrorMessage("%s", err))
+		}
+		v.Attachment = a
+	}
+
+	if err := repo.GetDB().Save(&v).Error; err != nil {
+		return variant.NewPutVariantDefault(500).WithPayload(ErrorMessage("%s", err))
+	}
+
+	resp := variant.NewPutVariantOK()
+	resp.SetPayload(e2r.MapVariant(&v))
+	return resp
+}
+
+func (c *crud) DeleteVariant(params variant.DeleteVariantParams) middleware.Responder {
+	if err := validateDeleteVariant(params); err != nil {
+		return variant.NewDeleteVariantDefault(err.StatusCode).WithPayload(ErrorMessage("%s", err))
+	}
+
+	q := entity.NewVariantQuerySet(repo.GetDB())
+	if err := q.IDEq(uint(params.VariantID)).Delete(); err != nil {
+		return variant.NewDeleteVariantDefault(500).WithPayload(ErrorMessage("%s", err))
+	}
+
+	return variant.NewDeleteVariantOK()
 }

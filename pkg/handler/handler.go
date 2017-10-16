@@ -61,6 +61,8 @@ func setupCRUD(api *operations.FlagrAPI) {
 	// variants
 	api.VariantCreateVariantHandler = variant.CreateVariantHandlerFunc(c.CreateVariant)
 	api.VariantFindVariantsHandler = variant.FindVariantsHandlerFunc(c.FindVariants)
+	api.VariantPutVariantHandler = variant.PutVariantHandlerFunc(c.PutVariant)
+	api.VariantDeleteVariantHandler = variant.DeleteVariantHandlerFunc(c.DeleteVariant)
 }
 
 func setupEvaluation(api *operations.FlagrAPI) {
