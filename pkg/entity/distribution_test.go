@@ -7,6 +7,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestCRC32(t *testing.T) {
+	num1 := crc32Num("entity1", "salt1")
+	num2 := crc32Num("entity2", "salt1")
+	num3 := crc32Num("entity1", "salt1")
+	assert.Equal(t, num1, num3)
+	assert.NotEqual(t, num1, num2)
+}
+
 func TestBucketByNum(t *testing.T) {
 	t.Run("normal cases", func(t *testing.T) {
 		d := DistributionArray{

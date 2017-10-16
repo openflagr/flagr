@@ -17,7 +17,7 @@ type Segment struct {
 	Rank           uint
 	RolloutPercent uint
 
-	Constraints   []Constraint
+	Constraints   ConstraintArray
 	Distributions []Distribution
 
 	SegmentEvaluation SegmentEvaluation `gorm:"-"`
@@ -46,7 +46,7 @@ func (s *Segment) Preload(db *gorm.DB) error {
 
 // SegmentEvaluation is a struct that holds the necessary info for evaluation
 type SegmentEvaluation struct {
-	Conditions        []conditions.Expr
+	ConditionsExpr    conditions.Expr
 	DistributionArray DistributionArray
 }
 
@@ -55,20 +55,18 @@ type SegmentEvaluation struct {
 func (s *Segment) PrepareEvaluation() error {
 	dLen := len(s.Distributions)
 	se := SegmentEvaluation{
-		Conditions: make([]conditions.Expr, len(s.Constraints), len(s.Constraints)),
 		DistributionArray: DistributionArray{
 			VariantIDs:          make([]uint, dLen, dLen),
 			PercentsAccumulated: make([]int, dLen, dLen),
 		},
 	}
 
-	for i, c := range s.Constraints {
-		expr, err := c.ToExpr()
-		if err != nil {
-			return err
-		}
-		se.Conditions[i] = expr
+	expr, err := s.Constraints.ToExpr()
+	if err != nil {
+		return err
 	}
+	se.ConditionsExpr = expr
+
 	for i, d := range s.Distributions {
 		se.DistributionArray.VariantIDs[i] = d.VariantID
 		if i == 0 {
