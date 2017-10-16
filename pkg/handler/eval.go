@@ -96,7 +96,13 @@ func evalFlag(evalContext *models.EvalContext) (*models.EvalResult, *Error) {
 	evalResult.EvalDebugLog.SegmentDebugLogs = logs
 	evalResult.SegmentID = sID
 	evalResult.VariantID = vID
+	asyncRecord(evalResult)
 	return evalResult, nil
+}
+
+var asyncRecord = func(r *models.EvalResult) {
+	rec := GetDataRecorder()
+	rec.AsyncRecord(r)
 }
 
 func evalSegment(
