@@ -39,6 +39,7 @@ func MapFlags(e []entity.Flag) ([]*models.Flag, error) {
 
 // MapSegment maps segment
 func MapSegment(e *entity.Segment) *models.Segment {
+	e.Preload(repo.GetDB())
 	r := &models.Segment{}
 	r.ID = int64(e.ID)
 	r.Description = util.StringPtr(e.Description)

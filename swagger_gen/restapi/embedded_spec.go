@@ -319,10 +319,98 @@ func init() {
         ],
         "responses": {
           "200": {
-            "description": "segments ordered by rank of the flag",
+            "description": "segment created",
             "schema": {
               "$ref": "#/definitions/segment"
             }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
+    "/flags/{flagID}/segments/{segmentID}": {
+      "put": {
+        "tags": [
+          "segment"
+        ],
+        "operationId": "putSegment",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the flag",
+            "name": "flagID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the segment",
+            "name": "segmentID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "update a segment",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/putSegmentRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "segment updated",
+            "schema": {
+              "$ref": "#/definitions/segment"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "segment"
+        ],
+        "operationId": "deleteSegment",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the flag",
+            "name": "flagID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the segment",
+            "name": "segmentID",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "deleted"
           },
           "default": {
             "description": "generic error response",
@@ -1140,6 +1228,25 @@ func init() {
         "description": {
           "type": "string",
           "minLength": 1
+        }
+      }
+    },
+    "putSegmentRequest": {
+      "type": "object",
+      "required": [
+        "description",
+        "rolloutPercent"
+      ],
+      "properties": {
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rolloutPercent": {
+          "type": "integer",
+          "format": "int64",
+          "maximum": 100,
+          "minimum": 0
         }
       }
     },

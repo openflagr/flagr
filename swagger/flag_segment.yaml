@@ -1,0 +1,60 @@
+put:
+  tags:
+    - segment
+  operationId: putSegment
+  parameters:
+    - in: path
+      name: flagID
+      description: numeric ID of the flag
+      required: true
+      type: integer
+      format: int64
+      minimum: 1
+    - in: path
+      name: segmentID
+      description: numeric ID of the segment
+      required: true
+      type: integer
+      format: int64
+      minimum: 1
+    - in: body
+      name: body
+      description: update a segment
+      required: true
+      schema:
+        $ref: "#/definitions/putSegmentRequest"
+  responses:
+    200:
+      description: segment updated
+      schema:
+        $ref: "#/definitions/segment"
+    default:
+      description: generic error response
+      schema:
+        $ref: "#/definitions/error"
+delete:
+  tags:
+    - segment
+  operationId: deleteSegment
+  parameters:
+    - in: path
+      name: flagID
+      description: numeric ID of the flag
+      required: true
+      type: integer
+      format: int64
+      minimum: 1
+    - in: path
+      name: segmentID
+      description: numeric ID of the segment
+      required: true
+      type: integer
+      format: int64
+      minimum: 1
+  responses:
+    200:
+      description: deleted
+    default:
+      description: generic error response
+      schema:
+        $ref: "#/definitions/error"

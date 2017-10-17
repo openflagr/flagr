@@ -61,11 +61,13 @@ func (s *Segment) PrepareEvaluation() error {
 		},
 	}
 
-	expr, err := s.Constraints.ToExpr()
-	if err != nil {
-		return err
+	if len(s.Constraints) != 0 {
+		expr, err := s.Constraints.ToExpr()
+		if err != nil {
+			return err
+		}
+		se.ConditionsExpr = expr
 	}
-	se.ConditionsExpr = expr
 
 	for i, d := range s.Distributions {
 		se.DistributionArray.VariantIDs[i] = d.VariantID

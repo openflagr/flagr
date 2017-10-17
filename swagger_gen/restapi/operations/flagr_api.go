@@ -60,6 +60,9 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		FlagDeleteFlagHandler: flag.DeleteFlagHandlerFunc(func(params flag.DeleteFlagParams) middleware.Responder {
 			return middleware.NotImplemented("operation FlagDeleteFlag has not yet been implemented")
 		}),
+		SegmentDeleteSegmentHandler: segment.DeleteSegmentHandlerFunc(func(params segment.DeleteSegmentParams) middleware.Responder {
+			return middleware.NotImplemented("operation SegmentDeleteSegment has not yet been implemented")
+		}),
 		VariantDeleteVariantHandler: variant.DeleteVariantHandlerFunc(func(params variant.DeleteVariantParams) middleware.Responder {
 			return middleware.NotImplemented("operation VariantDeleteVariant has not yet been implemented")
 		}),
@@ -92,6 +95,9 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		}),
 		FlagPutFlagHandler: flag.PutFlagHandlerFunc(func(params flag.PutFlagParams) middleware.Responder {
 			return middleware.NotImplemented("operation FlagPutFlag has not yet been implemented")
+		}),
+		SegmentPutSegmentHandler: segment.PutSegmentHandlerFunc(func(params segment.PutSegmentParams) middleware.Responder {
+			return middleware.NotImplemented("operation SegmentPutSegment has not yet been implemented")
 		}),
 		VariantPutVariantHandler: variant.PutVariantHandlerFunc(func(params variant.PutVariantParams) middleware.Responder {
 			return middleware.NotImplemented("operation VariantPutVariant has not yet been implemented")
@@ -140,6 +146,8 @@ type FlagrAPI struct {
 	ConstraintDeleteConstraintHandler constraint.DeleteConstraintHandler
 	// FlagDeleteFlagHandler sets the operation handler for the delete flag operation
 	FlagDeleteFlagHandler flag.DeleteFlagHandler
+	// SegmentDeleteSegmentHandler sets the operation handler for the delete segment operation
+	SegmentDeleteSegmentHandler segment.DeleteSegmentHandler
 	// VariantDeleteVariantHandler sets the operation handler for the delete variant operation
 	VariantDeleteVariantHandler variant.DeleteVariantHandler
 	// ConstraintFindConstraintsHandler sets the operation handler for the find constraints operation
@@ -162,6 +170,8 @@ type FlagrAPI struct {
 	DistributionPutDistributionsHandler distribution.PutDistributionsHandler
 	// FlagPutFlagHandler sets the operation handler for the put flag operation
 	FlagPutFlagHandler flag.PutFlagHandler
+	// SegmentPutSegmentHandler sets the operation handler for the put segment operation
+	SegmentPutSegmentHandler segment.PutSegmentHandler
 	// VariantPutVariantHandler sets the operation handler for the put variant operation
 	VariantPutVariantHandler variant.PutVariantHandler
 	// FlagSetFlagEnabledHandler sets the operation handler for the set flag enabled operation
@@ -253,6 +263,10 @@ func (o *FlagrAPI) Validate() error {
 		unregistered = append(unregistered, "flag.DeleteFlagHandler")
 	}
 
+	if o.SegmentDeleteSegmentHandler == nil {
+		unregistered = append(unregistered, "segment.DeleteSegmentHandler")
+	}
+
 	if o.VariantDeleteVariantHandler == nil {
 		unregistered = append(unregistered, "variant.DeleteVariantHandler")
 	}
@@ -295,6 +309,10 @@ func (o *FlagrAPI) Validate() error {
 
 	if o.FlagPutFlagHandler == nil {
 		unregistered = append(unregistered, "flag.PutFlagHandler")
+	}
+
+	if o.SegmentPutSegmentHandler == nil {
+		unregistered = append(unregistered, "segment.PutSegmentHandler")
 	}
 
 	if o.VariantPutVariantHandler == nil {
@@ -428,6 +446,11 @@ func (o *FlagrAPI) initHandlerCache() {
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
+	o.handlers["DELETE"]["/flags/{flagID}/segments/{segmentID}"] = segment.NewDeleteSegment(o.context, o.SegmentDeleteSegmentHandler)
+
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
 	o.handlers["DELETE"]["/flags/{flagID}/variants/{variantID}"] = variant.NewDeleteVariant(o.context, o.VariantDeleteVariantHandler)
 
 	if o.handlers["GET"] == nil {
@@ -479,6 +502,11 @@ func (o *FlagrAPI) initHandlerCache() {
 		o.handlers["PUT"] = make(map[string]http.Handler)
 	}
 	o.handlers["PUT"]["/flags/{flagID}"] = flag.NewPutFlag(o.context, o.FlagPutFlagHandler)
+
+	if o.handlers["PUT"] == nil {
+		o.handlers["PUT"] = make(map[string]http.Handler)
+	}
+	o.handlers["PUT"]["/flags/{flagID}/segments/{segmentID}"] = segment.NewPutSegment(o.context, o.SegmentPutSegmentHandler)
 
 	if o.handlers["PUT"] == nil {
 		o.handlers["PUT"] = make(map[string]http.Handler)
