@@ -1,0 +1,60 @@
+put:
+  tags:
+    - variant
+  operationId: putVariant
+  parameters:
+    - in: path
+      name: flagID
+      description: numeric ID of the flag
+      required: true
+      type: integer
+      format: int64
+      minimum: 1
+    - in: path
+      name: variantID
+      description: numeric ID of the variant
+      required: true
+      type: integer
+      format: int64
+      minimum: 1
+    - in: body
+      name: body
+      description: update a variant
+      required: true
+      schema:
+        $ref: "#/definitions/putVariantRequest"
+  responses:
+    200:
+      description: variant just updated
+      schema:
+        $ref: "#/definitions/variant"
+    default:
+      description: generic error response
+      schema:
+        $ref: "#/definitions/error"
+delete:
+  tags:
+    - variant
+  operationId: deleteVariant
+  parameters:
+    - in: path
+      name: flagID
+      description: numeric ID of the flag
+      required: true
+      type: integer
+      format: int64
+      minimum: 1
+    - in: path
+      name: variantID
+      description: numeric ID of the variant
+      required: true
+      type: integer
+      format: int64
+      minimum: 1
+  responses:
+    200:
+      description: deleted
+    default:
+      description: generic error response
+      schema:
+        $ref: "#/definitions/error"

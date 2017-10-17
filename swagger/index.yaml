@@ -20,6 +20,8 @@ paths:
     $ref: ./flag_enabled.yaml
   /flags/{flagID}/variants:
     $ref: ./flag_variants.yaml
+  /flags/{flagID}/variants/{variantID}:
+    $ref: ./flag_variant.yaml
   /flags/{flagID}/segments:
     $ref: ./flag_segments.yaml
   /flags/{flagID}/segments/{segmentID}/constraints:
@@ -148,6 +150,17 @@ definitions:
     type: object
     required:
       - key
+    properties:
+      key:
+        type: string
+        minLength: 1
+      attachment:
+        type: object
+  putVariantRequest:
+    type: object
+    required:
+      - key
+      - attachment
     properties:
       key:
         type: string

@@ -60,6 +60,9 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		FlagDeleteFlagHandler: flag.DeleteFlagHandlerFunc(func(params flag.DeleteFlagParams) middleware.Responder {
 			return middleware.NotImplemented("operation FlagDeleteFlag has not yet been implemented")
 		}),
+		VariantDeleteVariantHandler: variant.DeleteVariantHandlerFunc(func(params variant.DeleteVariantParams) middleware.Responder {
+			return middleware.NotImplemented("operation VariantDeleteVariant has not yet been implemented")
+		}),
 		ConstraintFindConstraintsHandler: constraint.FindConstraintsHandlerFunc(func(params constraint.FindConstraintsParams) middleware.Responder {
 			return middleware.NotImplemented("operation ConstraintFindConstraints has not yet been implemented")
 		}),
@@ -89,6 +92,9 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		}),
 		FlagPutFlagHandler: flag.PutFlagHandlerFunc(func(params flag.PutFlagParams) middleware.Responder {
 			return middleware.NotImplemented("operation FlagPutFlag has not yet been implemented")
+		}),
+		VariantPutVariantHandler: variant.PutVariantHandlerFunc(func(params variant.PutVariantParams) middleware.Responder {
+			return middleware.NotImplemented("operation VariantPutVariant has not yet been implemented")
 		}),
 		FlagSetFlagEnabledHandler: flag.SetFlagEnabledHandlerFunc(func(params flag.SetFlagEnabledParams) middleware.Responder {
 			return middleware.NotImplemented("operation FlagSetFlagEnabled has not yet been implemented")
@@ -134,6 +140,8 @@ type FlagrAPI struct {
 	ConstraintDeleteConstraintHandler constraint.DeleteConstraintHandler
 	// FlagDeleteFlagHandler sets the operation handler for the delete flag operation
 	FlagDeleteFlagHandler flag.DeleteFlagHandler
+	// VariantDeleteVariantHandler sets the operation handler for the delete variant operation
+	VariantDeleteVariantHandler variant.DeleteVariantHandler
 	// ConstraintFindConstraintsHandler sets the operation handler for the find constraints operation
 	ConstraintFindConstraintsHandler constraint.FindConstraintsHandler
 	// DistributionFindDistributionsHandler sets the operation handler for the find distributions operation
@@ -154,6 +162,8 @@ type FlagrAPI struct {
 	DistributionPutDistributionsHandler distribution.PutDistributionsHandler
 	// FlagPutFlagHandler sets the operation handler for the put flag operation
 	FlagPutFlagHandler flag.PutFlagHandler
+	// VariantPutVariantHandler sets the operation handler for the put variant operation
+	VariantPutVariantHandler variant.PutVariantHandler
 	// FlagSetFlagEnabledHandler sets the operation handler for the set flag enabled operation
 	FlagSetFlagEnabledHandler flag.SetFlagEnabledHandler
 
@@ -243,6 +253,10 @@ func (o *FlagrAPI) Validate() error {
 		unregistered = append(unregistered, "flag.DeleteFlagHandler")
 	}
 
+	if o.VariantDeleteVariantHandler == nil {
+		unregistered = append(unregistered, "variant.DeleteVariantHandler")
+	}
+
 	if o.ConstraintFindConstraintsHandler == nil {
 		unregistered = append(unregistered, "constraint.FindConstraintsHandler")
 	}
@@ -281,6 +295,10 @@ func (o *FlagrAPI) Validate() error {
 
 	if o.FlagPutFlagHandler == nil {
 		unregistered = append(unregistered, "flag.PutFlagHandler")
+	}
+
+	if o.VariantPutVariantHandler == nil {
+		unregistered = append(unregistered, "variant.PutVariantHandler")
 	}
 
 	if o.FlagSetFlagEnabledHandler == nil {
@@ -407,6 +425,11 @@ func (o *FlagrAPI) initHandlerCache() {
 	}
 	o.handlers["DELETE"]["/flags/{flagID}"] = flag.NewDeleteFlag(o.context, o.FlagDeleteFlagHandler)
 
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/flags/{flagID}/variants/{variantID}"] = variant.NewDeleteVariant(o.context, o.VariantDeleteVariantHandler)
+
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
@@ -456,6 +479,11 @@ func (o *FlagrAPI) initHandlerCache() {
 		o.handlers["PUT"] = make(map[string]http.Handler)
 	}
 	o.handlers["PUT"]["/flags/{flagID}"] = flag.NewPutFlag(o.context, o.FlagPutFlagHandler)
+
+	if o.handlers["PUT"] == nil {
+		o.handlers["PUT"] = make(map[string]http.Handler)
+	}
+	o.handlers["PUT"]["/flags/{flagID}/variants/{variantID}"] = variant.NewPutVariant(o.context, o.VariantPutVariantHandler)
 
 	if o.handlers["PUT"] == nil {
 		o.handlers["PUT"] = make(map[string]http.Handler)
