@@ -4,6 +4,30 @@ info:
   description: Flagr is a feature flagging, A/B testing and dynamic configuration microservice
   title: Flagr
   version: 1.0.0
+tags:
+  - name: flag
+    description: Everything about the flag
+  - name: segment
+    description: Segment defines the audience of the flag, it's the user segmentation
+  - name: constraint
+    description: Constraint is the unit of defining a small subset of users
+  - name: distribution
+    description: Distribution is the percent distribution of variants within that segment
+  - name: variant
+    description: Variants are the possible outcomes of flag evaluation
+  - name: evaluation
+    description: Evaluation is the process of evaluating a flag given the entity context
+x-tagGroups:
+  - name: Flag Management
+    tags:
+      - flag
+      - segment
+      - constraint
+      - distribution
+      - variant
+  - name: Flag Evaluation
+    tags:
+      - evaluation
 consumes:
 - application/json
 produces:
