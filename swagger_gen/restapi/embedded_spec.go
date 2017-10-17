@@ -1362,6 +1362,50 @@ func init() {
         }
       }
     }
-  }
+  },
+  "tags": [
+    {
+      "description": "Everything about the flag",
+      "name": "flag"
+    },
+    {
+      "description": "Segment defines the audience of the flag, it's the user segmentation",
+      "name": "segment"
+    },
+    {
+      "description": "Constraint is the unit of defining a small subset of users",
+      "name": "constraint"
+    },
+    {
+      "description": "Distribution is the percent distribution of variants within that segment",
+      "name": "distribution"
+    },
+    {
+      "description": "Variants are the possible outcomes of flag evaluation",
+      "name": "variant"
+    },
+    {
+      "description": "Evaluation is the process of evaluating a flag given the entity context",
+      "name": "evaluation"
+    }
+  ],
+  "x-tagGroups": [
+    {
+      "name": "Flag Management",
+      "tags": [
+        "flag",
+        "segment",
+        "constraint",
+        "distribution",
+        "variant"
+      ]
+    },
+    {
+      "name": "Flag Evaluation",
+      "tags": [
+        "evaluation"
+      ]
+    }
+  ]
 }`))
 }
