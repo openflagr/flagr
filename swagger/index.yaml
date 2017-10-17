@@ -24,6 +24,8 @@ paths:
     $ref: ./flag_variant.yaml
   /flags/{flagID}/segments:
     $ref: ./flag_segments.yaml
+  /flags/{flagID}/segments/{segmentID}:
+    $ref: ./flag_segment.yaml
   /flags/{flagID}/segments/{segmentID}/constraints:
     $ref: ./flag_segment_constraints.yaml
   /flags/{flagID}/segments/{segmentID}/constraints/{constraintID}:
@@ -116,6 +118,20 @@ definitions:
         minimum: 0
         maximum: 100
   createSegmentRequest:
+    type: object
+    required:
+      - description
+      - rolloutPercent
+    properties:
+      description:
+        type: string
+        minLength: 1
+      rolloutPercent:
+        type: integer
+        format: int64
+        minimum: 0
+        maximum: 100
+  putSegmentRequest:
     type: object
     required:
       - description

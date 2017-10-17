@@ -41,7 +41,7 @@ post:
         $ref: "#/definitions/createSegmentRequest"
   responses:
     200:
-      description: segments ordered by rank of the flag
+      description: segment created
       schema:
         $ref: "#/definitions/segment"
     default:

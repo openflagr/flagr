@@ -16,7 +16,7 @@ import (
 // CreateSegmentOKCode is the HTTP code returned for type CreateSegmentOK
 const CreateSegmentOKCode int = 200
 
-/*CreateSegmentOK segments ordered by rank of the flag
+/*CreateSegmentOK segment created
 
 swagger:response createSegmentOK
 */

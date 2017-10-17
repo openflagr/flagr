@@ -27,6 +27,8 @@ type CRUD interface {
 	// Segments
 	CreateSegment(segment.CreateSegmentParams) middleware.Responder
 	FindSegments(segment.FindSegmentsParams) middleware.Responder
+	PutSegment(segment.PutSegmentParams) middleware.Responder
+	DeleteSegment(segment.DeleteSegmentParams) middleware.Responder
 
 	// Constraints
 	CreateConstraint(constraint.CreateConstraintParams) middleware.Responder
@@ -201,6 +203,33 @@ func (c *crud) FindSegments(params segment.FindSegmentsParams) middleware.Respon
 	resp := segment.NewFindSegmentsOK()
 	resp.SetPayload(e2r.MapSegments(ss))
 	return resp
+}
+
+func (c *crud) PutSegment(params segment.PutSegmentParams) middleware.Responder {
+	s := entity.Segment{}
+	q := entity.NewSegmentQuerySet(repo.GetDB())
+	if err := q.IDEq(util.SafeUint(params.SegmentID)).One(&s); err != nil {
+		return segment.NewPutSegmentDefault(500).WithPayload(ErrorMessage("%s", err))
+	}
+
+	s.RolloutPercent = util.SafeUint(params.Body.RolloutPercent)
+	s.Description = util.SafeString(params.Body.Description)
+
+	if err := repo.GetDB().Save(&s).Error; err != nil {
+		return segment.NewPutSegmentDefault(500).WithPayload(ErrorMessage("%s", err))
+	}
+
+	resp := segment.NewPutSegmentOK()
+	resp.SetPayload(e2r.MapSegment(&s))
+	return resp
+}
+
+func (c *crud) DeleteSegment(params segment.DeleteSegmentParams) middleware.Responder {
+	q := entity.NewSegmentQuerySet(repo.GetDB())
+	if err := q.IDEq(util.SafeUint(params.SegmentID)).Delete(); err != nil {
+		return segment.NewDeleteSegmentDefault(500).WithPayload(ErrorMessage("%s", err))
+	}
+	return segment.NewDeleteSegmentOK()
 }
 
 func (c *crud) CreateConstraint(params constraint.CreateConstraintParams) middleware.Responder {

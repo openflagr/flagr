@@ -47,6 +47,8 @@ func setupCRUD(api *operations.FlagrAPI) {
 	// segments
 	api.SegmentCreateSegmentHandler = segment.CreateSegmentHandlerFunc(c.CreateSegment)
 	api.SegmentFindSegmentsHandler = segment.FindSegmentsHandlerFunc(c.FindSegments)
+	api.SegmentPutSegmentHandler = segment.PutSegmentHandlerFunc(c.PutSegment)
+	api.SegmentDeleteSegmentHandler = segment.DeleteSegmentHandlerFunc(c.DeleteSegment)
 
 	// constraints
 	api.ConstraintCreateConstraintHandler = constraint.CreateConstraintHandlerFunc(c.CreateConstraint)
