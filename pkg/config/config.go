@@ -9,22 +9,38 @@ import (
 // Config is the whole configuration of the app
 var Config = struct {
 	DB struct {
-		DBDriver        string `env:"DBDriver" default:"mysql"`
-		DBConnectionStr string `env:"DBConnectionStr" default:"root:@tcp(127.0.0.1:18100)/flagr?parseTime=true"`
+		DBDriver        string `env:"FLAGR_DB_DBDRIVER" default:"mysql"`
+		DBConnectionStr string `env:"FLAGR_DB_DBCONNECTIONSTR" default:"root:@tcp(127.0.0.1:18100)/flagr?parseTime=true"`
 	}
 	CORS struct {
-		Enabled bool `env:"CORSEnabled" default:"true"`
+		Enabled bool `env:"FLAGR_CORS_ENABLED" default:"true"`
 	}
 	Sentry struct {
-		Enabled bool   `env:"SentryEnabled" default:"false"`
-		DSN     string `env:"SentryDSN" default:""`
+		Enabled bool   `env:"FLAGR_SENTRY_ENABLED" default:"false"`
+		DSN     string `env:"FLAGR_SENTRY_DSN" default:""`
 	}
 	EvalCache struct {
-		RefreshTimeout  Duration `env:"EvalCacheRefreshTimeout" default:"59s"`
-		RefreshInterval Duration `env:"EvalCacheRefreshInterval" default:"10s"`
+		RefreshTimeout  Duration `env:"FLAGR_EVALCACHE_REFRESHTIMEOUT" default:"59s"`
+		RefreshInterval Duration `env:"FLAGR_EVALCACHE_REFRESHINTERVAL" default:"10s"`
 	}
 	PProf struct {
-		Enabled bool `env:"PProfEnabled" default:"true"`
+		Enabled bool `env:"FLAGR_PPROF_ENABLED" default:"true"`
+	}
+	Recorder struct {
+		Enabled bool   `env:"FLAGR_RECORDER_ENABLED" default:"true"`
+		Type    string `env:"FLAGR_RECORDER_TYPE" default:"kafka"`
+		Kafka   struct {
+			Brokers   string `env:"FLAGR_RECORDER_KAFKA_BROKERS" default:":9092"`
+			CertFile  string `env:"FLAGR_RECORDER_KAFKA_CERTFILE" default:""`
+			KeyFile   string `env:"FLAGR_RECORDER_KAFKA_KEYFILE" default:""`
+			CAFile    string `env:"FLAGR_RECORDER_KAFKA_CAFILE" default:""`
+			VerifySSL bool   `env:"FLAGR_RECORDER_KAFKA_VERIFYSSL" default:"false"`
+			Verbose   bool   `env:"FLAGR_RECORDER_KAFKA_VERBOSE" default:"true"`
+
+			Topic          string   `env:"FLAGR_RECORDER_KAFKA_TOPIC" default:"flagr-records"`
+			RetryMax       int      `env:"FLAGR_RECORDER_KAFKA_RETRYMAX" default:"5"`
+			FlushFrequency Duration `env:"FLAGR_RECORDER_KAFKA_FLUSHFREQUENCY" default:"500ms"`
+		}
 	}
 }{}
 

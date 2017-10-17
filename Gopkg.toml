@@ -100,3 +100,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/gohttp/pprof"
+
+[[constraint]]
+  name = "github.com/Shopify/sarama"
+  version = "1.13.0"
