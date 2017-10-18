@@ -21,7 +21,7 @@ var Config = struct {
 	}
 	EvalCache struct {
 		RefreshTimeout  Duration `env:"FLAGR_EVALCACHE_REFRESHTIMEOUT" default:"59s"`
-		RefreshInterval Duration `env:"FLAGR_EVALCACHE_REFRESHINTERVAL" default:"10s"`
+		RefreshInterval Duration `env:"FLAGR_EVALCACHE_REFRESHINTERVAL" default:"3s"`
 	}
 	PProf struct {
 		Enabled bool `env:"FLAGR_PPROF_ENABLED" default:"true"`

@@ -109,7 +109,6 @@ func (c *crud) GetFlag(params flag.GetFlagParams) middleware.Responder {
 			ErrorMessage("cannot map flag %v. %s", params.FlagID, err))
 	}
 	resp.SetPayload(payload)
-
 	return resp
 }
 

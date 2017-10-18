@@ -82,7 +82,7 @@
 
     <el-breadcrumb separator="/">
       <el-breadcrumb-item :to="{name: 'home'}">Home page</el-breadcrumb-item>
-      <el-breadcrumb-item>Flag {{ $route.params.flagId }}</el-breadcrumb-item>
+      <el-breadcrumb-item>Flag ID: {{ $route.params.flagId }}</el-breadcrumb-item>
     </el-breadcrumb>
 
     <div v-if="loaded && flag">
@@ -110,6 +110,9 @@
               placeholder="Key"
               v-model="flag.description">
               <template slot="prepend">Flag Description</template>
+              <el-button slot="append" @click="putFlag(flag)">
+                Save
+              </el-button>
             </el-input>
           </div>
         </div>
@@ -122,17 +125,23 @@
         <div class="variants-container-inner" v-if="flag.variants.length">
           <div v-for="variant in flag.variants" :key="variant.id">
             <el-card>
-              <el-form :label-position="right" label-width="100px">
+              <el-form :label-position="right" label-width="110px">
+                <el-form-item label="Variant ID">
+                  <el-tag type="primary"> {{ variant.id }} </el-tag>
+                </el-form-item>
                 <el-form-item label="Key">
                   <el-input
                     placeholder="Key"
                     v-model="variant.key">
+                    <el-button slot="append" @click="putVariant(variant)">
+                      Save
+                    </el-button>
                   </el-input>
                 </el-form-item>
                 <el-form-item label="Attachment">
                   <el-input
                     placeholder="{}"
-                    v-model="variant.attachment">
+                    v-model="variant.attachmentStr">
                   </el-input>
                 </el-form-item>
               </el-form>
@@ -181,7 +190,7 @@
             class="segment">
             <div class="flex-row">
               <div class="flex-row-left">
-                <el-tag>{{ segment.id }}</el-tag> {{ segment.description }}
+                <el-tag type="primary">Segment ID: {{ segment.id }}</el-tag> {{ segment.description }}
               </div>
               <div class="flex-row-right">
                 {{ segment.rolloutPercent || 0 }}%
@@ -189,7 +198,7 @@
             </div>
             <hr>
             <div class="flex-row equal-width align-items-top">
-              <div class="segment-contraints">
+              <div class="segment-constraints">
                 <h4>Constraints</h4>
                 <div class="constraints">
                   <ol class="constraints-inner" v-if="segment.constraints.length">
@@ -203,7 +212,7 @@
                         <el-tag type="gray">{{ constraint.value }}</el-tag>
                       </div>
                       <div class="flex-row-right">
-                        <el-button @click="deleteConstraint(segment, constraint)">
+                        <el-button @click="deleteConstraint(segment, constraint)" type="danger" size="mini">
                           <span class="el-icon-delete2"/>
                         </el-button>
                       </div>
@@ -257,7 +266,7 @@
                 <div class="card--empty" v-else>
                   No distribution yet
                 </div>
-                <div>
+                <div class="edit-distribution-button">
                   <el-button class="width--full" @click="editDistribution(segment)">
                     <span class="el-icon-edit"></span>
                     Edit distribution
@@ -340,6 +349,10 @@ function processSegment (segment) {
   segment.newConstraint = clone(DEFAULT_CONSTRAINT)
 }
 
+function processVariant (variant) {
+  variant.attachmentStr = JSON.stringify(variant.attachment)
+}
+
 export default {
   name: 'flag',
   components: {
@@ -384,6 +397,13 @@ export default {
         .then(() => {
           this.$router.replace({name: 'home'})
           this.$message(`You deleted flag ${flagId}`)
+        })
+    },
+    putFlag (flag) {
+      const flagId = this.$route.params.flagId
+      putJson(`${API_URL}/flags/${flagId}`, {description: flag.description})
+        .then(() => {
+          this.$message(`You've updated flag`)
         })
     },
     setFlagEnabled (checked) {
@@ -438,6 +458,14 @@ export default {
           this.flag.variants.push(variant)
         })
     },
+    putVariant (variant) {
+      const flagId = this.$route.params.flagId
+      variant.attachment = JSON.parse(variant.attachmentStr)
+      putJson(`${API_URL}/flags/${flagId}/variants/${variant.id}`, variant)
+        .then(variant => {
+          this.$message('You updated the variant')
+        })
+    },
     createConstraint (segment) {
       const {flagId} = this.$route.params
       postJson(`${API_URL}/flags/${flagId}/segments/${segment.id}/constraints`, segment.newConstraint)
@@ -480,6 +508,7 @@ export default {
 
     getJson(`${API_URL}/flags/${flagId}`).then(flag => {
       flag.segments.forEach(segment => processSegment(segment))
+      flag.variants.forEach(variant => processVariant(variant))
       this.flag = flag
       this.loaded = true
     })
@@ -502,12 +531,7 @@ h2 {
   width: 700px;
 }
 
-.el-breadcrumb {
-  margin-bottom: 2em;
-}
-
 .segment {
-  cursor: pointer;
   .highlightable {
     padding: 4px;
     &:hover {
@@ -516,16 +540,24 @@ h2 {
   }
 }
 
+.segment-constraints {
+  padding: 10px;
+}
+
+.segment-distributions {
+  padding: 10px;
+}
+
 ol.constraints-inner {
   background-color: white;
-  padding: 5px;
-  padding-left: 30px;
+  padding-left: 8px;
+  padding-right: 8px;
   border-radius: 3px;
   border: 1px solid #ddd;
   li {
-    padding: 8px 0;
+    padding: 3px 0;
     .el-tag {
-      font-size: 1em;
+      font-size: 0.7em;
     }
   }
 }
@@ -542,6 +574,9 @@ ol.constraints-inner {
 
 .segment-distributions {
   padding-left: 8px;
+  .edit-distribution-button {
+    margin-top: 5px;
+  }
 }
 
 .edit-distribution-choose-variants {
@@ -554,5 +589,9 @@ ol.constraints-inner {
 
 .el-card {
   margin-bottom: 1em;
+}
+
+.el-form-item {
+  margin-bottom: 5px;
 }
 </style>
