@@ -23,7 +23,7 @@ const (
 // gen:qs
 type Distribution struct {
 	gorm.Model
-	SegmentID  uint `gorm:"index:idx_segmentid"`
+	SegmentID  uint `gorm:"index:idx_distribution_segmentid"`
 	VariantID  uint
 	VariantKey string
 
@@ -53,6 +53,10 @@ func (d DistributionArray) Rollout(entityID *string, salt string, rolloutPercent
 
 	if rolloutPercent == uint(0) {
 		return nil, "rollout no. 0% rolloutPercent"
+	}
+
+	if len(d.VariantIDs) == 0 || len(d.PercentsAccumulated) == 0 {
+		return nil, "rollout no. there's no distribution set"
 	}
 
 	num := crc32Num(*entityID, salt)

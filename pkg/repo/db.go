@@ -6,6 +6,7 @@ import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"    // mysql driver
 	_ "github.com/jinzhu/gorm/dialects/postgres" // postgres driver
+	_ "github.com/jinzhu/gorm/dialects/sqlite"   // sqlite driver
 
 	"github.com/checkr/flagr/pkg/config"
 	"github.com/checkr/flagr/pkg/entity"
