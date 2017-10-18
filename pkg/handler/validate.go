@@ -73,3 +73,11 @@ func validateDeleteVariant(params variant.DeleteVariantParams) *Error {
 
 	return nil
 }
+
+func validatePutVariantForDistributions(v *entity.Variant) *Error {
+	q := entity.NewDistributionQuerySet(repo.GetDB())
+	if err := q.VariantIDEq(v.ID).GetUpdater().SetVariantKey(v.Key).Update(); err != nil {
+		return NewError(500, "error updating distribution to sync with variantID %v with variantKey %v. reason: %s", v.ID, v.Key, err)
+	}
+	return nil
+}

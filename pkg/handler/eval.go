@@ -135,8 +135,11 @@ func evalSegment(
 		expr := segment.SegmentEvaluation.ConditionsExpr
 		match, err := conditions.Evaluate(expr, m)
 		if err != nil {
-			evalErr = NewError(400, "invalid entity_context: %s. reason: %s.", spew.Sdump(evalContext.EntityContext), err)
-			return nil, nil, evalErr
+			log = &models.SegmentDebugLog{
+				Msg:       err.Error(),
+				SegmentID: int64(segment.ID),
+			}
+			return nil, log, nil
 		}
 		if !match {
 			log = &models.SegmentDebugLog{

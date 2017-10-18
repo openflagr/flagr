@@ -404,6 +404,10 @@ func (c *crud) PutVariant(params variant.PutVariantParams) middleware.Responder 
 		return variant.NewPutVariantDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
+	if err := validatePutVariantForDistributions(&v); err != nil {
+		return variant.NewPutVariantDefault(err.StatusCode).WithPayload(ErrorMessage("%s", err))
+	}
+
 	resp := variant.NewPutVariantOK()
 	resp.SetPayload(e2r.MapVariant(&v))
 	return resp

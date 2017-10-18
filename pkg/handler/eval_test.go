@@ -50,8 +50,8 @@ func TestEvalSegment(t *testing.T) {
 		}, s)
 
 		assert.Nil(t, vID)
-		assert.Empty(t, log)
-		assert.Error(t, err)
+		assert.NotEmpty(t, log)
+		assert.Nil(t, err)
 	})
 
 	t.Run("test constraint not match", func(t *testing.T) {
