@@ -16,7 +16,7 @@ import (
 type Constraint struct {
 	gorm.Model
 
-	SegmentID uint `gorm:"index:idx_segmentid"`
+	SegmentID uint `gorm:"index:idx_constraint_segmentid"`
 	Property  string
 	Operator  string
 	Value     string `sql:"type:text"`

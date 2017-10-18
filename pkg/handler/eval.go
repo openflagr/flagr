@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 
+	"github.com/checkr/flagr/pkg/config"
 	"github.com/checkr/flagr/pkg/entity"
 	"github.com/checkr/flagr/pkg/util"
 	"github.com/checkr/flagr/swagger_gen/models"
@@ -101,6 +102,9 @@ func evalFlag(evalContext *models.EvalContext) (*models.EvalResult, *Error) {
 }
 
 var asyncRecord = func(r *models.EvalResult) {
+	if !config.Config.Recorder.Enabled {
+		return
+	}
 	rec := GetDataRecorder()
 	rec.AsyncRecord(r)
 }

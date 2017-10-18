@@ -14,7 +14,7 @@ import (
 // gen:qs
 type Variant struct {
 	gorm.Model
-	FlagID     uint `gorm:"index:idx_flagid"`
+	FlagID     uint `gorm:"index:idx_variant_flagid"`
 	Key        string
 	Attachment Attachment `sql:"type:text"`
 }

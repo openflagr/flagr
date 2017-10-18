@@ -12,7 +12,7 @@ import (
 type Segment struct {
 	gorm.Model
 
-	FlagID         uint   `gorm:"index:idx_flagid"`
+	FlagID         uint   `gorm:"index:idx_segment_flagid"`
 	Description    string `sql:"type:text"`
 	Rank           uint
 	RolloutPercent uint

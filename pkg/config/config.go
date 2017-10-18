@@ -27,7 +27,7 @@ var Config = struct {
 		Enabled bool `env:"FLAGR_PPROF_ENABLED" default:"true"`
 	}
 	Recorder struct {
-		Enabled bool   `env:"FLAGR_RECORDER_ENABLED" default:"true"`
+		Enabled bool   `env:"FLAGR_RECORDER_ENABLED" default:"false"`
 		Type    string `env:"FLAGR_RECORDER_TYPE" default:"kafka"`
 		Kafka   struct {
 			Brokers   string `env:"FLAGR_RECORDER_KAFKA_BROKERS" default:":9092"`
