@@ -44,7 +44,19 @@ func (f *Flag) Preload(db *gorm.DB) error {
 		return err
 	}
 	f.Variants = vs
+	return nil
+}
 
+// GetVariant returns the variant in flag
+func (f *Flag) GetVariant(variantID uint) *Variant {
+	if variantID == uint(0) {
+		return nil
+	}
+	for i := range f.Variants {
+		if f.Variants[i].ID == variantID {
+			return &f.Variants[i]
+		}
+	}
 	return nil
 }
 

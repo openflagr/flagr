@@ -18,10 +18,6 @@
         type="success"
         show-icon>
       </el-alert>
-      <h2>
-        Feature Flags
-        <span v-if="flags.length">({{ flags.length }})</span>
-      </h2>
       <ul v-if="flags.length">
         <li
           v-for="flag in flags" class="flag"
@@ -30,7 +26,7 @@
             class="flag-link flex-row"
             :to="{name: 'flag', params: {flagId: flag.id}}">
             <div class="flex-row-left">
-              <el-tag>{{ flag.id }}</el-tag> {{ flag.description }}
+              <el-tag type="primary">Flag ID: {{ flag.id }}</el-tag> {{ flag.description }}
             </div>
             <div class="flex-row-right">
               <span :class="{'flag-enabled-icon': true, enabled: flag.enabled}"></span>

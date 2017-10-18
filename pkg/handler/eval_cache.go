@@ -89,12 +89,13 @@ func (ec *EvalCache) reloadMapCache() error {
 		return err
 	}
 	m := make(map[uint]*entity.Flag)
-	for _, f := range fs {
-		err := f.Preload(repo.GetDB())
+	for i := range fs {
+		ptr := &fs[i]
+		err := ptr.Preload(repo.GetDB())
 		if err != nil {
 			return err
 		}
-		m[f.ID] = &f
+		m[ptr.ID] = ptr
 	}
 
 	for _, f := range m {

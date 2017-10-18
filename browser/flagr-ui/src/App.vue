@@ -116,5 +116,9 @@ ul {
   .el-card__header {
     background-color: #74E5E0;
   }
+
+  .el-breadcrumb {
+    margin-bottom: 20px;
+  }
 }
 </style>

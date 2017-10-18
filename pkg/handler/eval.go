@@ -74,8 +74,11 @@ func evalFlag(evalContext *models.EvalContext) (*models.EvalResult, *Error) {
 		return BlankResult(f, evalContext, fmt.Sprintf("flagID %v is not enabled", f.ID)), nil
 	}
 
-	logs := []*models.SegmentDebugLog{}
+	if len(f.Segments) == 0 {
+		return BlankResult(f, evalContext, fmt.Sprintf("flagID %v has no segments", f.ID)), nil
+	}
 
+	logs := []*models.SegmentDebugLog{}
 	var vID *int64
 	var sID *int64
 
@@ -97,6 +100,11 @@ func evalFlag(evalContext *models.EvalContext) (*models.EvalResult, *Error) {
 	evalResult.EvalDebugLog.SegmentDebugLogs = logs
 	evalResult.SegmentID = sID
 	evalResult.VariantID = vID
+	v := f.GetVariant(util.SafeUint(vID))
+	if v != nil {
+		evalResult.VariantAttachment = v.Attachment
+	}
+
 	asyncRecord(evalResult)
 	return evalResult, nil
 }
