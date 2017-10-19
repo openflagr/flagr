@@ -1083,6 +1083,8 @@ func init() {
         "flagID",
         "segmentID",
         "variantID",
+        "variantKey",
+        "variantAttachment",
         "evalContext",
         "timestamp"
       ],
@@ -1114,6 +1116,10 @@ func init() {
           "type": "integer",
           "format": "int64",
           "minimum": 1
+        },
+        "variantKey": {
+          "type": "string",
+          "minLength": 1
         }
       }
     },

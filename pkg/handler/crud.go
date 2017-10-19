@@ -358,8 +358,11 @@ func (c *crud) CreateVariant(params variant.CreateVariantParams) middleware.Resp
 	}
 	v.Attachment = a
 
-	err = v.Create(repo.GetDB())
-	if err != nil {
+	if err := v.Validate(); err != nil {
+		return variant.NewCreateVariantDefault(400).WithPayload(ErrorMessage("%s", err))
+	}
+
+	if err := v.Create(repo.GetDB()); err != nil {
 		return variant.NewCreateVariantDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
@@ -398,6 +401,10 @@ func (c *crud) PutVariant(params variant.PutVariantParams) middleware.Responder 
 			return variant.NewPutVariantDefault(400).WithPayload(ErrorMessage("%s", err))
 		}
 		v.Attachment = a
+	}
+
+	if err := v.Validate(); err != nil {
+		return variant.NewPutVariantDefault(400).WithPayload(ErrorMessage("%s", err))
 	}
 
 	if err := repo.GetDB().Save(&v).Error; err != nil {

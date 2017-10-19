@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/checkr/flagr/pkg/util"
 	"github.com/jinzhu/gorm"
 )
 
@@ -17,6 +18,15 @@ type Variant struct {
 	FlagID     uint `gorm:"index:idx_variant_flagid"`
 	Key        string
 	Attachment Attachment `sql:"type:text"`
+}
+
+// Validate validates the Variant
+func (v *Variant) Validate() error {
+	ok, msg := util.IsSafeKey(v.Key)
+	if !ok {
+		return fmt.Errorf(msg)
+	}
+	return nil
 }
 
 // Attachment supports dynamic configuration in variant

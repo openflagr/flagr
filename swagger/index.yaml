@@ -326,6 +326,8 @@ definitions:
       - flagID
       - segmentID
       - variantID
+      - variantKey
+      - variantAttachment
       - evalContext
       - timestamp
     properties:
@@ -341,6 +343,11 @@ definitions:
         type: integer
         format: int64
         minimum: 1
+      variantKey:
+        type: string
+        minLength: 1
+      variantAttachment:
+        type: object
       evalContext:
         $ref: "#/definitions/evalContext"
       timestamp:
@@ -348,8 +355,6 @@ definitions:
         minLength: 1
       evalDebugLog:
         $ref: "#/definitions/evalDebugLog"
-      variantAttachment:
-        type: object
   evalDebugLog:
     type: object
     properties:

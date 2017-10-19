@@ -19,7 +19,7 @@ build: api_docs
 	@CGO_ENABLED=1 go build -o $(PWD)/flagr github.com/checkr/flagr/swagger_gen/cmd/flagr-server
 
 run:
-	@$(PWD)/flagr --port 18000 --host 0.0.0.0
+	@$(PWD)/flagr --port 18000
 
 gen: swagger api_docs goqueryset
 

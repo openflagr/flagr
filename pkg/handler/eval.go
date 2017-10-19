@@ -100,9 +100,10 @@ func evalFlag(evalContext *models.EvalContext) (*models.EvalResult, *Error) {
 	evalResult.EvalDebugLog.SegmentDebugLogs = logs
 	evalResult.SegmentID = sID
 	evalResult.VariantID = vID
-	v := f.GetVariant(util.SafeUint(vID))
+	v := f.FlagEvaluation.VariantsMap[util.SafeUint(vID)]
 	if v != nil {
 		evalResult.VariantAttachment = v.Attachment
+		evalResult.VariantKey = util.StringPtr(v.Key)
 	}
 
 	asyncRecord(evalResult)

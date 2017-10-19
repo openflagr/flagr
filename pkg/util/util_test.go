@@ -1,6 +1,7 @@
 package util
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -28,4 +29,37 @@ func TestSafeUint(t *testing.T) {
 
 func TestTimeNow(t *testing.T) {
 	assert.Len(t, TimeNow(), 20)
+}
+
+func TestIsSafeKey(t *testing.T) {
+	var b bool
+	var msg string
+
+	b, msg = IsSafeKey("a")
+	assert.True(t, b)
+	assert.Empty(t, msg)
+
+	b, msg = IsSafeKey("a1")
+	assert.True(t, b)
+	assert.Empty(t, msg)
+
+	b, msg = IsSafeKey("a_1")
+	assert.True(t, b)
+	assert.Empty(t, msg)
+
+	b, msg = IsSafeKey(strings.Repeat("a", 63))
+	assert.True(t, b)
+	assert.Empty(t, msg)
+
+	b, msg = IsSafeKey("1a")
+	assert.False(t, b)
+	assert.NotEmpty(t, msg)
+
+	b, msg = IsSafeKey("_a")
+	assert.False(t, b)
+	assert.NotEmpty(t, msg)
+
+	b, msg = IsSafeKey(strings.Repeat("a", 64))
+	assert.False(t, b)
+	assert.NotEmpty(t, msg)
 }
