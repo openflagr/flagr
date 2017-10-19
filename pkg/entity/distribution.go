@@ -24,7 +24,7 @@ const (
 type Distribution struct {
 	gorm.Model
 	SegmentID  uint `gorm:"index:idx_distribution_segmentid"`
-	VariantID  uint
+	VariantID  uint `gorm:"index:idx_distribution_variantid"`
 	VariantKey string
 
 	Percent uint   // Percent is an uint from 0 to 100, percent is always derived from Bitmap
