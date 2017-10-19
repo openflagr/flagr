@@ -50,20 +50,20 @@ type kafkaRecorder struct {
 func NewKafkaRecorder() DataRecorder {
 	cfg := sarama.NewConfig()
 	tlscfg := createTLSConfiguration(
-		config.Config.Recorder.Kafka.CertFile,
-		config.Config.Recorder.Kafka.KeyFile,
-		config.Config.Recorder.Kafka.CAFile,
-		config.Config.Recorder.Kafka.VerifySSL,
+		config.Config.RecorderKafkaCertFile,
+		config.Config.RecorderKafkaKeyFile,
+		config.Config.RecorderKafkaCAFile,
+		config.Config.RecorderKafkaVerifySSL,
 	)
 	if tlscfg != nil {
 		cfg.Net.TLS.Enable = true
 		cfg.Net.TLS.Config = tlscfg
 	}
 	cfg.Producer.RequiredAcks = sarama.WaitForLocal
-	cfg.Producer.Retry.Max = config.Config.Recorder.Kafka.RetryMax
-	cfg.Producer.Flush.Frequency = config.Config.Recorder.Kafka.FlushFrequency.Duration
+	cfg.Producer.Retry.Max = config.Config.RecorderKafkaRetryMax
+	cfg.Producer.Flush.Frequency = config.Config.RecorderKafkaFlushFrequency
 
-	brokerList := strings.Split(config.Config.Recorder.Kafka.Brokers, ",")
+	brokerList := strings.Split(config.Config.RecorderKafkaBrokers, ",")
 	producer, err := sarama.NewAsyncProducer(brokerList, cfg)
 	if err != nil {
 		log.Fatalln("Failed to start Sarama producer:", err)
@@ -78,8 +78,8 @@ func NewKafkaRecorder() DataRecorder {
 
 	return &kafkaRecorder{
 		producer: producer,
-		topic:    config.Config.Recorder.Kafka.Topic,
-		enabled:  config.Config.Recorder.Enabled,
+		topic:    config.Config.RecorderKafkaTopic,
+		enabled:  config.Config.RecorderEnabled,
 	}
 }
 

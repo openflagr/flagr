@@ -104,3 +104,7 @@
 [[constraint]]
   name = "github.com/Shopify/sarama"
   version = "1.13.0"
+
+[[constraint]]
+  name = "github.com/caarlos0/env"
+  version = "3.0.0"

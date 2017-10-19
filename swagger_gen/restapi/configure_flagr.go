@@ -25,8 +25,8 @@ import (
 
 var (
 	pwd, _      = os.Getwd()
-	enableCORS  = config.Config.CORS.Enabled
-	enablePProf = config.Config.PProf.Enabled
+	enableCORS  = config.Config.CORSEnabled
+	enablePProf = config.Config.PProfEnabled
 )
 
 func configureFlags(api *operations.FlagrAPI) {

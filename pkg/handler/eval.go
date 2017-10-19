@@ -111,7 +111,7 @@ func evalFlag(evalContext *models.EvalContext) (*models.EvalResult, *Error) {
 }
 
 var asyncRecord = func(r *models.EvalResult) {
-	if !config.Config.Recorder.Enabled {
+	if !config.Config.RecorderEnabled {
 		return
 	}
 	rec := GetDataRecorder()

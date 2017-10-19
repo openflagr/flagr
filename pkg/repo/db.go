@@ -29,7 +29,7 @@ var (
 // GetDB gets the db singleton
 func GetDB() *gorm.DB {
 	singletonOnce.Do(func() {
-		db, err := gorm.Open(config.Config.DB.DBDriver, config.Config.DB.DBConnectionStr)
+		db, err := gorm.Open(config.Config.DBDriver, config.Config.DBConnectionStr)
 		if err != nil {
 			panic(err)
 		}
