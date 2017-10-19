@@ -1,8 +1,23 @@
 package util
 
 import (
+	"fmt"
+	"regexp"
 	"time"
 )
+
+var keyRegex = regexp.MustCompile("^[a-z]+[a-z0-9_]*$")
+
+// IsSafeKey return if the key is safe to store
+func IsSafeKey(s string) (bool, string) {
+	if !keyRegex.MatchString(s) {
+		return false, fmt.Sprintf("key should have the format %v", keyRegex)
+	}
+	if len(s) > 63 {
+		return false, fmt.Sprintf("the key is too long")
+	}
+	return true, ""
+}
 
 // SafeString safely dereference the string or string ptr
 func SafeString(s interface{}) (r string) {

@@ -17,9 +17,16 @@ type Flag struct {
 	CreatedBy   string
 	UpdatedBy   string
 	Enabled     bool
+	Segments    []Segment
+	Variants    []Variant
 
-	Segments []Segment
-	Variants []Variant
+	// Purely for evaluation
+	FlagEvaluation FlagEvaluation `gorm:"-"`
+}
+
+// FlagEvaluation is a struct that holds the necessary info for evaluation
+type FlagEvaluation struct {
+	VariantsMap map[uint]*Variant
 }
 
 // Preload preloads the segments and variants into flags
@@ -47,25 +54,18 @@ func (f *Flag) Preload(db *gorm.DB) error {
 	return nil
 }
 
-// GetVariant returns the variant in flag
-func (f *Flag) GetVariant(variantID uint) *Variant {
-	if variantID == uint(0) {
-		return nil
-	}
-	for i := range f.Variants {
-		if f.Variants[i].ID == variantID {
-			return &f.Variants[i]
-		}
-	}
-	return nil
-}
-
 // PrepareEvaluation prepares the information for evaluation
 func (f *Flag) PrepareEvaluation() error {
+	f.FlagEvaluation = FlagEvaluation{
+		VariantsMap: make(map[uint]*Variant),
+	}
 	for i := range f.Segments {
 		if err := f.Segments[i].PrepareEvaluation(); err != nil {
 			return err
 		}
+	}
+	for i := range f.Variants {
+		f.FlagEvaluation.VariantsMap[f.Variants[i].ID] = &f.Variants[i]
 	}
 	return nil
 }

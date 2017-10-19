@@ -41,12 +41,18 @@ type EvalResult struct {
 	Timestamp *string `json:"timestamp"`
 
 	// variant attachment
-	VariantAttachment interface{} `json:"variantAttachment,omitempty"`
+	// Required: true
+	VariantAttachment interface{} `json:"variantAttachment"`
 
 	// variant ID
 	// Required: true
 	// Minimum: 1
 	VariantID *int64 `json:"variantID"`
+
+	// variant key
+	// Required: true
+	// Min Length: 1
+	VariantKey *string `json:"variantKey"`
 }
 
 /* polymorph evalResult evalContext false */
@@ -62,6 +68,8 @@ type EvalResult struct {
 /* polymorph evalResult variantAttachment false */
 
 /* polymorph evalResult variantID false */
+
+/* polymorph evalResult variantKey false */
 
 // Validate validates this eval result
 func (m *EvalResult) Validate(formats strfmt.Registry) error {
@@ -92,7 +100,17 @@ func (m *EvalResult) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
+	if err := m.validateVariantAttachment(formats); err != nil {
+		// prop
+		res = append(res, err)
+	}
+
 	if err := m.validateVariantID(formats); err != nil {
+		// prop
+		res = append(res, err)
+	}
+
+	if err := m.validateVariantKey(formats); err != nil {
 		// prop
 		res = append(res, err)
 	}
@@ -180,6 +198,11 @@ func (m *EvalResult) validateTimestamp(formats strfmt.Registry) error {
 	return nil
 }
 
+func (m *EvalResult) validateVariantAttachment(formats strfmt.Registry) error {
+
+	return nil
+}
+
 func (m *EvalResult) validateVariantID(formats strfmt.Registry) error {
 
 	if err := validate.Required("variantID", "body", m.VariantID); err != nil {
@@ -187,6 +210,19 @@ func (m *EvalResult) validateVariantID(formats strfmt.Registry) error {
 	}
 
 	if err := validate.MinimumInt("variantID", "body", int64(*m.VariantID), 1, false); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *EvalResult) validateVariantKey(formats strfmt.Registry) error {
+
+	if err := validate.Required("variantKey", "body", m.VariantKey); err != nil {
+		return err
+	}
+
+	if err := validate.MinLength("variantKey", "body", string(*m.VariantKey), 1); err != nil {
 		return err
 	}
 

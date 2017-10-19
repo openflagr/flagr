@@ -11,15 +11,14 @@ import (
 // gen:qs
 type Segment struct {
 	gorm.Model
-
 	FlagID         uint   `gorm:"index:idx_segment_flagid"`
 	Description    string `sql:"type:text"`
 	Rank           uint
 	RolloutPercent uint
+	Constraints    ConstraintArray
+	Distributions  []Distribution
 
-	Constraints   ConstraintArray
-	Distributions []Distribution
-
+	// Purely for evaluation
 	SegmentEvaluation SegmentEvaluation `gorm:"-"`
 }
 
