@@ -20,7 +20,7 @@ type DataRecorder interface {
 // GetDataRecorder gets the data recorder
 func GetDataRecorder() DataRecorder {
 	singletonDataRecorderOnce.Do(func() {
-		recorderType := config.Config.Recorder.Type
+		recorderType := config.Config.RecorderType
 		switch recorderType {
 		case "kafka":
 			singletonDataRecorder = NewKafkaRecorder()

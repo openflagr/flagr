@@ -3,59 +3,37 @@ package config
 import (
 	"time"
 
-	"github.com/jinzhu/configor"
+	"github.com/caarlos0/env"
 )
 
 // Config is the whole configuration of the app
 var Config = struct {
-	DB struct {
-		DBDriver        string `env:"FLAGR_DB_DBDRIVER" default:"mysql"`
-		DBConnectionStr string `env:"FLAGR_DB_DBCONNECTIONSTR" default:"root:@tcp(127.0.0.1:18100)/flagr?parseTime=true"`
-	}
-	CORS struct {
-		Enabled bool `env:"FLAGR_CORS_ENABLED" default:"true"`
-	}
-	Sentry struct {
-		Enabled bool   `env:"FLAGR_SENTRY_ENABLED" default:"false"`
-		DSN     string `env:"FLAGR_SENTRY_DSN" default:""`
-	}
-	EvalCache struct {
-		RefreshTimeout  Duration `env:"FLAGR_EVALCACHE_REFRESHTIMEOUT" default:"59s"`
-		RefreshInterval Duration `env:"FLAGR_EVALCACHE_REFRESHINTERVAL" default:"3s"`
-	}
-	PProf struct {
-		Enabled bool `env:"FLAGR_PPROF_ENABLED" default:"true"`
-	}
-	Recorder struct {
-		Enabled bool   `env:"FLAGR_RECORDER_ENABLED" default:"false"`
-		Type    string `env:"FLAGR_RECORDER_TYPE" default:"kafka"`
-		Kafka   struct {
-			Brokers   string `env:"FLAGR_RECORDER_KAFKA_BROKERS" default:":9092"`
-			CertFile  string `env:"FLAGR_RECORDER_KAFKA_CERTFILE" default:""`
-			KeyFile   string `env:"FLAGR_RECORDER_KAFKA_KEYFILE" default:""`
-			CAFile    string `env:"FLAGR_RECORDER_KAFKA_CAFILE" default:""`
-			VerifySSL bool   `env:"FLAGR_RECORDER_KAFKA_VERIFYSSL" default:"false"`
-			Verbose   bool   `env:"FLAGR_RECORDER_KAFKA_VERBOSE" default:"true"`
+	Host         string `env:"HOST" envDefault:"127.0.0.1"`
+	PProfEnabled bool   `env:"FLAGR_PPROF_ENABLED" envDefault:"true"`
 
-			Topic          string   `env:"FLAGR_RECORDER_KAFKA_TOPIC" default:"flagr-records"`
-			RetryMax       int      `env:"FLAGR_RECORDER_KAFKA_RETRYMAX" default:"5"`
-			FlushFrequency Duration `env:"FLAGR_RECORDER_KAFKA_FLUSHFREQUENCY" default:"500ms"`
-		}
-	}
+	DBDriver        string `env:"FLAGR_DB_DBDRIVER" envDefault:"mysql"`
+	DBConnectionStr string `env:"FLAGR_DB_DBCONNECTIONSTR" envDefault:"root:@tcp(127.0.0.1:18100)/flagr?parseTime=true"`
+
+	CORSEnabled   bool   `env:"FLAGR_CORS_ENABLED" envDefault:"true"`
+	SentryEnabled bool   `env:"FLAGR_SENTRY_ENABLED" envDefault:"false"`
+	SentryDSN     string `env:"FLAGR_SENTRY_DSN" envDefault:""`
+
+	EvalCacheRefreshTimeout  time.Duration `env:"FLAGR_EVALCACHE_REFRESHTIMEOUT" envDefault:"59s"`
+	EvalCacheRefreshInterval time.Duration `env:"FLAGR_EVALCACHE_REFRESHINTERVAL" envDefault:"3s"`
+
+	RecorderEnabled             bool          `env:"FLAGR_RECORDER_ENABLED" envDefault:"false"`
+	RecorderType                string        `env:"FLAGR_RECORDER_TYPE" envDefault:"kafka"`
+	RecorderKafkaBrokers        string        `env:"FLAGR_RECORDER_KAFKA_BROKERS" envDefault:":9092"`
+	RecorderKafkaCertFile       string        `env:"FLAGR_RECORDER_KAFKA_CERTFILE" envDefault:""`
+	RecorderKafkaKeyFile        string        `env:"FLAGR_RECORDER_KAFKA_KEYFILE" envDefault:""`
+	RecorderKafkaCAFile         string        `env:"FLAGR_RECORDER_KAFKA_CAFILE" envDefault:""`
+	RecorderKafkaVerifySSL      bool          `env:"FLAGR_RECORDER_KAFKA_VERIFYSSL" envDefault:"false"`
+	RecorderKafkaVerbose        bool          `env:"FLAGR_RECORDER_KAFKA_VERBOSE" envDefault:"true"`
+	RecorderKafkaTopic          string        `env:"FLAGR_RECORDER_KAFKA_TOPIC" envDefault:"flagr-records"`
+	RecorderKafkaRetryMax       int           `env:"FLAGR_RECORDER_KAFKA_RETRYMAX" envDefault:"5"`
+	RecorderKafkaFlushFrequency time.Duration `env:"FLAGR_RECORDER_KAFKA_FLUSHFREQUENCY" envDefault:"500ms"`
 }{}
 
 func init() {
-	configor.Load(&Config)
-}
-
-// Duration is an alias type of time.Duration
-type Duration struct {
-	time.Duration
-}
-
-// UnmarshalText implements the encoding.TextUnmarshaler interface
-func (d *Duration) UnmarshalText(text []byte) error {
-	var err error
-	d.Duration, err = time.ParseDuration(string(text))
-	return err
+	env.Parse(&Config)
 }

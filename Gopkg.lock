@@ -2,12 +2,6 @@
 
 
 [[projects]]
-  name = "github.com/BurntSushi/toml"
-  packages = ["."]
-  revision = "b26d9c308763d68093482582cea63d69be07a0f0"
-  version = "v0.3.0"
-
-[[projects]]
   name = "github.com/PuerkitoBio/purell"
   packages = ["."]
   revision = "0bcb03f4b4d0a9428594752bd2a3b9aa0a9d4bd4"
@@ -30,6 +24,12 @@
   packages = ["."]
   revision = "73945b6115bfbbcc57d89b7316e28109364124e1"
   version = "v7"
+
+[[projects]]
+  name = "github.com/caarlos0/env"
+  packages = ["."]
+  revision = "0cf029d5748c52beb2c9d20c81880cb4bdf8f788"
+  version = "v3.0"
 
 [[projects]]
   name = "github.com/certifi/gocertifi"
@@ -158,12 +158,6 @@
   version = "v1.3.0"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/jinzhu/configor"
-  packages = ["."]
-  revision = "6c409036e1aea1420f2e1a196f95c0e3c4aef091"
-
-[[projects]]
   name = "github.com/jinzhu/gorm"
   packages = [".","dialects/mysql","dialects/postgres","dialects/sqlite"]
   revision = "5174cc5c242a728b435ea2be8a2f7f998e15429b"
@@ -286,6 +280,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "e8470185c9cb467f56113b4f13f396ae591fac78b18e51a8d139252fcd64e354"
+  inputs-digest = "132f76bcf3a6826d6fed5309461c67727080b2bf0f4bb74069dadeb2387175b0"
   solver-name = "gps-cdcl"
   solver-version = 1

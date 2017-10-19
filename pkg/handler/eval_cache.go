@@ -31,8 +31,8 @@ var GetEvalCache = func() *EvalCache {
 	singletonEvalCacheOnce.Do(func() {
 		ec := &EvalCache{
 			mapCache:        make(map[uint]*entity.Flag),
-			refreshTimeout:  config.Config.EvalCache.RefreshTimeout.Duration,
-			refreshInterval: config.Config.EvalCache.RefreshInterval.Duration,
+			refreshTimeout:  config.Config.EvalCacheRefreshTimeout,
+			refreshInterval: config.Config.EvalCacheRefreshInterval,
 			redisCache:      &redisCache{},
 		}
 		singletonEvalCache = ec

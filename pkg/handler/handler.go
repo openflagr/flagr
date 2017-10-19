@@ -29,8 +29,8 @@ func setupGob() {
 }
 
 func setupRaven() {
-	if config.Config.Sentry.Enabled {
-		raven.SetDSN(config.Config.Sentry.DSN)
+	if config.Config.SentryEnabled {
+		raven.SetDSN(config.Config.SentryDSN)
 	}
 }
 
