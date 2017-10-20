@@ -7,16 +7,18 @@ import (
 	"net/http"
 	"os"
 
-	errors "github.com/go-openapi/errors"
-	runtime "github.com/go-openapi/runtime"
-	"github.com/gohttp/pprof"
-	"github.com/rs/cors"
-	graceful "github.com/tylerb/graceful"
-	"github.com/urfave/negroni"
-
 	"github.com/checkr/flagr/pkg/config"
 	"github.com/checkr/flagr/pkg/handler"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations"
+	"github.com/sirupsen/logrus"
+
+	"github.com/go-openapi/errors"
+	"github.com/go-openapi/runtime"
+	"github.com/gohttp/pprof"
+	"github.com/meatballhat/negroni-logrus"
+	"github.com/rs/cors"
+	"github.com/tylerb/graceful"
+	"github.com/urfave/negroni"
 )
 
 // This file is safe to edit. Once it exists it will not be overwritten
@@ -34,18 +36,12 @@ func configureFlags(api *operations.FlagrAPI) {
 }
 
 func configureAPI(api *operations.FlagrAPI) http.Handler {
-	// configure the api here
 	api.ServeError = errors.ServeError
-
-	// Set your custom logger if needed. Default one is log.Printf
-	// Expected interface func(string, ...interface{})
-	//
-	// Example:
-	// api.Logger = log.Printf
 
 	api.JSONConsumer = runtime.JSONConsumer()
 	api.JSONProducer = runtime.JSONProducer()
 	api.ServerShutdown = func() {}
+	api.Logger = logrus.Infof
 
 	handler.Setup(api)
 	return setupGlobalMiddleware(api.Serve(setupMiddlewares))
@@ -72,17 +68,18 @@ func setupMiddlewares(handler http.Handler) http.Handler {
 // The middleware configuration happens before anything, this middleware also applies to serving the swagger.json document.
 // So this is a good place to plug in a panic handling middleware, logging and metrics
 func setupGlobalMiddleware(handler http.Handler) http.Handler {
+	n := negroni.New()
+
 	if enableCORS {
 		c := cors.New(cors.Options{
 			AllowedOrigins: []string{"*"},
 			AllowedHeaders: []string{"Content-Type", "Accepts"},
 			AllowedMethods: []string{"GET", "POST", "PUT", "DELETE"},
 		})
-		handler = c.Handler(handler)
+		n.Use(c)
 	}
 
-	n := negroni.New()
-	n.Use(negroni.NewLogger())
+	n.Use(negronilogrus.NewMiddlewareFromLogger(logrus.StandardLogger(), "flagr"))
 	n.Use(negroni.NewRecovery())
 	n.Use(negroni.NewStatic(http.Dir(pwd + "/browser/flagr-ui/dist/")))
 
