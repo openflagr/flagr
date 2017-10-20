@@ -238,7 +238,9 @@
                       <div class="flex-row-left">
                         <el-tag type="gray">{{ constraint.property }}</el-tag>
                         <el-tag type="primary">{{ operatorValueToLabelMap[constraint.operator] }}</el-tag>
-                        <el-tag type="gray">{{ constraint.value }}</el-tag>
+                        <el-tooltip :content="constraint.value" placement="top">
+                          <el-tag type="gray" class="truncate">{{ constraint.value }}</el-tag>
+                        </el-tooltip>
                       </div>
                       <div class="flex-row-right">
                         <el-button @click="deleteConstraint(segment, constraint)" type="danger" size="mini">
@@ -651,5 +653,11 @@ ol.constraints-inner {
 
 .id-row {
   margin-bottom: 8px;
+}
+
+.truncate {
+  max-width: 200px;
+  overflow-x: hidden;
+  text-overflow: ellipsis;
 }
 </style>
