@@ -11,6 +11,7 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/go-openapi/runtime/middleware"
+	log "github.com/sirupsen/logrus"
 	"github.com/zhouzhuojie/conditions"
 )
 
@@ -106,11 +107,12 @@ func evalFlag(evalContext *models.EvalContext) (*models.EvalResult, *Error) {
 		evalResult.VariantKey = util.StringPtr(v.Key)
 	}
 
-	asyncRecord(evalResult)
+	logEvalResult(evalResult)
 	return evalResult, nil
 }
 
-var asyncRecord = func(r *models.EvalResult) {
+var logEvalResult = func(r *models.EvalResult) {
+	log.WithField("flagr_evalresult", r).Info()
 	if !config.Config.RecorderEnabled {
 		return
 	}

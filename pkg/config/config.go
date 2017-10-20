@@ -1,9 +1,11 @@
 package config
 
 import (
+	"os"
 	"time"
 
 	"github.com/caarlos0/env"
+	log "github.com/sirupsen/logrus"
 )
 
 // Config is the whole configuration of the app
@@ -36,4 +38,8 @@ var Config = struct {
 
 func init() {
 	env.Parse(&Config)
+
+	log.SetFormatter(&log.JSONFormatter{})
+	log.SetOutput(os.Stdout)
+	log.SetLevel(log.InfoLevel)
 }

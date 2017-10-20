@@ -83,6 +83,7 @@ func setupGlobalMiddleware(handler http.Handler) http.Handler {
 
 	n := negroni.New()
 	n.Use(negroni.NewLogger())
+	n.Use(negroni.NewRecovery())
 	n.Use(negroni.NewStatic(http.Dir(pwd + "/browser/flagr-ui/dist/")))
 
 	if enablePProf {
