@@ -58,6 +58,8 @@ paths:
     $ref: ./flag_segment_distributions.yaml
   /evaluation:
     $ref: ./evaluation.yaml
+  /evaluation/batch:
+    $ref: ./evaluation_batch.yaml
 definitions:
   # Flag
   flag:
@@ -373,6 +375,51 @@ definitions:
         minimum: 1
       msg:
         type: string
+
+  # Evaluation Batch
+  evaluationEntity:
+    type: object
+    required:
+      - entityID
+      - entityType
+    properties:
+      entityID:
+        type: string
+        minLength: 1
+      entityType:
+        type: string
+        minLength: 1
+      entityContext:
+        type: object
+  evaluationBatchRequest:
+    type: object
+    required:
+      - entities
+      - flagIDs
+    properties:
+      entities:
+        type: array
+        items:
+          $ref: "#/definitions/evaluationEntity"
+        minItems: 1
+      enableDebug:
+        type: boolean
+      flagIDs:
+        type: array
+        items:
+          type: integer
+          format: int64
+          minimum: 1
+        minItems: 1
+  evaluationBatchResponse:
+    type: object
+    required:
+      - evaluationResults
+    properties:
+      evaluationResults:
+        type: array
+        items:
+          $ref: "#/definitions/evalResult"
 
   # Default Error
   error:

@@ -64,6 +64,39 @@ func init() {
         }
       }
     },
+    "/evaluation/batch": {
+      "post": {
+        "tags": [
+          "evaluation"
+        ],
+        "operationId": "postEvaluationBatch",
+        "parameters": [
+          {
+            "description": "evalution batch request",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/evaluationBatchRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "evaluation batch result",
+            "schema": {
+              "$ref": "#/definitions/evaluationBatchResponse"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
     "/flags": {
       "get": {
         "tags": [
@@ -1118,6 +1151,76 @@ func init() {
           "minimum": 1
         },
         "variantKey": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "evaluationBatchRequest": {
+      "type": "object",
+      "required": [
+        "entities",
+        "flagIDs"
+      ],
+      "properties": {
+        "enableDebug": {
+          "type": "boolean"
+        },
+        "entities": {
+          "$ref": "#/definitions/evaluationBatchRequestEntities"
+        },
+        "flagIDs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    "evaluationBatchRequestEntities": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/evaluationEntity"
+      },
+      "x-go-gen-location": "models"
+    },
+    "evaluationBatchResponse": {
+      "type": "object",
+      "required": [
+        "evaluationResults"
+      ],
+      "properties": {
+        "evaluationResults": {
+          "$ref": "#/definitions/evaluationBatchResponseEvaluationResults"
+        }
+      }
+    },
+    "evaluationBatchResponseEvaluationResults": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/evalResult"
+      },
+      "x-go-gen-location": "models"
+    },
+    "evaluationEntity": {
+      "type": "object",
+      "required": [
+        "entityID",
+        "entityType"
+      ],
+      "properties": {
+        "entityContext": {
+          "type": "object"
+        },
+        "entityID": {
+          "type": "string",
+          "minLength": 1
+        },
+        "entityType": {
           "type": "string",
           "minLength": 1
         }

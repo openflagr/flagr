@@ -8,16 +8,17 @@ import (
 	"github.com/checkr/flagr/pkg/util"
 	"github.com/checkr/flagr/swagger_gen/models"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/evaluation"
+	"github.com/sirupsen/logrus"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/go-openapi/runtime/middleware"
-	log "github.com/sirupsen/logrus"
 	"github.com/zhouzhuojie/conditions"
 )
 
 // Eval is the Eval interface
 type Eval interface {
 	PostEvaluation(evaluation.PostEvaluationParams) middleware.Responder
+	PostEvaluationBatch(evaluation.PostEvaluationBatchParams) middleware.Responder
 }
 
 // NewEval creates a new Eval instance
@@ -34,49 +35,70 @@ func (e *eval) PostEvaluation(params evaluation.PostEvaluationParams) middleware
 			ErrorMessage("empty body"))
 	}
 
-	evalResult, err := evalFlag(evalContext)
-	if err != nil {
-		return evaluation.NewPostEvaluationDefault(err.StatusCode).WithPayload(
-			ErrorMessage("error evaluating. reason: %s. context: %s", err, spew.Sdump(evalContext)))
-	}
+	evalResult := evalFlag(*evalContext)
 	resp := evaluation.NewPostEvaluationOK()
 	resp.SetPayload(evalResult)
 	return resp
 }
 
+func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) middleware.Responder {
+	entities := params.Body.Entities
+	flagIDs := params.Body.FlagIds
+	results := &models.EvaluationBatchResponse{}
+
+	// TODO make it concurrent
+	for _, entity := range entities {
+		for _, flagID := range flagIDs {
+			evalContext := models.EvalContext{
+				EnableDebug:   params.Body.EnableDebug,
+				EntityContext: entity.EntityContext,
+				EntityID:      entity.EntityID,
+				EntityType:    entity.EntityType,
+				FlagID:        util.Int64Ptr(flagID),
+			}
+			evalResult := evalFlag(evalContext)
+			results.EvaluationResults = append(results.EvaluationResults, evalResult)
+		}
+	}
+
+	resp := evaluation.NewPostEvaluationBatchOK()
+	resp.SetPayload(results)
+	return resp
+}
+
 // BlankResult creates a blank result
-func BlankResult(f *entity.Flag, evalContext *models.EvalContext, msg string) *models.EvalResult {
+func BlankResult(f *entity.Flag, evalContext models.EvalContext, msg string) *models.EvalResult {
+	flagID := uint(0)
+	if f != nil {
+		flagID = f.ID
+	}
 	return &models.EvalResult{
-		EvalContext: evalContext,
+		EvalContext: &evalContext,
 		EvalDebugLog: &models.EvalDebugLog{
 			Msg:              msg,
 			SegmentDebugLogs: nil,
 		},
-		FlagID:    util.Int64Ptr(int64(f.ID)),
+		FlagID:    util.Int64Ptr(int64(flagID)),
 		SegmentID: nil,
 		VariantID: nil,
 		Timestamp: util.StringPtr(util.TimeNow()),
 	}
 }
 
-func evalFlag(evalContext *models.EvalContext) (*models.EvalResult, *Error) {
-	if evalContext == nil {
-		return nil, NewError(400, "empty evalContext")
-	}
-
+func evalFlag(evalContext models.EvalContext) *models.EvalResult {
 	cache := GetEvalCache()
 	flagID := util.SafeUint(evalContext.FlagID)
 	f := cache.GetByFlagID(flagID)
 
 	if f == nil {
-		return nil, NewError(404, "flagID not found: %v", flagID)
+		return BlankResult(f, evalContext, fmt.Sprintf("flagID %v not found", flagID))
 	}
 	if !f.Enabled {
-		return BlankResult(f, evalContext, fmt.Sprintf("flagID %v is not enabled", f.ID)), nil
+		return BlankResult(f, evalContext, fmt.Sprintf("flagID %v is not enabled", flagID))
 	}
 
 	if len(f.Segments) == 0 {
-		return BlankResult(f, evalContext, fmt.Sprintf("flagID %v has no segments", f.ID)), nil
+		return BlankResult(f, evalContext, fmt.Sprintf("flagID %v has no segments", flagID))
 	}
 
 	logs := []*models.SegmentDebugLog{}
@@ -84,10 +106,7 @@ func evalFlag(evalContext *models.EvalContext) (*models.EvalResult, *Error) {
 	var sID *int64
 
 	for _, segment := range f.Segments {
-		variantID, log, err := evalSegment(evalContext, segment)
-		if err != nil {
-			return nil, err
-		}
+		variantID, log := evalSegment(evalContext, segment)
 		if evalContext.EnableDebug {
 			logs = append(logs, log)
 		}
@@ -108,11 +127,11 @@ func evalFlag(evalContext *models.EvalContext) (*models.EvalResult, *Error) {
 	}
 
 	logEvalResult(evalResult)
-	return evalResult, nil
+	return evalResult
 }
 
 var logEvalResult = func(r *models.EvalResult) {
-	log.WithField("flagr_evalresult", r).Info()
+	logrus.WithField("flagr_evalresult", r).Info()
 	if !config.Config.RecorderEnabled {
 		return
 	}
@@ -121,18 +140,20 @@ var logEvalResult = func(r *models.EvalResult) {
 }
 
 func evalSegment(
-	evalContext *models.EvalContext,
+	evalContext models.EvalContext,
 	segment entity.Segment,
 ) (
 	vID *uint, // returns VariantID
 	log *models.SegmentDebugLog,
-	evalErr *Error,
 ) {
 	if len(segment.Constraints) != 0 {
 		m, ok := evalContext.EntityContext.(map[string]interface{})
 		if !ok {
-			evalErr = NewError(400, "constraints are present in the segment_id %v, but got invalid entity_context: %s.", segment.ID, spew.Sdump(evalContext.EntityContext))
-			return nil, nil, evalErr
+			log = &models.SegmentDebugLog{
+				Msg:       fmt.Sprintf("constraints are present in the segment_id %v, but got invalid entity_context: %s.", segment.ID, spew.Sdump(evalContext.EntityContext)),
+				SegmentID: int64(segment.ID),
+			}
+			return nil, log
 		}
 
 		expr := segment.SegmentEvaluation.ConditionsExpr
@@ -142,14 +163,14 @@ func evalSegment(
 				Msg:       err.Error(),
 				SegmentID: int64(segment.ID),
 			}
-			return nil, log, nil
+			return nil, log
 		}
 		if !match {
 			log = &models.SegmentDebugLog{
 				Msg:       debugConstraintMsg(expr, m),
 				SegmentID: int64(segment.ID),
 			}
-			return nil, log, nil
+			return nil, log
 		}
 	}
 
@@ -164,7 +185,7 @@ func evalSegment(
 		SegmentID: int64(segment.ID),
 	}
 
-	return vID, log, evalErr
+	return vID, log
 }
 
 func debugConstraintMsg(expr conditions.Expr, m map[string]interface{}) string {

@@ -1,0 +1,20 @@
+post:
+  tags:
+    - evaluation
+  operationId: postEvaluationBatch
+  parameters:
+    - in: body
+      name: body
+      description: evalution batch request
+      required: true
+      schema:
+        $ref: "#/definitions/evaluationBatchRequest"
+  responses:
+    200:
+      description: evaluation batch result
+      schema:
+        $ref: "#/definitions/evaluationBatchResponse"
+    default:
+      description: generic error response
+      schema:
+        $ref: "#/definitions/error"
