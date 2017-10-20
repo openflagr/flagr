@@ -125,17 +125,22 @@
         <div class="variants-container-inner" v-if="flag.variants.length">
           <div v-for="variant in flag.variants" :key="variant.id">
             <el-card>
-              <el-form :label-position="right" label-width="110px">
-                <el-form-item label="Variant ID">
-                  <el-tag type="primary"> {{ variant.id }} </el-tag>
-                </el-form-item>
+              <el-form label-position="left" label-width="100px">
+                <div class="flex-row id-row">
+                  <div class="flex-row-left">
+                    <el-tag type="primary"> Variant ID: <b>{{ variant.id }}</b> </el-tag>
+                  </div>
+                  <div class="flex-row-right">
+                    <el-button slot="append" size="small" @click="putVariant(variant)">
+                      Save
+                    </el-button>
+                  </div>
+                </div>
+
                 <el-form-item label="Key">
                   <el-input
                     placeholder="Key"
                     v-model="variant.key">
-                    <el-button slot="append" @click="putVariant(variant)">
-                      Save
-                    </el-button>
                   </el-input>
                 </el-form-item>
                 <el-form-item label="Attachment">
@@ -177,7 +182,7 @@
             </div>
             <div class="flex-row-right">
               <el-button @click="dialogCreateSegmentOpen = true">
-                <span class="el-icon-edit"></span>
+                <span class="el-icon-plus"></span>
                 Create
               </el-button>
             </div>
@@ -188,15 +193,36 @@
             v-for="segment in flag.segments"
             :key="segment.id"
             class="segment">
-            <div class="flex-row">
+            <div class="flex-row id-row">
               <div class="flex-row-left">
-                <el-tag type="primary">Segment ID: {{ segment.id }}</el-tag> {{ segment.description }}
+                <el-tag type="primary">Segment ID: <b>{{ segment.id }}</b></el-tag>
               </div>
               <div class="flex-row-right">
-                {{ segment.rolloutPercent || 0 }}%
+                <el-button slot="append" size="small" @click="putSegment(segment)">
+                  Save
+                </el-button>
               </div>
             </div>
-            <hr>
+            <div class="flex-row id-row">
+              <div class="flex-row-left">
+                <el-input
+                  placeholder="Description"
+                  v-model="segment.description">
+                <template slot="prepend">Description</template>
+                </el-input>
+              </div>
+              <div class="flex-row-right">
+                <el-input
+                  placeholder="0"
+                  v-model="segment.rolloutPercent"
+                  :min="0"
+                  :max="100"
+                >
+                <template slot="prepend">Rollout</template>
+                <template slot="append">%</template>
+                </el-input>
+              </div>
+            </div>
             <div class="flex-row equal-width align-items-top">
               <div class="segment-constraints">
                 <h4>Constraints</h4>
@@ -490,6 +516,16 @@ export default {
         segment.constraints.splice(index, 1)
       })
     },
+    putSegment (segment) {
+      const flagId = this.$route.params.flagId
+      putJson(`${API_URL}/flags/${flagId}/segments/${segment.id}`, {
+        description: segment.description,
+        rolloutPercent: parseInt(segment.rolloutPercent)
+      })
+        .then(segment => {
+          this.$message('You updated a segment')
+        })
+    },
     createSegment () {
       const flagId = this.$route.params.flagId
       postJson(`${API_URL}/flags/${flagId}/segments`, this.newSegment)
@@ -541,11 +577,14 @@ h2 {
 }
 
 .segment-constraints {
-  padding: 10px;
+  padding-right: 10px;
 }
 
 .segment-distributions {
-  padding: 10px;
+  padding-left: 10px;
+  .edit-distribution-button {
+    margin-top: 5px;
+  }
 }
 
 ol.constraints-inner {
@@ -572,11 +611,8 @@ ol.constraints-inner {
   }
 }
 
-.segment-distributions {
-  padding-left: 8px;
-  .edit-distribution-button {
-    margin-top: 5px;
-  }
+.segment-description-rollout {
+  margin-top: 10px;
 }
 
 .edit-distribution-choose-variants {
@@ -593,5 +629,9 @@ ol.constraints-inner {
 
 .el-form-item {
   margin-bottom: 5px;
+}
+
+.id-row {
+  margin-bottom: 8px;
 }
 </style>

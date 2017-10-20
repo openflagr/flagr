@@ -120,5 +120,9 @@ ul {
   .el-breadcrumb {
     margin-bottom: 20px;
   }
+
+  .el-input {
+    margin-bottom: 2px;
+  }
 }
 </style>
