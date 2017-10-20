@@ -88,7 +88,7 @@ func TestEvalSegment(t *testing.T) {
 }
 
 func TestEvalFlag(t *testing.T) {
-	defer gostub.StubFunc(&asyncRecord).Reset()
+	defer gostub.StubFunc(&logEvalResult).Reset()
 
 	t.Run("test empty evalContext", func(t *testing.T) {
 		defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
