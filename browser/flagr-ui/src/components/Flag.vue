@@ -201,6 +201,9 @@
                 <el-button slot="append" size="small" @click="putSegment(segment)">
                   Save
                 </el-button>
+                <el-button @click="deleteSegment(segment)" type="danger" size="mini">
+                  <span class="el-icon-delete2"/>
+                </el-button>
               </div>
             </div>
             <div class="flex-row id-row">
@@ -525,6 +528,21 @@ export default {
         .then(segment => {
           this.$message('You updated a segment')
         })
+    },
+    deleteSegment (segment) {
+      const {flagId} = this.$route.params
+
+      if (!confirm('Are you sure you want to delete this segment?')) {
+        return
+      }
+
+      fetch(
+        `${API_URL}/flags/${flagId}/segments/${segment.id}`,
+        {method: 'delete'}
+      ).then(() => {
+        const index = this.flag.segments.findIndex(el => el.id === segment.id)
+        this.flag.segments.splice(index, 1)
+      })
     },
     createSegment () {
       const flagId = this.$route.params.flagId
