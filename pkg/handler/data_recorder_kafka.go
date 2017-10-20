@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"io/ioutil"
-	"log"
 	"strings"
 	"time"
 
@@ -13,18 +12,19 @@ import (
 	"github.com/checkr/flagr/swagger_gen/models"
 
 	"github.com/Shopify/sarama"
+	"github.com/sirupsen/logrus"
 )
 
 func createTLSConfiguration(certFile string, keyFile string, caFile string, verifySSL bool) (t *tls.Config) {
 	if certFile != "" && keyFile != "" && caFile != "" {
 		cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 		if err != nil {
-			log.Fatal(err)
+			logrus.WithField("TLSConfigurationError", err).Fatal(err)
 		}
 
 		caCert, err := ioutil.ReadFile(caFile)
 		if err != nil {
-			log.Fatal(err)
+			logrus.WithField("TLSConfigurationError", err).Fatal(err)
 		}
 
 		caCertPool := x509.NewCertPool()
@@ -66,13 +66,13 @@ func NewKafkaRecorder() DataRecorder {
 	brokerList := strings.Split(config.Config.RecorderKafkaBrokers, ",")
 	producer, err := sarama.NewAsyncProducer(brokerList, cfg)
 	if err != nil {
-		log.Fatalln("Failed to start Sarama producer:", err)
+		logrus.WithField("kafka_error", err).Fatal("Failed to start Sarama producer:")
 	}
 
 	// We will just log to STDOUT if we're not able to produce messages.
 	go func() {
 		for err := range producer.Errors() {
-			log.Println("Failed to write access log entry:", err)
+			logrus.WithField("kafka_error", err).Error("Failed to write access log entry")
 		}
 	}()
 

@@ -189,6 +189,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/meatballhat/negroni-logrus"
+  packages = ["."]
+  revision = "31067281800f66f57548a7a32d9c6c5f963fef83"
+
+[[projects]]
+  branch = "master"
   name = "github.com/mitchellh/mapstructure"
   packages = ["."]
   revision = "d0303fe809921458f417bcf828397a65db30a7e4"
@@ -298,6 +304,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a724bbdd2c85e647f4a8cdbc71614ff1583438a2527dd2b7dbe8a6904936f871"
+  inputs-digest = "9f175ccb5020e16590edf15a2edc4019b32ca75ffe7f5feabd492bd1b0f55f43"
   solver-name = "gps-cdcl"
   solver-version = 1
