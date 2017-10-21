@@ -134,6 +134,9 @@
                     <el-button slot="append" size="small" @click="putVariant(variant)">
                       Save
                     </el-button>
+                    <el-button @click="deleteVariant(variant)" type="danger" size="mini">
+                      <span class="el-icon-delete2"/>
+                    </el-button>
                   </div>
                 </div>
 
@@ -489,6 +492,29 @@ export default {
           this.flag.variants.push(variant)
         })
     },
+    deleteVariant (variant) {
+      const {flagId} = this.$route.params
+
+      const isVariantInUse = this.flag.segments.some(segment => (
+        segment.distributions.some(distribution => distribution.variantID === variant.id)
+      ))
+
+      if (isVariantInUse) {
+        alert('This variant is being used by a segment distribution. Please remove the segment or edit the distribution in order to remove this variant.')
+        return
+      }
+
+      if (!confirm(`Are you sure you want to delete variant #${variant.id} [${variant.key}]`)) {
+        return
+      }
+
+      fetch(
+        `${API_URL}/flags/${flagId}/variants/${variant.id}`,
+        {method: 'delete'}
+      ).then(() => {
+        this.fetchFlag()
+      })
+    },
     putVariant (variant) {
       const flagId = this.$route.params.flagId
       variant.attachment = JSON.parse(variant.attachmentStr)
@@ -557,17 +583,19 @@ export default {
           this.$message('You created a new segment')
           this.dialogCreateSegmentOpen = false
         })
+    },
+    fetchFlag () {
+      const flagId = this.$route.params.flagId
+      getJson(`${API_URL}/flags/${flagId}`).then(flag => {
+        flag.segments.forEach(segment => processSegment(segment))
+        flag.variants.forEach(variant => processVariant(variant))
+        this.flag = flag
+        this.loaded = true
+      })
     }
   },
   created () {
-    const flagId = this.$route.params.flagId
-
-    getJson(`${API_URL}/flags/${flagId}`).then(flag => {
-      flag.segments.forEach(segment => processSegment(segment))
-      flag.variants.forEach(variant => processVariant(variant))
-      this.flag = flag
-      this.loaded = true
-    })
+    this.fetchFlag()
   }
 }
 </script>
