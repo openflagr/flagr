@@ -1,0 +1,5 @@
+ Hash Join  (cost=12.93..26.33 rows=130 width=1113)
+   Hash Cond: (pg_catalog.concat(blogs.title, '-suffix') = (posts.title)::text)
+   ->  Seq Scan on blogs  (cost=0.00..11.40 rows=140 width=540)
+   ->  Hash  (cost=11.30..11.30 rows=130 width=573)
+         ->  Seq Scan on posts  (cost=0.00..11.30 rows=130 width=573)

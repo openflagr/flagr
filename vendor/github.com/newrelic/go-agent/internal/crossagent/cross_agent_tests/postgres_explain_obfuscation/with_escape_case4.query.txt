@@ -1,0 +1,1 @@
+SELECT * FROM blogs WHERE blogs.title='foo\'bar'

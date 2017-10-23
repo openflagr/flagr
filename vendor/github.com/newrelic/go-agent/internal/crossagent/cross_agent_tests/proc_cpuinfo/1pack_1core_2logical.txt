@@ -1,0 +1,14 @@
+processor   : 0
+model name  : Intel(R) Pentium(R) 4 CPU 2.80GHz
+cache size  : 1024 KB
+physical id : 0
+siblings    : 2
+core id     : 0
+cpu cores   : 1
+processor   : 1
+model name  : Intel(R) Pentium(R) 4 CPU 2.80GHz
+cache size  : 1024 KB
+physical id : 0
+siblings    : 2
+core id     : 0
+cpu cores   : 1

@@ -1,0 +1,1 @@
+SELECT * FROM blogs WHERE blogs.title=E'\1\7\9'

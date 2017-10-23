@@ -1,0 +1,3 @@
+ Index Scan using blogs_pkey on blogs  (cost=0.00..8.27 rows=1 width=540)
+   Index Cond: (id = 1234)
+   Filter: ((title)::text = 'sensitive text'::text)

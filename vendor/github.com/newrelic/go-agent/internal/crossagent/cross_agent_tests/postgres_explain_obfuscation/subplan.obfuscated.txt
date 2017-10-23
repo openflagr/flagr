@@ -1,0 +1,5 @@
+Insert on explain_plan_test_1  (cost=24.50..49.00 rows=580 width=40)
+  ->  Seq Scan on explain_plan_test_2  (cost=24.50..49.00 rows=580 width=40)
+        Filter: (NOT (hashed SubPlan 1))
+        SubPlan 1
+          ->  Seq Scan on explain_plan_test_1  (cost=0.00..21.60 rows=1160 width=4)

@@ -1,0 +1,2 @@
+Seq Scan on explain_plan_test_4  (cost=0.00..56.60 rows=1 width=5)
+  Filter: ((j = 'a'::"char") AND (k = ('now'::cstring)::date))

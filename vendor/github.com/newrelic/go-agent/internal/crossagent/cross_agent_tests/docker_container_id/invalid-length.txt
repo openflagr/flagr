@@ -1,0 +1,9 @@
+9:perf_event:/docker/47cbd16b77c5
+8:blkio:/docker/47cbd16b77c5
+7:net_cls:/
+6:freezer:/docker/47cbd16b77c5
+5:devices:/docker/47cbd16b77c5
+4:memory:/docker/47cbd16b77c5
+3:cpuacct:/docker/47cbd16b77c5
+2:cpu:/docker/47cbd16b77c5
+1:cpuset:/

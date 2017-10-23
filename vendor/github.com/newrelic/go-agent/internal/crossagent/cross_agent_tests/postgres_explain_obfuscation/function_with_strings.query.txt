@@ -1,0 +1,1 @@
+SELECT * FROM blogs JOIN posts ON posts.title=CONCAT(blogs.title, '-suffix')
