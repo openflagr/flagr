@@ -645,6 +645,7 @@ ol.constraints-inner {
     padding: 3px 0;
     .el-tag {
       font-size: 0.7em;
+      vertical-align: middle;
     }
   }
 }
