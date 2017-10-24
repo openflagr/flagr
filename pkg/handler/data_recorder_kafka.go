@@ -3,6 +3,8 @@ package handler
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/base64"
+	"encoding/json"
 	"io/ioutil"
 	"strings"
 	"time"
@@ -12,6 +14,7 @@ import (
 	"github.com/checkr/flagr/swagger_gen/models"
 
 	"github.com/Shopify/sarama"
+	"github.com/brandur/simplebox"
 	"github.com/sirupsen/logrus"
 )
 
@@ -87,7 +90,10 @@ func (k *kafkaRecorder) AsyncRecord(r *models.EvalResult) {
 	if !k.enabled {
 		return
 	}
-	kr := &kafkaEvalResult{EvalResult: r}
+	kr := &kafkaEvalResult{
+		EvalResult: r,
+		encrypted:  config.Config.RecorderKafkaEncrypted,
+	}
 	k.producer.Input() <- &sarama.ProducerMessage{
 		Topic:     k.topic,
 		Key:       sarama.StringEncoder(kr.Key()),
@@ -99,13 +105,23 @@ func (k *kafkaRecorder) AsyncRecord(r *models.EvalResult) {
 type kafkaEvalResult struct {
 	*models.EvalResult
 
-	encoded []byte
-	err     error
+	encrypted bool
+	encoded   []byte
+	err       error
 }
 
 func (r *kafkaEvalResult) ensureEncoded() {
 	if r.encoded == nil && r.err == nil {
-		r.encoded, r.err = r.MarshalBinary()
+		payload, err := r.EvalResult.MarshalBinary()
+		if err != nil {
+			r.err = err
+			return
+		}
+		kmf := &kafkaMessageFrame{
+			Payload:   string(payload),
+			Encrypted: r.encrypted,
+		}
+		r.encoded, r.err = kmf.encode(config.Config.RecorderKafkaEncryptionKey)
 	}
 }
 
@@ -125,4 +141,20 @@ func (r *kafkaEvalResult) Key() string {
 		return ""
 	}
 	return util.SafeString(r.EvalContext.EntityID)
+}
+
+type kafkaMessageFrame struct {
+	Payload   string `json:"payload"`
+	Encrypted bool   `json:"encrypted"`
+}
+
+func (kmf *kafkaMessageFrame) encode(k string) ([]byte, error) {
+	if !kmf.Encrypted {
+		return json.Marshal(kmf)
+	}
+
+	key := [simplebox.KeySize]byte{}
+	copy(key[:], k)
+	kmf.Payload = base64.StdEncoding.EncodeToString(simplebox.NewFromSecretKey(&key).Encrypt([]byte(kmf.Payload)))
+	return json.Marshal(kmf)
 }

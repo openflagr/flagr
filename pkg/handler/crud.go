@@ -115,17 +115,19 @@ func (c *crud) GetFlag(params flag.GetFlagParams) middleware.Responder {
 func (c *crud) PutFlag(params flag.PutFlagParams) middleware.Responder {
 	q := entity.NewFlagQuerySet(repo.GetDB())
 
-	err := q.IDEq(uint(params.FlagID)).
-		GetUpdater().
-		SetDescription(util.SafeString(params.Body.Description)).
-		Update()
-	if err != nil {
+	u := q.IDEq(uint(params.FlagID)).GetUpdater()
+	if params.Body.Description != nil {
+		u = u.SetDescription(*params.Body.Description)
+	}
+	if params.Body.DataRecordsEnabled != nil {
+		u = u.SetDataRecordsEnabled(*params.Body.DataRecordsEnabled)
+	}
+	if err := u.Update(); err != nil {
 		return flag.NewPutFlagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
 	f := &entity.Flag{}
-	err = q.IDEq(uint(params.FlagID)).One(f)
-	if err != nil {
+	if err := q.IDEq(uint(params.FlagID)).One(f); err != nil {
 		return flag.NewPutFlagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 

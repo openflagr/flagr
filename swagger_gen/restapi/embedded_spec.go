@@ -1268,6 +1268,10 @@ func init() {
         "enabled"
       ],
       "properties": {
+        "dataRecordsEnabled": {
+          "description": "enabled data records will get data logging in the metrics pipeline, for example, kafka.",
+          "type": "boolean"
+        },
         "description": {
           "type": "string",
           "minLength": 1
@@ -1334,6 +1338,11 @@ func init() {
         "description"
       ],
       "properties": {
+        "dataRecordsEnabled": {
+          "description": "enabled data records will get data logging in the metrics pipeline, for example, kafka.",
+          "type": "boolean",
+          "x-nullable": true
+        },
         "description": {
           "type": "string",
           "minLength": 1

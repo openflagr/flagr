@@ -18,6 +18,9 @@ import (
 
 type Flag struct {
 
+	// enabled data records will get data logging in the metrics pipeline, for example, kafka.
+	DataRecordsEnabled bool `json:"dataRecordsEnabled,omitempty"`
+
 	// description
 	// Required: true
 	// Min Length: 1
@@ -38,6 +41,8 @@ type Flag struct {
 	// variants
 	Variants FlagVariants `json:"variants"`
 }
+
+/* polymorph flag dataRecordsEnabled false */
 
 /* polymorph flag description false */
 

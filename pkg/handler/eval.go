@@ -126,13 +126,14 @@ func evalFlag(evalContext models.EvalContext) *models.EvalResult {
 		evalResult.VariantKey = util.StringPtr(v.Key)
 	}
 
-	logEvalResult(evalResult)
+	logEvalResult(evalResult, f.DataRecordsEnabled)
 	return evalResult
 }
 
-var logEvalResult = func(r *models.EvalResult) {
+var logEvalResult = func(r *models.EvalResult, dataRecordsEnabled bool) {
 	logrus.WithField("flagr_evalresult", r).Info()
-	if !config.Config.RecorderEnabled {
+
+	if !config.Config.RecorderEnabled || !dataRecordsEnabled {
 		return
 	}
 	rec := GetDataRecorder()
