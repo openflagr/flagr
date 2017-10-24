@@ -1,0 +1,1 @@
+explain select * from explain_plan_test_4 where j = 'abcd' and k = current_date

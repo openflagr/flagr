@@ -1,0 +1,10 @@
+11:hugetlb:/user/1000.user/2.session
+10:perf_event:/user/1000.user/2.session
+9:blkio:/user/1000.user/2.session
+8:freezer:/user/1000.user/2.session
+7:devices:/user/1000.user/2.session
+6:memory:/user/1000.user/2.session
+5:cpuacct:/user/1000.user/2.session
+4:cpu:/user/1000.user/2.session
+3:cpuset:/user/1000.user/2.session
+2:name=systemd:/user/1000.user/2.session

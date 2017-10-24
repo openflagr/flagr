@@ -1,0 +1,28 @@
+processor   : 0
+model name  : Intel(R) Xeon(R) CPU           E5410  @ 2.33GHz
+cache size  : 6144 KB
+physical id : 0
+siblings    : 4
+core id     : 0
+cpu cores   : 4
+processor   : 1
+model name  : Intel(R) Xeon(R) CPU           E5410  @ 2.33GHz
+cache size  : 6144 KB
+physical id : 0
+siblings    : 4
+core id     : 1
+cpu cores   : 4
+processor   : 2
+model name  : Intel(R) Xeon(R) CPU           E5410  @ 2.33GHz
+cache size  : 6144 KB
+physical id : 0
+siblings    : 4
+core id     : 2
+cpu cores   : 4
+processor   : 3
+model name  : Intel(R) Xeon(R) CPU           E5410  @ 2.33GHz
+cache size  : 6144 KB
+physical id : 0
+siblings    : 4
+core id     : 3
+cpu cores   : 4

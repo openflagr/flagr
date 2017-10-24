@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Dynamic iframe Generation</title>
+  </head>
+  <body>
+    <p>The quick brown fox jumps over the lazy dog.</p>
+    <iframe width="300" height="300">
+      <p>iframes are not supported by your browser</p>
+    </iframe>
+    <script>
+      var f = window.document.getElementsByTagName("iframe")[0];
+      var doc = f.contentWindow.document;
+      doc.open();
+      doc.write('<html><head></head><body>This is the iframe</body></html>');
+      doc.close();
+    </script>
+  EXPECTED_RUM_FOOTER_LOCATION</body>
+</html>

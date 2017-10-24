@@ -1,0 +1,10 @@
+11:hugetlb:/lxc/p1
+10:perf_event:/lxc/p1
+9:blkio:/lxc/p1
+8:freezer:/lxc/p1
+7:devices:/lxc/p1
+6:memory:/lxc/p1
+5:cpuacct:/lxc/p1
+4:cpu:/lxc/p1
+3:cpuset:/lxc/p1
+2:name=systemd:/user/1000.user/1.session

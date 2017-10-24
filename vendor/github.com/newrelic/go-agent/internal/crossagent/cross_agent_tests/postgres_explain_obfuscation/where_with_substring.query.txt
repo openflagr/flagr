@@ -1,0 +1,1 @@
+SELECT * FROM blogs WHERE blogs.id=15402 AND blogs.title='logs'

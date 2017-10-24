@@ -200,6 +200,12 @@
   revision = "d0303fe809921458f417bcf828397a65db30a7e4"
 
 [[projects]]
+  name = "github.com/newrelic/go-agent"
+  packages = [".","internal","internal/jsonx","internal/logger","internal/sysinfo","internal/utilization"]
+  revision = "29ec3cd1bb2f21d21d36da37dae52695cb2c3a17"
+  version = "v1.9.0"
+
+[[projects]]
   name = "github.com/pierrec/lz4"
   packages = ["."]
   revision = "08c27939df1bd95e881e2c2367a749964ad1fceb"
@@ -261,6 +267,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/yadvendar/negroni-newrelic-go-agent"
+  packages = ["."]
+  revision = "3dc58758cb67abc45ae91e8e7bb3d90bdc254dfb"
+
+[[projects]]
+  branch = "master"
   name = "github.com/zhouzhuojie/conditions"
   packages = ["."]
   revision = "1bb009e7eb417433b27744b24eb3c28225761600"
@@ -304,6 +316,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "9f175ccb5020e16590edf15a2edc4019b32ca75ffe7f5feabd492bd1b0f55f43"
+  inputs-digest = "9754d750343158529e9f3b4a6c4c32b029991c920bb56c9a28fca0cfac011ec0"
   solver-name = "gps-cdcl"
   solver-version = 1

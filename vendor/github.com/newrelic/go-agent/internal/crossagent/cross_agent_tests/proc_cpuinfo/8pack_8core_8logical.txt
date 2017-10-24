@@ -1,0 +1,199 @@
+processor       : 0
+vendor_id       : GenuineIntel
+cpu family      : 6
+model           : 15
+model name      : Intel(R) Xeon(R) CPU           E5345  @ 2.33GHz
+stepping        : 11
+cpu MHz         : 2327.498
+cache size      : 4096 KB
+physical id     : 0
+siblings        : 1
+core id         : 0
+cpu cores       : 1
+fpu             : yes
+fpu_exception   : yes
+cpuid level     : 10
+wp              : yes
+flags           : fpu tsc msr pae mce cx8 apic mca cmov pat pse36 clflush dts ac
+pi mmx fxsr sse sse2 ss ht tm syscall nx lm constant_tsc pni monitor ds_cpl vmx
+est tm2 ssse3 cx16 xtpr dca lahf_lm
+bogomips        : 4654.10
+clflush size    : 64
+cache_alignment : 64
+address sizes   : 38 bits physical, 48 bits virtual
+power management:
+
+processor       : 1
+vendor_id       : GenuineIntel
+cpu family      : 6
+model           : 15
+model name      : Intel(R) Xeon(R) CPU           E5345  @ 2.33GHz
+stepping        : 11
+cpu MHz         : 2327.498
+cache size      : 4096 KB
+physical id     : 1
+siblings        : 1
+core id         : 0
+cpu cores       : 1
+fpu             : yes
+fpu_exception   : yes
+cpuid level     : 10
+wp              : yes
+flags           : fpu tsc msr pae mce cx8 apic mca cmov pat pse36 clflush dts ac
+pi mmx fxsr sse sse2 ss ht tm syscall nx lm constant_tsc up pni monitor ds_cpl v
+mx est tm2 ssse3 cx16 xtpr dca lahf_lm
+bogomips        : 4654.10
+clflush size    : 64
+cache_alignment : 64
+address sizes   : 38 bits physical, 48 bits virtual
+power management:
+
+processor       : 2
+vendor_id       : GenuineIntel
+cpu family      : 6
+model           : 15
+model name      : Intel(R) Xeon(R) CPU           E5345  @ 2.33GHz
+stepping        : 11
+cpu MHz         : 2327.498
+cache size      : 4096 KB
+physical id     : 2
+siblings        : 1
+core id         : 0
+cpu cores       : 1
+fpu             : yes
+fpu_exception   : yes
+cpuid level     : 10
+wp              : yes
+flags           : fpu tsc msr pae mce cx8 apic mca cmov pat pse36 clflush dts ac
+pi mmx fxsr sse sse2 ss ht tm syscall nx lm constant_tsc up pni monitor ds_cpl v
+mx est tm2 ssse3 cx16 xtpr dca lahf_lm
+bogomips        : 4654.10
+clflush size    : 64
+cache_alignment : 64
+address sizes   : 38 bits physical, 48 bits virtual
+power management:
+
+processor       : 3
+vendor_id       : GenuineIntel
+cpu family      : 6
+model           : 15
+model name      : Intel(R) Xeon(R) CPU           E5345  @ 2.33GHz
+stepping        : 11
+cpu MHz         : 2327.498
+cache size      : 4096 KB
+physical id     : 3
+siblings        : 1
+core id         : 0
+cpu cores       : 1
+fpu             : yes
+fpu_exception   : yes
+cpuid level     : 10
+wp              : yes
+flags           : fpu tsc msr pae mce cx8 apic mca cmov pat pse36 clflush dts ac
+pi mmx fxsr sse sse2 ss ht tm syscall nx lm constant_tsc up pni monitor ds_cpl v
+mx est tm2 ssse3 cx16 xtpr dca lahf_lm
+bogomips        : 4654.10
+clflush size    : 64
+cache_alignment : 64
+address sizes   : 38 bits physical, 48 bits virtual
+power management:
+
+processor       : 4
+vendor_id       : GenuineIntel
+cpu family      : 6
+model           : 15
+model name      : Intel(R) Xeon(R) CPU           E5345  @ 2.33GHz
+stepping        : 11
+cpu MHz         : 2327.498
+cache size      : 4096 KB
+physical id     : 4
+siblings        : 1
+core id         : 0
+cpu cores       : 1
+fpu             : yes
+fpu_exception   : yes
+cpuid level     : 10
+wp              : yes
+flags           : fpu tsc msr pae mce cx8 apic mca cmov pat pse36 clflush dts ac
+pi mmx fxsr sse sse2 ss ht tm syscall nx lm constant_tsc up pni monitor ds_cpl v
+mx est tm2 ssse3 cx16 xtpr dca lahf_lm
+bogomips        : 4654.10
+clflush size    : 64
+cache_alignment : 64
+address sizes   : 38 bits physical, 48 bits virtual
+power management:
+
+processor       : 5
+vendor_id       : GenuineIntel
+cpu family      : 6
+model           : 15
+model name      : Intel(R) Xeon(R) CPU           E5345  @ 2.33GHz
+stepping        : 11
+cpu MHz         : 2327.498
+cache size      : 4096 KB
+physical id     : 5
+siblings        : 1
+core id         : 0
+cpu cores       : 1
+fpu             : yes
+fpu_exception   : yes
+cpuid level     : 10
+wp              : yes
+flags           : fpu tsc msr pae mce cx8 apic mca cmov pat pse36 clflush dts ac
+pi mmx fxsr sse sse2 ss ht tm syscall nx lm constant_tsc up pni monitor ds_cpl v
+mx est tm2 ssse3 cx16 xtpr dca lahf_lm
+bogomips        : 4654.10
+clflush size    : 64
+cache_alignment : 64
+address sizes   : 38 bits physical, 48 bits virtual
+power management:
+
+processor       : 6
+vendor_id       : GenuineIntel
+cpu family      : 6
+model           : 15
+model name      : Intel(R) Xeon(R) CPU           E5345  @ 2.33GHz
+stepping        : 11
+cpu MHz         : 2327.498
+cache size      : 4096 KB
+physical id     : 6
+siblings        : 1
+core id         : 0
+cpu cores       : 1
+fpu             : yes
+fpu_exception   : yes
+cpuid level     : 10
+wp              : yes
+flags           : fpu tsc msr pae mce cx8 apic mca cmov pat pse36 clflush dts ac
+pi mmx fxsr sse sse2 ss ht tm syscall nx lm constant_tsc up pni monitor ds_cpl v
+mx est tm2 ssse3 cx16 xtpr dca lahf_lm
+bogomips        : 4654.10
+clflush size    : 64
+cache_alignment : 64
+address sizes   : 38 bits physical, 48 bits virtual
+power management:
+
+processor       : 7
+vendor_id       : GenuineIntel
+cpu family      : 6
+model           : 15
+model name      : Intel(R) Xeon(R) CPU           E5345  @ 2.33GHz
+stepping        : 11
+cpu MHz         : 2327.498
+cache size      : 4096 KB
+physical id     : 7
+siblings        : 1
+core id         : 0
+cpu cores       : 1
+fpu             : yes
+fpu_exception   : yes
+cpuid level     : 10
+wp              : yes
+flags           : fpu tsc msr pae mce cx8 apic mca cmov pat pse36 clflush dts ac
+pi mmx fxsr sse sse2 ss ht tm syscall nx lm constant_tsc up pni monitor ds_cpl v
+mx est tm2 ssse3 cx16 xtpr dca lahf_lm
+bogomips        : 4654.10
+clflush size    : 64
+cache_alignment : 64
+address sizes   : 38 bits physical, 48 bits virtual
+power management:

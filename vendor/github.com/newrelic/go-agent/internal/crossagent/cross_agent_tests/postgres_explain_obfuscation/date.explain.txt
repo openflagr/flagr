@@ -1,0 +1,2 @@
+Seq Scan on explain_plan_test_4  (cost=0.00..39.12 rows=12 width=5)
+  Filter: (k = '2001-09-28'::date)

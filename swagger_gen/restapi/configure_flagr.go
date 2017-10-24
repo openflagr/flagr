@@ -19,6 +19,7 @@ import (
 	"github.com/rs/cors"
 	"github.com/tylerb/graceful"
 	"github.com/urfave/negroni"
+	newrelic "github.com/yadvendar/negroni-newrelic-go-agent"
 )
 
 // This file is safe to edit. Once it exists it will not be overwritten
@@ -26,9 +27,10 @@ import (
 //go:generate swagger generate server --target ../swagger_gen --name  --spec ../swagger.yml
 
 var (
-	pwd, _      = os.Getwd()
-	enableCORS  = config.Config.CORSEnabled
-	enablePProf = config.Config.PProfEnabled
+	pwd, _         = os.Getwd()
+	enableCORS     = config.Config.CORSEnabled
+	enablePProf    = config.Config.PProfEnabled
+	enableNewRelic = config.Config.NewRelicEnabled
 )
 
 func configureFlags(api *operations.FlagrAPI) {
@@ -77,6 +79,16 @@ func setupGlobalMiddleware(handler http.Handler) http.Handler {
 			AllowedMethods: []string{"GET", "POST", "PUT", "DELETE"},
 		})
 		n.Use(c)
+	}
+
+	if enableNewRelic {
+		nCfg := newrelic.NewConfig(config.Config.NewRelicAppName, config.Config.NewRelicKey)
+		nCfg.Enabled = true
+		newRelicMiddleware, err := newrelic.New(nCfg)
+		if err != nil {
+			logrus.Fatalf("unable to initialize newrelic. %s", err)
+		}
+		n.Use(newRelicMiddleware)
 	}
 
 	n.Use(negronilogrus.NewMiddlewareFromLogger(logrus.StandardLogger(), "flagr"))

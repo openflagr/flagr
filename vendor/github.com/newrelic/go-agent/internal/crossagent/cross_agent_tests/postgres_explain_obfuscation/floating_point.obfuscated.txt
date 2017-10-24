@@ -1,0 +1,2 @@
+Seq Scan on explain_plan_test_1  (cost=0.00..27.40 rows=6 width=40)
+  Filter: ((a)::numeric = ?::numeric)

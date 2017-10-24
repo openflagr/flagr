@@ -16,9 +16,14 @@ var Config = struct {
 	DBDriver        string `env:"FLAGR_DB_DBDRIVER" envDefault:"mysql"`
 	DBConnectionStr string `env:"FLAGR_DB_DBCONNECTIONSTR" envDefault:"root:@tcp(127.0.0.1:18100)/flagr?parseTime=true"`
 
-	CORSEnabled   bool   `env:"FLAGR_CORS_ENABLED" envDefault:"true"`
+	CORSEnabled bool `env:"FLAGR_CORS_ENABLED" envDefault:"true"`
+
 	SentryEnabled bool   `env:"FLAGR_SENTRY_ENABLED" envDefault:"false"`
 	SentryDSN     string `env:"FLAGR_SENTRY_DSN" envDefault:""`
+
+	NewRelicEnabled bool   `env:"FLAGR_NEWRELIC_ENABLED" envDefault:"false"`
+	NewRelicAppName string `env:"FLAGR_NEWRELIC_NAME" envDefault:"flagr"`
+	NewRelicKey     string `env:"FLAGR_NEWRELIC_KEY" envDefault:""`
 
 	EvalCacheRefreshTimeout  time.Duration `env:"FLAGR_EVALCACHE_REFRESHTIMEOUT" envDefault:"59s"`
 	EvalCacheRefreshInterval time.Duration `env:"FLAGR_EVALCACHE_REFRESHINTERVAL" envDefault:"3s"`
