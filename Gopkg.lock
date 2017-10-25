@@ -26,6 +26,12 @@
   version = "v7"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/brandur/simplebox"
+  packages = ["."]
+  revision = "84e9865bb03ad38c464043bf5382ce8c68ca5f0c"
+
+[[projects]]
   name = "github.com/caarlos0/env"
   packages = ["."]
   revision = "0cf029d5748c52beb2c9d20c81880cb4bdf8f788"
@@ -280,7 +286,7 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
-  packages = ["ssh/terminal"]
+  packages = ["nacl/secretbox","poly1305","salsa20/salsa","ssh/terminal"]
   revision = "541b9d50ad47e36efd8fb423e938e59ff1691f68"
 
 [[projects]]
@@ -316,6 +322,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "9754d750343158529e9f3b4a6c4c32b029991c920bb56c9a28fca0cfac011ec0"
+  inputs-digest = "f2003178602196d372cc8a2c2661433cd17e2c3844a37b8d8693041ff0f2a941"
   solver-name = "gps-cdcl"
   solver-version = 1

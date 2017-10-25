@@ -13,12 +13,13 @@ import (
 // gen:qs
 type Flag struct {
 	gorm.Model
-	Description string `sql:"type:text"`
-	CreatedBy   string
-	UpdatedBy   string
-	Enabled     bool
-	Segments    []Segment
-	Variants    []Variant
+	Description        string `sql:"type:text"`
+	CreatedBy          string
+	UpdatedBy          string
+	Enabled            bool
+	Segments           []Segment
+	Variants           []Variant
+	DataRecordsEnabled bool
 
 	// Purely for evaluation
 	FlagEvaluation FlagEvaluation `gorm:"-"`

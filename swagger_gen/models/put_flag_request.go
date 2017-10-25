@@ -18,11 +18,16 @@ import (
 
 type PutFlagRequest struct {
 
+	// enabled data records will get data logging in the metrics pipeline, for example, kafka.
+	DataRecordsEnabled *bool `json:"dataRecordsEnabled,omitempty"`
+
 	// description
 	// Required: true
 	// Min Length: 1
 	Description *string `json:"description"`
 }
+
+/* polymorph putFlagRequest dataRecordsEnabled false */
 
 /* polymorph putFlagRequest description false */
 
