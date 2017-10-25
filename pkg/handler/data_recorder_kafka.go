@@ -150,11 +150,11 @@ type kafkaMessageFrame struct {
 
 func (kmf *kafkaMessageFrame) encode(k string) ([]byte, error) {
 	if !kmf.Encrypted {
-		return json.Marshal(kmf)
+		return json.MarshalIndent(kmf, "", "  ")
 	}
 
 	key := [simplebox.KeySize]byte{}
 	copy(key[:], k)
 	kmf.Payload = base64.StdEncoding.EncodeToString(simplebox.NewFromSecretKey(&key).Encrypt([]byte(kmf.Payload)))
-	return json.Marshal(kmf)
+	return json.MarshalIndent(kmf, "", "  ")
 }
