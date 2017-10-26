@@ -7,6 +7,7 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/mysql"    // mysql driver
 	_ "github.com/jinzhu/gorm/dialects/postgres" // postgres driver
 	_ "github.com/jinzhu/gorm/dialects/sqlite"   // sqlite driver
+	"github.com/sirupsen/logrus"
 
 	"github.com/checkr/flagr/pkg/config"
 	"github.com/checkr/flagr/pkg/entity"
@@ -33,6 +34,7 @@ func GetDB() *gorm.DB {
 		if err != nil {
 			panic(err)
 		}
+		db.SetLogger(logrus.StandardLogger())
 		db.AutoMigrate(autoMigrateTables...)
 		singletonDB = db
 	})

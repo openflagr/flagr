@@ -52,7 +52,6 @@
 <script>
 import constants from '@/constants'
 import Spinner from '@/components/Spinner'
-import { Tag, Button, Input, Alert, Breadcrumb, BreadcrumbItem } from 'element-ui'
 
 const {
   API_URL
@@ -61,13 +60,7 @@ const {
 export default {
   name: 'flags',
   components: {
-    spinner: Spinner,
-    'el-tag': Tag,
-    'el-input': Input,
-    'el-button': Button,
-    'el-alert': Alert,
-    'el-breadcrumb': Breadcrumb,
-    'el-breadcrumb-item': BreadcrumbItem
+    spinner: Spinner
   },
   data () {
     return {
