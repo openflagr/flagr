@@ -19,7 +19,8 @@ import (
 type Flag struct {
 
 	// enabled data records will get data logging in the metrics pipeline, for example, kafka.
-	DataRecordsEnabled bool `json:"dataRecordsEnabled,omitempty"`
+	// Required: true
+	DataRecordsEnabled *bool `json:"dataRecordsEnabled"`
 
 	// description
 	// Required: true
@@ -58,6 +59,11 @@ type Flag struct {
 func (m *Flag) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateDataRecordsEnabled(formats); err != nil {
+		// prop
+		res = append(res, err)
+	}
+
 	if err := m.validateDescription(formats); err != nil {
 		// prop
 		res = append(res, err)
@@ -76,6 +82,15 @@ func (m *Flag) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *Flag) validateDataRecordsEnabled(formats strfmt.Registry) error {
+
+	if err := validate.Required("dataRecordsEnabled", "body", m.DataRecordsEnabled); err != nil {
+		return err
+	}
+
 	return nil
 }
 
