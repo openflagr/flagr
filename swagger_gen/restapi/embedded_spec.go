@@ -1265,7 +1265,8 @@ func init() {
       "type": "object",
       "required": [
         "description",
-        "enabled"
+        "enabled",
+        "dataRecordsEnabled"
       ],
       "properties": {
         "dataRecordsEnabled": {

@@ -12,12 +12,6 @@
     </div>
 
     <div v-if="loaded && !loadError">
-      <el-alert
-        v-if="createSuccess"
-        title="Feature flag created!"
-        type="success"
-        show-icon>
-      </el-alert>
       <ul v-if="flags.length">
         <li
           v-for="flag in flags" class="flag"
@@ -57,14 +51,8 @@
 
 <script>
 import constants from '@/constants'
-import fetchHelpers from '@/helpers/fetch'
 import Spinner from '@/components/Spinner'
 import { Tag, Button, Input, Alert, Breadcrumb, BreadcrumbItem } from 'element-ui'
-
-const {
-  getJson,
-  postJson
-} = fetchHelpers
 
 const {
   API_URL
@@ -85,7 +73,6 @@ export default {
     return {
       loaded: false,
       loadError: false,
-      createSuccess: false,
       flags: [],
       newFlag: {
         description: ''
@@ -93,13 +80,14 @@ export default {
     }
   },
   created () {
-    getJson(`${API_URL}/flags`)
-      .then(flags => {
+    this.$http.get(`${API_URL}/flags`)
+      .then(response => {
+        let flags = response.body
         this.loaded = true
         flags.reverse()
         this.flags = flags
-      })
-      .catch(() => {
+      }, (err) => {
+        this.$message.error(err.body.message)
         this.loadError = true
       })
   },
@@ -109,13 +97,16 @@ export default {
         return
       }
 
-      postJson(`${API_URL}/flags`, this.newFlag)
-        .then(flag => {
+      this.$http.post(`${API_URL}/flags`, this.newFlag)
+        .then(response => {
+          let flag = response.body
           this.newFlag.description = ''
-          this.createSuccess = true
+          this.$message('flag created')
 
           flag._new = true
           this.flags.unshift(flag)
+        }, err => {
+          this.$message.error(err.body.message)
         })
     }
   }

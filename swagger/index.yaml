@@ -67,6 +67,7 @@ definitions:
     required:
       - description
       - enabled
+      - dataRecordsEnabled
     properties:
       id:
         type: integer

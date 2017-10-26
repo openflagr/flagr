@@ -1,7 +1,19 @@
 <template>
   <div id="app">
     <el-menu theme="light" mode="horizontal" class="navbar">
-      <img src="./assets/logo.png">
+      <el-row>
+        <el-col :span="6">
+          <div class="img-frame">
+            <a href="#"><img src="./assets/logo.png"></a>
+          </div>
+        </el-col>
+        <el-col :span="3" :offset="12">
+          <a href="/api_docs" target="_blank"><h3>API</h3></a>
+        </el-col>
+        <el-col :span="2">
+          <a href="https://checkr.github.io/flagr" target="_blank"><h3>Docs</h3></a>
+        </el-col>
+      </el-row>
     </el-menu>
     <div class="router-view-container">
       <router-view></router-view>
@@ -29,6 +41,9 @@ body {
   background-color: #f7f7f7;
   margin: 0;
   padding: 0;
+  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 h1, h2 {
@@ -55,13 +70,38 @@ ul {
 }
 
 #app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
   color: #2c3e50;
 
   .navbar {
     background-color: #74E5E0;
+    .img-frame {
+      height: 80px;
+      width: 150px;
+      position: relative;
+    }
+    img {
+      max-height: 100%;
+      max-width: 100%;
+      width: auto;
+      height: auto;
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      margin: auto;
+    }
+    h3 {
+      color: white;
+      text-align: right;
+      margin-right: 1em;
+      &:hover {
+        color: #f7f7f7;
+      }
+    }
+    a {
+      text-decoration: none;
+    }
   }
 
   .flex-row {

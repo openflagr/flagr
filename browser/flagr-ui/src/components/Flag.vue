@@ -90,13 +90,16 @@
         <div slot="header" class="el-card-header">
           <div class="flex-row">
             <div class="flex-row-left">
-              <h2>Flag ID: {{ $route.params.flagId }}</h2>
+              <h2>Flag</h2>
             </div>
             <div class="flex-row-right" v-if="flag">
               <el-switch
                 v-model="flag.enabled"
                 on-color="#13ce66"
                 off-color="#ff4949"
+                on-text="Enabled"
+                off-text="Disabled"
+                :width="87"
                 @change="setFlagEnabled"
                 :on-value="true"
                 :off-value="false">
@@ -104,18 +107,38 @@
             </div>
           </div>
         </div>
-        <div class="flag-description">
-          <div>
-            <el-input
-              placeholder="Key"
-              v-model="flag.description">
-              <template slot="prepend">Flag Description</template>
-              <el-button slot="append" @click="putFlag(flag)">
+        <el-card>
+          <div class="flex-row id-row">
+            <div class="flex-row-left">
+              <el-tag type="primary">
+                Flag ID: {{ $route.params.flagId }}
+              </el-tag>
+            </div>
+            <div class="flex-row-right">
+              <el-button size="small" @click="putFlag(flag)">
                 Save
               </el-button>
-            </el-input>
+            </div>
           </div>
-        </div>
+          <el-row :gutter="20" class="flag-content">
+            <el-col :span="17">
+              <el-input
+                placeholder="Key"
+                v-model="flag.description">
+                <template slot="prepend">Flag Description</template>
+              </el-input>
+            </el-col>
+            <el-col :span="7">
+              <el-switch
+                v-model="flag.dataRecordsEnabled"
+                on-color="#74E5E0"
+                :on-value="true"
+                :off-value="false">
+              </el-switch>
+              <span size="small">Data Records</span>
+            </el-col>
+          </el-row>
+        </el-card>
       </el-card>
 
       <el-card class="variants-container">
@@ -134,7 +157,7 @@
                     <el-button slot="append" size="small" @click="putVariant(variant)">
                       Save
                     </el-button>
-                    <el-button @click="deleteVariant(variant)" type="danger" size="mini">
+                    <el-button @click="deleteVariant(variant)" size="small">
                       <span class="el-icon-delete2"/>
                     </el-button>
                   </div>
@@ -204,20 +227,20 @@
                 <el-button slot="append" size="small" @click="putSegment(segment)">
                   Save
                 </el-button>
-                <el-button @click="deleteSegment(segment)" type="danger" size="mini">
+                <el-button @click="deleteSegment(segment)" size="small">
                   <span class="el-icon-delete2"/>
                 </el-button>
               </div>
             </div>
-            <div class="flex-row id-row">
-              <div class="flex-row-left">
+            <el-row :gutter="20" class="id-row">
+              <el-col :span="12">
                 <el-input
                   placeholder="Description"
                   v-model="segment.description">
                 <template slot="prepend">Description</template>
                 </el-input>
-              </div>
-              <div class="flex-row-right">
+              </el-col>
+              <el-col :span="12">
                 <el-input
                   placeholder="0"
                   v-model="segment.rolloutPercent"
@@ -227,10 +250,10 @@
                 <template slot="prepend">Rollout</template>
                 <template slot="append">%</template>
                 </el-input>
-              </div>
-            </div>
-            <div class="flex-row equal-width align-items-top">
-              <div class="segment-constraints">
+              </el-col>
+            </el-row>
+            <el-row :gutter="20">
+              <el-col :span="12" class="segment-constraints">
                 <h4>Constraints</h4>
                 <div class="constraints">
                   <ol class="constraints-inner" v-if="segment.constraints.length">
@@ -246,7 +269,7 @@
                         </el-tooltip>
                       </div>
                       <div class="flex-row-right">
-                        <el-button @click="deleteConstraint(segment, constraint)" type="danger" size="mini">
+                        <el-button @click="deleteConstraint(segment, constraint)" size="mini">
                           <span class="el-icon-delete2"/>
                         </el-button>
                       </div>
@@ -288,12 +311,12 @@
                     </el-button>
                   </div>
                 </div>
-              </div>
-              <div class="segment-distributions">
+              </el-col>
+              <el-col :span="12" class="segment-distributions">
                 <h4>Distribution</h4>
                 <ul class="segment-distributions-inner" v-if="segment.distributions.length">
                   <li v-for="distribution in segment.distributions" :key="distribution.id">
-                    <el-tag type="danger">{{ distribution.variantKey }}</el-tag>
+                    <el-tag type="gray">{{ distribution.variantKey }}</el-tag>
                     <span>{{ distribution.percent }} %</span>
                   </li>
                 </ul>
@@ -306,8 +329,8 @@
                     Edit distribution
                   </el-button>
                 </div>
-              </div>
-            </div>
+              </el-col>
+            </el-row>
           </el-card>
         </div>
         <div class="card--empty" v-else>
@@ -318,7 +341,7 @@
         <div slot="header" class="el-card-header">
           <h2>Flag Settings</h2>
         </div>
-        <el-button @click="dialogDeleteFlagVisible = true" type="danger">
+        <el-button @click="dialogDeleteFlagVisible = true">
           <span class="el-icon-delete2"></span>
           Delete Flag
         </el-button>
@@ -331,7 +354,6 @@
 <script>
 import constants from '@/constants'
 import helpers from '@/helpers/helpers'
-import fetchHelpers from '@/helpers/fetch'
 import Spinner from '@/components/Spinner'
 import clone from 'lodash.clone'
 import { Button, Dialog, Slider, Checkbox, Tag, Breadcrumb, BreadcrumbItem, Switch } from 'element-ui'
@@ -346,12 +368,6 @@ const {
   sum,
   pluck
 } = helpers
-
-const {
-  getJson,
-  postJson,
-  putJson
-} = fetchHelpers
 
 const {
   API_URL
@@ -427,26 +443,36 @@ export default {
   methods: {
     deleteFlag () {
       const {flagId} = this.$route.params
-      fetch(`${API_URL}/flags/${flagId}`, {method: 'delete'})
+      this.$http.delete(`${API_URL}/flags/${flagId}`)
         .then(() => {
           this.$router.replace({name: 'home'})
-          this.$message(`You deleted flag ${flagId}`)
+          this.$message.success(`You deleted flag ${flagId}`)
+        }, err => {
+          this.$message.error(err.body.message)
         })
     },
     putFlag (flag) {
       const flagId = this.$route.params.flagId
-      putJson(`${API_URL}/flags/${flagId}`, {description: flag.description})
-        .then(() => {
-          this.$message(`You've updated flag`)
-        })
+      this.$http.put(`${API_URL}/flags/${flagId}`, {
+        description: flag.description,
+        dataRecordsEnabled: flag.dataRecordsEnabled
+      }).then(() => {
+        this.$message.success(`You've updated flag`)
+      }, err => {
+        this.$message.error(err.body.message)
+      })
     },
     setFlagEnabled (checked) {
       const flagId = this.$route.params.flagId
-      putJson(`${API_URL}/flags/${flagId}/enabled`, {enabled: checked})
-        .then(() => {
-          const checkedStr = checked ? 'on' : 'off'
-          this.$message(`You turned ${checkedStr} this feature flag`)
-        })
+      this.$http.put(
+        `${API_URL}/flags/${flagId}/enabled`,
+        {enabled: checked}
+      ).then(() => {
+        const checkedStr = checked ? 'on' : 'off'
+        this.$message.success(`You turned ${checkedStr} this feature flag`)
+      }, err => {
+        this.$message.error(err.body.message)
+      })
     },
     selectVariant ($event, variant) {
       const checked = $event.target.checked
@@ -477,20 +503,31 @@ export default {
 
       const distributions = Object.values(this.newDistributions).filter(distribution => distribution.percent !== 0)
 
-      putJson(`${API_URL}/flags/${flagId}/segments/${segment.id}/distributions`, {distributions})
-        .then(distributions => {
-          this.selectedSegment.distributions = distributions
-          this.dialogEditDistributionOpen = false
-        })
+      this.$http.put(
+        `${API_URL}/flags/${flagId}/segments/${segment.id}/distributions`,
+        {distributions}
+      ).then(response => {
+        let distributions = response.body
+        this.selectedSegment.distributions = distributions
+        this.dialogEditDistributionOpen = false
+        this.$message.success('distributions updated')
+      }, err => {
+        this.$message.error(err.body.message)
+      })
     },
     createVariant () {
       const flagId = this.$route.params.flagId
-      postJson(`${API_URL}/flags/${flagId}/variants`, this.newVariant)
-        .then(variant => {
-          this.$message('You created a new variant')
-          this.newVariant = clone(DEFAULT_VARIANT)
-          this.flag.variants.push(variant)
-        })
+      this.$http.post(
+        `${API_URL}/flags/${flagId}/variants`,
+        this.newVariant
+      ).then(response => {
+        let variant = response.body
+        this.newVariant = clone(DEFAULT_VARIANT)
+        this.flag.variants.push(variant)
+        this.$message.success('new variant created')
+      }, err => {
+        this.$message.error(err.body.message)
+      })
     },
     deleteVariant (variant) {
       const {flagId} = this.$route.params
@@ -508,29 +545,40 @@ export default {
         return
       }
 
-      fetch(
-        `${API_URL}/flags/${flagId}/variants/${variant.id}`,
-        {method: 'delete'}
+      this.$http.delete(
+        `${API_URL}/flags/${flagId}/variants/${variant.id}`
       ).then(() => {
+        this.$message.success('variant deleted')
         this.fetchFlag()
+      }, err => {
+        this.$message.error(err.body.message)
       })
     },
     putVariant (variant) {
       const flagId = this.$route.params.flagId
       variant.attachment = JSON.parse(variant.attachmentStr)
-      putJson(`${API_URL}/flags/${flagId}/variants/${variant.id}`, variant)
-        .then(variant => {
-          this.$message('You updated the variant')
-        })
+      this.$http.put(
+        `${API_URL}/flags/${flagId}/variants/${variant.id}`,
+        variant
+      ).then(() => {
+        this.$message.success('variant updated')
+      }, err => {
+        this.$message.error(err.body.message)
+      })
     },
     createConstraint (segment) {
       const {flagId} = this.$route.params
-      postJson(`${API_URL}/flags/${flagId}/segments/${segment.id}/constraints`, segment.newConstraint)
-        .then(constraint => {
-          segment.constraints.push(constraint)
-          segment.newConstraint = clone(DEFAULT_CONSTRAINT)
-          this.$message('You created a new constraint')
-        })
+      this.$http.post(
+        `${API_URL}/flags/${flagId}/segments/${segment.id}/constraints`,
+        segment.newConstraint
+      ).then(response => {
+        let constraint = response.body
+        segment.constraints.push(constraint)
+        segment.newConstraint = clone(DEFAULT_CONSTRAINT)
+        this.$message.success('new constraint created')
+      }, err => {
+        this.$message.error(err.body.message)
+      })
     },
     deleteConstraint (segment, constraint) {
       const {flagId} = this.$route.params
@@ -539,23 +587,29 @@ export default {
         return
       }
 
-      fetch(
-        `${API_URL}/flags/${flagId}/segments/${segment.id}/constraints/${constraint.id}`,
-        {method: 'delete'}
+      this.$http.delete(
+        `${API_URL}/flags/${flagId}/segments/${segment.id}/constraints/${constraint.id}`
       ).then(() => {
         const index = segment.constraints.findIndex(constraint => constraint.id === constraint.id)
         segment.constraints.splice(index, 1)
+        this.$message.success('constraint deleted')
+      }, err => {
+        this.$message.error(err.body.message)
       })
     },
     putSegment (segment) {
       const flagId = this.$route.params.flagId
-      putJson(`${API_URL}/flags/${flagId}/segments/${segment.id}`, {
-        description: segment.description,
-        rolloutPercent: parseInt(segment.rolloutPercent)
+      this.$http.put(
+        `${API_URL}/flags/${flagId}/segments/${segment.id}`,
+        {
+          description: segment.description,
+          rolloutPercent: parseInt(segment.rolloutPercent)
+        }
+      ).then(() => {
+        this.$message.success('segment updated')
+      }, err => {
+        this.$message.error(err.body.message)
       })
-        .then(segment => {
-          this.$message('You updated a segment')
-        })
     },
     deleteSegment (segment) {
       const {flagId} = this.$route.params
@@ -564,33 +618,43 @@ export default {
         return
       }
 
-      fetch(
-        `${API_URL}/flags/${flagId}/segments/${segment.id}`,
-        {method: 'delete'}
+      this.$http.delete(
+        `${API_URL}/flags/${flagId}/segments/${segment.id}`
       ).then(() => {
         const index = this.flag.segments.findIndex(el => el.id === segment.id)
         this.flag.segments.splice(index, 1)
+        this.$message.success('segment deleted')
+      }, err => {
+        this.$message.error(err.body.message)
       })
     },
     createSegment () {
       const flagId = this.$route.params.flagId
-      postJson(`${API_URL}/flags/${flagId}/segments`, this.newSegment)
-        .then(segment => {
-          processSegment(segment)
-          segment.constraints = []
-          this.newSegment = clone(DEFAULT_SEGMENT)
-          this.flag.segments.push(segment)
-          this.$message('You created a new segment')
-          this.dialogCreateSegmentOpen = false
-        })
+      this.$http.post(
+        `${API_URL}/flags/${flagId}/segments`,
+        this.newSegment
+      ).then(response => {
+        let segment = response.body
+        processSegment(segment)
+        segment.constraints = []
+        this.newSegment = clone(DEFAULT_SEGMENT)
+        this.flag.segments.push(segment)
+        this.$message.success('new segment created')
+        this.dialogCreateSegmentOpen = false
+      }, err => {
+        this.$message.error(err.body.message)
+      })
     },
     fetchFlag () {
       const flagId = this.$route.params.flagId
-      getJson(`${API_URL}/flags/${flagId}`).then(flag => {
+      this.$http.get(`${API_URL}/flags/${flagId}`).then(response => {
+        let flag = response.body
         flag.segments.forEach(segment => processSegment(segment))
         flag.variants.forEach(variant => processVariant(variant))
         this.flag = flag
         this.loaded = true
+      }, err => {
+        this.$message.error(err.body.message)
       })
     }
   },
@@ -601,6 +665,10 @@ export default {
 </script>
 
 <style lang="less" scoped>
+span[size="small"] {
+  font-size: 0.85em
+}
+
 h4 {
   padding: 0;
   margin: 10px 0;
@@ -688,5 +756,9 @@ ol.constraints-inner {
   max-width: 200px;
   overflow-x: hidden;
   text-overflow: ellipsis;
+}
+
+.flag-content{
+  margin-top: 8px;
 }
 </style>
