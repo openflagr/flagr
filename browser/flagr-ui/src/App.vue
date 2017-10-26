@@ -22,17 +22,8 @@
 </template>
 
 <script>
-import {
-  Menu,
-  MenuItem
-} from 'element-ui'
-
 export default {
-  name: 'app',
-  components: {
-    'el-menu': Menu,
-    'el-menu-item': MenuItem
-  }
+  name: 'app'
 }
 </script>
 
@@ -150,6 +141,7 @@ ul {
       border: 1px solid #ccc;
       border-radius: 3px;
       width: 100%;
+      margin-bottom: 12px;
     }
   }
 

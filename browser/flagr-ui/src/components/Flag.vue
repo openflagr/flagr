@@ -116,13 +116,14 @@
             </div>
             <div class="flex-row-right">
               <el-button size="small" @click="putFlag(flag)">
-                Save
+                Save Flag
               </el-button>
             </div>
           </div>
-          <el-row :gutter="20" class="flag-content">
+          <el-row :gutter="10" class="flag-content">
             <el-col :span="17">
               <el-input
+                size="small"
                 placeholder="Key"
                 v-model="flag.description">
                 <template slot="prepend">Flag Description</template>
@@ -130,6 +131,7 @@
             </el-col>
             <el-col :span="7">
               <el-switch
+                size="small"
                 v-model="flag.dataRecordsEnabled"
                 on-color="#74E5E0"
                 :on-value="true"
@@ -155,7 +157,7 @@
                   </div>
                   <div class="flex-row-right">
                     <el-button slot="append" size="small" @click="putVariant(variant)">
-                      Save
+                      Save Variant
                     </el-button>
                     <el-button @click="deleteVariant(variant)" size="small">
                       <span class="el-icon-delete2"/>
@@ -225,7 +227,7 @@
               </div>
               <div class="flex-row-right">
                 <el-button slot="append" size="small" @click="putSegment(segment)">
-                  Save
+                  Save Segment
                 </el-button>
                 <el-button @click="deleteSegment(segment)" size="small">
                   <span class="el-icon-delete2"/>
@@ -233,15 +235,17 @@
               </div>
             </div>
             <el-row :gutter="20" class="id-row">
-              <el-col :span="12">
+              <el-col :span="17">
                 <el-input
+                  size="small"
                   placeholder="Description"
                   v-model="segment.description">
                 <template slot="prepend">Description</template>
                 </el-input>
               </el-col>
-              <el-col :span="12">
+              <el-col :span="7">
                 <el-input
+                  size="small"
                   placeholder="0"
                   v-model="segment.rolloutPercent"
                   :min="0"
@@ -252,42 +256,68 @@
                 </el-input>
               </el-col>
             </el-row>
-            <el-row :gutter="20">
-              <el-col :span="12" class="segment-constraints">
-                <h4>Constraints</h4>
+            <el-row>
+              <el-col :span="24">
+                <h4>Constraints (match ALL of them)</h4>
                 <div class="constraints">
-                  <ol class="constraints-inner" v-if="segment.constraints.length">
-                    <li
-                      class="flex-row"
+                  <div class="constraints-inner" v-if="segment.constraints.length">
+                    <div
                       v-for="constraint in segment.constraints"
                       :key="constraint.id">
-                      <div class="flex-row-left">
-                        <el-tag type="gray">{{ constraint.property }}</el-tag>
-                        <el-tag type="primary">{{ operatorValueToLabelMap[constraint.operator] }}</el-tag>
-                        <el-tooltip :content="constraint.value" placement="top">
-                          <el-tag type="gray" class="truncate">{{ constraint.value }}</el-tag>
-                        </el-tooltip>
-                      </div>
-                      <div class="flex-row-right">
-                        <el-button @click="deleteConstraint(segment, constraint)" size="mini">
-                          <span class="el-icon-delete2"/>
-                        </el-button>
-                      </div>
-                    </li>
-                  </ol>
+                      <el-row :gutter="3" class="segment-constraint">
+                        <el-col :span="20">
+                          <el-input
+                            size="small"
+                            placeholder="Property"
+                            v-model="constraint.property">
+                            <template slot="prepend">Property</template>
+                          </el-input>
+                        </el-col>
+                        <el-col :span="4">
+                          <el-select size="small" v-model="constraint.operator" placeholder="operator">
+                            <el-option
+                              v-for="item in operatorOptions"
+                              :key="item.value"
+                              :label="item.label"
+                              :value="item.value">
+                            </el-option>
+                          </el-select>
+                        </el-col>
+                        <el-col :span="20">
+                          <el-input
+                            size="small"
+                            placeholder='Value, e.g. "CA", ["CA", "NY"]'
+                            v-model="constraint.value">
+                            <template slot="prepend">Value&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</template>
+                          </el-input>
+                        </el-col>
+                        <el-col :span="2">
+                          <el-button class="width--full" @click="putConstraint(segment, constraint)" size="small">
+                            <span class="el-icon-check"/>
+                          </el-button>
+                        </el-col>
+                        <el-col :span="2">
+                          <el-button class="width--full" @click="deleteConstraint(segment, constraint)" size="small">
+                            <span class="el-icon-delete2"/>
+                          </el-button>
+                        </el-col>
+                      </el-row>
+                    </div>
+                  </div>
                   <div class="card--empty" v-else>
                     <span>No constraints for this segment yet</span>
                   </div>
                   <div>
-                    <div class="flex-row equal-width constraints-inputs-container">
-                      <div>
+                    <el-row :gutter="3" class="segment-constraint">
+                      <el-col :span="5">
                         <el-input
+                          size="small"
                           placeholder="Property"
-                          v-model="segment.newConstraint.property">  
+                          v-model="segment.newConstraint.property">
                         </el-input>
-                      </div>
-                      <div>
-                        <el-select v-model="segment.newConstraint.operator" placeholder="operator">
+                      </el-col>
+                      <el-col :span="4">
+                        <el-select size="small" v-model="segment.newConstraint.operator" placeholder="operator">
                           <el-option
                             v-for="item in operatorOptions"
                             :key="item.value"
@@ -295,29 +325,33 @@
                             :value="item.value">
                           </el-option>
                         </el-select>
-                      </div>
-                      <div>
+                      </el-col>
+                      <el-col :span="11">
                         <el-input
-                          placeholder="Value"
-                          v-model="segment.newConstraint.value">  
+                          size="small"
+                          placeholder='Value, e.g. "CA", ["CA", "NY"]'
+                          v-model="segment.newConstraint.value">
                         </el-input>
-                      </div>
-                    </div>
-                    <el-button
-                      class="width--full"
-                      :disabled="!segment.newConstraint.property || !segment.newConstraint.value"
-                      @click.prevent="() => createConstraint(segment)">
-                      Create Constraint
-                    </el-button>
+                      </el-col>
+                      <el-col :span="4">
+                        <el-button
+                          class="width--full"
+                          size="small"
+                          :disabled="!segment.newConstraint.property || !segment.newConstraint.value"
+                          @click.prevent="() => createConstraint(segment)">
+                          <span class="el-icon-plus"/>
+                        </el-button>
+                      </el-col>
+                    </el-row>
                   </div>
                 </div>
               </el-col>
-              <el-col :span="12" class="segment-distributions">
+              <el-col :span="24" class="segment-distributions">
                 <h4>Distribution</h4>
                 <ul class="segment-distributions-inner" v-if="segment.distributions.length">
                   <li v-for="distribution in segment.distributions" :key="distribution.id">
                     <el-tag type="gray">{{ distribution.variantKey }}</el-tag>
-                    <span>{{ distribution.percent }} %</span>
+                    <span size="small">{{ distribution.percent }}%</span>
                   </li>
                 </ul>
                 <div class="card--empty" v-else>
@@ -356,7 +390,6 @@ import constants from '@/constants'
 import helpers from '@/helpers/helpers'
 import Spinner from '@/components/Spinner'
 import clone from 'lodash.clone'
-import { Button, Dialog, Slider, Checkbox, Tag, Breadcrumb, BreadcrumbItem, Switch } from 'element-ui'
 import {operators} from '@/../config/operators.json'
 
 const OPERATOR_VALUE_TO_LABEL_MAP = operators.reduce((acc, el) => {
@@ -406,15 +439,7 @@ function processVariant (variant) {
 export default {
   name: 'flag',
   components: {
-    spinner: Spinner,
-    'el-button': Button,
-    'el-dialog': Dialog,
-    'el-slider': Slider,
-    'el-checkbox': Checkbox,
-    'el-tag': Tag,
-    'el-breadcrumb': Breadcrumb,
-    'el-breadcrumb-item': BreadcrumbItem,
-    'el-switch': Switch
+    spinner: Spinner
   },
   data () {
     return {
@@ -580,6 +605,18 @@ export default {
         this.$message.error(err.body.message)
       })
     },
+    putConstraint (segment, constraint) {
+      const {flagId} = this.$route.params
+
+      this.$http.put(
+        `${API_URL}/flags/${flagId}/segments/${segment.id}/constraints/${constraint.id}`,
+        constraint
+      ).then(() => {
+        this.$message.success('constraint updated')
+      }, err => {
+        this.$message.error(err.body.message)
+      })
+    },
     deleteConstraint (segment, constraint) {
       const {flagId} = this.$route.params
 
@@ -690,16 +727,11 @@ h2 {
       background-color: #ddd;
     }
   }
-}
-
-.segment-constraints {
-  padding-right: 10px;
-}
-
-.segment-distributions {
-  padding-left: 10px;
-  .edit-distribution-button {
-    margin-top: 5px;
+  .segment-constraint {
+    margin-bottom: 12px;
+    padding: 1px;
+    background-color: #f6f6f6;
+    border-radius: 5px;
   }
 }
 
@@ -713,7 +745,6 @@ ol.constraints-inner {
     padding: 3px 0;
     .el-tag {
       font-size: 0.7em;
-      vertical-align: middle;
     }
   }
 }
@@ -730,6 +761,10 @@ ol.constraints-inner {
 
 .segment-description-rollout {
   margin-top: 10px;
+}
+
+.edit-distribution-button {
+  margin-top: 5px;
 }
 
 .edit-distribution-choose-variants {
@@ -750,12 +785,6 @@ ol.constraints-inner {
 
 .id-row {
   margin-bottom: 8px;
-}
-
-.truncate {
-  max-width: 200px;
-  overflow-x: hidden;
-  text-overflow: ellipsis;
 }
 
 .flag-content{
