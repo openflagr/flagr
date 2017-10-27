@@ -1,9 +1,6 @@
 package handler
 
 import (
-	"encoding/gob"
-
-	"github.com/checkr/flagr/pkg/config"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/constraint"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/distribution"
@@ -11,27 +8,12 @@ import (
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/flag"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/segment"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/variant"
-	raven "github.com/getsentry/raven-go"
-	"github.com/zhouzhuojie/conditions"
 )
 
 // Setup initialize all the handler functions
 func Setup(api *operations.FlagrAPI) {
-	setupRaven()
-	setupGob()
 	setupCRUD(api)
 	setupEvaluation(api)
-}
-
-func setupGob() {
-	gob.Register(conditions.BinaryExpr{})
-	gob.Register(conditions.VarRef{})
-}
-
-func setupRaven() {
-	if config.Config.SentryEnabled {
-		raven.SetDSN(config.Config.SentryDSN)
-	}
 }
 
 func setupCRUD(api *operations.FlagrAPI) {
@@ -49,6 +31,7 @@ func setupCRUD(api *operations.FlagrAPI) {
 	api.SegmentFindSegmentsHandler = segment.FindSegmentsHandlerFunc(c.FindSegments)
 	api.SegmentPutSegmentHandler = segment.PutSegmentHandlerFunc(c.PutSegment)
 	api.SegmentDeleteSegmentHandler = segment.DeleteSegmentHandlerFunc(c.DeleteSegment)
+	api.SegmentPutSegmentsReorderHandler = segment.PutSegmentsReorderHandlerFunc(c.PutSegmentsReorder)
 
 	// constraints
 	api.ConstraintCreateConstraintHandler = constraint.CreateConstraintHandlerFunc(c.CreateConstraint)

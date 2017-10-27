@@ -48,6 +48,8 @@ paths:
     $ref: ./flag_variant.yaml
   /flags/{flagID}/segments:
     $ref: ./flag_segments.yaml
+  /flags/{flagID}/segments/reorder:
+    $ref: ./flag_segments_reorder.yaml
   /flags/{flagID}/segments/{segmentID}:
     $ref: ./flag_segment.yaml
   /flags/{flagID}/segments/{segmentID}/constraints:
@@ -179,6 +181,18 @@ definitions:
         format: int64
         minimum: 0
         maximum: 100
+  putSegmentReorderRequest:
+    type: object
+    required:
+      - segmentIDs
+    properties:
+      segmentIDs:
+        type: array
+        minItems: 1
+        items:
+          type: integer
+          format: int64
+          minimum: 1
 
   # Variant
   variant:

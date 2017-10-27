@@ -1,11 +1,14 @@
 package config
 
 import (
+	"encoding/gob"
 	"os"
 	"time"
 
 	"github.com/caarlos0/env"
+	raven "github.com/getsentry/raven-go"
 	"github.com/sirupsen/logrus"
+	"github.com/zhouzhuojie/conditions"
 )
 
 // Config is the whole configuration of the app
@@ -46,7 +49,24 @@ var Config = struct {
 func init() {
 	env.Parse(&Config)
 
+	setupRaven()
+	setupGob()
+	setupLogrus()
+}
+
+func setupLogrus() {
 	logrus.SetFormatter(&logrus.JSONFormatter{})
 	logrus.SetOutput(os.Stdout)
 	logrus.SetLevel(logrus.InfoLevel)
+}
+
+func setupGob() {
+	gob.Register(conditions.BinaryExpr{})
+	gob.Register(conditions.VarRef{})
+}
+
+func setupRaven() {
+	if Config.SentryEnabled {
+		raven.SetDSN(Config.SentryDSN)
+	}
 }

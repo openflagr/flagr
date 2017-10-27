@@ -1,0 +1,25 @@
+put:
+  tags:
+    - segment
+  operationId: putSegmentsReorder
+  parameters:
+    - in: path
+      name: flagID
+      description: numeric ID of the flag
+      required: true
+      type: integer
+      format: int64
+      minimum: 1
+    - in: body
+      name: body
+      description: reorder segments
+      required: true
+      schema:
+        $ref: "#/definitions/putSegmentReorderRequest"
+  responses:
+    200:
+      description: segments reordered
+    default:
+      description: generic error response
+      schema:
+        $ref: "#/definitions/error"

@@ -366,6 +366,45 @@ func init() {
         }
       }
     },
+    "/flags/{flagID}/segments/reorder": {
+      "put": {
+        "tags": [
+          "segment"
+        ],
+        "operationId": "putSegmentsReorder",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the flag",
+            "name": "flagID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "reorder segments",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/putSegmentReorderRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "segments reordered"
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
     "/flags/{flagID}/segments/{segmentID}": {
       "put": {
         "tags": [
@@ -1347,6 +1386,23 @@ func init() {
         "description": {
           "type": "string",
           "minLength": 1
+        }
+      }
+    },
+    "putSegmentReorderRequest": {
+      "type": "object",
+      "required": [
+        "segmentIDs"
+      ],
+      "properties": {
+        "segmentIDs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          }
         }
       }
     },

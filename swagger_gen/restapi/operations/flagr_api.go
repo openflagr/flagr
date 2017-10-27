@@ -102,6 +102,9 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		SegmentPutSegmentHandler: segment.PutSegmentHandlerFunc(func(params segment.PutSegmentParams) middleware.Responder {
 			return middleware.NotImplemented("operation SegmentPutSegment has not yet been implemented")
 		}),
+		SegmentPutSegmentsReorderHandler: segment.PutSegmentsReorderHandlerFunc(func(params segment.PutSegmentsReorderParams) middleware.Responder {
+			return middleware.NotImplemented("operation SegmentPutSegmentsReorder has not yet been implemented")
+		}),
 		VariantPutVariantHandler: variant.PutVariantHandlerFunc(func(params variant.PutVariantParams) middleware.Responder {
 			return middleware.NotImplemented("operation VariantPutVariant has not yet been implemented")
 		}),
@@ -177,6 +180,8 @@ type FlagrAPI struct {
 	FlagPutFlagHandler flag.PutFlagHandler
 	// SegmentPutSegmentHandler sets the operation handler for the put segment operation
 	SegmentPutSegmentHandler segment.PutSegmentHandler
+	// SegmentPutSegmentsReorderHandler sets the operation handler for the put segments reorder operation
+	SegmentPutSegmentsReorderHandler segment.PutSegmentsReorderHandler
 	// VariantPutVariantHandler sets the operation handler for the put variant operation
 	VariantPutVariantHandler variant.PutVariantHandler
 	// FlagSetFlagEnabledHandler sets the operation handler for the set flag enabled operation
@@ -322,6 +327,10 @@ func (o *FlagrAPI) Validate() error {
 
 	if o.SegmentPutSegmentHandler == nil {
 		unregistered = append(unregistered, "segment.PutSegmentHandler")
+	}
+
+	if o.SegmentPutSegmentsReorderHandler == nil {
+		unregistered = append(unregistered, "segment.PutSegmentsReorderHandler")
 	}
 
 	if o.VariantPutVariantHandler == nil {
@@ -521,6 +530,11 @@ func (o *FlagrAPI) initHandlerCache() {
 		o.handlers["PUT"] = make(map[string]http.Handler)
 	}
 	o.handlers["PUT"]["/flags/{flagID}/segments/{segmentID}"] = segment.NewPutSegment(o.context, o.SegmentPutSegmentHandler)
+
+	if o.handlers["PUT"] == nil {
+		o.handlers["PUT"] = make(map[string]http.Handler)
+	}
+	o.handlers["PUT"]["/flags/{flagID}/segments/reorder"] = segment.NewPutSegmentsReorder(o.context, o.SegmentPutSegmentsReorderHandler)
 
 	if o.handlers["PUT"] == nil {
 		o.handlers["PUT"] = make(map[string]http.Handler)
