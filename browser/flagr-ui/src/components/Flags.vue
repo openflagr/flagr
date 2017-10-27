@@ -114,9 +114,7 @@ export default {
     border-radius: 3px;
     border: 1px solid #ddd;
     background-color: white;
-    overflow-y: scroll;
     overflow-x: hidden;
-    max-height: 800px;
     list-style-type: none;
     padding: 0;
     li.flag {
