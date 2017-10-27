@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <el-menu theme="light" mode="horizontal" class="navbar">
+    <el-menu mode="horizontal" class="navbar">
       <el-row>
         <el-col :span="6">
           <div class="img-frame">
@@ -155,6 +155,10 @@ ul {
 
   .el-input {
     margin-bottom: 2px;
+  }
+
+  .segment-rollout-percent input {
+    text-align: right;
   }
 }
 </style>

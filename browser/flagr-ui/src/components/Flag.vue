@@ -3,7 +3,7 @@
     <el-dialog
       title="Delete feature flag"
       :visible.sync="dialogDeleteFlagVisible"
-      size="tiny">
+    >
       <span>Are you sure you want to delete this feature flag?</span>
       <span slot="footer" class="dialog-footer">
         <el-button @click="dialogDeleteFlagVisible = false">Cancel</el-button>
@@ -93,17 +93,16 @@
               <h2>Flag</h2>
             </div>
             <div class="flex-row-right" v-if="flag">
-              <el-switch
-                v-model="flag.enabled"
-                on-color="#13ce66"
-                off-color="#ff4949"
-                on-text="Enabled"
-                off-text="Disabled"
-                :width="87"
-                @change="setFlagEnabled"
-                :on-value="true"
-                :off-value="false">
-              </el-switch>
+              <el-tooltip content="Enable/Disable Flag" placement="top">
+                <el-switch
+                  v-model="flag.enabled"
+                  active-color="#13ce66"
+                  inactive-color="#ff4949"
+                  @change="setFlagEnabled"
+                  :active-value="true"
+                  :inactive-value="false">
+                </el-switch>
+              </el-tooltip>
             </div>
           </div>
         </div>
@@ -130,13 +129,15 @@
               </el-input>
             </el-col>
             <el-col :span="7">
-              <el-switch
-                size="small"
-                v-model="flag.dataRecordsEnabled"
-                on-color="#74E5E0"
-                :on-value="true"
-                :off-value="false">
-              </el-switch>
+              <el-tooltip content="Controls whether to log to data pipeline, e.g. Kafka" placement="top">
+                <el-switch
+                  size="small"
+                  v-model="flag.dataRecordsEnabled"
+                  active-color="#74E5E0"
+                  :active-value="true"
+                  :inactive-value="false">
+                </el-switch>
+              </el-tooltip>
               <span size="small">Data Records</span>
             </el-col>
           </el-row>
@@ -160,23 +161,20 @@
                       Save Variant
                     </el-button>
                     <el-button @click="deleteVariant(variant)" size="small">
-                      <span class="el-icon-delete2"/>
+                      <span class="el-icon-delete"/>
                     </el-button>
                   </div>
                 </div>
-
-                <el-form-item label="Key">
-                  <el-input
-                    placeholder="Key"
-                    v-model="variant.key">
-                  </el-input>
-                </el-form-item>
-                <el-form-item label="Attachment">
-                  <el-input
-                    placeholder="{}"
-                    v-model="variant.attachmentStr">
-                  </el-input>
-                </el-form-item>
+                <el-input
+                  placeholder="Key"
+                  v-model="variant.key">
+                  <template slot="prepend">Key&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</template>
+                </el-input>
+                <el-input
+                  placeholder="{}"
+                  v-model="variant.attachmentStr">
+                  <template slot="prepend">Attachment </template>
+                </el-input>
               </el-form>
             </el-card>
           </div>
@@ -234,12 +232,12 @@
                       Save Segment
                     </el-button>
                     <el-button @click="deleteSegment(segment)" size="small">
-                      <span class="el-icon-delete2"/>
+                      <span class="el-icon-delete"/>
                     </el-button>
                   </div>
                 </div>
                 <el-row :gutter="20" class="id-row">
-                  <el-col :span="17">
+                  <el-col :span="15">
                     <el-input
                       size="small"
                       placeholder="Description"
@@ -247,16 +245,17 @@
                     <template slot="prepend">Description</template>
                     </el-input>
                   </el-col>
-                  <el-col :span="7">
+                  <el-col :span="9">
                     <el-input
+                      class="segment-rollout-percent"
                       size="small"
                       placeholder="0"
                       v-model="segment.rolloutPercent"
                       :min="0"
                       :max="100"
                     >
-                    <template slot="prepend">Rollout</template>
-                    <template slot="append">%</template>
+                      <template slot="prepend">Rollout</template>
+                      <template slot="append">%</template>
                     </el-input>
                   </el-col>
                 </el-row>
@@ -302,7 +301,7 @@
                             </el-col>
                             <el-col :span="2">
                               <el-button class="width--full" @click="deleteConstraint(segment, constraint)" size="small">
-                                <span class="el-icon-delete2"/>
+                                <span class="el-icon-delete"/>
                               </el-button>
                             </el-col>
                           </el-row>
@@ -312,7 +311,7 @@
                         <span>No constraints for this segment yet</span>
                       </div>
                       <div>
-                        <el-row :gutter="3" class="segment-constraint">
+                        <el-row :gutter="3">
                           <el-col :span="5">
                             <el-input
                               size="small"
@@ -382,7 +381,7 @@
           <h2>Flag Settings</h2>
         </div>
         <el-button @click="dialogDeleteFlagVisible = true">
-          <span class="el-icon-delete2"></span>
+          <span class="el-icon-delete"></span>
           Delete Flag
         </el-button>
       </el-card>
