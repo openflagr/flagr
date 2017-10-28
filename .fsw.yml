@@ -5,7 +5,7 @@ triggers:
   - './pkg'
   - './swagger_gen'
   - '!**/*_test.go'
-  cmd: make build && make run | jq .
+  cmd: make build && make run
   shell: true
   delay: 1000ms
   stop_timeout: 500ms

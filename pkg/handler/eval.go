@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/checkr/flagr/pkg/config"
@@ -8,7 +9,6 @@ import (
 	"github.com/checkr/flagr/pkg/util"
 	"github.com/checkr/flagr/swagger_gen/models"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/evaluation"
-	"github.com/sirupsen/logrus"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/go-openapi/runtime/middleware"
@@ -131,7 +131,8 @@ func evalFlag(evalContext models.EvalContext) *models.EvalResult {
 }
 
 var logEvalResult = func(r *models.EvalResult, dataRecordsEnabled bool) {
-	logrus.WithField("flagr_evalresult", r).Info()
+	jsonStr, _ := json.Marshal(struct{ FlagEvalResult *models.EvalResult }{FlagEvalResult: r})
+	fmt.Println(string(jsonStr))
 
 	if !config.Config.RecorderEnabled || !dataRecordsEnabled {
 		return
