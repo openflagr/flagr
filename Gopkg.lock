@@ -74,6 +74,12 @@
   version = "v1.0.2"
 
 [[projects]]
+  name = "github.com/evalphobia/logrus_sentry"
+  packages = ["."]
+  revision = "13ba9278e2adf1537fd94143a6b6a1c0dc008ac7"
+  version = "v0.4.2"
+
+[[projects]]
   branch = "master"
   name = "github.com/getsentry/raven-go"
   packages = ["."]
@@ -224,6 +230,12 @@
   version = "v0.1.1"
 
 [[projects]]
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
+  version = "v0.8.0"
+
+[[projects]]
   name = "github.com/pmezard/go-difflib"
   packages = ["difflib"]
   revision = "792786c7400a136282c1664665ae0a8db921c6c2"
@@ -322,6 +334,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f2003178602196d372cc8a2c2661433cd17e2c3844a37b8d8693041ff0f2a941"
+  inputs-digest = "c8a5dac48d98cad3d9f0f65374f457fd9837dc5efa0a2a1d27605a9f6a5f3620"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -120,3 +120,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/yadvendar/negroni-newrelic-go-agent"
+
+[[constraint]]
+  name = "github.com/evalphobia/logrus_sentry"
+  version = "0.4.2"
