@@ -5,7 +5,6 @@ package restapi
 import (
 	"crypto/tls"
 	"net/http"
-	"os"
 
 	"github.com/checkr/flagr/pkg/config"
 	"github.com/checkr/flagr/pkg/handler"
@@ -14,24 +13,12 @@ import (
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime"
-	"github.com/gohttp/pprof"
-	"github.com/meatballhat/negroni-logrus"
-	"github.com/rs/cors"
 	"github.com/tylerb/graceful"
-	"github.com/urfave/negroni"
-	newrelic "github.com/yadvendar/negroni-newrelic-go-agent"
 )
 
 // This file is safe to edit. Once it exists it will not be overwritten
 
 //go:generate swagger generate server --target ../swagger_gen --name  --spec ../swagger.yml
-
-var (
-	pwd, _         = os.Getwd()
-	enableCORS     = config.Config.CORSEnabled
-	enablePProf    = config.Config.PProfEnabled
-	enableNewRelic = config.Config.NewRelicEnabled
-)
 
 func configureFlags(api *operations.FlagrAPI) {
 	// api.CommandLineOptionsGroups = []swag.CommandLineOptionsGroup{ ... }
@@ -70,36 +57,5 @@ func setupMiddlewares(handler http.Handler) http.Handler {
 // The middleware configuration happens before anything, this middleware also applies to serving the swagger.json document.
 // So this is a good place to plug in a panic handling middleware, logging and metrics
 func setupGlobalMiddleware(handler http.Handler) http.Handler {
-	n := negroni.New()
-
-	if enableCORS {
-		c := cors.New(cors.Options{
-			AllowedOrigins: []string{"*"},
-			AllowedHeaders: []string{"Content-Type", "Accepts"},
-			AllowedMethods: []string{"GET", "POST", "PUT", "DELETE"},
-		})
-		n.Use(c)
-	}
-
-	if enableNewRelic {
-		nCfg := newrelic.NewConfig(config.Config.NewRelicAppName, config.Config.NewRelicKey)
-		nCfg.Enabled = true
-		newRelicMiddleware, err := newrelic.New(nCfg)
-		if err != nil {
-			logrus.Fatalf("unable to initialize newrelic. %s", err)
-		}
-		n.Use(newRelicMiddleware)
-	}
-
-	n.Use(negronilogrus.NewMiddlewareFromLogger(logrus.StandardLogger(), "flagr"))
-	n.Use(negroni.NewRecovery())
-	n.Use(negroni.NewStatic(http.Dir(pwd + "/browser/flagr-ui/dist/")))
-
-	if enablePProf {
-		n.UseHandler(pprof.New()(handler))
-	} else {
-		n.UseHandler(handler)
-	}
-
-	return n
+	return config.SetupGlobalMiddleware(handler)
 }

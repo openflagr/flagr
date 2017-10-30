@@ -7,7 +7,8 @@ import (
 	"github.com/checkr/flagr/pkg/config"
 	"github.com/checkr/flagr/pkg/entity"
 	"github.com/checkr/flagr/pkg/repo"
-	raven "github.com/getsentry/raven-go"
+
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -50,10 +51,7 @@ func (ec *EvalCache) Start() {
 		for range time.Tick(ec.refreshInterval) {
 			err := ec.reloadMapCache()
 			if err != nil {
-				raven.CaptureError(err, map[string]string{
-					"msg": "reload evaluation cache error",
-					"err": err.Error(),
-				})
+				logrus.WithField("err", err).Error("reload evaluation cache error")
 			}
 		}
 	}()
@@ -83,6 +81,10 @@ func (ec *EvalCache) GetByFlagID(flagID uint) *entity.Flag {
 }
 
 func (ec *EvalCache) reloadMapCache() error {
+	if config.Config.NewRelicEnabled {
+		defer config.Global.NewRelicApp.StartTransaction("eval_cache_reload", nil, nil).End()
+	}
+
 	fs := []entity.Flag{}
 	q := entity.NewFlagQuerySet(repo.GetDB())
 	if err := q.All(&fs); err != nil {
