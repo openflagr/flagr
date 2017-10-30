@@ -75,7 +75,7 @@ func NewKafkaRecorder() DataRecorder {
 	// We will just log to STDOUT if we're not able to produce messages.
 	go func() {
 		for err := range producer.Errors() {
-			logrus.WithField("kafka_error", err).Error("Failed to write access log entry")
+			logrus.WithField("kafka_error", err).Error("failed to write access log entry")
 		}
 	}()
 
