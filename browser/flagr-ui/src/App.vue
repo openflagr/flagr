@@ -63,6 +63,10 @@ ul {
 #app {
   color: #2c3e50;
 
+  span[size="small"] {
+    font-size: 0.85em
+  }
+
   .navbar {
     background-color: #74E5E0;
     .img-frame {
@@ -145,10 +149,6 @@ ul {
     }
   }
 
-  .el-card__header {
-    background-color: #74E5E0;
-  }
-
   .el-breadcrumb {
     margin-bottom: 20px;
   }
@@ -159,6 +159,28 @@ ul {
 
   .segment-rollout-percent input {
     text-align: right;
+  }
+
+  .el-card {
+    .el-card__header {
+      background-color: #74E5E0;
+    }
+    margin-bottom: 1em;
+    h2 {
+      margin: -0.2em;
+      color: white;
+    }
+  }
+
+  .jsoneditor{
+    border-color: #d8dce5;
+    .jsoneditor-menu {
+      background-color: #74E5E0;
+      border-bottom-color: #74E5E0;
+    }
+    .jsoneditor-poweredBy {
+      display: none;
+    }
   }
 }
 </style>

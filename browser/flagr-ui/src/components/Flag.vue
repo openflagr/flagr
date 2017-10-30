@@ -1,393 +1,400 @@
 <template>
-  <div class="container flag-container">
-    <el-dialog
-      title="Delete feature flag"
-      :visible.sync="dialogDeleteFlagVisible"
-    >
-      <span>Are you sure you want to delete this feature flag?</span>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="dialogDeleteFlagVisible = false">Cancel</el-button>
-        <el-button type="primary" @click.prevent="deleteFlag">Confirm</el-button>
-      </span>
-    </el-dialog>
+  <el-row>
+    <el-col :span="16" :offset="4">
+      <div class="container flag-container">
+        <el-dialog
+          title="Delete feature flag"
+          :visible.sync="dialogDeleteFlagVisible"
+        >
+          <span>Are you sure you want to delete this feature flag?</span>
+          <span slot="footer" class="dialog-footer">
+            <el-button @click="dialogDeleteFlagVisible = false">Cancel</el-button>
+            <el-button type="primary" @click.prevent="deleteFlag">Confirm</el-button>
+          </span>
+        </el-dialog>
 
-    <el-dialog title="Edit distribution" :visible.sync="dialogEditDistributionOpen">
-      <ul class="edit-distribution-choose-variants" v-if="loaded && flag">
-        <li
-          v-for="variant in flag.variants"
-          :key="'distribution-variant-' + variant.id">
-          <div>
-            <el-checkbox
-              @change="(e) => selectVariant(e, variant)"
-              :checked="!!newDistributions[variant.id]"
-            >
-            </el-checkbox>
-            <el-tag type="danger">
-              {{ variant.key }}
-            </el-tag>
-          </div>
-          <el-slider
-            v-if="!newDistributions[variant.id]"
-            :value="0"
-            :disabled="true"
-            show-input>
-          </el-slider>
-          <div v-if="!!newDistributions[variant.id]">
-            <el-slider
-              v-model="newDistributions[variant.id].percent"
-              :disabled="false"
-              show-input>
-            </el-slider>
-          </div>
-        </li>
-      </ul>
-      <el-button
-        class="width--full"
-        :disabled="!newDistributionIsValid"
-        @click.prevent="() => saveDistribution(selectedSegment)">
-        Save
-      </el-button>
-
-      <el-alert
-        class="edit-distribution-alert"
-        v-if="!newDistributionIsValid"
-        :title="'Percentages must add up to 100% (currently at ' + newDistributionPercentageSum + '%)'"
-        type="error"
-        show-icon>
-      </el-alert>
-    </el-dialog>
-
-    <el-dialog title="Create segment" :visible.sync="dialogCreateSegmentOpen">
-      <div>
-        <p>
-          <el-input
-            placeholder="Segment description"
-            v-model="newSegment.description">
-          </el-input>
-        </p>
-        <p>
-          <el-slider
-            v-model="newSegment.rolloutPercent"
-            show-input>
-          </el-slider>
-        </p>
-        <el-button
-          class="width--full"
-          :disabled="!newSegment.description"
-          @click.prevent="createSegment">
-          Create Segment
-        </el-button>
-      </div>
-    </el-dialog>
-
-    <el-breadcrumb separator="/">
-      <el-breadcrumb-item :to="{name: 'home'}">Home page</el-breadcrumb-item>
-      <el-breadcrumb-item>Flag ID: {{ $route.params.flagId }}</el-breadcrumb-item>
-    </el-breadcrumb>
-
-    <div v-if="loaded && flag">
-      <el-card>
-        <div slot="header" class="el-card-header">
-          <div class="flex-row">
-            <div class="flex-row-left">
-              <h2>Flag</h2>
-            </div>
-            <div class="flex-row-right" v-if="flag">
-              <el-tooltip content="Enable/Disable Flag" placement="top">
-                <el-switch
-                  v-model="flag.enabled"
-                  active-color="#13ce66"
-                  inactive-color="#ff4949"
-                  @change="setFlagEnabled"
-                  :active-value="true"
-                  :inactive-value="false">
-                </el-switch>
-              </el-tooltip>
-            </div>
-          </div>
-        </div>
-        <el-card>
-          <div class="flex-row id-row">
-            <div class="flex-row-left">
-              <el-tag type="primary">
-                Flag ID: {{ $route.params.flagId }}
-              </el-tag>
-            </div>
-            <div class="flex-row-right">
-              <el-button size="small" @click="putFlag(flag)">
-                Save Flag
-              </el-button>
-            </div>
-          </div>
-          <el-row :gutter="10" class="flag-content">
-            <el-col :span="17">
-              <el-input
-                size="small"
-                placeholder="Key"
-                v-model="flag.description">
-                <template slot="prepend">Flag Description</template>
-              </el-input>
-            </el-col>
-            <el-col :span="7">
-              <el-tooltip content="Controls whether to log to data pipeline, e.g. Kafka" placement="top">
-                <el-switch
-                  size="small"
-                  v-model="flag.dataRecordsEnabled"
-                  active-color="#74E5E0"
-                  :active-value="true"
-                  :inactive-value="false">
-                </el-switch>
-              </el-tooltip>
-              <span size="small">Data Records</span>
-            </el-col>
-          </el-row>
-        </el-card>
-      </el-card>
-
-      <el-card class="variants-container">
-        <div slot="header" class="clearfix">
-          <h2>Variants</h2>
-        </div>
-        <div class="variants-container-inner" v-if="flag.variants.length">
-          <div v-for="variant in flag.variants" :key="variant.id">
-            <el-card>
-              <el-form label-position="left" label-width="100px">
-                <div class="flex-row id-row">
-                  <div class="flex-row-left">
-                    <el-tag type="primary"> Variant ID: <b>{{ variant.id }}</b> </el-tag>
-                  </div>
-                  <div class="flex-row-right">
-                    <el-button slot="append" size="small" @click="putVariant(variant)">
-                      Save Variant
-                    </el-button>
-                    <el-button @click="deleteVariant(variant)" size="small">
-                      <span class="el-icon-delete"/>
-                    </el-button>
-                  </div>
-                </div>
-                <el-input
-                  placeholder="Key"
-                  v-model="variant.key">
-                  <template slot="prepend">Key&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</template>
-                </el-input>
-                <el-input
-                  placeholder="{}"
-                  v-model="variant.attachmentStr">
-                  <template slot="prepend">Attachment </template>
-                </el-input>
-              </el-form>
-            </el-card>
-          </div>
-        </div>
-        <div class="card--empty" v-else>
-          No variants created for this feature flag yet
-        </div>
-        <div class="variants-input">
-          <div class="flex-row equal-width constraints-inputs-container">
-            <div>
-              <el-input
-                placeholder="Variant Key"
-                v-model="newVariant.key">
-              </el-input>
-            </div>
-          </div>
+        <el-dialog title="Edit distribution" :visible.sync="dialogEditDistributionOpen">
+          <ul class="edit-distribution-choose-variants" v-if="loaded && flag">
+            <li
+              v-for="variant in flag.variants"
+              :key="'distribution-variant-' + variant.id">
+              <div>
+                <el-checkbox
+                  @change="(e) => selectVariant(e, variant)"
+                  :checked="!!newDistributions[variant.id]"
+                >
+                </el-checkbox>
+                <el-tag type="danger">
+                  {{ variant.key }}
+                </el-tag>
+              </div>
+              <el-slider
+                v-if="!newDistributions[variant.id]"
+                :value="0"
+                :disabled="true"
+                show-input>
+              </el-slider>
+              <div v-if="!!newDistributions[variant.id]">
+                <el-slider
+                  v-model="newDistributions[variant.id].percent"
+                  :disabled="false"
+                  show-input>
+                </el-slider>
+              </div>
+            </li>
+          </ul>
           <el-button
             class="width--full"
-            :disabled="!newVariant.key"
-            @click.prevent="createVariant">
-            Create Variant
+            :disabled="!newDistributionIsValid"
+            @click.prevent="() => saveDistribution(selectedSegment)">
+            Save
           </el-button>
-        </div>
-      </el-card>
 
-      <el-card class="segments-container">
-        <div slot="header" class="el-card-header">
-          <div class="flex-row">
-            <div class="flex-row-left">
-              <h2>Segments</h2>
-            </div>
-            <div class="flex-row-right">
-              <el-button @click="putSegmentsReorder(flag.segments)">
-                Reorder
-              </el-button>
-              <el-button @click="dialogCreateSegmentOpen = true">
-                New Segment
-              </el-button>
-            </div>
+          <el-alert
+            class="edit-distribution-alert"
+            v-if="!newDistributionIsValid"
+            :title="'Percentages must add up to 100% (currently at ' + newDistributionPercentageSum + '%)'"
+            type="error"
+            show-icon>
+          </el-alert>
+        </el-dialog>
+
+        <el-dialog title="Create segment" :visible.sync="dialogCreateSegmentOpen">
+          <div>
+            <p>
+              <el-input
+                placeholder="Segment description"
+                v-model="newSegment.description">
+              </el-input>
+            </p>
+            <p>
+              <el-slider
+                v-model="newSegment.rolloutPercent"
+                show-input>
+              </el-slider>
+            </p>
+            <el-button
+              class="width--full"
+              :disabled="!newSegment.description"
+              @click.prevent="createSegment">
+              Create Segment
+            </el-button>
           </div>
-        </div>
-        <div class="segments-container-inner" v-if="flag.segments.length">
-          <draggable v-model="flag.segments" @start="drag=true" @end="drag=false">
-            <transition-group>
-              <el-card
-                v-for="segment in flag.segments"
-                :key="segment.id"
-                class="segment grabbable">
-                <div class="flex-row id-row">
-                  <div class="flex-row-left">
-                    <el-tag type="primary">Segment ID: <b>{{ segment.id }}</b></el-tag>
-                  </div>
-                  <div class="flex-row-right">
-                    <el-button slot="append" size="small" @click="putSegment(segment)">
-                      Save Segment
-                    </el-button>
-                    <el-button @click="deleteSegment(segment)" size="small">
-                      <span class="el-icon-delete"/>
-                    </el-button>
-                  </div>
+        </el-dialog>
+
+        <el-breadcrumb separator="/">
+          <el-breadcrumb-item :to="{name: 'home'}">Home page</el-breadcrumb-item>
+          <el-breadcrumb-item>Flag ID: {{ $route.params.flagId }}</el-breadcrumb-item>
+        </el-breadcrumb>
+
+        <div v-if="loaded && flag">
+          <el-card>
+            <div slot="header" class="el-card-header">
+              <div class="flex-row">
+                <div class="flex-row-left">
+                  <h2>Flag</h2>
                 </div>
-                <el-row :gutter="20" class="id-row">
-                  <el-col :span="15">
-                    <el-input
+                <div class="flex-row-right" v-if="flag">
+                  <el-tooltip content="Enable/Disable Flag" placement="top">
+                    <el-switch
+                      v-model="flag.enabled"
+                      active-color="#13ce66"
+                      inactive-color="#ff4949"
+                      @change="setFlagEnabled"
+                      :active-value="true"
+                      :inactive-value="false">
+                    </el-switch>
+                  </el-tooltip>
+                </div>
+              </div>
+            </div>
+            <el-card>
+              <div class="flex-row id-row">
+                <div class="flex-row-left">
+                  <el-tag type="primary">
+                    Flag ID: {{ $route.params.flagId }}
+                  </el-tag>
+                </div>
+                <div class="flex-row-right">
+                  <el-button size="small" @click="putFlag(flag)">
+                    Save Flag
+                  </el-button>
+                </div>
+              </div>
+              <el-row :gutter="10" class="flag-content">
+                <el-col :span="17">
+                  <el-input
+                    size="small"
+                    placeholder="Key"
+                    v-model="flag.description">
+                    <template slot="prepend">Flag Description</template>
+                  </el-input>
+                </el-col>
+                <el-col :span="7" style="text-align: right">
+                  <el-tooltip content="Controls whether to log to data pipeline, e.g. Kafka" placement="top">
+                    <el-switch
                       size="small"
-                      placeholder="Description"
-                      v-model="segment.description">
-                    <template slot="prepend">Description</template>
-                    </el-input>
-                  </el-col>
-                  <el-col :span="9">
+                      v-model="flag.dataRecordsEnabled"
+                      active-color="#74E5E0"
+                      :active-value="true"
+                      :inactive-value="false">
+                    </el-switch>
+                  </el-tooltip>
+                  <span size="small">Data Records</span>
+                </el-col>
+              </el-row>
+            </el-card>
+          </el-card>
+
+          <el-card class="variants-container">
+            <div slot="header" class="clearfix">
+              <h2>Variants</h2>
+            </div>
+            <div class="variants-container-inner" v-if="flag.variants.length">
+              <div v-for="variant in flag.variants" :key="variant.id">
+                <el-card>
+                  <el-form label-position="left" label-width="100px">
+                    <div class="flex-row id-row">
+                      <div class="flex-row-left">
+                        <el-tag type="primary"> Variant ID: <b>{{ variant.id }}</b> </el-tag>
+                      </div>
+                      <div class="flex-row-right">
+                        <el-button slot="append" size="small" @click="putVariant(variant)">
+                          Save Variant
+                        </el-button>
+                        <el-button @click="deleteVariant(variant)" size="small">
+                          <span class="el-icon-delete"/>
+                        </el-button>
+                      </div>
+                    </div>
                     <el-input
-                      class="segment-rollout-percent"
-                      size="small"
-                      placeholder="0"
-                      v-model="segment.rolloutPercent"
-                      :min="0"
-                      :max="100"
-                    >
-                      <template slot="prepend">Rollout</template>
-                      <template slot="append">%</template>
+                      placeholder="Key"
+                      v-model="variant.key">
+                      <template slot="prepend">Key&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</template>
                     </el-input>
-                  </el-col>
-                </el-row>
-                <el-row>
-                  <el-col :span="24">
-                    <h4>Constraints (match ALL of them)</h4>
-                    <div class="constraints">
-                      <div class="constraints-inner" v-if="segment.constraints.length">
-                        <div
-                          v-for="constraint in segment.constraints"
-                          :key="constraint.id">
-                          <el-row :gutter="3" class="segment-constraint">
-                            <el-col :span="20">
-                              <el-input
-                                size="small"
-                                placeholder="Property"
-                                v-model="constraint.property">
-                                <template slot="prepend">Property</template>
-                              </el-input>
-                            </el-col>
-                            <el-col :span="4">
-                              <el-select size="small" v-model="constraint.operator" placeholder="operator">
-                                <el-option
-                                  v-for="item in operatorOptions"
-                                  :key="item.value"
-                                  :label="item.label"
-                                  :value="item.value">
-                                </el-option>
-                              </el-select>
-                            </el-col>
-                            <el-col :span="20">
-                              <el-input
-                                size="small"
-                                placeholder='Value, e.g. "CA", ["CA", "NY"]'
-                                v-model="constraint.value">
-                                <template slot="prepend">Value&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</template>
-                              </el-input>
-                            </el-col>
-                            <el-col :span="2">
-                              <el-button class="width--full" @click="putConstraint(segment, constraint)" size="small">
-                                <span class="el-icon-check"/>
-                              </el-button>
-                            </el-col>
-                            <el-col :span="2">
-                              <el-button class="width--full" @click="deleteConstraint(segment, constraint)" size="small">
-                                <span class="el-icon-delete"/>
-                              </el-button>
-                            </el-col>
-                          </el-row>
+                    <el-input
+                      placeholder="{}"
+                      v-model="variant.attachmentStr">
+                      <template slot="prepend">Attachment </template>
+                    </el-input>
+                  </el-form>
+                </el-card>
+              </div>
+            </div>
+            <div class="card--empty" v-else>
+              No variants created for this feature flag yet
+            </div>
+            <div class="variants-input">
+              <div class="flex-row equal-width constraints-inputs-container">
+                <div>
+                  <el-input
+                    placeholder="Variant Key"
+                    v-model="newVariant.key">
+                  </el-input>
+                </div>
+              </div>
+              <el-button
+                class="width--full"
+                :disabled="!newVariant.key"
+                @click.prevent="createVariant">
+                Create Variant
+              </el-button>
+            </div>
+          </el-card>
+
+          <el-card class="segments-container">
+            <div slot="header" class="el-card-header">
+              <div class="flex-row">
+                <div class="flex-row-left">
+                  <h2>Segments</h2>
+                </div>
+                <div class="flex-row-right">
+                  <el-tooltip content="You can drag and drop segments to reorder" placement="top">
+                    <el-button @click="putSegmentsReorder(flag.segments)">
+                      Reorder
+                    </el-button>
+                  </el-tooltip>
+                  <el-button @click="dialogCreateSegmentOpen = true">
+                    New Segment
+                  </el-button>
+                </div>
+              </div>
+            </div>
+            <div class="segments-container-inner" v-if="flag.segments.length">
+              <draggable v-model="flag.segments" @start="drag=true" @end="drag=false">
+                <transition-group>
+                  <el-card
+                    v-for="segment in flag.segments"
+                    :key="segment.id"
+                    class="segment grabbable">
+                    <div class="flex-row id-row">
+                      <div class="flex-row-left">
+                        <el-tag type="primary">Segment ID: <b>{{ segment.id }}</b></el-tag>
+                      </div>
+                      <div class="flex-row-right">
+                        <el-button slot="append" size="small" @click="putSegment(segment)">
+                          Save Segment
+                        </el-button>
+                        <el-button @click="deleteSegment(segment)" size="small">
+                          <span class="el-icon-delete"/>
+                        </el-button>
+                      </div>
+                    </div>
+                    <el-row :gutter="20" class="id-row">
+                      <el-col :span="15">
+                        <el-input
+                          size="small"
+                          placeholder="Description"
+                          v-model="segment.description">
+                        <template slot="prepend">Description</template>
+                        </el-input>
+                      </el-col>
+                      <el-col :span="9">
+                        <el-input
+                          class="segment-rollout-percent"
+                          size="small"
+                          placeholder="0"
+                          v-model="segment.rolloutPercent"
+                          :min="0"
+                          :max="100"
+                        >
+                          <template slot="prepend">Rollout</template>
+                          <template slot="append">%</template>
+                        </el-input>
+                      </el-col>
+                    </el-row>
+                    <el-row>
+                      <el-col :span="24">
+                        <h4>Constraints (match ALL of them)</h4>
+                        <div class="constraints">
+                          <div class="constraints-inner" v-if="segment.constraints.length">
+                            <div
+                              v-for="constraint in segment.constraints"
+                              :key="constraint.id">
+                              <el-row :gutter="3" class="segment-constraint">
+                                <el-col :span="20">
+                                  <el-input
+                                    size="small"
+                                    placeholder="Property"
+                                    v-model="constraint.property">
+                                    <template slot="prepend">Property</template>
+                                  </el-input>
+                                </el-col>
+                                <el-col :span="4">
+                                  <el-select size="small" v-model="constraint.operator" placeholder="operator">
+                                    <el-option
+                                      v-for="item in operatorOptions"
+                                      :key="item.value"
+                                      :label="item.label"
+                                      :value="item.value">
+                                    </el-option>
+                                  </el-select>
+                                </el-col>
+                                <el-col :span="20">
+                                  <el-input
+                                    size="small"
+                                    placeholder='Value, e.g. "CA", ["CA", "NY"]'
+                                    v-model="constraint.value">
+                                    <template slot="prepend">Value&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</template>
+                                  </el-input>
+                                </el-col>
+                                <el-col :span="2">
+                                  <el-button class="width--full" @click="putConstraint(segment, constraint)" size="small">
+                                    <span class="el-icon-check"/>
+                                  </el-button>
+                                </el-col>
+                                <el-col :span="2">
+                                  <el-button class="width--full" @click="deleteConstraint(segment, constraint)" size="small">
+                                    <span class="el-icon-delete"/>
+                                  </el-button>
+                                </el-col>
+                              </el-row>
+                            </div>
+                          </div>
+                          <div class="card--empty" v-else>
+                            <span>No constraints for this segment yet</span>
+                          </div>
+                          <div>
+                            <el-row :gutter="3">
+                              <el-col :span="5">
+                                <el-input
+                                  size="small"
+                                  placeholder="Property"
+                                  v-model="segment.newConstraint.property">
+                                </el-input>
+                              </el-col>
+                              <el-col :span="4">
+                                <el-select size="small" v-model="segment.newConstraint.operator" placeholder="operator">
+                                  <el-option
+                                    v-for="item in operatorOptions"
+                                    :key="item.value"
+                                    :label="item.label"
+                                    :value="item.value">
+                                  </el-option>
+                                </el-select>
+                              </el-col>
+                              <el-col :span="11">
+                                <el-input
+                                  size="small"
+                                  placeholder='Value, e.g. "CA", ["CA", "NY"]'
+                                  v-model="segment.newConstraint.value">
+                                </el-input>
+                              </el-col>
+                              <el-col :span="4">
+                                <el-button
+                                  class="width--full"
+                                  size="small"
+                                  :disabled="!segment.newConstraint.property || !segment.newConstraint.value"
+                                  @click.prevent="() => createConstraint(segment)">
+                                  <span class="el-icon-plus"/>
+                                </el-button>
+                              </el-col>
+                            </el-row>
+                          </div>
                         </div>
-                      </div>
-                      <div class="card--empty" v-else>
-                        <span>No constraints for this segment yet</span>
-                      </div>
-                      <div>
-                        <el-row :gutter="3">
-                          <el-col :span="5">
-                            <el-input
-                              size="small"
-                              placeholder="Property"
-                              v-model="segment.newConstraint.property">
-                            </el-input>
-                          </el-col>
-                          <el-col :span="4">
-                            <el-select size="small" v-model="segment.newConstraint.operator" placeholder="operator">
-                              <el-option
-                                v-for="item in operatorOptions"
-                                :key="item.value"
-                                :label="item.label"
-                                :value="item.value">
-                              </el-option>
-                            </el-select>
-                          </el-col>
-                          <el-col :span="11">
-                            <el-input
-                              size="small"
-                              placeholder='Value, e.g. "CA", ["CA", "NY"]'
-                              v-model="segment.newConstraint.value">
-                            </el-input>
-                          </el-col>
-                          <el-col :span="4">
-                            <el-button
-                              class="width--full"
-                              size="small"
-                              :disabled="!segment.newConstraint.property || !segment.newConstraint.value"
-                              @click.prevent="() => createConstraint(segment)">
-                              <span class="el-icon-plus"/>
-                            </el-button>
-                          </el-col>
-                        </el-row>
-                      </div>
-                    </div>
-                  </el-col>
-                  <el-col :span="24" class="segment-distributions">
-                    <h4>Distribution</h4>
-                    <ul class="segment-distributions-inner" v-if="segment.distributions.length">
-                      <li v-for="distribution in segment.distributions" :key="distribution.id">
-                        <el-tag type="gray">{{ distribution.variantKey }}</el-tag>
-                        <span size="small">{{ distribution.percent }}%</span>
-                      </li>
-                    </ul>
-                    <div class="card--empty" v-else>
-                      No distribution yet
-                    </div>
-                    <div class="edit-distribution-button">
-                      <el-button class="width--full" @click="editDistribution(segment)">
-                        <span class="el-icon-edit"></span>
-                        Edit distribution
-                      </el-button>
-                    </div>
-                  </el-col>
-                </el-row>
-              </el-card>
-            </transition-group>
-          </draggable>
+                      </el-col>
+                      <el-col :span="24" class="segment-distributions">
+                        <h4>Distribution</h4>
+                        <ul class="segment-distributions-inner" v-if="segment.distributions.length">
+                          <li v-for="distribution in segment.distributions" :key="distribution.id">
+                            <el-tag type="gray">{{ distribution.variantKey }}</el-tag>
+                            <span size="small">{{ distribution.percent }}%</span>
+                          </li>
+                        </ul>
+                        <div class="card--empty" v-else>
+                          No distribution yet
+                        </div>
+                        <div class="edit-distribution-button">
+                          <el-button class="width--full" @click="editDistribution(segment)">
+                            <span class="el-icon-edit"></span>
+                            Edit distribution
+                          </el-button>
+                        </div>
+                      </el-col>
+                    </el-row>
+                  </el-card>
+                </transition-group>
+              </draggable>
+            </div>
+            <div class="card--empty" v-else>
+              No segments created for this feature flag yet
+            </div>
+          </el-card>
+          <el-card>
+            <div slot="header" class="el-card-header">
+              <h2>Flag Settings</h2>
+            </div>
+            <el-button @click="dialogDeleteFlagVisible = true">
+              <span class="el-icon-delete"></span>
+              Delete Flag
+            </el-button>
+          </el-card>
         </div>
-        <div class="card--empty" v-else>
-          No segments created for this feature flag yet
-        </div>
-      </el-card>
-      <el-card>
-        <div slot="header" class="el-card-header">
-          <h2>Flag Settings</h2>
-        </div>
-        <el-button @click="dialogDeleteFlagVisible = true">
-          <span class="el-icon-delete"></span>
-          Delete Flag
-        </el-button>
-      </el-card>
-    </div>
-    <spinner v-if="!loaded"></spinner>
-  </div>
+        <spinner v-if="!loaded"></spinner>
+        <debug-console :flag-id="parseInt($route.params.flagId, 10)"></debug-console>
+      </div>
+    </el-col>
+  </el-row>
 </template>
 
 <script>
@@ -397,6 +404,7 @@ import draggable from 'vuedraggable'
 import constants from '@/constants'
 import helpers from '@/helpers/helpers'
 import Spinner from '@/components/Spinner'
+import DebugConsole from '@/components/DebugConsole'
 import {operators} from '@/../config/operators.json'
 
 const OPERATOR_VALUE_TO_LABEL_MAP = operators.reduce((acc, el) => {
@@ -447,6 +455,7 @@ export default {
   name: 'flag',
   components: {
     spinner: Spinner,
+    debugConsole: DebugConsole,
     draggable: draggable
   },
   data () {
@@ -455,7 +464,8 @@ export default {
       dialogDeleteFlagVisible: false,
       dialogEditDistributionOpen: false,
       dialogCreateSegmentOpen: false,
-      flag: null,
+      flag: {},
+      flagId: this.$route.params.id,
       newSegment: clone(DEFAULT_SEGMENT),
       newVariant: clone(DEFAULT_VARIANT),
       selectedSegment: null,
@@ -648,7 +658,7 @@ export default {
         `${API_URL}/flags/${flagId}/segments/${segment.id}`,
         {
           description: segment.description,
-          rolloutPercent: parseInt(segment.rolloutPercent)
+          rolloutPercent: parseInt(segment.rolloutPercent, 10)
         }
       ).then(() => {
         this.$message.success('segment updated')
@@ -714,25 +724,16 @@ export default {
       })
     }
   },
-  created () {
+  mounted () {
     this.fetchFlag()
   }
 }
 </script>
 
 <style lang="less" scoped>
-span[size="small"] {
-  font-size: 0.85em
-}
-
 h4 {
   padding: 0;
   margin: 10px 0;
-}
-
-h2 {
-  margin: -0.2em;
-  color: white;
 }
 
 .grabbable {
@@ -740,10 +741,6 @@ h2 {
     cursor: grab;
     cursor: -moz-grab;
     cursor: -webkit-grab;
-}
-
-.flag-container {
-  width: 700px;
 }
 
 .segment {
@@ -799,10 +796,6 @@ ol.constraints-inner {
 
 .edit-distribution-alert {
   margin-top: 10px;
-} 
-
-.el-card {
-  margin-bottom: 1em;
 }
 
 .el-form-item {

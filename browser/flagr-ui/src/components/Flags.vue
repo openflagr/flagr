@@ -1,52 +1,56 @@
 <template>
-  <div class="flags-container container">
-    <el-breadcrumb separator="/" v-if="loaded && !loadError">
-      <el-breadcrumb-item>Home page</el-breadcrumb-item>      
-    </el-breadcrumb>
+  <el-row>
+    <el-col :span="16" :offset="4">
+      <div class="flags-container container">
+        <el-breadcrumb separator="/" v-if="loaded && !loadError">
+          <el-breadcrumb-item>Home page</el-breadcrumb-item>      
+        </el-breadcrumb>
 
-    <spinner v-if="!loaded" />
+        <spinner v-if="!loaded" />
 
-    <div v-if="loadError" class="card--error">
-      <span class="el-icon-circle-close"></span>
-      Failed to load feature flags
-    </div>
+        <div v-if="loadError" class="card--error">
+          <span class="el-icon-circle-close"></span>
+          Failed to load feature flags
+        </div>
 
-    <div v-if="loaded && !loadError">
-      <ul v-if="flags.length">
-        <li
-          v-for="flag in flags" class="flag"
-          :class="{new: flag._new}">
-          <router-link
-            class="flag-link flex-row"
-            :to="{name: 'flag', params: {flagId: flag.id}}">
-            <div class="flex-row-left">
-              <el-tag type="primary">Flag ID: {{ flag.id }}</el-tag> {{ flag.description }}
-            </div>
-            <div class="flex-row-right">
-              <span :class="{'flag-enabled-icon': true, enabled: flag.enabled}"></span>
-            </div>
-          </router-link>
-        </li>
-      </ul>
-      <div class="card--empty" v-else>
-        No feature flags created yet
+        <div v-if="loaded && !loadError">
+          <ul v-if="flags.length">
+            <li
+              v-for="flag in flags" class="flag"
+              :class="{new: flag._new}">
+              <router-link
+                class="flag-link flex-row"
+                :to="{name: 'flag', params: {flagId: flag.id}}">
+                <div class="flex-row-left">
+                  <el-tag type="primary">Flag ID: {{ flag.id }}</el-tag> {{ flag.description }}
+                </div>
+                <div class="flex-row-right">
+                  <span :class="{'flag-enabled-icon': true, enabled: flag.enabled}"></span>
+                </div>
+              </router-link>
+            </li>
+          </ul>
+          <div class="card--empty" v-else>
+            No feature flags created yet
+          </div>
+          <div>
+            <p>
+              <el-input
+                placeholder="Feature flag description"
+                v-model="newFlag.description">  
+              </el-input>
+            </p>
+            <el-button
+              class="width--full"
+              :disabled="!newFlag.description"
+              @click.prevent="createFlag">
+              Create Feature Flag
+            </el-button>
+          </div>
+        </div>
       </div>
-      <div>
-        <p>
-          <el-input
-            placeholder="Feature flag description"
-            v-model="newFlag.description">  
-          </el-input>
-        </p>
-        <el-button
-          class="width--full"
-          :disabled="!newFlag.description"
-          @click.prevent="createFlag">
-          Create Feature Flag
-        </el-button>
-      </div>
-    </div>
-  </div>
+    </el-col>
+  </el-row>
 </template>
 
 <script>
@@ -109,7 +113,6 @@ export default {
 <style lang="less" scoped>
 
 .flags-container {
-  width: 700px;
   ul {
     border-radius: 3px;
     border: 1px solid #ddd;

@@ -15,6 +15,7 @@
   "dependencies": {
     "element-theme-chalk": "^2.0.0",
     "element-ui": "^2.0.0",
+    "vue-json-editor": "^1.2.0",
     "lodash.clone": "^4.5.0",
     "vue": "^2.5.0",
     "vue-resource": "^1.3.4",
