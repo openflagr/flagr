@@ -6220,6 +6220,12 @@ vue-hot-reload-api@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/vue-hot-reload-api/-/vue-hot-reload-api-2.1.0.tgz#9ca58a6e0df9078554ce1708688b6578754d86de"
 
+vue-json-editor@^1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/vue-json-editor/-/vue-json-editor-1.2.0.tgz#2e09d1c63ce8c34b4d1876f3c8c48522078c3f63"
+  dependencies:
+    vue "^2.2.6"
+
 vue-loader@^13.0.4:
   version "13.0.5"
   resolved "https://registry.yarnpkg.com/vue-loader/-/vue-loader-13.0.5.tgz#3639e9fb3940cded7f0fc34429277fb6de70a57c"
@@ -6266,7 +6272,7 @@ vue-template-es2015-compiler@^1.5.3:
   version "1.5.3"
   resolved "https://registry.yarnpkg.com/vue-template-es2015-compiler/-/vue-template-es2015-compiler-1.5.3.tgz#22787de4e37ebd9339b74223bc467d1adee30545"
 
-vue@^2.3.0:
+vue@^2.2.6, vue@^2.5.0:
   version "2.5.2"
   resolved "https://registry.yarnpkg.com/vue/-/vue-2.5.2.tgz#fd367a87bae7535e47f9dc5c9ec3b496e5feb5a4"
 
