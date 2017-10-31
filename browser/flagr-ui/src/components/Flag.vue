@@ -518,8 +518,7 @@ export default {
       })
     },
     selectVariant ($event, variant) {
-      const checked = $event.target.checked
-
+      const checked = $event
       if (checked) {
         const distribution = Object.assign(clone(DEFAULT_DISTRIBUTION), {
           variantKey: variant.key,
