@@ -34,7 +34,7 @@ type FlagEvaluation struct {
 func (f *Flag) Preload(db *gorm.DB) error {
 	ss := []Segment{}
 	segmentQuery := NewSegmentQuerySet(db)
-	if err := segmentQuery.FlagIDEq(f.ID).OrderAscByRank().All(&ss); err != nil {
+	if err := segmentQuery.FlagIDEq(f.ID).OrderAscByRank().OrderAscByID().All(&ss); err != nil {
 		return err
 	}
 	for i, s := range ss {
