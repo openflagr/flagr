@@ -50,7 +50,7 @@ var Config = struct {
 
 // Global is the global dependency we can use, such as the new relic app instance
 var Global = struct {
-	NewRelicApp newrelic.Application
+	NewrelicApp newrelic.Application
 }{}
 
 func init() {
@@ -59,6 +59,7 @@ func init() {
 	setupSentry()
 	setupGob()
 	setupLogrus()
+	setupNewrelic()
 }
 
 func setupLogrus() {
@@ -87,6 +88,18 @@ func setupSentry() {
 	}
 }
 
+func setupNewrelic() {
+	if Config.NewRelicEnabled {
+		nCfg := newrelic.NewConfig(Config.NewRelicAppName, Config.NewRelicKey)
+		nCfg.Enabled = true
+		app, err := newrelic.NewApplication(nCfg)
+		if err != nil {
+			logrus.Fatalf("unable to initialize newrelic. %s", err)
+		}
+		Global.NewrelicApp = app
+	}
+}
+
 // SetupGlobalMiddleware setup the global middleware
 func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 	pwd, _ := os.Getwd()
@@ -102,13 +115,7 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 	}
 
 	if Config.NewRelicEnabled {
-		nCfg := newrelic.NewConfig(Config.NewRelicAppName, Config.NewRelicKey)
-		nCfg.Enabled = true
-		newRelicMiddleware, err := negroninewrelic.New(nCfg)
-		Global.NewRelicApp = *newRelicMiddleware.Application
-		if err != nil {
-			logrus.Fatalf("unable to initialize newrelic. %s", err)
-		}
+		newRelicMiddleware := &negroninewrelic.Newrelic{Application: &Global.NewrelicApp}
 		n.Use(newRelicMiddleware)
 	}
 
