@@ -82,7 +82,7 @@ func (ec *EvalCache) GetByFlagID(flagID uint) *entity.Flag {
 
 func (ec *EvalCache) reloadMapCache() error {
 	if config.Config.NewRelicEnabled {
-		defer config.Global.NewRelicApp.StartTransaction("eval_cache_reload", nil, nil).End()
+		defer config.Global.NewrelicApp.StartTransaction("eval_cache_reload", nil, nil).End()
 	}
 
 	fs := []entity.Flag{}
