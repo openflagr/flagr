@@ -197,7 +197,7 @@ func (c *crud) FindSegments(params segment.FindSegmentsParams) middleware.Respon
 	ss := []entity.Segment{}
 
 	q := entity.NewSegmentQuerySet(repo.GetDB())
-	err := q.FlagIDEq(uint(params.FlagID)).OrderAscByRank().All(&ss)
+	err := q.FlagIDEq(uint(params.FlagID)).OrderAscByRank().OrderAscByID().All(&ss)
 	if err != nil {
 		return segment.NewFindSegmentsDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
