@@ -5,39 +5,44 @@
     </div>
     <el-collapse>
       <el-collapse-item title="Evaluation">
-        <el-row :gutter="20">
+        <el-row :gutter="10">
+          <el-col :span="5">
+            <span>Request</span>
+          </el-col>
+          <el-col :span="7" class="evaluation-button-col">
+            <el-button size="mini" @click="postEvaluation(evalContext)" type="primary" plain>POST /api/v1/evaluation</el-button>
+          </el-col>
+          <el-col :span="6">
+            <span>Response</span>
+          </el-col>
+        </el-row>
+        <el-row :gutter="10">
           <el-col :span="12">
-            <el-row>
-              <el-col :lg="13" :md="24">
-                <span>Evaluation Context</span>
-              </el-col>
-              <el-col :lg="11" :md="24" class="evaluation-button-col">
-                <el-button size="mini" @click="postEvaluation(evalContext)" type="primary" plain>POST /api/v1/evaluation</el-button>
-              </el-col>
-            </el-row>
             <vue-json-editor v-model="evalContext" :showBtns="false" ref="evalContextEditor" class="json-editor"></vue-json-editor>
           </el-col>
           <el-col :span="12">
-            <span>Evaluation Result</span>
             <vue-json-editor v-model="evalResult" :showBtns="false" ref="evalResultEditor" class="json-editor"></vue-json-editor>
           </el-col>
         </el-row>
       </el-collapse-item>
+
       <el-collapse-item title="Batch Evaluation">
-        <el-row :gutter="20">
+        <el-row :gutter="10">
+          <el-col :span="5">
+            <span>Request</span>
+          </el-col>
+          <el-col :span="7" class="evaluation-button-col">
+            <el-button size="mini" @click="postEvaluationBatch(batchEvalContext)" type="primary" plain>POST /api/v1/evaluation/batch</el-button>
+          </el-col>
+          <el-col :span="6">
+            <span>Response</span>
+          </el-col>
+        </el-row>
+        <el-row :gutter="10">
           <el-col :span="12">
-            <el-row>
-              <el-col :lg="13" :md="24">
-                <span>Batch Evaluation Context</span>
-              </el-col>
-              <el-col :lg="11" :md="24" class="evaluation-button-col">
-                <el-button size="mini" @click="postEvaluationBatch(batchEvalContext)" type="primary" plain>POST /api/v1/evaluation/batch</el-button>
-              </el-col>
-            </el-row>
             <vue-json-editor v-model="batchEvalContext" :showBtns="false" ref="batchEvalContextEditor" class="json-editor"></vue-json-editor>
           </el-col>
           <el-col :span="12">
-            <span>Batch Evaluation Result</span>
             <vue-json-editor v-model="batchEvalResult" :showBtns="false" ref="batchEvalResultEditor" class="json-editor"></vue-json-editor>
           </el-col>
         </el-row>
