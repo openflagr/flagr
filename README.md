@@ -1,3 +1,5 @@
+[![Go Report Card](https://goreportcard.com/badge/github.com/checkr/flagr)](https://goreportcard.com/report/github.com/checkr/flagr)
+
 # Flagr Quickstart Guide
 
 Flagr delivers the right experience to the right entity and monitors the impact. It’s a micro service that provides the functionality of feature flags, experimentation (A/B testing), and dynamic configuration.

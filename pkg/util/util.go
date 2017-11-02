@@ -20,10 +20,10 @@ func IsSafeKey(s string) (bool, string) {
 }
 
 // SafeString safely dereference the string or string ptr
-func SafeString(s interface{}) (r string) {
+func SafeString(s interface{}) (ret string) {
 	defer func() {
 		if r := recover(); r != nil {
-			r = ""
+			ret = ""
 		}
 	}()
 
@@ -37,10 +37,10 @@ func SafeString(s interface{}) (r string) {
 }
 
 // SafeUint returns the uint of the value
-func SafeUint(s interface{}) (r uint) {
+func SafeUint(s interface{}) (ret uint) {
 	defer func() {
 		if r := recover(); r != nil {
-			r = 0
+			ret = 0
 		}
 	}()
 

@@ -13,7 +13,7 @@ func GenFixtureFlag() Flag {
 		Enabled:     true,
 		Segments:    []Segment{GenFixtureSegment()},
 		Variants: []Variant{
-			Variant{
+			{
 				Model:  gorm.Model{ID: 300},
 				FlagID: 100,
 				Key:    "control",
@@ -21,7 +21,7 @@ func GenFixtureFlag() Flag {
 					"value": "123",
 				},
 			},
-			Variant{
+			{
 				Model:  gorm.Model{ID: 301},
 				FlagID: 100,
 				Key:    "treatment",
@@ -44,7 +44,7 @@ func GenFixtureSegment() Segment {
 		Rank:           0,
 		RolloutPercent: 100,
 		Constraints: []Constraint{
-			Constraint{
+			{
 				Model:     gorm.Model{ID: 500},
 				SegmentID: 200,
 				Property:  "dl_state",
@@ -53,14 +53,14 @@ func GenFixtureSegment() Segment {
 			},
 		},
 		Distributions: []Distribution{
-			Distribution{
+			{
 				Model:      gorm.Model{ID: 400},
 				SegmentID:  200,
 				VariantID:  300,
 				VariantKey: "control",
 				Percent:    50,
 			},
-			Distribution{
+			{
 				Model:      gorm.Model{ID: 401},
 				SegmentID:  200,
 				VariantID:  301,
