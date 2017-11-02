@@ -1,4 +1,9 @@
+<p align="center">
+    <img src="./browser/flagr-ui/src/assets/logo.png" width="150">
+</p>
+
 [![Go Report Card](https://goreportcard.com/badge/github.com/checkr/flagr)](https://goreportcard.com/report/github.com/checkr/flagr)
+[![](https://img.shields.io/gitter/room/nwjs/nw.js.svg)](https://gitter.im/checkr-flagr/Lobby)
 
 # Flagr Quickstart Guide
 
