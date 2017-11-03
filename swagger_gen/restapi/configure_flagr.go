@@ -30,7 +30,7 @@ func configureAPI(api *operations.FlagrAPI) http.Handler {
 
 	api.JSONConsumer = runtime.JSONConsumer()
 	api.JSONProducer = runtime.JSONProducer()
-	api.ServerShutdown = func() { time.Sleep(5 * time.Second) }
+	api.ServerShutdown = func() { time.Sleep(config.Config.GracefulCleanupTimeout) }
 	api.Logger = logrus.Infof
 
 	handler.Setup(api)
@@ -47,6 +47,7 @@ func configureTLS(tlsConfig *tls.Config) {
 // This function can be called multiple times, depending on the number of serving schemes.
 // scheme value will be set accordingly: "http", "https" or "unix"
 func configureServer(s *graceful.Server, scheme, addr string) {
+	s.Timeout = config.Config.GracefulCleanupTimeout
 }
 
 // The middleware configuration is for the handler executors. These do not apply to the swagger.json document.
