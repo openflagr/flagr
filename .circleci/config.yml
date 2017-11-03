@@ -11,4 +11,5 @@ jobs:
       - checkout
       - run: make deps
       - run: make test
+      - run: bash <(curl -s https://codecov.io/bash)
       - run: cd browser/flagr-ui && yarn install && yarn run test
