@@ -21,7 +21,7 @@ import (
 
 // Config is the whole configuration of the app
 var Config = struct {
-	Host                        string        `env:"HOST" envDefault:"127.0.0.1"`
+	GracefulCleanupTimeout      time.Duration `env:"FLAGR_GRACEFUL_CLEANUP_TIMEOUT" envDefault:"5s"`
 	PProfEnabled                bool          `env:"FLAGR_PPROF_ENABLED" envDefault:"true"`
 	DBDriver                    string        `env:"FLAGR_DB_DBDRIVER" envDefault:"mysql"`
 	DBConnectionStr             string        `env:"FLAGR_DB_DBCONNECTIONSTR" envDefault:"root:@tcp(127.0.0.1:18100)/flagr?parseTime=true"`
