@@ -5,6 +5,7 @@ package restapi
 import (
 	"crypto/tls"
 	"net/http"
+	"time"
 
 	"github.com/checkr/flagr/pkg/config"
 	"github.com/checkr/flagr/pkg/handler"
@@ -29,7 +30,7 @@ func configureAPI(api *operations.FlagrAPI) http.Handler {
 
 	api.JSONConsumer = runtime.JSONConsumer()
 	api.JSONProducer = runtime.JSONProducer()
-	api.ServerShutdown = func() {}
+	api.ServerShutdown = func() { time.Sleep(5 * time.Second) }
 	api.Logger = logrus.Infof
 
 	handler.Setup(api)
