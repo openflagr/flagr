@@ -2,35 +2,58 @@
     <img src="./browser/flagr-ui/src/assets/logo.png" width="150">
 </p>
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/checkr/flagr)](https://goreportcard.com/report/github.com/checkr/flagr)
-[![](https://img.shields.io/gitter/room/nwjs/nw.js.svg)](https://gitter.im/checkr-flagr/Lobby)
+<p align="center">
+    <a href="https://goreportcard.com/report/github.com/checkr/flagr" target="_blank">
+        <img src="https://goreportcard.com/badge/github.com/checkr/flagr">
+    </a>
+    <a href="https://circleci.com/gh/checkr/flagr" target="_blank">
+        <img src="https://circleci.com/gh/checkr/flagr.svg?style=shield">
+    </a>
+    <a href="https://gitter.im/checkr-flagr/Lobby" target="_blank">
+        <img src="https://img.shields.io/gitter/room/nwjs/nw.js.svg">
+    </a>
+    <a href="https://raw.githubusercontent.com/checkr/flagr/master/LICENSE" target="_blank">
+        <img src="http://img.shields.io/badge/license-Apache%20v2-green.svg">
+    </a>
+    <a href="https://codecov.io/gh/checkr/flagr" target="_blank">
+        <img src="https://codecov.io/gh/checkr/flagr/branch/master/graph/badge.svg">
+    </a>
+</p>
 
-# Flagr Quickstart Guide
+## Introduction
 
-Flagr delivers the right experience to the right entity and monitors the impact. It’s a micro service that provides the functionality of feature flags, experimentation (A/B testing), and dynamic configuration.
+Flagr is an open source Go service that delivers the right experience to the right entity and monitors the impact. It provides feature flags, experimentation (A/B testing), and dynamic configuration. It has clear swagger REST APIs for flags management and flag evaluation.
 
-## Install from Source
+## Documentation
+- [Flagr Documentation](https://checkr.github.io/flagr/)
 
-Source installation is only intended for developers and advanced users.
+## Quick demo
 
 ```sh
-# get the source
-go get -u github.com/checkr/flagr
-cd $GOPATH/src/github.com/checkr/flagr
+# Get the flagr-mini image for the demo
+docker run -it -p 18000:18000 zhouzhuojie/flagr-mini
 
-# docker-compose with the infra
-docker-compose up
-
-# install dependencies, generated code, and run the app
-make all
+# Open the flagr homepage
+open localhost:18000
 ```
 
-## Test using Flagr UI
-Flagr Server comes with an embedded web based UI. Point your web browser to http://127.0.0.1:18000 ensure your server has started successfully.
+<p align="center">
+    <img src="./docs/images/demo_constraints.png" width="600">
+    <img src="./docs/images/demo_debug_console.png" width="600">
+    <img src="./docs/images/demo_api_docs.png" width="600">
+</p>
 
-## Explore Further
-- [Flagr QuickStart Guide]()
-- [Flagr Documentation Website]()
+## Flag Evaluation Performance
 
-## Contribute to Flagr Project
-Please follow Flagr [Contributor's Guide](https://github.com/checkr/flagr/blob/master/CONTRIBUTING.md)
+Tested with `vegeta`. For more details, see [benchmarks](./benchmark).
+
+```
+Requests      [total, rate]            56521, 2000.04
+Duration      [total, attack, wait]    28.2603654s, 28.259999871s, 365.529µs
+Latencies     [mean, 50, 95, 99, max]  371.632µs, 327.991µs, 614.918µs, 1.385568ms, 12.50012ms
+Bytes In      [total, mean]            23250552, 411.36
+Bytes Out     [total, mean]            8308587, 147.00
+Success       [ratio]                  100.00%
+Status Codes  [code:count]             200:56521
+Error Set:
+```
