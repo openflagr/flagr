@@ -6,7 +6,6 @@ import (
 
 	"github.com/checkr/flagr/pkg/config"
 	"github.com/checkr/flagr/pkg/entity"
-	"github.com/checkr/flagr/pkg/repo"
 
 	"github.com/sirupsen/logrus"
 )
@@ -86,14 +85,14 @@ func (ec *EvalCache) reloadMapCache() error {
 	}
 
 	fs := []entity.Flag{}
-	q := entity.NewFlagQuerySet(repo.GetDB())
+	q := entity.NewFlagQuerySet(getDB())
 	if err := q.All(&fs); err != nil {
 		return err
 	}
 	m := make(map[uint]*entity.Flag)
 	for i := range fs {
 		ptr := &fs[i]
-		err := ptr.Preload(repo.GetDB())
+		err := ptr.Preload(getDB())
 		if err != nil {
 			return err
 		}

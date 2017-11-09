@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"github.com/checkr/flagr/pkg/repo"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/constraint"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/distribution"
@@ -9,6 +10,8 @@ import (
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/segment"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/variant"
 )
+
+var getDB = repo.GetDB
 
 // Setup initialize all the handler functions
 func Setup(api *operations.FlagrAPI) {

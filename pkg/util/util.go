@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"math"
 	"regexp"
 	"time"
 )
@@ -69,8 +70,21 @@ func SafeUint(s interface{}) (ret uint) {
 		return s.(uint)
 	case *uint:
 		return *s.(*uint)
+	case float32:
+		return uint(Round(float64(s.(float32))))
+	case *float32:
+		return uint(Round(float64(*s.(*float32))))
+	case float64:
+		return uint(Round(float64(s.(float64))))
+	case *float64:
+		return uint(Round(float64(*s.(*float64))))
 	}
 	return 0
+}
+
+// Round makes the float to int conversion with rounding
+func Round(f float64) int {
+	return int(f + math.Copysign(0.5, f))
 }
 
 // TimeNow follows RFC3339 time format

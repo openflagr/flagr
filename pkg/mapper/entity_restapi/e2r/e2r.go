@@ -7,6 +7,8 @@ import (
 	"github.com/checkr/flagr/swagger_gen/models"
 )
 
+var getDB = repo.GetDB
+
 // MapFlag maps flag
 func MapFlag(e *entity.Flag, preload bool) (*models.Flag, error) {
 	r := &models.Flag{}
@@ -16,7 +18,7 @@ func MapFlag(e *entity.Flag, preload bool) (*models.Flag, error) {
 	r.DataRecordsEnabled = util.BoolPtr(e.DataRecordsEnabled)
 
 	if preload {
-		if err := e.Preload(repo.GetDB()); err != nil {
+		if err := e.Preload(getDB()); err != nil {
 			return nil, err
 		}
 		r.Segments = MapSegments(e.Segments)
@@ -40,7 +42,7 @@ func MapFlags(e []entity.Flag) ([]*models.Flag, error) {
 
 // MapSegment maps segment
 func MapSegment(e *entity.Segment) *models.Segment {
-	e.Preload(repo.GetDB())
+	e.Preload(getDB())
 	r := &models.Segment{}
 	r.ID = int64(e.ID)
 	r.Description = util.StringPtr(e.Description)

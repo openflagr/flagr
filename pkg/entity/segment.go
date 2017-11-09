@@ -27,6 +27,7 @@ func (s *Segment) Preload(db *gorm.DB) error {
 	cs := []Constraint{}
 	constraintQuery := NewConstraintQuerySet(db)
 	err := constraintQuery.SegmentIDEq(s.ID).OrderAscByCreatedAt().All(&cs)
+
 	if err != nil {
 		return err
 	}

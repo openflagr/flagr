@@ -4,13 +4,13 @@ import (
 	"github.com/checkr/flagr/pkg/entity"
 	"github.com/checkr/flagr/pkg/mapper/entity_restapi/e2r"
 	"github.com/checkr/flagr/pkg/mapper/entity_restapi/r2e"
-	"github.com/checkr/flagr/pkg/repo"
 	"github.com/checkr/flagr/pkg/util"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/constraint"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/distribution"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/flag"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/segment"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/variant"
+
 	"github.com/go-openapi/runtime/middleware"
 )
 
@@ -57,7 +57,7 @@ type crud struct{}
 
 func (c *crud) FindFlags(params flag.FindFlagsParams) middleware.Responder {
 	fs := []entity.Flag{}
-	q := entity.NewFlagQuerySet(repo.GetDB())
+	q := entity.NewFlagQuerySet(getDB())
 	err := q.All(&fs)
 	if err != nil {
 		return flag.NewFindFlagsDefault(500).WithPayload(
@@ -78,7 +78,7 @@ func (c *crud) CreateFlag(params flag.CreateFlagParams) middleware.Responder {
 	if params.Body != nil {
 		f.Description = util.SafeString(params.Body.Description)
 	}
-	err := f.Create(repo.GetDB())
+	err := f.Create(getDB())
 	if err != nil {
 		return flag.NewCreateFlagDefault(500).WithPayload(
 			ErrorMessage("cannot create flag. %s", err))
@@ -96,7 +96,7 @@ func (c *crud) CreateFlag(params flag.CreateFlagParams) middleware.Responder {
 
 func (c *crud) GetFlag(params flag.GetFlagParams) middleware.Responder {
 	f := &entity.Flag{}
-	q := entity.NewFlagQuerySet(repo.GetDB())
+	q := entity.NewFlagQuerySet(getDB())
 	err := q.IDEq(uint(params.FlagID)).One(f)
 	if err != nil {
 		return flag.NewGetFlagDefault(500).WithPayload(
@@ -114,7 +114,7 @@ func (c *crud) GetFlag(params flag.GetFlagParams) middleware.Responder {
 }
 
 func (c *crud) PutFlag(params flag.PutFlagParams) middleware.Responder {
-	q := entity.NewFlagQuerySet(repo.GetDB())
+	q := entity.NewFlagQuerySet(getDB())
 
 	u := q.IDEq(uint(params.FlagID)).GetUpdater()
 	if params.Body.Description != nil {
@@ -142,7 +142,7 @@ func (c *crud) PutFlag(params flag.PutFlagParams) middleware.Responder {
 }
 
 func (c *crud) SetFlagEnabledState(params flag.SetFlagEnabledParams) middleware.Responder {
-	q := entity.NewFlagQuerySet(repo.GetDB())
+	q := entity.NewFlagQuerySet(getDB())
 
 	err := q.IDEq(uint(params.FlagID)).
 		GetUpdater().
@@ -168,7 +168,7 @@ func (c *crud) SetFlagEnabledState(params flag.SetFlagEnabledParams) middleware.
 }
 
 func (c *crud) DeleteFlag(params flag.DeleteFlagParams) middleware.Responder {
-	q := entity.NewFlagQuerySet(repo.GetDB())
+	q := entity.NewFlagQuerySet(getDB())
 
 	err := q.IDEq(uint(params.FlagID)).Delete()
 	if err != nil {
@@ -183,7 +183,7 @@ func (c *crud) CreateSegment(params segment.CreateSegmentParams) middleware.Resp
 	s.RolloutPercent = uint(*params.Body.RolloutPercent)
 	s.Description = util.SafeString(params.Body.Description)
 
-	err := s.Create(repo.GetDB())
+	err := s.Create(getDB())
 	if err != nil {
 		return segment.NewCreateSegmentDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
@@ -196,7 +196,7 @@ func (c *crud) CreateSegment(params segment.CreateSegmentParams) middleware.Resp
 func (c *crud) FindSegments(params segment.FindSegmentsParams) middleware.Responder {
 	ss := []entity.Segment{}
 
-	q := entity.NewSegmentQuerySet(repo.GetDB())
+	q := entity.NewSegmentQuerySet(getDB())
 	err := q.FlagIDEq(uint(params.FlagID)).OrderAscByRank().OrderAscByID().All(&ss)
 	if err != nil {
 		return segment.NewFindSegmentsDefault(500).WithPayload(ErrorMessage("%s", err))
@@ -209,7 +209,7 @@ func (c *crud) FindSegments(params segment.FindSegmentsParams) middleware.Respon
 
 func (c *crud) PutSegment(params segment.PutSegmentParams) middleware.Responder {
 	s := entity.Segment{}
-	q := entity.NewSegmentQuerySet(repo.GetDB())
+	q := entity.NewSegmentQuerySet(getDB())
 	if err := q.IDEq(util.SafeUint(params.SegmentID)).One(&s); err != nil {
 		return segment.NewPutSegmentDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
@@ -217,7 +217,7 @@ func (c *crud) PutSegment(params segment.PutSegmentParams) middleware.Responder 
 	s.RolloutPercent = util.SafeUint(params.Body.RolloutPercent)
 	s.Description = util.SafeString(params.Body.Description)
 
-	if err := repo.GetDB().Save(&s).Error; err != nil {
+	if err := getDB().Save(&s).Error; err != nil {
 		return segment.NewPutSegmentDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
@@ -227,7 +227,7 @@ func (c *crud) PutSegment(params segment.PutSegmentParams) middleware.Responder 
 }
 
 func (c *crud) PutSegmentsReorder(params segment.PutSegmentsReorderParams) middleware.Responder {
-	tx := repo.GetDB().Begin()
+	tx := getDB().Begin()
 	for i, segmentID := range params.Body.SegmentIds {
 		err := entity.NewSegmentQuerySet(tx).IDEq(util.SafeUint(segmentID)).GetUpdater().SetRank(uint(i)).Update()
 		if err != nil {
@@ -244,7 +244,7 @@ func (c *crud) PutSegmentsReorder(params segment.PutSegmentsReorderParams) middl
 }
 
 func (c *crud) DeleteSegment(params segment.DeleteSegmentParams) middleware.Responder {
-	q := entity.NewSegmentQuerySet(repo.GetDB())
+	q := entity.NewSegmentQuerySet(getDB())
 	if err := q.IDEq(util.SafeUint(params.SegmentID)).Delete(); err != nil {
 		return segment.NewDeleteSegmentDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
@@ -262,7 +262,7 @@ func (c *crud) CreateConstraint(params constraint.CreateConstraintParams) middle
 	if err := cons.Validate(); err != nil {
 		return constraint.NewCreateConstraintDefault(400).WithPayload(ErrorMessage("%s", err))
 	}
-	if err := cons.Create(repo.GetDB()); err != nil {
+	if err := cons.Create(getDB()); err != nil {
 		return constraint.NewCreateConstraintDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
@@ -274,7 +274,7 @@ func (c *crud) CreateConstraint(params constraint.CreateConstraintParams) middle
 func (c *crud) FindConstraints(params constraint.FindConstraintsParams) middleware.Responder {
 	cs := []entity.Constraint{}
 
-	q := entity.NewConstraintQuerySet(repo.GetDB())
+	q := entity.NewConstraintQuerySet(getDB())
 	err := q.SegmentIDEq(uint(params.SegmentID)).OrderAscByCreatedAt().All(&cs)
 	if err != nil {
 		return constraint.NewFindConstraintsDefault(500).WithPayload(ErrorMessage("%s", err))
@@ -287,7 +287,7 @@ func (c *crud) FindConstraints(params constraint.FindConstraintsParams) middlewa
 
 func (c *crud) PutConstraint(params constraint.PutConstraintParams) middleware.Responder {
 	cons := entity.Constraint{}
-	err := entity.NewConstraintQuerySet(repo.GetDB()).IDEq(uint(params.ConstraintID)).One(&cons)
+	err := entity.NewConstraintQuerySet(getDB()).IDEq(uint(params.ConstraintID)).One(&cons)
 	if err != nil {
 		return constraint.NewPutConstraintDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
@@ -300,7 +300,7 @@ func (c *crud) PutConstraint(params constraint.PutConstraintParams) middleware.R
 		return constraint.NewPutConstraintDefault(400).WithPayload(ErrorMessage("%s", err))
 	}
 
-	if err := repo.GetDB().Save(&cons).Error; err != nil {
+	if err := getDB().Save(&cons).Error; err != nil {
 		return constraint.NewPutConstraintDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
@@ -310,7 +310,7 @@ func (c *crud) PutConstraint(params constraint.PutConstraintParams) middleware.R
 }
 
 func (c *crud) DeleteConstraint(params constraint.DeleteConstraintParams) middleware.Responder {
-	err := entity.NewConstraintQuerySet(repo.GetDB()).IDEq(uint(params.ConstraintID)).Delete()
+	err := entity.NewConstraintQuerySet(getDB()).IDEq(uint(params.ConstraintID)).Delete()
 	if err != nil {
 		return constraint.NewDeleteConstraintDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
@@ -327,7 +327,7 @@ func (c *crud) PutDistributions(params distribution.PutDistributionsParams) midd
 
 	segmentID := uint(params.SegmentID)
 
-	tx := repo.GetDB().Begin()
+	tx := getDB().Begin()
 	err := tx.Delete(entity.Distribution{}, "segment_id = ?", segmentID).Error
 	if err != nil {
 		tx.Rollback()
@@ -356,7 +356,7 @@ func (c *crud) PutDistributions(params distribution.PutDistributionsParams) midd
 func (c *crud) FindDistributions(params distribution.FindDistributionsParams) middleware.Responder {
 	ds := []entity.Distribution{}
 
-	q := entity.NewDistributionQuerySet(repo.GetDB())
+	q := entity.NewDistributionQuerySet(getDB())
 	err := q.SegmentIDEq(uint(params.SegmentID)).OrderAscByVariantID().All(&ds)
 	if err != nil {
 		return distribution.NewFindDistributionsDefault(500).WithPayload(ErrorMessage("%s", err))
@@ -382,7 +382,7 @@ func (c *crud) CreateVariant(params variant.CreateVariantParams) middleware.Resp
 		return variant.NewCreateVariantDefault(400).WithPayload(ErrorMessage("%s", err))
 	}
 
-	if err := v.Create(repo.GetDB()); err != nil {
+	if err := v.Create(getDB()); err != nil {
 		return variant.NewCreateVariantDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
@@ -394,7 +394,7 @@ func (c *crud) CreateVariant(params variant.CreateVariantParams) middleware.Resp
 func (c *crud) FindVariants(params variant.FindVariantsParams) middleware.Responder {
 	vs := []entity.Variant{}
 
-	q := entity.NewVariantQuerySet(repo.GetDB())
+	q := entity.NewVariantQuerySet(getDB())
 	err := q.FlagIDEq(uint(params.FlagID)).OrderAscByID().All(&vs)
 	if err != nil {
 		return variant.NewFindVariantsDefault(500).WithPayload(ErrorMessage("%s", err))
@@ -408,7 +408,7 @@ func (c *crud) FindVariants(params variant.FindVariantsParams) middleware.Respon
 func (c *crud) PutVariant(params variant.PutVariantParams) middleware.Responder {
 	v := entity.Variant{}
 
-	q := entity.NewVariantQuerySet(repo.GetDB())
+	q := entity.NewVariantQuerySet(getDB())
 	err := q.IDEq(uint(params.VariantID)).One(&v)
 	if err != nil {
 		return variant.NewPutVariantDefault(500).WithPayload(ErrorMessage("%s", err))
@@ -427,7 +427,7 @@ func (c *crud) PutVariant(params variant.PutVariantParams) middleware.Responder 
 		return variant.NewPutVariantDefault(400).WithPayload(ErrorMessage("%s", err))
 	}
 
-	if err := repo.GetDB().Save(&v).Error; err != nil {
+	if err := getDB().Save(&v).Error; err != nil {
 		return variant.NewPutVariantDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
@@ -445,7 +445,7 @@ func (c *crud) DeleteVariant(params variant.DeleteVariantParams) middleware.Resp
 		return variant.NewDeleteVariantDefault(err.StatusCode).WithPayload(ErrorMessage("%s", err))
 	}
 
-	q := entity.NewVariantQuerySet(repo.GetDB())
+	q := entity.NewVariantQuerySet(getDB())
 	if err := q.IDEq(uint(params.VariantID)).Delete(); err != nil {
 		return variant.NewDeleteVariantDefault(500).WithPayload(ErrorMessage("%s", err))
 	}

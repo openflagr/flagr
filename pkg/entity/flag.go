@@ -3,9 +3,6 @@
 package entity
 
 import (
-	"bytes"
-	"encoding/gob"
-
 	"github.com/jinzhu/gorm"
 )
 
@@ -67,29 +64,6 @@ func (f *Flag) PrepareEvaluation() error {
 	}
 	for i := range f.Variants {
 		f.FlagEvaluation.VariantsMap[f.Variants[i].ID] = &f.Variants[i]
-	}
-	return nil
-}
-
-// Encode serialize the flag
-func (f *Flag) Encode() ([]byte, error) {
-	var b bytes.Buffer
-	enc := gob.NewEncoder(&b)
-	err := enc.Encode(f)
-	if err != nil {
-		return nil, err
-	}
-	return b.Bytes(), nil
-}
-
-// Decode de-serialize the flag
-func (f *Flag) Decode(b []byte) error {
-	var bb bytes.Buffer
-	bb.Write(b)
-	dec := gob.NewDecoder(&bb)
-	err := dec.Decode(f)
-	if err != nil {
-		return err
 	}
 	return nil
 }

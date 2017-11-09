@@ -140,22 +140,41 @@ func TestRollout(t *testing.T) {
 }
 
 func TestRolloutWithEntity(t *testing.T) {
-	d := DistributionArray{
-		VariantIDs:          []uint{1111, 2222},
-		PercentsAccumulated: []int{500, 1000},
-	}
-	var vID *uint
-	var msg string
+	t.Run("normal distributions cases", func(t *testing.T) {
+		d := DistributionArray{
+			VariantIDs:          []uint{1111, 2222},
+			PercentsAccumulated: []int{500, 1000},
+		}
+		var vID *uint
+		var msg string
 
-	vID, msg = d.Rollout(util.StringPtr("entity123"), "salt", uint(0))
-	assert.Nil(t, vID)
-	assert.Contains(t, msg, "no")
+		vID, msg = d.Rollout(nil, "salt", uint(0))
+		assert.Nil(t, vID)
+		assert.Contains(t, msg, "no")
 
-	vID, msg = d.Rollout(util.StringPtr("entity123"), "salt", uint(100))
-	assert.NotNil(t, vID)
-	assert.Contains(t, msg, "yes")
+		vID, msg = d.Rollout(util.StringPtr("entity123"), "salt", uint(0))
+		assert.Nil(t, vID)
+		assert.Contains(t, msg, "no")
 
-	vID, msg = d.Rollout(util.StringPtr("entity123"), "salt", uint(1))
-	assert.Nil(t, vID)
-	assert.Contains(t, msg, "no")
+		vID, msg = d.Rollout(util.StringPtr("entity123"), "salt", uint(100))
+		assert.NotNil(t, vID)
+		assert.Contains(t, msg, "yes")
+
+		vID, msg = d.Rollout(util.StringPtr("entity123"), "salt", uint(1))
+		assert.Nil(t, vID)
+		assert.Contains(t, msg, "no")
+	})
+
+	t.Run("empty distributions cases", func(t *testing.T) {
+		d := DistributionArray{
+			VariantIDs:          []uint{},
+			PercentsAccumulated: []int{},
+		}
+		var vID *uint
+		var msg string
+
+		vID, msg = d.Rollout(util.StringPtr("entity123"), "salt", uint(100))
+		assert.Nil(t, vID)
+		assert.Contains(t, msg, "no")
+	})
 }

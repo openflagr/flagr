@@ -9,11 +9,3 @@ mysql:
     - MYSQL_USER=root
   volumes:
     - ./_data/mysql:/var/lib/mysql
-
-elk:
-  image: sebp/elk
-  container_name: flagr-elk
-  ports:
-    - "5601:5601"
-    - "9200:9200"
-    - "5044:5044"

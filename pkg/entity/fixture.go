@@ -2,7 +2,10 @@ package entity
 
 import (
 	"github.com/checkr/flagr/swagger_gen/models"
+	"github.com/sirupsen/logrus"
+
 	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/sqlite" // sqlite driver
 )
 
 // GenFixtureFlag is a fixture
@@ -17,9 +20,6 @@ func GenFixtureFlag() Flag {
 				Model:  gorm.Model{ID: 300},
 				FlagID: 100,
 				Key:    "control",
-				Attachment: map[string]string{
-					"value": "123",
-				},
 			},
 			{
 				Model:  gorm.Model{ID: 301},
@@ -71,4 +71,38 @@ func GenFixtureSegment() Segment {
 	}
 	s.PrepareEvaluation()
 	return s
+}
+
+// NewTestDB creates a new in-memory test db
+func NewTestDB() *gorm.DB {
+	db, err := gorm.Open("sqlite3", ":memory:")
+	if err != nil {
+		logrus.WithField("err", err).Error("failed to connect to db")
+		panic(err)
+	}
+	db.SetLogger(logrus.StandardLogger())
+	db.AutoMigrate(AutoMigrateTables...)
+	return db
+}
+
+// PopulateTestDB seeds the test db
+func PopulateTestDB(flag Flag) *gorm.DB {
+	testDB := NewTestDB()
+	for _, s := range flag.Segments {
+		for _, c := range s.Constraints {
+			testDB.Create(&c)
+		}
+		for _, d := range s.Distributions {
+			testDB.Create(&d)
+		}
+		s.Constraints = []Constraint{}
+		s.Distributions = []Distribution{}
+		testDB.Create(&s)
+	}
+	for _, v := range flag.Variants {
+		testDB.Create(&v)
+	}
+	testDB.Create(&flag)
+
+	return testDB
 }
