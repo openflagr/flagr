@@ -24,3 +24,12 @@ func TestSegmentPrepareEvaluation(t *testing.T) {
 		assert.Empty(t, s.SegmentEvaluation.DistributionArray.PercentsAccumulated)
 	})
 }
+
+func TestSegmentPreload(t *testing.T) {
+	t.Run("happy code path", func(t *testing.T) {
+		s := GenFixtureSegment()
+		f := GenFixtureFlag()
+		err := s.Preload(PopulateTestDB(f))
+		assert.NoError(t, err)
+	})
+}

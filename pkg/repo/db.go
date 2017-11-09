@@ -16,15 +16,6 @@ import (
 var (
 	singletonDB   *gorm.DB
 	singletonOnce sync.Once
-
-	autoMigrateTables = []interface{}{
-		entity.Constraint{},
-		entity.Distribution{},
-		entity.Flag{},
-		entity.Segment{},
-		entity.User{},
-		entity.Variant{},
-	}
 )
 
 // GetDB gets the db singleton
@@ -36,7 +27,7 @@ func GetDB() *gorm.DB {
 			panic(err)
 		}
 		db.SetLogger(logrus.StandardLogger())
-		db.AutoMigrate(autoMigrateTables...)
+		db.AutoMigrate(entity.AutoMigrateTables...)
 		singletonDB = db
 	})
 

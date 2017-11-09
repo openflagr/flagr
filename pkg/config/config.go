@@ -1,7 +1,6 @@
 package config
 
 import (
-	"encoding/gob"
 	"net/http"
 	"os"
 	"time"
@@ -16,12 +15,11 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/negroni"
 	negroninewrelic "github.com/yadvendar/negroni-newrelic-go-agent"
-	"github.com/zhouzhuojie/conditions"
 )
 
 // Config is the whole configuration of the app
 var Config = struct {
-	GracefulCleanupTimeout      time.Duration `env:"FLAGR_GRACEFUL_CLEANUP_TIMEOUT" envDefault:"5s"`
+	GracefulCleanupTimeout      time.Duration `env:"FLAGR_GRACEFUL_CLEANUP_TIMEOUT" envDefault:"2s"`
 	PProfEnabled                bool          `env:"FLAGR_PPROF_ENABLED" envDefault:"true"`
 	DBDriver                    string        `env:"FLAGR_DB_DBDRIVER" envDefault:"mysql"`
 	DBConnectionStr             string        `env:"FLAGR_DB_DBCONNECTIONSTR" envDefault:"root:@tcp(127.0.0.1:18100)/flagr?parseTime=true"`
@@ -57,7 +55,6 @@ func init() {
 	env.Parse(&Config)
 
 	setupSentry()
-	setupGob()
 	setupLogrus()
 	setupNewrelic()
 }
@@ -65,11 +62,6 @@ func init() {
 func setupLogrus() {
 	logrus.SetOutput(os.Stdout)
 	logrus.SetLevel(logrus.InfoLevel)
-}
-
-func setupGob() {
-	gob.Register(conditions.BinaryExpr{})
-	gob.Register(conditions.VarRef{})
 }
 
 func setupSentry() {

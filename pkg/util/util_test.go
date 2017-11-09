@@ -18,10 +18,28 @@ func TestSafeString(t *testing.T) {
 }
 
 func TestSafeUint(t *testing.T) {
-	assert.Equal(t, SafeUint("123"), uint(0))
-	assert.Equal(t, SafeUint(Uint32Ptr(123)), uint(123))
-	assert.Equal(t, SafeUint(123), uint(123))
 	assert.Equal(t, SafeUint(nil), uint(0))
+	assert.Equal(t, SafeUint("123"), uint(0))
+
+	assert.Equal(t, SafeUint(int(1)), uint(1))
+	assert.Equal(t, SafeUint(IntPtr(1)), uint(1))
+	assert.Equal(t, SafeUint(int32(1)), uint(1))
+	assert.Equal(t, SafeUint(Int32Ptr(1)), uint(1))
+	assert.Equal(t, SafeUint(int64(1)), uint(1))
+	assert.Equal(t, SafeUint(Int64Ptr(1)), uint(1))
+	assert.Equal(t, SafeUint(uint(1)), uint(1))
+	assert.Equal(t, SafeUint(UintPtr(1)), uint(1))
+	assert.Equal(t, SafeUint(uint32(1)), uint(1))
+	assert.Equal(t, SafeUint(Uint32Ptr(1)), uint(1))
+	assert.Equal(t, SafeUint(uint64(1)), uint(1))
+	assert.Equal(t, SafeUint(Uint64Ptr(1)), uint(1))
+	assert.Equal(t, SafeUint(int32(1)), uint(1))
+	assert.Equal(t, SafeUint(int64(1)), uint(1))
+
+	assert.Equal(t, SafeUint(float32(123)), uint(123))
+	assert.Equal(t, SafeUint(Float32Ptr(float32(123))), uint(123))
+	assert.Equal(t, SafeUint(float64(123)), uint(123))
+	assert.Equal(t, SafeUint(Float64Ptr(float64(123))), uint(123))
 
 	var ptr *int64
 	assert.Equal(t, SafeUint(ptr), uint(0))
@@ -62,4 +80,18 @@ func TestIsSafeKey(t *testing.T) {
 	b, msg = IsSafeKey(strings.Repeat("a", 64))
 	assert.False(t, b)
 	assert.NotEmpty(t, msg)
+}
+
+func TestPtrs(t *testing.T) {
+	assert.Equal(t, "a", *StringPtr("a"))
+	assert.Equal(t, int(1), *IntPtr(int(1)))
+	assert.Equal(t, int32(1), *Int32Ptr(int32(1)))
+	assert.Equal(t, int64(1), *Int64Ptr(int64(1)))
+	assert.Equal(t, float32(1.0), *Float32Ptr(float32(1.0)))
+	assert.Equal(t, float64(1.0), *Float64Ptr(float64(1.0)))
+	assert.Equal(t, uint(1), *UintPtr(uint(1)))
+	assert.Equal(t, uint32(1), *Uint32Ptr(uint32(1)))
+	assert.Equal(t, uint64(1), *Uint64Ptr(uint64(1)))
+	assert.Equal(t, true, *BoolPtr(true))
+	assert.Equal(t, []byte("abc"), *ByteSlicePtr([]byte("abc")))
 }

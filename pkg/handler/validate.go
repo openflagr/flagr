@@ -2,7 +2,6 @@ package handler
 
 import (
 	"github.com/checkr/flagr/pkg/entity"
-	"github.com/checkr/flagr/pkg/repo"
 	"github.com/checkr/flagr/pkg/util"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/distribution"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/variant"
@@ -22,11 +21,11 @@ func validatePutDistributions(params distribution.PutDistributionsParams) *Error
 	}
 
 	f := &entity.Flag{}
-	err := entity.NewFlagQuerySet(repo.GetDB()).IDEq(uint(params.FlagID)).One(f)
+	err := entity.NewFlagQuerySet(getDB()).IDEq(uint(params.FlagID)).One(f)
 	if err != nil {
 		return NewError(400, "error finding flagID %v. reason %s", params.FlagID, err)
 	}
-	f.Preload(repo.GetDB())
+	f.Preload(getDB())
 
 	vMap := make(map[uint]string)
 	vIDs := []uint{}
@@ -51,13 +50,13 @@ func validatePutDistributions(params distribution.PutDistributionsParams) *Error
 
 func validateDeleteVariant(params variant.DeleteVariantParams) *Error {
 	f := &entity.Flag{}
-	err := entity.NewFlagQuerySet(repo.GetDB()).IDEq(uint(params.FlagID)).One(f)
+	err := entity.NewFlagQuerySet(getDB()).IDEq(uint(params.FlagID)).One(f)
 	if err != nil {
 		return NewError(400, "error finding flagID %v. reason %s", params.FlagID, err)
 	}
-	f.Preload(repo.GetDB())
+	f.Preload(getDB())
 
-	q := entity.NewDistributionQuerySet(repo.GetDB())
+	q := entity.NewDistributionQuerySet(getDB())
 	for _, s := range f.Segments {
 		for _, d := range s.Distributions {
 			if d.VariantID == util.SafeUint(params.VariantID) {
@@ -75,7 +74,7 @@ func validateDeleteVariant(params variant.DeleteVariantParams) *Error {
 }
 
 func validatePutVariantForDistributions(v *entity.Variant) *Error {
-	q := entity.NewDistributionQuerySet(repo.GetDB())
+	q := entity.NewDistributionQuerySet(getDB())
 	if err := q.VariantIDEq(v.ID).GetUpdater().SetVariantKey(v.Key).Update(); err != nil {
 		return NewError(500, "error updating distribution to sync with variantID %v with variantKey %v. reason: %s", v.ID, v.Key, err)
 	}
