@@ -15,9 +15,6 @@
     <a href="https://raw.githubusercontent.com/checkr/flagr/master/LICENSE" target="_blank">
         <img src="http://img.shields.io/badge/license-Apache%20v2-green.svg">
     </a>
-    <a href="https://codecov.io/gh/checkr/flagr" target="_blank">
-        <img src="https://codecov.io/gh/checkr/flagr/branch/master/graph/badge.svg">
-    </a>
 </p>
 
 ## Introduction

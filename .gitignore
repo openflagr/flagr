@@ -1,5 +1,5 @@
 **/*.swp
-cover.out
+*.out
 *~
 flagr
 !*/

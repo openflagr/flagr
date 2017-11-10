@@ -6,6 +6,7 @@ import (
 	"github.com/checkr/flagr/pkg/entity"
 	"github.com/checkr/flagr/pkg/util"
 	"github.com/checkr/flagr/swagger_gen/models"
+	"github.com/checkr/flagr/swagger_gen/restapi/operations/evaluation"
 	"github.com/jinzhu/gorm"
 
 	"github.com/prashantv/gostub"
@@ -182,5 +183,50 @@ func TestEvalFlag(t *testing.T) {
 		})
 		assert.NotNil(t, result)
 		assert.Nil(t, result.VariantID)
+	})
+}
+
+func TestPostEvaluation(t *testing.T) {
+	t.Run("test empty body", func(t *testing.T) {
+		defer gostub.StubFunc(&evalFlag, &models.EvalResult{}).Reset()
+		e := NewEval()
+		resp := e.PostEvaluation(evaluation.PostEvaluationParams{})
+		assert.NotNil(t, resp)
+	})
+
+	t.Run("test happy code path", func(t *testing.T) {
+		defer gostub.StubFunc(&evalFlag, &models.EvalResult{}).Reset()
+		e := NewEval()
+		resp := e.PostEvaluation(evaluation.PostEvaluationParams{
+			Body: &models.EvalContext{
+				EnableDebug:   true,
+				EntityContext: map[string]interface{}{"dl_state": "CA", "state": "NY"},
+				EntityID:      util.StringPtr("entityID1"),
+				EntityType:    util.StringPtr("entityType1"),
+				FlagID:        util.Int64Ptr(int64(100)),
+			},
+		})
+		assert.NotNil(t, resp)
+	})
+}
+
+func TestPostEvaluationBatch(t *testing.T) {
+	t.Run("test happy code path", func(t *testing.T) {
+		defer gostub.StubFunc(&evalFlag, &models.EvalResult{}).Reset()
+		e := NewEval()
+		resp := e.PostEvaluationBatch(evaluation.PostEvaluationBatchParams{
+			Body: &models.EvaluationBatchRequest{
+				EnableDebug: true,
+				Entities: []*models.EvaluationEntity{
+					{
+						EntityContext: map[string]interface{}{"dl_state": "CA", "state": "NY"},
+						EntityID:      util.StringPtr("entityID1"),
+						EntityType:    util.StringPtr("entityType1"),
+					},
+				},
+				FlagIds: []int64{100, 200},
+			},
+		})
+		assert.NotNil(t, resp)
 	})
 }

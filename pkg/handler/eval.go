@@ -85,7 +85,7 @@ func BlankResult(f *entity.Flag, evalContext models.EvalContext, msg string) *mo
 	}
 }
 
-func evalFlag(evalContext models.EvalContext) *models.EvalResult {
+var evalFlag = func(evalContext models.EvalContext) *models.EvalResult {
 	cache := GetEvalCache()
 	flagID := util.SafeUint(evalContext.FlagID)
 	f := cache.GetByFlagID(flagID)
@@ -141,7 +141,7 @@ var logEvalResult = func(r *models.EvalResult, dataRecordsEnabled bool) {
 	rec.AsyncRecord(r)
 }
 
-func evalSegment(
+var evalSegment = func(
 	evalContext models.EvalContext,
 	segment entity.Segment,
 ) (
