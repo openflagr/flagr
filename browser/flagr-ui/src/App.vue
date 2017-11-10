@@ -8,7 +8,7 @@
           </div>
         </el-col>
         <el-col :span="3" :offset="12">
-          <a href="/api_docs" target="_blank"><h3>API</h3></a>
+          <a href="https://checkr.github.io/flagr/api_docs" target="_blank"><h3>API</h3></a>
         </el-col>
         <el-col :span="2">
           <a href="https://checkr.github.io/flagr" target="_blank"><h3>Docs</h3></a>

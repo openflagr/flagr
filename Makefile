@@ -6,7 +6,7 @@ UIPATH := $(PWD)/browser/flagr-ui
 ### Public
 ################################
 
-all: deps gen run
+all: deps gen build run
 
 rebuild: gen run
 
@@ -35,6 +35,7 @@ deps: checks
 	@echo "Installing gt" && go get rsc.io/gt
 	@echo "Installing gomock" && go get github.com/golang/mock/gomock && go get github.com/golang/mock/mockgen
 	@echo "Installing fswatch" && go get github.com/codeskyblue/fswatch
+	@echo "Sqlite3" && sqlite3 -version
 
 watch:
 	@fswatch
@@ -49,9 +50,7 @@ serve_docs:
 
 api_docs:
 	@echo "Installing swagger-merger" && yarn global add swagger-merger
-	@mkdir -p $(PWD)/browser/flagr-ui/dist/api_docs
-	@swagger-merger -i $(PWD)/swagger/index.yaml -o $(PWD)/browser/flagr-ui/dist/api_docs/bundle.yaml
-	@cp $(PWD)/swagger/redoc.html $(PWD)/browser/flagr-ui/dist/api_docs/index.html
+	@swagger-merger -i $(PWD)/swagger/index.yaml -o $(PWD)/docs/api_docs/bundle.yaml
 
 checks:
 	@echo "Check deps"
