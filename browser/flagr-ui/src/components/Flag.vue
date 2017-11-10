@@ -1,6 +1,6 @@
 <template>
   <el-row>
-    <el-col :span="16" :offset="4">
+    <el-col :span="14" :offset="5">
       <div class="container flag-container">
         <el-dialog
           title="Delete feature flag"
@@ -24,7 +24,7 @@
                   :checked="!!newDistributions[variant.id]"
                 >
                 </el-checkbox>
-                <el-tag type="danger">
+                <el-tag type="danger" :disable-transitions="true">
                   {{ variant.key }}
                 </el-tag>
               </div>
@@ -111,7 +111,7 @@
             <el-card>
               <div class="flex-row id-row">
                 <div class="flex-row-left">
-                  <el-tag type="primary">
+                  <el-tag type="primary" :disable-transitions="true">
                     Flag ID: {{ $route.params.flagId }}
                   </el-tag>
                 </div>
@@ -156,7 +156,7 @@
                   <el-form label-position="left" label-width="100px">
                     <div class="flex-row id-row">
                       <div class="flex-row-left">
-                        <el-tag type="primary"> Variant ID: <b>{{ variant.id }}</b> </el-tag>
+                        <el-tag type="primary" :disable-transitions="true"> Variant ID: <b>{{ variant.id }}</b> </el-tag>
                       </div>
                       <div class="flex-row-right">
                         <el-button slot="append" size="small" @click="putVariant(variant)">
@@ -229,7 +229,7 @@
                     class="segment grabbable">
                     <div class="flex-row id-row">
                       <div class="flex-row-left">
-                        <el-tag type="primary">Segment ID: <b>{{ segment.id }}</b></el-tag>
+                        <el-tag type="primary" :disable-transitions="true">Segment ID: <b>{{ segment.id }}</b></el-tag>
                       </div>
                       <div class="flex-row-right">
                         <el-button slot="append" size="small" @click="putSegment(segment)">
@@ -357,7 +357,7 @@
                         <h4>Distribution</h4>
                         <ul class="segment-distributions-inner" v-if="segment.distributions.length">
                           <li v-for="distribution in segment.distributions" :key="distribution.id">
-                            <el-tag type="gray">{{ distribution.variantKey }}</el-tag>
+                            <el-tag type="gray" :disable-transitions="true">{{ distribution.variantKey }}</el-tag>
                             <span size="small">{{ distribution.percent }}%</span>
                           </li>
                         </ul>

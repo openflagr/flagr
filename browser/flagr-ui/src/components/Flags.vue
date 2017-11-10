@@ -1,6 +1,6 @@
 <template>
   <el-row>
-    <el-col :span="16" :offset="4">
+    <el-col :span="14" :offset="5">
       <div class="flags-container container">
         <el-breadcrumb separator="/" v-if="loaded && !loadError">
           <el-breadcrumb-item>Home page</el-breadcrumb-item>      
@@ -22,7 +22,7 @@
                 class="flag-link flex-row"
                 :to="{name: 'flag', params: {flagId: flag.id}}">
                 <div class="flex-row-left">
-                  <el-tag type="primary">Flag ID: {{ flag.id }}</el-tag> {{ flag.description }}
+                  <el-tag type="primary" :disable-transitions="true">Flag ID: {{ flag.id }}</el-tag> {{ flag.description }}
                 </div>
                 <div class="flex-row-right">
                   <span :class="{'flag-enabled-icon': true, enabled: flag.enabled}"></span>
