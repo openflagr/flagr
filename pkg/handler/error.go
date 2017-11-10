@@ -1,6 +1,11 @@
 package handler
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/checkr/flagr/pkg/util"
+	"github.com/checkr/flagr/swagger_gen/models"
+)
 
 // Error is the handler error
 type Error struct {
@@ -20,5 +25,12 @@ func NewError(statusCode int, msg string, values ...interface{}) *Error {
 		StatusCode: statusCode,
 		Message:    msg,
 		Values:     values,
+	}
+}
+
+// ErrorMessage generates error messages
+func ErrorMessage(s string, data ...interface{}) *models.Error {
+	return &models.Error{
+		Message: util.StringPtr(fmt.Sprintf(s, data...)),
 	}
 }
