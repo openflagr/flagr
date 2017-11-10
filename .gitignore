@@ -2,6 +2,7 @@
 *.out
 *~
 flagr
+flagr.sqlite
 !*/
 site/
 **/*.test
@@ -21,4 +22,3 @@ parts/
 prime/
 snap/.snapcraft/
 stage/
-_data/

@@ -10,10 +10,10 @@ The easiest way to try out Flagr is using the flagr-mini docker image.
 
 ```
 # Start the docker container
-docker run -it -p 18000:18000 zhouzhuojie/flagr-mini
+docker run -it -p 18000:18000 checkr/flagr
 
 # Or with attached volume
-docker run -it -p 18000:18000 -v /tmp/flagr_data:/data zhouzhuojie/flagr-mini
+docker run -it -p 18000:18000 -v /tmp/flagr_data:/data checkr/flagr
 ```
 
 And then open http://localhost:18000

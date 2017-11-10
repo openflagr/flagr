@@ -28,7 +28,7 @@ Flagr is an open source Go service that delivers the right experience to the rig
 
 ```sh
 # Get the flagr-mini image for the demo
-docker run -it -p 18000:18000 zhouzhuojie/flagr-mini
+docker run -it -p 18000:18000 checkr/flagr
 
 # Open the flagr homepage
 open localhost:18000

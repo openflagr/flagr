@@ -1,4 +1,4 @@
-FROM zhouzhuojie/flagr-ci
+FROM checkr/flagr-ci
 
 VOLUME ["/data"]
 
