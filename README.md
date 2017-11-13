@@ -22,7 +22,7 @@
 Flagr is an open source Go service that delivers the right experience to the right entity and monitors the impact. It provides feature flags, experimentation (A/B testing), and dynamic configuration. It has clear swagger REST APIs for flags management and flag evaluation.
 
 ## Documentation
-- [Flagr Documentation](https://checkr.github.io/flagr/)
+- [Flagr Documentation - https://checkr.github.io/flagr](https://checkr.github.io/flagr/)
 
 ## Quick demo
 
@@ -33,12 +33,6 @@ docker run -it -p 18000:18000 checkr/flagr
 # Open the flagr homepage
 open localhost:18000
 ```
-
-<p align="center">
-    <img src="./docs/images/demo_constraints.png" width="600">
-    <img src="./docs/images/demo_debug_console.png" width="600">
-    <img src="./docs/images/demo_api_docs.png" width="600">
-</p>
 
 ## Flag Evaluation Performance
 
@@ -54,3 +48,10 @@ Success       [ratio]                  100.00%
 Status Codes  [code:count]             200:56521
 Error Set:
 ```
+
+## Flag UI
+
+<p align="center">
+    <img src="./docs/images/demo_readme.png" width="900">
+</p>
+
