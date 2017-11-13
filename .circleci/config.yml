@@ -5,7 +5,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: zhouzhuojie/flagr-ci
+      - image: checkr/flagr-ci
     working_directory: /go/src/github.com/checkr/flagr
     steps:
       - checkout

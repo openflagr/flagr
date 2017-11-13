@@ -1,2 +1,14 @@
-- [Flagr Quickstart Guide](README.md)
-- [Introduction](Introduction.md)
+- What's Flagr
+    - [Get started](README.md)
+    - <a href="https://checkr.github.io/flagr/api_docs" target="_blank">API</a>
+- Introduction
+    - [Overview](flagr_overview.md)
+    - [Use Cases](flagr_use_cases.md)
+    - [Debug Console](flagr_debugging.md)
+- Server Configuration
+    - [Env](flagr_env.md)
+- Client SDKs
+    - [Ruby SDK](https://github.com/checkr/rbflagr)
+    - Go SDK (coming soon)
+    - JavaScript SDK (coming soon)
+- FAQ
