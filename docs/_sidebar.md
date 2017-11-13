@@ -1,5 +1,5 @@
 - What's Flagr
-    - [Get started](README.md)
+    - [Get started](home.md)
     - <a href="https://checkr.github.io/flagr/api_docs" target="_blank">API</a>
 - Introduction
     - [Overview](flagr_overview.md)

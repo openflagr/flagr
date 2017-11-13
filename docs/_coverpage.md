@@ -8,6 +8,6 @@ and dynamic configuration microservice in Go.
 </p>
 
 [GitHub](https://github.com/checkr/flagr)
-[Get Started](README)
+[Get Started](home)
 
 ![color](#74e5e0)
