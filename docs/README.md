@@ -1,6 +1,6 @@
 # Get Started
 
-Flagr is an open source Go service that delivers the right experience to the right entity and monitors the impact. It provides feature flags, experimentation (A/B testing), and dynamic configuration. It has clear swagger REST APIs for flags management and flag evaluation. For more details, see [Flagr Overview](/flagr_overview)
+Flagr is an open source Go service that delivers the right experience to the right entity and monitors the impact. It provides feature flags, experimentation (A/B testing), and dynamic configuration. It has clear swagger REST APIs for flags management and flag evaluation. For more details, see [Flagr Overview](flagr_overview)
 
 ## Install
 
@@ -31,7 +31,7 @@ docker run -it -p 18000:18000 -v /tmp/flagr_data:/data checkr/flagr
 
 ## Deploy
 
-We recommend directly use the checkr/flagr image, and configure everything in the env variables. See more in [Server Configuration](/flagr_env).
+We recommend directly use the checkr/flagr image, and configure everything in the env variables. See more in [Server Configuration](flagr_env).
 
 ```bash
 # Set env variables. For example,
