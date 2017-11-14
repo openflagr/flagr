@@ -34,7 +34,7 @@ docker run -it -p 18000:18000 checkr/flagr
 open localhost:18000
 ```
 
-## Flag Evaluation Performance
+## Flagr Evaluation Performance
 
 Tested with `vegeta`. For more details, see [benchmarks](./benchmark).
 
@@ -49,7 +49,7 @@ Status Codes  [code:count]             200:56521
 Error Set:
 ```
 
-## Flag UI
+## Flagr UI
 
 <p align="center">
     <img src="./docs/images/demo_readme.png" width="900">
