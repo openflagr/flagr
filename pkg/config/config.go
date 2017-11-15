@@ -1,19 +1,13 @@
 package config
 
 import (
-	"net/http"
 	"os"
 
 	"github.com/caarlos0/env"
 	"github.com/evalphobia/logrus_sentry"
 	raven "github.com/getsentry/raven-go"
-	"github.com/gohttp/pprof"
-	negronilogrus "github.com/meatballhat/negroni-logrus"
 	newrelic "github.com/newrelic/go-agent"
-	"github.com/rs/cors"
 	"github.com/sirupsen/logrus"
-	"github.com/urfave/negroni"
-	negroninewrelic "github.com/yadvendar/negroni-newrelic-go-agent"
 )
 
 // Global is the global dependency we can use, such as the new relic app instance
@@ -60,36 +54,4 @@ func setupNewrelic() {
 		}
 		Global.NewrelicApp = app
 	}
-}
-
-// SetupGlobalMiddleware setup the global middleware
-func SetupGlobalMiddleware(handler http.Handler) http.Handler {
-	pwd, _ := os.Getwd()
-	n := negroni.New()
-
-	if Config.CORSEnabled {
-		c := cors.New(cors.Options{
-			AllowedOrigins: []string{"*"},
-			AllowedHeaders: []string{"Content-Type", "Accepts"},
-			AllowedMethods: []string{"GET", "POST", "PUT", "DELETE"},
-		})
-		n.Use(c)
-	}
-
-	if Config.NewRelicEnabled {
-		newRelicMiddleware := &negroninewrelic.Newrelic{Application: &Global.NewrelicApp}
-		n.Use(newRelicMiddleware)
-	}
-
-	n.Use(negronilogrus.NewMiddlewareFromLogger(logrus.StandardLogger(), "flagr"))
-	n.Use(negroni.NewRecovery())
-	n.Use(negroni.NewStatic(http.Dir(pwd + "/browser/flagr-ui/dist/")))
-
-	if Config.PProfEnabled {
-		n.UseHandler(pprof.New()(handler))
-	} else {
-		n.UseHandler(handler)
-	}
-
-	return n
 }
