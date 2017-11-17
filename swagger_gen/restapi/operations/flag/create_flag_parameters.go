@@ -30,7 +30,7 @@ func NewCreateFlagParams() CreateFlagParams {
 type CreateFlagParams struct {
 
 	// HTTP Request Object
-	HTTPRequest *http.Request
+	HTTPRequest *http.Request `json:"-"`
 
 	/*create a flag
 	  Required: true

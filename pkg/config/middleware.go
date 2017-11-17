@@ -47,6 +47,8 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 					}
 					return c.Value, nil
 				},
+				UserProperty: Config.JWTAuthUserProperty,
+				Debug:        Config.JWTAuthDebug,
 				ErrorHandler: func(w http.ResponseWriter, r *http.Request, err string) {
 					http.Redirect(w, r, Config.JWTAuthNoTokenRedirectURL, 307)
 				},

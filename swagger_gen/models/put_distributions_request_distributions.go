@@ -16,7 +16,6 @@ import (
 
 // PutDistributionsRequestDistributions put distributions request distributions
 // swagger:model putDistributionsRequestDistributions
-
 type PutDistributionsRequestDistributions []*Distribution
 
 // Validate validates this put distributions request distributions

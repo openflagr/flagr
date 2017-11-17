@@ -17,7 +17,6 @@ import (
 
 // EvaluationBatchRequest evaluation batch request
 // swagger:model evaluationBatchRequest
-
 type EvaluationBatchRequest struct {
 
 	// enable debug
@@ -32,12 +31,6 @@ type EvaluationBatchRequest struct {
 	// Min Items: 1
 	FlagIds []int64 `json:"flagIDs"`
 }
-
-/* polymorph evaluationBatchRequest enableDebug false */
-
-/* polymorph evaluationBatchRequest entities false */
-
-/* polymorph evaluationBatchRequest flagIDs false */
 
 // Validate validates this evaluation batch request
 func (m *EvaluationBatchRequest) Validate(formats strfmt.Registry) error {
@@ -62,6 +55,13 @@ func (m *EvaluationBatchRequest) Validate(formats strfmt.Registry) error {
 func (m *EvaluationBatchRequest) validateEntities(formats strfmt.Registry) error {
 
 	if err := validate.Required("entities", "body", m.Entities); err != nil {
+		return err
+	}
+
+	if err := m.Entities.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("entities")
+		}
 		return err
 	}
 

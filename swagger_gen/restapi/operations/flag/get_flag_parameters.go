@@ -30,7 +30,7 @@ func NewGetFlagParams() GetFlagParams {
 type GetFlagParams struct {
 
 	// HTTP Request Object
-	HTTPRequest *http.Request
+	HTTPRequest *http.Request `json:"-"`
 
 	/*numeric ID of the flag to get
 	  Required: true

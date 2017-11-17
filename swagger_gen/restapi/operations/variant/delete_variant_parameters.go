@@ -30,7 +30,7 @@ func NewDeleteVariantParams() DeleteVariantParams {
 type DeleteVariantParams struct {
 
 	// HTTP Request Object
-	HTTPRequest *http.Request
+	HTTPRequest *http.Request `json:"-"`
 
 	/*numeric ID of the flag
 	  Required: true

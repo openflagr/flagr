@@ -16,7 +16,6 @@ import (
 
 // FlagVariants flag variants
 // swagger:model flagVariants
-
 type FlagVariants []*Variant
 
 // Validate validates this flag variants

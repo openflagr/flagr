@@ -14,27 +14,27 @@ test: verifiers
 	@echo "Running all coverage for flagr"
 	@./buildscripts/go-coverage.sh
 
-build: api_docs
+build:
 	@echo "Building flagr to $(PWD)/flagr ..."
 	@CGO_ENABLED=1 go build -o $(PWD)/flagr github.com/checkr/flagr/swagger_gen/cmd/flagr-server
 
 run:
 	@$(PWD)/flagr --port 18000
 
-gen: swagger api_docs goqueryset
+gen: api_docs swagger goqueryset
 
 deps: checks
-	@echo "Installing dep" && go get github.com/golang/dep/cmd/dep
-	@echo "Installing golint" && go get github.com/golang/lint/golint
-	@echo "Installing gocyclo" && go get github.com/fzipp/gocyclo
-	@echo "Installing deadcode" && go get github.com/remyoudompheng/go-misc/deadcode
-	@echo "Installing misspell" && go get github.com/client9/misspell/cmd/misspell
-	@echo "Installing ineffassign" && go get github.com/gordonklaus/ineffassign
-	@echo "Installing go-swagger" && go get github.com/go-swagger/go-swagger/cmd/swagger
-	@echo "Installing goqueryset" && go get github.com/jirfag/go-queryset/cmd/goqueryset
-	@echo "Installing gt" && go get rsc.io/gt
-	@echo "Installing gomock" && go get github.com/golang/mock/gomock && go get github.com/golang/mock/mockgen
-	@echo "Installing fswatch" && go get github.com/codeskyblue/fswatch
+	@echo "Installing dep" && go get -u github.com/golang/dep/cmd/dep
+	@echo "Installing golint" && go get -u github.com/golang/lint/golint
+	@echo "Installing gocyclo" && go get -u github.com/fzipp/gocyclo
+	@echo "Installing deadcode" && go get -u github.com/remyoudompheng/go-misc/deadcode
+	@echo "Installing misspell" && go get -u github.com/client9/misspell/cmd/misspell
+	@echo "Installing ineffassign" && go get -u github.com/gordonklaus/ineffassign
+	@echo "Installing go-swagger" && go get -u github.com/go-swagger/go-swagger/cmd/swagger
+	@echo "Installing goqueryset" && go get -u github.com/jirfag/go-queryset/cmd/goqueryset
+	@echo "Installing gt" && go get -u rsc.io/gt
+	@echo "Installing gomock" && go get -u github.com/golang/mock/gomock && go get github.com/golang/mock/mockgen
+	@echo "Installing fswatch" && go get -u github.com/codeskyblue/fswatch
 	@echo "Sqlite3" && sqlite3 -version
 
 watch:
@@ -91,7 +91,7 @@ spelling:
 
 verify_swagger:
 	@echo "Running $@"
-	@swagger validate ./swagger/index.yaml
+	@swagger validate $(PWD)/docs/api_docs/bundle.yaml
 
 clean:
 	@echo "Cleaning up all the generated files"
@@ -105,7 +105,7 @@ swagger: verify_swagger
 	@cp $(PWD)/swagger_gen/restapi/configure_flagr.go /tmp/configure_flagr.go 2>/dev/null || :
 	@rm -rf $(PWD)/swagger_gen
 	@mkdir $(PWD)/swagger_gen
-	@swagger generate server -t ./swagger_gen -f ./swagger/index.yaml
+	@swagger generate server -t ./swagger_gen -f $(PWD)/docs/api_docs/bundle.yaml
 	@cp /tmp/configure_flagr.go $(PWD)/swagger_gen/restapi/configure_flagr.go 2>/dev/null || :
 
 goqueryset:

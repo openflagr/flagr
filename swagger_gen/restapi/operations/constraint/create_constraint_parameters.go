@@ -34,7 +34,7 @@ func NewCreateConstraintParams() CreateConstraintParams {
 type CreateConstraintParams struct {
 
 	// HTTP Request Object
-	HTTPRequest *http.Request
+	HTTPRequest *http.Request `json:"-"`
 
 	/*create a constraint
 	  Required: true

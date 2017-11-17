@@ -16,7 +16,6 @@ import (
 
 // EvalDebugLogSegmentDebugLogs eval debug log segment debug logs
 // swagger:model evalDebugLogSegmentDebugLogs
-
 type EvalDebugLogSegmentDebugLogs []*SegmentDebugLog
 
 // Validate validates this eval debug log segment debug logs

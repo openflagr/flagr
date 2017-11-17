@@ -15,7 +15,6 @@ import (
 
 // PutVariantRequest put variant request
 // swagger:model putVariantRequest
-
 type PutVariantRequest struct {
 
 	// attachment
@@ -27,10 +26,6 @@ type PutVariantRequest struct {
 	// Min Length: 1
 	Key *string `json:"key"`
 }
-
-/* polymorph putVariantRequest attachment false */
-
-/* polymorph putVariantRequest key false */
 
 // Validate validates this put variant request
 func (m *PutVariantRequest) Validate(formats strfmt.Registry) error {

@@ -34,7 +34,7 @@ func NewCreateSegmentParams() CreateSegmentParams {
 type CreateSegmentParams struct {
 
 	// HTTP Request Object
-	HTTPRequest *http.Request
+	HTTPRequest *http.Request `json:"-"`
 
 	/*create a segment under a flag
 	  Required: true

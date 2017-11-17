@@ -17,7 +17,6 @@ import (
 
 // Constraint constraint
 // swagger:model constraint
-
 type Constraint struct {
 
 	// id
@@ -40,14 +39,6 @@ type Constraint struct {
 	// Min Length: 1
 	Value *string `json:"value"`
 }
-
-/* polymorph constraint id false */
-
-/* polymorph constraint operator false */
-
-/* polymorph constraint property false */
-
-/* polymorph constraint value false */
 
 // Validate validates this constraint
 func (m *Constraint) Validate(formats strfmt.Registry) error {

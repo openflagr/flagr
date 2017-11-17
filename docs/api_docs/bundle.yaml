@@ -959,6 +959,9 @@ definitions:
         type: integer
         format: int64
         minimum: 1
+      flagSnapshotID:
+        type: integer
+        format: int64
       segmentID:
         type: integer
         format: int64

@@ -17,7 +17,6 @@ import (
 
 // EvaluationBatchRequestEntities evaluation batch request entities
 // swagger:model evaluationBatchRequestEntities
-
 type EvaluationBatchRequestEntities []*EvaluationEntity
 
 // Validate validates this evaluation batch request entities

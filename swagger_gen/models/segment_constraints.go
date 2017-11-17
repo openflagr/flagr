@@ -16,7 +16,6 @@ import (
 
 // SegmentConstraints segment constraints
 // swagger:model segmentConstraints
-
 type SegmentConstraints []*Constraint
 
 // Validate validates this segment constraints

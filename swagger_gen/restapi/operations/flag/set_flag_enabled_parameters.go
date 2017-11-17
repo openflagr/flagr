@@ -34,7 +34,7 @@ func NewSetFlagEnabledParams() SetFlagEnabledParams {
 type SetFlagEnabledParams struct {
 
 	// HTTP Request Object
-	HTTPRequest *http.Request
+	HTTPRequest *http.Request `json:"-"`
 
 	/*set flag enabled state
 	  Required: true

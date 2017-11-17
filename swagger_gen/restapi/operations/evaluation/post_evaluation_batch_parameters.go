@@ -30,7 +30,7 @@ func NewPostEvaluationBatchParams() PostEvaluationBatchParams {
 type PostEvaluationBatchParams struct {
 
 	// HTTP Request Object
-	HTTPRequest *http.Request
+	HTTPRequest *http.Request `json:"-"`
 
 	/*evalution batch request
 	  Required: true

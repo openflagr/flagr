@@ -14,7 +14,6 @@ import (
 
 // EvalDebugLog eval debug log
 // swagger:model evalDebugLog
-
 type EvalDebugLog struct {
 
 	// msg
@@ -23,10 +22,6 @@ type EvalDebugLog struct {
 	// segment debug logs
 	SegmentDebugLogs EvalDebugLogSegmentDebugLogs `json:"segmentDebugLogs"`
 }
-
-/* polymorph evalDebugLog msg false */
-
-/* polymorph evalDebugLog segmentDebugLogs false */
 
 // Validate validates this eval debug log
 func (m *EvalDebugLog) Validate(formats strfmt.Registry) error {

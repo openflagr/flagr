@@ -15,7 +15,6 @@ import (
 
 // Error error
 // swagger:model error
-
 type Error struct {
 
 	// message
@@ -23,8 +22,6 @@ type Error struct {
 	// Min Length: 1
 	Message *string `json:"message"`
 }
-
-/* polymorph error message false */
 
 // Validate validates this error
 func (m *Error) Validate(formats strfmt.Registry) error {

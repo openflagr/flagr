@@ -34,7 +34,7 @@ func NewCreateVariantParams() CreateVariantParams {
 type CreateVariantParams struct {
 
 	// HTTP Request Object
-	HTTPRequest *http.Request
+	HTTPRequest *http.Request `json:"-"`
 
 	/*create a variant
 	  Required: true

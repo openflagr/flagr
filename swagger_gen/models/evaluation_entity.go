@@ -15,7 +15,6 @@ import (
 
 // EvaluationEntity evaluation entity
 // swagger:model evaluationEntity
-
 type EvaluationEntity struct {
 
 	// entity context
@@ -31,12 +30,6 @@ type EvaluationEntity struct {
 	// Min Length: 1
 	EntityType *string `json:"entityType"`
 }
-
-/* polymorph evaluationEntity entityContext false */
-
-/* polymorph evaluationEntity entityID false */
-
-/* polymorph evaluationEntity entityType false */
 
 // Validate validates this evaluation entity
 func (m *EvaluationEntity) Validate(formats strfmt.Registry) error {

@@ -15,7 +15,6 @@ import (
 
 // Segment segment
 // swagger:model segment
-
 type Segment struct {
 
 	// constraints
@@ -45,18 +44,6 @@ type Segment struct {
 	// Minimum: 0
 	RolloutPercent *int64 `json:"rolloutPercent"`
 }
-
-/* polymorph segment constraints false */
-
-/* polymorph segment description false */
-
-/* polymorph segment distributions false */
-
-/* polymorph segment id false */
-
-/* polymorph segment rank false */
-
-/* polymorph segment rolloutPercent false */
 
 // Validate validates this segment
 func (m *Segment) Validate(formats strfmt.Registry) error {

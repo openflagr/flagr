@@ -15,15 +15,12 @@ import (
 
 // PutDistributionsRequest put distributions request
 // swagger:model putDistributionsRequest
-
 type PutDistributionsRequest struct {
 
 	// distributions
 	// Required: true
 	Distributions PutDistributionsRequestDistributions `json:"distributions"`
 }
-
-/* polymorph putDistributionsRequest distributions false */
 
 // Validate validates this put distributions request
 func (m *PutDistributionsRequest) Validate(formats strfmt.Registry) error {
@@ -43,6 +40,13 @@ func (m *PutDistributionsRequest) Validate(formats strfmt.Registry) error {
 func (m *PutDistributionsRequest) validateDistributions(formats strfmt.Registry) error {
 
 	if err := validate.Required("distributions", "body", m.Distributions); err != nil {
+		return err
+	}
+
+	if err := m.Distributions.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("distributions")
+		}
 		return err
 	}
 

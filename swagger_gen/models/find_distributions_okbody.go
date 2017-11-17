@@ -14,13 +14,12 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// FindConstraintsOKBody find constraints o k body
-// swagger:model findConstraintsOKBody
+// FindDistributionsOKBody find distributions o k body
+// swagger:model findDistributionsOKBody
+type FindDistributionsOKBody []*Distribution
 
-type FindConstraintsOKBody []*Constraint
-
-// Validate validates this find constraints o k body
-func (m FindConstraintsOKBody) Validate(formats strfmt.Registry) error {
+// Validate validates this find distributions o k body
+func (m FindDistributionsOKBody) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	for i := 0; i < len(m); i++ {

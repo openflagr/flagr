@@ -107,7 +107,10 @@ func init() {
           "200": {
             "description": "list all the flags",
             "schema": {
-              "$ref": "#/definitions/findFlagsOKBody"
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/flag"
+              }
             }
           },
           "default": {
@@ -314,7 +317,10 @@ func init() {
           "200": {
             "description": "segments ordered by rank of the flag",
             "schema": {
-              "$ref": "#/definitions/findSegmentsOKBody"
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/segment"
+              }
             }
           },
           "default": {
@@ -523,7 +529,10 @@ func init() {
           "200": {
             "description": "constraints under the segment",
             "schema": {
-              "$ref": "#/definitions/findConstraintsOKBody"
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/constraint"
+              }
             }
           },
           "default": {
@@ -720,7 +729,10 @@ func init() {
           "200": {
             "description": "distribution under the segment",
             "schema": {
-              "$ref": "#/definitions/findDistributionsOKBody"
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/distribution"
+              }
             }
           },
           "default": {
@@ -770,7 +782,10 @@ func init() {
           "200": {
             "description": "distribution under the segment",
             "schema": {
-              "$ref": "#/definitions/putDistributionsOKBody"
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/distribution"
+              }
             }
           },
           "default": {
@@ -803,7 +818,10 @@ func init() {
           "200": {
             "description": "variant ordered by variantID",
             "schema": {
-              "$ref": "#/definitions/findVariantsOKBody"
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/variant"
+              }
             }
           },
           "default": {
@@ -1138,16 +1156,12 @@ func init() {
           "type": "string"
         },
         "segmentDebugLogs": {
-          "$ref": "#/definitions/evalDebugLogSegmentDebugLogs"
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/segmentDebugLog"
+          }
         }
       }
-    },
-    "evalDebugLogSegmentDebugLogs": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/segmentDebugLog"
-      },
-      "x-go-gen-location": "models"
     },
     "evalResult": {
       "type": "object",
@@ -1171,6 +1185,10 @@ func init() {
           "type": "integer",
           "format": "int64",
           "minimum": 1
+        },
+        "flagSnapshotID": {
+          "type": "integer",
+          "format": "int64"
         },
         "segmentID": {
           "type": "integer",
@@ -1206,7 +1224,11 @@ func init() {
           "type": "boolean"
         },
         "entities": {
-          "$ref": "#/definitions/evaluationBatchRequestEntities"
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/evaluationEntity"
+          }
         },
         "flagIDs": {
           "type": "array",
@@ -1219,14 +1241,6 @@ func init() {
         }
       }
     },
-    "evaluationBatchRequestEntities": {
-      "type": "array",
-      "minItems": 1,
-      "items": {
-        "$ref": "#/definitions/evaluationEntity"
-      },
-      "x-go-gen-location": "models"
-    },
     "evaluationBatchResponse": {
       "type": "object",
       "required": [
@@ -1234,16 +1248,12 @@ func init() {
       ],
       "properties": {
         "evaluationResults": {
-          "$ref": "#/definitions/evaluationBatchResponseEvaluationResults"
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/evalResult"
+          }
         }
       }
-    },
-    "evaluationBatchResponseEvaluationResults": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/evalResult"
-      },
-      "x-go-gen-location": "models"
     },
     "evaluationEntity": {
       "type": "object",
@@ -1264,41 +1274,6 @@ func init() {
           "minLength": 1
         }
       }
-    },
-    "findConstraintsOKBody": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/constraint"
-      },
-      "x-go-gen-location": "operations"
-    },
-    "findDistributionsOKBody": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/distribution"
-      },
-      "x-go-gen-location": "operations"
-    },
-    "findFlagsOKBody": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/flag"
-      },
-      "x-go-gen-location": "operations"
-    },
-    "findSegmentsOKBody": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/segment"
-      },
-      "x-go-gen-location": "operations"
-    },
-    "findVariantsOKBody": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/variant"
-      },
-      "x-go-gen-location": "operations"
     },
     "flag": {
       "type": "object",
@@ -1326,33 +1301,18 @@ func init() {
           "readOnly": true
         },
         "segments": {
-          "$ref": "#/definitions/flagSegments"
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/segment"
+          }
         },
         "variants": {
-          "$ref": "#/definitions/flagVariants"
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/variant"
+          }
         }
       }
-    },
-    "flagSegments": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/segment"
-      },
-      "x-go-gen-location": "models"
-    },
-    "flagVariants": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/variant"
-      },
-      "x-go-gen-location": "models"
-    },
-    "putDistributionsOKBody": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/distribution"
-      },
-      "x-go-gen-location": "operations"
     },
     "putDistributionsRequest": {
       "type": "object",
@@ -1361,16 +1321,12 @@ func init() {
       ],
       "properties": {
         "distributions": {
-          "$ref": "#/definitions/putDistributionsRequestDistributions"
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/distribution"
+          }
         }
       }
-    },
-    "putDistributionsRequestDistributions": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/distribution"
-      },
-      "x-go-gen-location": "models"
     },
     "putFlagRequest": {
       "type": "object",
@@ -1450,14 +1406,20 @@ func init() {
       ],
       "properties": {
         "constraints": {
-          "$ref": "#/definitions/segmentConstraints"
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/constraint"
+          }
         },
         "description": {
           "type": "string",
           "minLength": 1
         },
         "distributions": {
-          "$ref": "#/definitions/segmentDistributions"
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/distribution"
+          }
         },
         "id": {
           "type": "integer",
@@ -1478,13 +1440,6 @@ func init() {
         }
       }
     },
-    "segmentConstraints": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/constraint"
-      },
-      "x-go-gen-location": "models"
-    },
     "segmentDebugLog": {
       "type": "object",
       "properties": {
@@ -1497,13 +1452,6 @@ func init() {
           "minimum": 1
         }
       }
-    },
-    "segmentDistributions": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/distribution"
-      },
-      "x-go-gen-location": "models"
     },
     "setFlagEnabledRequest": {
       "type": "object",

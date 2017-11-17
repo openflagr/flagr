@@ -15,15 +15,12 @@ import (
 
 // EvaluationBatchResponse evaluation batch response
 // swagger:model evaluationBatchResponse
-
 type EvaluationBatchResponse struct {
 
 	// evaluation results
 	// Required: true
 	EvaluationResults EvaluationBatchResponseEvaluationResults `json:"evaluationResults"`
 }
-
-/* polymorph evaluationBatchResponse evaluationResults false */
 
 // Validate validates this evaluation batch response
 func (m *EvaluationBatchResponse) Validate(formats strfmt.Registry) error {
@@ -43,6 +40,13 @@ func (m *EvaluationBatchResponse) Validate(formats strfmt.Registry) error {
 func (m *EvaluationBatchResponse) validateEvaluationResults(formats strfmt.Registry) error {
 
 	if err := validate.Required("evaluationResults", "body", m.EvaluationResults); err != nil {
+		return err
+	}
+
+	if err := m.EvaluationResults.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("evaluationResults")
+		}
 		return err
 	}
 

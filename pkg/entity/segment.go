@@ -19,7 +19,7 @@ type Segment struct {
 	Distributions  []Distribution
 
 	// Purely for evaluation
-	SegmentEvaluation SegmentEvaluation `gorm:"-"`
+	SegmentEvaluation SegmentEvaluation `gorm:"-" json:"-"`
 }
 
 // Preload preloads the segment

@@ -34,7 +34,7 @@ func NewPutSegmentsReorderParams() PutSegmentsReorderParams {
 type PutSegmentsReorderParams struct {
 
 	// HTTP Request Object
-	HTTPRequest *http.Request
+	HTTPRequest *http.Request `json:"-"`
 
 	/*reorder segments
 	  Required: true
