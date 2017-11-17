@@ -61,4 +61,14 @@ var Config = struct {
 	RecorderKafkaFlushFrequency time.Duration `env:"FLAGR_RECORDER_KAFKA_FLUSHFREQUENCY" envDefault:"500ms"`
 	RecorderKafkaEncrypted      bool          `env:"FLAGR_RECORDER_KAFKA_ENCRYPTED" envDefault:"false"`
 	RecorderKafkaEncryptionKey  string        `env:"FLAGR_RECORDER_KAFKA_ENCRYPTION_KEY" envDefault:""`
+
+	// JWTAuthEnabled enables the JWT Auth
+	// The pattern of using JWT auth token is that it redirects to the URL to set cross subdomain cookie
+	// For example, redirect to auth.example.com/signin, which sets Cookie access_token=jwt_token for domain ".example.com"
+	// One can also whitelist some routes so that they don't get blocked by JWT auth
+	JWTAuthEnabled            bool   `env:"FLAGR_JWT_AUTH_ENABLED" envDefault:"false"`
+	JWTAuthWhitelistPaths     string `env:"FLAGR_JWT_AUTH_WHITELIST_PATHS" envDefault:"/api,/static,/favicon"`
+	JWTAuthCookieTokenName    string `env:"FLAGR_JWT_AUTH_COOKIE_TOKEN_NAME" envDefault:"access_token"`
+	JWTAuthSecret             string `env:"FLAGR_JWT_AUTH_SECRET" envDefault:""`
+	JWTAuthNoTokenRedirectURL string `env:"FLAGR_JWT_AUTH_NO_TOKEN_REDIRECT_URL" envDefault:""`
 }{}

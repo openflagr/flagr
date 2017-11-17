@@ -27,6 +27,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/auth0/go-jwt-middleware"
+  packages = ["."]
+  revision = "5493cabe49f7bfa6e2ec444a09d334d90cd4e2bd"
+
+[[projects]]
+  branch = "master"
   name = "github.com/brandur/simplebox"
   packages = ["."]
   revision = "84e9865bb03ad38c464043bf5382ce8c68ca5f0c"
@@ -48,6 +54,12 @@
   packages = ["spew"]
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
   version = "v1.1.0"
+
+[[projects]]
+  name = "github.com/dgrijalva/jwt-go"
+  packages = ["."]
+  revision = "dbeaa9332f19a944acb5736b4456cfcc02140e29"
+  version = "v3.1.0"
 
 [[projects]]
   name = "github.com/docker/go-units"
@@ -334,6 +346,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "c8a5dac48d98cad3d9f0f65374f457fd9837dc5efa0a2a1d27605a9f6a5f3620"
+  inputs-digest = "5934fdf0d2603935e836081639ef7c2322d75cf91cd7bda1bee88d5e2b8ad848"
   solver-name = "gps-cdcl"
   solver-version = 1

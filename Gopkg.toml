@@ -124,3 +124,7 @@
 [[constraint]]
   name = "github.com/evalphobia/logrus_sentry"
   version = "0.4.2"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/auth0/go-jwt-middleware"
