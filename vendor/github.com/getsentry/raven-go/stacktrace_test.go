@@ -139,7 +139,7 @@ func TestNewStacktrace_outOfBounds(t *testing.T) {
 func TestNewStacktrace_noFrames(t *testing.T) {
 	st := NewStacktrace(999999999, 0, []string{})
 	if st != nil {
-		t.Errorf("expected st.Frames to be nil:", st)
+		t.Errorf("expected st.Frames to be nil: %v", st)
 	}
 }
 

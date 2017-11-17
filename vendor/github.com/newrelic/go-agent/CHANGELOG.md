@@ -1,5 +1,37 @@
 ## ChangeLog
 
+## 1.10.0
+
+* Added new `RecordCustomMetric` method to [Application](https://godoc.org/github.com/newrelic/go-agent#Application).
+  This functionality can be used to track averages or counters without using
+  custom events.
+  * [Custom Metric Documentation](https://docs.newrelic.com/docs/agents/manage-apm-agents/agent-data/collect-custom-metrics)
+
+* Fixed import needed for logrus.  The import Sirupsen/logrus had been renamed to sirupsen/logrus.
+  Thanks to @alfred-landrum for spotting this.
+
+* Added [ErrorAttributer](https://godoc.org/github.com/newrelic/go-agent#ErrorAttributer),
+  an optional interface that can be implemented by errors provided to
+  `Transaction.NoticeError` to attach additional attributes.  These attributes are
+  subject to attribute configuration.
+
+* Added [Error](https://godoc.org/github.com/newrelic/go-agent#Error), a type
+  that allows direct control of error fields.  Example use:
+
+```go
+txn.NoticeError(newrelic.Error{
+	// Message is returned by the Error() method.
+	Message: "error message: something went very wrong",
+	Class:   "errors are aggregated by class",
+	Attributes: map[string]interface{}{
+		"important_number": 97232,
+		"relevant_string":  "zap",
+	},
+})
+```
+
+* Updated license to address scope of usage.
+
 ## 1.9.0
 
 * Added support for [github.com/gin-gonic/gin](https://github.com/gin-gonic/gin)

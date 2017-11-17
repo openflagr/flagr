@@ -3,6 +3,7 @@ package newrelic
 import (
 	"errors"
 	"fmt"
+	"math"
 	"net/http"
 	"os"
 	"strings"
@@ -14,9 +15,17 @@ import (
 )
 
 var (
-	debugLogging = os.Getenv("NEW_RELIC_DEBUG_LOGGING")
+	// NEW_RELIC_HOST can be used to override the New Relic endpoint.  This
+	// is useful for testing against staging.
+	envHost = "NEW_RELIC_HOST"
+	// NEW_RELIC_DEBUG_LOGGING can be set to anything to enable additional
+	// debug logging: the agent will log every transaction's data at info
+	// level.
+	envDebugLogging = "NEW_RELIC_DEBUG_LOGGING"
+
+	debugLogging = os.Getenv(envDebugLogging)
 	redirectHost = func() string {
-		if s := os.Getenv("NEW_RELIC_HOST"); "" != s {
+		if s := os.Getenv(envHost); "" != s {
 			return s
 		}
 		return "collector.newrelic.com"
@@ -183,13 +192,13 @@ func debug(data internal.Harvestable, lg Logger) {
 			continue
 		}
 		if nil != err {
-			lg.Debug("integration", map[string]interface{}{
+			lg.Info("integration", map[string]interface{}{
 				"cmd":   cmd,
 				"error": err.Error(),
 			})
 			continue
 		}
-		lg.Debug("integration", map[string]interface{}{
+		lg.Info("integration", map[string]interface{}{
 			"cmd":  cmd,
 			"data": internal.JSONString(d),
 		})
@@ -507,6 +516,31 @@ func (app *app) RecordCustomEvent(eventType string, params map[string]interface{
 
 	app.Consume(run.RunID, event)
 
+	return nil
+}
+
+var (
+	errMetricInf       = errors.New("invalid metric value: inf")
+	errMetricNaN       = errors.New("invalid metric value: NaN")
+	errMetricNameEmpty = errors.New("missing metric name")
+)
+
+// RecordCustomMetric implements newrelic.Application's RecordCustomMetric.
+func (app *app) RecordCustomMetric(name string, value float64) error {
+	if math.IsNaN(value) {
+		return errMetricNaN
+	}
+	if math.IsInf(value, 0) {
+		return errMetricInf
+	}
+	if "" == name {
+		return errMetricNameEmpty
+	}
+	run, _ := app.getState()
+	app.Consume(run.RunID, internal.CustomMetric{
+		RawInputName: name,
+		Value:        value,
+	})
 	return nil
 }
 

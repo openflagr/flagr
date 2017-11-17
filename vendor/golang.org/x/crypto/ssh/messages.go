@@ -141,6 +141,8 @@ const msgUserAuthBanner = 53
 
 type userAuthBannerMsg struct {
 	Message string `sshtype:"53"`
+	// unused, but required to allow message parsing
+	Language string
 }
 
 // See RFC 4256, section 3.2

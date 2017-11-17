@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/Sirupsen/logrus"
 	newrelic "github.com/newrelic/go-agent"
 	"github.com/newrelic/go-agent/_integrations/nrlogrus"
+	"github.com/sirupsen/logrus"
 )
 
 func mustGetEnv(key string) string {

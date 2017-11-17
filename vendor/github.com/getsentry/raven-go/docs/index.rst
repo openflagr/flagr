@@ -84,6 +84,23 @@ as the second argument. For example:
 
 Tags in Sentry help to categories and give you more information about the errors that happened.
 
+Event Sampling
+--------------------
+
+To setup client side sampling you can use ``SetSampleRate`` Client function.
+Error sampling is disabled by default (sampleRate=1).
+
+.. sourcecode:: go
+
+    package main
+
+    import "github.com/getsentry/raven-go"
+
+    func init() {
+        raven.SetSampleRate(0.25)
+    }
+
+
 Deep Dive
 ---------
 

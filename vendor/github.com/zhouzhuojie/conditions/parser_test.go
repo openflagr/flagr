@@ -1,6 +1,7 @@
 package conditions
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"testing"
@@ -82,6 +83,8 @@ var validTestData = []struct {
 	{"\"OFF\"", nil, false, true},
 	{"`ON`", nil, false, true},
 	{"{var0} == \"OFF\"", map[string]interface{}{"var0": "OFF"}, true, false},
+
+	// AND
 	{"{var0} > 10 AND {var1} == \"OFF\"", map[string]interface{}{"var0": 14, "var1": "OFF"}, true, false},
 	{"({var0} > 10) AND ({var1} == \"OFF\")", map[string]interface{}{"var0": 14, "var1": "OFF"}, true, false},
 	{"({var0} > 10) AND ({var1} == \"OFF\") OR true", map[string]interface{}{"var0": 1, "var1": "ON"}, true, false},
@@ -89,6 +92,7 @@ var validTestData = []struct {
 	{"{foo}{dfs}{a} == true and {bar} == true", map[string]interface{}{"foo.dfs.a": true, "bar": true}, true, false},
 	{"{@foo}{a} == true and {bar} == true", map[string]interface{}{"@foo.a": true, "bar": true}, true, false},
 	{"{foo}{unknow} == true and {bar} == true", map[string]interface{}{"foo.dfs": true, "bar": true}, false, true},
+	{"{foo} == 123", map[string]interface{}{"foo": json.Number("123"), "bar": true}, true, false},
 
 	// OR
 	{"{foo} == true OR {foo} > 1", map[string]interface{}{"foo": true}, false, true},
@@ -110,6 +114,8 @@ var validTestData = []struct {
 
 	// IN
 	{"{foo} in {foobar}", map[string]interface{}{"foo": "findme", "foobar": []string{"notme", "may", "findme", "lol"}}, true, false},
+	{"{foo} in [123]", map[string]interface{}{"foo": json.Number("123"), "baz": true}, true, false},
+	{"{foo} in [123]", map[string]interface{}{"foo": json.Number("124"), "baz": true}, false, false},
 
 	// NOT IN
 	{"{foo} not in {foobar}", map[string]interface{}{"foo": "dontfindme", "foobar": []string{"notme", "may", "findme", "lol"}}, true, false},
@@ -145,6 +151,11 @@ var validTestData = []struct {
 	{`{foo} contains {bar}`, map[string]interface{}{"foo": []int{1, 2}, "bar": int32(1)}, true, false},
 	{`{foo} contains {bar}`, map[string]interface{}{"foo": []int{1, 2, 3}, "bar": float32(1.0 + 2.0)}, true, false},
 	{`{foo} contains {bar}`, map[string]interface{}{"foo": []float64{0.29}, "bar": float32(29.0 / 100)}, true, false},
+	{`{foo} contains 2`, map[string]interface{}{"foo": []json.Number{"2"}}, true, false},
+	{`{foo} contains 2`, map[string]interface{}{"foo": []json.Number{"2", "3"}}, true, false},
+	{`{foo} contains 2`, map[string]interface{}{"foo": []json.Number{"3"}}, false, false},
+	{`{foo} contains 2`, map[string]interface{}{"foo": []interface{}{json.Number("2")}}, true, false},
+	{`{foo} contains 2`, map[string]interface{}{"foo": []interface{}{json.Number("3")}}, false, false},
 
 	//{NOT}CONTAINS
 	{`{foo} not contains "2"`, map[string]interface{}{"foo": []string{"1", "2"}}, false, false},
@@ -286,6 +297,45 @@ func TestReadmeExample(t *testing.T) {
 	}
 
 	fmt.Println("Evaluation result:", r)
+}
+
+func TestJSON(t *testing.T) {
+	var tests = []struct {
+		cond    string
+		jsonStr string
+		result  bool
+		isErr   bool
+	}{
+		{`{foo} == 123`, `{"foo": 123}`, true, false},
+		{`{foo} in [123]`, `{"foo": 123}`, true, false},
+		{`{foo} in [124]`, `{"foo": 123}`, false, false},
+		{`{foo} in [123]`, `{"foo": 123, "bar": "baz"}`, true, false},
+		{`{foo} in [124]`, `{"foo": 123, "bar": "baz"}`, false, false},
+
+		{`{foo} == "123"`, `{"foo": 123}`, false, true},
+		{`{foo} == "123"`, `{"foo": "123"}`, true, false},
+		{`{foo} not in ["123"]`, `{"foo": "123"}`, false, false},
+
+		{`{foo} contains "123"`, `{"foo": ["123"]}`, true, false},
+		{`{foo} contains 123`, `{"foo": [123]}`, true, false},
+		{`{foo} contains 123`, `{"foo": ["123"]}`, false, true},
+		{`{foo} not contains 123`, `{"foo": [124]}`, true, false},
+		{`{foo} not contains "123"`, `{"foo": ["124"]}`, true, false},
+	}
+
+	for _, test := range tests {
+		p := NewParser(strings.NewReader(test.cond))
+		expr, _ := p.Parse()
+		data := make(map[string]interface{})
+		json.Unmarshal([]byte(test.jsonStr), &data)
+		r, err := Evaluate(expr, data)
+		assert.Equal(t, r, test.result, test.cond, test.jsonStr)
+		if test.isErr {
+			assert.Error(t, err, test.cond, test.jsonStr)
+		} else {
+			assert.NoError(t, err, test.cond)
+		}
+	}
 }
 
 func BenchmarkParser(b *testing.B) {
