@@ -6,13 +6,13 @@
 //
 // Only logrus' StandardLogger is supported since there is no method (as of July
 // 2016) to get the level of a logrus.Logger. See
-// https://github.com/Sirupsen/logrus/issues/241
+// https://github.com/sirupsen/logrus/issues/241
 package nrlogrus
 
 import (
-	"github.com/Sirupsen/logrus"
 	newrelic "github.com/newrelic/go-agent"
 	"github.com/newrelic/go-agent/internal"
+	"github.com/sirupsen/logrus"
 )
 
 func init() { internal.TrackUsage("integration", "logging", "logrus") }

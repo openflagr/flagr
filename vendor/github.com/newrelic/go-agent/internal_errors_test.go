@@ -2,6 +2,7 @@ package newrelic
 
 import (
 	"runtime"
+	"strconv"
 	"testing"
 
 	"github.com/newrelic/go-agent/internal"
@@ -297,4 +298,218 @@ func TestErrorWithStackTraceReturnsNil(t *testing.T) {
 		},
 	}})
 	app.ExpectMetrics(t, backgroundErrorMetrics)
+}
+
+func TestNewrelicErrorNoAttributes(t *testing.T) {
+	app := testApp(nil, nil, t)
+	txn := app.StartTransaction("hello", nil, nil)
+	err := txn.NoticeError(Error{
+		Message: "my msg",
+		Class:   "my class",
+	})
+	if nil != err {
+		t.Error(err)
+	}
+	txn.End()
+	app.ExpectErrors(t, []internal.WantError{{
+		TxnName: "OtherTransaction/Go/hello",
+		Msg:     "my msg",
+		Klass:   "my class",
+		Caller:  "go-agent.TestNewrelicErrorNoAttributes",
+		URL:     "",
+	}})
+	app.ExpectErrorEvents(t, []internal.WantEvent{{
+		Intrinsics: map[string]interface{}{
+			"error.class":     "my class",
+			"error.message":   "my msg",
+			"transactionName": "OtherTransaction/Go/hello",
+		},
+	}})
+	app.ExpectMetrics(t, backgroundErrorMetrics)
+}
+
+func TestNewrelicErrorValidAttributes(t *testing.T) {
+	extraAttributes := map[string]interface{}{
+		"zip": "zap",
+	}
+	app := testApp(nil, nil, t)
+	txn := app.StartTransaction("hello", nil, nil)
+	err := txn.NoticeError(Error{
+		Message:    "my msg",
+		Class:      "my class",
+		Attributes: extraAttributes,
+	})
+	if nil != err {
+		t.Error(err)
+	}
+	txn.End()
+	app.ExpectErrors(t, []internal.WantError{{
+		TxnName:        "OtherTransaction/Go/hello",
+		Msg:            "my msg",
+		Klass:          "my class",
+		Caller:         "go-agent.TestNewrelicErrorValidAttributes",
+		URL:            "",
+		UserAttributes: extraAttributes,
+	}})
+	app.ExpectErrorEvents(t, []internal.WantEvent{{
+		Intrinsics: map[string]interface{}{
+			"error.class":     "my class",
+			"error.message":   "my msg",
+			"transactionName": "OtherTransaction/Go/hello",
+		},
+		UserAttributes: extraAttributes,
+	}})
+	app.ExpectMetrics(t, backgroundErrorMetrics)
+}
+
+func TestNewrelicErrorAttributesHighSecurity(t *testing.T) {
+	extraAttributes := map[string]interface{}{
+		"zip": "zap",
+	}
+	cfgFn := func(cfg *Config) { cfg.HighSecurity = true }
+	app := testApp(nil, cfgFn, t)
+	txn := app.StartTransaction("hello", nil, nil)
+	err := txn.NoticeError(Error{
+		Message:    "my msg",
+		Class:      "my class",
+		Attributes: extraAttributes,
+	})
+	if nil != err {
+		t.Error(err)
+	}
+	txn.End()
+	app.ExpectErrors(t, []internal.WantError{{
+		TxnName:        "OtherTransaction/Go/hello",
+		Msg:            "message removed by high security setting",
+		Klass:          "my class",
+		Caller:         "go-agent.TestNewrelicErrorAttributesHighSecurity",
+		URL:            "",
+		UserAttributes: map[string]interface{}{},
+	}})
+	app.ExpectErrorEvents(t, []internal.WantEvent{{
+		Intrinsics: map[string]interface{}{
+			"error.class":     "my class",
+			"error.message":   "message removed by high security setting",
+			"transactionName": "OtherTransaction/Go/hello",
+		},
+		UserAttributes: map[string]interface{}{},
+	}})
+	app.ExpectMetrics(t, backgroundErrorMetrics)
+}
+
+func TestNewrelicErrorAttributeOverridesNormalAttribute(t *testing.T) {
+	extraAttributes := map[string]interface{}{
+		"zip": "zap",
+	}
+	app := testApp(nil, nil, t)
+	txn := app.StartTransaction("hello", nil, nil)
+	if err := txn.AddAttribute("zip", 123); nil != err {
+		t.Error(err)
+	}
+	err := txn.NoticeError(Error{
+		Message:    "my msg",
+		Class:      "my class",
+		Attributes: extraAttributes,
+	})
+	if nil != err {
+		t.Error(err)
+	}
+	txn.End()
+	app.ExpectErrors(t, []internal.WantError{{
+		TxnName:        "OtherTransaction/Go/hello",
+		Msg:            "my msg",
+		Klass:          "my class",
+		Caller:         "go-agent.TestNewrelicErrorAttributeOverridesNormalAttribute",
+		URL:            "",
+		UserAttributes: extraAttributes,
+	}})
+	app.ExpectErrorEvents(t, []internal.WantEvent{{
+		Intrinsics: map[string]interface{}{
+			"error.class":     "my class",
+			"error.message":   "my msg",
+			"transactionName": "OtherTransaction/Go/hello",
+		},
+		UserAttributes: extraAttributes,
+	}})
+	app.ExpectMetrics(t, backgroundErrorMetrics)
+}
+
+func TestNewrelicErrorInvalidAttributes(t *testing.T) {
+	extraAttributes := map[string]interface{}{
+		"zip":     "zap",
+		"INVALID": struct{}{},
+	}
+	app := testApp(nil, nil, t)
+	txn := app.StartTransaction("hello", nil, nil)
+	err := txn.NoticeError(Error{
+		Message:    "my msg",
+		Class:      "my class",
+		Attributes: extraAttributes,
+	})
+	if _, ok := err.(internal.ErrInvalidAttributeType); !ok {
+		t.Error(err)
+	}
+	txn.End()
+	app.ExpectErrors(t, []internal.WantError{})
+	app.ExpectErrorEvents(t, []internal.WantEvent{})
+	app.ExpectMetrics(t, backgroundMetrics)
+}
+
+func TestExtraErrorAttributeRemovedThroughConfiguration(t *testing.T) {
+	cfgfn := func(cfg *Config) {
+		cfg.ErrorCollector.Attributes.Exclude = []string{"IGNORE_ME"}
+	}
+	app := testApp(nil, cfgfn, t)
+	txn := app.StartTransaction("hello", nil, nil)
+	err := txn.NoticeError(Error{
+		Message: "my msg",
+		Class:   "my class",
+		Attributes: map[string]interface{}{
+			"zip":       "zap",
+			"IGNORE_ME": 123,
+		},
+	})
+	if nil != err {
+		t.Error(err)
+	}
+	txn.End()
+	app.ExpectErrors(t, []internal.WantError{{
+		TxnName:        "OtherTransaction/Go/hello",
+		Msg:            "my msg",
+		Klass:          "my class",
+		Caller:         "go-agent.TestExtraErrorAttributeRemovedThroughConfiguration",
+		URL:            "",
+		UserAttributes: map[string]interface{}{"zip": "zap"},
+	}})
+	app.ExpectErrorEvents(t, []internal.WantEvent{{
+		Intrinsics: map[string]interface{}{
+			"error.class":     "my class",
+			"error.message":   "my msg",
+			"transactionName": "OtherTransaction/Go/hello",
+		},
+		UserAttributes: map[string]interface{}{"zip": "zap"},
+	}})
+	app.ExpectMetrics(t, backgroundErrorMetrics)
+
+}
+
+func TestTooManyExtraErrorAttributes(t *testing.T) {
+	attrs := make(map[string]interface{})
+	for i := 0; i <= internal.AttributeErrorLimit; i++ {
+		attrs[strconv.Itoa(i)] = i
+	}
+	app := testApp(nil, nil, t)
+	txn := app.StartTransaction("hello", nil, nil)
+	err := txn.NoticeError(Error{
+		Message:    "my msg",
+		Class:      "my class",
+		Attributes: attrs,
+	})
+	if errTooManyErrorAttributes != err {
+		t.Error(err)
+	}
+	txn.End()
+	app.ExpectErrors(t, []internal.WantError{})
+	app.ExpectErrorEvents(t, []internal.WantEvent{})
+	app.ExpectMetrics(t, backgroundMetrics)
 }

@@ -79,6 +79,7 @@ func TestHostKeyCheck(t *testing.T) {
 		}
 	}
 }
+
 func TestBannerCallback(t *testing.T) {
 	c1, c2, err := netPipe()
 	if err != nil {

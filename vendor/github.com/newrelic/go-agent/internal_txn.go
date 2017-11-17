@@ -2,6 +2,7 @@ package newrelic
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -306,6 +307,11 @@ func (txn *txn) noticeErrorInternal(err internal.ErrorData) error {
 	return nil
 }
 
+var (
+	errTooManyErrorAttributes = fmt.Errorf("too many extra attributes: limit is %d",
+		internal.AttributeErrorLimit)
+)
+
 func (txn *txn) NoticeError(err error) error {
 	txn.Lock()
 	defer txn.Unlock()
@@ -335,6 +341,22 @@ func (txn *txn) NoticeError(err error) error {
 	}
 	if nil == e.Stack {
 		e.Stack = internal.GetStackTrace(2)
+	}
+
+	if ea, ok := err.(ErrorAttributer); ok && !txn.Config.HighSecurity {
+		unvetted := ea.ErrorAttributes()
+		if len(unvetted) > internal.AttributeErrorLimit {
+			return errTooManyErrorAttributes
+		}
+
+		e.ExtraAttributes = make(map[string]interface{})
+		for key, val := range unvetted {
+			val, errr := internal.ValidateUserAttribute(key, val)
+			if nil != errr {
+				return errr
+			}
+			e.ExtraAttributes[key] = val
+		}
 	}
 
 	return txn.noticeErrorInternal(e)

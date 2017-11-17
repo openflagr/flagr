@@ -31,6 +31,12 @@ type Application interface {
 	// https://docs.newrelic.com/docs/insights/new-relic-insights/adding-querying-data/inserting-custom-events-new-relic-apm-agents
 	RecordCustomEvent(eventType string, params map[string]interface{}) error
 
+	// RecordCustomMetric records a custom metric.  NOTE! The name you give
+	// will be prefixed by "Custom/".
+	//
+	// https://docs.newrelic.com/docs/agents/manage-apm-agents/agent-data/collect-custom-metrics
+	RecordCustomMetric(name string, value float64) error
+
 	// WaitForConnection blocks until the application is connected, is
 	// incapable of being connected, or the timeout has been reached.  This
 	// method is useful for short-lived processes since the application will

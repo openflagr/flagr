@@ -104,6 +104,14 @@ func customSegmentMetric(s string) string {
 	return "Custom/" + s
 }
 
+// customMetric is used to construct custom metrics from the input given to
+// Application.RecordCustomMetric.  Note that the "Custom/" prefix helps prevent
+// collision with other agent metrics, but does not eliminate the possibility
+// since "Custom/" is also used for segments.
+func customMetric(customerInput string) string {
+	return "Custom/" + customerInput
+}
+
 // DatastoreMetricKey contains the fields by which datastore metrics are
 // aggregated.
 type DatastoreMetricKey struct {

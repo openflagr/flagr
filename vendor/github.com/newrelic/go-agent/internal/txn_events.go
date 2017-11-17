@@ -42,7 +42,7 @@ func (e *TxnEvent) WriteJSON(buf *bytes.Buffer) {
 	}
 	buf.WriteByte('}')
 	buf.WriteByte(',')
-	userAttributesJSON(e.Attrs, buf, destTxnEvent)
+	userAttributesJSON(e.Attrs, buf, destTxnEvent, nil)
 	buf.WriteByte(',')
 	agentAttributesJSON(e.Attrs, buf, destTxnEvent)
 	buf.WriteByte(']')

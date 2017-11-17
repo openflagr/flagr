@@ -2,7 +2,6 @@ package internal
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"sort"
@@ -307,24 +306,14 @@ func NewAttributes(config *AttributeConfig) *Attributes {
 	}
 }
 
-// ErrInvalidAttribute is returned when the value is not valid.
-type ErrInvalidAttribute struct{ typeString string }
-
-func (e ErrInvalidAttribute) Error() string {
-	return fmt.Sprintf("attribute value type %s is invalid", e.typeString)
+// ErrInvalidAttributeType is returned when the value is not valid.
+type ErrInvalidAttributeType struct {
+	key string
+	val interface{}
 }
 
-func valueIsValid(val interface{}) error {
-	switch val.(type) {
-	case string, bool, nil,
-		uint8, uint16, uint32, uint64, int8, int16, int32, int64,
-		float32, float64, uint, int, uintptr:
-		return nil
-	default:
-		return ErrInvalidAttribute{
-			typeString: fmt.Sprintf("%T", val),
-		}
-	}
+func (e ErrInvalidAttributeType) Error() string {
+	return fmt.Sprintf("attribute '%s' value of type %T is invalid", e.key, e.val)
 }
 
 type invalidAttributeKeyErr struct{ key string }
@@ -341,16 +330,6 @@ func (e userAttributeLimitErr) Error() string {
 		attributeUserLimit)
 }
 
-func validAttributeKey(key string) error {
-	// Attributes whose keys are excessively long are dropped rather than
-	// truncated to avoid worrying about the application of configuration to
-	// truncated values or performing the truncation after configuration.
-	if len(key) > attributeKeyLengthLimit {
-		return invalidAttributeKeyErr{key: key}
-	}
-	return nil
-}
-
 func truncateStringValueIfLong(val string) string {
 	if len(val) > attributeValueLengthLimit {
 		return StringLengthByteLimit(val, attributeValueLengthLimit)
@@ -358,20 +337,36 @@ func truncateStringValueIfLong(val string) string {
 	return val
 }
 
-func truncateStringValueIfLongInterface(val interface{}) interface{} {
+// ValidateUserAttribute validates a user attribute.
+func ValidateUserAttribute(key string, val interface{}) (interface{}, error) {
 	if str, ok := val.(string); ok {
 		val = interface{}(truncateStringValueIfLong(str))
 	}
-	return val
+
+	switch val.(type) {
+	case string, bool, nil,
+		uint8, uint16, uint32, uint64, int8, int16, int32, int64,
+		float32, float64, uint, int, uintptr:
+	default:
+		return nil, ErrInvalidAttributeType{
+			key: key,
+			val: val,
+		}
+	}
+
+	// Attributes whose keys are excessively long are dropped rather than
+	// truncated to avoid worrying about the application of configuration to
+	// truncated values or performing the truncation after configuration.
+	if len(key) > attributeKeyLengthLimit {
+		return nil, invalidAttributeKeyErr{key: key}
+	}
+	return val, nil
 }
 
 // AddUserAttribute adds a user attribute.
 func AddUserAttribute(a *Attributes, key string, val interface{}, d destinationSet) error {
-	val = truncateStringValueIfLongInterface(val)
-	if err := valueIsValid(val); nil != err {
-		return err
-	}
-	if err := validAttributeKey(key); nil != err {
+	val, err := ValidateUserAttribute(key, val)
+	if nil != err {
 		return err
 	}
 	dests := applyAttributeConfig(a.config, key, d)
@@ -445,12 +440,21 @@ func agentAttributesJSON(a *Attributes, buf *bytes.Buffer, d destinationSet) {
 	writeAgentAttributes(buf, d, a.Agent, a.config.agentDests)
 }
 
-func userAttributesJSON(a *Attributes, buf *bytes.Buffer, d destinationSet) {
+func userAttributesJSON(a *Attributes, buf *bytes.Buffer, d destinationSet, extraAttributes map[string]interface{}) {
 	buf.WriteByte('{')
 	if nil != a {
 		w := jsonFieldsWriter{buf: buf}
+		for key, val := range extraAttributes {
+			outputDest := applyAttributeConfig(a.config, key, d)
+			if 0 != outputDest&d {
+				writeAttributeValueJSON(&w, key, val)
+			}
+		}
 		for name, atr := range a.user {
 			if 0 != atr.dests&d {
+				if _, found := extraAttributes[name]; found {
+					continue
+				}
 				writeAttributeValueJSON(&w, name, atr.value)
 			}
 		}
@@ -458,37 +462,12 @@ func userAttributesJSON(a *Attributes, buf *bytes.Buffer, d destinationSet) {
 	buf.WriteByte('}')
 }
 
-func userAttributesStringJSON(a *Attributes, d destinationSet) JSONString {
-	if nil == a {
-		return JSONString("{}")
-	}
+// userAttributesStringJSON is only used for testing.
+func userAttributesStringJSON(a *Attributes, d destinationSet, extraAttributes map[string]interface{}) string {
 	estimate := len(a.user) * 128
 	buf := bytes.NewBuffer(make([]byte, 0, estimate))
-	userAttributesJSON(a, buf, d)
-	bs := buf.Bytes()
-	return JSONString(bs)
-}
-
-func agentAttributesStringJSON(a *Attributes, d destinationSet) JSONString {
-	if nil == a {
-		return JSONString("{}")
-	}
-	estimate := 1024
-	buf := bytes.NewBuffer(make([]byte, 0, estimate))
-	agentAttributesJSON(a, buf, d)
-	return JSONString(buf.Bytes())
-}
-
-func getUserAttributes(a *Attributes, d destinationSet) map[string]interface{} {
-	v := make(map[string]interface{})
-	json.Unmarshal([]byte(userAttributesStringJSON(a, d)), &v)
-	return v
-}
-
-func getAgentAttributes(a *Attributes, d destinationSet) map[string]interface{} {
-	v := make(map[string]interface{})
-	json.Unmarshal([]byte(agentAttributesStringJSON(a, d)), &v)
-	return v
+	userAttributesJSON(a, buf, d, extraAttributes)
+	return buf.String()
 }
 
 // RequestAgentAttributes gathers agent attributes out of the request.

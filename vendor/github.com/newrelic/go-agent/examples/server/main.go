@@ -32,6 +32,21 @@ func noticeError(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func noticeErrorWithAttributes(w http.ResponseWriter, r *http.Request) {
+	io.WriteString(w, "noticing an error")
+
+	if txn, ok := w.(newrelic.Transaction); ok {
+		txn.NoticeError(newrelic.Error{
+			Message: "uh oh. something went very wrong",
+			Class:   "errors are aggregated by class",
+			Attributes: map[string]interface{}{
+				"important_number": 97232,
+				"relevant_string":  "zap",
+			},
+		})
+	}
+}
+
 func customEvent(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, "recording a custom event")
 
@@ -154,6 +169,17 @@ func roundtripper(w http.ResponseWriter, r *http.Request) {
 	io.Copy(w, resp.Body)
 }
 
+func customMetric(w http.ResponseWriter, r *http.Request) {
+	for _, vals := range r.Header {
+		for _, v := range vals {
+			// This custom metric will have the name
+			// "Custom/HeaderLength" in the New Relic UI.
+			app.RecordCustomMetric("HeaderLength", float64(len(v)))
+		}
+	}
+	io.WriteString(w, "custom metric recorded")
+}
+
 func mustGetEnv(key string) string {
 	if val := os.Getenv(key); "" != val {
 		return val
@@ -175,6 +201,7 @@ func main() {
 	http.HandleFunc(newrelic.WrapHandleFunc(app, "/", index))
 	http.HandleFunc(newrelic.WrapHandleFunc(app, "/version", versionHandler))
 	http.HandleFunc(newrelic.WrapHandleFunc(app, "/notice_error", noticeError))
+	http.HandleFunc(newrelic.WrapHandleFunc(app, "/notice_error_with_attributes", noticeErrorWithAttributes))
 	http.HandleFunc(newrelic.WrapHandleFunc(app, "/custom_event", customEvent))
 	http.HandleFunc(newrelic.WrapHandleFunc(app, "/set_name", setName))
 	http.HandleFunc(newrelic.WrapHandleFunc(app, "/add_attribute", addAttribute))
@@ -183,6 +210,7 @@ func main() {
 	http.HandleFunc(newrelic.WrapHandleFunc(app, "/mysql", mysql))
 	http.HandleFunc(newrelic.WrapHandleFunc(app, "/external", external))
 	http.HandleFunc(newrelic.WrapHandleFunc(app, "/roundtripper", roundtripper))
+	http.HandleFunc(newrelic.WrapHandleFunc(app, "/custommetric", customMetric))
 	http.HandleFunc("/background", background)
 
 	http.ListenAndServe(":8000", nil)

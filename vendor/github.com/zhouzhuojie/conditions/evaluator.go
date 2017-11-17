@@ -1,6 +1,7 @@
 package conditions
 
 import (
+	"encoding/json"
 	"fmt"
 	"math"
 	"reflect"
@@ -81,6 +82,13 @@ func evaluateSubtree(expr Expr, args map[string]interface{}) (Expr, error) {
 		case reflect.Float64:
 			return &NumberLiteral{Val: float64(args[index].(float64))}, nil
 		case reflect.String:
+			if num, ok := args[index].(json.Number); ok {
+				f, err := num.Float64()
+				if err != nil {
+					return falseExpr, fmt.Errorf("Unsupported JSON Number %v type: %s", args[index], kind)
+				}
+				return &NumberLiteral{Val: f}, nil
+			}
 			return &StringLiteral{Val: args[index].(string)}, nil
 		case reflect.Bool:
 			return &BooleanLiteral{Val: args[index].(bool)}, nil
@@ -118,6 +126,39 @@ func evaluateSubtree(expr Expr, args map[string]interface{}) (Expr, error) {
 					snl.Val = append(snl.Val, float64(v))
 				}
 				return snl, nil
+			case []json.Number:
+				snl := &SliceNumberLiteral{}
+				for _, v := range args[index].([]json.Number) {
+					f, _ := v.Float64()
+					snl.Val = append(snl.Val, f)
+				}
+				return snl, nil
+			case []interface{}:
+				items := args[index].([]interface{})
+				if len(items) != 0 {
+					item := items[0]
+					switch item.(type) {
+					case string:
+						snl := &SliceStringLiteral{}
+						for _, v := range items {
+							snl.Val = append(snl.Val, v.(string))
+						}
+						return snl, nil
+					case float64:
+						snl := &SliceNumberLiteral{}
+						for _, v := range items {
+							snl.Val = append(snl.Val, v.(float64))
+						}
+						return snl, nil
+					case json.Number:
+						snl := &SliceNumberLiteral{}
+						for _, v := range items {
+							f, _ := v.(json.Number).Float64()
+							snl.Val = append(snl.Val, f)
+						}
+						return snl, nil
+					}
+				}
 			}
 		}
 		return falseExpr, fmt.Errorf("Unsupported argument %s type: %s", n.Val, kind)

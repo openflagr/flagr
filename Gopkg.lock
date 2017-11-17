@@ -16,14 +16,14 @@
 [[projects]]
   name = "github.com/Shopify/sarama"
   packages = ["."]
-  revision = "bbdbe644099b7fdc8327d5cc69c030945188b2e9"
-  version = "v1.13.0"
+  revision = "240fd146ce68bcafb034cc5dc977229ffbafa8ea"
+  version = "v1.14.0"
 
 [[projects]]
   name = "github.com/asaskevich/govalidator"
   packages = ["."]
-  revision = "73945b6115bfbbcc57d89b7316e28109364124e1"
-  version = "v7"
+  revision = "521b25f4b05fd26bec69d9dedeb8f9c9a83939a8"
+  version = "v8"
 
 [[projects]]
   branch = "master"
@@ -40,14 +40,14 @@
 [[projects]]
   name = "github.com/caarlos0/env"
   packages = ["."]
-  revision = "0cf029d5748c52beb2c9d20c81880cb4bdf8f788"
-  version = "v3.0"
+  revision = "9de094f90fa8a13dc162e10ae8a3b95c0c2c33e1"
+  version = "v3.1.1"
 
 [[projects]]
   name = "github.com/certifi/gocertifi"
   packages = ["."]
-  revision = "3fd9e1adb12b72d2f3f82191d49be9b93c69f67c"
-  version = "2017.07.27"
+  revision = "a4ab0227d360091084658029ec8ae45f989fba3e"
+  version = "2017.11.05"
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
@@ -95,7 +95,7 @@
   branch = "master"
   name = "github.com/getsentry/raven-go"
   packages = ["."]
-  revision = "1452f6376ddb15c546b6d7567e1d9518765391b5"
+  revision = "c9de0b92586aaba092c2a231cb7384354b178544"
 
 [[projects]]
   branch = "master"
@@ -125,19 +125,19 @@
   branch = "master"
   name = "github.com/go-openapi/loads"
   packages = ["."]
-  revision = "a80dea3052f00e5f032e860dd7355cd0cc67e24d"
+  revision = "c3e1ca4c0b6160cac10aeef7e8b425cc95b9c820"
 
 [[projects]]
   branch = "master"
   name = "github.com/go-openapi/runtime"
-  packages = [".","flagext","middleware","middleware/denco","middleware/header","middleware/untyped","security"]
-  revision = "e8231e16de5bcda9839e03ae07c5c96a1fd82041"
+  packages = [".","flagext","logger","middleware","middleware/denco","middleware/header","middleware/untyped","security"]
+  revision = "4ab0c2c86df53f4f138421a6b88d53dd9fd30254"
 
 [[projects]]
   branch = "master"
   name = "github.com/go-openapi/spec"
   packages = ["."]
-  revision = "48c2a7185575f9103a5a3863eff950bb776899d2"
+  revision = "a4fa9574c7aa73b2fc54e251eb9524d0482bb592"
 
 [[projects]]
   branch = "master"
@@ -149,13 +149,13 @@
   branch = "master"
   name = "github.com/go-openapi/swag"
   packages = ["."]
-  revision = "f3f9494671f93fcff853e3c6e9e948b3eb71e590"
+  revision = "cf0bdb963811675a4d7e74901cefc7411a1df939"
 
 [[projects]]
   branch = "master"
   name = "github.com/go-openapi/validate"
   packages = ["."]
-  revision = "dc8a684882cf70c9a529887104340f44e0e138e5"
+  revision = "d509235108fcf6ab4913d2dcb3a2260c0db2108e"
 
 [[projects]]
   name = "github.com/go-sql-driver/mysql"
@@ -197,19 +197,19 @@
   branch = "master"
   name = "github.com/lib/pq"
   packages = [".","hstore","oid"]
-  revision = "017e4c14d80628353eaee677a1aeffe47a10c0dc"
+  revision = "8c6ee72f3e6bcb1542298dd5f76cb74af9742cec"
 
 [[projects]]
   branch = "master"
   name = "github.com/mailru/easyjson"
   packages = ["buffer","jlexer","jwriter"]
-  revision = "2a92e673c9a6302dd05c3a691ae1f24aef46457d"
+  revision = "61a3095943e4e55a9305ac68a71cd0bd191d6096"
 
 [[projects]]
   name = "github.com/mattn/go-sqlite3"
   packages = ["."]
-  revision = "ca5e3819723d8eeaf170ad510e7da1d6d2e94a08"
-  version = "v1.2.0"
+  revision = "ed69081a91fd053f17672236b0dd52ba7485e1a3"
+  version = "v1.4.0"
 
 [[projects]]
   branch = "master"
@@ -221,13 +221,13 @@
   branch = "master"
   name = "github.com/mitchellh/mapstructure"
   packages = ["."]
-  revision = "d0303fe809921458f417bcf828397a65db30a7e4"
+  revision = "06020f85339e21b2478f756a78e295255ffa4d6a"
 
 [[projects]]
   name = "github.com/newrelic/go-agent"
   packages = [".","internal","internal/jsonx","internal/logger","internal/sysinfo","internal/utilization"]
-  revision = "29ec3cd1bb2f21d21d36da37dae52695cb2c3a17"
-  version = "v1.9.0"
+  revision = "462a146a1270954750aac98c5b3e83dec6a9adfd"
+  version = "v1.10.0"
 
 [[projects]]
   name = "github.com/pierrec/lz4"
@@ -305,31 +305,31 @@
   branch = "master"
   name = "github.com/zhouzhuojie/conditions"
   packages = ["."]
-  revision = "1bb009e7eb417433b27744b24eb3c28225761600"
+  revision = "c70410a3c5af14640d7ea17578f0047324c9e049"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["nacl/secretbox","poly1305","salsa20/salsa","ssh/terminal"]
-  revision = "541b9d50ad47e36efd8fb423e938e59ff1691f68"
+  revision = "9f005a07e0d31d45e6656d241bb5c0f2efd4bc94"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context","idna"]
-  revision = "a04bdaca5b32abe1c069418fb7088ae607de5bd0"
+  revision = "9dfe39835686865bff950a07b394c12a98ddc811"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix","windows"]
-  revision = "8dbc5d05d6edcc104950cc299a1ce6641235bc86"
+  revision = "0dd5e194bbf5eb84a39666eb4c98a4d007e4203a"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/text"
   packages = ["collate","collate/build","internal/colltab","internal/gen","internal/tag","internal/triegen","internal/ucd","language","secure/bidirule","transform","unicode/bidi","unicode/cldr","unicode/norm","unicode/rangetable","width"]
-  revision = "c01e4764d870b77f8abe5096ee19ad20d80e8075"
+  revision = "88f656faf3f37f690df1a32515b479415e1a6769"
 
 [[projects]]
   branch = "v2"
@@ -341,11 +341,11 @@
   branch = "v2"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
-  revision = "eb3733d160e74a9c7e442f435eb3bea458e1d19f"
+  revision = "287cf08546ab5e7e37d55a84f7ed3fd1db036de5"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "5934fdf0d2603935e836081639ef7c2322d75cf91cd7bda1bee88d5e2b8ad848"
+  inputs-digest = "df62bffd8a650e32f80a7060fb71f209a6aeecd413ebb4be66f3fe9511557242"
   solver-name = "gps-cdcl"
   solver-version = 1

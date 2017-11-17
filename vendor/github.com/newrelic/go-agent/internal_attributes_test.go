@@ -25,7 +25,7 @@ func TestUserAttributeBasics(t *testing.T) {
 		t.Error(err)
 	}
 	err := txn.AddAttribute("invalid_value", struct{}{})
-	if _, ok := err.(internal.ErrInvalidAttribute); !ok {
+	if _, ok := err.(internal.ErrInvalidAttributeType); !ok {
 		t.Error(err)
 	}
 	txn.End()

@@ -39,7 +39,10 @@ const (
 	attributeKeyLengthLimit   = 255
 	attributeValueLengthLimit = 255
 	attributeUserLimit        = 64
-	attributeAgentLimit       = 255 - attributeUserLimit
+	// AttributeErrorLimit limits the number of extra attributes that can be
+	// provided when noticing an error.
+	AttributeErrorLimit       = 32
+	attributeAgentLimit       = 255 - (attributeUserLimit + AttributeErrorLimit)
 	customEventAttributeLimit = 64
 
 	// Limits affecting Config validation are found in the config package.

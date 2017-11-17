@@ -295,11 +295,26 @@ func expectError(v Validator, err *tracedError, expect WantError) {
 	validateStringField(v, "klass", expect.Klass, err.Klass)
 	validateStringField(v, "msg", expect.Msg, err.Msg)
 	validateStringField(v, "URL", expect.URL, err.CleanURL)
+	js, errr := err.MarshalJSON()
+	if nil != errr {
+		v.Error("unable to marshal error json", errr)
+		return
+	}
+	var unmarshalled []interface{}
+	errr = json.Unmarshal(js, &unmarshalled)
+	if nil != errr {
+		v.Error("unable to unmarshal error json", errr)
+		return
+	}
+	attributes := unmarshalled[4].(map[string]interface{})
+	agentAttributes := attributes["agentAttributes"].(map[string]interface{})
+	userAttributes := attributes["userAttributes"].(map[string]interface{})
+
 	if nil != expect.UserAttributes {
-		expectAttributes(v, getUserAttributes(err.Attrs, destError), expect.UserAttributes)
+		expectAttributes(v, userAttributes, expect.UserAttributes)
 	}
 	if nil != expect.AgentAttributes {
-		expectAttributes(v, getAgentAttributes(err.Attrs, destError), expect.AgentAttributes)
+		expectAttributes(v, agentAttributes, expect.AgentAttributes)
 	}
 }
 
@@ -314,20 +329,56 @@ func ExpectErrors(v Validator, errors harvestErrors, expect []WantError) {
 	}
 }
 
-func expectTxnTrace(v Validator, trace *HarvestTrace, expect WantTxnTrace) {
-	if doDurationTests && 0 == trace.Duration {
+func countSegments(node []interface{}) int {
+	count := 1
+	children := node[4].([]interface{})
+	for _, c := range children {
+		node := c.([]interface{})
+		count += countSegments(node)
+	}
+	return count
+}
+
+func expectTxnTrace(v Validator, got json.Marshaler, expect WantTxnTrace) {
+	js, err := got.MarshalJSON()
+	if nil != err {
+		v.Error("unable to marshal txn trace json", err)
+		return
+	}
+	var unmarshalled []interface{}
+	err = json.Unmarshal(js, &unmarshalled)
+	if nil != err {
+		v.Error("unable to unmarshal error json", err)
+		return
+	}
+	duration := unmarshalled[1].(float64)
+	name := unmarshalled[2].(string)
+	cleanURL := unmarshalled[3].(string)
+	traceData := unmarshalled[4].([]interface{})
+
+	rootNode := traceData[3].([]interface{})
+	attributes := traceData[4].(map[string]interface{})
+	userAttributes := attributes["userAttributes"].(map[string]interface{})
+	agentAttributes := attributes["agentAttributes"].(map[string]interface{})
+
+	validateStringField(v, "metric name", expect.MetricName, name)
+	validateStringField(v, "request url", expect.CleanURL, cleanURL)
+
+	if doDurationTests && 0 == duration {
 		v.Error("zero trace duration")
 	}
-	validateStringField(v, "metric name", expect.MetricName, trace.FinalName)
-	validateStringField(v, "request url", expect.CleanURL, trace.CleanURL)
+
 	if nil != expect.UserAttributes {
-		expectAttributes(v, getUserAttributes(trace.Attrs, destTxnTrace), expect.UserAttributes)
+		expectAttributes(v, userAttributes, expect.UserAttributes)
 	}
 	if nil != expect.AgentAttributes {
-		expectAttributes(v, getAgentAttributes(trace.Attrs, destTxnTrace), expect.AgentAttributes)
+		expectAttributes(v, agentAttributes, expect.AgentAttributes)
 	}
-	if expect.NumSegments != len(trace.Trace.nodes) {
-		v.Error("wrong number of segments", expect.NumSegments, len(trace.Trace.nodes))
+	numSegments := countSegments(rootNode)
+	// The expectation segment count does not include the two root nodes.
+	numSegments -= 2
+	if expect.NumSegments != numSegments {
+		v.Error("wrong number of segments", expect.NumSegments, numSegments)
 	}
 }
 
