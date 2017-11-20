@@ -69,8 +69,10 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 // BlankResult creates a blank result
 func BlankResult(f *entity.Flag, evalContext models.EvalContext, msg string) *models.EvalResult {
 	flagID := uint(0)
+	flagSnapshotID := uint(0)
 	if f != nil {
 		flagID = f.ID
+		flagSnapshotID = f.SnapshotID
 	}
 	return &models.EvalResult{
 		EvalContext: &evalContext,
@@ -78,10 +80,11 @@ func BlankResult(f *entity.Flag, evalContext models.EvalContext, msg string) *mo
 			Msg:              msg,
 			SegmentDebugLogs: nil,
 		},
-		FlagID:    util.Int64Ptr(int64(flagID)),
-		SegmentID: nil,
-		VariantID: nil,
-		Timestamp: util.StringPtr(util.TimeNow()),
+		FlagID:         util.Int64Ptr(int64(flagID)),
+		FlagSnapshotID: int64(flagSnapshotID),
+		SegmentID:      nil,
+		VariantID:      nil,
+		Timestamp:      util.StringPtr(util.TimeNow()),
 	}
 }
 
@@ -120,7 +123,6 @@ var evalFlag = func(evalContext models.EvalContext) *models.EvalResult {
 	evalResult.EvalDebugLog.SegmentDebugLogs = logs
 	evalResult.SegmentID = sID
 	evalResult.VariantID = vID
-	evalResult.FlagSnapshotID = int64(f.SnapshotID)
 	v := f.FlagEvaluation.VariantsMap[util.SafeUint(vID)]
 	if v != nil {
 		evalResult.VariantAttachment = v.Attachment
