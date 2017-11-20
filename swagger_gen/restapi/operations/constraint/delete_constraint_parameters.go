@@ -30,7 +30,7 @@ func NewDeleteConstraintParams() DeleteConstraintParams {
 type DeleteConstraintParams struct {
 
 	// HTTP Request Object
-	HTTPRequest *http.Request
+	HTTPRequest *http.Request `json:"-"`
 
 	/*numeric ID of the constraint
 	  Required: true

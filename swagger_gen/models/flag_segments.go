@@ -16,7 +16,6 @@ import (
 
 // FlagSegments flag segments
 // swagger:model flagSegments
-
 type FlagSegments []*Segment
 
 // Validate validates this flag segments

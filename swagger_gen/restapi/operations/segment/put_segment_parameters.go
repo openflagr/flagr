@@ -34,7 +34,7 @@ func NewPutSegmentParams() PutSegmentParams {
 type PutSegmentParams struct {
 
 	// HTTP Request Object
-	HTTPRequest *http.Request
+	HTTPRequest *http.Request `json:"-"`
 
 	/*update a segment
 	  Required: true

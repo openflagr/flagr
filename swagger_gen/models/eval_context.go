@@ -15,7 +15,6 @@ import (
 
 // EvalContext eval context
 // swagger:model evalContext
-
 type EvalContext struct {
 
 	// enable debug
@@ -39,16 +38,6 @@ type EvalContext struct {
 	// Minimum: 1
 	FlagID *int64 `json:"flagID"`
 }
-
-/* polymorph evalContext enableDebug false */
-
-/* polymorph evalContext entityContext false */
-
-/* polymorph evalContext entityID false */
-
-/* polymorph evalContext entityType false */
-
-/* polymorph evalContext flagID false */
 
 // Validate validates this eval context
 func (m *EvalContext) Validate(formats strfmt.Registry) error {

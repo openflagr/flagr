@@ -16,7 +16,6 @@ import (
 
 // SegmentDistributions segment distributions
 // swagger:model segmentDistributions
-
 type SegmentDistributions []*Distribution
 
 // Validate validates this segment distributions

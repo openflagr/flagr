@@ -16,7 +16,6 @@ import (
 
 // FindSegmentsOKBody find segments o k body
 // swagger:model findSegmentsOKBody
-
 type FindSegmentsOKBody []*Segment
 
 // Validate validates this find segments o k body

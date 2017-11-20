@@ -15,7 +15,6 @@ import (
 
 // CreateFlagRequest create flag request
 // swagger:model createFlagRequest
-
 type CreateFlagRequest struct {
 
 	// description
@@ -23,8 +22,6 @@ type CreateFlagRequest struct {
 	// Min Length: 1
 	Description *string `json:"description"`
 }
-
-/* polymorph createFlagRequest description false */
 
 // Validate validates this create flag request
 func (m *CreateFlagRequest) Validate(formats strfmt.Registry) error {

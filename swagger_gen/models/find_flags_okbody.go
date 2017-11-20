@@ -16,7 +16,6 @@ import (
 
 // FindFlagsOKBody find flags o k body
 // swagger:model findFlagsOKBody
-
 type FindFlagsOKBody []*Flag
 
 // Validate validates this find flags o k body

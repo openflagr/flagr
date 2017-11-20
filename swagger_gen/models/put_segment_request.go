@@ -15,7 +15,6 @@ import (
 
 // PutSegmentRequest put segment request
 // swagger:model putSegmentRequest
-
 type PutSegmentRequest struct {
 
 	// description
@@ -29,10 +28,6 @@ type PutSegmentRequest struct {
 	// Minimum: 0
 	RolloutPercent *int64 `json:"rolloutPercent"`
 }
-
-/* polymorph putSegmentRequest description false */
-
-/* polymorph putSegmentRequest rolloutPercent false */
 
 // Validate validates this put segment request
 func (m *PutSegmentRequest) Validate(formats strfmt.Registry) error {

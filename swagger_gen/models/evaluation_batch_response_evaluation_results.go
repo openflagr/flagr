@@ -16,7 +16,6 @@ import (
 
 // EvaluationBatchResponseEvaluationResults evaluation batch response evaluation results
 // swagger:model evaluationBatchResponseEvaluationResults
-
 type EvaluationBatchResponseEvaluationResults []*EvalResult
 
 // Validate validates this evaluation batch response evaluation results

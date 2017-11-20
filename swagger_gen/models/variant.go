@@ -15,7 +15,6 @@ import (
 
 // Variant variant
 // swagger:model variant
-
 type Variant struct {
 
 	// attachment
@@ -31,12 +30,6 @@ type Variant struct {
 	// Min Length: 1
 	Key *string `json:"key"`
 }
-
-/* polymorph variant attachment false */
-
-/* polymorph variant id false */
-
-/* polymorph variant key false */
 
 // Validate validates this variant
 func (m *Variant) Validate(formats strfmt.Registry) error {

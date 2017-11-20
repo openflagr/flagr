@@ -4,6 +4,7 @@ package entity
 var AutoMigrateTables = []interface{}{
 	Constraint{},
 	Distribution{},
+	FlagSnapshot{},
 	Flag{},
 	Segment{},
 	User{},

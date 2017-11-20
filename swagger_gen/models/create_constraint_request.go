@@ -15,7 +15,6 @@ import (
 
 // CreateConstraintRequest create constraint request
 // swagger:model createConstraintRequest
-
 type CreateConstraintRequest struct {
 
 	// operator
@@ -33,12 +32,6 @@ type CreateConstraintRequest struct {
 	// Min Length: 1
 	Value *string `json:"value"`
 }
-
-/* polymorph createConstraintRequest operator false */
-
-/* polymorph createConstraintRequest property false */
-
-/* polymorph createConstraintRequest value false */
 
 // Validate validates this create constraint request
 func (m *CreateConstraintRequest) Validate(formats strfmt.Registry) error {

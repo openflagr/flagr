@@ -34,7 +34,7 @@ func NewPutDistributionsParams() PutDistributionsParams {
 type PutDistributionsParams struct {
 
 	// HTTP Request Object
-	HTTPRequest *http.Request
+	HTTPRequest *http.Request `json:"-"`
 
 	/*array of distributions
 	  Required: true

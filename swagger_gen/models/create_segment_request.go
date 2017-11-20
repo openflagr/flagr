@@ -15,7 +15,6 @@ import (
 
 // CreateSegmentRequest create segment request
 // swagger:model createSegmentRequest
-
 type CreateSegmentRequest struct {
 
 	// description
@@ -29,10 +28,6 @@ type CreateSegmentRequest struct {
 	// Minimum: 0
 	RolloutPercent *int64 `json:"rolloutPercent"`
 }
-
-/* polymorph createSegmentRequest description false */
-
-/* polymorph createSegmentRequest rolloutPercent false */
 
 // Validate validates this create segment request
 func (m *CreateSegmentRequest) Validate(formats strfmt.Registry) error {

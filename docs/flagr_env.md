@@ -68,10 +68,12 @@ var Config = struct {
 	// For example, redirect to auth.example.com/signin, which sets Cookie access_token=jwt_token for domain ".example.com"
 	// One can also whitelist some routes so that they don't get blocked by JWT auth
 	JWTAuthEnabled            bool   `env:"FLAGR_JWT_AUTH_ENABLED" envDefault:"false"`
-	JWTAuthWhitelistPaths     string `env:"FLAGR_JWT_AUTH_WHITELIST_PATHS" envDefault:"/api,/static,/favicon"`
+	JWTAuthDebug              bool   `env:"FLAGR_JWT_AUTH_DEBUG" envDefault:"false"`
+	JWTAuthWhitelistPaths     string `env:"FLAGR_JWT_AUTH_WHITELIST_PATHS" envDefault:"/evaluation,/favicon"`
 	JWTAuthCookieTokenName    string `env:"FLAGR_JWT_AUTH_COOKIE_TOKEN_NAME" envDefault:"access_token"`
 	JWTAuthSecret             string `env:"FLAGR_JWT_AUTH_SECRET" envDefault:""`
 	JWTAuthNoTokenRedirectURL string `env:"FLAGR_JWT_AUTH_NO_TOKEN_REDIRECT_URL" envDefault:""`
+	JWTAuthUserProperty       string `env:"FLAGR_JWT_AUTH_USER_PROPERTY" envDefault:"flagr_user"`
 }{}
 ```
 

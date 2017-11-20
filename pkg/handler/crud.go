@@ -77,6 +77,7 @@ func (c *crud) CreateFlag(params flag.CreateFlagParams) middleware.Responder {
 	f := &entity.Flag{}
 	if params.Body != nil {
 		f.Description = util.SafeString(params.Body.Description)
+		f.CreatedBy = getSubjectFromRequest(params.HTTPRequest)
 	}
 	err := f.Create(getDB())
 	if err != nil {
@@ -91,6 +92,8 @@ func (c *crud) CreateFlag(params flag.CreateFlagParams) middleware.Responder {
 			ErrorMessage("cannot map flag. %s", err))
 	}
 	resp.SetPayload(payload)
+
+	go entity.SaveFlagSnapshot(getDB(), f.ID, getSubjectFromRequest(params.HTTPRequest))
 	return resp
 }
 
@@ -138,23 +141,20 @@ func (c *crud) PutFlag(params flag.PutFlagParams) middleware.Responder {
 		return flag.NewPutFlagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 	resp.SetPayload(payload)
+
+	go entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
 	return resp
 }
 
 func (c *crud) SetFlagEnabledState(params flag.SetFlagEnabledParams) middleware.Responder {
-	q := entity.NewFlagQuerySet(getDB())
+	q := entity.NewFlagQuerySet(getDB()).IDEq(uint(params.FlagID))
 
-	err := q.IDEq(uint(params.FlagID)).
-		GetUpdater().
-		SetEnabled(*params.Body.Enabled).
-		Update()
-	if err != nil {
+	if err := q.GetUpdater().SetEnabled(*params.Body.Enabled).Update(); err != nil {
 		return flag.NewSetFlagEnabledDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
 	f := &entity.Flag{}
-	err = q.IDEq(uint(params.FlagID)).One(f)
-	if err != nil {
+	if err := q.One(f); err != nil {
 		return flag.NewSetFlagEnabledDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
@@ -164,13 +164,15 @@ func (c *crud) SetFlagEnabledState(params flag.SetFlagEnabledParams) middleware.
 		return flag.NewSetFlagEnabledDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 	resp.SetPayload(payload)
+
+	go entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
 	return resp
 }
 
 func (c *crud) DeleteFlag(params flag.DeleteFlagParams) middleware.Responder {
-	q := entity.NewFlagQuerySet(getDB())
+	q := entity.NewFlagQuerySet(getDB()).IDEq(uint(params.FlagID))
 
-	err := q.IDEq(uint(params.FlagID)).Delete()
+	err := q.Delete()
 	if err != nil {
 		return flag.NewGetFlagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
@@ -190,6 +192,8 @@ func (c *crud) CreateSegment(params segment.CreateSegmentParams) middleware.Resp
 
 	resp := segment.NewCreateSegmentOK()
 	resp.SetPayload(e2r.MapSegment(s))
+
+	go entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
 	return resp
 }
 
@@ -209,8 +213,8 @@ func (c *crud) FindSegments(params segment.FindSegmentsParams) middleware.Respon
 
 func (c *crud) PutSegment(params segment.PutSegmentParams) middleware.Responder {
 	s := entity.Segment{}
-	q := entity.NewSegmentQuerySet(getDB())
-	if err := q.IDEq(util.SafeUint(params.SegmentID)).One(&s); err != nil {
+	q := entity.NewSegmentQuerySet(getDB()).IDEq(util.SafeUint(params.SegmentID))
+	if err := q.One(&s); err != nil {
 		return segment.NewPutSegmentDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
@@ -223,6 +227,8 @@ func (c *crud) PutSegment(params segment.PutSegmentParams) middleware.Responder 
 
 	resp := segment.NewPutSegmentOK()
 	resp.SetPayload(e2r.MapSegment(&s))
+
+	go entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
 	return resp
 }
 
@@ -240,14 +246,18 @@ func (c *crud) PutSegmentsReorder(params segment.PutSegmentsReorderParams) middl
 		tx.Rollback()
 		return segment.NewPutSegmentsReorderDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
+
+	go entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
 	return segment.NewPutSegmentsReorderOK()
 }
 
 func (c *crud) DeleteSegment(params segment.DeleteSegmentParams) middleware.Responder {
-	q := entity.NewSegmentQuerySet(getDB())
-	if err := q.IDEq(util.SafeUint(params.SegmentID)).Delete(); err != nil {
+	q := entity.NewSegmentQuerySet(getDB()).IDEq(util.SafeUint(params.SegmentID))
+	if err := q.Delete(); err != nil {
 		return segment.NewDeleteSegmentDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
+
+	go entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
 	return segment.NewDeleteSegmentOK()
 }
 
@@ -268,6 +278,8 @@ func (c *crud) CreateConstraint(params constraint.CreateConstraintParams) middle
 
 	resp := constraint.NewCreateConstraintOK()
 	resp.SetPayload(e2r.MapConstraint(cons))
+
+	go entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
 	return resp
 }
 
@@ -306,6 +318,8 @@ func (c *crud) PutConstraint(params constraint.PutConstraintParams) middleware.R
 
 	resp := constraint.NewPutConstraintOK()
 	resp.SetPayload(e2r.MapConstraint(&cons))
+
+	go entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
 	return resp
 }
 
@@ -316,6 +330,8 @@ func (c *crud) DeleteConstraint(params constraint.DeleteConstraintParams) middle
 	}
 
 	resp := constraint.NewDeleteConstraintOK()
+
+	go entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
 	return resp
 }
 
@@ -350,6 +366,8 @@ func (c *crud) PutDistributions(params distribution.PutDistributionsParams) midd
 
 	resp := distribution.NewPutDistributionsOK()
 	resp.SetPayload(e2r.MapDistributions(ds))
+
+	go entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
 	return resp
 }
 
@@ -388,6 +406,8 @@ func (c *crud) CreateVariant(params variant.CreateVariantParams) middleware.Resp
 
 	resp := variant.NewCreateVariantOK()
 	resp.SetPayload(e2r.MapVariant(v))
+
+	go entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
 	return resp
 }
 
@@ -437,6 +457,8 @@ func (c *crud) PutVariant(params variant.PutVariantParams) middleware.Responder 
 
 	resp := variant.NewPutVariantOK()
 	resp.SetPayload(e2r.MapVariant(&v))
+
+	go entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
 	return resp
 }
 
@@ -450,5 +472,6 @@ func (c *crud) DeleteVariant(params variant.DeleteVariantParams) middleware.Resp
 		return variant.NewDeleteVariantDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
+	go entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
 	return variant.NewDeleteVariantOK()
 }

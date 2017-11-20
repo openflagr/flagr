@@ -30,7 +30,7 @@ func NewFindVariantsParams() FindVariantsParams {
 type FindVariantsParams struct {
 
 	// HTTP Request Object
-	HTTPRequest *http.Request
+	HTTPRequest *http.Request `json:"-"`
 
 	/*numeric ID of the flag
 	  Required: true

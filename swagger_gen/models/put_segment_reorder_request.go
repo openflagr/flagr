@@ -17,7 +17,6 @@ import (
 
 // PutSegmentReorderRequest put segment reorder request
 // swagger:model putSegmentReorderRequest
-
 type PutSegmentReorderRequest struct {
 
 	// segment ids
@@ -25,8 +24,6 @@ type PutSegmentReorderRequest struct {
 	// Min Items: 1
 	SegmentIds []int64 `json:"segmentIDs"`
 }
-
-/* polymorph putSegmentReorderRequest segmentIDs false */
 
 // Validate validates this put segment reorder request
 func (m *PutSegmentReorderRequest) Validate(formats strfmt.Registry) error {

@@ -31,6 +31,8 @@ func NewDeleteConstraintOK() *DeleteConstraintOK {
 // WriteResponse to the client
 func (o *DeleteConstraintOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
+	rw.Header().Del(runtime.HeaderContentType) //Remove Content-Type on empty responses
+
 	rw.WriteHeader(200)
 }
 

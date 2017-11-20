@@ -30,7 +30,7 @@ func NewPostEvaluationParams() PostEvaluationParams {
 type PostEvaluationParams struct {
 
 	// HTTP Request Object
-	HTTPRequest *http.Request
+	HTTPRequest *http.Request `json:"-"`
 
 	/*evalution context
 	  Required: true

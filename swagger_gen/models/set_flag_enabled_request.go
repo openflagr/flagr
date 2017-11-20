@@ -15,15 +15,12 @@ import (
 
 // SetFlagEnabledRequest set flag enabled request
 // swagger:model setFlagEnabledRequest
-
 type SetFlagEnabledRequest struct {
 
 	// enabled
 	// Required: true
 	Enabled *bool `json:"enabled"`
 }
-
-/* polymorph setFlagEnabledRequest enabled false */
 
 // Validate validates this set flag enabled request
 func (m *SetFlagEnabledRequest) Validate(formats strfmt.Registry) error {

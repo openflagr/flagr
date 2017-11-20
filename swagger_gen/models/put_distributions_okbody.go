@@ -16,7 +16,6 @@ import (
 
 // PutDistributionsOKBody put distributions o k body
 // swagger:model putDistributionsOKBody
-
 type PutDistributionsOKBody []*Distribution
 
 // Validate validates this put distributions o k body

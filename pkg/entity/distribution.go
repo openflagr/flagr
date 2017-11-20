@@ -28,7 +28,7 @@ type Distribution struct {
 	VariantKey string
 
 	Percent uint   // Percent is an uint from 0 to 100, percent is always derived from Bitmap
-	Bitmap  string `sql:"type:text"`
+	Bitmap  string `sql:"type:text" json:"-"`
 }
 
 // DistributionArray is useful for faster evalution

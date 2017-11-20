@@ -15,7 +15,6 @@ import (
 
 // Distribution distribution
 // swagger:model distribution
-
 type Distribution struct {
 
 	// bitmap
@@ -43,16 +42,6 @@ type Distribution struct {
 	// Min Length: 1
 	VariantKey *string `json:"variantKey"`
 }
-
-/* polymorph distribution bitmap false */
-
-/* polymorph distribution id false */
-
-/* polymorph distribution percent false */
-
-/* polymorph distribution variantID false */
-
-/* polymorph distribution variantKey false */
 
 // Validate validates this distribution
 func (m *Distribution) Validate(formats strfmt.Registry) error {

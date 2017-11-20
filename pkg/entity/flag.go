@@ -18,8 +18,8 @@ type Flag struct {
 	Variants           []Variant
 	DataRecordsEnabled bool
 
-	// Purely for evaluation
-	FlagEvaluation FlagEvaluation `gorm:"-"`
+	FlagEvaluation FlagEvaluation `gorm:"-" json:"-"`
+	SnapshotID     uint           `json:"-"`
 }
 
 // FlagEvaluation is a struct that holds the necessary info for evaluation

@@ -15,7 +15,6 @@ import (
 
 // Flag flag
 // swagger:model flag
-
 type Flag struct {
 
 	// enabled data records will get data logging in the metrics pipeline, for example, kafka.
@@ -42,18 +41,6 @@ type Flag struct {
 	// variants
 	Variants FlagVariants `json:"variants"`
 }
-
-/* polymorph flag dataRecordsEnabled false */
-
-/* polymorph flag description false */
-
-/* polymorph flag enabled false */
-
-/* polymorph flag id false */
-
-/* polymorph flag segments false */
-
-/* polymorph flag variants false */
 
 // Validate validates this flag
 func (m *Flag) Validate(formats strfmt.Registry) error {

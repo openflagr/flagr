@@ -16,7 +16,6 @@ import (
 
 // FindVariantsOKBody find variants o k body
 // swagger:model findVariantsOKBody
-
 type FindVariantsOKBody []*Variant
 
 // Validate validates this find variants o k body

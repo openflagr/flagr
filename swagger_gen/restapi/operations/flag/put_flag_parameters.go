@@ -34,7 +34,7 @@ func NewPutFlagParams() PutFlagParams {
 type PutFlagParams struct {
 
 	// HTTP Request Object
-	HTTPRequest *http.Request
+	HTTPRequest *http.Request `json:"-"`
 
 	/*update a flag
 	  Required: true

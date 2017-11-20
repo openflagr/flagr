@@ -120,6 +120,7 @@ var evalFlag = func(evalContext models.EvalContext) *models.EvalResult {
 	evalResult.EvalDebugLog.SegmentDebugLogs = logs
 	evalResult.SegmentID = sID
 	evalResult.VariantID = vID
+	evalResult.FlagSnapshotID = int64(f.SnapshotID)
 	v := f.FlagEvaluation.VariantsMap[util.SafeUint(vID)]
 	if v != nil {
 		evalResult.VariantAttachment = v.Attachment

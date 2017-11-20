@@ -15,7 +15,6 @@ import (
 
 // SegmentDebugLog segment debug log
 // swagger:model segmentDebugLog
-
 type SegmentDebugLog struct {
 
 	// msg
@@ -25,10 +24,6 @@ type SegmentDebugLog struct {
 	// Minimum: 1
 	SegmentID int64 `json:"segmentID,omitempty"`
 }
-
-/* polymorph segmentDebugLog msg false */
-
-/* polymorph segmentDebugLog segmentID false */
 
 // Validate validates this segment debug log
 func (m *SegmentDebugLog) Validate(formats strfmt.Registry) error {

@@ -15,7 +15,6 @@ import (
 
 // PutFlagRequest put flag request
 // swagger:model putFlagRequest
-
 type PutFlagRequest struct {
 
 	// enabled data records will get data logging in the metrics pipeline, for example, kafka.
@@ -26,10 +25,6 @@ type PutFlagRequest struct {
 	// Min Length: 1
 	Description *string `json:"description"`
 }
-
-/* polymorph putFlagRequest dataRecordsEnabled false */
-
-/* polymorph putFlagRequest description false */
 
 // Validate validates this put flag request
 func (m *PutFlagRequest) Validate(formats strfmt.Registry) error {
