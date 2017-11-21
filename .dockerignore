@@ -22,3 +22,5 @@ prime/
 snap/.snapcraft/
 stage/
 _data/
+.env.local
+flagr.sqlite
