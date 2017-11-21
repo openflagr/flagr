@@ -181,7 +181,7 @@
                 </el-card>
               </div>
             </div>
-            <div class="card--empty" v-else>
+            <div class="card--error" v-else>
               No variants created for this feature flag yet
             </div>
             <div class="variants-input">
@@ -312,7 +312,7 @@
                             </div>
                           </div>
                           <div class="card--empty" v-else>
-                            <span>No constraints for this segment yet</span>
+                            <span>No constraints (ALL will pass)</span>
                           </div>
                           <div>
                             <el-row :gutter="3">
@@ -361,7 +361,7 @@
                             <span size="small">{{ distribution.percent }}%</span>
                           </li>
                         </ul>
-                        <div class="card--empty" v-else>
+                        <div class="card--error" v-else>
                           No distribution yet
                         </div>
                         <div class="edit-distribution-button">
@@ -376,7 +376,7 @@
                 </transition-group>
               </draggable>
             </div>
-            <div class="card--empty" v-else>
+            <div class="card--error" v-else>
               No segments created for this feature flag yet
             </div>
           </el-card>

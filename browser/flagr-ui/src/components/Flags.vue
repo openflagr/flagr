@@ -3,7 +3,7 @@
     <el-col :span="14" :offset="5">
       <div class="flags-container container">
         <el-breadcrumb separator="/" v-if="loaded && !loadError">
-          <el-breadcrumb-item>Home page</el-breadcrumb-item>      
+          <el-breadcrumb-item>Home page</el-breadcrumb-item>
         </el-breadcrumb>
 
         <spinner v-if="!loaded" />
@@ -36,16 +36,20 @@
           <div>
             <p>
               <el-input
-                placeholder="Feature flag description"
-                v-model="newFlag.description">  
+                placeholder="Specific new flag description"
+                v-model="newFlag.description">
+                <template slot="prepend">
+                  Description
+                </template>
+                <template slot="append">
+                  <el-button
+                    :disabled="!newFlag.description"
+                    @click.prevent="createFlag">
+                    <span class="el-icon-plus"/> Create Flag
+                  </el-button>
+                </template>
               </el-input>
             </p>
-            <el-button
-              class="width--full"
-              :disabled="!newFlag.description"
-              @click.prevent="createFlag">
-              Create Feature Flag
-            </el-button>
           </div>
         </div>
       </div>
