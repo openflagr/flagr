@@ -4,7 +4,7 @@
       <el-row>
         <el-col :span="6">
           <div class="img-frame">
-            <a href="#"><img src="./assets/logo.png"></a>
+            <router-link :to="{name: 'home'}"><img src="./assets/logo.png"></router-link>
           </div>
         </el-col>
         <el-col :span="3" :offset="12">
@@ -128,13 +128,14 @@ ul {
   .card {
     &--error {
       box-sizing: border-box;
-      background-color: white;
+      background-color: #fff9f9;
       padding: 10px;
       text-align: center;
       color: #ed2d2d;
       border: 1px solid #ed2d2d;
       border-radius: 3px;
       width: 100%;
+      margin-bottom: 12px;
     }
     &--empty {
       box-sizing: border-box;
