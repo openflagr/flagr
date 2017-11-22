@@ -18,6 +18,7 @@
     <a href="https://raw.githubusercontent.com/checkr/flagr/master/LICENSE" target="_blank">
         <img src="http://img.shields.io/badge/license-Apache%20v2-green.svg">
     </a>
+    <img src="https://img.shields.io/badge/pr-welcome-green.svg">
 </p>
 
 ## Introduction
