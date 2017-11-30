@@ -58,6 +58,8 @@ paths:
     $ref: ./flag_segment_constraint.yaml
   /flags/{flagID}/segments/{segmentID}/distributions:
     $ref: ./flag_segment_distributions.yaml
+  /flags/{flagID}/snapshots:
+    $ref: ./flag_snapshots.yaml
   /evaluation:
     $ref: ./evaluation.yaml
   /evaluation/batch:
@@ -119,6 +121,23 @@ definitions:
     properties:
       enabled:
         type: boolean
+
+  # Flag Snapshot
+  flagSnapshot:
+    type: object
+    required:
+      - id
+      - flag
+    properties:
+      id:
+        type: integer
+        format: int64
+        minimum: 1
+        readOnly: true
+      updatedBy:
+        type: string
+      flag:
+        $ref: "#/definitions/flag"
 
   # Segment
   segment:

@@ -21,9 +21,9 @@ func MapFlag(e *entity.Flag, preload bool) (*models.Flag, error) {
 		if err := e.Preload(getDB()); err != nil {
 			return nil, err
 		}
-		r.Segments = MapSegments(e.Segments)
-		r.Variants = MapVariants(e.Variants)
 	}
+	r.Segments = MapSegments(e.Segments)
+	r.Variants = MapVariants(e.Variants)
 	return r, nil
 }
 
@@ -32,6 +32,33 @@ func MapFlags(e []entity.Flag) ([]*models.Flag, error) {
 	ret := make([]*models.Flag, len(e), len(e))
 	for i, f := range e {
 		rf, err := MapFlag(&f, false)
+		if err != nil {
+			return nil, err
+		}
+		ret[i] = rf
+	}
+	return ret, nil
+}
+
+// MapFlagSnapshot maps flag snapshot
+func MapFlagSnapshot(e *entity.FlagSnapshot) (*models.FlagSnapshot, error) {
+	f, err := MapFlag(e.Flag, false)
+	if err != nil {
+		return nil, err
+	}
+	r := &models.FlagSnapshot{
+		Flag:      f,
+		ID:        int64(e.ID),
+		UpdatedBy: e.UpdatedBy,
+	}
+	return r, nil
+}
+
+// MapFlagSnapshots maps flag snapshots
+func MapFlagSnapshots(e []entity.FlagSnapshot) ([]*models.FlagSnapshot, error) {
+	ret := make([]*models.FlagSnapshot, len(e), len(e))
+	for i, fs := range e {
+		rf, err := MapFlagSnapshot(&fs)
 		if err != nil {
 			return nil, err
 		}

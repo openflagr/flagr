@@ -23,6 +23,7 @@ type CRUD interface {
 	PutFlag(flag.PutFlagParams) middleware.Responder
 	DeleteFlag(flag.DeleteFlagParams) middleware.Responder
 	SetFlagEnabledState(flag.SetFlagEnabledParams) middleware.Responder
+	GetFlagSnapshots(params flag.GetFlagSnapshotsParams) middleware.Responder
 
 	// Segments
 	CreateSegment(segment.CreateSegmentParams) middleware.Responder
@@ -112,6 +113,24 @@ func (c *crud) GetFlag(params flag.GetFlagParams) middleware.Responder {
 		return flag.NewGetFlagDefault(500).WithPayload(
 			ErrorMessage("cannot map flag %v. %s", params.FlagID, err))
 	}
+	resp.SetPayload(payload)
+	return resp
+}
+
+func (c *crud) GetFlagSnapshots(params flag.GetFlagSnapshotsParams) middleware.Responder {
+	fs := []entity.FlagSnapshot{}
+	q := entity.NewFlagSnapshotQuerySet(getDB())
+	if err := q.FlagIDEq(util.SafeUint(params.FlagID)).OrderDescByCreatedAt().All(&fs); err != nil {
+		return flag.NewGetFlagSnapshotsDefault(500).WithPayload(
+			ErrorMessage("cannot find flag snapshots for %v. %s", params.FlagID, err))
+	}
+
+	payload, err := e2r.MapFlagSnapshots(fs)
+	if err != nil {
+		return flag.NewGetFlagSnapshotsDefault(500).WithPayload(
+			ErrorMessage("cannot map flag snapshots for flagID %v. %s", params.FlagID, err))
+	}
+	resp := flag.NewGetFlagSnapshotsOK()
 	resp.SetPayload(payload)
 	return resp
 }
