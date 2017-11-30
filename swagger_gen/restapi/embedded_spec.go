@@ -797,6 +797,42 @@ func init() {
         }
       }
     },
+    "/flags/{flagID}/snapshots": {
+      "get": {
+        "tags": [
+          "flag"
+        ],
+        "operationId": "getFlagSnapshots",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the flag to get",
+            "name": "flagID",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "returns the flag snapshots",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/flagSnapshot"
+              }
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
     "/flags/{flagID}/variants": {
       "get": {
         "tags": [
@@ -1311,6 +1347,27 @@ func init() {
           "items": {
             "$ref": "#/definitions/variant"
           }
+        }
+      }
+    },
+    "flagSnapshot": {
+      "type": "object",
+      "required": [
+        "id",
+        "flag"
+      ],
+      "properties": {
+        "flag": {
+          "$ref": "#/definitions/flag"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": 1,
+          "readOnly": true
+        },
+        "updatedBy": {
+          "type": "string"
         }
       }
     },

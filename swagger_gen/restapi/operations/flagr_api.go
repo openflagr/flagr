@@ -84,6 +84,9 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		FlagGetFlagHandler: flag.GetFlagHandlerFunc(func(params flag.GetFlagParams) middleware.Responder {
 			return middleware.NotImplemented("operation FlagGetFlag has not yet been implemented")
 		}),
+		FlagGetFlagSnapshotsHandler: flag.GetFlagSnapshotsHandlerFunc(func(params flag.GetFlagSnapshotsParams) middleware.Responder {
+			return middleware.NotImplemented("operation FlagGetFlagSnapshots has not yet been implemented")
+		}),
 		EvaluationPostEvaluationHandler: evaluation.PostEvaluationHandlerFunc(func(params evaluation.PostEvaluationParams) middleware.Responder {
 			return middleware.NotImplemented("operation EvaluationPostEvaluation has not yet been implemented")
 		}),
@@ -168,6 +171,8 @@ type FlagrAPI struct {
 	VariantFindVariantsHandler variant.FindVariantsHandler
 	// FlagGetFlagHandler sets the operation handler for the get flag operation
 	FlagGetFlagHandler flag.GetFlagHandler
+	// FlagGetFlagSnapshotsHandler sets the operation handler for the get flag snapshots operation
+	FlagGetFlagSnapshotsHandler flag.GetFlagSnapshotsHandler
 	// EvaluationPostEvaluationHandler sets the operation handler for the post evaluation operation
 	EvaluationPostEvaluationHandler evaluation.PostEvaluationHandler
 	// EvaluationPostEvaluationBatchHandler sets the operation handler for the post evaluation batch operation
@@ -303,6 +308,10 @@ func (o *FlagrAPI) Validate() error {
 
 	if o.FlagGetFlagHandler == nil {
 		unregistered = append(unregistered, "flag.GetFlagHandler")
+	}
+
+	if o.FlagGetFlagSnapshotsHandler == nil {
+		unregistered = append(unregistered, "flag.GetFlagSnapshotsHandler")
 	}
 
 	if o.EvaluationPostEvaluationHandler == nil {
@@ -500,6 +509,11 @@ func (o *FlagrAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/flags/{flagID}"] = flag.NewGetFlag(o.context, o.FlagGetFlagHandler)
+
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/flags/{flagID}/snapshots"] = flag.NewGetFlagSnapshots(o.context, o.FlagGetFlagSnapshotsHandler)
 
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
