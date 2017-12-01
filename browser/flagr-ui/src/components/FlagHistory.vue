@@ -67,9 +67,13 @@ export default {
       })
     },
     getDiff (newFlag, oldFlag) {
-      let o = JSON.parse(JSON.stringify(oldFlag))
-      let n = JSON.parse(JSON.stringify(newFlag))
-      return convertChangesToXML(diffJson(o, n))
+      const o = JSON.parse(JSON.stringify(oldFlag))
+      const n = JSON.parse(JSON.stringify(newFlag))
+      const d = diffJson(o, n)
+      if (d.length === 1) {
+        return 'No changes'
+      }
+      return convertChangesToXML(d)
     }
   },
   mounted () {
