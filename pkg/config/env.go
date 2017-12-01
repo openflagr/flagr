@@ -68,7 +68,7 @@ var Config = struct {
 	// One can also whitelist some routes so that they don't get blocked by JWT auth
 	JWTAuthEnabled            bool   `env:"FLAGR_JWT_AUTH_ENABLED" envDefault:"false"`
 	JWTAuthDebug              bool   `env:"FLAGR_JWT_AUTH_DEBUG" envDefault:"false"`
-	JWTAuthWhitelistPaths     string `env:"FLAGR_JWT_AUTH_WHITELIST_PATHS" envDefault:"/evaluation,/favicon"`
+	JWTAuthWhitelistPaths     string `env:"FLAGR_JWT_AUTH_WHITELIST_PATHS" envDefault:"/api/v1/evaluation"`
 	JWTAuthCookieTokenName    string `env:"FLAGR_JWT_AUTH_COOKIE_TOKEN_NAME" envDefault:"access_token"`
 	JWTAuthSecret             string `env:"FLAGR_JWT_AUTH_SECRET" envDefault:""`
 	JWTAuthNoTokenRedirectURL string `env:"FLAGR_JWT_AUTH_NO_TOKEN_REDIRECT_URL" envDefault:""`

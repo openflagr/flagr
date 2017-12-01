@@ -77,7 +77,7 @@ type auth struct {
 func (a *auth) ServeHTTP(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
 	path := req.URL.Path
 	for _, p := range a.WhitelistPaths {
-		if strings.HasPrefix(path, p) {
+		if p != "" && strings.HasPrefix(path, p) {
 			next(w, req)
 			return
 		}

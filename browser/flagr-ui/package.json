@@ -71,7 +71,6 @@
     "less": "^2.7.2",
     "less-loader": "^4.0.5",
     "mocha": "^3.2.0",
-    "nightwatch": "^0.9.12",
     "opn": "^5.1.0",
     "optimize-css-assets-webpack-plugin": "^2.0.0",
     "ora": "^1.2.0",
