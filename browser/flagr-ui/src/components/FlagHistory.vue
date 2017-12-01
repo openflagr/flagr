@@ -103,6 +103,7 @@ export default {
         background-color: #B6DDC6;
         text-decoration: none;
       }
+      overflow-x: auto;
     }
   }
 </style>

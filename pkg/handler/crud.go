@@ -124,7 +124,6 @@ func (c *crud) GetFlagSnapshots(params flag.GetFlagSnapshotsParams) middleware.R
 		return flag.NewGetFlagSnapshotsDefault(500).WithPayload(
 			ErrorMessage("cannot find flag snapshots for %v. %s", params.FlagID, err))
 	}
-
 	payload, err := e2r.MapFlagSnapshots(fs)
 	if err != nil {
 		return flag.NewGetFlagSnapshotsDefault(500).WithPayload(
@@ -210,7 +209,7 @@ func (c *crud) CreateSegment(params segment.CreateSegmentParams) middleware.Resp
 	}
 
 	resp := segment.NewCreateSegmentOK()
-	resp.SetPayload(e2r.MapSegment(s))
+	resp.SetPayload(e2r.MapSegment(s, true))
 
 	go entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
 	return resp
@@ -226,7 +225,7 @@ func (c *crud) FindSegments(params segment.FindSegmentsParams) middleware.Respon
 	}
 
 	resp := segment.NewFindSegmentsOK()
-	resp.SetPayload(e2r.MapSegments(ss))
+	resp.SetPayload(e2r.MapSegments(ss, true))
 	return resp
 }
 
@@ -245,7 +244,7 @@ func (c *crud) PutSegment(params segment.PutSegmentParams) middleware.Responder 
 	}
 
 	resp := segment.NewPutSegmentOK()
-	resp.SetPayload(e2r.MapSegment(&s))
+	resp.SetPayload(e2r.MapSegment(&s, true))
 
 	go entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
 	return resp
