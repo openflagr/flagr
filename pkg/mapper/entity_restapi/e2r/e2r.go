@@ -24,7 +24,7 @@ func MapFlag(e *entity.Flag, preload bool) (*models.Flag, error) {
 			return nil, err
 		}
 	}
-	r.Segments = MapSegments(e.Segments)
+	r.Segments = MapSegments(e.Segments, preload)
 	r.Variants = MapVariants(e.Variants)
 	return r, nil
 }
@@ -71,8 +71,11 @@ func MapFlagSnapshots(e []entity.FlagSnapshot) ([]*models.FlagSnapshot, error) {
 }
 
 // MapSegment maps segment
-func MapSegment(e *entity.Segment) *models.Segment {
-	e.Preload(getDB())
+func MapSegment(e *entity.Segment, preload bool) *models.Segment {
+	if preload {
+		e.Preload(getDB())
+	}
+
 	r := &models.Segment{}
 	r.ID = int64(e.ID)
 	r.Description = util.StringPtr(e.Description)
@@ -84,10 +87,10 @@ func MapSegment(e *entity.Segment) *models.Segment {
 }
 
 // MapSegments maps segments
-func MapSegments(e []entity.Segment) []*models.Segment {
+func MapSegments(e []entity.Segment, preload bool) []*models.Segment {
 	ret := make([]*models.Segment, len(e), len(e))
 	for i, s := range e {
-		ret[i] = MapSegment(&s)
+		ret[i] = MapSegment(&s, preload)
 	}
 	return ret
 }
