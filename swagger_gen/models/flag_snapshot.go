@@ -27,6 +27,11 @@ type FlagSnapshot struct {
 	// Minimum: 1
 	ID int64 `json:"id"`
 
+	// updated at
+	// Required: true
+	// Min Length: 1
+	UpdatedAt *string `json:"updatedAt"`
+
 	// updated by
 	UpdatedBy string `json:"updatedBy,omitempty"`
 }
@@ -41,6 +46,11 @@ func (m *FlagSnapshot) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateID(formats); err != nil {
+		// prop
+		res = append(res, err)
+	}
+
+	if err := m.validateUpdatedAt(formats); err != nil {
 		// prop
 		res = append(res, err)
 	}
@@ -77,6 +87,19 @@ func (m *FlagSnapshot) validateID(formats strfmt.Registry) error {
 	}
 
 	if err := validate.MinimumInt("id", "body", int64(m.ID), 1, false); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *FlagSnapshot) validateUpdatedAt(formats strfmt.Registry) error {
+
+	if err := validate.Required("updatedAt", "body", m.UpdatedAt); err != nil {
+		return err
+	}
+
+	if err := validate.MinLength("updatedAt", "body", string(*m.UpdatedAt), 1); err != nil {
 		return err
 	}
 

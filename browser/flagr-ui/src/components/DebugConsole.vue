@@ -108,7 +108,7 @@ export default {
         this.$message.success(`evaluation success`)
         this.evalResult = response.body
       }, () => {
-        this.$message.success(`evaluation error`)
+        this.$message.error(`evaluation error`)
       })
     },
     postEvaluationBatch (batchEvalContext) {
@@ -116,7 +116,7 @@ export default {
         this.$message.success(`evaluation success`)
         this.batchEvalResult = response.body
       }, () => {
-        this.$message.success(`evaluation error`)
+        this.$message.error(`evaluation error`)
       })
     }
   },
