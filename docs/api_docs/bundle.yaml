@@ -758,6 +758,7 @@ definitions:
     required:
       - id
       - flag
+      - updatedAt
     properties:
       id:
         type: integer
@@ -768,6 +769,9 @@ definitions:
         type: string
       flag:
         $ref: '#/definitions/flag'
+      updatedAt:
+        type: string
+        minLength: 1
   segment:
     type: object
     required:

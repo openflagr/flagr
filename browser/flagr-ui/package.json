@@ -13,6 +13,7 @@
     "lint": "eslint --ext .js,.vue src test/unit/specs"
   },
   "dependencies": {
+    "diff": "^3.4.0",
     "element-theme-chalk": "^2.0.0",
     "element-ui": "^2.0.0",
     "lodash.clone": "^4.5.0",

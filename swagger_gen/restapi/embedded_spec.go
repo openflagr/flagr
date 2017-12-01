@@ -1354,7 +1354,8 @@ func init() {
       "type": "object",
       "required": [
         "id",
-        "flag"
+        "flag",
+        "updatedAt"
       ],
       "properties": {
         "flag": {
@@ -1365,6 +1366,10 @@ func init() {
           "format": "int64",
           "minimum": 1,
           "readOnly": true
+        },
+        "updatedAt": {
+          "type": "string",
+          "minLength": 1
         },
         "updatedBy": {
           "type": "string"

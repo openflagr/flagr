@@ -1,6 +1,8 @@
 package e2r
 
 import (
+	"time"
+
 	"github.com/checkr/flagr/pkg/entity"
 	"github.com/checkr/flagr/pkg/repo"
 	"github.com/checkr/flagr/pkg/util"
@@ -50,6 +52,7 @@ func MapFlagSnapshot(e *entity.FlagSnapshot) (*models.FlagSnapshot, error) {
 		Flag:      f,
 		ID:        int64(e.ID),
 		UpdatedBy: e.UpdatedBy,
+		UpdatedAt: util.StringPtr(e.UpdatedAt.UTC().Format(time.RFC3339)),
 	}
 	return r, nil
 }
