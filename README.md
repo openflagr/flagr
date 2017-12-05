@@ -30,13 +30,33 @@ Flagr is an open source Go service that delivers the right experience to the rig
 
 ## Quick demo
 
+Try it with Docker.
+
 ```sh
-# Get the flagr-mini image for the demo
+# Get the checkr/flagr docker image
 docker run -it -p 18000:18000 checkr/flagr
 
 # Open the flagr homepage
 open localhost:18000
 ```
+
+Or try it on [https://try-flagr.herokuapp.com](https://try-flagr.herokuapp.com)
+
+```
+curl --request POST \
+  --url https://try-flagr.herokuapp.com/api/v1/evaluation \
+  --header 'content-type: application/json' \
+  --data '{
+	"entityID": "127",
+	"entityType": "user",
+	"entityContext": {
+		"state": "NY"
+	},
+	"flagID": 1,
+	"enableDebug": true
+}'
+```
+
 
 ## Flagr Evaluation Performance
 
