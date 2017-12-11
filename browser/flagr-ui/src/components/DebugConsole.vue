@@ -68,8 +68,7 @@ export default {
         entityID: 'a1234',
         entityType: 'report',
         entityContext: {
-          dl_state: 'CA',
-          package: 'flagr-test'
+          hello: 'world'
         },
         enableDebug: true,
         flagID: this.$props.flagId
@@ -81,16 +80,14 @@ export default {
             entityID: 'a1234',
             entityType: 'report',
             entityContext: {
-              dl_state: 'CA',
-              package: 'flagr-test'
+              hello: 'world'
             }
           },
           {
             entityID: 'a5678',
             entityType: 'report',
             entityContext: {
-              dl_state: 'NY',
-              package: 'flagr-test'
+              hello: 'world'
             }
           }
         ],
