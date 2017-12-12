@@ -10,5 +10,5 @@
 - Client SDKs
     - [Ruby SDK](https://github.com/checkr/rbflagr)
     - [Go SDK] (https://github.com/checkr/goflagr)
-    - [JavaScript SDK] (https://github.com/checkr/jsflagr)
-    - [Python SDK] (https://github.com/checkr/pyflagr)
+    - [JavaScript SDK] (https://github.com/checkr/jsflagr)
+    - [Python SDK] (https://github.com/checkr/pyflagr)
