@@ -88,7 +88,7 @@ func fetchAllFlags() ([]entity.Flag, error) {
 			return db.Order("Distributions.variant_id ASC")
 		}).Preload("Constraints", func(db *gorm.DB) *gorm.DB {
 			return db.Order("Constraints.created_at ASC")
-		}).Order("Segments.Rank ASC").Order("Segments.Id ASC")
+		}).Order("Segments.rank ASC").Order("Segments.id ASC")
 	}).Preload("Variants").Find(&fs).Error
 	return fs, err
 }
