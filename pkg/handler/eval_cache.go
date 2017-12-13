@@ -83,7 +83,7 @@ func fetchAllFlags() ([]entity.Flag, error) {
 	// Use eager loading to avoid N+1 problem
 	// doc: http://jinzhu.me/gorm/crud.html#preloading-eager-loading
 	fs := []entity.Flag{}
-	err := getDB().Debug().Preload("Segments", func(db *gorm.DB) *gorm.DB {
+	err := getDB().Preload("Segments", func(db *gorm.DB) *gorm.DB {
 		return db.Preload("Distributions", func(db *gorm.DB) *gorm.DB {
 			return db.Order("variant_id ASC")
 		}).Preload("Constraints", func(db *gorm.DB) *gorm.DB {
