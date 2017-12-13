@@ -6,7 +6,7 @@ import (
 
 	"github.com/checkr/flagr/pkg/config"
 	"github.com/checkr/flagr/pkg/entity"
-
+	"github.com/jinzhu/gorm"
 	"github.com/sirupsen/logrus"
 )
 
@@ -79,23 +79,32 @@ func (ec *EvalCache) GetByFlagID(flagID uint) *entity.Flag {
 	return f
 }
 
+func fetchAllFlags() ([]entity.Flag, error) {
+	// Use eager loading to avoid N+1 problem
+	// doc: http://jinzhu.me/gorm/crud.html#preloading-eager-loading
+	fs := []entity.Flag{}
+	err := getDB().Preload("Segments", func(db *gorm.DB) *gorm.DB {
+		return db.Preload("Distributions", func(db *gorm.DB) *gorm.DB {
+			return db.Order("Distributions.variant_id ASC")
+		}).Preload("Constraints", func(db *gorm.DB) *gorm.DB {
+			return db.Order("Constraints.created_at ASC")
+		}).Order("Segments.Rank ASC").Order("Segments.Id ASC")
+	}).Preload("Variants").Find(&fs).Error
+	return fs, err
+}
+
 func (ec *EvalCache) reloadMapCache() error {
 	if config.Config.NewRelicEnabled {
 		defer config.Global.NewrelicApp.StartTransaction("eval_cache_reload", nil, nil).End()
 	}
 
-	fs := []entity.Flag{}
-	q := entity.NewFlagQuerySet(getDB())
-	if err := q.All(&fs); err != nil {
+	fs, err := fetchAllFlags()
+	if err != nil {
 		return err
 	}
 	m := make(map[uint]*entity.Flag)
 	for i := range fs {
 		ptr := &fs[i]
-		err := ptr.Preload(getDB())
-		if err != nil {
-			return err
-		}
 		m[ptr.ID] = ptr
 	}
 
