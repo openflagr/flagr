@@ -7,6 +7,9 @@ import (
 	"github.com/zhouzhuojie/conditions"
 )
 
+// SegmentDefaultRank is the default rank when we create the segment
+const SegmentDefaultRank = uint(999)
+
 // Segment is the unit of segmentation
 // gen:qs
 type Segment struct {

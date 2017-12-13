@@ -202,6 +202,7 @@ func (c *crud) CreateSegment(params segment.CreateSegmentParams) middleware.Resp
 	s.FlagID = uint(params.FlagID)
 	s.RolloutPercent = uint(*params.Body.RolloutPercent)
 	s.Description = util.SafeString(params.Body.Description)
+	s.Rank = entity.SegmentDefaultRank
 
 	err := s.Create(getDB())
 	if err != nil {
