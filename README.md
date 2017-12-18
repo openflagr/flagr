@@ -9,16 +9,6 @@
     <a href="https://circleci.com/gh/checkr/flagr" target="_blank">
         <img src="https://circleci.com/gh/checkr/flagr.svg?style=shield">
     </a>
-    <a href="https://gitter.im/checkr-flagr/Lobby" target="_blank">
-        <img src="https://img.shields.io/gitter/room/nwjs/nw.js.svg">
-    </a>
-    <a href="https://github.com/checkr/flagr/releases" target="_blank">
-        <img src="https://img.shields.io/github/release/checkr/flagr.svg?colorB=green">
-    </a>
-    <a href="https://raw.githubusercontent.com/checkr/flagr/master/LICENSE" target="_blank">
-        <img src="http://img.shields.io/badge/license-Apache%20v2-green.svg">
-    </a>
-    <img src="https://img.shields.io/badge/pr-welcome-green.svg">
 </p>
 
 ## Introduction
