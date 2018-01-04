@@ -12,7 +12,8 @@ rebuild: gen run
 
 test: verifiers
 	@echo "Running all coverage for flagr"
-	@./buildscripts/go-coverage.sh
+	@courtney -v -o ./coverage.txt -t="-race" -t="-covermode=atomic" github.com/checkr/flagr/pkg/...
+
 
 build:
 	@echo "Building flagr to $(PWD)/flagr ..."
@@ -32,7 +33,7 @@ deps: checks
 	@echo "Installing ineffassign" && go get -u github.com/gordonklaus/ineffassign
 	@echo "Installing go-swagger" && go get -u github.com/go-swagger/go-swagger/cmd/swagger
 	@echo "Installing goqueryset" && go get -u github.com/jirfag/go-queryset/cmd/goqueryset
-	@echo "Installing gt" && go get -u rsc.io/gt
+	@echo "Installing courtney" && go get -u github.com/dave/courtney
 	@echo "Installing gomock" && go get -u github.com/golang/mock/gomock && go get github.com/golang/mock/mockgen
 	@echo "Installing fswatch" && go get -u github.com/codeskyblue/fswatch
 	@echo "Sqlite3" && sqlite3 -version
@@ -110,3 +111,4 @@ swagger: verify_swagger
 
 goqueryset:
 	@go generate ./pkg/...
+	@./buildscripts/goqueryset.sh

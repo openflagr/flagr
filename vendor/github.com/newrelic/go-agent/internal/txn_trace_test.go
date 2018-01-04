@@ -4,6 +4,8 @@ import (
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/newrelic/go-agent/internal/cat"
 )
 
 func TestTxnTrace(t *testing.T) {
@@ -29,7 +31,7 @@ func TestTxnTrace(t *testing.T) {
 		PortPathOrID:       "3306",
 	})
 	t3 := StartSegment(tr, start.Add(4*time.Second))
-	EndExternalSegment(tr, t3, start.Add(5*time.Second), parseURL("http://example.com/zip/zap?secret=shhh"))
+	EndExternalSegment(tr, t3, start.Add(5*time.Second), parseURL("http://example.com/zip/zap?secret=shhh"), nil)
 	EndBasicSegment(tr, t1, start.Add(6*time.Second), "t1")
 	t4 := StartSegment(tr, start.Add(7*time.Second))
 	t5 := StartSegment(tr, start.Add(8*time.Second))
@@ -46,7 +48,7 @@ func TestTxnTrace(t *testing.T) {
 		// no collection
 	})
 	t8 := StartSegment(tr, start.Add(14*time.Second))
-	EndExternalSegment(tr, t8, start.Add(15*time.Second), nil)
+	EndExternalSegment(tr, t8, start.Add(15*time.Second), nil, nil)
 	EndBasicSegment(tr, t4, start.Add(16*time.Second), "t4")
 
 	acfg := CreateAttributeConfig(sampleAttributeConfigInput)
@@ -54,7 +56,8 @@ func TestTxnTrace(t *testing.T) {
 	attr.Agent.RequestMethod = "GET"
 	AddUserAttribute(attr, "zap", 123, DestAll)
 
-	ht := HarvestTrace{
+	ht := newHarvestTraces()
+	ht.regular.addTxnTrace(&HarvestTrace{
 		TxnEvent: TxnEvent{
 			Start:     start,
 			Duration:  20 * time.Second,
@@ -63,7 +66,7 @@ func TestTxnTrace(t *testing.T) {
 			Attrs:     attr,
 		},
 		Trace: tr.TxnTrace,
-	}
+	})
 
 	expect := `[
 	   1417136460000000,
@@ -179,7 +182,7 @@ func TestTxnTrace(t *testing.T) {
 	]`
 
 	expect = CompactJSONString(expect)
-	js, err := ht.MarshalJSON()
+	js, err := ht.slice()[0].MarshalJSON()
 	if nil != err {
 		t.Fatal(err)
 	}
@@ -198,7 +201,8 @@ func TestTxnTraceNoSegmentsNoAttributes(t *testing.T) {
 	acfg := CreateAttributeConfig(sampleAttributeConfigInput)
 	attr := NewAttributes(acfg)
 
-	ht := HarvestTrace{
+	ht := newHarvestTraces()
+	ht.regular.addTxnTrace(&HarvestTrace{
 		TxnEvent: TxnEvent{
 			Start:     start,
 			Duration:  20 * time.Second,
@@ -207,7 +211,7 @@ func TestTxnTraceNoSegmentsNoAttributes(t *testing.T) {
 			Attrs:     attr,
 		},
 		Trace: tr.TxnTrace,
-	}
+	})
 
 	expect := `[
 	   1417136460000000,
@@ -246,7 +250,7 @@ func TestTxnTraceNoSegmentsNoAttributes(t *testing.T) {
 	   ""
 	]`
 	expect = CompactJSONString(expect)
-	js, err := ht.MarshalJSON()
+	js, err := ht.slice()[0].MarshalJSON()
 	if nil != err {
 		t.Fatal(err)
 	}
@@ -274,7 +278,8 @@ func TestTxnTraceSlowestNodesSaved(t *testing.T) {
 	acfg := CreateAttributeConfig(sampleAttributeConfigInput)
 	attr := NewAttributes(acfg)
 
-	ht := HarvestTrace{
+	ht := newHarvestTraces()
+	ht.regular.addTxnTrace(&HarvestTrace{
 		TxnEvent: TxnEvent{
 			Start:     start,
 			Duration:  123 * time.Second,
@@ -283,7 +288,7 @@ func TestTxnTraceSlowestNodesSaved(t *testing.T) {
 			Attrs:     attr,
 		},
 		Trace: tr.TxnTrace,
-	}
+	})
 
 	expect := `[
 	   1417136460000000,
@@ -358,7 +363,7 @@ func TestTxnTraceSlowestNodesSaved(t *testing.T) {
 	   ""
 	]`
 	expect = CompactJSONString(expect)
-	js, err := ht.MarshalJSON()
+	js, err := ht.slice()[0].MarshalJSON()
 	if nil != err {
 		t.Fatal(err)
 	}
@@ -386,7 +391,8 @@ func TestTxnTraceSegmentThreshold(t *testing.T) {
 	acfg := CreateAttributeConfig(sampleAttributeConfigInput)
 	attr := NewAttributes(acfg)
 
-	ht := HarvestTrace{
+	ht := newHarvestTraces()
+	ht.regular.addTxnTrace(&HarvestTrace{
 		TxnEvent: TxnEvent{
 			Start:     start,
 			Duration:  123 * time.Second,
@@ -395,7 +401,7 @@ func TestTxnTraceSegmentThreshold(t *testing.T) {
 			Attrs:     attr,
 		},
 		Trace: tr.TxnTrace,
-	}
+	})
 
 	expect := `[
 	   1417136460000000,
@@ -456,7 +462,7 @@ func TestTxnTraceSegmentThreshold(t *testing.T) {
 	   ""
 	]`
 	expect = CompactJSONString(expect)
-	js, err := ht.MarshalJSON()
+	js, err := ht.slice()[0].MarshalJSON()
 	if nil != err {
 		t.Fatal(err)
 	}
@@ -566,7 +572,7 @@ func TestTxnTraceStackTraceThreshold(t *testing.T) {
 
 	// node above stack trace threshold w/ params
 	t3 := StartSegment(tr, start.Add(4*time.Second))
-	EndExternalSegment(tr, t3, start.Add(6*time.Second), parseURL("http://example.com/zip/zap?secret=shhh"))
+	EndExternalSegment(tr, t3, start.Add(6*time.Second), parseURL("http://example.com/zip/zap?secret=shhh"), nil)
 
 	p := tr.TxnTrace.nodes[0].params
 	if nil != p {
@@ -579,5 +585,126 @@ func TestTxnTraceStackTraceThreshold(t *testing.T) {
 	p = tr.TxnTrace.nodes[2].params
 	if nil == p || nil == p.StackTrace || "http://example.com/zip/zap" != p.CleanURL {
 		t.Error(p)
+	}
+}
+
+func TestTxnTraceSynthetics(t *testing.T) {
+	start := time.Date(2014, time.November, 28, 1, 1, 0, 0, time.UTC)
+	tr := &TxnData{}
+	tr.TxnTrace.Enabled = true
+
+	acfg := CreateAttributeConfig(sampleAttributeConfigInput)
+	attr := NewAttributes(acfg)
+	ht := newHarvestTraces()
+
+	ht.Witness(HarvestTrace{
+		TxnEvent: TxnEvent{
+			Start:     start,
+			Duration:  3 * time.Second,
+			FinalName: "WebTransaction/Go/3",
+			CleanURL:  "/url/3",
+			Attrs:     attr,
+			CrossProcess: TxnCrossProcess{
+				Type: txnCrossProcessSynthetics,
+				Synthetics: &cat.SyntheticsHeader{
+					ResourceID: "resource",
+				},
+			},
+		},
+		Trace: tr.TxnTrace,
+	})
+	ht.Witness(HarvestTrace{
+		TxnEvent: TxnEvent{
+			Start:     start,
+			Duration:  5 * time.Second,
+			FinalName: "WebTransaction/Go/5",
+			CleanURL:  "/url/5",
+			Attrs:     attr,
+			CrossProcess: TxnCrossProcess{
+				Type: txnCrossProcessSynthetics,
+				Synthetics: &cat.SyntheticsHeader{
+					ResourceID: "resource",
+				},
+			},
+		},
+		Trace: tr.TxnTrace,
+	})
+	ht.Witness(HarvestTrace{
+		TxnEvent: TxnEvent{
+			Start:     start,
+			Duration:  4 * time.Second,
+			FinalName: "WebTransaction/Go/4",
+			CleanURL:  "/url/4",
+			Attrs:     attr,
+			CrossProcess: TxnCrossProcess{
+				Type: txnCrossProcessSynthetics,
+				Synthetics: &cat.SyntheticsHeader{
+					ResourceID: "resource",
+				},
+			},
+		},
+		Trace: tr.TxnTrace,
+	})
+
+	expect := CompactJSONString(`
+[
+	"12345",
+	[
+		[
+			1417136460000000,3000,"WebTransaction/Go/3","/url/3",
+			[
+				0,{},{},
+				[0,3000,"ROOT",{},
+					[[0,3000,"WebTransaction/Go/3",{},[]]]
+				],
+				{
+					"agentAttributes":{},
+					"userAttributes":{},
+					"intrinsics":{
+            "synthetics_resource_id": "resource"
+          }
+				}
+			],
+			"",null,false,null,"resource"
+		],
+		[
+			1417136460000000,5000,"WebTransaction/Go/5","/url/5",
+			[
+				0,{},{},
+				[0,5000,"ROOT",{},
+					[[0,5000,"WebTransaction/Go/5",{},[]]]
+				],
+				{
+					"agentAttributes":{},
+					"userAttributes":{},
+					"intrinsics":{
+            "synthetics_resource_id": "resource"
+          }
+				}
+			],
+			"",null,false,null,"resource"
+		],
+		[
+			1417136460000000,4000,"WebTransaction/Go/4","/url/4",
+			[
+				0,{},{},
+				[0,4000,"ROOT",{},
+					[[0,4000,"WebTransaction/Go/4",{},[]]]
+				],
+				{
+					"agentAttributes":{},
+					"userAttributes":{},
+					"intrinsics":{
+            "synthetics_resource_id": "resource"
+          }
+				}
+			],
+			"",null,false,null,"resource"
+		]
+	]
+]`)
+	js, err := ht.Data("12345", start)
+	if nil != err || string(js) != expect {
+		t.Errorf("err=%v; actual=%s; expect=%s", err, string(js), expect)
 	}
 }

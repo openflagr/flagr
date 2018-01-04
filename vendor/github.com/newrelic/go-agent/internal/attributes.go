@@ -484,11 +484,10 @@ func RequestAgentAttributes(a *Attributes, r *http.Request) {
 	a.Agent.RequestHeadersUserAgent = h.Get("User-Agent")
 	a.Agent.RequestHeadersReferer = SafeURLFromString(h.Get("Referer"))
 
-	if cl := h.Get("Content-Length"); "" != cl {
-		if x, err := strconv.Atoi(cl); nil == err {
-			a.Agent.RequestContentLength = x
-		}
-	}
+	// Per NewAttributes(), the default for this field is -1 (which is also what
+	// GetContentLengthFromHeader() returns if no content length is found), so we
+	// can just use the return value unconditionally.
+	a.Agent.RequestContentLength = int(GetContentLengthFromHeader(h))
 }
 
 // ResponseHeaderAttributes gather agent attributes from the response headers.
@@ -497,11 +496,11 @@ func ResponseHeaderAttributes(a *Attributes, h http.Header) {
 		return
 	}
 	a.Agent.ResponseHeadersContentType = h.Get("Content-Type")
-	if val := h.Get("Content-Length"); "" != val {
-		if x, err := strconv.Atoi(val); nil == err {
-			a.Agent.ResponseHeadersContentLength = x
-		}
-	}
+
+	// Per NewAttributes(), the default for this field is -1 (which is also what
+	// GetContentLengthFromHeader() returns if no content length is found), so we
+	// can just use the return value unconditionally.
+	a.Agent.ResponseHeadersContentLength = int(GetContentLengthFromHeader(h))
 }
 
 var (

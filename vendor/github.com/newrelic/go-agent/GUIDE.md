@@ -9,6 +9,8 @@
   * [Datastore Segments](#datastore-segments)
   * [External Segments](#external-segments)
 * [Attributes](#attributes)
+* [Cross Application Tracing](#cross-application-tracing)
+  * [Upgrading Applications to Support Cross Application Tracing](#upgrading-applications-to-support-cross-application-tracing)
 * [Custom Metrics](#custom-metrics)
 * [Custom Events](#custom-events)
 * [Request Queuing](#request-queuing)
@@ -105,6 +107,13 @@ txn := app.StartTransaction("transactionName", responseWriter, request)
 defer txn.End()
 ```
 
+If the response writer is provided when calling `StartTransaction`, you can
+then use `txn.WriteHeader` as a drop in replacement for the standard library's
+[`http.ResponseWriter.WriteHeader`](https://golang.org/pkg/net/http/#ResponseWriter)
+function. We strongly recommend doing so, as this both enables Cross
+Application Tracing support and ensures that attributes are added to the
+Transaction event capturing the response size and status code.
+
 The response writer and request parameters are optional.  Leave them `nil` to
 instrument a background task.
 
@@ -116,9 +125,10 @@ defer txn.End()
 The transaction has helpful methods like `NoticeError` and `SetName`.
 See more in [transaction.go](transaction.go).
 
-If you are using the `http` standard library package, use `WrapHandle` and
-`WrapHandleFunc`.  These wrappers automatically start and end transactions with
-the request and response writer.  See [instrumentation.go](instrumentation.go).
+If you are using [`http.ServeMux`](https://golang.org/pkg/net/http/#ServeMux),
+use `WrapHandle` and `WrapHandleFunc`.  These wrappers automatically start and
+end transactions with the request and response writer.  See
+[instrumentation.go](instrumentation.go).
 
 ```go
 http.HandleFunc(newrelic.WrapHandleFunc(app, "/users", usersHandler))
@@ -233,48 +243,73 @@ defer newrelic.DatastoreSegment{
 ### External Segments
 
 External segments appear in the transaction "Breakdown table" and in the
-"External services" tab.  
+"External services" tab. Version 1.11.0 of the Go agent also adds support for
+Cross Application Tracing (CAT), which will result in external segments also
+appearing in the "Service maps" tab and being linked in transaction traces when
+both sides of the request have traces.
 
 * [More info on External Services tab](https://docs.newrelic.com/docs/apm/applications-menu/monitoring/external-services-page)
+* [More info on Cross Application Tracing](https://docs.newrelic.com/docs/apm/transactions/cross-application-traces/introduction-cross-application-traces)
 
-External segments are instrumented using `ExternalSegment`.  Populate either the
-`URL` or `Request` field to indicate the endpoint.  Here is an example:
+External segments are instrumented using `ExternalSegment`. There are three
+ways to use this functionality:
 
-```go
-func external(txn newrelic.Transaction, url string) (*http.Response, error) {
-	defer newrelic.ExternalSegment{
-		StartTime: newrelic.StartSegmentNow(txn),
-		URL:   url,
-	}.End()
+1. Using `StartExternalSegment` to create an `ExternalSegment` before the
+   request is sent, and then calling `ExternalSegment.End` when the external
+   request is complete.
+   
+   For CAT support to operate, an `http.Request` must be provided to
+   `StartExternalSegment`, and the `ExternalSegment.Response` field must be set
+   before `ExternalSegment.End` is called or deferred.
 
-	return http.Get(url)
-}
-```
+   For example:
 
-We recommend using the `Request` and `Response` fields since they provide more
-information about the external call.  The `StartExternalSegment` helper is
-useful when the request is available.  This function may be modified in the
-future to add headers that will trace activity between applications that are
-instrumented by New Relic.
+    ```go
+    func external(txn newrelic.Transaction, req *http.Request) (*http.Response, error) {
+      s := newrelic.StartExternalSegment(txn, req)
+      response, err := http.DefaultClient.Do(req)
+      s.Response = response
+      s.End()
+      return response, err
+    }
+    ```
 
-```go
-func external(txn newrelic.Transaction, req *http.Request) (*http.Response, error) {
-	s := newrelic.StartExternalSegment(txn, req)
-	response, err := http.DefaultClient.Do(req)
-	s.Response = response
-	s.End()
-	return response, err
-}
-```
+2. Using `NewRoundTripper` to get a
+   [`http.RoundTripper`](https://golang.org/pkg/net/http/#RoundTripper) that
+   will automatically instrument all requests made via
+   [`http.Client`](https://golang.org/pkg/net/http/#Client) instances that use
+   that round tripper as their `Transport`. This option results in CAT support
+   transparently, provided the Go agent is version 1.11.0 or later.
 
-`NewRoundTripper` is another useful helper.  As with all segments, the round
-tripper returned **must** only be used in the same goroutine as the transaction.
+   For example:
 
-```go
-client := &http.Client{}
-client.Transport = newrelic.NewRoundTripper(txn, nil)
-resp, err := client.Get("http://example.com/")
-```
+    ```go
+    client := &http.Client{}
+    client.Transport = newrelic.NewRoundTripper(txn, nil)
+    resp, err := client.Get("http://example.com/")
+    ```
+
+   Note that, as with all segments, the round tripper returned **must** only be
+   used in the same goroutine as the transaction.
+
+3. Directly creating an `ExternalSegment` via a struct literal with an explicit
+   `URL` or `Request`, and then calling `ExternalSegment.End`. This option does
+   not support CAT, and may be removed or changed in a future major version of
+   the Go agent. As a result, we suggest using one of the other options above
+   wherever possible.
+
+   For example:
+
+    ```go
+    func external(txn newrelic.Transaction, url string) (*http.Response, error) {
+      defer newrelic.ExternalSegment{
+        StartTime: newrelic.StartSegmentNow(txn),
+        URL:   url,
+      }.End()
+
+      return http.Get(url)
+    }
+    ```
 
 ## Attributes
 
@@ -305,6 +340,55 @@ config.Attributes.Exclude = append(config.Attributes.Exclude, newrelic.Attribute
 ```
 
 * [More info on Agent Attributes](https://docs.newrelic.com/docs/agents/manage-apm-agents/agent-metrics/agent-attributes)
+
+## Cross Application Tracing
+
+New Relic's
+[Cross Application Tracing](https://docs.newrelic.com/docs/apm/transactions/cross-application-traces/introduction-cross-application-traces)
+feature, or CAT for short, links transactions between applications in APM to
+help identify performance problems within your service-oriented architecture.
+Support for CAT was added in version 1.11.0 of the Go agent.
+
+As CAT uses HTTP headers to track requests across applications, the Go agent
+needs to be able to access and modify request and response headers both for
+incoming and outgoing requests.
+
+### Upgrading Applications to Support Cross Application Tracing
+
+Although many Go applications instrumented using older versions of the Go agent
+will not require changes to enable CAT support, we've prepared this checklist
+that you can use to ensure that your application is ready to take advantage of
+the full functionality offered by New Relic's CAT feature:
+
+1. Ensure that incoming HTTP requests both parse any incoming CAT headers, and
+   output the required outgoing CAT header:
+
+   1. If you use `WrapHandle` or `WrapHandleFunc` to instrument a server that
+      uses [`http.ServeMux`](https://golang.org/pkg/net/http/#ServeMux), no
+      changes are required.
+
+   2. If you use either of the Go agent's [Gin](_integrations/nrgin/v1) or
+      [Gorilla](_integrations/nrgorilla/v1) integrations, no changes are
+      required.
+
+   3. If you use another framework or
+      [`http.Server`](https://golang.org/pkg/net/http/#Server) directly, you
+      will need to ensure that:
+
+      1. All calls to `StartTransaction` include the response writer and
+         request, and
+      2. `Transaction.WriteHeader` is used instead of calling `WriteHeader`
+         directly on the response writer, as described in the
+         [transactions section of this guide](#transactions).
+
+2. Convert any instances of using an `ExternalSegment` literal directly to
+   either use `StartExternalSegment` or `NewRoundTripper`, as described in the
+   [external segments section of this guide](#external-segments).
+
+3. Ensure that calls to `StartExternalSegment` provide an `http.Request`.
+
+4. Ensure that the `Response` field is set on `ExternalSegment` values before
+   making or deferring calls to `ExternalSegment.End`.
 
 ## Custom Metrics
 

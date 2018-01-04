@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"encoding/json"
 	"strings"
 	"time"
 )
@@ -32,9 +33,9 @@ type ConnectReply struct {
 	MetricRules  metricRules  `json:"metric_name_rules"`
 
 	// Cross Process
-	EncodingKey     string `json:"encoding_key"`
-	CrossProcessID  string `json:"cross_process_id"`
-	TrustedAccounts []int  `json:"trusted_account_ids"`
+	EncodingKey     string            `json:"encoding_key"`
+	CrossProcessID  string            `json:"cross_process_id"`
+	TrustedAccounts trustedAccountSet `json:"trusted_account_ids"`
 
 	// Settings
 	KeyTxnApdex            map[string]float64 `json:"web_transactions_apdex"`
@@ -57,6 +58,27 @@ type ConnectReply struct {
 		Message string `json:"message"`
 		Level   string `json:"level"`
 	} `json:"messages"`
+}
+
+type trustedAccountSet map[int]struct{}
+
+func (t *trustedAccountSet) IsTrusted(account int) bool {
+	_, exists := (*t)[account]
+	return exists
+}
+
+func (t *trustedAccountSet) UnmarshalJSON(data []byte) error {
+	accounts := make([]int, 0)
+	if err := json.Unmarshal(data, &accounts); err != nil {
+		return err
+	}
+
+	*t = make(trustedAccountSet)
+	for _, account := range accounts {
+		(*t)[account] = struct{}{}
+	}
+
+	return nil
 }
 
 // ConnectReplyDefaults returns a newly allocated ConnectReply with the proper

@@ -28,12 +28,14 @@ const (
 	maxTxnSlowQueries = 10
 
 	// harvest data
-	maxMetrics         = 2 * 1000
-	maxCustomEvents    = 10 * 1000
-	maxTxnEvents       = 10 * 1000
-	maxErrorEvents     = 100
-	maxHarvestErrors   = 20
-	maxHarvestSlowSQLs = 10
+	maxMetrics          = 2 * 1000
+	maxCustomEvents     = 10 * 1000
+	maxTxnEvents        = 10 * 1000
+	maxRegularTraces    = 1
+	maxSyntheticsTraces = 20
+	maxErrorEvents      = 100
+	maxHarvestErrors    = 20
+	maxHarvestSlowSQLs  = 10
 
 	// attributes
 	attributeKeyLengthLimit   = 255

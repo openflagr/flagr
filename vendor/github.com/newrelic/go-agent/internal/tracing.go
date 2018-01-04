@@ -3,9 +3,11 @@ package internal
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
 	"time"
 
+	"github.com/newrelic/go-agent/internal/cat"
 	"github.com/newrelic/go-agent/internal/sysinfo"
 )
 
@@ -21,13 +23,15 @@ type TxnEvent struct {
 	Attrs     *Attributes
 	DatastoreExternalTotals
 	// CleanURL is not used in txn events, but is used in traced errors which embed TxnEvent.
-	CleanURL string
+	CleanURL     string
+	CrossProcess TxnCrossProcess
 }
 
 // TxnData contains the recorded data of a transaction.
 type TxnData struct {
 	TxnEvent
 	IsWeb          bool
+	Name           string    // Work in progress name.
 	Errors         TxnErrors // Lazily initialized.
 	Stop           time.Time
 	ApdexThreshold time.Duration
@@ -195,19 +199,38 @@ func EndBasicSegment(t *TxnData, start SegmentStartTime, now time.Time, name str
 }
 
 // EndExternalSegment ends an external segment.
-func EndExternalSegment(t *TxnData, start SegmentStartTime, now time.Time, u *url.URL) error {
+func EndExternalSegment(t *TxnData, start SegmentStartTime, now time.Time, u *url.URL, resp *http.Response) error {
 	end, err := endSegment(t, start, now)
 	if nil != err {
 		return err
 	}
+
 	host := HostFromURL(u)
 	if "" == host {
 		host = "unknown"
 	}
+
+	var appData *cat.AppDataHeader
+	if resp != nil {
+		appData, err = t.CrossProcess.ParseAppData(HTTPHeaderToAppData(resp.Header))
+		if err != nil {
+			return err
+		}
+	}
+
+	var crossProcessID string
+	var transactionName string
+	var transactionGUID string
+	if appData != nil {
+		crossProcessID = appData.CrossProcessID
+		transactionName = appData.TransactionName
+		transactionGUID = appData.TransactionGUID
+	}
+
 	key := externalMetricKey{
 		Host: host,
-		ExternalCrossProcessID:  "",
-		ExternalTransactionName: "",
+		ExternalCrossProcessID:  crossProcessID,
+		ExternalTransactionName: transactionName,
 	}
 	if nil == t.externalSegments {
 		t.externalSegments = make(map[externalMetricKey]*metricData)
@@ -227,7 +250,8 @@ func EndExternalSegment(t *TxnData, start SegmentStartTime, now time.Time, u *ur
 
 	if t.TxnTrace.considerNode(end) {
 		t.TxnTrace.witnessNode(end, externalHostMetric(key), &traceNodeParams{
-			CleanURL: SafeURL(u),
+			CleanURL:        SafeURL(u),
+			TransactionGUID: transactionGUID,
 		})
 	}
 
@@ -263,13 +287,13 @@ var (
 		return unknownDatastoreHost
 	}()
 	hostsToReplace = map[string]struct{}{
-		"localhost":       struct{}{},
-		"127.0.0.1":       struct{}{},
-		"0.0.0.0":         struct{}{},
-		"0:0:0:0:0:0:0:1": struct{}{},
-		"::1":             struct{}{},
-		"0:0:0:0:0:0:0:0": struct{}{},
-		"::":              struct{}{},
+		"localhost":       {},
+		"127.0.0.1":       {},
+		"0.0.0.0":         {},
+		"0:0:0:0:0:0:0:1": {},
+		"::1":             {},
+		"0:0:0:0:0:0:0:0": {},
+		"::":              {},
 	}
 )
 

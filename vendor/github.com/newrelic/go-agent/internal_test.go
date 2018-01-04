@@ -1328,6 +1328,9 @@ func TestRoundTripper(t *testing.T) {
 			"name":              "OtherTransaction/Go/hello",
 			"externalCallCount": 1,
 			"externalDuration":  internal.MatchAnything,
+			"nr.guid":           internal.MatchAnything,
+			"nr.tripId":         internal.MatchAnything,
+			"nr.pathHash":       internal.MatchAnything,
 		},
 	}})
 }

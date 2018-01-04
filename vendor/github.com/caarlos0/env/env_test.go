@@ -1,8 +1,11 @@
 package env_test
 
 import (
+	"errors"
 	"fmt"
+	"net/http"
 	"os"
+	"reflect"
 	"testing"
 	"time"
 
@@ -32,6 +35,7 @@ type Config struct {
 type ParentStruct struct {
 	InnerStruct *InnerStruct
 	unexported  *InnerStruct
+	Ignored     *http.Client
 }
 
 type InnerStruct struct {
@@ -80,7 +84,10 @@ func TestParsesEnv(t *testing.T) {
 func TestParsesEnvInner(t *testing.T) {
 	os.Setenv("innervar", "someinnervalue")
 	defer os.Clearenv()
-	cfg := ParentStruct{&InnerStruct{}, &InnerStruct{}}
+	cfg := ParentStruct{
+		InnerStruct: &InnerStruct{},
+		unexported:  &InnerStruct{},
+	}
 	assert.NoError(t, env.Parse(&cfg))
 	assert.Equal(t, "someinnervalue", cfg.InnerStruct.Inner)
 }
@@ -89,7 +96,7 @@ func TestParsesEnvInnerNil(t *testing.T) {
 	os.Setenv("innervar", "someinnervalue")
 	defer os.Clearenv()
 	cfg := ParentStruct{}
-	assert.Error(t, env.Parse(&cfg))
+	assert.NoError(t, env.Parse(&cfg))
 }
 
 func TestEmptyVars(t *testing.T) {
@@ -224,6 +231,82 @@ func TestErrorRequiredNotSet(t *testing.T) {
 	assert.Error(t, env.Parse(cfg))
 }
 
+func TestCustomParser(t *testing.T) {
+	type foo struct {
+		name string
+	}
+
+	type config struct {
+		Var foo `env:"VAR"`
+	}
+
+	os.Setenv("VAR", "test")
+
+	customParserFunc := func(v string) (interface{}, error) {
+		return foo{name: v}, nil
+	}
+
+	cfg := &config{}
+	err := env.ParseWithFuncs(cfg, map[reflect.Type]env.ParserFunc{
+		reflect.TypeOf(foo{}): customParserFunc,
+	})
+
+	assert.NoError(t, err)
+	assert.Equal(t, cfg.Var.name, "test")
+}
+
+func TestParseWithFuncsNoPtr(t *testing.T) {
+	type foo struct{}
+	err := env.ParseWithFuncs(foo{}, nil)
+	assert.Error(t, err)
+	assert.Equal(t, err, env.ErrNotAStructPtr)
+}
+
+func TestParseWithFuncsInvalidType(t *testing.T) {
+	var c int
+	err := env.ParseWithFuncs(&c, nil)
+	assert.Error(t, err)
+	assert.Equal(t, err, env.ErrNotAStructPtr)
+}
+
+func TestCustomParserError(t *testing.T) {
+	type foo struct {
+		name string
+	}
+
+	type config struct {
+		Var foo `env:"VAR"`
+	}
+
+	os.Setenv("VAR", "test")
+
+	customParserFunc := func(v string) (interface{}, error) {
+		return nil, errors.New("something broke")
+	}
+
+	cfg := &config{}
+	err := env.ParseWithFuncs(cfg, map[reflect.Type]env.ParserFunc{
+		reflect.TypeOf(foo{}): customParserFunc,
+	})
+
+	assert.Empty(t, cfg.Var.name, "Var.name should not be filled out when parse errors")
+	assert.Error(t, err)
+	assert.Equal(t, err.Error(), "Custom parser error: something broke")
+}
+
+func TestUnsupportedStructType(t *testing.T) {
+	type config struct {
+		Foo http.Client `env:"FOO"`
+	}
+
+	os.Setenv("FOO", "foo")
+
+	cfg := &config{}
+	err := env.Parse(cfg)
+
+	assert.Error(t, err)
+	assert.Equal(t, env.ErrUnsupportedType, err)
+}
 func TestEmptyOption(t *testing.T) {
 	type config struct {
 		Var string `env:"VAR,"`

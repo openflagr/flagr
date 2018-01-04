@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"net/http"
 	"testing"
 	"time"
 )
@@ -65,6 +66,37 @@ func TestCompactJSON(t *testing.T) {
 	out := CompactJSONString(in)
 	if out != `{"zip":1}` {
 		t.Fatal(in, out)
+	}
+}
+
+func TestGetContentLengthFromHeader(t *testing.T) {
+	// Nil header.
+	if cl := GetContentLengthFromHeader(nil); cl != -1 {
+		t.Errorf("unexpected content length: expected -1; got %d", cl)
+	}
+
+	// Empty header.
+	header := make(http.Header)
+	if cl := GetContentLengthFromHeader(header); cl != -1 {
+		t.Errorf("unexpected content length: expected -1; got %d", cl)
+	}
+
+	// Invalid header.
+	header.Set("Content-Length", "foo")
+	if cl := GetContentLengthFromHeader(header); cl != -1 {
+		t.Errorf("unexpected content length: expected -1; got %d", cl)
+	}
+
+	// Zero header.
+	header.Set("Content-Length", "0")
+	if cl := GetContentLengthFromHeader(header); cl != 0 {
+		t.Errorf("unexpected content length: expected 0; got %d", cl)
+	}
+
+	// Valid, non-zero header.
+	header.Set("Content-Length", "1024")
+	if cl := GetContentLengthFromHeader(header); cl != 1024 {
+		t.Errorf("unexpected content length: expected 1024; got %d", cl)
 	}
 }
 
