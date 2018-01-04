@@ -30,7 +30,7 @@ func TestDockerIDCrossAgent(t *testing.T) {
 
 		got, _ := parseDockerID(bytes.NewReader(input))
 		if got != test.ID {
-			t.Error(got, test.ID)
+			t.Errorf("%s != %s", got, test.ID)
 		}
 	}
 }

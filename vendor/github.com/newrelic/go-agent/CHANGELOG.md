@@ -1,5 +1,21 @@
 ## ChangeLog
 
+## 1.11.0
+
+* We've closed the Issues tab on GitHub. Please visit our
+  [support site](https://support.newrelic.com) to get timely help with any
+  problems you're having, or to report issues.
+
+* Added support for Cross Application Tracing (CAT). Please refer to the
+  [upgrading section of the guide](GUIDE.md#upgrading-applications-to-support-cross-application-tracing)
+  for more detail on how to ensure you get the most out of the Go agent's new
+  CAT support.
+
+* The agent now collects additional metadata when running within Amazon Web
+  Services, Google Cloud Platform, Microsoft Azure, and Pivotal Cloud Foundry.
+  This information is used to provide an enhanced experience when the agent is
+  deployed on those platforms.
+
 ## 1.10.0
 
 * Added new `RecordCustomMetric` method to [Application](https://godoc.org/github.com/newrelic/go-agent#Application).

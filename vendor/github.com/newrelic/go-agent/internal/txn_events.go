@@ -3,6 +3,8 @@ package internal
 import (
 	"bytes"
 	"math/rand"
+	"sort"
+	"strings"
 	"time"
 )
 
@@ -40,6 +42,39 @@ func (e *TxnEvent) WriteJSON(buf *bytes.Buffer) {
 		w.intField("databaseCallCount", int64(e.datastoreCallCount))
 		w.floatField("databaseDuration", e.datastoreDuration.Seconds())
 	}
+	if e.CrossProcess.Used() {
+		if e.CrossProcess.ClientID != "" {
+			w.stringField("client_cross_process_id", e.CrossProcess.ClientID)
+		}
+		if e.CrossProcess.TripID != "" {
+			w.stringField("nr.tripId", e.CrossProcess.TripID)
+		}
+		if e.CrossProcess.PathHash != "" {
+			w.stringField("nr.pathHash", e.CrossProcess.PathHash)
+		}
+		if e.CrossProcess.ReferringPathHash != "" {
+			w.stringField("nr.referringPathHash", e.CrossProcess.ReferringPathHash)
+		}
+		if e.CrossProcess.GUID != "" {
+			w.stringField("nr.guid", e.CrossProcess.GUID)
+		}
+		if e.CrossProcess.ReferringTxnGUID != "" {
+			w.stringField("nr.referringTransactionGuid", e.CrossProcess.ReferringTxnGUID)
+		}
+		if len(e.CrossProcess.AlternatePathHashes) > 0 {
+			hashes := make([]string, 0, len(e.CrossProcess.AlternatePathHashes))
+			for hash := range e.CrossProcess.AlternatePathHashes {
+				hashes = append(hashes, hash)
+			}
+			sort.Strings(hashes)
+			w.stringField("nr.alternatePathHashes", strings.Join(hashes, ","))
+		}
+		if e.CrossProcess.IsSynthetics() {
+			w.stringField("nr.syntheticsResourceId", e.CrossProcess.Synthetics.ResourceID)
+			w.stringField("nr.syntheticsJobId", e.CrossProcess.Synthetics.JobID)
+			w.stringField("nr.syntheticsMonitorId", e.CrossProcess.Synthetics.MonitorID)
+		}
+	}
 	buf.WriteByte('}')
 	buf.WriteByte(',')
 	userAttributesJSON(e.Attrs, buf, destTxnEvent, nil)
@@ -69,6 +104,14 @@ func newTxnEvents(max int) *txnEvents {
 
 func (events *txnEvents) AddTxnEvent(e *TxnEvent) {
 	stamp := eventStamp(rand.Float32())
+
+	// Synthetics events always get priority: normal event stamps are in the
+	// range [0.0,1.0), so adding 1 means that a Synthetics event will always
+	// win.
+	if e.CrossProcess.IsSynthetics() {
+		stamp += 1.0
+	}
+
 	events.events.addEvent(analyticsEvent{stamp, e})
 }
 

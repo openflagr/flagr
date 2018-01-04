@@ -17,7 +17,7 @@ import (
 
 	strfmt "github.com/go-openapi/strfmt"
 
-	"github.com/checkr/flagr/swagger_gen/models"
+	models "github.com/checkr/flagr/swagger_gen/models"
 )
 
 // NewCreateConstraintParams creates a new CreateConstraintParams object

@@ -182,17 +182,77 @@ func TestSelect(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Select: %v", err)
 	}
-}
 
-func TestUname(t *testing.T) {
-	var utsname unix.Utsname
-	err := unix.Uname(&utsname)
+	dur := 150 * time.Millisecond
+	tv := unix.NsecToTimeval(int64(dur))
+	start := time.Now()
+	_, err = unix.Select(0, nil, nil, nil, &tv)
+	took := time.Since(start)
 	if err != nil {
-		t.Fatalf("Uname: %v", err)
+		t.Fatalf("Select: %v", err)
 	}
 
-	// conversion from []byte to string, golang.org/issue/20753
-	t.Logf("OS: %s/%s %s", string(utsname.Sysname[:]), string(utsname.Machine[:]), string(utsname.Release[:]))
+	if took < dur {
+		t.Errorf("Select: timeout should have been at least %v, got %v", dur, took)
+	}
+}
+
+func TestPselect(t *testing.T) {
+	_, err := unix.Pselect(0, nil, nil, nil, &unix.Timespec{Sec: 0, Nsec: 0}, nil)
+	if err != nil {
+		t.Fatalf("Pselect: %v", err)
+	}
+
+	dur := 2500 * time.Microsecond
+	ts := unix.NsecToTimespec(int64(dur))
+	start := time.Now()
+	_, err = unix.Pselect(0, nil, nil, nil, &ts, nil)
+	took := time.Since(start)
+	if err != nil {
+		t.Fatalf("Pselect: %v", err)
+	}
+
+	if took < dur {
+		t.Errorf("Pselect: timeout should have been at least %v, got %v", dur, took)
+	}
+}
+
+func TestFstatat(t *testing.T) {
+	defer chtmpdir(t)()
+
+	touch(t, "file1")
+
+	var st1 unix.Stat_t
+	err := unix.Stat("file1", &st1)
+	if err != nil {
+		t.Fatalf("Stat: %v", err)
+	}
+
+	var st2 unix.Stat_t
+	err = unix.Fstatat(unix.AT_FDCWD, "file1", &st2, 0)
+	if err != nil {
+		t.Fatalf("Fstatat: %v", err)
+	}
+
+	if st1 != st2 {
+		t.Errorf("Fstatat: returned stat does not match Stat")
+	}
+
+	os.Symlink("file1", "symlink1")
+
+	err = unix.Lstat("symlink1", &st1)
+	if err != nil {
+		t.Fatalf("Lstat: %v", err)
+	}
+
+	err = unix.Fstatat(unix.AT_FDCWD, "symlink1", &st2, unix.AT_SYMLINK_NOFOLLOW)
+	if err != nil {
+		t.Fatalf("Fstatat: %v", err)
+	}
+
+	if st1 != st2 {
+		t.Errorf("Fstatat: returned stat does not match Lstat")
+	}
 }
 
 // utilities taken from os/os_test.go

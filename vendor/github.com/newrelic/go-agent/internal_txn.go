@@ -29,7 +29,6 @@ type txn struct {
 	// finished has been set to true, no recording should occur.
 	finished bool
 
-	Name   string // Work in progress name
 	ignore bool
 
 	// wroteHeader prevents capturing multiple response code errors if the
@@ -60,8 +59,13 @@ func newTxn(input txnInput, req *http.Request, name string) *txn {
 	if nil != req && nil != req.URL {
 		txn.CleanURL = internal.SafeURL(req.URL)
 	}
+	txn.CrossProcess.InitFromHTTPRequest(txn.crossProcessEnabled(), input.Reply, req)
 
 	return txn
+}
+
+func (txn *txn) crossProcessEnabled() bool {
+	return txn.Config.CrossApplicationTracer.Enabled
 }
 
 func (txn *txn) slowQueriesEnabled() bool {
@@ -107,8 +111,8 @@ func (txn *txn) txnTraceThreshold() time.Duration {
 }
 
 func (txn *txn) shouldSaveTrace() bool {
-	return txn.txnTracesEnabled() &&
-		(txn.Duration >= txn.txnTraceThreshold())
+	return txn.CrossProcess.IsSynthetics() ||
+		(txn.txnTracesEnabled() && (txn.Duration >= txn.txnTraceThreshold()))
 }
 
 func (txn *txn) MergeIntoHarvest(h *internal.Harvest) {
@@ -162,6 +166,9 @@ func responseCodeIsError(cfg *Config, code int) bool {
 }
 
 func headersJustWritten(txn *txn, code int) {
+	txn.Lock()
+	defer txn.Unlock()
+
 	if txn.finished {
 		return
 	}
@@ -180,13 +187,53 @@ func headersJustWritten(txn *txn, code int) {
 	}
 }
 
+func (txn *txn) responseHeader() http.Header {
+	txn.Lock()
+	defer txn.Unlock()
+
+	if txn.finished {
+		return nil
+	}
+	if txn.wroteHeader {
+		return nil
+	}
+	if !txn.CrossProcess.Enabled {
+		return nil
+	}
+	if !txn.CrossProcess.IsInbound() {
+		return nil
+	}
+	txn.freezeName()
+	contentLength := internal.GetContentLengthFromHeader(txn.W.Header())
+
+	appData, err := txn.CrossProcess.CreateAppData(txn.FinalName, txn.Queuing, time.Since(txn.Start), contentLength)
+	if err != nil {
+		txn.Config.Logger.Debug("error generating outbound response header", map[string]interface{}{
+			"error": err,
+		})
+		return nil
+	}
+	return internal.AppDataToHTTPHeader(appData)
+}
+
+func addCrossProcessHeaders(txn *txn) {
+	// responseHeader() checks the wroteHeader field and returns a nil map if the
+	// header has been written, so we don't need a check here.
+	for key, values := range txn.responseHeader() {
+		for _, value := range values {
+			txn.W.Header().Add(key, value)
+		}
+	}
+}
+
 func (txn *txn) Header() http.Header { return txn.W.Header() }
 
 func (txn *txn) Write(b []byte) (int, error) {
-	n, err := txn.W.Write(b)
+	// This is safe to call unconditionally, even if Write() is called multiple
+	// times; see also the commentary in addCrossProcessHeaders().
+	addCrossProcessHeaders(txn)
 
-	txn.Lock()
-	defer txn.Unlock()
+	n, err := txn.W.Write(b)
 
 	headersJustWritten(txn, http.StatusOK)
 
@@ -194,10 +241,9 @@ func (txn *txn) Write(b []byte) (int, error) {
 }
 
 func (txn *txn) WriteHeader(code int) {
-	txn.W.WriteHeader(code)
+	addCrossProcessHeaders(txn)
 
-	txn.Lock()
-	defer txn.Unlock()
+	txn.W.WriteHeader(code)
 
 	headersJustWritten(txn, code)
 }
@@ -226,6 +272,13 @@ func (txn *txn) End() error {
 	}
 
 	txn.freezeName()
+
+	// Finalise the CAT state.
+	if err := txn.CrossProcess.Finalise(txn.Name, txn.Config.AppName); err != nil {
+		txn.Config.Logger.Debug("error finalising the cross process state", map[string]interface{}{
+			"error": err,
+		})
+	}
 
 	// Assign apdexThreshold regardless of whether or not the transaction
 	// gets apdex since it may be used to calculate the trace threshold.
@@ -489,5 +542,31 @@ func endExternal(s ExternalSegment) error {
 	if nil != err {
 		return err
 	}
-	return internal.EndExternalSegment(&txn.TxnData, s.StartTime.start, time.Now(), u)
+	return internal.EndExternalSegment(&txn.TxnData, s.StartTime.start, time.Now(), u, s.Response)
+}
+
+func outboundHeaders(s ExternalSegment) http.Header {
+	txn := s.StartTime.txn
+	if nil == txn {
+		return http.Header{}
+	}
+	txn.Lock()
+	defer txn.Unlock()
+
+	if txn.finished {
+		return http.Header{}
+	}
+
+	metadata, err := txn.CrossProcess.CreateCrossProcessMetadata(txn.Name, txn.Config.AppName)
+	if err != nil {
+		txn.Config.Logger.Debug("error generating outbound headers", map[string]interface{}{
+			"error": err,
+		})
+
+		// It's possible for CreateCrossProcessMetadata() to error and still have a
+		// Synthetics header, so we'll still fall through to returning headers
+		// based on whatever metadata was returned.
+	}
+
+	return internal.MetadataToHTTPHeader(metadata)
 }

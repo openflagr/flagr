@@ -26,6 +26,7 @@ type traceNodeParams struct {
 	Host            string
 	PortPathOrID    string
 	Query           string
+	TransactionGUID string
 	queryParameters queryParameters
 }
 
@@ -49,6 +50,9 @@ func (p *traceNodeParams) WriteJSON(buf *bytes.Buffer) {
 	}
 	if "" != p.Query {
 		w.stringField("query", p.Query)
+	}
+	if "" != p.TransactionGUID {
+		w.stringField("transaction_guid", p.TransactionGUID)
 	}
 	if nil != p.queryParameters {
 		w.writerField("query_parameters", p.queryParameters)
@@ -263,7 +267,8 @@ func (trace *HarvestTrace) MarshalJSON() ([]byte, error) {
 	buf.WriteString(`"userAttributes":`)
 	userAttributesJSON(trace.Attrs, buf, destTxnTrace, nil)
 	buf.WriteByte(',')
-	buf.WriteString(`"intrinsics":{}`) // TODO intrinsics
+	buf.WriteString(`"intrinsics":`)
+	intrinsicsJSON(&trace.TxnEvent, buf)
 	buf.WriteByte('}')
 
 	// If the trace string pool is used, end another array here.
@@ -271,7 +276,11 @@ func (trace *HarvestTrace) MarshalJSON() ([]byte, error) {
 	buf.WriteByte(']') // end trace data
 
 	buf.WriteByte(',')
-	buf.WriteString(`""`)    // GUID is not yet supported
+	if trace.CrossProcess.Used() && trace.CrossProcess.GUID != "" {
+		jsonx.AppendString(buf, trace.CrossProcess.GUID)
+	} else {
+		buf.WriteString(`""`)
+	}
 	buf.WriteByte(',')       //
 	buf.WriteString(`null`)  // reserved for future use
 	buf.WriteByte(',')       //
@@ -279,39 +288,113 @@ func (trace *HarvestTrace) MarshalJSON() ([]byte, error) {
 	buf.WriteByte(',')       //
 	buf.WriteString(`null`)  // X-Ray sessions not supported
 	buf.WriteByte(',')       //
-	buf.WriteString(`""`)    // SyntheticsResourceID is not yet supported
+
+	// Synthetics are supported:
+	if trace.CrossProcess.IsSynthetics() {
+		jsonx.AppendString(buf, trace.CrossProcess.Synthetics.ResourceID)
+	} else {
+		buf.WriteString(`""`)
+	}
 
 	buf.WriteByte(']') // end trace
 
 	return buf.Bytes(), nil
 }
 
+type txnTraceHeap []*HarvestTrace
+
+func (h *txnTraceHeap) isEmpty() bool {
+	return 0 == len(*h)
+}
+
+func newTxnTraceHeap(max int) *txnTraceHeap {
+	h := make(txnTraceHeap, 0, max)
+	heap.Init(&h)
+	return &h
+}
+
+// Implement sort.Interface.
+func (h txnTraceHeap) Len() int           { return len(h) }
+func (h txnTraceHeap) Less(i, j int) bool { return h[i].Duration < h[j].Duration }
+func (h txnTraceHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
+
+// Implement heap.Interface.
+func (h *txnTraceHeap) Push(x interface{}) { *h = append(*h, x.(*HarvestTrace)) }
+
+func (h *txnTraceHeap) Pop() interface{} {
+	old := *h
+	n := len(old)
+	x := old[n-1]
+	*h = old[0 : n-1]
+	return x
+}
+
+func (h *txnTraceHeap) isKeeper(t *HarvestTrace) bool {
+	if len(*h) < cap(*h) {
+		return true
+	}
+	return t.Duration >= (*h)[0].Duration
+}
+
+func (h *txnTraceHeap) addTxnTrace(t *HarvestTrace) {
+	if len(*h) < cap(*h) {
+		heap.Push(h, t)
+		return
+	}
+
+	if t.Duration <= (*h)[0].Duration {
+		return
+	}
+	heap.Pop(h)
+	heap.Push(h, t)
+}
+
 type harvestTraces struct {
-	trace *HarvestTrace
+	regular    *txnTraceHeap
+	synthetics *txnTraceHeap
 }
 
 func newHarvestTraces() *harvestTraces {
-	return &harvestTraces{}
+	return &harvestTraces{
+		regular:    newTxnTraceHeap(maxRegularTraces),
+		synthetics: newTxnTraceHeap(maxSyntheticsTraces),
+	}
+}
+
+func (traces *harvestTraces) Len() int {
+	return traces.regular.Len() + traces.synthetics.Len()
 }
 
 func (traces *harvestTraces) Witness(trace HarvestTrace) {
-	if nil == traces.trace || traces.trace.Duration < trace.Duration {
+	traceHeap := traces.regular
+	if trace.CrossProcess.IsSynthetics() {
+		traceHeap = traces.synthetics
+	}
+
+	if traceHeap.isKeeper(&trace) {
 		cpy := new(HarvestTrace)
 		*cpy = trace
-		traces.trace = cpy
+		traceHeap.addTxnTrace(cpy)
 	}
 }
 
 func (traces *harvestTraces) Data(agentRunID string, harvestStart time.Time) ([]byte, error) {
-	if nil == traces.trace {
+	if traces.Len() == 0 {
 		return nil, nil
 	}
+
 	return json.Marshal([]interface{}{
 		agentRunID,
-		[]interface{}{
-			traces.trace,
-		},
+		traces.slice(),
 	})
+}
+
+func (traces *harvestTraces) slice() []*HarvestTrace {
+	out := make([]*HarvestTrace, 0, traces.Len())
+	out = append(out, (*traces.regular)...)
+	out = append(out, (*traces.synthetics)...)
+
+	return out
 }
 
 func (traces *harvestTraces) MergeIntoHarvest(h *Harvest) {}

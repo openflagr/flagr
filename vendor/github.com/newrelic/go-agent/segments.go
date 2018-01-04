@@ -71,6 +71,12 @@ func (s DatastoreSegment) End() error { return endDatastore(s) }
 // End finishes the external segment.
 func (s ExternalSegment) End() error { return endExternal(s) }
 
+// OutboundHeaders returns the headers that should be attached to the external
+// request.
+func (s ExternalSegment) OutboundHeaders() http.Header {
+	return outboundHeaders(s)
+}
+
 // StartSegmentNow helps avoid Transaction nil checks.
 func StartSegmentNow(txn Transaction) SegmentStartTime {
 	if nil != txn {
@@ -108,8 +114,16 @@ func StartSegment(txn Transaction, name string) Segment {
 //    segment.End()
 //
 func StartExternalSegment(txn Transaction, request *http.Request) ExternalSegment {
-	return ExternalSegment{
+	s := ExternalSegment{
 		StartTime: StartSegmentNow(txn),
 		Request:   request,
 	}
+
+	for key, values := range s.OutboundHeaders() {
+		for _, value := range values {
+			request.Header.Add(key, value)
+		}
+	}
+
+	return s
 }

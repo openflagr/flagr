@@ -3,6 +3,8 @@ package internal
 import (
 	"bytes"
 	"encoding/json"
+	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -60,6 +62,18 @@ func compactJSON(js []byte) []byte {
 func CompactJSONString(js string) string {
 	out := compactJSON([]byte(js))
 	return string(out)
+}
+
+// GetContentLengthFromHeader gets the content length from a HTTP header, or -1
+// if no content length is available.
+func GetContentLengthFromHeader(h http.Header) int64 {
+	if cl := h.Get("Content-Length"); cl != "" {
+		if contentLength, err := strconv.ParseInt(cl, 10, 64); err == nil {
+			return contentLength
+		}
+	}
+
+	return -1
 }
 
 // StringLengthByteLimit truncates strings using a byte-limit boundary and

@@ -2,8 +2,11 @@ package internal
 
 import (
 	"encoding/json"
+	"math"
 	"testing"
 	"time"
+
+	"github.com/newrelic/go-agent/internal/cat"
 )
 
 func testTxnEventJSON(t *testing.T, e *TxnEvent, expect string) {
@@ -126,4 +129,57 @@ func TestTxnEventAttributes(t *testing.T) {
 	{
 		"request.method":"GET"
 	}]`)
+}
+
+func TestTxnEventsSynthetics(t *testing.T) {
+	events := newTxnEvents(1)
+
+	regular := &TxnEvent{
+		FinalName: "myName",
+		Start:     time.Date(2014, time.November, 28, 1, 1, 0, 0, time.UTC),
+		Duration:  2 * time.Second,
+		Zone:      ApdexNone,
+		Attrs:     nil,
+	}
+
+	synthetics := &TxnEvent{
+		FinalName: "myName",
+		Start:     time.Date(2014, time.November, 28, 1, 1, 0, 0, time.UTC),
+		Duration:  2 * time.Second,
+		Zone:      ApdexNone,
+		Attrs:     nil,
+		CrossProcess: TxnCrossProcess{
+			Type: txnCrossProcessSynthetics,
+			Synthetics: &cat.SyntheticsHeader{
+				ResourceID: "resource",
+				JobID:      "job",
+				MonitorID:  "monitor",
+			},
+		},
+	}
+
+	events.AddTxnEvent(regular)
+
+	// Check that the event was saved and that the stamp was sensible.
+	if saved := events.events.events[0].jsonWriter; saved != regular {
+		t.Errorf("unexpected saved event: expected=%v; got=%v", regular, saved)
+	}
+	if stamp := events.events.events[0].stamp; stamp < 0.0 || stamp >= 1.0 {
+		t.Errorf("regular event got out of range stamp: %f", stamp)
+	}
+
+	// Now set the regular event stamp to be the maximum possible value and add
+	// the synthetics event, which should evict it. Note that, although
+	// math.Nextafter32() would be a much cleaner way of doing this, that
+	// requires Go 1.4.
+	events.events.events[0].stamp = eventStamp(math.Float32frombits(math.Float32bits(1.0) - 1))
+	events.AddTxnEvent(synthetics)
+
+	// Check that the event was saved and that the stamp was sensible.
+	if saved := events.events.events[0].jsonWriter; saved != synthetics {
+		t.Errorf("unexpected saved event: expected=%v; got=%v", synthetics, saved)
+	}
+	if stamp := events.events.events[0].stamp; stamp < 1.0 || stamp >= 2.0 {
+		t.Errorf("synthetics event got out of range stamp: %f", stamp)
+	}
 }

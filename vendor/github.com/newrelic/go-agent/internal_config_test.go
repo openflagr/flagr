@@ -66,6 +66,7 @@ func TestCopyConfigReferenceFieldsPresent(t *testing.T) {
 		"settings":{
 			"AppName":"my appname",
 			"Attributes":{"Enabled":true,"Exclude":["2"],"Include":["1"]},
+			"CrossApplicationTracer":{"Enabled":true},
 			"CustomInsightsEvents":{"Enabled":true},
 			"DatastoreTracer":{
 				"DatabaseNameReporting":{"Enabled":true},
@@ -107,7 +108,10 @@ func TestCopyConfigReferenceFieldsPresent(t *testing.T) {
 			"Utilization":{
 				"BillingHostname":"",
 				"DetectAWS":true,
+				"DetectAzure":true,
 				"DetectDocker":true,
+				"DetectGCP":true,
+				"DetectPCF":true,
 				"LogicalProcessors":0,
 				"TotalRAMMIB":0
 			}
@@ -124,7 +128,7 @@ func TestCopyConfigReferenceFieldsPresent(t *testing.T) {
 		],
 		"identifier":"my appname",
 		"utilization":{
-			"metadata_version":2,
+			"metadata_version":3,
 			"logical_processors":16,
 			"total_ram_mib":1024,
 			"hostname":"my-hostname"
@@ -157,6 +161,7 @@ func TestCopyConfigReferenceFieldsAbsent(t *testing.T) {
 		"settings":{
 			"AppName":"my appname",
 			"Attributes":{"Enabled":true,"Exclude":null,"Include":null},
+			"CrossApplicationTracer":{"Enabled":true},
 			"CustomInsightsEvents":{"Enabled":true},
 			"DatastoreTracer":{
 				"DatabaseNameReporting":{"Enabled":true},
@@ -198,7 +203,10 @@ func TestCopyConfigReferenceFieldsAbsent(t *testing.T) {
 			"Utilization":{
 				"BillingHostname":"",
 				"DetectAWS":true,
+				"DetectAzure":true,
 				"DetectDocker":true,
+				"DetectGCP":true,
+				"DetectPCF":true,
 				"LogicalProcessors":0,
 				"TotalRAMMIB":0
 			}
@@ -214,7 +222,7 @@ func TestCopyConfigReferenceFieldsAbsent(t *testing.T) {
 		],
 		"identifier":"my appname",
 		"utilization":{
-			"metadata_version":2,
+			"metadata_version":3,
 			"logical_processors":16,
 			"total_ram_mib":1024,
 			"hostname":"my-hostname"

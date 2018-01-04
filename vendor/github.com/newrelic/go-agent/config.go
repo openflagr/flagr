@@ -126,6 +126,15 @@ type Config struct {
 		// DetectAWS controls whether the Application attempts to detect
 		// AWS.
 		DetectAWS bool
+		// DetectAzure controls whether the Application attempts to detect
+		// Azure.
+		DetectAzure bool
+		// DetectPCF controls whether the Application attempts to detect
+		// PCF.
+		DetectPCF bool
+		// DetectGCP controls whether the Application attempts to detect
+		// GCP.
+		DetectGCP bool
 		// DetectDocker controls whether the Application attempts to
 		// detect Docker.
 		DetectDocker bool
@@ -135,6 +144,12 @@ type Config struct {
 		LogicalProcessors int
 		TotalRAMMIB       int
 		BillingHostname   string
+	}
+
+	// CrossApplicationTracer controls behaviour relating to cross application
+	// tracing (CAT).
+	CrossApplicationTracer struct {
+		Enabled bool
 	}
 
 	// DatastoreTracer controls behavior relating to datastore segments.
@@ -198,6 +213,9 @@ func NewConfig(appname, license string) Config {
 	}
 	c.ErrorCollector.Attributes.Enabled = true
 	c.Utilization.DetectAWS = true
+	c.Utilization.DetectAzure = true
+	c.Utilization.DetectPCF = true
+	c.Utilization.DetectGCP = true
 	c.Utilization.DetectDocker = true
 	c.Attributes.Enabled = true
 	c.RuntimeSampler.Enabled = true
@@ -208,6 +226,8 @@ func NewConfig(appname, license string) Config {
 	c.TransactionTracer.SegmentThreshold = 2 * time.Millisecond
 	c.TransactionTracer.StackTraceThreshold = 500 * time.Millisecond
 	c.TransactionTracer.Attributes.Enabled = true
+
+	c.CrossApplicationTracer.Enabled = true
 
 	c.DatastoreTracer.InstanceReporting.Enabled = true
 	c.DatastoreTracer.DatabaseNameReporting.Enabled = true
@@ -227,7 +247,7 @@ const (
 var (
 	errLicenseLen      = fmt.Errorf("license length is not %d", licenseLength)
 	errHighSecurityTLS = errors.New("high security requires TLS")
-	errAppNameMissing  = errors.New("AppName required")
+	errAppNameMissing  = errors.New("string AppName required")
 	errAppNameLimit    = fmt.Errorf("max of %d rollup application names", appNameLimit)
 )
 

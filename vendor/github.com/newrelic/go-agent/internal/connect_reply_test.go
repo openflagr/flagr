@@ -108,3 +108,25 @@ func TestCalculateApdexThreshold(t *testing.T) {
 		t.Error(threshold)
 	}
 }
+
+func TestIsTrusted(t *testing.T) {
+	for _, test := range []struct {
+		id       int
+		trusted  string
+		expected bool
+	}{
+		{1, `[]`, false},
+		{1, `[2, 3]`, false},
+		{1, `[1]`, true},
+		{1, `[1, 2, 3]`, true},
+	} {
+		trustedAccounts := make(trustedAccountSet)
+		if err := json.Unmarshal([]byte(test.trusted), &trustedAccounts); err != nil {
+			t.Fatal(err)
+		}
+
+		if actual := trustedAccounts.IsTrusted(test.id); test.expected != actual {
+			t.Errorf("failed asserting whether %d is trusted by %v: expected %v; got %v", test.id, test.trusted, test.expected, actual)
+		}
+	}
+}

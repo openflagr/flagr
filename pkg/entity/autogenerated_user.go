@@ -7,6 +7,7 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
+// notest
 // ===== BEGIN of all query sets
 
 // ===== BEGIN of query set UserQuerySet

@@ -281,13 +281,13 @@ func TestSegmentExternal(t *testing.T) {
 
 	t1 := StartSegment(tr, start.Add(1*time.Second))
 	t2 := StartSegment(tr, start.Add(2*time.Second))
-	EndExternalSegment(tr, t2, start.Add(3*time.Second), nil)
-	EndExternalSegment(tr, t1, start.Add(4*time.Second), parseURL("http://f1.com"))
+	EndExternalSegment(tr, t2, start.Add(3*time.Second), nil, nil)
+	EndExternalSegment(tr, t1, start.Add(4*time.Second), parseURL("http://f1.com"), nil)
 	t3 := StartSegment(tr, start.Add(5*time.Second))
-	EndExternalSegment(tr, t3, start.Add(6*time.Second), parseURL("http://f1.com"))
+	EndExternalSegment(tr, t3, start.Add(6*time.Second), parseURL("http://f1.com"), nil)
 	t4 := StartSegment(tr, start.Add(7*time.Second))
 	t4.Stamp++
-	EndExternalSegment(tr, t4, start.Add(8*time.Second), parseURL("http://invalid-token.com"))
+	EndExternalSegment(tr, t4, start.Add(8*time.Second), parseURL("http://invalid-token.com"), nil)
 
 	if tr.externalCallCount != 3 {
 		t.Error(tr.externalCallCount)

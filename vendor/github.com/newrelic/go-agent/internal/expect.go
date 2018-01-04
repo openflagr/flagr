@@ -178,6 +178,13 @@ func expectAttributes(v Validator, exists map[string]interface{}, expect map[str
 			v.Error("value difference", fmt.Sprintf("key=%s", key), v1, v2)
 		}
 	}
+	for key, val := range exists {
+		_, ok := expect[key]
+		if !ok {
+			v.Error("unexpected attribute present: ", key, val)
+			continue
+		}
+	}
 }
 
 // ExpectCustomEvents allows testing of custom events.
@@ -384,18 +391,13 @@ func expectTxnTrace(v Validator, got json.Marshaler, expect WantTxnTrace) {
 
 // ExpectTxnTraces allows testing of transaction traces.
 func ExpectTxnTraces(v Validator, traces *harvestTraces, want []WantTxnTrace) {
-	if len(want) == 0 {
-		if nil != traces.trace {
-			v.Error("trace exists when not expected")
-		}
-	} else if len(want) > 1 {
-		v.Error("too many traces expected")
-	} else {
-		if nil == traces.trace {
-			v.Error("missing expected trace")
-		} else {
-			expectTxnTrace(v, traces.trace, want[0])
-		}
+	if len(want) != traces.Len() {
+		v.Error("number of traces do not match", len(want), traces.Len())
+	}
+
+	actual := traces.slice()
+	for i, expected := range want {
+		expectTxnTrace(v, actual[i], expected)
 	}
 }
 
