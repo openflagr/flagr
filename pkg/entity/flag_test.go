@@ -17,7 +17,10 @@ func TestFlagPrepareEvaluation(t *testing.T) {
 func TestFlagPreload(t *testing.T) {
 	t.Run("happy code path", func(t *testing.T) {
 		f := GenFixtureFlag()
-		err := f.Preload(PopulateTestDB(f))
+		db := PopulateTestDB(f)
+		defer db.Close()
+
+		err := f.Preload(db)
 		assert.NoError(t, err)
 	})
 }
