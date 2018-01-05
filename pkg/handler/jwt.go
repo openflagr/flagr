@@ -10,6 +10,10 @@ import (
 )
 
 func getSubjectFromRequest(r *http.Request) string {
+	if r == nil {
+		return ""
+	}
+
 	token, ok := r.Context().Value(config.Config.JWTAuthUserProperty).(*jwt.Token)
 	if !ok {
 		return ""

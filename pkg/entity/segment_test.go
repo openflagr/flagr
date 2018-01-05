@@ -29,7 +29,10 @@ func TestSegmentPreload(t *testing.T) {
 	t.Run("happy code path", func(t *testing.T) {
 		s := GenFixtureSegment()
 		f := GenFixtureFlag()
-		err := s.Preload(PopulateTestDB(f))
+		db := PopulateTestDB(f)
+		defer db.Close()
+
+		err := s.Preload(db)
 		assert.NoError(t, err)
 	})
 }

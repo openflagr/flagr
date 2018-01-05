@@ -153,7 +153,7 @@ func (c *crud) PutFlag(params flag.PutFlagParams) middleware.Responder {
 		return flag.NewPutFlagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
-	resp := flag.NewGetFlagOK()
+	resp := flag.NewPutFlagOK()
 	payload, err := e2r.MapFlag(f, true)
 	if err != nil {
 		return flag.NewPutFlagDefault(500).WithPayload(ErrorMessage("%s", err))

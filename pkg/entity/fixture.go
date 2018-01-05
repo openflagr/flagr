@@ -1,6 +1,8 @@
 package entity
 
 import (
+	"os"
+
 	"github.com/checkr/flagr/swagger_gen/models"
 	"github.com/sirupsen/logrus"
 
@@ -75,7 +77,9 @@ func GenFixtureSegment() Segment {
 
 // NewTestDB creates a new in-memory test db
 func NewTestDB() *gorm.DB {
-	db, err := gorm.Open("sqlite3", ":memory:")
+	testFile := "/tmp/flagr_test.sqlite"
+	os.Remove(testFile)
+	db, err := gorm.Open("sqlite3", testFile)
 	if err != nil {
 		logrus.WithField("err", err).Error("failed to connect to db")
 		panic(err)
