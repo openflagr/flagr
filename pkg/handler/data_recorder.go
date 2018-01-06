@@ -15,6 +15,7 @@ var (
 // DataRecorder can record and produce the evaluation result
 type DataRecorder interface {
 	AsyncRecord(*models.EvalResult)
+	Close() error
 }
 
 // GetDataRecorder gets the data recorder

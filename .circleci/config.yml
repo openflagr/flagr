@@ -6,6 +6,13 @@ jobs:
   build:
     docker:
       - image: checkr/flagr-ci
+      - image: spotify/kafka
+        ports:
+          - 2181:2181
+          - 9092:9092
+        environment:
+          ADVERTISED_HOST: localhost
+          ADVERTISED_PORT: '9092'
     working_directory: /go/src/github.com/checkr/flagr
     steps:
       - checkout

@@ -102,6 +102,10 @@ func (k *kafkaRecorder) AsyncRecord(r *models.EvalResult) {
 	}
 }
 
+func (k *kafkaRecorder) Close() error {
+	return k.producer.Close()
+}
+
 type kafkaEvalResult struct {
 	*models.EvalResult
 
