@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/caarlos0/env"
@@ -50,7 +51,7 @@ func setupNewrelic() {
 		nCfg.Enabled = true
 		app, err := newrelic.NewApplication(nCfg)
 		if err != nil {
-			logrus.Fatalf("unable to initialize newrelic. %s", err)
+			panic(fmt.Sprintf("unable to initialize newrelic. %s", err))
 		}
 		Global.NewrelicApp = app
 	}

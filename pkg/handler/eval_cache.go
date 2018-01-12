@@ -22,8 +22,6 @@ type EvalCache struct {
 
 	refreshTimeout  time.Duration
 	refreshInterval time.Duration
-
-	redisCache *redisCache
 }
 
 // GetEvalCache gets the EvalCache
@@ -33,7 +31,6 @@ var GetEvalCache = func() *EvalCache {
 			mapCache:        make(map[uint]*entity.Flag),
 			refreshTimeout:  config.Config.EvalCacheRefreshTimeout,
 			refreshInterval: config.Config.EvalCacheRefreshInterval,
-			redisCache:      &redisCache{},
 		}
 		singletonEvalCache = ec
 	})
@@ -118,25 +115,5 @@ func (ec *EvalCache) reloadMapCache() error {
 	ec.mapCacheLock.Lock()
 	ec.mapCache = m
 	ec.mapCacheLock.Unlock()
-	return nil
-}
-
-// TODO implement the redis cache before hitting DB
-type redisCache struct {
-}
-
-func (rc *redisCache) GetFlags() ([]entity.Flag, error) {
-	return nil, nil
-}
-
-func (rc *redisCache) SetFlags(fs []entity.Flag) error {
-	return nil
-}
-
-func (rc *redisCache) Lock() error {
-	return nil
-}
-
-func (rc *redisCache) Unlock() error {
 	return nil
 }
