@@ -9,6 +9,9 @@
     <a href="https://circleci.com/gh/checkr/flagr" target="_blank">
         <img src="https://circleci.com/gh/checkr/flagr.svg?style=shield">
     </a>
+    <a href="https://godoc.org/github.com/checkr/flagr" target="_blank">
+        <img src="https://img.shields.io/badge/godoc-reference-green.svg">
+    </a>
     <a href="https://codecov.io/gh/checkr/flagr" target="_blank">
         <img src="https://codecov.io/gh/checkr/flagr/branch/master/graph/badge.svg">
     </a>
