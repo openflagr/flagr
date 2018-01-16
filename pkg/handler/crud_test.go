@@ -72,6 +72,19 @@ func TestCrudFlags(t *testing.T) {
 	assert.NotZero(t, res.(*flag.DeleteFlagOK))
 }
 
+func TestCrudFlagsWithFailures(t *testing.T) {
+	var res middleware.Responder
+	db := entity.NewTestDB()
+	c := &crud{}
+
+	defer db.Close()
+	defer gostub.StubFunc(&getDB, db).Reset()
+
+	// step 0. can't find non-exist flag
+	res = c.GetFlag(flag.GetFlagParams{FlagID: int64(1)})
+	assert.NotZero(t, res.(*flag.GetFlagDefault).Payload)
+}
+
 func TestCrudSegments(t *testing.T) {
 	var res middleware.Responder
 	db := entity.NewTestDB()
