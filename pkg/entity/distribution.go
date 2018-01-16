@@ -87,8 +87,9 @@ func (d DistributionArray) rollout(bucketNum uint, rolloutPercent uint, index in
 		return true
 	}
 
-	min, max, r := 0, 0, 0
-	max = d.PercentsAccumulated[index]
+	min := 0
+	max := d.PercentsAccumulated[index]
+	r := 0
 	if index != 0 {
 		min = d.PercentsAccumulated[index-1]
 	}

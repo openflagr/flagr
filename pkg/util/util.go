@@ -38,6 +38,7 @@ func SafeString(s interface{}) (ret string) {
 }
 
 // SafeUint returns the uint of the value
+// nolint: gocyclo
 func SafeUint(s interface{}) (ret uint) {
 	defer func() {
 		if r := recover(); r != nil {

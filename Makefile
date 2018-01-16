@@ -26,11 +26,8 @@ gen: api_docs swagger goqueryset
 
 deps: checks
 	@echo "Installing dep" && go get -u github.com/golang/dep/cmd/dep
-	@echo "Installing golint" && go get -u github.com/golang/lint/golint
-	@echo "Installing gocyclo" && go get -u github.com/fzipp/gocyclo
-	@echo "Installing deadcode" && go get -u github.com/remyoudompheng/go-misc/deadcode
-	@echo "Installing misspell" && go get -u github.com/client9/misspell/cmd/misspell
-	@echo "Installing ineffassign" && go get -u github.com/gordonklaus/ineffassign
+	@echo "Installing gometalinter" && go get -u github.com/alecthomas/gometalinter
+	@gometalinter --install
 	@echo "Installing go-swagger" && go get -u github.com/go-swagger/go-swagger/cmd/swagger
 	@echo "Installing goqueryset" && go get -u github.com/jirfag/go-queryset/cmd/goqueryset
 	@echo "Installing courtney" && go get -u github.com/dave/courtney
@@ -59,36 +56,11 @@ checks:
 	@echo "Checking project is in GOPATH"
 	@(env bash $(PWD)/buildscripts/checkgopath.sh)
 
-verifiers: vet fmt lint cyclo spelling verify_swagger
+verifiers: verify_gometalinter verify_swagger
 
-vet:
+verify_gometalinter:
 	@echo "Running $@"
-	@go tool vet -atomic -bool -copylocks -nilfunc -printf -shadow -rangeloops -unreachable -unsafeptr -unusedresult pkg
-
-fmt:
-	@echo "Running $@"
-	@gofmt -d pkg
-
-lint:
-	@echo "Running $@"
-	@${GOPATH}/bin/golint -set_exit_status github.com/checkr/flagr/pkg...
-
-ineffassign:
-	@echo "Running $@"
-	@${GOPATH}/bin/ineffassign .
-
-cyclo:
-	@echo "Running $@"
-	@${GOPATH}/bin/gocyclo -over 100 pkg
-
-deadcode:
-	@echo "Running $@"
-	@${GOPATH}/bin/deadcode
-
-spelling:
-	@echo "Running $@"
-	@${GOPATH}/bin/misspell -error `find pkg/`
-	@${GOPATH}/bin/misspell -error `find docs/` -source markdown-like
+	@gometalinter --config=.gometalinter.json ./pkg/...
 
 verify_swagger:
 	@echo "Running $@"

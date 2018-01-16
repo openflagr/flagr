@@ -6,6 +6,7 @@ import (
 	"github.com/checkr/flagr/pkg/entity"
 	"github.com/checkr/flagr/pkg/repo"
 	"github.com/checkr/flagr/pkg/util"
+
 	"github.com/checkr/flagr/swagger_gen/models"
 )
 
