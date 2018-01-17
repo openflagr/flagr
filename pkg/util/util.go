@@ -5,6 +5,8 @@ import (
 	"math"
 	"regexp"
 	"time"
+
+	"github.com/spf13/cast"
 )
 
 var keyRegex = regexp.MustCompile("^[a-z]+[a-z0-9_]*$")
@@ -22,65 +24,13 @@ func IsSafeKey(s string) (bool, string) {
 
 // SafeString safely dereference the string or string ptr
 func SafeString(s interface{}) (ret string) {
-	defer func() {
-		if r := recover(); r != nil {
-			ret = ""
-		}
-	}()
-
-	switch s.(type) {
-	case string:
-		return s.(string)
-	case *string:
-		return *s.(*string)
-	}
-	return ""
+	return cast.ToString(s)
 }
 
 // SafeUint returns the uint of the value
 // nolint: gocyclo
 func SafeUint(s interface{}) (ret uint) {
-	defer func() {
-		if r := recover(); r != nil {
-			ret = 0
-		}
-	}()
-
-	switch s.(type) {
-	case int64:
-		return uint(s.(int64))
-	case *int64:
-		return uint(*s.(*int64))
-	case int32:
-		return uint(s.(int32))
-	case *int32:
-		return uint(*s.(*int32))
-	case int:
-		return uint(s.(int))
-	case *int:
-		return uint(*s.(*int))
-	case uint64:
-		return uint(s.(uint64))
-	case *uint64:
-		return uint(*s.(*uint64))
-	case uint32:
-		return uint(s.(uint32))
-	case *uint32:
-		return uint(*s.(*uint32))
-	case uint:
-		return s.(uint)
-	case *uint:
-		return *s.(*uint)
-	case float32:
-		return uint(Round(float64(s.(float32))))
-	case *float32:
-		return uint(Round(float64(*s.(*float32))))
-	case float64:
-		return uint(Round(float64(s.(float64))))
-	case *float64:
-		return uint(Round(float64(*s.(*float64))))
-	}
-	return 0
+	return cast.ToUint(s)
 }
 
 // Round makes the float to int conversion with rounding

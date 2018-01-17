@@ -308,6 +308,12 @@
   version = "v1.0.4"
 
 [[projects]]
+  name = "github.com/spf13/cast"
+  packages = ["."]
+  revision = "acbeb36b902d72a7a4c18e8f3241075e7ab763e4"
+  version = "v1.1.0"
+
+[[projects]]
   name = "github.com/stretchr/testify"
   packages = ["assert"]
   revision = "b91bfb9ebec76498946beb6af7c0230c7cc7ba6c"
@@ -406,6 +412,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "df62bffd8a650e32f80a7060fb71f209a6aeecd413ebb4be66f3fe9511557242"
+  inputs-digest = "c236a16781e203dffdee89a9ea66de21e0eebb25d2513cde9b66879c19575d2d"
   solver-name = "gps-cdcl"
   solver-version = 1
