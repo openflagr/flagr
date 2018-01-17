@@ -10,7 +10,7 @@ import (
 func TestSafeString(t *testing.T) {
 	assert.Equal(t, SafeString("123"), "123")
 	assert.Equal(t, SafeString(StringPtr("123")), "123")
-	assert.Equal(t, SafeString(123), "")
+	assert.Equal(t, SafeString(123), "123")
 	assert.Equal(t, SafeString(nil), "")
 
 	var ptr *string
@@ -19,7 +19,7 @@ func TestSafeString(t *testing.T) {
 
 func TestSafeUint(t *testing.T) {
 	assert.Equal(t, SafeUint(nil), uint(0))
-	assert.Equal(t, SafeUint("123"), uint(0))
+	assert.Equal(t, SafeUint("123"), uint(123))
 
 	assert.Equal(t, SafeUint(int(1)), uint(1))
 	assert.Equal(t, SafeUint(IntPtr(1)), uint(1))
@@ -94,4 +94,12 @@ func TestPtrs(t *testing.T) {
 	assert.Equal(t, uint64(1), *Uint64Ptr(uint64(1)))
 	assert.Equal(t, true, *BoolPtr(true))
 	assert.Equal(t, []byte("abc"), *ByteSlicePtr([]byte("abc")))
+}
+
+func TestRound(t *testing.T) {
+	assert.Equal(t, Round(float64(1.01)), 1)
+	assert.Equal(t, Round(float64(1.99)), 2)
+	assert.Equal(t, Round(float64(-0.5)), -1)
+	assert.Equal(t, Round(float64(-1.5)), -2)
+	assert.Equal(t, Round(float64(0.0)), 0)
 }
