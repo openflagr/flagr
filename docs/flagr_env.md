@@ -17,6 +17,10 @@ var Config = struct {
 	// PProfEnabled - to enable the standard pprof of golang's http server
 	PProfEnabled bool `env:"FLAGR_PPROF_ENABLED" envDefault:"true"`
 
+	// MiddlewareVerboseLoggerEnabled - to enable the negroni-logrus logger for all the endpoints
+	// useful for debugging
+	MiddlewareVerboseLoggerEnabled bool `env:"FLAGR_MIDDLEWARE_VERBOSE_LOGGER_ENABLED" envDefault:"true"`
+
 	// DBDriver - Flagr supports sqlite3, mysql, postgres
 	DBDriver string `env:"FLAGR_DB_DBDRIVER" envDefault:"sqlite3"`
 	// DBConnectionStr - examples
@@ -69,7 +73,7 @@ var Config = struct {
 	// One can also whitelist some routes so that they don't get blocked by JWT auth
 	JWTAuthEnabled            bool   `env:"FLAGR_JWT_AUTH_ENABLED" envDefault:"false"`
 	JWTAuthDebug              bool   `env:"FLAGR_JWT_AUTH_DEBUG" envDefault:"false"`
-	JWTAuthWhitelistPaths     string `env:"FLAGR_JWT_AUTH_WHITELIST_PATHS" envDefault:"/evaluation,/favicon"`
+	JWTAuthWhitelistPaths     string `env:"FLAGR_JWT_AUTH_WHITELIST_PATHS" envDefault:"/api/v1/evaluation"`
 	JWTAuthCookieTokenName    string `env:"FLAGR_JWT_AUTH_COOKIE_TOKEN_NAME" envDefault:"access_token"`
 	JWTAuthSecret             string `env:"FLAGR_JWT_AUTH_SECRET" envDefault:""`
 	JWTAuthNoTokenRedirectURL string `env:"FLAGR_JWT_AUTH_NO_TOKEN_REDIRECT_URL" envDefault:""`
