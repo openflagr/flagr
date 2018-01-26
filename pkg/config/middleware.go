@@ -56,7 +56,10 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 		})
 	}
 
-	n.Use(negronilogrus.NewMiddlewareFromLogger(logrus.StandardLogger(), "flagr"))
+	if Config.MiddlewareVerboseLoggerEnabled {
+		n.Use(negronilogrus.NewMiddlewareFromLogger(logrus.StandardLogger(), "flagr"))
+	}
+
 	n.Use(negroni.NewRecovery())
 	n.Use(negroni.NewStatic(http.Dir(pwd + "/browser/flagr-ui/dist/")))
 

@@ -16,6 +16,10 @@ var Config = struct {
 	// PProfEnabled - to enable the standard pprof of golang's http server
 	PProfEnabled bool `env:"FLAGR_PPROF_ENABLED" envDefault:"true"`
 
+	// MiddlewareVerboseLoggerEnabled - to enable the negroni-logrus logger for all the endpoints
+	// useful for debugging
+	MiddlewareVerboseLoggerEnabled bool `env:"FLAGR_MIDDLEWARE_VERBOSE_LOGGER_ENABLED" envDefault:"true"`
+
 	// DBDriver - Flagr supports sqlite3, mysql, postgres
 	DBDriver string `env:"FLAGR_DB_DBDRIVER" envDefault:"sqlite3"`
 	// DBConnectionStr - examples
