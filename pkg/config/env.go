@@ -20,6 +20,10 @@ var Config = struct {
 	// useful for debugging
 	MiddlewareVerboseLoggerEnabled bool `env:"FLAGR_MIDDLEWARE_VERBOSE_LOGGER_ENABLED" envDefault:"true"`
 
+	// RateLimiterPerFlagPerSecondConsoleLogging - to rate limit the logging rate
+	// per flag per second
+	RateLimiterPerFlagPerSecondConsoleLogging int `env:"FLAGR_RATELIMITER_PERFLAG_PERSECOND_CONSOLE_LOGGING" envDefault:"100"`
+
 	// DBDriver - Flagr supports sqlite3, mysql, postgres
 	DBDriver string `env:"FLAGR_DB_DBDRIVER" envDefault:"sqlite3"`
 	// DBConnectionStr - examples

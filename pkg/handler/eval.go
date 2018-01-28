@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/checkr/flagr/pkg/config"
 	"github.com/checkr/flagr/pkg/entity"
@@ -10,6 +11,7 @@ import (
 	"github.com/checkr/flagr/swagger_gen/models"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/evaluation"
 
+	"github.com/bsm/ratelimit"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/zhouzhuojie/conditions"
@@ -134,8 +136,7 @@ var evalFlag = func(evalContext models.EvalContext) *models.EvalResult {
 }
 
 var logEvalResult = func(r *models.EvalResult, dataRecordsEnabled bool) {
-	jsonStr, _ := json.Marshal(struct{ FlagEvalResult *models.EvalResult }{FlagEvalResult: r})
-	fmt.Println(string(jsonStr))
+	rateLimitPerFlagConsoleLogging(r)
 
 	if !config.Config.RecorderEnabled || !dataRecordsEnabled {
 		return
@@ -195,4 +196,22 @@ var evalSegment = func(
 
 func debugConstraintMsg(expr conditions.Expr, m map[string]interface{}) string {
 	return fmt.Sprintf("constraint not match. constraint: %s, entity_context: %+v.", expr, m)
+}
+
+var rateLimitMap = make(map[uint]*ratelimit.RateLimiter)
+
+var rateLimitPerFlagConsoleLogging = func(r *models.EvalResult) {
+	flagID := util.SafeUint(r.FlagID)
+	rl, ok := rateLimitMap[flagID]
+	if !ok {
+		rl = ratelimit.New(
+			config.Config.RateLimiterPerFlagPerSecondConsoleLogging,
+			time.Second,
+		)
+		rateLimitMap[flagID] = rl
+	}
+	if !rl.Limit() {
+		jsonStr, _ := json.Marshal(struct{ FlagEvalResult *models.EvalResult }{FlagEvalResult: r})
+		fmt.Println(string(jsonStr))
+	}
 }

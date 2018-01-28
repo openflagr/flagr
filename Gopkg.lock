@@ -38,6 +38,12 @@
   revision = "84e9865bb03ad38c464043bf5382ce8c68ca5f0c"
 
 [[projects]]
+  name = "github.com/bsm/ratelimit"
+  packages = ["."]
+  revision = "4a38dca83ebadb017e83301642fab61b1c17edb7"
+  version = "v2.0.0"
+
+[[projects]]
   name = "github.com/caarlos0/env"
   packages = ["."]
   revision = "7cd7992b3bc86f920394f8de92c13900da1a46b7"
@@ -412,6 +418,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "c236a16781e203dffdee89a9ea66de21e0eebb25d2513cde9b66879c19575d2d"
+  inputs-digest = "801b057967532c77ce312ea60238b45fc46cd86beaa79613711abca22cc18150"
   solver-name = "gps-cdcl"
   solver-version = 1
