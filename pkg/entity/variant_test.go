@@ -24,3 +24,29 @@ func TestValidate(t *testing.T) {
 		assert.NoError(t, err)
 	})
 }
+
+func TestVariantScan(t *testing.T) {
+	t.Run("happy code path", func(t *testing.T) {
+		a := &Attachment{}
+		err := a.Scan([]byte(`{"key": "value"}`))
+		assert.NoError(t, err)
+	})
+
+	t.Run("nil value", func(t *testing.T) {
+		a := &Attachment{}
+		err := a.Scan(nil)
+		assert.NoError(t, err)
+	})
+
+	t.Run("invalid json", func(t *testing.T) {
+		a := &Attachment{}
+		err := a.Scan([]byte(`{`))
+		assert.Error(t, err)
+	})
+
+	t.Run("invalid value type", func(t *testing.T) {
+		a := &Attachment{}
+		err := a.Scan(123)
+		assert.Error(t, err)
+	})
+}

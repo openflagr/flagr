@@ -56,6 +56,15 @@ func NewCRUD() CRUD {
 
 type crud struct{}
 
+var (
+	e2rMapFlag          = e2r.MapFlag
+	e2rMapFlags         = e2r.MapFlags
+	e2rMapFlagSnapshots = e2r.MapFlagSnapshots
+
+	r2eMapAttachment    = r2e.MapAttachment
+	r2eMapDistributions = r2e.MapDistributions
+)
+
 func (c *crud) FindFlags(params flag.FindFlagsParams) middleware.Responder {
 	fs := []entity.Flag{}
 	q := entity.NewFlagQuerySet(getDB())
@@ -65,7 +74,7 @@ func (c *crud) FindFlags(params flag.FindFlagsParams) middleware.Responder {
 			ErrorMessage("cannot query all flags. %s", err))
 	}
 	resp := flag.NewFindFlagsOK()
-	payload, err := e2r.MapFlags(fs)
+	payload, err := e2rMapFlags(fs)
 	if err != nil {
 		return flag.NewFindFlagsDefault(500).WithPayload(
 			ErrorMessage("cannot map flags. %s", err))
@@ -87,7 +96,7 @@ func (c *crud) CreateFlag(params flag.CreateFlagParams) middleware.Responder {
 	}
 
 	resp := flag.NewCreateFlagOK()
-	payload, err := e2r.MapFlag(f, true)
+	payload, err := e2rMapFlag(f, true)
 	if err != nil {
 		return flag.NewCreateFlagDefault(500).WithPayload(
 			ErrorMessage("cannot map flag. %s", err))
@@ -108,7 +117,7 @@ func (c *crud) GetFlag(params flag.GetFlagParams) middleware.Responder {
 	}
 
 	resp := flag.NewGetFlagOK()
-	payload, err := e2r.MapFlag(f, true)
+	payload, err := e2rMapFlag(f, true)
 	if err != nil {
 		return flag.NewGetFlagDefault(500).WithPayload(
 			ErrorMessage("cannot map flag %v. %s", params.FlagID, err))
@@ -124,7 +133,7 @@ func (c *crud) GetFlagSnapshots(params flag.GetFlagSnapshotsParams) middleware.R
 		return flag.NewGetFlagSnapshotsDefault(500).WithPayload(
 			ErrorMessage("cannot find flag snapshots for %v. %s", params.FlagID, err))
 	}
-	payload, err := e2r.MapFlagSnapshots(fs)
+	payload, err := e2rMapFlagSnapshots(fs)
 	if err != nil {
 		return flag.NewGetFlagSnapshotsDefault(500).WithPayload(
 			ErrorMessage("cannot map flag snapshots for flagID %v. %s", params.FlagID, err))
@@ -154,7 +163,7 @@ func (c *crud) PutFlag(params flag.PutFlagParams) middleware.Responder {
 	}
 
 	resp := flag.NewPutFlagOK()
-	payload, err := e2r.MapFlag(f, true)
+	payload, err := e2rMapFlag(f, true)
 	if err != nil {
 		return flag.NewPutFlagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
@@ -177,7 +186,7 @@ func (c *crud) SetFlagEnabledState(params flag.SetFlagEnabledParams) middleware.
 	}
 
 	resp := flag.NewSetFlagEnabledOK()
-	payload, err := e2r.MapFlag(f, true)
+	payload, err := e2rMapFlag(f, true)
 	if err != nil {
 		return flag.NewSetFlagEnabledDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
@@ -192,7 +201,7 @@ func (c *crud) DeleteFlag(params flag.DeleteFlagParams) middleware.Responder {
 
 	err := q.Delete()
 	if err != nil {
-		return flag.NewGetFlagDefault(500).WithPayload(ErrorMessage("%s", err))
+		return flag.NewDeleteFlagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 	return flag.NewDeleteFlagOK()
 }
@@ -369,7 +378,7 @@ func (c *crud) PutDistributions(params distribution.PutDistributionsParams) midd
 		return distribution.NewPutDistributionsDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
-	ds := r2e.MapDistributions(params.Body.Distributions, segmentID)
+	ds := r2eMapDistributions(params.Body.Distributions, segmentID)
 	for _, d := range ds {
 		err1 := tx.Create(&d).Error
 		if err1 != nil {
@@ -409,7 +418,7 @@ func (c *crud) CreateVariant(params variant.CreateVariantParams) middleware.Resp
 	v.FlagID = uint(params.FlagID)
 	v.Key = util.SafeString(params.Body.Key)
 
-	a, err := r2e.MapAttachment(params.Body.Attachment)
+	a, err := r2eMapAttachment(params.Body.Attachment)
 	if err != nil {
 		return variant.NewCreateVariantDefault(400).WithPayload(ErrorMessage("%s", err))
 	}
@@ -455,7 +464,7 @@ func (c *crud) PutVariant(params variant.PutVariantParams) middleware.Responder 
 
 	v.Key = util.SafeString(params.Body.Key)
 	if params.Body.Attachment != nil {
-		a, err := r2e.MapAttachment(params.Body.Attachment)
+		a, err := r2eMapAttachment(params.Body.Attachment)
 		if err != nil {
 			return variant.NewPutVariantDefault(400).WithPayload(ErrorMessage("%s", err))
 		}
