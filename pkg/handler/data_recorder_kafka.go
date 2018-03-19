@@ -18,16 +18,20 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+var (
+	saramaNewAsyncProducer = sarama.NewAsyncProducer
+)
+
 func createTLSConfiguration(certFile string, keyFile string, caFile string, verifySSL bool) (t *tls.Config) {
 	if certFile != "" && keyFile != "" && caFile != "" {
 		cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 		if err != nil {
-			logrus.WithField("TLSConfigurationError", err).Fatal(err)
+			logrus.WithField("TLSConfigurationError", err).Panic(err)
 		}
 
 		caCert, err := ioutil.ReadFile(caFile)
 		if err != nil {
-			logrus.WithField("TLSConfigurationError", err).Fatal(err)
+			logrus.WithField("TLSConfigurationError", err).Panic(err)
 		}
 
 		caCertPool := x509.NewCertPool()
@@ -50,7 +54,7 @@ type kafkaRecorder struct {
 }
 
 // NewKafkaRecorder creates a new Kafka recorder
-func NewKafkaRecorder() DataRecorder {
+var NewKafkaRecorder = func() DataRecorder {
 	cfg := sarama.NewConfig()
 	tlscfg := createTLSConfiguration(
 		config.Config.RecorderKafkaCertFile,
@@ -67,17 +71,19 @@ func NewKafkaRecorder() DataRecorder {
 	cfg.Producer.Flush.Frequency = config.Config.RecorderKafkaFlushFrequency
 
 	brokerList := strings.Split(config.Config.RecorderKafkaBrokers, ",")
-	producer, err := sarama.NewAsyncProducer(brokerList, cfg)
+	producer, err := saramaNewAsyncProducer(brokerList, cfg)
 	if err != nil {
 		logrus.WithField("kafka_error", err).Fatal("Failed to start Sarama producer:")
 	}
 
 	// We will just log to STDOUT if we're not able to produce messages.
-	go func() {
-		for err := range producer.Errors() {
-			logrus.WithField("kafka_error", err).Error("failed to write access log entry")
-		}
-	}()
+	if producer != nil {
+		go func() {
+			for err := range producer.Errors() {
+				logrus.WithField("kafka_error", err).Error("failed to write access log entry")
+			}
+		}()
+	}
 
 	return &kafkaRecorder{
 		producer: producer,

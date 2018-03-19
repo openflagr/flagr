@@ -230,3 +230,12 @@ func TestPostEvaluationBatch(t *testing.T) {
 		assert.NotNil(t, resp)
 	})
 }
+
+func TestRateLimitPerFlagConsoleLogging(t *testing.T) {
+	r := &models.EvalResult{FlagID: util.Int64Ptr(int64(1))}
+	t.Run("running fast triggers rate limiting", func(t *testing.T) {
+		for i := 0; i < 100; i++ {
+			rateLimitPerFlagConsoleLogging(r)
+		}
+	})
+}

@@ -7,7 +7,7 @@ import (
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/variant"
 )
 
-func validatePutDistributions(params distribution.PutDistributionsParams) *Error {
+var validatePutDistributions = func(params distribution.PutDistributionsParams) *Error {
 
 	sum := int64(0)
 	for _, d := range params.Body.Distributions {
@@ -48,7 +48,7 @@ func validatePutDistributions(params distribution.PutDistributionsParams) *Error
 	return nil
 }
 
-func validateDeleteVariant(params variant.DeleteVariantParams) *Error {
+var validateDeleteVariant = func(params variant.DeleteVariantParams) *Error {
 	f := &entity.Flag{}
 	err := entity.NewFlagQuerySet(getDB()).IDEq(uint(params.FlagID)).One(f)
 	if err != nil {
@@ -73,7 +73,7 @@ func validateDeleteVariant(params variant.DeleteVariantParams) *Error {
 	return nil
 }
 
-func validatePutVariantForDistributions(v *entity.Variant) *Error {
+var validatePutVariantForDistributions = func(v *entity.Variant) *Error {
 	q := entity.NewDistributionQuerySet(getDB())
 	if err := q.VariantIDEq(v.ID).GetUpdater().SetVariantKey(v.Key).Update(); err != nil {
 		return NewError(500, "error updating distribution to sync with variantID %v with variantKey %v. reason: %s", v.ID, v.Key, err)
