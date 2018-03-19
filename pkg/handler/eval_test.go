@@ -116,11 +116,18 @@ func TestEvalFlag(t *testing.T) {
 				Value:     `"CA"`,
 			},
 			{
-				Model:     gorm.Model{ID: 500},
+				Model:     gorm.Model{ID: 501},
 				SegmentID: 200,
 				Property:  "state",
 				Operator:  models.ConstraintOperatorEQ,
 				Value:     `{dl_state}`,
+			},
+			{
+				Model:     gorm.Model{ID: 502},
+				SegmentID: 200,
+				Property:  "rate",
+				Operator:  models.ConstraintOperatorGT,
+				Value:     `1000`,
 			},
 		}
 		f.PrepareEvaluation()
@@ -128,7 +135,7 @@ func TestEvalFlag(t *testing.T) {
 		defer gostub.StubFunc(&GetEvalCache, cache).Reset()
 		result := evalFlag(models.EvalContext{
 			EnableDebug:   true,
-			EntityContext: map[string]interface{}{"dl_state": "CA", "state": "CA"},
+			EntityContext: map[string]interface{}{"dl_state": "CA", "state": "CA", "rate": 2000},
 			EntityID:      util.StringPtr("entityID1"),
 			EntityType:    util.StringPtr("entityType1"),
 			FlagID:        util.Int64Ptr(int64(100)),

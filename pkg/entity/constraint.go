@@ -69,7 +69,7 @@ func (c *Constraint) toExprStr() (string, error) {
 		return "", fmt.Errorf("not supported operator: %s", c.Operator)
 	}
 
-	return fmt.Sprintf("{%s} %s %s", c.Property, o, c.Value), nil
+	return fmt.Sprintf("({%s} %s %s)", c.Property, o, c.Value), nil
 }
 
 // Validate validates Constraint
