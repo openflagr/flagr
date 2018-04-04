@@ -111,7 +111,7 @@
 
 [[constraint]]
   name = "github.com/newrelic/go-agent"
-  version = "1.9.0"
+  version = "1.11.0"
 
 [[constraint]]
   branch = "master"
