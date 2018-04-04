@@ -97,7 +97,7 @@ func TestUpdateWithNoStdPrimaryKeyAndDefaultValues(t *testing.T) {
 	DB.Save(&animal).Update("From", "a nice place") // The name field shoul be untouched
 	DB.First(&animal, animal.Counter)
 	if animal.Name != "galeone" {
-		t.Errorf("Name fiels shouldn't be changed if untouched, but got %v", animal.Name)
+		t.Errorf("Name fields shouldn't be changed if untouched, but got %v", animal.Name)
 	}
 
 	// When changing a field with a default value, the change must occur
@@ -300,7 +300,7 @@ func TestOmitWithUpdate(t *testing.T) {
 		queryUser.ShippingAddressId == user.ShippingAddressId ||
 		queryUser.CreditCard.ID != user.CreditCard.ID ||
 		len(queryUser.Emails) != len(user.Emails) || queryUser.Company.Id != user.Company.Id {
-		t.Errorf("Should only update relationships that not omited")
+		t.Errorf("Should only update relationships that not omitted")
 	}
 }
 
@@ -336,7 +336,7 @@ func TestOmitWithUpdateWithMap(t *testing.T) {
 		queryUser.ShippingAddressId == user.ShippingAddressId ||
 		queryUser.CreditCard.ID != user.CreditCard.ID ||
 		len(queryUser.Emails) != len(user.Emails) || queryUser.Company.Id != user.Company.Id {
-		t.Errorf("Should only update relationships not omited")
+		t.Errorf("Should only update relationships not omitted")
 	}
 }
 
@@ -416,6 +416,36 @@ func TestUpdatesWithBlankValues(t *testing.T) {
 
 	if product1.Code != "product1" || product1.Price != 100 {
 		t.Errorf("product's code should not be updated")
+	}
+}
+
+type ElementWithIgnoredField struct {
+	Id           int64
+	Value        string
+	IgnoredField int64 `sql:"-"`
+}
+
+func (e ElementWithIgnoredField) TableName() string {
+	return "element_with_ignored_field"
+}
+
+func TestUpdatesTableWithIgnoredValues(t *testing.T) {
+	elem := ElementWithIgnoredField{Value: "foo", IgnoredField: 10}
+	DB.Save(&elem)
+
+	DB.Table(elem.TableName()).
+		Where("id = ?", elem.Id).
+		// DB.Model(&ElementWithIgnoredField{Id: elem.Id}).
+		Updates(&ElementWithIgnoredField{Value: "bar", IgnoredField: 100})
+
+	var elem1 ElementWithIgnoredField
+	err := DB.First(&elem1, elem.Id).Error
+	if err != nil {
+		t.Errorf("error getting an element from database: %s", err.Error())
+	}
+
+	if elem1.IgnoredField != 0 {
+		t.Errorf("element's ignored field should not be updated")
 	}
 }
 

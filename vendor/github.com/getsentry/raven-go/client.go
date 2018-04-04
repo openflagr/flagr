@@ -337,6 +337,8 @@ func newClient(tags map[string]string) *Client {
 		queue:      make(chan *outgoingPacket, MaxQueueBuffer),
 	}
 	client.SetDSN(os.Getenv("SENTRY_DSN"))
+	client.SetRelease(os.Getenv("SENTRY_RELEASE"))
+	client.SetEnvironment(os.Getenv("SENTRY_ENVIRONMENT"))
 	return client
 }
 
@@ -582,8 +584,13 @@ func (client *Client) Capture(packet *Packet, captureTags map[string]string) (ev
 		return
 	}
 
-	packet.Release = release
-	packet.Environment = environment
+	if packet.Release == "" {
+		packet.Release = release
+	}
+
+	if packet.Environment == "" {
+		packet.Environment = environment
+	}
 
 	outgoingPacket := &outgoingPacket{packet, ch}
 

@@ -17,9 +17,9 @@ import (
 )
 
 // NewDeleteConstraintParams creates a new DeleteConstraintParams object
-// with the default values initialized.
+// no default values defined in spec.
 func NewDeleteConstraintParams() DeleteConstraintParams {
-	var ()
+
 	return DeleteConstraintParams{}
 }
 
@@ -53,9 +53,12 @@ type DeleteConstraintParams struct {
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
-// for simple values it will use straight method calls
+// for simple values it will use straight method calls.
+//
+// To ensure default values, the struct must have been initialized with NewDeleteConstraintParams() beforehand.
 func (o *DeleteConstraintParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
+
 	o.HTTPRequest = r
 
 	rConstraintID, rhkConstraintID, _ := route.Params.GetOK("constraintID")
@@ -85,6 +88,9 @@ func (o *DeleteConstraintParams) bindConstraintID(rawData []string, hasKey bool,
 		raw = rawData[len(rawData)-1]
 	}
 
+	// Required: true
+	// Parameter is provided by construction from the route
+
 	value, err := swag.ConvertInt64(raw)
 	if err != nil {
 		return errors.InvalidType("constraintID", "path", "int64", raw)
@@ -113,6 +119,9 @@ func (o *DeleteConstraintParams) bindFlagID(rawData []string, hasKey bool, forma
 		raw = rawData[len(rawData)-1]
 	}
 
+	// Required: true
+	// Parameter is provided by construction from the route
+
 	value, err := swag.ConvertInt64(raw)
 	if err != nil {
 		return errors.InvalidType("flagID", "path", "int64", raw)
@@ -140,6 +149,9 @@ func (o *DeleteConstraintParams) bindSegmentID(rawData []string, hasKey bool, fo
 	if len(rawData) > 0 {
 		raw = rawData[len(rawData)-1]
 	}
+
+	// Required: true
+	// Parameter is provided by construction from the route
 
 	value, err := swag.ConvertInt64(raw)
 	if err != nil {

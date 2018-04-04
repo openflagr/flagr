@@ -30,6 +30,7 @@ type CreateVariantOK struct {
 
 // NewCreateVariantOK creates CreateVariantOK with default headers values
 func NewCreateVariantOK() *CreateVariantOK {
+
 	return &CreateVariantOK{}
 }
 

@@ -5,7 +5,9 @@ import (
 	"database/sql/driver"
 	"errors"
 	"fmt"
+	"os"
 	"reflect"
+	"strconv"
 	"testing"
 	"time"
 
@@ -18,7 +20,7 @@ type User struct {
 	UserNum           Num
 	Name              string `sql:"size:255"`
 	Email             string
-	Birthday          time.Time     // Time
+	Birthday          *time.Time    // Time
 	CreatedAt         time.Time     // CreatedAt: Time of record is created, will be insert automatically
 	UpdatedAt         time.Time     // UpdatedAt: Time of record is updated, will be updated automatically
 	Emails            []Email       // Embedded structs
@@ -31,12 +33,33 @@ type User struct {
 	Languages         []Language `gorm:"many2many:user_languages;"`
 	CompanyID         *int
 	Company           Company
-	Role
+	Role              Role
+	Password          EncryptedData
 	PasswordHash      []byte
 	IgnoreMe          int64                 `sql:"-"`
 	IgnoreStringSlice []string              `sql:"-"`
 	Ignored           struct{ Name string } `sql:"-"`
 	IgnoredPointer    *User                 `sql:"-"`
+}
+
+type NotSoLongTableName struct {
+	Id                int64
+	ReallyLongThingID int64
+	ReallyLongThing   ReallyLongTableNameToTestMySQLNameLengthLimit
+}
+
+type ReallyLongTableNameToTestMySQLNameLengthLimit struct {
+	Id int64
+}
+
+type ReallyLongThingThatReferencesShort struct {
+	Id      int64
+	ShortID int64
+	Short   Short
+}
+
+type Short struct {
+	Id int64
 }
 
 type CreditCard struct {
@@ -45,7 +68,7 @@ type CreditCard struct {
 	UserId    sql.NullInt64
 	CreatedAt time.Time `sql:"not null"`
 	UpdatedAt time.Time
-	DeletedAt *time.Time
+	DeletedAt *time.Time `sql:"column:deleted_time"`
 }
 
 type Email struct {
@@ -95,8 +118,33 @@ type Company struct {
 	Owner *User `sql:"-"`
 }
 
+type EncryptedData []byte
+
+func (data *EncryptedData) Scan(value interface{}) error {
+	if b, ok := value.([]byte); ok {
+		if len(b) < 3 || b[0] != '*' || b[1] != '*' || b[2] != '*' {
+			return errors.New("Too short")
+		}
+
+		*data = b[3:]
+		return nil
+	}
+
+	return errors.New("Bytes expected")
+}
+
+func (data EncryptedData) Value() (driver.Value, error) {
+	if len(data) > 0 && data[0] == 'x' {
+		//needed to test failures
+		return nil, errors.New("Should not start with 'x'")
+	}
+
+	//prepend asterisks
+	return append([]byte("***"), data...), nil
+}
+
 type Role struct {
-	Name string
+	Name string `gorm:"size:256"`
 }
 
 func (role *Role) Scan(value interface{}) error {
@@ -121,6 +169,8 @@ type Num int64
 func (i *Num) Scan(src interface{}) error {
 	switch s := src.(type) {
 	case []byte:
+		n, _ := strconv.Atoi(string(s))
+		*i = Num(n)
 	case int64:
 		*i = Num(s)
 	default:
@@ -159,6 +209,9 @@ type Post struct {
 type Category struct {
 	gorm.Model
 	Name string
+
+	Categories []Category
+	CategoryID *uint
 }
 
 type Comment struct {
@@ -231,11 +284,10 @@ func runMigration() {
 		DB.Exec(fmt.Sprintf("drop table %v;", table))
 	}
 
-	values := []interface{}{&Product{}, &Email{}, &Address{}, &CreditCard{}, &Company{}, &Role{}, &Language{}, &HNPost{}, &EngadgetPost{}, &Animal{}, &User{}, &JoinTable{}, &Post{}, &Category{}, &Comment{}, &Cat{}, &Dog{}, &Toy{}}
+	values := []interface{}{&Short{}, &ReallyLongThingThatReferencesShort{}, &ReallyLongTableNameToTestMySQLNameLengthLimit{}, &NotSoLongTableName{}, &Product{}, &Email{}, &Address{}, &CreditCard{}, &Company{}, &Role{}, &Language{}, &HNPost{}, &EngadgetPost{}, &Animal{}, &User{}, &JoinTable{}, &Post{}, &Category{}, &Comment{}, &Cat{}, &Dog{}, &Hamster{}, &Toy{}, &ElementWithIgnoredField{}}
 	for _, value := range values {
 		DB.DropTable(value)
 	}
-
 	if err := DB.AutoMigrate(values...).Error; err != nil {
 		panic(fmt.Sprintf("No error should happen when create table, but got %+v", err))
 	}
@@ -310,40 +362,124 @@ func TestIndexes(t *testing.T) {
 	}
 }
 
-type BigEmail struct {
+type EmailWithIdx struct {
 	Id           int64
 	UserId       int64
-	Email        string    `sql:"index:idx_email_agent"`
-	UserAgent    string    `sql:"index:idx_email_agent"`
-	RegisteredAt time.Time `sql:"unique_index"`
+	Email        string     `sql:"index:idx_email_agent"`
+	UserAgent    string     `sql:"index:idx_email_agent"`
+	RegisteredAt *time.Time `sql:"unique_index"`
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 }
 
-func (b BigEmail) TableName() string {
-	return "emails"
-}
-
 func TestAutoMigration(t *testing.T) {
 	DB.AutoMigrate(&Address{})
-	if err := DB.Table("emails").AutoMigrate(&BigEmail{}).Error; err != nil {
+	DB.DropTable(&EmailWithIdx{})
+	if err := DB.AutoMigrate(&EmailWithIdx{}).Error; err != nil {
 		t.Errorf("Auto Migrate should not raise any error")
 	}
 
-	DB.Save(&BigEmail{Email: "jinzhu@example.org", UserAgent: "pc", RegisteredAt: time.Now()})
+	now := time.Now()
+	DB.Save(&EmailWithIdx{Email: "jinzhu@example.org", UserAgent: "pc", RegisteredAt: &now})
 
-	scope := DB.NewScope(&BigEmail{})
+	scope := DB.NewScope(&EmailWithIdx{})
 	if !scope.Dialect().HasIndex(scope.TableName(), "idx_email_agent") {
 		t.Errorf("Failed to create index")
 	}
 
-	if !scope.Dialect().HasIndex(scope.TableName(), "uix_emails_registered_at") {
+	if !scope.Dialect().HasIndex(scope.TableName(), "uix_email_with_idxes_registered_at") {
 		t.Errorf("Failed to create index")
 	}
 
-	var bigemail BigEmail
+	var bigemail EmailWithIdx
 	DB.First(&bigemail, "user_agent = ?", "pc")
 	if bigemail.Email != "jinzhu@example.org" || bigemail.UserAgent != "pc" || bigemail.RegisteredAt.IsZero() {
 		t.Error("Big Emails should be saved and fetched correctly")
+	}
+}
+
+type MultipleIndexes struct {
+	ID     int64
+	UserID int64  `sql:"unique_index:uix_multipleindexes_user_name,uix_multipleindexes_user_email;index:idx_multipleindexes_user_other"`
+	Name   string `sql:"unique_index:uix_multipleindexes_user_name"`
+	Email  string `sql:"unique_index:,uix_multipleindexes_user_email"`
+	Other  string `sql:"index:,idx_multipleindexes_user_other"`
+}
+
+func TestMultipleIndexes(t *testing.T) {
+	if err := DB.DropTableIfExists(&MultipleIndexes{}).Error; err != nil {
+		fmt.Printf("Got error when try to delete table multiple_indexes, %+v\n", err)
+	}
+
+	DB.AutoMigrate(&MultipleIndexes{})
+	if err := DB.AutoMigrate(&EmailWithIdx{}).Error; err != nil {
+		t.Errorf("Auto Migrate should not raise any error")
+	}
+
+	DB.Save(&MultipleIndexes{UserID: 1, Name: "jinzhu", Email: "jinzhu@example.org", Other: "foo"})
+
+	scope := DB.NewScope(&MultipleIndexes{})
+	if !scope.Dialect().HasIndex(scope.TableName(), "uix_multipleindexes_user_name") {
+		t.Errorf("Failed to create index")
+	}
+
+	if !scope.Dialect().HasIndex(scope.TableName(), "uix_multipleindexes_user_email") {
+		t.Errorf("Failed to create index")
+	}
+
+	if !scope.Dialect().HasIndex(scope.TableName(), "uix_multiple_indexes_email") {
+		t.Errorf("Failed to create index")
+	}
+
+	if !scope.Dialect().HasIndex(scope.TableName(), "idx_multipleindexes_user_other") {
+		t.Errorf("Failed to create index")
+	}
+
+	if !scope.Dialect().HasIndex(scope.TableName(), "idx_multiple_indexes_other") {
+		t.Errorf("Failed to create index")
+	}
+
+	var mutipleIndexes MultipleIndexes
+	DB.First(&mutipleIndexes, "name = ?", "jinzhu")
+	if mutipleIndexes.Email != "jinzhu@example.org" || mutipleIndexes.Name != "jinzhu" {
+		t.Error("MutipleIndexes should be saved and fetched correctly")
+	}
+
+	// Check unique constraints
+	if err := DB.Save(&MultipleIndexes{UserID: 1, Name: "name1", Email: "jinzhu@example.org", Other: "foo"}).Error; err == nil {
+		t.Error("MultipleIndexes unique index failed")
+	}
+
+	if err := DB.Save(&MultipleIndexes{UserID: 1, Name: "name1", Email: "foo@example.org", Other: "foo"}).Error; err != nil {
+		t.Error("MultipleIndexes unique index failed")
+	}
+
+	if err := DB.Save(&MultipleIndexes{UserID: 2, Name: "name1", Email: "jinzhu@example.org", Other: "foo"}).Error; err == nil {
+		t.Error("MultipleIndexes unique index failed")
+	}
+
+	if err := DB.Save(&MultipleIndexes{UserID: 2, Name: "name1", Email: "foo2@example.org", Other: "foo"}).Error; err != nil {
+		t.Error("MultipleIndexes unique index failed")
+	}
+}
+
+func TestModifyColumnType(t *testing.T) {
+	if dialect := os.Getenv("GORM_DIALECT"); dialect != "postgres" && dialect != "mysql" && dialect != "mssql" {
+		t.Skip("Skipping this because only postgres, mysql and mssql support altering a column type")
+	}
+
+	type ModifyColumnType struct {
+		gorm.Model
+		Name1 string `gorm:"length:100"`
+		Name2 string `gorm:"length:200"`
+	}
+	DB.DropTable(&ModifyColumnType{})
+	DB.CreateTable(&ModifyColumnType{})
+
+	name2Field, _ := DB.NewScope(&ModifyColumnType{}).FieldByName("Name2")
+	name2Type := DB.Dialect().DataTypeOf(name2Field.StructField)
+
+	if err := DB.Model(&ModifyColumnType{}).ModifyColumn("name1", name2Type).Error; err != nil {
+		t.Errorf("No error should happen when ModifyColumn, but got %v", err)
 	}
 }

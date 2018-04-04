@@ -25,6 +25,7 @@ type PutSegmentsReorderOK struct {
 
 // NewPutSegmentsReorderOK creates PutSegmentsReorderOK with default headers values
 func NewPutSegmentsReorderOK() *PutSegmentsReorderOK {
+
 	return &PutSegmentsReorderOK{}
 }
 

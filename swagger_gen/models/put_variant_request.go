@@ -49,6 +49,10 @@ func (m *PutVariantRequest) Validate(formats strfmt.Registry) error {
 
 func (m *PutVariantRequest) validateAttachment(formats strfmt.Registry) error {
 
+	if err := validate.Required("attachment", "body", m.Attachment); err != nil {
+		return err
+	}
+
 	return nil
 }
 

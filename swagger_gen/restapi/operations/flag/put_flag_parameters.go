@@ -21,9 +21,9 @@ import (
 )
 
 // NewPutFlagParams creates a new PutFlagParams object
-// with the default values initialized.
+// no default values defined in spec.
 func NewPutFlagParams() PutFlagParams {
-	var ()
+
 	return PutFlagParams{}
 }
 
@@ -50,9 +50,12 @@ type PutFlagParams struct {
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
-// for simple values it will use straight method calls
+// for simple values it will use straight method calls.
+//
+// To ensure default values, the struct must have been initialized with NewPutFlagParams() beforehand.
 func (o *PutFlagParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
+
 	o.HTTPRequest = r
 
 	if runtime.HasBody(r) {
@@ -64,8 +67,9 @@ func (o *PutFlagParams) BindRequest(r *http.Request, route *middleware.MatchedRo
 			} else {
 				res = append(res, errors.NewParseError("body", "body", "", err))
 			}
-
 		} else {
+
+			// validate body object
 			if err := body.Validate(route.Formats); err != nil {
 				res = append(res, err)
 			}
@@ -74,11 +78,9 @@ func (o *PutFlagParams) BindRequest(r *http.Request, route *middleware.MatchedRo
 				o.Body = &body
 			}
 		}
-
 	} else {
 		res = append(res, errors.Required("body", "body"))
 	}
-
 	rFlagID, rhkFlagID, _ := route.Params.GetOK("flagID")
 	if err := o.bindFlagID(rFlagID, rhkFlagID, route.Formats); err != nil {
 		res = append(res, err)
@@ -95,6 +97,9 @@ func (o *PutFlagParams) bindFlagID(rawData []string, hasKey bool, formats strfmt
 	if len(rawData) > 0 {
 		raw = rawData[len(rawData)-1]
 	}
+
+	// Required: true
+	// Parameter is provided by construction from the route
 
 	value, err := swag.ConvertInt64(raw)
 	if err != nil {

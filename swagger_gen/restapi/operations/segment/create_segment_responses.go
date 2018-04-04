@@ -30,6 +30,7 @@ type CreateSegmentOK struct {
 
 // NewCreateSegmentOK creates CreateSegmentOK with default headers values
 func NewCreateSegmentOK() *CreateSegmentOK {
+
 	return &CreateSegmentOK{}
 }
 

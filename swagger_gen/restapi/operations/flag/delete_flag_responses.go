@@ -25,6 +25,7 @@ type DeleteFlagOK struct {
 
 // NewDeleteFlagOK creates DeleteFlagOK with default headers values
 func NewDeleteFlagOK() *DeleteFlagOK {
+
 	return &DeleteFlagOK{}
 }
 

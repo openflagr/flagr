@@ -25,22 +25,23 @@ type FindDistributionsOK struct {
 	/*
 	  In: Body
 	*/
-	Payload models.FindDistributionsOKBody `json:"body,omitempty"`
+	Payload []*models.Distribution `json:"body,omitempty"`
 }
 
 // NewFindDistributionsOK creates FindDistributionsOK with default headers values
 func NewFindDistributionsOK() *FindDistributionsOK {
+
 	return &FindDistributionsOK{}
 }
 
 // WithPayload adds the payload to the find distributions o k response
-func (o *FindDistributionsOK) WithPayload(payload models.FindDistributionsOKBody) *FindDistributionsOK {
+func (o *FindDistributionsOK) WithPayload(payload []*models.Distribution) *FindDistributionsOK {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the find distributions o k response
-func (o *FindDistributionsOK) SetPayload(payload models.FindDistributionsOKBody) {
+func (o *FindDistributionsOK) SetPayload(payload []*models.Distribution) {
 	o.Payload = payload
 }
 
@@ -50,7 +51,7 @@ func (o *FindDistributionsOK) WriteResponse(rw http.ResponseWriter, producer run
 	rw.WriteHeader(200)
 	payload := o.Payload
 	if payload == nil {
-		payload = make(models.FindDistributionsOKBody, 0, 50)
+		payload = make([]*models.Distribution, 0, 50)
 	}
 
 	if err := producer.Produce(rw, payload); err != nil {

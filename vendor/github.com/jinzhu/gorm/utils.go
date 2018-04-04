@@ -23,8 +23,11 @@ var NowFunc = func() time.Time {
 }
 
 // Copied from golint
-var commonInitialisms = []string{"API", "ASCII", "CPU", "CSS", "DNS", "EOF", "GUID", "HTML", "HTTP", "HTTPS", "ID", "IP", "JSON", "LHS", "QPS", "RAM", "RHS", "RPC", "SLA", "SMTP", "SSH", "TLS", "TTL", "UI", "UID", "UUID", "URI", "URL", "UTF8", "VM", "XML", "XSRF", "XSS"}
+var commonInitialisms = []string{"API", "ASCII", "CPU", "CSS", "DNS", "EOF", "GUID", "HTML", "HTTP", "HTTPS", "ID", "IP", "JSON", "LHS", "QPS", "RAM", "RHS", "RPC", "SLA", "SMTP", "SSH", "TLS", "TTL", "UID", "UI", "UUID", "URI", "URL", "UTF8", "VM", "XML", "XSRF", "XSS"}
 var commonInitialismsReplacer *strings.Replacer
+
+var goSrcRegexp = regexp.MustCompile(`jinzhu/gorm/.*.go`)
+var goTestRegexp = regexp.MustCompile(`jinzhu/gorm/.*test.go`)
 
 func init() {
 	var commonInitialismsForReplacer []string
@@ -94,6 +97,9 @@ func ToDBName(name string) string {
 				}
 			} else {
 				buf.WriteRune(v)
+				if i == len(value)-2 && nextCase == upper {
+					buf.WriteRune('_')
+				}
 			}
 		} else {
 			currCase = upper
@@ -171,7 +177,7 @@ func toQueryValues(values [][]interface{}) (results []interface{}) {
 func fileWithLineNum() string {
 	for i := 2; i < 15; i++ {
 		_, file, line, ok := runtime.Caller(i)
-		if ok && (!regexp.MustCompile(`jinzhu/gorm/.*.go`).MatchString(file) || regexp.MustCompile(`jinzhu/gorm/.*test.go`).MatchString(file)) {
+		if ok && (!goSrcRegexp.MatchString(file) || goTestRegexp.MatchString(file)) {
 			return fmt.Sprintf("%v:%v", file, line)
 		}
 	}
@@ -179,6 +185,21 @@ func fileWithLineNum() string {
 }
 
 func isBlank(value reflect.Value) bool {
+	switch value.Kind() {
+	case reflect.String:
+		return value.Len() == 0
+	case reflect.Bool:
+		return !value.Bool()
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return value.Int() == 0
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		return value.Uint() == 0
+	case reflect.Float32, reflect.Float64:
+		return value.Float() == 0
+	case reflect.Interface, reflect.Ptr:
+		return value.IsNil()
+	}
+
 	return reflect.DeepEqual(value.Interface(), reflect.Zero(value.Type()).Interface())
 }
 

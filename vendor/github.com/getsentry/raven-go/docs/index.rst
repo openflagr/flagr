@@ -32,7 +32,8 @@ Configuring the Client
 
 To use ``raven-go``, you'll need to import the ``raven`` package, then initilize your
 DSN globally. If you specify the ``SENTRY_DSN`` environment variable, this will be
-done automatically for you.
+done automatically for you. The release and environment can also be specified in the
+environment variables ``SENTRY_RELEASE`` and ``SENTRY_ENVIRONMENT`` respectively.
 
 .. sourcecode:: go
 

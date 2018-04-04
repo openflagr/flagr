@@ -17,9 +17,9 @@ import (
 )
 
 // NewPostEvaluationBatchParams creates a new PostEvaluationBatchParams object
-// with the default values initialized.
+// no default values defined in spec.
 func NewPostEvaluationBatchParams() PostEvaluationBatchParams {
-	var ()
+
 	return PostEvaluationBatchParams{}
 }
 
@@ -40,9 +40,12 @@ type PostEvaluationBatchParams struct {
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
-// for simple values it will use straight method calls
+// for simple values it will use straight method calls.
+//
+// To ensure default values, the struct must have been initialized with NewPostEvaluationBatchParams() beforehand.
 func (o *PostEvaluationBatchParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
+
 	o.HTTPRequest = r
 
 	if runtime.HasBody(r) {
@@ -54,8 +57,9 @@ func (o *PostEvaluationBatchParams) BindRequest(r *http.Request, route *middlewa
 			} else {
 				res = append(res, errors.NewParseError("body", "body", "", err))
 			}
-
 		} else {
+
+			// validate body object
 			if err := body.Validate(route.Formats); err != nil {
 				res = append(res, err)
 			}
@@ -64,11 +68,9 @@ func (o *PostEvaluationBatchParams) BindRequest(r *http.Request, route *middlewa
 				o.Body = &body
 			}
 		}
-
 	} else {
 		res = append(res, errors.Required("body", "body"))
 	}
-
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}

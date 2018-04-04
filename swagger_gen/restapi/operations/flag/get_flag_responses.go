@@ -30,6 +30,7 @@ type GetFlagOK struct {
 
 // NewGetFlagOK creates GetFlagOK with default headers values
 func NewGetFlagOK() *GetFlagOK {
+
 	return &GetFlagOK{}
 }
 

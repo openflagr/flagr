@@ -30,6 +30,7 @@ type PostEvaluationBatchOK struct {
 
 // NewPostEvaluationBatchOK creates PostEvaluationBatchOK with default headers values
 func NewPostEvaluationBatchOK() *PostEvaluationBatchOK {
+
 	return &PostEvaluationBatchOK{}
 }
 

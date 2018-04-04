@@ -51,12 +51,14 @@ func (o *PutSegmentURL) Build() (*url.URL, error) {
 	} else {
 		return nil, errors.New("FlagID is required on PutSegmentURL")
 	}
+
 	segmentID := swag.FormatInt64(o.SegmentID)
 	if segmentID != "" {
 		_path = strings.Replace(_path, "{segmentID}", segmentID, -1)
 	} else {
 		return nil, errors.New("SegmentID is required on PutSegmentURL")
 	}
+
 	_basePath := o._basePath
 	if _basePath == "" {
 		_basePath = "/api/v1"

@@ -30,6 +30,7 @@ type PostEvaluationOK struct {
 
 // NewPostEvaluationOK creates PostEvaluationOK with default headers values
 func NewPostEvaluationOK() *PostEvaluationOK {
+
 	return &PostEvaluationOK{}
 }
 

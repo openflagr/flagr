@@ -30,6 +30,7 @@ type PutConstraintOK struct {
 
 // NewPutConstraintOK creates PutConstraintOK with default headers values
 func NewPutConstraintOK() *PutConstraintOK {
+
 	return &PutConstraintOK{}
 }
 

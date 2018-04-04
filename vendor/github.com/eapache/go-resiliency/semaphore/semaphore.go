@@ -8,7 +8,7 @@ import (
 
 // ErrNoTickets is the error returned by Acquire when it could not acquire
 // a ticket from the semaphore within the configured timeout.
-var ErrNoTickets = errors.New("could not aquire semaphore ticket")
+var ErrNoTickets = errors.New("could not acquire semaphore ticket")
 
 // Semaphore implements the semaphore resiliency pattern
 type Semaphore struct {
@@ -42,4 +42,11 @@ func (s *Semaphore) Acquire() error {
 // a Semaphore from which you have not first acquired a ticket.
 func (s *Semaphore) Release() {
 	<-s.sem
+}
+
+// IsEmpty will return true if no tickets are being held at that instant.
+// It is safe to call concurrently with Acquire and Release, though do note
+// that the result may then be unpredictable.
+func (s *Semaphore) IsEmpty() bool {
+	return len(s.sem) == 0
 }

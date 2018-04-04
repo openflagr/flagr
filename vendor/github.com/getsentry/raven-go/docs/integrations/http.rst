@@ -28,7 +28,8 @@ in your ``main`` package is a good place.
     }
 
 If you don't call ``SetDSN``, we will attempt to read it from your environment under the
-``SENTRY_DSN`` environment variable.
+``SENTRY_DSN`` environment variable. The release and environment will also be read from
+the environment variables ``SENTRY_RELEASE`` and ``SENTRY_ENVIRONMENT`` if set.
 
 Next, we need to wrap our ``http.Handler`` with our ``RecoveryHandler``:
 

@@ -51,12 +51,14 @@ func (o *DeleteVariantURL) Build() (*url.URL, error) {
 	} else {
 		return nil, errors.New("FlagID is required on DeleteVariantURL")
 	}
+
 	variantID := swag.FormatInt64(o.VariantID)
 	if variantID != "" {
 		_path = strings.Replace(_path, "{variantID}", variantID, -1)
 	} else {
 		return nil, errors.New("VariantID is required on DeleteVariantURL")
 	}
+
 	_basePath := o._basePath
 	if _basePath == "" {
 		_basePath = "/api/v1"

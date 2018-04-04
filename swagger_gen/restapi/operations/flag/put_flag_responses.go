@@ -30,6 +30,7 @@ type PutFlagOK struct {
 
 // NewPutFlagOK creates PutFlagOK with default headers values
 func NewPutFlagOK() *PutFlagOK {
+
 	return &PutFlagOK{}
 }
 

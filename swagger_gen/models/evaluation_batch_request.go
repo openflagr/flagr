@@ -24,7 +24,8 @@ type EvaluationBatchRequest struct {
 
 	// entities
 	// Required: true
-	Entities EvaluationBatchRequestEntities `json:"entities"`
+	// Min Items: 1
+	Entities []*EvaluationEntity `json:"entities"`
 
 	// flag ids
 	// Required: true
@@ -58,11 +59,29 @@ func (m *EvaluationBatchRequest) validateEntities(formats strfmt.Registry) error
 		return err
 	}
 
-	if err := m.Entities.Validate(formats); err != nil {
-		if ve, ok := err.(*errors.Validation); ok {
-			return ve.ValidateName("entities")
-		}
+	iEntitiesSize := int64(len(m.Entities))
+
+	if err := validate.MinItems("entities", "body", iEntitiesSize, 1); err != nil {
 		return err
+	}
+
+	for i := 0; i < len(m.Entities); i++ {
+
+		if swag.IsZero(m.Entities[i]) { // not required
+			continue
+		}
+
+		if m.Entities[i] != nil {
+
+			if err := m.Entities[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("entities" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+
+		}
+
 	}
 
 	return nil

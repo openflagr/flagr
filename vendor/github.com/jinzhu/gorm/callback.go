@@ -1,13 +1,11 @@
 package gorm
 
-import (
-	"fmt"
-)
+import "log"
 
 // DefaultCallback default callbacks defined by gorm
 var DefaultCallback = &Callback{}
 
-// Callback is a struct that contains all CURD callbacks
+// Callback is a struct that contains all CRUD callbacks
 //   Field `creates` contains callbacks will be call when creating object
 //   Field `updates` contains callbacks will be call when updating object
 //   Field `deletes` contains callbacks will be call when deleting object
@@ -93,6 +91,13 @@ func (cp *CallbackProcessor) Before(callbackName string) *CallbackProcessor {
 
 // Register a new callback, refer `Callbacks.Create`
 func (cp *CallbackProcessor) Register(callbackName string, callback func(scope *Scope)) {
+	if cp.kind == "row_query" {
+		if cp.before == "" && cp.after == "" && callbackName != "gorm:row_query" {
+			log.Printf("Registing RowQuery callback %v without specify order with Before(), After(), applying Before('gorm:row_query') by default for compatibility...\n", callbackName)
+			cp.before = "gorm:row_query"
+		}
+	}
+
 	cp.name = callbackName
 	cp.processor = &callback
 	cp.parent.processors = append(cp.parent.processors, cp)
@@ -102,7 +107,7 @@ func (cp *CallbackProcessor) Register(callbackName string, callback func(scope *
 // Remove a registered callback
 //     db.Callback().Create().Remove("gorm:update_time_stamp_when_create")
 func (cp *CallbackProcessor) Remove(callbackName string) {
-	fmt.Printf("[info] removing callback `%v` from %v\n", callbackName, fileWithLineNum())
+	log.Printf("[info] removing callback `%v` from %v\n", callbackName, fileWithLineNum())
 	cp.name = callbackName
 	cp.remove = true
 	cp.parent.processors = append(cp.parent.processors, cp)
@@ -115,7 +120,7 @@ func (cp *CallbackProcessor) Remove(callbackName string) {
 //		   scope.SetColumn("Updated", now)
 //     })
 func (cp *CallbackProcessor) Replace(callbackName string, callback func(scope *Scope)) {
-	fmt.Printf("[info] replacing callback `%v` from %v\n", callbackName, fileWithLineNum())
+	log.Printf("[info] replacing callback `%v` from %v\n", callbackName, fileWithLineNum())
 	cp.name = callbackName
 	cp.processor = &callback
 	cp.replace = true
@@ -154,7 +159,7 @@ func sortProcessors(cps []*CallbackProcessor) []*func(scope *Scope) {
 	for _, cp := range cps {
 		// show warning message the callback name already exists
 		if index := getRIndex(allNames, cp.name); index > -1 && !cp.replace && !cp.remove {
-			fmt.Printf("[warning] duplicated callback `%v` from %v\n", cp.name, fileWithLineNum())
+			log.Printf("[warning] duplicated callback `%v` from %v\n", cp.name, fileWithLineNum())
 		}
 		allNames = append(allNames, cp.name)
 	}
@@ -208,7 +213,7 @@ func sortProcessors(cps []*CallbackProcessor) []*func(scope *Scope) {
 	return sortedFuncs
 }
 
-// reorder all registered processors, and reset CURD callbacks
+// reorder all registered processors, and reset CRUD callbacks
 func (c *Callback) reorder() {
 	var creates, updates, deletes, queries, rowQueries []*CallbackProcessor
 

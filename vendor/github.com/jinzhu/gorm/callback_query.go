@@ -15,6 +15,10 @@ func init() {
 
 // queryCallback used to query data from database
 func queryCallback(scope *Scope) {
+	if _, skip := scope.InstanceGet("gorm:skip_query_callback"); skip {
+		return
+	}
+
 	defer scope.trace(NowFunc())
 
 	var (
@@ -30,7 +34,7 @@ func queryCallback(scope *Scope) {
 	}
 
 	if value, ok := scope.Get("gorm:query_destination"); ok {
-		results = reflect.Indirect(reflect.ValueOf(value))
+		results = indirect(reflect.ValueOf(value))
 	}
 
 	if kind := results.Kind(); kind == reflect.Slice {
@@ -78,7 +82,9 @@ func queryCallback(scope *Scope) {
 				}
 			}
 
-			if scope.db.RowsAffected == 0 && !isSlice {
+			if err := rows.Err(); err != nil {
+				scope.Err(err)
+			} else if scope.db.RowsAffected == 0 && !isSlice {
 				scope.Err(ErrRecordNotFound)
 			}
 		}

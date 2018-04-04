@@ -30,6 +30,7 @@ type PutVariantOK struct {
 
 // NewPutVariantOK creates PutVariantOK with default headers values
 func NewPutVariantOK() *PutVariantOK {
+
 	return &PutVariantOK{}
 }
 
