@@ -50,6 +50,7 @@ func (o *DeleteFlagURL) Build() (*url.URL, error) {
 	} else {
 		return nil, errors.New("FlagID is required on DeleteFlagURL")
 	}
+
 	_basePath := o._basePath
 	if _basePath == "" {
 		_basePath = "/api/v1"

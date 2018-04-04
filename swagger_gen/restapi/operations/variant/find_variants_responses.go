@@ -25,22 +25,23 @@ type FindVariantsOK struct {
 	/*
 	  In: Body
 	*/
-	Payload models.FindVariantsOKBody `json:"body,omitempty"`
+	Payload []*models.Variant `json:"body,omitempty"`
 }
 
 // NewFindVariantsOK creates FindVariantsOK with default headers values
 func NewFindVariantsOK() *FindVariantsOK {
+
 	return &FindVariantsOK{}
 }
 
 // WithPayload adds the payload to the find variants o k response
-func (o *FindVariantsOK) WithPayload(payload models.FindVariantsOKBody) *FindVariantsOK {
+func (o *FindVariantsOK) WithPayload(payload []*models.Variant) *FindVariantsOK {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the find variants o k response
-func (o *FindVariantsOK) SetPayload(payload models.FindVariantsOKBody) {
+func (o *FindVariantsOK) SetPayload(payload []*models.Variant) {
 	o.Payload = payload
 }
 
@@ -50,7 +51,7 @@ func (o *FindVariantsOK) WriteResponse(rw http.ResponseWriter, producer runtime.
 	rw.WriteHeader(200)
 	payload := o.Payload
 	if payload == nil {
-		payload = make(models.FindVariantsOKBody, 0, 50)
+		payload = make([]*models.Variant, 0, 50)
 	}
 
 	if err := producer.Produce(rw, payload); err != nil {

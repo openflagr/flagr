@@ -25,6 +25,7 @@ type DeleteSegmentOK struct {
 
 // NewDeleteSegmentOK creates DeleteSegmentOK with default headers values
 func NewDeleteSegmentOK() *DeleteSegmentOK {
+
 	return &DeleteSegmentOK{}
 }
 

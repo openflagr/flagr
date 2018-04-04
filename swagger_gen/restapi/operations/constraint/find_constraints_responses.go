@@ -25,22 +25,23 @@ type FindConstraintsOK struct {
 	/*
 	  In: Body
 	*/
-	Payload models.FindConstraintsOKBody `json:"body,omitempty"`
+	Payload []*models.Constraint `json:"body,omitempty"`
 }
 
 // NewFindConstraintsOK creates FindConstraintsOK with default headers values
 func NewFindConstraintsOK() *FindConstraintsOK {
+
 	return &FindConstraintsOK{}
 }
 
 // WithPayload adds the payload to the find constraints o k response
-func (o *FindConstraintsOK) WithPayload(payload models.FindConstraintsOKBody) *FindConstraintsOK {
+func (o *FindConstraintsOK) WithPayload(payload []*models.Constraint) *FindConstraintsOK {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the find constraints o k response
-func (o *FindConstraintsOK) SetPayload(payload models.FindConstraintsOKBody) {
+func (o *FindConstraintsOK) SetPayload(payload []*models.Constraint) {
 	o.Payload = payload
 }
 
@@ -50,7 +51,7 @@ func (o *FindConstraintsOK) WriteResponse(rw http.ResponseWriter, producer runti
 	rw.WriteHeader(200)
 	payload := o.Payload
 	if payload == nil {
-		payload = make(models.FindConstraintsOKBody, 0, 50)
+		payload = make([]*models.Constraint, 0, 50)
 	}
 
 	if err := producer.Produce(rw, payload); err != nil {

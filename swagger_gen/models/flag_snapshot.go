@@ -75,6 +75,7 @@ func (m *FlagSnapshot) validateFlag(formats strfmt.Registry) error {
 			}
 			return err
 		}
+
 	}
 
 	return nil

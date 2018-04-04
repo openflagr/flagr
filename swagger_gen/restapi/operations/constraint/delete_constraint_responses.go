@@ -25,6 +25,7 @@ type DeleteConstraintOK struct {
 
 // NewDeleteConstraintOK creates DeleteConstraintOK with default headers values
 func NewDeleteConstraintOK() *DeleteConstraintOK {
+
 	return &DeleteConstraintOK{}
 }
 

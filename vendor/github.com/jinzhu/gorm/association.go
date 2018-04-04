@@ -22,6 +22,10 @@ func (association *Association) Find(value interface{}) *Association {
 
 // Append append new associations for many2many, has_many, replace current association for has_one, belongs_to
 func (association *Association) Append(values ...interface{}) *Association {
+	if association.Error != nil {
+		return association
+	}
+
 	if relationship := association.field.Relationship; relationship.Kind == "has_one" {
 		return association.Replace(values...)
 	}
@@ -30,6 +34,10 @@ func (association *Association) Append(values ...interface{}) *Association {
 
 // Replace replace current associations with new one
 func (association *Association) Replace(values ...interface{}) *Association {
+	if association.Error != nil {
+		return association
+	}
+
 	var (
 		relationship = association.field.Relationship
 		scope        = association.scope
@@ -55,31 +63,33 @@ func (association *Association) Replace(values ...interface{}) *Association {
 	} else {
 		// Polymorphic Relations
 		if relationship.PolymorphicDBName != "" {
-			newDB = newDB.Where(fmt.Sprintf("%v = ?", scope.Quote(relationship.PolymorphicDBName)), scope.TableName())
+			newDB = newDB.Where(fmt.Sprintf("%v = ?", scope.Quote(relationship.PolymorphicDBName)), relationship.PolymorphicValue)
 		}
 
 		// Delete Relations except new created
 		if len(values) > 0 {
-			var associationForeignFieldNames []string
+			var associationForeignFieldNames, associationForeignDBNames []string
 			if relationship.Kind == "many_to_many" {
 				// if many to many relations, get association fields name from association foreign keys
 				associationScope := scope.New(reflect.New(field.Type()).Interface())
-				for _, dbName := range relationship.AssociationForeignFieldNames {
+				for idx, dbName := range relationship.AssociationForeignFieldNames {
 					if field, ok := associationScope.FieldByName(dbName); ok {
 						associationForeignFieldNames = append(associationForeignFieldNames, field.Name)
+						associationForeignDBNames = append(associationForeignDBNames, relationship.AssociationForeignDBNames[idx])
 					}
 				}
 			} else {
-				// If other relations, use primary keys
+				// If has one/many relations, use primary keys
 				for _, field := range scope.New(reflect.New(field.Type()).Interface()).PrimaryFields() {
 					associationForeignFieldNames = append(associationForeignFieldNames, field.Name)
+					associationForeignDBNames = append(associationForeignDBNames, field.DBName)
 				}
 			}
 
 			newPrimaryKeys := scope.getColumnAsArray(associationForeignFieldNames, field.Interface())
 
 			if len(newPrimaryKeys) > 0 {
-				sql := fmt.Sprintf("%v NOT IN (%v)", toQueryCondition(scope, relationship.AssociationForeignDBNames), toQueryMarks(newPrimaryKeys))
+				sql := fmt.Sprintf("%v NOT IN (%v)", toQueryCondition(scope, associationForeignDBNames), toQueryMarks(newPrimaryKeys))
 				newDB = newDB.Where(sql, toQueryValues(newPrimaryKeys)...)
 			}
 		}
@@ -97,7 +107,7 @@ func (association *Association) Replace(values ...interface{}) *Association {
 			if sourcePrimaryKeys := scope.getColumnAsArray(sourceForeignFieldNames, scope.Value); len(sourcePrimaryKeys) > 0 {
 				newDB = newDB.Where(fmt.Sprintf("%v IN (%v)", toQueryCondition(scope, relationship.ForeignDBNames), toQueryMarks(sourcePrimaryKeys)), toQueryValues(sourcePrimaryKeys)...)
 
-				association.setErr(relationship.JoinTableHandler.Delete(relationship.JoinTableHandler, newDB, relationship))
+				association.setErr(relationship.JoinTableHandler.Delete(relationship.JoinTableHandler, newDB))
 			}
 		} else if relationship.Kind == "has_one" || relationship.Kind == "has_many" {
 			// has_one or has_many relations, set foreign key to be nil (TODO or delete them?)
@@ -118,6 +128,10 @@ func (association *Association) Replace(values ...interface{}) *Association {
 
 // Delete remove relationship between source & passed arguments, but won't delete those arguments
 func (association *Association) Delete(values ...interface{}) *Association {
+	if association.Error != nil {
+		return association
+	}
+
 	var (
 		relationship = association.field.Relationship
 		scope        = association.scope
@@ -159,7 +173,7 @@ func (association *Association) Delete(values ...interface{}) *Association {
 		sql := fmt.Sprintf("%v IN (%v)", toQueryCondition(scope, relationship.AssociationForeignDBNames), toQueryMarks(deletingPrimaryKeys))
 		newDB = newDB.Where(sql, toQueryValues(deletingPrimaryKeys)...)
 
-		association.setErr(relationship.JoinTableHandler.Delete(relationship.JoinTableHandler, newDB, relationship))
+		association.setErr(relationship.JoinTableHandler.Delete(relationship.JoinTableHandler, newDB))
 	} else {
 		var foreignKeyMap = map[string]interface{}{}
 		for _, foreignKey := range relationship.ForeignDBNames {
@@ -272,11 +286,13 @@ func (association *Association) Count() int {
 	if relationship.PolymorphicType != "" {
 		query = query.Where(
 			fmt.Sprintf("%v.%v = ?", scope.New(fieldValue).QuotedTableName(), scope.Quote(relationship.PolymorphicDBName)),
-			scope.TableName(),
+			relationship.PolymorphicValue,
 		)
 	}
 
-	query.Model(fieldValue).Count(&count)
+	if err := query.Model(fieldValue).Count(&count).Error; err != nil {
+		association.Error = err
+	}
 	return count
 }
 

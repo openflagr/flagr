@@ -25,22 +25,23 @@ type GetFlagSnapshotsOK struct {
 	/*
 	  In: Body
 	*/
-	Payload models.GetFlagSnapshotsOKBody `json:"body,omitempty"`
+	Payload []*models.FlagSnapshot `json:"body,omitempty"`
 }
 
 // NewGetFlagSnapshotsOK creates GetFlagSnapshotsOK with default headers values
 func NewGetFlagSnapshotsOK() *GetFlagSnapshotsOK {
+
 	return &GetFlagSnapshotsOK{}
 }
 
 // WithPayload adds the payload to the get flag snapshots o k response
-func (o *GetFlagSnapshotsOK) WithPayload(payload models.GetFlagSnapshotsOKBody) *GetFlagSnapshotsOK {
+func (o *GetFlagSnapshotsOK) WithPayload(payload []*models.FlagSnapshot) *GetFlagSnapshotsOK {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the get flag snapshots o k response
-func (o *GetFlagSnapshotsOK) SetPayload(payload models.GetFlagSnapshotsOKBody) {
+func (o *GetFlagSnapshotsOK) SetPayload(payload []*models.FlagSnapshot) {
 	o.Payload = payload
 }
 
@@ -50,7 +51,7 @@ func (o *GetFlagSnapshotsOK) WriteResponse(rw http.ResponseWriter, producer runt
 	rw.WriteHeader(200)
 	payload := o.Payload
 	if payload == nil {
-		payload = make(models.GetFlagSnapshotsOKBody, 0, 50)
+		payload = make([]*models.FlagSnapshot, 0, 50)
 	}
 
 	if err := producer.Produce(rw, payload); err != nil {

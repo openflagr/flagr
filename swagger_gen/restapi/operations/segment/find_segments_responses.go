@@ -25,22 +25,23 @@ type FindSegmentsOK struct {
 	/*
 	  In: Body
 	*/
-	Payload models.FindSegmentsOKBody `json:"body,omitempty"`
+	Payload []*models.Segment `json:"body,omitempty"`
 }
 
 // NewFindSegmentsOK creates FindSegmentsOK with default headers values
 func NewFindSegmentsOK() *FindSegmentsOK {
+
 	return &FindSegmentsOK{}
 }
 
 // WithPayload adds the payload to the find segments o k response
-func (o *FindSegmentsOK) WithPayload(payload models.FindSegmentsOKBody) *FindSegmentsOK {
+func (o *FindSegmentsOK) WithPayload(payload []*models.Segment) *FindSegmentsOK {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the find segments o k response
-func (o *FindSegmentsOK) SetPayload(payload models.FindSegmentsOKBody) {
+func (o *FindSegmentsOK) SetPayload(payload []*models.Segment) {
 	o.Payload = payload
 }
 
@@ -50,7 +51,7 @@ func (o *FindSegmentsOK) WriteResponse(rw http.ResponseWriter, producer runtime.
 	rw.WriteHeader(200)
 	payload := o.Payload
 	if payload == nil {
-		payload = make(models.FindSegmentsOKBody, 0, 50)
+		payload = make([]*models.Segment, 0, 50)
 	}
 
 	if err := producer.Produce(rw, payload); err != nil {

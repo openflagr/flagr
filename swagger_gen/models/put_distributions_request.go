@@ -6,6 +6,8 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"strconv"
+
 	strfmt "github.com/go-openapi/strfmt"
 
 	"github.com/go-openapi/errors"
@@ -19,7 +21,7 @@ type PutDistributionsRequest struct {
 
 	// distributions
 	// Required: true
-	Distributions PutDistributionsRequestDistributions `json:"distributions"`
+	Distributions []*Distribution `json:"distributions"`
 }
 
 // Validate validates this put distributions request
@@ -43,11 +45,23 @@ func (m *PutDistributionsRequest) validateDistributions(formats strfmt.Registry)
 		return err
 	}
 
-	if err := m.Distributions.Validate(formats); err != nil {
-		if ve, ok := err.(*errors.Validation); ok {
-			return ve.ValidateName("distributions")
+	for i := 0; i < len(m.Distributions); i++ {
+
+		if swag.IsZero(m.Distributions[i]) { // not required
+			continue
 		}
-		return err
+
+		if m.Distributions[i] != nil {
+
+			if err := m.Distributions[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("distributions" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+
+		}
+
 	}
 
 	return nil

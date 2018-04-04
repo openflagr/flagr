@@ -6,6 +6,8 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"strconv"
+
 	strfmt "github.com/go-openapi/strfmt"
 
 	"github.com/go-openapi/errors"
@@ -19,7 +21,7 @@ type EvaluationBatchResponse struct {
 
 	// evaluation results
 	// Required: true
-	EvaluationResults EvaluationBatchResponseEvaluationResults `json:"evaluationResults"`
+	EvaluationResults []*EvalResult `json:"evaluationResults"`
 }
 
 // Validate validates this evaluation batch response
@@ -43,11 +45,23 @@ func (m *EvaluationBatchResponse) validateEvaluationResults(formats strfmt.Regis
 		return err
 	}
 
-	if err := m.EvaluationResults.Validate(formats); err != nil {
-		if ve, ok := err.(*errors.Validation); ok {
-			return ve.ValidateName("evaluationResults")
+	for i := 0; i < len(m.EvaluationResults); i++ {
+
+		if swag.IsZero(m.EvaluationResults[i]) { // not required
+			continue
 		}
-		return err
+
+		if m.EvaluationResults[i] != nil {
+
+			if err := m.EvaluationResults[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("evaluationResults" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+
+		}
+
 	}
 
 	return nil

@@ -62,10 +62,6 @@
   version = "1.0.0"
 
 [[constraint]]
-  branch = "master"
-  name = "github.com/jinzhu/configor"
-
-[[constraint]]
   name = "github.com/davecgh/go-spew"
   version = "1.1.0"
 

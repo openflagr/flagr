@@ -17,9 +17,9 @@ import (
 )
 
 // NewDeleteSegmentParams creates a new DeleteSegmentParams object
-// with the default values initialized.
+// no default values defined in spec.
 func NewDeleteSegmentParams() DeleteSegmentParams {
-	var ()
+
 	return DeleteSegmentParams{}
 }
 
@@ -47,9 +47,12 @@ type DeleteSegmentParams struct {
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
-// for simple values it will use straight method calls
+// for simple values it will use straight method calls.
+//
+// To ensure default values, the struct must have been initialized with NewDeleteSegmentParams() beforehand.
 func (o *DeleteSegmentParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
+
 	o.HTTPRequest = r
 
 	rFlagID, rhkFlagID, _ := route.Params.GetOK("flagID")
@@ -73,6 +76,9 @@ func (o *DeleteSegmentParams) bindFlagID(rawData []string, hasKey bool, formats 
 	if len(rawData) > 0 {
 		raw = rawData[len(rawData)-1]
 	}
+
+	// Required: true
+	// Parameter is provided by construction from the route
 
 	value, err := swag.ConvertInt64(raw)
 	if err != nil {
@@ -101,6 +107,9 @@ func (o *DeleteSegmentParams) bindSegmentID(rawData []string, hasKey bool, forma
 	if len(rawData) > 0 {
 		raw = rawData[len(rawData)-1]
 	}
+
+	// Required: true
+	// Parameter is provided by construction from the route
 
 	value, err := swag.ConvertInt64(raw)
 	if err != nil {

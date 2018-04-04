@@ -30,6 +30,7 @@ type SetFlagEnabledOK struct {
 
 // NewSetFlagEnabledOK creates SetFlagEnabledOK with default headers values
 func NewSetFlagEnabledOK() *SetFlagEnabledOK {
+
 	return &SetFlagEnabledOK{}
 }
 

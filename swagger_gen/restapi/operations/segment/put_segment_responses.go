@@ -30,6 +30,7 @@ type PutSegmentOK struct {
 
 // NewPutSegmentOK creates PutSegmentOK with default headers values
 func NewPutSegmentOK() *PutSegmentOK {
+
 	return &PutSegmentOK{}
 }
 

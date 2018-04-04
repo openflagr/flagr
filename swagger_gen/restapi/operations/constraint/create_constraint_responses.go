@@ -30,6 +30,7 @@ type CreateConstraintOK struct {
 
 // NewCreateConstraintOK creates CreateConstraintOK with default headers values
 func NewCreateConstraintOK() *CreateConstraintOK {
+
 	return &CreateConstraintOK{}
 }
 

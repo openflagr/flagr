@@ -40,6 +40,7 @@ type SentryHook struct {
 	client *raven.Client
 	levels []logrus.Level
 
+	serverName   string
 	ignoreFields map[string]struct{}
 	extraFilters map[string]func(interface{}) interface{}
 
@@ -78,6 +79,8 @@ type StackTraceConfiguration struct {
 	InAppPrefixes []string
 	// whether sending exception type should be enabled.
 	SendExceptionType bool
+	// whether the exception type and message should be switched.
+	SwitchExceptionTypeAndMessage bool
 }
 
 // NewSentryHook creates a hook to be added to an instance of logger
@@ -166,6 +169,9 @@ func (hook *SentryHook) Fire(entry *logrus.Entry) error {
 	df := newDataField(entry.Data)
 
 	// set special fields
+	if hook.serverName != "" {
+		packet.ServerName = hook.serverName
+	}
 	if logger, ok := df.getLogger(); ok {
 		packet.Logger = logger
 	}
@@ -201,8 +207,13 @@ func (hook *SentryHook) Fire(entry *logrus.Entry) error {
 			if !stConfig.SendExceptionType {
 				exc.Type = ""
 			}
-			packet.Interfaces = append(packet.Interfaces, exc)
-			packet.Culprit = err.Error()
+			if stConfig.SwitchExceptionTypeAndMessage {
+				packet.Interfaces = append(packet.Interfaces, currentStacktrace)
+				packet.Culprit = exc.Type + ": " + currentStacktrace.Culprit()
+			} else {
+				packet.Interfaces = append(packet.Interfaces, exc)
+				packet.Culprit = err.Error()
+			}
 		} else {
 			currentStacktrace := raven.NewStacktrace(stConfig.Skip, stConfig.Context, stConfig.InAppPrefixes)
 			if currentStacktrace != nil {
@@ -324,6 +335,11 @@ func (hook *SentryHook) SetRelease(release string) {
 // SetEnvironment sets environment tag.
 func (hook *SentryHook) SetEnvironment(environment string) {
 	hook.client.SetEnvironment(environment)
+}
+
+// SetServerName sets server_name tag.
+func (hook *SentryHook) SetServerName(serverName string) {
+	hook.serverName = serverName
 }
 
 // AddIgnore adds field name to ignore.

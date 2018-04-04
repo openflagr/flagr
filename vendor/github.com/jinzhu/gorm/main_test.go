@@ -5,6 +5,7 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"os"
+	"path/filepath"
 	"reflect"
 	"strconv"
 	"testing"
@@ -31,38 +32,50 @@ func init() {
 		panic(fmt.Sprintf("No error should happen when connecting to test database, but got err=%+v", err))
 	}
 
-	// DB.SetLogger(Logger{log.New(os.Stdout, "\r\n", 0)})
-	// DB.SetLogger(log.New(os.Stdout, "\r\n", 0))
-	if os.Getenv("DEBUG") == "true" {
-		DB.LogMode(true)
-	}
-
-	DB.DB().SetMaxIdleConns(10)
-
 	runMigration()
 }
 
 func OpenTestConnection() (db *gorm.DB, err error) {
+	dbDSN := os.Getenv("GORM_DSN")
 	switch os.Getenv("GORM_DIALECT") {
 	case "mysql":
-		// CREATE USER 'gorm'@'localhost' IDENTIFIED BY 'gorm';
-		// CREATE DATABASE gorm;
-		// GRANT ALL ON gorm.* TO 'gorm'@'localhost';
 		fmt.Println("testing mysql...")
-		db, err = gorm.Open("mysql", "gorm:gorm@/gorm?charset=utf8&parseTime=True")
+		if dbDSN == "" {
+			dbDSN = "gorm:gorm@tcp(localhost:9910)/gorm?charset=utf8&parseTime=True"
+		}
+		db, err = gorm.Open("mysql", dbDSN)
 	case "postgres":
 		fmt.Println("testing postgres...")
-		db, err = gorm.Open("postgres", "user=gorm DB.name=gorm sslmode=disable")
-	case "foundation":
-		fmt.Println("testing foundation...")
-		db, err = gorm.Open("foundation", "dbname=gorm port=15432 sslmode=disable")
+		if dbDSN == "" {
+			dbDSN = "user=gorm password=gorm DB.name=gorm port=9920 sslmode=disable"
+		}
+		db, err = gorm.Open("postgres", dbDSN)
 	case "mssql":
+		// CREATE LOGIN gorm WITH PASSWORD = 'LoremIpsum86';
+		// CREATE DATABASE gorm;
+		// USE gorm;
+		// CREATE USER gorm FROM LOGIN gorm;
+		// sp_changedbowner 'gorm';
 		fmt.Println("testing mssql...")
-		db, err = gorm.Open("mssql", "server=SERVER_HERE;database=rogue;user id=USER_HERE;password=PW_HERE;port=1433")
+		if dbDSN == "" {
+			dbDSN = "sqlserver://gorm:LoremIpsum86@localhost:9930?database=gorm"
+		}
+		db, err = gorm.Open("mssql", dbDSN)
 	default:
 		fmt.Println("testing sqlite3...")
-		db, err = gorm.Open("sqlite3", "/tmp/gorm.db")
+		db, err = gorm.Open("sqlite3", filepath.Join(os.TempDir(), "gorm.db"))
 	}
+
+	// db.SetLogger(Logger{log.New(os.Stdout, "\r\n", 0)})
+	// db.SetLogger(log.New(os.Stdout, "\r\n", 0))
+	if debug := os.Getenv("DEBUG"); debug == "true" {
+		db.LogMode(true)
+	} else if debug == "false" {
+		db.LogMode(false)
+	}
+
+	db.DB().SetMaxIdleConns(10)
+
 	return
 }
 
@@ -71,10 +84,16 @@ func TestStringPrimaryKey(t *testing.T) {
 		ID   string `gorm:"primary_key"`
 		Name string
 	}
+	DB.DropTable(&UUIDStruct{})
 	DB.AutoMigrate(&UUIDStruct{})
 
 	data := UUIDStruct{ID: "uuid", Name: "hello"}
-	if err := DB.Save(&data).Error; err != nil || data.ID != "uuid" {
+	if err := DB.Save(&data).Error; err != nil || data.ID != "uuid" || data.Name != "hello" {
+		t.Errorf("string primary key should not be populated")
+	}
+
+	data = UUIDStruct{ID: "uuid", Name: "hello world"}
+	if err := DB.Save(&data).Error; err != nil || data.ID != "uuid" || data.Name != "hello world" {
 		t.Errorf("string primary key should not be populated")
 	}
 }
@@ -299,8 +318,14 @@ func TestNullValuesWithFirstOrCreate(t *testing.T) {
 	}
 
 	var nv2 NullValue
-	if err := DB.Where(nv1).FirstOrCreate(&nv2).Error; err != nil {
-		t.Errorf("Should not raise any error, but got %v", err)
+	result := DB.Where(nv1).FirstOrCreate(&nv2)
+
+	if result.RowsAffected != 1 {
+		t.Errorf("RowsAffected should be 1 after create some record")
+	}
+
+	if result.Error != nil {
+		t.Errorf("Should not raise any error, but got %v", result.Error)
 	}
 
 	if nv2.Name.String != "first_or_create" || nv2.Gender.String != "M" {
@@ -355,9 +380,9 @@ func TestTransaction(t *testing.T) {
 }
 
 func TestRow(t *testing.T) {
-	user1 := User{Name: "RowUser1", Age: 1, Birthday: now.MustParse("2000-1-1")}
-	user2 := User{Name: "RowUser2", Age: 10, Birthday: now.MustParse("2010-1-1")}
-	user3 := User{Name: "RowUser3", Age: 20, Birthday: now.MustParse("2020-1-1")}
+	user1 := User{Name: "RowUser1", Age: 1, Birthday: parseTime("2000-1-1")}
+	user2 := User{Name: "RowUser2", Age: 10, Birthday: parseTime("2010-1-1")}
+	user3 := User{Name: "RowUser3", Age: 20, Birthday: parseTime("2020-1-1")}
 	DB.Save(&user1).Save(&user2).Save(&user3)
 
 	row := DB.Table("users").Where("name = ?", user2.Name).Select("age").Row()
@@ -369,9 +394,9 @@ func TestRow(t *testing.T) {
 }
 
 func TestRows(t *testing.T) {
-	user1 := User{Name: "RowsUser1", Age: 1, Birthday: now.MustParse("2000-1-1")}
-	user2 := User{Name: "RowsUser2", Age: 10, Birthday: now.MustParse("2010-1-1")}
-	user3 := User{Name: "RowsUser3", Age: 20, Birthday: now.MustParse("2020-1-1")}
+	user1 := User{Name: "RowsUser1", Age: 1, Birthday: parseTime("2000-1-1")}
+	user2 := User{Name: "RowsUser2", Age: 10, Birthday: parseTime("2010-1-1")}
+	user3 := User{Name: "RowsUser3", Age: 20, Birthday: parseTime("2020-1-1")}
 	DB.Save(&user1).Save(&user2).Save(&user3)
 
 	rows, err := DB.Table("users").Where("name = ? or name = ?", user2.Name, user3.Name).Select("name, age").Rows()
@@ -393,9 +418,9 @@ func TestRows(t *testing.T) {
 }
 
 func TestScanRows(t *testing.T) {
-	user1 := User{Name: "ScanRowsUser1", Age: 1, Birthday: now.MustParse("2000-1-1")}
-	user2 := User{Name: "ScanRowsUser2", Age: 10, Birthday: now.MustParse("2010-1-1")}
-	user3 := User{Name: "ScanRowsUser3", Age: 20, Birthday: now.MustParse("2020-1-1")}
+	user1 := User{Name: "ScanRowsUser1", Age: 1, Birthday: parseTime("2000-1-1")}
+	user2 := User{Name: "ScanRowsUser2", Age: 10, Birthday: parseTime("2010-1-1")}
+	user3 := User{Name: "ScanRowsUser3", Age: 20, Birthday: parseTime("2020-1-1")}
 	DB.Save(&user1).Save(&user2).Save(&user3)
 
 	rows, err := DB.Table("users").Where("name = ? or name = ?", user2.Name, user3.Name).Select("name, age").Rows()
@@ -423,9 +448,9 @@ func TestScanRows(t *testing.T) {
 }
 
 func TestScan(t *testing.T) {
-	user1 := User{Name: "ScanUser1", Age: 1, Birthday: now.MustParse("2000-1-1")}
-	user2 := User{Name: "ScanUser2", Age: 10, Birthday: now.MustParse("2010-1-1")}
-	user3 := User{Name: "ScanUser3", Age: 20, Birthday: now.MustParse("2020-1-1")}
+	user1 := User{Name: "ScanUser1", Age: 1, Birthday: parseTime("2000-1-1")}
+	user2 := User{Name: "ScanUser2", Age: 10, Birthday: parseTime("2010-1-1")}
+	user3 := User{Name: "ScanUser3", Age: 20, Birthday: parseTime("2020-1-1")}
 	DB.Save(&user1).Save(&user2).Save(&user3)
 
 	type result struct {
@@ -439,8 +464,10 @@ func TestScan(t *testing.T) {
 		t.Errorf("Scan into struct should work")
 	}
 
-	var doubleAgeRes result
-	DB.Table("users").Select("age + age as age").Where("name = ?", user3.Name).Scan(&doubleAgeRes)
+	var doubleAgeRes = &result{}
+	if err := DB.Table("users").Select("age + age as age").Where("name = ?", user3.Name).Scan(&doubleAgeRes).Error; err != nil {
+		t.Errorf("Scan to pointer of pointer")
+	}
 	if doubleAgeRes.Age != res.Age*2 {
 		t.Errorf("Scan double age as age")
 	}
@@ -453,9 +480,9 @@ func TestScan(t *testing.T) {
 }
 
 func TestRaw(t *testing.T) {
-	user1 := User{Name: "ExecRawSqlUser1", Age: 1, Birthday: now.MustParse("2000-1-1")}
-	user2 := User{Name: "ExecRawSqlUser2", Age: 10, Birthday: now.MustParse("2010-1-1")}
-	user3 := User{Name: "ExecRawSqlUser3", Age: 20, Birthday: now.MustParse("2020-1-1")}
+	user1 := User{Name: "ExecRawSqlUser1", Age: 1, Birthday: parseTime("2000-1-1")}
+	user2 := User{Name: "ExecRawSqlUser2", Age: 10, Birthday: parseTime("2010-1-1")}
+	user3 := User{Name: "ExecRawSqlUser3", Age: 20, Birthday: parseTime("2020-1-1")}
 	DB.Save(&user1).Save(&user2).Save(&user3)
 
 	type result struct {
@@ -529,6 +556,12 @@ func TestJoins(t *testing.T) {
 	if len(users4) != 0 {
 		t.Errorf("should find no user when searching with unexisting credit card")
 	}
+
+	var users5 []User
+	db5 := DB.Joins("join emails on emails.user_id = users.id AND emails.email = ?", "join1@example.com").Joins("join credit_cards on credit_cards.user_id = users.id AND credit_cards.number = ?", "411111111111").Where(User{Id: 1}).Where(Email{Id: 1}).Not(Email{Id: 10}).First(&users5)
+	if db5.Error != nil {
+		t.Errorf("Should not raise error for join where identical fields in different tables. Error: %s", db5.Error.Error())
+	}
 }
 
 func TestJoinsWithSelect(t *testing.T) {
@@ -572,9 +605,95 @@ func TestHaving(t *testing.T) {
 	}
 }
 
+func TestQueryBuilderSubselectInWhere(t *testing.T) {
+	user := User{Name: "query_expr_select_ruser1", Email: "root@user1.com", Age: 32}
+	DB.Save(&user)
+	user = User{Name: "query_expr_select_ruser2", Email: "nobody@user2.com", Age: 16}
+	DB.Save(&user)
+	user = User{Name: "query_expr_select_ruser3", Email: "root@user3.com", Age: 64}
+	DB.Save(&user)
+	user = User{Name: "query_expr_select_ruser4", Email: "somebody@user3.com", Age: 128}
+	DB.Save(&user)
+
+	var users []User
+	DB.Select("*").Where("name IN (?)", DB.
+		Select("name").Table("users").Where("name LIKE ?", "query_expr_select%").QueryExpr()).Find(&users)
+
+	if len(users) != 4 {
+		t.Errorf("Four users should be found, instead found %d", len(users))
+	}
+
+	DB.Select("*").Where("name LIKE ?", "query_expr_select%").Where("age >= (?)", DB.
+		Select("AVG(age)").Table("users").Where("name LIKE ?", "query_expr_select%").QueryExpr()).Find(&users)
+
+	if len(users) != 2 {
+		t.Errorf("Two users should be found, instead found %d", len(users))
+	}
+}
+
+func TestQueryBuilderRawQueryWithSubquery(t *testing.T) {
+	user := User{Name: "subquery_test_user1", Age: 10}
+	DB.Save(&user)
+	user = User{Name: "subquery_test_user2", Age: 11}
+	DB.Save(&user)
+	user = User{Name: "subquery_test_user3", Age: 12}
+	DB.Save(&user)
+
+	var count int
+	err := DB.Raw("select count(*) from (?) tmp",
+		DB.Table("users").
+			Select("name").
+			Where("age >= ? and name in (?)", 10, []string{"subquery_test_user1", "subquery_test_user2"}).
+			Group("name").
+			QueryExpr(),
+	).Count(&count).Error
+
+	if err != nil {
+		t.Errorf("Expected to get no errors, but got %v", err)
+	}
+	if count != 2 {
+		t.Errorf("Row count must be 2, instead got %d", count)
+	}
+
+	err = DB.Raw("select count(*) from (?) tmp",
+		DB.Table("users").
+			Select("name").
+			Where("name LIKE ?", "subquery_test%").
+			Not("age <= ?", 10).Not("name in (?)", []string{"subquery_test_user1", "subquery_test_user2"}).
+			Group("name").
+			QueryExpr(),
+	).Count(&count).Error
+
+	if err != nil {
+		t.Errorf("Expected to get no errors, but got %v", err)
+	}
+	if count != 1 {
+		t.Errorf("Row count must be 1, instead got %d", count)
+	}
+}
+
+func TestQueryBuilderSubselectInHaving(t *testing.T) {
+	user := User{Name: "query_expr_having_ruser1", Email: "root@user1.com", Age: 64}
+	DB.Save(&user)
+	user = User{Name: "query_expr_having_ruser2", Email: "root@user2.com", Age: 128}
+	DB.Save(&user)
+	user = User{Name: "query_expr_having_ruser3", Email: "root@user1.com", Age: 64}
+	DB.Save(&user)
+	user = User{Name: "query_expr_having_ruser4", Email: "root@user2.com", Age: 128}
+	DB.Save(&user)
+
+	var users []User
+	DB.Select("AVG(age) as avgage").Where("name LIKE ?", "query_expr_having_%").Group("email").Having("AVG(age) > (?)", DB.
+		Select("AVG(age)").Where("name LIKE ?", "query_expr_having_%").Table("users").QueryExpr()).Find(&users)
+
+	if len(users) != 1 {
+		t.Errorf("Two user group should be found, instead found %d", len(users))
+	}
+}
+
 func DialectHasTzSupport() bool {
 	// NB: mssql and FoundationDB do not support time zones.
-	if dialect := os.Getenv("GORM_DIALECT"); dialect == "mssql" || dialect == "foundation" {
+	if dialect := os.Getenv("GORM_DIALECT"); dialect == "foundation" {
 		return false
 	}
 	return true
@@ -589,11 +708,12 @@ func TestTimeWithZone(t *testing.T) {
 
 	for index, vtime := range times {
 		name := "time_with_zone_" + strconv.Itoa(index)
-		user := User{Name: name, Birthday: vtime}
+		user := User{Name: name, Birthday: &vtime}
 
 		if !DialectHasTzSupport() {
 			// If our driver dialect doesn't support TZ's, just use UTC for everything here.
-			user.Birthday = vtime.UTC()
+			utcBirthday := user.Birthday.UTC()
+			user.Birthday = &utcBirthday
 		}
 
 		DB.Save(&user)
@@ -732,15 +852,64 @@ func TestDdlErrors(t *testing.T) {
 	}
 }
 
+func TestOpenWithOneParameter(t *testing.T) {
+	db, err := gorm.Open("dialect")
+	if db != nil {
+		t.Error("Open with one parameter returned non nil for db")
+	}
+	if err == nil {
+		t.Error("Open with one parameter returned err as nil")
+	}
+}
+
+func TestBlockGlobalUpdate(t *testing.T) {
+	db := DB.New()
+	db.Create(&Toy{Name: "Stuffed Animal", OwnerType: "Nobody"})
+
+	err := db.Model(&Toy{}).Update("OwnerType", "Human").Error
+	if err != nil {
+		t.Error("Unexpected error on global update")
+	}
+
+	err = db.Delete(&Toy{}).Error
+	if err != nil {
+		t.Error("Unexpected error on global delete")
+	}
+
+	db.BlockGlobalUpdate(true)
+
+	db.Create(&Toy{Name: "Stuffed Animal", OwnerType: "Nobody"})
+
+	err = db.Model(&Toy{}).Update("OwnerType", "Human").Error
+	if err == nil {
+		t.Error("Expected error on global update")
+	}
+
+	err = db.Model(&Toy{}).Where(&Toy{OwnerType: "Martian"}).Update("OwnerType", "Astronaut").Error
+	if err != nil {
+		t.Error("Unxpected error on conditional update")
+	}
+
+	err = db.Delete(&Toy{}).Error
+	if err == nil {
+		t.Error("Expected error on global delete")
+	}
+	err = db.Where(&Toy{OwnerType: "Martian"}).Delete(&Toy{}).Error
+	if err != nil {
+		t.Error("Unexpected error on conditional delete")
+	}
+}
+
 func BenchmarkGorm(b *testing.B) {
 	b.N = 2000
 	for x := 0; x < b.N; x++ {
 		e := strconv.Itoa(x) + "benchmark@example.org"
-		email := BigEmail{Email: e, UserAgent: "pc", RegisteredAt: time.Now()}
+		now := time.Now()
+		email := EmailWithIdx{Email: e, UserAgent: "pc", RegisteredAt: &now}
 		// Insert
 		DB.Save(&email)
 		// Query
-		DB.First(&BigEmail{}, "email = ?", e)
+		DB.First(&EmailWithIdx{}, "email = ?", e)
 		// Update
 		DB.Model(&email).UpdateColumn("email", "new-"+e)
 		// Delete
@@ -760,7 +929,8 @@ func BenchmarkRawSql(b *testing.B) {
 	for x := 0; x < b.N; x++ {
 		var id int64
 		e := strconv.Itoa(x) + "benchmark@example.org"
-		email := BigEmail{Email: e, UserAgent: "pc", RegisteredAt: time.Now()}
+		now := time.Now()
+		email := EmailWithIdx{Email: e, UserAgent: "pc", RegisteredAt: &now}
 		// Insert
 		DB.QueryRow(insertSql, email.UserId, email.Email, email.UserAgent, email.RegisteredAt, time.Now(), time.Now()).Scan(&id)
 		// Query
@@ -771,4 +941,9 @@ func BenchmarkRawSql(b *testing.B) {
 		// Delete
 		DB.Exec(deleteSql, id)
 	}
+}
+
+func parseTime(str string) *time.Time {
+	t := now.New(time.Now().UTC()).MustParse(str)
+	return &t
 }

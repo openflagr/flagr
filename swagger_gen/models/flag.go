@@ -6,6 +6,8 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"strconv"
+
 	strfmt "github.com/go-openapi/strfmt"
 
 	"github.com/go-openapi/errors"
@@ -36,10 +38,10 @@ type Flag struct {
 	ID int64 `json:"id,omitempty"`
 
 	// segments
-	Segments FlagSegments `json:"segments"`
+	Segments []*Segment `json:"segments"`
 
 	// variants
-	Variants FlagVariants `json:"variants"`
+	Variants []*Variant `json:"variants"`
 }
 
 // Validate validates this flag
@@ -62,6 +64,16 @@ func (m *Flag) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateID(formats); err != nil {
+		// prop
+		res = append(res, err)
+	}
+
+	if err := m.validateSegments(formats); err != nil {
+		// prop
+		res = append(res, err)
+	}
+
+	if err := m.validateVariants(formats); err != nil {
 		// prop
 		res = append(res, err)
 	}
@@ -111,6 +123,62 @@ func (m *Flag) validateID(formats strfmt.Registry) error {
 
 	if err := validate.MinimumInt("id", "body", int64(m.ID), 1, false); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (m *Flag) validateSegments(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Segments) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.Segments); i++ {
+
+		if swag.IsZero(m.Segments[i]) { // not required
+			continue
+		}
+
+		if m.Segments[i] != nil {
+
+			if err := m.Segments[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("segments" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+
+		}
+
+	}
+
+	return nil
+}
+
+func (m *Flag) validateVariants(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Variants) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.Variants); i++ {
+
+		if swag.IsZero(m.Variants[i]) { // not required
+			continue
+		}
+
+		if m.Variants[i] != nil {
+
+			if err := m.Variants[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("variants" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+
+		}
+
 	}
 
 	return nil

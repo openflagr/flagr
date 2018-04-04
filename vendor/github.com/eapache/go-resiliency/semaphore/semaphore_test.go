@@ -45,6 +45,26 @@ func TestSemaphoreBlockTimeout(t *testing.T) {
 	}
 }
 
+func TestSemaphoreEmpty(t *testing.T) {
+	sem := New(2, 200*time.Millisecond)
+
+	if !sem.IsEmpty() {
+		t.Error("semaphore should be empty")
+	}
+
+	sem.Acquire()
+
+	if sem.IsEmpty() {
+		t.Error("semaphore should not be empty")
+	}
+
+	sem.Release()
+
+	if !sem.IsEmpty() {
+		t.Error("semaphore should be empty")
+	}
+}
+
 func ExampleSemaphore() {
 	sem := New(3, 1*time.Second)
 

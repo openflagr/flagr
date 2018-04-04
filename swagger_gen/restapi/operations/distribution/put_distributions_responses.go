@@ -25,22 +25,23 @@ type PutDistributionsOK struct {
 	/*
 	  In: Body
 	*/
-	Payload models.PutDistributionsOKBody `json:"body,omitempty"`
+	Payload []*models.Distribution `json:"body,omitempty"`
 }
 
 // NewPutDistributionsOK creates PutDistributionsOK with default headers values
 func NewPutDistributionsOK() *PutDistributionsOK {
+
 	return &PutDistributionsOK{}
 }
 
 // WithPayload adds the payload to the put distributions o k response
-func (o *PutDistributionsOK) WithPayload(payload models.PutDistributionsOKBody) *PutDistributionsOK {
+func (o *PutDistributionsOK) WithPayload(payload []*models.Distribution) *PutDistributionsOK {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the put distributions o k response
-func (o *PutDistributionsOK) SetPayload(payload models.PutDistributionsOKBody) {
+func (o *PutDistributionsOK) SetPayload(payload []*models.Distribution) {
 	o.Payload = payload
 }
 
@@ -50,7 +51,7 @@ func (o *PutDistributionsOK) WriteResponse(rw http.ResponseWriter, producer runt
 	rw.WriteHeader(200)
 	payload := o.Payload
 	if payload == nil {
-		payload = make(models.PutDistributionsOKBody, 0, 50)
+		payload = make([]*models.Distribution, 0, 50)
 	}
 
 	if err := producer.Produce(rw, payload); err != nil {

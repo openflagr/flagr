@@ -50,6 +50,7 @@ func (o *SetFlagEnabledURL) Build() (*url.URL, error) {
 	} else {
 		return nil, errors.New("FlagID is required on SetFlagEnabledURL")
 	}
+
 	_basePath := o._basePath
 	if _basePath == "" {
 		_basePath = "/api/v1"

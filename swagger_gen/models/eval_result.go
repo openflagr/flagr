@@ -121,6 +121,7 @@ func (m *EvalResult) validateEvalContext(formats strfmt.Registry) error {
 			}
 			return err
 		}
+
 	}
 
 	return nil
@@ -140,6 +141,7 @@ func (m *EvalResult) validateEvalDebugLog(formats strfmt.Registry) error {
 			}
 			return err
 		}
+
 	}
 
 	return nil
@@ -185,6 +187,10 @@ func (m *EvalResult) validateTimestamp(formats strfmt.Registry) error {
 }
 
 func (m *EvalResult) validateVariantAttachment(formats strfmt.Registry) error {
+
+	if err := validate.Required("variantAttachment", "body", m.VariantAttachment); err != nil {
+		return err
+	}
 
 	return nil
 }

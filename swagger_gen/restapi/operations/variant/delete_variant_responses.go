@@ -25,6 +25,7 @@ type DeleteVariantOK struct {
 
 // NewDeleteVariantOK creates DeleteVariantOK with default headers values
 func NewDeleteVariantOK() *DeleteVariantOK {
+
 	return &DeleteVariantOK{}
 }
 

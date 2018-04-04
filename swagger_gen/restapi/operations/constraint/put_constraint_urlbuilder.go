@@ -52,18 +52,21 @@ func (o *PutConstraintURL) Build() (*url.URL, error) {
 	} else {
 		return nil, errors.New("ConstraintID is required on PutConstraintURL")
 	}
+
 	flagID := swag.FormatInt64(o.FlagID)
 	if flagID != "" {
 		_path = strings.Replace(_path, "{flagID}", flagID, -1)
 	} else {
 		return nil, errors.New("FlagID is required on PutConstraintURL")
 	}
+
 	segmentID := swag.FormatInt64(o.SegmentID)
 	if segmentID != "" {
 		_path = strings.Replace(_path, "{segmentID}", segmentID, -1)
 	} else {
 		return nil, errors.New("SegmentID is required on PutConstraintURL")
 	}
+
 	_basePath := o._basePath
 	if _basePath == "" {
 		_basePath = "/api/v1"

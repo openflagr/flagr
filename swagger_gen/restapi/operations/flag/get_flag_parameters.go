@@ -17,9 +17,9 @@ import (
 )
 
 // NewGetFlagParams creates a new GetFlagParams object
-// with the default values initialized.
+// no default values defined in spec.
 func NewGetFlagParams() GetFlagParams {
-	var ()
+
 	return GetFlagParams{}
 }
 
@@ -41,9 +41,12 @@ type GetFlagParams struct {
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
-// for simple values it will use straight method calls
+// for simple values it will use straight method calls.
+//
+// To ensure default values, the struct must have been initialized with NewGetFlagParams() beforehand.
 func (o *GetFlagParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
+
 	o.HTTPRequest = r
 
 	rFlagID, rhkFlagID, _ := route.Params.GetOK("flagID")
@@ -62,6 +65,9 @@ func (o *GetFlagParams) bindFlagID(rawData []string, hasKey bool, formats strfmt
 	if len(rawData) > 0 {
 		raw = rawData[len(rawData)-1]
 	}
+
+	// Required: true
+	// Parameter is provided by construction from the route
 
 	value, err := swag.ConvertInt64(raw)
 	if err != nil {
