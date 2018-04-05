@@ -23,8 +23,7 @@ func GetDB() *gorm.DB {
 	singletonOnce.Do(func() {
 		db, err := gorm.Open(config.Config.DBDriver, config.Config.DBConnectionStr)
 		if err != nil {
-			logrus.WithField("err", err).Error("failed to connect to db")
-			panic(err)
+			logrus.WithField("err", err).Fatal("failed to connect to db")
 		}
 		db.SetLogger(logrus.StandardLogger())
 		db.AutoMigrate(entity.AutoMigrateTables...)

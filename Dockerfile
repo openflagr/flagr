@@ -15,5 +15,6 @@ ENV HOST=0.0.0.0
 ENV PORT=18000
 COPY --from=builder /go/src/github.com/checkr/flagr/flagr ./flagr
 COPY --from=builder /go/src/github.com/checkr/flagr/browser/flagr-ui/dist ./browser/flagr-ui/dist
+COPY --from=builder /go/src/github.com/checkr/flagr/buildscripts ./buildscripts
 EXPOSE 18000
 CMD ./flagr
