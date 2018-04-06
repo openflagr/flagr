@@ -41,17 +41,17 @@ Or try it on [https://try-flagr.herokuapp.com](https://try-flagr.herokuapp.com)
 
 ```
 curl --request POST \
-  --url https://try-flagr.herokuapp.com/api/v1/evaluation \
-  --header 'content-type: application/json' \
-  --data '{
-	"entityID": "127",
-	"entityType": "user",
-	"entityContext": {
-		"state": "NY"
-	},
-	"flagID": 1,
-	"enableDebug": true
-}'
+       --url https://try-flagr.herokuapp.com/api/v1/evaluation \
+       --header 'content-type: application/json' \
+       --data '{
+         "entityID": "127",
+           "entityType": "user",
+           "entityContext": {
+             "state": "NY"
+           },
+           "flagID": 1,
+           "enableDebug": true
+       }'
 ```
 
 

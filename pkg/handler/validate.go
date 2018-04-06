@@ -8,7 +8,6 @@ import (
 )
 
 var validatePutDistributions = func(params distribution.PutDistributionsParams) *Error {
-
 	sum := int64(0)
 	for _, d := range params.Body.Distributions {
 		if d.Percent == nil {

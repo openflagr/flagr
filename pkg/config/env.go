@@ -47,6 +47,12 @@ var Config = struct {
 	NewRelicAppName string `env:"FLAGR_NEWRELIC_NAME" envDefault:"flagr"`
 	NewRelicKey     string `env:"FLAGR_NEWRELIC_KEY" envDefault:""`
 
+	// StatsdEnabled - enable statsd metrics for all the endpoints and DB operations
+	StatsdEnabled bool   `env:"FLAGR_STATSD_ENABLED" envDefault:"false"`
+	StatsdHost    string `env:"FLAGR_STATSD_HOST" envDefault:"127.0.0.1"`
+	StatsdPort    string `env:"FLAGR_STATSD_PORT" envDefault:"8125"`
+	StatsdPrefix  string `env:"FLAGR_STATSD_PREFIX" envDefault:"flagr."`
+
 	// EvalCacheRefreshTimeout - timeout of getting the flags data from DB into the in-memory evaluation cache
 	EvalCacheRefreshTimeout time.Duration `env:"FLAGR_EVALCACHE_REFRESHTIMEOUT" envDefault:"59s"`
 	// EvalCacheRefreshInterval - time interval of getting the flags data from DB into the in-memory evaluation cache
