@@ -9,6 +9,7 @@ import (
 
 	"github.com/jinzhu/gorm"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/cast"
 )
 
 // FlagSnapshot is the snapshot of a flag
@@ -26,14 +27,11 @@ func (f *Flag) Scan(value interface{}) error {
 	if value == nil {
 		return nil
 	}
-	if b, ok := value.([]byte); ok {
-		err := json.Unmarshal(b, f)
-		if err != nil {
-			return err
-		}
-		return nil
+	s := cast.ToString(value)
+	if err := json.Unmarshal([]byte(s), f); err != nil {
+		return fmt.Errorf("cannot scan %v into Flag type. err: %v", value, err)
 	}
-	return fmt.Errorf("Cannot scan %v into Flag type", value)
+	return nil
 }
 
 // Value implements valuer interface
