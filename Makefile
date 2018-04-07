@@ -39,7 +39,7 @@ watch:
 	@fswatch
 
 serve_docs:
-	@yarn global add docsify-cli
+	@yarn global add docsify-cli@4
 	@docsify serve $(PWD)/docs
 
 ################################
