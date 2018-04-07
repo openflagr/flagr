@@ -9,6 +9,7 @@ import (
 
 	"github.com/checkr/flagr/pkg/util"
 	"github.com/jinzhu/gorm"
+	"github.com/spf13/cast"
 )
 
 // Variant is the struct that represent the experience/variant of the evaluation entity
@@ -37,14 +38,11 @@ func (a *Attachment) Scan(value interface{}) error {
 	if value == nil {
 		return nil
 	}
-	if b, ok := value.([]byte); ok {
-		err := json.Unmarshal(b, a)
-		if err != nil {
-			return err
-		}
-		return nil
+	s := cast.ToString(value)
+	if err := json.Unmarshal([]byte(s), a); err != nil {
+		return fmt.Errorf("cannot scan %v into Attachment type. err: %v", value, err)
 	}
-	return fmt.Errorf("Cannot scan %v into Attachment type", value)
+	return nil
 }
 
 // Value implements valuer interface
