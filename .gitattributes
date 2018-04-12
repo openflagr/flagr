@@ -1,0 +1,5 @@
+# All files use LF as eol
+* text=auto eol=lf
+
+# Remove vendor folder from the diff
+vendor/**/* -diff

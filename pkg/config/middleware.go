@@ -3,8 +3,11 @@ package config
 import (
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 
+	"github.com/DataDog/datadog-go/statsd"
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gohttp/pprof"
@@ -26,6 +29,10 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 			AllowedHeaders: []string{"Content-Type", "Accepts"},
 			AllowedMethods: []string{"GET", "POST", "PUT", "DELETE"},
 		}))
+	}
+
+	if Config.StatsdEnabled {
+		n.Use(&statsdMiddleware{StatsdClient: Global.StatsdClient})
 	}
 
 	if Config.NewRelicEnabled {
@@ -86,4 +93,26 @@ func (a *auth) ServeHTTP(w http.ResponseWriter, req *http.Request, next http.Han
 		}
 	}
 	a.JWTMiddleware.HandlerWithNext(w, req, next)
+}
+
+type statsdMiddleware struct {
+	StatsdClient *statsd.Client
+}
+
+func (s *statsdMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	defer func(start time.Time) {
+		response := w.(negroni.ResponseWriter)
+		status := strconv.Itoa(response.Status())
+		duration := float64(time.Since(start)) / float64(time.Millisecond)
+		tags := []string{
+			"status:" + status,
+			"path:" + r.RequestURI,
+			"method:" + r.Method,
+		}
+
+		s.StatsdClient.Incr("http.requests.count", tags, 1)
+		s.StatsdClient.TimeInMilliseconds("http.requests.duration", duration, tags, 1)
+	}(time.Now())
+
+	next(w, r)
 }
