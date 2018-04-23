@@ -23,9 +23,8 @@ type FlagSnapshot struct {
 
 	// id
 	// Required: true
-	// Read Only: true
 	// Minimum: 1
-	ID int64 `json:"id"`
+	ID *int64 `json:"id"`
 
 	// updated at
 	// Required: true
@@ -83,11 +82,11 @@ func (m *FlagSnapshot) validateFlag(formats strfmt.Registry) error {
 
 func (m *FlagSnapshot) validateID(formats strfmt.Registry) error {
 
-	if err := validate.Required("id", "body", int64(m.ID)); err != nil {
+	if err := validate.Required("id", "body", m.ID); err != nil {
 		return err
 	}
 
-	if err := validate.MinimumInt("id", "body", int64(m.ID), 1, false); err != nil {
+	if err := validate.MinimumInt("id", "body", int64(*m.ID), 1, false); err != nil {
 		return err
 	}
 
