@@ -10,6 +10,6 @@ jobs:
     steps:
       - checkout
       - run: make deps
-      - run: make test
+      - run: make ci
       - run: bash <(curl -s https://codecov.io/bash)
       - run: cd browser/flagr-ui && yarn install && yarn run test

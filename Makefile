@@ -11,9 +11,11 @@ all: deps gen build run
 rebuild: gen run
 
 test: verifiers
+	@go test -race -covermode=atomic github.com/checkr/flagr/pkg/...
+
+ci: verifiers
 	@echo "Running all coverage for flagr"
 	@courtney -v -o ./coverage.txt -t="-race" -t="-covermode=atomic" github.com/checkr/flagr/pkg/...
-
 
 build:
 	@echo "Building flagr to $(PWD)/flagr ..."

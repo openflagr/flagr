@@ -134,7 +134,6 @@ definitions:
         type: integer
         format: int64
         minimum: 1
-        readOnly: true
       updatedBy:
         type: string
       flag:
