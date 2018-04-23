@@ -136,7 +136,9 @@ var evalFlag = func(evalContext models.EvalContext) *models.EvalResult {
 }
 
 var logEvalResult = func(r *models.EvalResult, dataRecordsEnabled bool) {
-	rateLimitPerFlagConsoleLogging(r)
+	if config.Config.EvalLoggingEnabled {
+		rateLimitPerFlagConsoleLogging(r)
+	}
 
 	if !config.Config.RecorderEnabled || !dataRecordsEnabled {
 		return
