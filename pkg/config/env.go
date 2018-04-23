@@ -20,9 +20,16 @@ var Config = struct {
 	// useful for debugging
 	MiddlewareVerboseLoggerEnabled bool `env:"FLAGR_MIDDLEWARE_VERBOSE_LOGGER_ENABLED" envDefault:"true"`
 
+	// EvalLoggingEnabled - to enable the logging for eval results
+	EvalLoggingEnabled bool `env:"FLAGR_EVAL_LOGGING_ENABLED" envDefault:"true"`
 	// RateLimiterPerFlagPerSecondConsoleLogging - to rate limit the logging rate
 	// per flag per second
 	RateLimiterPerFlagPerSecondConsoleLogging int `env:"FLAGR_RATELIMITER_PERFLAG_PERSECOND_CONSOLE_LOGGING" envDefault:"100"`
+
+	// EvalCacheRefreshTimeout - timeout of getting the flags data from DB into the in-memory evaluation cache
+	EvalCacheRefreshTimeout time.Duration `env:"FLAGR_EVALCACHE_REFRESHTIMEOUT" envDefault:"59s"`
+	// EvalCacheRefreshInterval - time interval of getting the flags data from DB into the in-memory evaluation cache
+	EvalCacheRefreshInterval time.Duration `env:"FLAGR_EVALCACHE_REFRESHINTERVAL" envDefault:"3s"`
 
 	// DBDriver - Flagr supports sqlite3, mysql, postgres
 	DBDriver string `env:"FLAGR_DB_DBDRIVER" envDefault:"sqlite3"`
@@ -36,11 +43,9 @@ var Config = struct {
 	// CORSEnabled - enable CORS
 	CORSEnabled bool `env:"FLAGR_CORS_ENABLED" envDefault:"true"`
 
-	// SentryEnabled - enable Sentry
-	SentryEnabled bool `env:"FLAGR_SENTRY_ENABLED" envDefault:"false"`
-
-	// SentryDSN - sentry DSN
-	SentryDSN string `env:"FLAGR_SENTRY_DSN" envDefault:""`
+	// SentryEnabled - enable Sentry and Sentry DSN
+	SentryEnabled bool   `env:"FLAGR_SENTRY_ENABLED" envDefault:"false"`
+	SentryDSN     string `env:"FLAGR_SENTRY_DSN" envDefault:""`
 
 	// NewRelicEnabled - enable the NewRelic monitoring for all the endpoints and DB operations
 	NewRelicEnabled bool   `env:"FLAGR_NEWRELIC_ENABLED" envDefault:"false"`
@@ -52,11 +57,6 @@ var Config = struct {
 	StatsdHost    string `env:"FLAGR_STATSD_HOST" envDefault:"127.0.0.1"`
 	StatsdPort    string `env:"FLAGR_STATSD_PORT" envDefault:"8125"`
 	StatsdPrefix  string `env:"FLAGR_STATSD_PREFIX" envDefault:"flagr."`
-
-	// EvalCacheRefreshTimeout - timeout of getting the flags data from DB into the in-memory evaluation cache
-	EvalCacheRefreshTimeout time.Duration `env:"FLAGR_EVALCACHE_REFRESHTIMEOUT" envDefault:"59s"`
-	// EvalCacheRefreshInterval - time interval of getting the flags data from DB into the in-memory evaluation cache
-	EvalCacheRefreshInterval time.Duration `env:"FLAGR_EVALCACHE_REFRESHINTERVAL" envDefault:"3s"`
 
 	// RecorderEnabled - enable data records logging
 	RecorderEnabled bool `env:"FLAGR_RECORDER_ENABLED" envDefault:"false"`
