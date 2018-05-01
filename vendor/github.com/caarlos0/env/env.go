@@ -19,12 +19,14 @@ var (
 	// ErrUnsupportedSliceType if the slice element type is not supported by env
 	ErrUnsupportedSliceType = errors.New("Unsupported slice type")
 	// Friendly names for reflect types
-	sliceOfInts     = reflect.TypeOf([]int(nil))
-	sliceOfInt64s   = reflect.TypeOf([]int64(nil))
-	sliceOfStrings  = reflect.TypeOf([]string(nil))
-	sliceOfBools    = reflect.TypeOf([]bool(nil))
-	sliceOfFloat32s = reflect.TypeOf([]float32(nil))
-	sliceOfFloat64s = reflect.TypeOf([]float64(nil))
+	sliceOfInts      = reflect.TypeOf([]int(nil))
+	sliceOfInt64s    = reflect.TypeOf([]int64(nil))
+	sliceOfUint64s   = reflect.TypeOf([]uint64(nil))
+	sliceOfStrings   = reflect.TypeOf([]string(nil))
+	sliceOfBools     = reflect.TypeOf([]bool(nil))
+	sliceOfFloat32s  = reflect.TypeOf([]float32(nil))
+	sliceOfFloat64s  = reflect.TypeOf([]float64(nil))
+	sliceOfDurations = reflect.TypeOf([]time.Duration(nil))
 )
 
 // CustomParsers is a friendly name for the type that `ParseWithFuncs()` accepts
@@ -193,10 +195,24 @@ func set(field reflect.Value, refType reflect.StructField, value string, funcMap
 			}
 			field.SetInt(intValue)
 		}
+	case reflect.Uint64:
+		uintValue, err := strconv.ParseUint(value, 10, 64)
+		if err != nil {
+			return err
+		}
+		field.SetUint(uintValue)
 	case reflect.Struct:
 		return handleStruct(field, refType, value, funcMap)
 	default:
-		return ErrUnsupportedType
+		parserFunc, ok := funcMap[refType.Type]
+		if !ok {
+			return ErrUnsupportedType
+		}
+		val, err := parserFunc(value)
+		if err != nil {
+			return err
+		}
+		field.Set(reflect.ValueOf(val))
 	}
 	return nil
 }
@@ -244,7 +260,12 @@ func handleSlice(field reflect.Value, value, separator string) error {
 			return err
 		}
 		field.Set(reflect.ValueOf(int64Data))
-
+	case sliceOfUint64s:
+		uint64Data, err := parseUint64s(splitData)
+		if err != nil {
+			return err
+		}
+		field.Set(reflect.ValueOf(uint64Data))
 	case sliceOfFloat32s:
 		data, err := parseFloat32s(splitData)
 		if err != nil {
@@ -263,6 +284,12 @@ func handleSlice(field reflect.Value, value, separator string) error {
 			return err
 		}
 		field.Set(reflect.ValueOf(boolData))
+	case sliceOfDurations:
+		durationData, err := parseDurations(splitData)
+		if err != nil {
+			return err
+		}
+		field.Set(reflect.ValueOf(durationData))
 	default:
 		return ErrUnsupportedSliceType
 	}
@@ -270,7 +297,7 @@ func handleSlice(field reflect.Value, value, separator string) error {
 }
 
 func parseInts(data []string) ([]int, error) {
-	var intSlice []int
+	intSlice := make([]int, 0, len(data))
 
 	for _, v := range data {
 		intValue, err := strconv.ParseInt(v, 10, 32)
@@ -283,7 +310,7 @@ func parseInts(data []string) ([]int, error) {
 }
 
 func parseInt64s(data []string) ([]int64, error) {
-	var intSlice []int64
+	intSlice := make([]int64, 0, len(data))
 
 	for _, v := range data {
 		intValue, err := strconv.ParseInt(v, 10, 64)
@@ -295,8 +322,21 @@ func parseInt64s(data []string) ([]int64, error) {
 	return intSlice, nil
 }
 
+func parseUint64s(data []string) ([]uint64, error) {
+	var uintSlice []uint64
+
+	for _, v := range data {
+		uintValue, err := strconv.ParseUint(v, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		uintSlice = append(uintSlice, uint64(uintValue))
+	}
+	return uintSlice, nil
+}
+
 func parseFloat32s(data []string) ([]float32, error) {
-	var float32Slice []float32
+	float32Slice := make([]float32, 0, len(data))
 
 	for _, v := range data {
 		data, err := strconv.ParseFloat(v, 32)
@@ -309,7 +349,7 @@ func parseFloat32s(data []string) ([]float32, error) {
 }
 
 func parseFloat64s(data []string) ([]float64, error) {
-	var float64Slice []float64
+	float64Slice := make([]float64, 0, len(data))
 
 	for _, v := range data {
 		data, err := strconv.ParseFloat(v, 64)
@@ -322,7 +362,7 @@ func parseFloat64s(data []string) ([]float64, error) {
 }
 
 func parseBools(data []string) ([]bool, error) {
-	var boolSlice []bool
+	boolSlice := make([]bool, 0, len(data))
 
 	for _, v := range data {
 		bvalue, err := strconv.ParseBool(v)
@@ -333,4 +373,18 @@ func parseBools(data []string) ([]bool, error) {
 		boolSlice = append(boolSlice, bvalue)
 	}
 	return boolSlice, nil
+}
+
+func parseDurations(data []string) ([]time.Duration, error) {
+	durationSlice := make([]time.Duration, 0, len(data))
+
+	for _, v := range data {
+		dvalue, err := time.ParseDuration(v)
+		if err != nil {
+			return nil, err
+		}
+
+		durationSlice = append(durationSlice, dvalue)
+	}
+	return durationSlice, nil
 }

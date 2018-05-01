@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"reflect"
+	"strconv"
 	"testing"
 	"time"
 
@@ -17,19 +18,23 @@ type Config struct {
 	Some        string `env:"somevar"`
 	Other       bool   `env:"othervar"`
 	Port        int    `env:"PORT"`
+	Int64Val    int64  `env:"INT64VAL"`
 	UintVal     uint   `env:"UINTVAL"`
+	Uint64Val   uint64 `env:"UINT64VAL"`
 	NotAnEnv    string
-	DatabaseURL string        `env:"DATABASE_URL" envDefault:"postgres://localhost:5432/db"`
-	Strings     []string      `env:"STRINGS"`
-	SepStrings  []string      `env:"SEPSTRINGS" envSeparator:":"`
-	Numbers     []int         `env:"NUMBERS"`
-	Numbers64   []int64       `env:"NUMBERS64"`
-	Bools       []bool        `env:"BOOLS"`
-	Duration    time.Duration `env:"DURATION"`
-	Float32     float32       `env:"FLOAT32"`
-	Float64     float64       `env:"FLOAT64"`
-	Float32s    []float32     `env:"FLOAT32S"`
-	Float64s    []float64     `env:"FLOAT64S"`
+	DatabaseURL string          `env:"DATABASE_URL" envDefault:"postgres://localhost:5432/db"`
+	Strings     []string        `env:"STRINGS"`
+	SepStrings  []string        `env:"SEPSTRINGS" envSeparator:":"`
+	Numbers     []int           `env:"NUMBERS"`
+	Numbers64   []int64         `env:"NUMBERS64"`
+	UNumbers64  []uint64        `env:"UNUMBERS64"`
+	Bools       []bool          `env:"BOOLS"`
+	Duration    time.Duration   `env:"DURATION"`
+	Float32     float32         `env:"FLOAT32"`
+	Float64     float64         `env:"FLOAT64"`
+	Float32s    []float32       `env:"FLOAT32S"`
+	Float64s    []float64       `env:"FLOAT64S"`
+	Durations   []time.Duration `env:"DURATIONS"`
 }
 
 type ParentStruct struct {
@@ -40,6 +45,7 @@ type ParentStruct struct {
 
 type InnerStruct struct {
 	Inner string `env:"innervar"`
+	Number uint  `env:"innernum"`
 }
 
 func TestParsesEnv(t *testing.T) {
@@ -50,6 +56,7 @@ func TestParsesEnv(t *testing.T) {
 	os.Setenv("SEPSTRINGS", "string1:string2:string3")
 	os.Setenv("NUMBERS", "1,2,3,4")
 	os.Setenv("NUMBERS64", "1,2,2147483640,-2147483640")
+	os.Setenv("UNUMBERS64", "1,2,214748364011,9147483641")
 	os.Setenv("BOOLS", "t,TRUE,0,1")
 	os.Setenv("DURATION", "1s")
 	os.Setenv("FLOAT32", "3.40282346638528859811704183484516925440e+38")
@@ -57,6 +64,9 @@ func TestParsesEnv(t *testing.T) {
 	os.Setenv("FLOAT32S", "1.0,2.0,3.0")
 	os.Setenv("FLOAT64S", "1.0,2.0,3.0")
 	os.Setenv("UINTVAL", "44")
+	os.Setenv("UINT64VAL", "6464")
+	os.Setenv("INT64VAL", "-7575")
+	os.Setenv("DURATIONS", "1s,2s,3s")
 
 	defer os.Clearenv()
 
@@ -66,19 +76,25 @@ func TestParsesEnv(t *testing.T) {
 	assert.Equal(t, true, cfg.Other)
 	assert.Equal(t, 8080, cfg.Port)
 	assert.Equal(t, uint(44), cfg.UintVal)
+	assert.Equal(t, int64(-7575), cfg.Int64Val)
+	assert.Equal(t, uint64(6464), cfg.Uint64Val)
 	assert.Equal(t, []string{"string1", "string2", "string3"}, cfg.Strings)
 	assert.Equal(t, []string{"string1", "string2", "string3"}, cfg.SepStrings)
 	assert.Equal(t, []int{1, 2, 3, 4}, cfg.Numbers)
 	assert.Equal(t, []int64{1, 2, 2147483640, -2147483640}, cfg.Numbers64)
+	assert.Equal(t, []uint64{1, 2, 214748364011, 9147483641}, cfg.UNumbers64)
 	assert.Equal(t, []bool{true, true, false, true}, cfg.Bools)
-	d, _ := time.ParseDuration("1s")
-	assert.Equal(t, d, cfg.Duration)
+	d1, _ := time.ParseDuration("1s")
+	assert.Equal(t, d1, cfg.Duration)
 	f32 := float32(3.40282346638528859811704183484516925440e+38)
 	assert.Equal(t, f32, cfg.Float32)
 	f64 := float64(1.797693134862315708145274237317043567981e+308)
 	assert.Equal(t, f64, cfg.Float64)
 	assert.Equal(t, []float32{float32(1.0), float32(2.0), float32(3.0)}, cfg.Float32s)
 	assert.Equal(t, []float64{float64(1.0), float64(2.0), float64(3.0)}, cfg.Float64s)
+	d2, _ := time.ParseDuration("2s")
+	d3, _ := time.ParseDuration("3s")
+	assert.Equal(t, []time.Duration{d1, d2, d3}, cfg.Durations)
 }
 
 func TestParsesEnvInner(t *testing.T) {
@@ -99,6 +115,15 @@ func TestParsesEnvInnerNil(t *testing.T) {
 	assert.NoError(t, env.Parse(&cfg))
 }
 
+func TestParsesEnvInnerInvalid(t *testing.T) {
+	os.Setenv("innernum", "-547")
+	defer os.Clearenv()
+	cfg := ParentStruct{
+		InnerStruct: &InnerStruct{},
+	}
+	assert.Error(t, env.Parse(&cfg))
+}
+
 func TestEmptyVars(t *testing.T) {
 	cfg := Config{}
 	assert.NoError(t, env.Parse(&cfg))
@@ -106,6 +131,8 @@ func TestEmptyVars(t *testing.T) {
 	assert.Equal(t, false, cfg.Other)
 	assert.Equal(t, 0, cfg.Port)
 	assert.Equal(t, uint(0), cfg.UintVal)
+	assert.Equal(t, uint64(0), cfg.Uint64Val)
+	assert.Equal(t, int64(0), cfg.Int64Val)
 	assert.Equal(t, 0, len(cfg.Strings))
 	assert.Equal(t, 0, len(cfg.SepStrings))
 	assert.Equal(t, 0, len(cfg.Numbers))
@@ -146,6 +173,78 @@ func TestInvalidUint(t *testing.T) {
 	assert.Error(t, env.Parse(&cfg))
 }
 
+func TestInvalidFloat32(t *testing.T) {
+	os.Setenv("FLOAT32", "AAA")
+	defer os.Clearenv()
+
+	cfg := Config{}
+	assert.Error(t, env.Parse(&cfg))
+}
+
+func TestInvalidFloat64(t *testing.T) {
+	os.Setenv("FLOAT64", "AAA")
+	defer os.Clearenv()
+
+	cfg := Config{}
+	assert.Error(t, env.Parse(&cfg))
+}
+
+func TestInvalidUint64(t *testing.T) {
+	os.Setenv("UINT64VAL", "AAA")
+	defer os.Clearenv()
+
+	cfg := Config{}
+	assert.Error(t, env.Parse(&cfg))
+}
+
+func TestInvalidInt64(t *testing.T) {
+	os.Setenv("INT64VAL", "AAA")
+	defer os.Clearenv()
+
+	cfg := Config{}
+	assert.Error(t, env.Parse(&cfg))
+}
+
+func TestInvalidInt64Slice(t *testing.T) {
+	type config struct {
+		BadFloats []int64 `env:"BADINTS"`
+	}
+
+	os.Setenv("BADINTS", "A,2,3")
+	cfg := &config{}
+	assert.Error(t, env.Parse(cfg))
+}
+
+func TestInvalidUInt64Slice(t *testing.T) {
+	type config struct {
+		BadFloats []uint64 `env:"BADINTS"`
+	}
+
+	os.Setenv("BADFLOATS", "A,2,3")
+	cfg := &config{}
+	assert.Error(t, env.Parse(cfg))
+}
+
+func TestInvalidFloat32Slice(t *testing.T) {
+	type config struct {
+		BadFloats []float32 `env:"BADFLOATS"`
+	}
+
+	os.Setenv("BADFLOATS", "A,2.0,3.0")
+	cfg := &config{}
+	assert.Error(t, env.Parse(cfg))
+}
+
+func TestInvalidFloat64Slice(t *testing.T) {
+	type config struct {
+		BadFloats []float64 `env:"BADFLOATS"`
+	}
+
+	os.Setenv("BADFLOATS", "A,2.0,3.0")
+	cfg := &config{}
+	assert.Error(t, env.Parse(cfg))
+}
+
 func TestInvalidBoolsSlice(t *testing.T) {
 	type config struct {
 		BadBools []bool `env:"BADBOOLS"`
@@ -158,6 +257,14 @@ func TestInvalidBoolsSlice(t *testing.T) {
 
 func TestInvalidDuration(t *testing.T) {
 	os.Setenv("DURATION", "should-be-a-valid-duration")
+	defer os.Clearenv()
+
+	cfg := Config{}
+	assert.Error(t, env.Parse(&cfg))
+}
+
+func TestInvalidDurations(t *testing.T) {
+	os.Setenv("DURATIONS", "1s,contains-an-invalid-duration,3s")
 	defer os.Clearenv()
 
 	cfg := Config{}
@@ -294,6 +401,76 @@ func TestCustomParserError(t *testing.T) {
 	assert.Equal(t, err.Error(), "Custom parser error: something broke")
 }
 
+func TestCustomParserBasicType(t *testing.T) {
+	type ConstT int32
+
+	type config struct {
+		Const ConstT `env:"CONST_VAL"`
+	}
+
+	exp := ConstT(123)
+	os.Setenv("CONST_VAL", fmt.Sprintf("%d", exp))
+
+	customParserFunc := func(v string) (interface{}, error) {
+		i, err := strconv.Atoi(v)
+		if err != nil {
+			return nil, err
+		}
+		r := ConstT(i)
+		return r, nil
+	}
+
+	cfg := &config{}
+	err := env.ParseWithFuncs(cfg, map[reflect.Type]env.ParserFunc{
+		reflect.TypeOf(ConstT(0)): customParserFunc,
+	})
+
+	assert.NoError(t, err)
+	assert.Equal(t, exp, cfg.Const)
+}
+
+func TypeCustomParserBasicInvalid(t *testing.T) {
+	type ConstT int32
+
+	type config struct {
+		Const ConstT `env:"CONST_VAL"`
+	}
+
+	os.Setenv("CONST_VAL", "foobar")
+
+	expErr := errors.New("Random error")
+	customParserFunc := func(_ string) (interface{}, error) {
+		return nil, expErr
+	}
+
+	cfg := &config{}
+	err := env.ParseWithFuncs(cfg, map[reflect.Type]env.ParserFunc{
+		reflect.TypeOf(ConstT(0)): customParserFunc,
+	})
+
+	assert.Empty(t, cfg.Const)
+	assert.Error(t, err)
+	assert.Equal(t, expErr, err)
+}
+
+func TestCustomParserBasicUnsupported(t *testing.T) {
+	type ConstT int32
+
+	type config struct {
+		Const ConstT `env:"CONST_VAL"`
+	}
+
+	exp := ConstT(123)
+	os.Setenv("CONST_VAL", fmt.Sprintf("%d", exp))
+
+	cfg := &config{}
+	err := env.Parse(cfg)
+
+	assert.Zero(t, cfg.Const)
+	assert.Error(t, err)
+	assert.Equal(t, env.ErrUnsupportedType, err)
+}
+
 func TestUnsupportedStructType(t *testing.T) {
 	type config struct {
 		Foo http.Client `env:"FOO"`
@@ -307,6 +484,7 @@ func TestUnsupportedStructType(t *testing.T) {
 	assert.Error(t, err)
 	assert.Equal(t, env.ErrUnsupportedType, err)
 }
+
 func TestEmptyOption(t *testing.T) {
 	type config struct {
 		Var string `env:"VAR,"`
