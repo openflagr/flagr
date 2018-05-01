@@ -3,7 +3,6 @@ package entity
 import (
 	"testing"
 
-	"github.com/checkr/flagr/pkg/util"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -148,19 +147,19 @@ func TestRolloutWithEntity(t *testing.T) {
 		var vID *uint
 		var msg string
 
-		vID, msg = d.Rollout(nil, "salt", uint(0))
+		vID, msg = d.Rollout("", "salt", uint(0))
 		assert.Nil(t, vID)
 		assert.Contains(t, msg, "no")
 
-		vID, msg = d.Rollout(util.StringPtr("entity123"), "salt", uint(0))
+		vID, msg = d.Rollout("entity123", "salt", uint(0))
 		assert.Nil(t, vID)
 		assert.Contains(t, msg, "no")
 
-		vID, msg = d.Rollout(util.StringPtr("entity123"), "salt", uint(100))
+		vID, msg = d.Rollout("entity123", "salt", uint(100))
 		assert.NotNil(t, vID)
 		assert.Contains(t, msg, "yes")
 
-		vID, msg = d.Rollout(util.StringPtr("entity123"), "salt", uint(1))
+		vID, msg = d.Rollout("entity123", "salt", uint(1))
 		assert.Nil(t, vID)
 		assert.Contains(t, msg, "no")
 	})
@@ -173,7 +172,7 @@ func TestRolloutWithEntity(t *testing.T) {
 		var vID *uint
 		var msg string
 
-		vID, msg = d.Rollout(util.StringPtr("entity123"), "salt", uint(100))
+		vID, msg = d.Rollout("entity123", "salt", uint(100))
 		assert.Nil(t, vID)
 		assert.Contains(t, msg, "no")
 	})

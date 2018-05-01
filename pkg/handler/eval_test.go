@@ -28,7 +28,7 @@ func TestEvalSegment(t *testing.T) {
 		vID, log := evalSegment(models.EvalContext{
 			EnableDebug:   true,
 			EntityContext: map[string]interface{}{"dl_state": "CA"},
-			EntityID:      util.StringPtr("entityID1"),
+			EntityID:      "entityID1",
 			EntityType:    util.StringPtr("entityType1"),
 			FlagID:        util.Int64Ptr(int64(100)),
 		}, s)
@@ -43,7 +43,7 @@ func TestEvalSegment(t *testing.T) {
 		vID, log := evalSegment(models.EvalContext{
 			EnableDebug:   true,
 			EntityContext: map[string]interface{}{},
-			EntityID:      util.StringPtr("entityID1"),
+			EntityID:      "entityID1",
 			EntityType:    util.StringPtr("entityType1"),
 			FlagID:        util.Int64Ptr(int64(100)),
 		}, s)
@@ -58,7 +58,7 @@ func TestEvalSegment(t *testing.T) {
 		vID, log := evalSegment(models.EvalContext{
 			EnableDebug:   true,
 			EntityContext: map[string]interface{}{"dl_state": "NY"},
-			EntityID:      util.StringPtr("entityID1"),
+			EntityID:      "entityID1",
 			EntityType:    util.StringPtr("entityType1"),
 			FlagID:        util.Int64Ptr(int64(100)),
 		}, s)
@@ -73,7 +73,7 @@ func TestEvalSegment(t *testing.T) {
 		vID, log := evalSegment(models.EvalContext{
 			EnableDebug:   true,
 			EntityContext: nil,
-			EntityID:      util.StringPtr("entityID1"),
+			EntityID:      "entityID1",
 			EntityType:    util.StringPtr("entityType1"),
 			FlagID:        util.Int64Ptr(int64(100)),
 		}, s)
@@ -88,8 +88,9 @@ func TestEvalFlag(t *testing.T) {
 
 	t.Run("test empty evalContext", func(t *testing.T) {
 		defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
-		result := evalFlag(models.EvalContext{})
+		result := evalFlag(models.EvalContext{FlagID: util.Int64Ptr(int64(100))})
 		assert.Nil(t, result.VariantID)
+		assert.NotEmpty(t, result.EvalContext.EntityID)
 	})
 
 	t.Run("test happy code path", func(t *testing.T) {
@@ -97,7 +98,7 @@ func TestEvalFlag(t *testing.T) {
 		result := evalFlag(models.EvalContext{
 			EnableDebug:   true,
 			EntityContext: map[string]interface{}{"dl_state": "CA"},
-			EntityID:      util.StringPtr("entityID1"),
+			EntityID:      "entityID1",
 			EntityType:    util.StringPtr("entityType1"),
 			FlagID:        util.Int64Ptr(int64(100)),
 		})
@@ -136,7 +137,7 @@ func TestEvalFlag(t *testing.T) {
 		result := evalFlag(models.EvalContext{
 			EnableDebug:   true,
 			EntityContext: map[string]interface{}{"dl_state": "CA", "state": "CA", "rate": 2000},
-			EntityID:      util.StringPtr("entityID1"),
+			EntityID:      "entityID1",
 			EntityType:    util.StringPtr("entityType1"),
 			FlagID:        util.Int64Ptr(int64(100)),
 		})
@@ -168,7 +169,7 @@ func TestEvalFlag(t *testing.T) {
 		result := evalFlag(models.EvalContext{
 			EnableDebug:   true,
 			EntityContext: map[string]interface{}{"dl_state": "CA", "state": "NY"},
-			EntityID:      util.StringPtr("entityID1"),
+			EntityID:      "entityID1",
 			EntityType:    util.StringPtr("entityType1"),
 			FlagID:        util.Int64Ptr(int64(100)),
 		})
@@ -184,7 +185,7 @@ func TestEvalFlag(t *testing.T) {
 		result := evalFlag(models.EvalContext{
 			EnableDebug:   true,
 			EntityContext: map[string]interface{}{"dl_state": "CA"},
-			EntityID:      util.StringPtr("entityID1"),
+			EntityID:      "entityID1",
 			EntityType:    util.StringPtr("entityType1"),
 			FlagID:        util.Int64Ptr(int64(100)),
 		})
@@ -208,7 +209,7 @@ func TestPostEvaluation(t *testing.T) {
 			Body: &models.EvalContext{
 				EnableDebug:   true,
 				EntityContext: map[string]interface{}{"dl_state": "CA", "state": "NY"},
-				EntityID:      util.StringPtr("entityID1"),
+				EntityID:      "entityID1",
 				EntityType:    util.StringPtr("entityType1"),
 				FlagID:        util.Int64Ptr(int64(100)),
 			},
@@ -227,7 +228,7 @@ func TestPostEvaluationBatch(t *testing.T) {
 				Entities: []*models.EvaluationEntity{
 					{
 						EntityContext: map[string]interface{}{"dl_state": "CA", "state": "NY"},
-						EntityID:      util.StringPtr("entityID1"),
+						EntityID:      "entityID1",
 						EntityType:    util.StringPtr("entityType1"),
 					},
 				},

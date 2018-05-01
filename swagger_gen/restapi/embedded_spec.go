@@ -1163,7 +1163,6 @@ func init() {
     "evalContext": {
       "type": "object",
       "required": [
-        "entityID",
         "entityType",
         "flagID"
       ],
@@ -1175,8 +1174,8 @@ func init() {
           "type": "object"
         },
         "entityID": {
-          "type": "string",
-          "minLength": 1
+          "description": "entityID is used to deterministically at random to evaluate the flag result. If it's empty, flagr will randomly generate one.",
+          "type": "string"
         },
         "entityType": {
           "type": "string",
@@ -1298,7 +1297,6 @@ func init() {
     "evaluationEntity": {
       "type": "object",
       "required": [
-        "entityID",
         "entityType"
       ],
       "properties": {
@@ -1306,8 +1304,7 @@ func init() {
           "type": "object"
         },
         "entityID": {
-          "type": "string",
-          "minLength": 1
+          "type": "string"
         },
         "entityType": {
           "type": "string",
@@ -2742,7 +2739,6 @@ func init() {
     "evalContext": {
       "type": "object",
       "required": [
-        "entityID",
         "entityType",
         "flagID"
       ],
@@ -2754,8 +2750,8 @@ func init() {
           "type": "object"
         },
         "entityID": {
-          "type": "string",
-          "minLength": 1
+          "description": "entityID is used to deterministically at random to evaluate the flag result. If it's empty, flagr will randomly generate one.",
+          "type": "string"
         },
         "entityType": {
           "type": "string",
@@ -2877,7 +2873,6 @@ func init() {
     "evaluationEntity": {
       "type": "object",
       "required": [
-        "entityID",
         "entityType"
       ],
       "properties": {
@@ -2885,8 +2880,7 @@ func init() {
           "type": "object"
         },
         "entityID": {
-          "type": "string",
-          "minLength": 1
+          "type": "string"
         },
         "entityType": {
           "type": "string",

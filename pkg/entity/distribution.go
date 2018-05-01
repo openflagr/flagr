@@ -46,8 +46,8 @@ type DistributionDebugLog struct {
 }
 
 // Rollout rolls out the entity based on the rolloutPercent
-func (d DistributionArray) Rollout(entityID *string, salt string, rolloutPercent uint) (variantID *uint, msg string) {
-	if entityID == nil || *entityID == "" {
+func (d DistributionArray) Rollout(entityID string, salt string, rolloutPercent uint) (variantID *uint, msg string) {
+	if entityID == "" {
 		return nil, "rollout no. empty entityID"
 	}
 
@@ -59,7 +59,7 @@ func (d DistributionArray) Rollout(entityID *string, salt string, rolloutPercent
 		return nil, "rollout no. there's no distribution set"
 	}
 
-	num := crc32Num(*entityID, salt)
+	num := crc32Num(entityID, salt)
 	vID, index := d.bucketByNum(num)
 	log := fmt.Sprintf("%+v", DistributionDebugLog{
 		BucketNum:         num,
