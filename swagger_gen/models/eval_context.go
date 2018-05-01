@@ -23,10 +23,8 @@ type EvalContext struct {
 	// entity context
 	EntityContext interface{} `json:"entityContext,omitempty"`
 
-	// entity ID
-	// Required: true
-	// Min Length: 1
-	EntityID *string `json:"entityID"`
+	// entityID is used to deterministically at random to evaluate the flag result. If it's empty, flagr will randomly generate one.
+	EntityID string `json:"entityID,omitempty"`
 
 	// entity type
 	// Required: true
@@ -43,11 +41,6 @@ type EvalContext struct {
 func (m *EvalContext) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateEntityID(formats); err != nil {
-		// prop
-		res = append(res, err)
-	}
-
 	if err := m.validateEntityType(formats); err != nil {
 		// prop
 		res = append(res, err)
@@ -61,19 +54,6 @@ func (m *EvalContext) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (m *EvalContext) validateEntityID(formats strfmt.Registry) error {
-
-	if err := validate.Required("entityID", "body", m.EntityID); err != nil {
-		return err
-	}
-
-	if err := validate.MinLength("entityID", "body", string(*m.EntityID), 1); err != nil {
-		return err
-	}
-
 	return nil
 }
 

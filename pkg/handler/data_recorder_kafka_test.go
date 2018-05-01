@@ -83,7 +83,7 @@ func TestKafkaEvalResult(t *testing.T) {
 		r := &kafkaEvalResult{
 			EvalResult: &models.EvalResult{
 				EvalContext: &models.EvalContext{
-					EntityID: util.StringPtr("123"),
+					EntityID: "123",
 				},
 				FlagID:         util.Int64Ptr(int64(1)),
 				FlagSnapshotID: 1,

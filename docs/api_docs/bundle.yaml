@@ -968,13 +968,14 @@ definitions:
   evalContext:
     type: object
     required:
-      - entityID
       - entityType
       - flagID
     properties:
       entityID:
         type: string
-        minLength: 1
+        description: >-
+          entityID is used to deterministically at random to evaluate the flag
+          result. If it's empty, flagr will randomly generate one.
       entityType:
         type: string
         minLength: 1
@@ -1045,12 +1046,10 @@ definitions:
   evaluationEntity:
     type: object
     required:
-      - entityID
       - entityType
     properties:
       entityID:
         type: string
-        minLength: 1
       entityType:
         type: string
         minLength: 1

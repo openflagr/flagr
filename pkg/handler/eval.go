@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"time"
 
 	"github.com/checkr/flagr/pkg/config"
@@ -104,6 +105,10 @@ var evalFlag = func(evalContext models.EvalContext) *models.EvalResult {
 
 	if len(f.Segments) == 0 {
 		return BlankResult(f, evalContext, fmt.Sprintf("flagID %v has no segments", flagID))
+	}
+
+	if evalContext.EntityID == "" {
+		evalContext.EntityID = fmt.Sprintf("randomly_generated_%d", rand.Int31())
 	}
 
 	logs := []*models.SegmentDebugLog{}

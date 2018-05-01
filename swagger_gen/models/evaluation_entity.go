@@ -21,9 +21,7 @@ type EvaluationEntity struct {
 	EntityContext interface{} `json:"entityContext,omitempty"`
 
 	// entity ID
-	// Required: true
-	// Min Length: 1
-	EntityID *string `json:"entityID"`
+	EntityID string `json:"entityID,omitempty"`
 
 	// entity type
 	// Required: true
@@ -35,11 +33,6 @@ type EvaluationEntity struct {
 func (m *EvaluationEntity) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateEntityID(formats); err != nil {
-		// prop
-		res = append(res, err)
-	}
-
 	if err := m.validateEntityType(formats); err != nil {
 		// prop
 		res = append(res, err)
@@ -48,19 +41,6 @@ func (m *EvaluationEntity) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (m *EvaluationEntity) validateEntityID(formats strfmt.Registry) error {
-
-	if err := validate.Required("entityID", "body", m.EntityID); err != nil {
-		return err
-	}
-
-	if err := validate.MinLength("entityID", "body", string(*m.EntityID), 1); err != nil {
-		return err
-	}
-
 	return nil
 }
 
