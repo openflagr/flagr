@@ -69,7 +69,11 @@ func evaluateSubtree(expr Expr, args map[string]interface{}) (Expr, error) {
 			return falseExpr, fmt.Errorf("argument: %v not found", index)
 		}
 
-		kind := reflect.TypeOf(args[index]).Kind()
+		typeof := reflect.TypeOf(args[index])
+		if typeof == nil {
+			return falseExpr, fmt.Errorf("Unsupported argument nil type")
+		}
+		kind := typeof.Kind()
 		switch kind {
 		case reflect.Int:
 			return &NumberLiteral{Val: float64(args[index].(int))}, nil

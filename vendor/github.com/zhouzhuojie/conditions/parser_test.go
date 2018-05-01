@@ -321,6 +321,8 @@ func TestJSON(t *testing.T) {
 		{`{foo} contains 123`, `{"foo": ["123"]}`, false, true},
 		{`{foo} not contains 123`, `{"foo": [124]}`, true, false},
 		{`{foo} not contains "123"`, `{"foo": ["124"]}`, true, false},
+		{`{foo} not contains "123"`, `{"foo": null}`, false, true},
+		{`{foo} not contains "123"`, `{}`, false, true},
 	}
 
 	for _, test := range tests {

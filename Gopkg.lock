@@ -52,8 +52,8 @@
 [[projects]]
   name = "github.com/caarlos0/env"
   packages = ["."]
-  revision = "7cd7992b3bc86f920394f8de92c13900da1a46b7"
-  version = "v3.2.0"
+  revision = "1cddc31c48c56ecd700d873edb9fd5b6f5df922a"
+  version = "v3.3.0"
 
 [[projects]]
   name = "github.com/certifi/gocertifi"
@@ -76,8 +76,8 @@
 [[projects]]
   name = "github.com/docker/go-units"
   packages = ["."]
-  revision = "0dadbb0345b35ec7ef35e228dabb8de89a65bf52"
-  version = "v0.3.2"
+  revision = "47565b4f722fb6ceae66b95f853feed578a4a51c"
+  version = "v0.3.3"
 
 [[projects]]
   name = "github.com/eapache/go-resiliency"
@@ -107,13 +107,13 @@
   branch = "master"
   name = "github.com/getsentry/raven-go"
   packages = ["."]
-  revision = "7562301a6763c9ac631b0a2011b4aa0e064e45d4"
+  revision = "263040ce1a362270b5897a5982572ddc1fe807be"
 
 [[projects]]
   branch = "master"
   name = "github.com/go-openapi/analysis"
   packages = ["."]
-  revision = "f59a71f0ece6f9dfb438be7f45148f006cbad88e"
+  revision = "863ac7f90e00e88e507095639a8457bbbf3c2ec9"
 
 [[projects]]
   branch = "master"
@@ -152,31 +152,31 @@
     "middleware/untyped",
     "security"
   ]
-  revision = "62281b694b396a17fe3e4313ee8b0ca2c3cca719"
+  revision = "f12926f16ac2fb1da15316fd0aa84ce0d64550c3"
 
 [[projects]]
   branch = "master"
   name = "github.com/go-openapi/spec"
   packages = ["."]
-  revision = "9acd88844bc186c3ec7f318cd3d56f1114b4ab99"
+  revision = "bcff419492eeeb01f76e77d2ebc714dc97b607f5"
 
 [[projects]]
   branch = "master"
   name = "github.com/go-openapi/strfmt"
   packages = ["."]
-  revision = "6ba31556a6c60db8615afb9d8eddae7aae15eb48"
+  revision = "481808443b00a14745fada967cb5eeff0f9b1df2"
 
 [[projects]]
   branch = "master"
   name = "github.com/go-openapi/swag"
   packages = ["."]
-  revision = "ceb469cb0fdf2d792f28d771bc05da6c606f55e5"
+  revision = "811b1089cde9dad18d4d0c2d09fbdbf28dbd27a5"
 
 [[projects]]
   branch = "master"
   name = "github.com/go-openapi/validate"
   packages = ["."]
-  revision = "180bba53b98899f743a112e568bed9e2ef31aa20"
+  revision = "f8f9c5961cd5fd7c22af8d93d3190b640b4c72af"
 
 [[projects]]
   name = "github.com/go-sql-driver/mysql"
@@ -305,7 +305,7 @@
   branch = "master"
   name = "github.com/rcrowley/go-metrics"
   packages = ["."]
-  revision = "8732c616f52954686704c8645fe1a9d59e9df7c1"
+  revision = "d932a24a8ccb8fcadc993e5c6c58f93dac168294"
 
 [[projects]]
   name = "github.com/rs/cors"
@@ -353,7 +353,7 @@
   branch = "master"
   name = "github.com/zhouzhuojie/conditions"
   packages = ["."]
-  revision = "c70410a3c5af14640d7ea17578f0047324c9e049"
+  revision = "34882afc2ef77651b9e10ec8148ac7f95887f822"
 
 [[projects]]
   branch = "master"
@@ -364,7 +364,7 @@
     "salsa20/salsa",
     "ssh/terminal"
   ]
-  revision = "b2aa35443fbc700ab74c586ae79b81c171851023"
+  revision = "613d6eafa307c6881a737a3c35c0e312e8d3a8c5"
 
 [[projects]]
   branch = "master"
@@ -373,7 +373,7 @@
     "context",
     "idna"
   ]
-  revision = "b3c676e531a6dc479fa1b35ac961c13f5e2b4d2e"
+  revision = "5f9ae10d9af5b1c89ae6904293b14b064d4ada23"
 
 [[projects]]
   branch = "master"
@@ -382,7 +382,7 @@
     "unix",
     "windows"
   ]
-  revision = "fcb792cfc275f85145c640d36af94b591eed4275"
+  revision = "78d5f264b493f125018180c204871ecf58a2dce1"
 
 [[projects]]
   name = "golang.org/x/text"

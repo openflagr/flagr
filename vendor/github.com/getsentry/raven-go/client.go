@@ -37,7 +37,6 @@ var (
 	ErrPacketDropped         = errors.New("raven: packet dropped")
 	ErrUnableToUnmarshalJSON = errors.New("raven: unable to unmarshal JSON")
 	ErrMissingUser           = errors.New("raven: dsn missing public key and/or password")
-	ErrMissingPrivateKey     = errors.New("raven: dsn missing private key")
 	ErrMissingProjectID      = errors.New("raven: dsn missing project id")
 	ErrInvalidSampleRate     = errors.New("raven: sample rate should be between 0 and 1")
 )
@@ -446,10 +445,7 @@ func (client *Client) SetDSN(dsn string) error {
 		return ErrMissingUser
 	}
 	publicKey := uri.User.Username()
-	secretKey, ok := uri.User.Password()
-	if !ok {
-		return ErrMissingPrivateKey
-	}
+	secretKey, hasSecretKey := uri.User.Password()
 	uri.User = nil
 
 	if idx := strings.LastIndex(uri.Path, "/"); idx != -1 {
@@ -462,7 +458,11 @@ func (client *Client) SetDSN(dsn string) error {
 
 	client.url = uri.String()
 
-	client.authHeader = fmt.Sprintf("Sentry sentry_version=4, sentry_key=%s, sentry_secret=%s", publicKey, secretKey)
+	if hasSecretKey {
+		client.authHeader = fmt.Sprintf("Sentry sentry_version=4, sentry_key=%s, sentry_secret=%s", publicKey, secretKey)
+	} else {
+		client.authHeader = fmt.Sprintf("Sentry sentry_version=4, sentry_key=%s", publicKey)
+	}
 
 	return nil
 }
@@ -683,7 +683,7 @@ func (client *Client) CaptureError(err error, tags map[string]string, interfaces
 
 	cause := pkgErrors.Cause(err)
 
-	packet := NewPacket(cause.Error(), append(append(interfaces, client.context.interfaces()...), NewException(cause, GetOrNewStacktrace(cause, 1, 3, client.includePaths)))...)
+	packet := NewPacket(err.Error(), append(append(interfaces, client.context.interfaces()...), NewException(cause, GetOrNewStacktrace(cause, 1, 3, client.includePaths)))...)
 	eventID, _ := client.Capture(packet, tags)
 
 	return eventID
@@ -707,7 +707,7 @@ func (client *Client) CaptureErrorAndWait(err error, tags map[string]string, int
 
 	cause := pkgErrors.Cause(err)
 
-	packet := NewPacket(cause.Error(), append(append(interfaces, client.context.interfaces()...), NewException(cause, GetOrNewStacktrace(cause, 1, 3, client.includePaths)))...)
+	packet := NewPacket(err.Error(), append(append(interfaces, client.context.interfaces()...), NewException(cause, GetOrNewStacktrace(cause, 1, 3, client.includePaths)))...)
 	eventID, ch := client.Capture(packet, tags)
 	if eventID != "" {
 		<-ch
