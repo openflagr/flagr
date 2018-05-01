@@ -382,6 +382,7 @@
                   No segments created for this feature flag yet
                 </div>
               </el-card>
+              <debug-console :flag-id="parseInt($route.params.flagId, 10)"></debug-console>
               <el-card>
                 <div slot="header" class="el-card-header">
                   <h2>Flag Settings</h2>
@@ -392,7 +393,6 @@
                 </el-button>
               </el-card>
               <spinner v-if="!loaded"></spinner>
-              <debug-console :flag-id="parseInt($route.params.flagId, 10)"></debug-console>
             </el-tab-pane>
 
             <el-tab-pane label="History">
