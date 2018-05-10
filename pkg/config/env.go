@@ -39,6 +39,9 @@ var Config = struct {
 	// mysql:    "root:@tcp(127.0.0.1:18100)/flagr?parseTime=true"
 	// postgres: "host=myhost user=root dbname=flagr password=mypassword"
 	DBConnectionStr string `env:"FLAGR_DB_DBCONNECTIONSTR" envDefault:"flagr.sqlite"`
+	// DBConnectionDebug controls whether to show the database connection debugging logs
+	// warning: it may log the credentials to the stdout
+	DBConnectionDebug bool `env:"FLAGR_DB_DBCONNECTION_DEBUG" envDefault:"true"`
 
 	// CORSEnabled - enable CORS
 	CORSEnabled bool `env:"FLAGR_CORS_ENABLED" envDefault:"true"`
