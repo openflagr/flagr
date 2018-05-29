@@ -62,42 +62,34 @@ func (m *EvalResult) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateEvalContext(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateEvalDebugLog(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateFlagID(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateSegmentID(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateTimestamp(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateVariantAttachment(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateVariantID(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateVariantKey(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
@@ -114,14 +106,12 @@ func (m *EvalResult) validateEvalContext(formats strfmt.Registry) error {
 	}
 
 	if m.EvalContext != nil {
-
 		if err := m.EvalContext.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("evalContext")
 			}
 			return err
 		}
-
 	}
 
 	return nil
@@ -134,14 +124,12 @@ func (m *EvalResult) validateEvalDebugLog(formats strfmt.Registry) error {
 	}
 
 	if m.EvalDebugLog != nil {
-
 		if err := m.EvalDebugLog.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("evalDebugLog")
 			}
 			return err
 		}
-
 	}
 
 	return nil

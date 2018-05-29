@@ -40,17 +40,14 @@ func (m *FlagSnapshot) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateFlag(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateID(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateUpdatedAt(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
@@ -67,14 +64,12 @@ func (m *FlagSnapshot) validateFlag(formats strfmt.Registry) error {
 	}
 
 	if m.Flag != nil {
-
 		if err := m.Flag.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("flag")
 			}
 			return err
 		}
-
 	}
 
 	return nil

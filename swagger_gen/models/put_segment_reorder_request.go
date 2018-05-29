@@ -30,7 +30,6 @@ func (m *PutSegmentReorderRequest) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateSegmentIds(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 

@@ -42,12 +42,10 @@ func (m *EvalContext) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateEntityType(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateFlagID(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 

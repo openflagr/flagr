@@ -38,17 +38,14 @@ func (m *CreateConstraintRequest) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateOperator(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateProperty(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateValue(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 

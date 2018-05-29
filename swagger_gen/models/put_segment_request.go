@@ -34,12 +34,10 @@ func (m *PutSegmentRequest) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateDescription(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateRolloutPercent(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 

@@ -30,7 +30,6 @@ func (m *EvalDebugLog) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateSegmentDebugLogs(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
@@ -47,20 +46,17 @@ func (m *EvalDebugLog) validateSegmentDebugLogs(formats strfmt.Registry) error {
 	}
 
 	for i := 0; i < len(m.SegmentDebugLogs); i++ {
-
 		if swag.IsZero(m.SegmentDebugLogs[i]) { // not required
 			continue
 		}
 
 		if m.SegmentDebugLogs[i] != nil {
-
 			if err := m.SegmentDebugLogs[i].Validate(formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("segmentDebugLogs" + "." + strconv.Itoa(i))
 				}
 				return err
 			}
-
 		}
 
 	}

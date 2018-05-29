@@ -52,32 +52,26 @@ func (m *Segment) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateConstraints(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateDescription(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateDistributions(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateID(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateRank(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateRolloutPercent(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
@@ -94,20 +88,17 @@ func (m *Segment) validateConstraints(formats strfmt.Registry) error {
 	}
 
 	for i := 0; i < len(m.Constraints); i++ {
-
 		if swag.IsZero(m.Constraints[i]) { // not required
 			continue
 		}
 
 		if m.Constraints[i] != nil {
-
 			if err := m.Constraints[i].Validate(formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("constraints" + "." + strconv.Itoa(i))
 				}
 				return err
 			}
-
 		}
 
 	}
@@ -135,20 +126,17 @@ func (m *Segment) validateDistributions(formats strfmt.Registry) error {
 	}
 
 	for i := 0; i < len(m.Distributions); i++ {
-
 		if swag.IsZero(m.Distributions[i]) { // not required
 			continue
 		}
 
 		if m.Distributions[i] != nil {
-
 			if err := m.Distributions[i].Validate(formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("distributions" + "." + strconv.Itoa(i))
 				}
 				return err
 			}
-
 		}
 
 	}

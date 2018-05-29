@@ -49,32 +49,26 @@ func (m *Flag) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateDataRecordsEnabled(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateDescription(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateEnabled(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateID(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateSegments(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateVariants(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
@@ -135,20 +129,17 @@ func (m *Flag) validateSegments(formats strfmt.Registry) error {
 	}
 
 	for i := 0; i < len(m.Segments); i++ {
-
 		if swag.IsZero(m.Segments[i]) { // not required
 			continue
 		}
 
 		if m.Segments[i] != nil {
-
 			if err := m.Segments[i].Validate(formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("segments" + "." + strconv.Itoa(i))
 				}
 				return err
 			}
-
 		}
 
 	}
@@ -163,20 +154,17 @@ func (m *Flag) validateVariants(formats strfmt.Registry) error {
 	}
 
 	for i := 0; i < len(m.Variants); i++ {
-
 		if swag.IsZero(m.Variants[i]) { // not required
 			continue
 		}
 
 		if m.Variants[i] != nil {
-
 			if err := m.Variants[i].Validate(formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("variants" + "." + strconv.Itoa(i))
 				}
 				return err
 			}
-
 		}
 
 	}
