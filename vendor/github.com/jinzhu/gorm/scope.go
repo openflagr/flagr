@@ -692,12 +692,12 @@ func (scope *Scope) buildSelectQuery(clause map[string]interface{}) (str string)
 
 	buff := bytes.NewBuffer([]byte{})
 	i := 0
-	for pos := range str {
+	for pos, char := range str {
 		if str[pos] == '?' {
 			buff.WriteString(replacements[i])
 			i++
 		} else {
-			buff.WriteByte(str[pos])
+			buff.WriteRune(char)
 		}
 	}
 
@@ -1215,7 +1215,7 @@ func (scope *Scope) addForeignKey(field string, dest string, onDelete string, on
 }
 
 func (scope *Scope) removeForeignKey(field string, dest string) {
-	keyName := scope.Dialect().BuildKeyName(scope.TableName(), field, dest)
+	keyName := scope.Dialect().BuildKeyName(scope.TableName(), field, dest, "foreign")
 
 	if !scope.Dialect().HasForeignKey(scope.TableName(), keyName) {
 		return
