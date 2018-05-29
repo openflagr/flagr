@@ -50,10 +50,10 @@
   version = "v2.0.0"
 
 [[projects]]
+  branch = "master"
   name = "github.com/caarlos0/env"
   packages = ["."]
-  revision = "1cddc31c48c56ecd700d873edb9fd5b6f5df922a"
-  version = "v3.3.0"
+  revision = "3e0f30cbf50bb82273cf60e7bb70869f4852e9b8"
 
 [[projects]]
   name = "github.com/certifi/gocertifi"
@@ -203,6 +203,7 @@
   version = "v1.4.0"
 
 [[projects]]
+  branch = "master"
   name = "github.com/jinzhu/gorm"
   packages = [
     ".",
@@ -210,8 +211,7 @@
     "dialects/postgres",
     "dialects/sqlite"
   ]
-  revision = "6ed508ec6a4ecb3531899a69cbc746ccf65a4166"
-  version = "v1.9.1"
+  revision = "82eb9f8a5bbb5e6b929d2f0ae5b934e6a253f94e"
 
 [[projects]]
   branch = "master"
@@ -332,10 +332,10 @@
   version = "v1.2.1"
 
 [[projects]]
+  branch = "master"
   name = "github.com/tylerb/graceful"
   packages = ["."]
-  revision = "4654dfbb6ad53cb5e27f37d99b02e16c1872fbbb"
-  version = "v1.2.15"
+  revision = "d72b0151351a13d0421b763b88f791469c4f5dc7"
 
 [[projects]]
   name = "github.com/urfave/negroni"
@@ -424,6 +424,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "ac49407944e647ba071e2865000dbc87a5be3c7e89caaecadc5d8105de751212"
+  inputs-digest = "8d20640613ce933af0b05a7a02a4722e7dd0b59e967e2aa4963bb30e605c2216"
   solver-name = "gps-cdcl"
   solver-version = 1
