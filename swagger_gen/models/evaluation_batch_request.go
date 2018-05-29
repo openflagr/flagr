@@ -38,12 +38,10 @@ func (m *EvaluationBatchRequest) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateEntities(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateFlagIds(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
@@ -66,20 +64,17 @@ func (m *EvaluationBatchRequest) validateEntities(formats strfmt.Registry) error
 	}
 
 	for i := 0; i < len(m.Entities); i++ {
-
 		if swag.IsZero(m.Entities[i]) { // not required
 			continue
 		}
 
 		if m.Entities[i] != nil {
-
 			if err := m.Entities[i].Validate(formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("entities" + "." + strconv.Itoa(i))
 				}
 				return err
 			}
-
 		}
 
 	}

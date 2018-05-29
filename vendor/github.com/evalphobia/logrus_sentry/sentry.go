@@ -203,7 +203,11 @@ func (hook *SentryHook) Fire(entry *logrus.Entry) error {
 			if currentStacktrace == nil {
 				currentStacktrace = raven.NewStacktrace(stConfig.Skip, stConfig.Context, stConfig.InAppPrefixes)
 			}
-			exc := raven.NewException(errors.Cause(err), currentStacktrace)
+			cause := errors.Cause(err)
+			if cause == nil {
+				cause = err
+			}
+			exc := raven.NewException(cause, currentStacktrace)
 			if !stConfig.SendExceptionType {
 				exc.Type = ""
 			}

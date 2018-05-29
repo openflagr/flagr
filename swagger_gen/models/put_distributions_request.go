@@ -29,7 +29,6 @@ func (m *PutDistributionsRequest) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateDistributions(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
@@ -46,20 +45,17 @@ func (m *PutDistributionsRequest) validateDistributions(formats strfmt.Registry)
 	}
 
 	for i := 0; i < len(m.Distributions); i++ {
-
 		if swag.IsZero(m.Distributions[i]) { // not required
 			continue
 		}
 
 		if m.Distributions[i] != nil {
-
 			if err := m.Distributions[i].Validate(formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("distributions" + "." + strconv.Itoa(i))
 				}
 				return err
 			}
-
 		}
 
 	}

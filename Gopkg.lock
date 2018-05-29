@@ -100,26 +100,26 @@
 [[projects]]
   name = "github.com/evalphobia/logrus_sentry"
   packages = ["."]
-  revision = "57846a82817615f185b10cc40de8dc60c1ca5ae1"
-  version = "v0.4.5"
+  revision = "b78b27461c8163c45abf4ab3a8330d2b1ee9456a"
+  version = "v0.4.6"
 
 [[projects]]
   branch = "master"
   name = "github.com/getsentry/raven-go"
   packages = ["."]
-  revision = "263040ce1a362270b5897a5982572ddc1fe807be"
+  revision = "ed7bcb39ff10f39ab08e317ce16df282845852fa"
 
 [[projects]]
   branch = "master"
   name = "github.com/go-openapi/analysis"
   packages = ["."]
-  revision = "863ac7f90e00e88e507095639a8457bbbf3c2ec9"
+  revision = "5957818e100395077187fb7ef3b8a28227af06c6"
 
 [[projects]]
   branch = "master"
   name = "github.com/go-openapi/errors"
   packages = ["."]
-  revision = "7bcb96a367bac6b76e6e42fa84155bb5581dcff8"
+  revision = "b2b2befaf267d082d779bcef52d682a47c779517"
 
 [[projects]]
   branch = "master"
@@ -152,7 +152,7 @@
     "middleware/untyped",
     "security"
   ]
-  revision = "f12926f16ac2fb1da15316fd0aa84ce0d64550c3"
+  revision = "c0cae94704c76c8643896d8054080f91e920105b"
 
 [[projects]]
   branch = "master"
@@ -176,13 +176,13 @@
   branch = "master"
   name = "github.com/go-openapi/validate"
   packages = ["."]
-  revision = "f8f9c5961cd5fd7c22af8d93d3190b640b4c72af"
+  revision = "9286f6d0e5c1ffc7cf2bda1d59291dc3c4f2f828"
 
 [[projects]]
   name = "github.com/go-sql-driver/mysql"
   packages = ["."]
   revision = "a0583e0143b1624142adab07e0e97fe106d99561"
-  version = "v1.3"
+  version = "v1.3.0"
 
 [[projects]]
   branch = "master"
@@ -194,7 +194,7 @@
   branch = "master"
   name = "github.com/golang/snappy"
   packages = ["."]
-  revision = "553a641470496b2327abcac10b36396bd98e45c9"
+  revision = "2e65f85255dbc3072edf28d6b5b8efc472979f5a"
 
 [[projects]]
   name = "github.com/jessevdk/go-flags"
@@ -227,7 +227,7 @@
     "hstore",
     "oid"
   ]
-  revision = "d34b9ff171c21ad295489235aec8b6626023cd04"
+  revision = "90697d60dd844d5ef6ff15135d0203f65d2f53b8"
 
 [[projects]]
   branch = "master"
@@ -242,8 +242,8 @@
 [[projects]]
   name = "github.com/mattn/go-sqlite3"
   packages = ["."]
-  revision = "6c771bb9887719704b210e87e934f08be014bdb1"
-  version = "v1.6.0"
+  revision = "323a32be5a2421b8c7087225079c6c900ec397cd"
+  version = "v1.7.0"
 
 [[projects]]
   branch = "master"
@@ -255,7 +255,7 @@
   branch = "master"
   name = "github.com/mitchellh/mapstructure"
   packages = ["."]
-  revision = "00c29f56e2386353d58c599509e8dc3801b0d716"
+  revision = "bb74f1db0675b241733089d5a1faa5dd8b0ef57b"
 
 [[projects]]
   name = "github.com/newrelic/go-agent"
@@ -305,13 +305,13 @@
   branch = "master"
   name = "github.com/rcrowley/go-metrics"
   packages = ["."]
-  revision = "d932a24a8ccb8fcadc993e5c6c58f93dac168294"
+  revision = "e2704e165165ec55d062f5919b4b29494e9fa790"
 
 [[projects]]
   name = "github.com/rs/cors"
   packages = ["."]
-  revision = "feef513b9575b32f84bafa580aad89b011259019"
-  version = "v1.3.0"
+  revision = "ca016a06a5753f8ba03029c0aa5e54afb1bf713f"
+  version = "v1.4.0"
 
 [[projects]]
   name = "github.com/sirupsen/logrus"
@@ -364,7 +364,7 @@
     "salsa20/salsa",
     "ssh/terminal"
   ]
-  revision = "613d6eafa307c6881a737a3c35c0e312e8d3a8c5"
+  revision = "ab813273cd59e1333f7ae7bff5d027d4aadf528c"
 
 [[projects]]
   branch = "master"
@@ -373,7 +373,7 @@
     "context",
     "idna"
   ]
-  revision = "5f9ae10d9af5b1c89ae6904293b14b064d4ada23"
+  revision = "dfa909b99c79129e1100513e5cd36307665e5723"
 
 [[projects]]
   branch = "master"
@@ -382,7 +382,7 @@
     "unix",
     "windows"
   ]
-  revision = "78d5f264b493f125018180c204871ecf58a2dce1"
+  revision = "c11f84a56e43e20a78cee75a7c034031ecf57d1f"
 
 [[projects]]
   name = "golang.org/x/text"

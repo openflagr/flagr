@@ -29,7 +29,6 @@ func (m *EvaluationBatchResponse) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateEvaluationResults(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
@@ -46,20 +45,17 @@ func (m *EvaluationBatchResponse) validateEvaluationResults(formats strfmt.Regis
 	}
 
 	for i := 0; i < len(m.EvaluationResults); i++ {
-
 		if swag.IsZero(m.EvaluationResults[i]) { // not required
 			continue
 		}
 
 		if m.EvaluationResults[i] != nil {
-
 			if err := m.EvaluationResults[i].Validate(formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("evaluationResults" + "." + strconv.Itoa(i))
 				}
 				return err
 			}
-
 		}
 
 	}

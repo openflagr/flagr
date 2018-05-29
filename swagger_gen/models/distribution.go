@@ -48,27 +48,22 @@ func (m *Distribution) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateBitmap(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateID(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validatePercent(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateVariantID(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateVariantKey(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 

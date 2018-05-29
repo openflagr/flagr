@@ -32,12 +32,10 @@ func (m *PutVariantRequest) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateAttachment(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateKey(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 

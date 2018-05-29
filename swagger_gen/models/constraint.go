@@ -27,6 +27,7 @@ type Constraint struct {
 	// operator
 	// Required: true
 	// Min Length: 1
+	// Enum: [EQ NEQ LT LTE GT GTE EREG NEREG IN NOTIN CONTAINS NOTCONTAINS]
 	Operator *string `json:"operator"`
 
 	// property
@@ -45,22 +46,18 @@ func (m *Constraint) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateID(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateOperator(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateProperty(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateValue(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 

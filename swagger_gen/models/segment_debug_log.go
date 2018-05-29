@@ -30,7 +30,6 @@ func (m *SegmentDebugLog) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateSegmentID(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 

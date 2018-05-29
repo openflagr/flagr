@@ -14,6 +14,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/asn1"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -529,6 +530,111 @@ func TestVerifyHTTP01(t *testing.T) {
 	}
 }
 
+func TestRevokeFailedAuthz(t *testing.T) {
+	// Prefill authorization URIs expected to be revoked.
+	// The challenges are selected in a specific order,
+	// each tried within a newly created authorization.
+	// This means each authorization URI corresponds to a different challenge type.
+	revokedAuthz := map[string]bool{
+		"/authz/0": false, // tls-sni-02
+		"/authz/1": false, // tls-sni-01
+		"/authz/2": false, // no viable challenge, but authz is created
+	}
+
+	var authzCount int          // num. of created authorizations
+	var revokeCount int         // num. of revoked authorizations
+	done := make(chan struct{}) // closed when revokeCount is 3
+
+	// ACME CA server stub, only the needed bits.
+	// TODO: Merge this with startACMEServerStub, making it a configurable CA for testing.
+	var ca *httptest.Server
+	ca = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Replay-Nonce", "nonce")
+		if r.Method == "HEAD" {
+			// a nonce request
+			return
+		}
+
+		switch r.URL.Path {
+		// Discovery.
+		case "/":
+			if err := discoTmpl.Execute(w, ca.URL); err != nil {
+				t.Errorf("discoTmpl: %v", err)
+			}
+		// Client key registration.
+		case "/new-reg":
+			w.Write([]byte("{}"))
+		// New domain authorization.
+		case "/new-authz":
+			w.Header().Set("Location", fmt.Sprintf("%s/authz/%d", ca.URL, authzCount))
+			w.WriteHeader(http.StatusCreated)
+			if err := authzTmpl.Execute(w, ca.URL); err != nil {
+				t.Errorf("authzTmpl: %v", err)
+			}
+			authzCount++
+		// tls-sni-02 challenge "accept" request.
+		case "/challenge/2":
+			// Refuse.
+			http.Error(w, "won't accept tls-sni-02 challenge", http.StatusBadRequest)
+		// tls-sni-01 challenge "accept" request.
+		case "/challenge/1":
+			// Accept but the authorization will be "expired".
+			w.Write([]byte("{}"))
+		// Authorization requests.
+		case "/authz/0", "/authz/1", "/authz/2":
+			// Revocation requests.
+			if r.Method == "POST" {
+				var req struct{ Status string }
+				if err := decodePayload(&req, r.Body); err != nil {
+					t.Errorf("%s: decodePayload: %v", r.URL, err)
+				}
+				switch req.Status {
+				case "deactivated":
+					revokedAuthz[r.URL.Path] = true
+					revokeCount++
+					if revokeCount >= 3 {
+						// Last authorization is revoked.
+						defer close(done)
+					}
+				default:
+					t.Errorf("%s: req.Status = %q; want 'deactivated'", r.URL, req.Status)
+				}
+				w.Write([]byte(`{"status": "invalid"}`))
+				return
+			}
+			// Authorization status requests.
+			// Simulate abandoned authorization, deleted by the CA.
+			w.WriteHeader(http.StatusNotFound)
+		default:
+			http.NotFound(w, r)
+			t.Errorf("unrecognized r.URL.Path: %s", r.URL.Path)
+		}
+	}))
+	defer ca.Close()
+
+	m := &Manager{
+		Client: &acme.Client{DirectoryURL: ca.URL},
+	}
+	// Should fail and revoke 3 authorizations.
+	// The first 2 are tsl-sni-02 and tls-sni-01 challenges.
+	// The third time an authorization is created but no viable challenge is found.
+	// See revokedAuthz above for more explanation.
+	if _, err := m.createCert(context.Background(), "example.org"); err == nil {
+		t.Errorf("m.createCert returned nil error")
+	}
+	select {
+	case <-time.After(3 * time.Second):
+		t.Error("revocations took too long")
+	case <-done:
+		// revokeCount is at least 3.
+	}
+	for uri, ok := range revokedAuthz {
+		if !ok {
+			t.Errorf("%q authorization was not revoked", uri)
+		}
+	}
+}
+
 func TestHTTPHandlerDefaultFallback(t *testing.T) {
 	tt := []struct {
 		method, url  string
@@ -753,5 +859,35 @@ func TestManagerGetCertificateBogusSNI(t *testing.T) {
 		if got != tt.wantErr {
 			t.Errorf("GetCertificate(SNI = %q) = %q; want %q", tt.name, got, tt.wantErr)
 		}
+	}
+}
+
+func TestCertRequest(t *testing.T) {
+	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// An extension from RFC7633. Any will do.
+	ext := pkix.Extension{
+		Id:    asn1.ObjectIdentifier{1, 3, 6, 1, 5, 5, 7, 1},
+		Value: []byte("dummy"),
+	}
+	b, err := certRequest(key, "example.org", []pkix.Extension{ext}, "san.example.org")
+	if err != nil {
+		t.Fatalf("certRequest: %v", err)
+	}
+	r, err := x509.ParseCertificateRequest(b)
+	if err != nil {
+		t.Fatalf("ParseCertificateRequest: %v", err)
+	}
+	var found bool
+	for _, v := range r.Extensions {
+		if v.Id.Equal(ext.Id) {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Errorf("want %v in Extensions: %v", ext, r.Extensions)
 	}
 }
