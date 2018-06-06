@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"strconv"
+
 	"github.com/checkr/flagr/pkg/entity"
 	"github.com/checkr/flagr/pkg/mapper/entity_restapi/e2r"
 	"github.com/checkr/flagr/pkg/mapper/entity_restapi/r2e"
@@ -68,6 +70,34 @@ var (
 func (c *crud) FindFlags(params flag.FindFlagsParams) middleware.Responder {
 	fs := []entity.Flag{}
 	q := entity.NewFlagQuerySet(getDB())
+	queryParams := map[string]string{
+		"enabled":     "",
+		"description": "",
+		"limit":       "",
+	}
+	if params.HTTPRequest != nil {
+		queryParams["enabled"] = params.HTTPRequest.URL.Query().Get("enabled")
+	}
+	if params.HTTPRequest != nil {
+		queryParams["description"] = params.HTTPRequest.URL.Query().Get("description")
+	}
+	if params.HTTPRequest != nil {
+		queryParams["limit"] = params.HTTPRequest.URL.Query().Get("limit")
+	}
+	if queryParams["enabled"] == "true" {
+		q = q.EnabledEq(true)
+	} else if queryParams["enabled"] == "false" {
+		q = q.EnabledEq(false)
+	}
+	if queryParams["description"] != "" {
+		q = q.DescriptionEq(queryParams["description"])
+	}
+	if queryParams["limit"] != "" {
+		if qpLimit, err := strconv.Atoi(queryParams["limit"]); err == nil {
+			q = q.Limit(qpLimit)
+		}
+	}
+
 	err := q.All(&fs)
 	if err != nil {
 		return flag.NewFindFlagsDefault(500).WithPayload(
