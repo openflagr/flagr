@@ -1,0 +1,24 @@
+get:
+  tags:
+    - query
+  operationId: getFlagByNameBatch
+  parameters:
+    - in: query
+      name: flagNames
+      required: true
+      type: array
+      items:
+        type: string
+        minLength: 1
+      minItems: 1
+  responses:
+    200:
+      description: returns list of flags with the given names. Omits flags who's names weren't found.
+      schema:
+        type: array
+        items:
+          $ref: "#/definitions/flag"
+    default:
+      description: generic error response
+      schema:
+        $ref: "#/definitions/error"

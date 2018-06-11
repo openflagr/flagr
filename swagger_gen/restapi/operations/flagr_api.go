@@ -23,6 +23,7 @@ import (
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/distribution"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/evaluation"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/flag"
+	"github.com/checkr/flagr/swagger_gen/restapi/operations/query"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/segment"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/variant"
 )
@@ -85,6 +86,12 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		}),
 		FlagGetFlagHandler: flag.GetFlagHandlerFunc(func(params flag.GetFlagParams) middleware.Responder {
 			return middleware.NotImplemented("operation FlagGetFlag has not yet been implemented")
+		}),
+		QueryGetFlagByNameHandler: query.GetFlagByNameHandlerFunc(func(params query.GetFlagByNameParams) middleware.Responder {
+			return middleware.NotImplemented("operation QueryGetFlagByName has not yet been implemented")
+		}),
+		QueryGetFlagByNameBatchHandler: query.GetFlagByNameBatchHandlerFunc(func(params query.GetFlagByNameBatchParams) middleware.Responder {
+			return middleware.NotImplemented("operation QueryGetFlagByNameBatch has not yet been implemented")
 		}),
 		FlagGetFlagSnapshotsHandler: flag.GetFlagSnapshotsHandlerFunc(func(params flag.GetFlagSnapshotsParams) middleware.Responder {
 			return middleware.NotImplemented("operation FlagGetFlagSnapshots has not yet been implemented")
@@ -175,6 +182,10 @@ type FlagrAPI struct {
 	VariantFindVariantsHandler variant.FindVariantsHandler
 	// FlagGetFlagHandler sets the operation handler for the get flag operation
 	FlagGetFlagHandler flag.GetFlagHandler
+	// QueryGetFlagByNameHandler sets the operation handler for the get flag by name operation
+	QueryGetFlagByNameHandler query.GetFlagByNameHandler
+	// QueryGetFlagByNameBatchHandler sets the operation handler for the get flag by name batch operation
+	QueryGetFlagByNameBatchHandler query.GetFlagByNameBatchHandler
 	// FlagGetFlagSnapshotsHandler sets the operation handler for the get flag snapshots operation
 	FlagGetFlagSnapshotsHandler flag.GetFlagSnapshotsHandler
 	// EvaluationPostEvaluationHandler sets the operation handler for the post evaluation operation
@@ -312,6 +323,14 @@ func (o *FlagrAPI) Validate() error {
 
 	if o.FlagGetFlagHandler == nil {
 		unregistered = append(unregistered, "flag.GetFlagHandler")
+	}
+
+	if o.QueryGetFlagByNameHandler == nil {
+		unregistered = append(unregistered, "query.GetFlagByNameHandler")
+	}
+
+	if o.QueryGetFlagByNameBatchHandler == nil {
+		unregistered = append(unregistered, "query.GetFlagByNameBatchHandler")
 	}
 
 	if o.FlagGetFlagSnapshotsHandler == nil {
@@ -521,6 +540,16 @@ func (o *FlagrAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/flags/{flagID}"] = flag.NewGetFlag(o.context, o.FlagGetFlagHandler)
+
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/query"] = query.NewGetFlagByName(o.context, o.QueryGetFlagByNameHandler)
+
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/query/batch"] = query.NewGetFlagByNameBatch(o.context, o.QueryGetFlagByNameBatchHandler)
 
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)

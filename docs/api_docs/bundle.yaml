@@ -709,10 +709,59 @@ paths:
           description: generic error response
           schema:
             $ref: '#/definitions/error'
+  /query:
+    get:
+      tags:
+        - query
+      operationId: getFlagByName
+      parameters:
+        - in: query
+          name: flagName
+          description: name of the flag to query
+          required: true
+          type: string
+          minLength: 1
+      responses:
+        '200':
+          description: returns the flag
+          schema:
+            $ref: '#/definitions/flag'
+        default:
+          description: generic error response
+          schema:
+            $ref: '#/definitions/error'
+  /query/batch:
+    get:
+      tags:
+        - query
+      operationId: getFlagByNameBatch
+      parameters:
+        - in: query
+          name: flagNames
+          required: true
+          type: array
+          items:
+            type: string
+            minLength: 1
+          minItems: 1
+      responses:
+        '200':
+          description: >-
+            returns list of flags with the given names. Omits flags who's names
+            weren't found.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/flag'
+        default:
+          description: generic error response
+          schema:
+            $ref: '#/definitions/error'
 definitions:
   flag:
     type: object
     required:
+      - name
       - description
       - enabled
       - dataRecordsEnabled
@@ -722,6 +771,9 @@ definitions:
         format: int64
         minimum: 1
         readOnly: true
+      name:
+        type: string
+        minLength: 1
       description:
         type: string
         minLength: 1
@@ -743,8 +795,12 @@ definitions:
   createFlagRequest:
     type: object
     required:
+      - name
       - description
     properties:
+      name:
+        type: string
+        minLength: 1
       description:
         type: string
         minLength: 1

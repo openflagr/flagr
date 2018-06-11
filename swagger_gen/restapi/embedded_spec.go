@@ -1023,6 +1023,76 @@ func init() {
           }
         }
       }
+    },
+    "/query": {
+      "get": {
+        "tags": [
+          "query"
+        ],
+        "operationId": "getFlagByName",
+        "parameters": [
+          {
+            "minLength": 1,
+            "type": "string",
+            "description": "name of the flag to query",
+            "name": "flagName",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "returns the flag",
+            "schema": {
+              "$ref": "#/definitions/flag"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
+    "/query/batch": {
+      "get": {
+        "tags": [
+          "query"
+        ],
+        "operationId": "getFlagByNameBatch",
+        "parameters": [
+          {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "name": "flagNames",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "returns list of flags with the given names. Omits flags who's names weren't found.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/flag"
+              }
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -1093,10 +1163,15 @@ func init() {
     "createFlagRequest": {
       "type": "object",
       "required": [
+        "name",
         "description"
       ],
       "properties": {
         "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
           "type": "string",
           "minLength": 1
         }
@@ -1338,6 +1413,7 @@ func init() {
     "flag": {
       "type": "object",
       "required": [
+        "name",
         "description",
         "enabled",
         "dataRecordsEnabled"
@@ -1359,6 +1435,10 @@ func init() {
           "format": "int64",
           "minimum": 1,
           "readOnly": true
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
         },
         "segments": {
           "type": "array",
@@ -2622,6 +2702,76 @@ func init() {
           }
         }
       }
+    },
+    "/query": {
+      "get": {
+        "tags": [
+          "query"
+        ],
+        "operationId": "getFlagByName",
+        "parameters": [
+          {
+            "minLength": 1,
+            "type": "string",
+            "description": "name of the flag to query",
+            "name": "flagName",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "returns the flag",
+            "schema": {
+              "$ref": "#/definitions/flag"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
+    "/query/batch": {
+      "get": {
+        "tags": [
+          "query"
+        ],
+        "operationId": "getFlagByNameBatch",
+        "parameters": [
+          {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "name": "flagNames",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "returns list of flags with the given names. Omits flags who's names weren't found.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/flag"
+              }
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -2692,10 +2842,15 @@ func init() {
     "createFlagRequest": {
       "type": "object",
       "required": [
+        "name",
         "description"
       ],
       "properties": {
         "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
           "type": "string",
           "minLength": 1
         }
@@ -2937,6 +3092,7 @@ func init() {
     "flag": {
       "type": "object",
       "required": [
+        "name",
         "description",
         "enabled",
         "dataRecordsEnabled"
@@ -2958,6 +3114,10 @@ func init() {
           "format": "int64",
           "minimum": 1,
           "readOnly": true
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
         },
         "segments": {
           "type": "array",

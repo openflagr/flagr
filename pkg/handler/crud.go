@@ -98,6 +98,7 @@ func (c *crud) CreateFlag(params flag.CreateFlagParams) middleware.Responder {
 	f := &entity.Flag{}
 	if params.Body != nil {
 		f.Description = util.SafeString(params.Body.Description)
+		f.Name = util.SafeString(params.Body.Name)
 		f.CreatedBy = getSubjectFromRequest(params.HTTPRequest)
 	}
 	err := f.Create(getDB())

@@ -1,0 +1,20 @@
+get:
+  tags:
+    - query
+  operationId: getFlagByName
+  parameters:
+    - in: query
+      name: flagName
+      description: name of the flag to query
+      required: true
+      type: string
+      minLength: 1
+  responses:
+    200:
+      description: returns the flag
+      schema:
+        $ref: "#/definitions/flag"
+    default:
+      description: generic error response
+      schema:
+        $ref: "#/definitions/error"
