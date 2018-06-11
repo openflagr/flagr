@@ -22,7 +22,7 @@
                 class="flag-link flex-row"
                 :to="{name: 'flag', params: {flagId: flag.id}}">
                 <div class="flex-row-left">
-                  <el-tag type="primary" :disable-transitions="true">Flag ID: {{ flag.id }}</el-tag> {{ flag.description }}
+                  <el-tag type="primary" :disable-transitions="true">Flag ID: {{ flag.id }}</el-tag> {{ flag.name }}
                 </div>
                 <div class="flex-row-right">
                   <span :class="{'flag-enabled-icon': true, enabled: flag.enabled}"></span>
@@ -36,17 +36,24 @@
           <div>
             <p>
               <el-input
-                placeholder="Specific new flag description"
-                v-model="newFlag.description">
+                placeholder="New flag name (must be unique)"
+                v-model="newFlag.name">
                 <template slot="prepend">
-                  Description
+                  Name
                 </template>
                 <template slot="append">
                   <el-button
-                    :disabled="!newFlag.description"
+                    :disabled="!(newFlag.name && newFlag.description)"
                     @click.prevent="createFlag">
                     <span class="el-icon-plus"/> Create Flag
                   </el-button>
+                </template>
+              </el-input>
+              <el-input
+                placeholder="New flag description"
+                v-model="newFlag.description">
+                <template slot="prepend">
+                  Description
                 </template>
               </el-input>
             </p>
@@ -76,6 +83,7 @@ export default {
       loadError: false,
       flags: [],
       newFlag: {
+        name: '',
         description: ''
       }
     }
@@ -85,7 +93,11 @@ export default {
       .then(response => {
         let flags = response.body
         this.loaded = true
-        flags.reverse()
+
+        // Sort flags by name instead of by ID
+        flags.sort((flag1, flag2) => {
+          return flag1.name.localeCompare(flag2.name)
+        })
         this.flags = flags
       }, (err) => {
         this.$message.error(err.body.message)
@@ -94,7 +106,7 @@ export default {
   },
   methods: {
     createFlag () {
-      if (!this.newFlag.description) {
+      if (!this.newFlag.name || !this.newFlag.description) {
         return
       }
 
@@ -102,6 +114,7 @@ export default {
         .then(response => {
           let flag = response.body
           this.newFlag.description = ''
+          this.newFlag.name = ''
           this.$message('flag created')
 
           flag._new = true

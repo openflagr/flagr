@@ -21,6 +21,11 @@ type CreateFlagRequest struct {
 	// Required: true
 	// Min Length: 1
 	Description *string `json:"description"`
+
+	// name
+	// Required: true
+	// Min Length: 1
+	Name *string `json:"name"`
 }
 
 // Validate validates this create flag request
@@ -28,6 +33,10 @@ func (m *CreateFlagRequest) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateDescription(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateName(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -44,6 +53,19 @@ func (m *CreateFlagRequest) validateDescription(formats strfmt.Registry) error {
 	}
 
 	if err := validate.MinLength("description", "body", string(*m.Description), 1); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *CreateFlagRequest) validateName(formats strfmt.Registry) error {
+
+	if err := validate.Required("name", "body", m.Name); err != nil {
+		return err
+	}
+
+	if err := validate.MinLength("name", "body", string(*m.Name), 1); err != nil {
 		return err
 	}
 

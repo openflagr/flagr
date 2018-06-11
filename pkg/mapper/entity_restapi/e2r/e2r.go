@@ -16,6 +16,7 @@ var getDB = repo.GetDB
 func MapFlag(e *entity.Flag, preload bool) (*models.Flag, error) {
 	r := &models.Flag{}
 	r.ID = int64(e.ID)
+	r.Name = util.StringPtr(e.Name)
 	r.Description = util.StringPtr(e.Description)
 	r.Enabled = util.BoolPtr(e.Enabled)
 	r.DataRecordsEnabled = util.BoolPtr(e.DataRecordsEnabled)

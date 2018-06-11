@@ -94,7 +94,7 @@
                 <div slot="header" class="el-card-header">
                   <div class="flex-row">
                     <div class="flex-row-left">
-                      <h2>Flag</h2>
+                      <h2>Flag: {{ flag.name }}</h2>
                     </div>
                     <div class="flex-row-right" v-if="flag">
                       <el-tooltip content="Enable/Disable Flag" placement="top">
@@ -127,8 +127,18 @@
                     <el-col :span="17">
                       <el-input
                         size="small"
-                        placeholder="Key"
-                        v-model="flag.description">
+                        placeholder="Name"
+                        v-model="flag.name"
+                        :disabled="true">
+                        <template slot="prepend">Flag Name</template>
+                      </el-input>
+                    </el-col>
+                  </el-row>
+                  <el-row :gutter="10" class="flag-content">
+                    <el-col :span="17">
+                      <el-input
+                        v-model="flag.description"
+                        size="small">
                         <template slot="prepend">Flag Description</template>
                       </el-input>
                     </el-col>

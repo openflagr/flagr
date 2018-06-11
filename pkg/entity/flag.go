@@ -3,13 +3,20 @@
 package entity
 
 import (
+	"time"
+
 	"github.com/jinzhu/gorm"
 )
 
 // Flag is the unit of flags
 // gen:qs
 type Flag struct {
-	gorm.Model
+	// Base gorm.Model fields, not including DeletedAt
+	ID        uint `gorm:"primary_key"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+
+	Name               string `sql:"type:varchar(128);unique"`
 	Description        string `sql:"type:text"`
 	CreatedBy          string
 	UpdatedBy          string

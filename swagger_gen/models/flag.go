@@ -37,6 +37,11 @@ type Flag struct {
 	// Minimum: 1
 	ID int64 `json:"id,omitempty"`
 
+	// name
+	// Required: true
+	// Min Length: 1
+	Name *string `json:"name"`
+
 	// segments
 	Segments []*Segment `json:"segments"`
 
@@ -61,6 +66,10 @@ func (m *Flag) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateID(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateName(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -116,6 +125,19 @@ func (m *Flag) validateID(formats strfmt.Registry) error {
 	}
 
 	if err := validate.MinimumInt("id", "body", int64(m.ID), 1, false); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *Flag) validateName(formats strfmt.Registry) error {
+
+	if err := validate.Required("name", "body", m.Name); err != nil {
+		return err
+	}
+
+	if err := validate.MinLength("name", "body", string(*m.Name), 1); err != nil {
 		return err
 	}
 

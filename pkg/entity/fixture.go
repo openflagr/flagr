@@ -13,8 +13,9 @@ import (
 // GenFixtureFlag is a fixture
 func GenFixtureFlag() Flag {
 	f := Flag{
-		Model:       gorm.Model{ID: 100},
+		ID:          100,
 		Description: "",
+		Name:        "fixture",
 		Enabled:     true,
 		Segments:    []Segment{GenFixtureSegment()},
 		Variants: []Variant{

@@ -33,6 +33,7 @@ func TestCrudFlags(t *testing.T) {
 	// step 1. it should be able to create one flag
 	res = c.CreateFlag(flag.CreateFlagParams{
 		Body: &models.CreateFlagRequest{
+			Name:        util.StringPtr("fun"),
 			Description: util.StringPtr("funny flag"),
 		},
 	})

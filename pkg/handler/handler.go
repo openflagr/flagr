@@ -7,6 +7,7 @@ import (
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/distribution"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/evaluation"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/flag"
+	"github.com/checkr/flagr/swagger_gen/restapi/operations/query"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/segment"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/variant"
 )
@@ -17,6 +18,7 @@ var getDB = repo.GetDB
 func Setup(api *operations.FlagrAPI) {
 	setupCRUD(api)
 	setupEvaluation(api)
+	setupQuery(api)
 }
 
 func setupCRUD(api *operations.FlagrAPI) {
@@ -61,4 +63,10 @@ func setupEvaluation(api *operations.FlagrAPI) {
 	e := NewEval()
 	api.EvaluationPostEvaluationHandler = evaluation.PostEvaluationHandlerFunc(e.PostEvaluation)
 	api.EvaluationPostEvaluationBatchHandler = evaluation.PostEvaluationBatchHandlerFunc(e.PostEvaluationBatch)
+}
+
+func setupQuery(api *operations.FlagrAPI) {
+	q := NewQueryAPI()
+	api.QueryGetFlagByNameHandler = query.GetFlagByNameHandlerFunc(q.GetFlagByName)
+	api.QueryGetFlagByNameBatchHandler = query.GetFlagByNameBatchHandlerFunc(q.GetFlagByNameBatch)
 }
