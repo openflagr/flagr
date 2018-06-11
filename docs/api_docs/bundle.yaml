@@ -42,6 +42,22 @@ paths:
       tags:
         - flag
       operationId: findFlags
+      parameters:
+        - in: query
+          name: limit
+          type: integer
+          format: int64
+          default: 25
+          minimum: 1
+          description: the numbers of flags to return
+        - in: query
+          name: enabled
+          type: boolean
+          description: return only flags having given enabled status
+        - in: query
+          name: description
+          type: string
+          description: return only flags matching given description
       responses:
         '200':
           description: list all the flags
