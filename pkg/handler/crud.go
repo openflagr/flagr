@@ -68,6 +68,17 @@ var (
 func (c *crud) FindFlags(params flag.FindFlagsParams) middleware.Responder {
 	fs := []entity.Flag{}
 	q := entity.NewFlagQuerySet(getDB())
+
+	if params.Enabled != nil {
+		q = q.EnabledEq(*params.Enabled)
+	}
+	if params.Description != nil {
+		q = q.DescriptionEq(*params.Description)
+	}
+	if params.Limit != nil {
+		q = q.Limit(int(*params.Limit))
+	}
+
 	err := q.All(&fs)
 	if err != nil {
 		return flag.NewFindFlagsDefault(500).WithPayload(

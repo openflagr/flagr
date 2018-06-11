@@ -107,6 +107,29 @@ func init() {
           "flag"
         ],
         "operationId": "findFlags",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "default": 25,
+            "description": "the numbers of flags to return",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "type": "boolean",
+            "description": "return only flags having given enabled status",
+            "name": "enabled",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "return only flags matching given description",
+            "name": "description",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
             "description": "list all the flags",
@@ -1683,6 +1706,29 @@ func init() {
           "flag"
         ],
         "operationId": "findFlags",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "default": 25,
+            "description": "the numbers of flags to return",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "type": "boolean",
+            "description": "return only flags having given enabled status",
+            "name": "enabled",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "return only flags matching given description",
+            "name": "description",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
             "description": "list all the flags",
