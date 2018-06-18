@@ -12,24 +12,15 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/swag"
-	"github.com/go-openapi/validate"
 
 	strfmt "github.com/go-openapi/strfmt"
 )
 
 // NewFindFlagsParams creates a new FindFlagsParams object
-// with the default values initialized.
+// no default values defined in spec.
 func NewFindFlagsParams() FindFlagsParams {
 
-	var (
-		// initialize parameters with default values
-
-		limitDefault = int64(25)
-	)
-
-	return FindFlagsParams{
-		Limit: &limitDefault,
-	}
+	return FindFlagsParams{}
 }
 
 // FindFlagsParams contains all the bound params for the find flags operation
@@ -50,9 +41,7 @@ type FindFlagsParams struct {
 	*/
 	Enabled *bool
 	/*the numbers of flags to return
-	  Minimum: 1
 	  In: query
-	  Default: 25
 	*/
 	Limit *int64
 }
@@ -136,7 +125,6 @@ func (o *FindFlagsParams) bindLimit(rawData []string, hasKey bool, formats strfm
 	// Required: false
 	// AllowEmptyValue: false
 	if raw == "" { // empty values pass all other validations
-		// Default values have been previously initialized by NewFindFlagsParams()
 		return nil
 	}
 
@@ -145,19 +133,6 @@ func (o *FindFlagsParams) bindLimit(rawData []string, hasKey bool, formats strfm
 		return errors.InvalidType("limit", "query", "int64", raw)
 	}
 	o.Limit = &value
-
-	if err := o.validateLimit(formats); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (o *FindFlagsParams) validateLimit(formats strfmt.Registry) error {
-
-	if err := validate.MinimumInt("limit", "query", int64(*o.Limit), 1, false); err != nil {
-		return err
-	}
 
 	return nil
 }
