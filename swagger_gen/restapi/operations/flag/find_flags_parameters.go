@@ -32,11 +32,15 @@ type FindFlagsParams struct {
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
-	/*return only flags matching given description
+	/*return flags exactly matching given description
 	  In: query
 	*/
 	Description *string
-	/*return only flags having given enabled status
+	/*return flags partially matching given description
+	  In: query
+	*/
+	DescriptionLike *string
+	/*return flags having given enabled status
 	  In: query
 	*/
 	Enabled *bool
@@ -59,6 +63,11 @@ func (o *FindFlagsParams) BindRequest(r *http.Request, route *middleware.Matched
 
 	qDescription, qhkDescription, _ := qs.GetOK("description")
 	if err := o.bindDescription(qDescription, qhkDescription, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
+	qDescriptionLike, qhkDescriptionLike, _ := qs.GetOK("description_like")
+	if err := o.bindDescriptionLike(qDescriptionLike, qhkDescriptionLike, route.Formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -92,6 +101,24 @@ func (o *FindFlagsParams) bindDescription(rawData []string, hasKey bool, formats
 	}
 
 	o.Description = &raw
+
+	return nil
+}
+
+// bindDescriptionLike binds and validates parameter DescriptionLike from query.
+func (o *FindFlagsParams) bindDescriptionLike(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+
+	// Required: false
+	// AllowEmptyValue: false
+	if raw == "" { // empty values pass all other validations
+		return nil
+	}
+
+	o.DescriptionLike = &raw
 
 	return nil
 }

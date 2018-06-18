@@ -15,9 +15,10 @@ import (
 
 // FindFlagsURL generates an URL for the find flags operation
 type FindFlagsURL struct {
-	Description *string
-	Enabled     *bool
-	Limit       *int64
+	Description     *string
+	DescriptionLike *string
+	Enabled         *bool
+	Limit           *int64
 
 	_basePath string
 	// avoid unkeyed usage
@@ -59,6 +60,14 @@ func (o *FindFlagsURL) Build() (*url.URL, error) {
 	}
 	if description != "" {
 		qs.Set("description", description)
+	}
+
+	var descriptionLike string
+	if o.DescriptionLike != nil {
+		descriptionLike = *o.DescriptionLike
+	}
+	if descriptionLike != "" {
+		qs.Set("description_like", descriptionLike)
 	}
 
 	var enabled string
