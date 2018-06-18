@@ -1,3 +1,0 @@
-processor   : 0
-model name  : AMD Duron(tm) processor
-cache size  : 64 KB

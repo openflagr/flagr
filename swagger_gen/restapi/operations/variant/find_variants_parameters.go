@@ -60,6 +60,7 @@ func (o *FindVariantsParams) BindRequest(r *http.Request, route *middleware.Matc
 	return nil
 }
 
+// bindFlagID binds and validates parameter FlagID from path.
 func (o *FindVariantsParams) bindFlagID(rawData []string, hasKey bool, formats strfmt.Registry) error {
 	var raw string
 	if len(rawData) > 0 {
@@ -82,6 +83,7 @@ func (o *FindVariantsParams) bindFlagID(rawData []string, hasKey bool, formats s
 	return nil
 }
 
+// validateFlagID carries on validations for parameter FlagID
 func (o *FindVariantsParams) validateFlagID(formats strfmt.Registry) error {
 
 	if err := validate.MinimumInt("flagID", "path", int64(o.FlagID), 1, false); err != nil {

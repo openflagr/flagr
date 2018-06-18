@@ -13,12 +13,10 @@ func (id AgentRunID) String() string {
 	return string(id)
 }
 
-// AppRun contains information regarding a single connection session with the
-// collector.  It is created upon application connect and is afterwards
-// immutable.
-type AppRun struct {
-	*ConnectReply
-	Collector string
+// PreconnectReply contains settings from the preconnect endpoint.
+type PreconnectReply struct {
+	Collector        string           `json:"redirect_host"`
+	SecurityPolicies SecurityPolicies `json:"security_policies"`
 }
 
 // ConnectReply contains all of the settings and state send down from the
@@ -53,6 +51,10 @@ type ConnectReply struct {
 	AppID       string `json:"application_id"`
 	ErrorBeacon string `json:"error_beacon"`
 	JSAgentFile string `json:"js_agent_file"`
+
+	// PreconnectReply fields are not in the connect reply, this embedding
+	// is done to simplify code.
+	PreconnectReply `json:"-"`
 
 	Messages []struct {
 		Message string `json:"message"`

@@ -71,6 +71,7 @@ func (o *FindConstraintsParams) BindRequest(r *http.Request, route *middleware.M
 	return nil
 }
 
+// bindFlagID binds and validates parameter FlagID from path.
 func (o *FindConstraintsParams) bindFlagID(rawData []string, hasKey bool, formats strfmt.Registry) error {
 	var raw string
 	if len(rawData) > 0 {
@@ -93,6 +94,7 @@ func (o *FindConstraintsParams) bindFlagID(rawData []string, hasKey bool, format
 	return nil
 }
 
+// validateFlagID carries on validations for parameter FlagID
 func (o *FindConstraintsParams) validateFlagID(formats strfmt.Registry) error {
 
 	if err := validate.MinimumInt("flagID", "path", int64(o.FlagID), 1, false); err != nil {
@@ -102,6 +104,7 @@ func (o *FindConstraintsParams) validateFlagID(formats strfmt.Registry) error {
 	return nil
 }
 
+// bindSegmentID binds and validates parameter SegmentID from path.
 func (o *FindConstraintsParams) bindSegmentID(rawData []string, hasKey bool, formats strfmt.Registry) error {
 	var raw string
 	if len(rawData) > 0 {
@@ -124,6 +127,7 @@ func (o *FindConstraintsParams) bindSegmentID(rawData []string, hasKey bool, for
 	return nil
 }
 
+// validateSegmentID carries on validations for parameter SegmentID
 func (o *FindConstraintsParams) validateSegmentID(formats strfmt.Registry) error {
 
 	if err := validate.MinimumInt("segmentID", "path", int64(o.SegmentID), 1, false); err != nil {

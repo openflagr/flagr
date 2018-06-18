@@ -1,1 +1,0 @@
-SELECT * FROM blogs WHERE blogs.title=E'\x55'

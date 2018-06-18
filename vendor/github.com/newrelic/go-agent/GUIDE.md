@@ -14,6 +14,10 @@
 * [Custom Metrics](#custom-metrics)
 * [Custom Events](#custom-events)
 * [Request Queuing](#request-queuing)
+* [Error Reporting](#error-reporting)
+  * [Advanced Error Reporting](#advanced-error-reporting)
+* [Naming Transactions and Metrics](#naming-transactions-and-metrics)
+* [For More Help](#for-more-help)
 
 ## Installation
 
@@ -232,12 +236,13 @@ This may be combined into a single line when instrumenting a datastore call
 that spans an entire function call:
 
 ```go
-defer newrelic.DatastoreSegment{
+s := newrelic.DatastoreSegment{
 	StartTime:  newrelic.StartSegmentNow(txn),
 	Product:    newrelic.DatastoreMySQL,
 	Collection: "my_table",
 	Operation:  "SELECT",
-}.End()
+}
+defer s.End()
 ```
 
 ### External Segments
@@ -302,10 +307,11 @@ ways to use this functionality:
 
     ```go
     func external(txn newrelic.Transaction, url string) (*http.Response, error) {
-      defer newrelic.ExternalSegment{
+      es := newrelic.ExternalSegment{
         StartTime: newrelic.StartSegmentNow(txn),
         URL:   url,
-      }.End()
+      }
+      defer es.End()
 
       return http.Get(url)
     }
@@ -468,7 +474,7 @@ in the *Error Analytics* section of APM.  Second, the `Attributes` field allows
 you to send through key/value pairs with additional error debugging information
 (also exposed in the *Error Analytics* section of APM).
 
-## Advanced Error Reporting
+### Advanced Error Reporting
 
 You're not limited to using Go's built-in error type or the provided
 `newrelic.Error` struct.  The Go Agent provides three error interfaces

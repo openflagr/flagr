@@ -42,6 +42,11 @@ type Config struct {
 	// https://docs.newrelic.com/docs/accounts-partnerships/accounts/security/high-security
 	HighSecurity bool
 
+	// SecurityPoliciesToken enables security policies if set to a non-empty
+	// string.  Only set this if security policies have been enabled on your
+	// account.  This cannot be used in conjuction with HighSecurity.
+	SecurityPoliciesToken string
+
 	// CustomInsightsEvents controls the behavior of
 	// Application.RecordCustomEvent.
 	//
@@ -111,10 +116,6 @@ type Config struct {
 	// HostDisplayName gives this server a recognizable name in the New
 	// Relic UI.  This is an optional setting.
 	HostDisplayName string
-
-	// UseTLS controls whether http or https is used to send data to New
-	// Relic servers.
-	UseTLS bool
 
 	// Transport customizes http.Client communication with New Relic
 	// servers.  This may be used to configure a proxy.
@@ -205,7 +206,6 @@ func NewConfig(appname, license string) Config {
 	c.TransactionEvents.Enabled = true
 	c.TransactionEvents.Attributes.Enabled = true
 	c.HighSecurity = false
-	c.UseTLS = true
 	c.ErrorCollector.Enabled = true
 	c.ErrorCollector.CaptureEvents = true
 	c.ErrorCollector.IgnoreStatusCodes = []int{
@@ -245,10 +245,10 @@ const (
 
 // The following errors will be returned if your Config fails to validate.
 var (
-	errLicenseLen      = fmt.Errorf("license length is not %d", licenseLength)
-	errHighSecurityTLS = errors.New("high security requires TLS")
-	errAppNameMissing  = errors.New("string AppName required")
-	errAppNameLimit    = fmt.Errorf("max of %d rollup application names", appNameLimit)
+	errLicenseLen                       = fmt.Errorf("license length is not %d", licenseLength)
+	errAppNameMissing                   = errors.New("string AppName required")
+	errAppNameLimit                     = fmt.Errorf("max of %d rollup application names", appNameLimit)
+	errHighSecurityWithSecurityPolicies = errors.New("SecurityPoliciesToken and HighSecurity are incompatible; please ensure HighSecurity is set to false if SecurityPoliciesToken is a non-empty string and a security policy has been set for your account")
 )
 
 // Validate checks the config for improper fields.  If the config is invalid,
@@ -264,11 +264,11 @@ func (c Config) Validate() error {
 			return errLicenseLen
 		}
 	}
-	if c.HighSecurity && !c.UseTLS {
-		return errHighSecurityTLS
-	}
-	if "" == c.AppName {
+	if "" == c.AppName && c.Enabled {
 		return errAppNameMissing
+	}
+	if c.HighSecurity && "" != c.SecurityPoliciesToken {
+		return errHighSecurityWithSecurityPolicies
 	}
 	if strings.Count(c.AppName, ";") >= appNameLimit {
 		return errAppNameLimit

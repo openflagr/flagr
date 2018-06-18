@@ -18,13 +18,15 @@ matrix:
   allow_failures:
     - go: tip
 
+# golint has dependencies that only work on Go 1.7 or later. See also
+# https://github.com/golang/lint/issues/400.
 before_script:
   - GO_FILES=$(find . -iname '*.go' -type f | grep -v /vendor/)
-  - GT_15=$(echo $TRAVIS_GO_VERSION | grep '^1.[6-9]$' > /dev/null; echo $?)
-  - if [[ "$GT_15" -eq "0" ]]; then go get github.com/golang/lint/golint; fi
+  - DO_GOLINT=$(echo $TRAVIS_GO_VERSION | perl -wne 'chomp; if (/^[0-9]+\.[0-9]+/) { my ($major, $minor) = split /\./; print "new" if $minor >= 7 || $major > 1 } elsif (/^tip$/) { print "new" }' | grep new > /dev/null; echo $?)
+  - if [[ "$DO_GOLINT" -eq "0" ]]; then go get github.com/golang/lint/golint; fi
 
 script:
   - if [ -n "$(gofmt -s -l $GO_FILES)" ]; then echo "1"; fi; # gofmt
   - go test -v -race ./... # go test
   - go vet ./... # go vet
-  - if [[ "$GT_15" -eq 0 ]]; then golint -set_exit_status $(go list ./...); fi # golint
+  - if [[ "$DO_GOLINT" -eq 0 ]]; then golint -set_exit_status $(go list ./...); fi # golint

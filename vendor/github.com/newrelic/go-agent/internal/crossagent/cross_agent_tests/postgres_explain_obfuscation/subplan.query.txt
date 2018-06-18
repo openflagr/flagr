@@ -1,1 +1,0 @@
-explain insert into explain_plan_test_1 select * from explain_plan_test_2 where explain_plan_test_2.d not in (select a from explain_plan_test_1)

@@ -1,2 +1,0 @@
-Seq Scan on explain_plan_test_1  (cost=0.00..24.50 rows=6 width=40)
-  Filter: ?

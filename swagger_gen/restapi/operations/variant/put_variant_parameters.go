@@ -74,7 +74,6 @@ func (o *PutVariantParams) BindRequest(r *http.Request, route *middleware.Matche
 				res = append(res, errors.NewParseError("body", "body", "", err))
 			}
 		} else {
-
 			// validate body object
 			if err := body.Validate(route.Formats); err != nil {
 				res = append(res, err)
@@ -103,6 +102,7 @@ func (o *PutVariantParams) BindRequest(r *http.Request, route *middleware.Matche
 	return nil
 }
 
+// bindFlagID binds and validates parameter FlagID from path.
 func (o *PutVariantParams) bindFlagID(rawData []string, hasKey bool, formats strfmt.Registry) error {
 	var raw string
 	if len(rawData) > 0 {
@@ -125,6 +125,7 @@ func (o *PutVariantParams) bindFlagID(rawData []string, hasKey bool, formats str
 	return nil
 }
 
+// validateFlagID carries on validations for parameter FlagID
 func (o *PutVariantParams) validateFlagID(formats strfmt.Registry) error {
 
 	if err := validate.MinimumInt("flagID", "path", int64(o.FlagID), 1, false); err != nil {
@@ -134,6 +135,7 @@ func (o *PutVariantParams) validateFlagID(formats strfmt.Registry) error {
 	return nil
 }
 
+// bindVariantID binds and validates parameter VariantID from path.
 func (o *PutVariantParams) bindVariantID(rawData []string, hasKey bool, formats strfmt.Registry) error {
 	var raw string
 	if len(rawData) > 0 {
@@ -156,6 +158,7 @@ func (o *PutVariantParams) bindVariantID(rawData []string, hasKey bool, formats 
 	return nil
 }
 
+// validateVariantID carries on validations for parameter VariantID
 func (o *PutVariantParams) validateVariantID(formats strfmt.Registry) error {
 
 	if err := validate.MinimumInt("variantID", "path", int64(o.VariantID), 1, false); err != nil {

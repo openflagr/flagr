@@ -82,6 +82,7 @@ func (o *DeleteConstraintParams) BindRequest(r *http.Request, route *middleware.
 	return nil
 }
 
+// bindConstraintID binds and validates parameter ConstraintID from path.
 func (o *DeleteConstraintParams) bindConstraintID(rawData []string, hasKey bool, formats strfmt.Registry) error {
 	var raw string
 	if len(rawData) > 0 {
@@ -104,6 +105,7 @@ func (o *DeleteConstraintParams) bindConstraintID(rawData []string, hasKey bool,
 	return nil
 }
 
+// validateConstraintID carries on validations for parameter ConstraintID
 func (o *DeleteConstraintParams) validateConstraintID(formats strfmt.Registry) error {
 
 	if err := validate.MinimumInt("constraintID", "path", int64(o.ConstraintID), 1, false); err != nil {
@@ -113,6 +115,7 @@ func (o *DeleteConstraintParams) validateConstraintID(formats strfmt.Registry) e
 	return nil
 }
 
+// bindFlagID binds and validates parameter FlagID from path.
 func (o *DeleteConstraintParams) bindFlagID(rawData []string, hasKey bool, formats strfmt.Registry) error {
 	var raw string
 	if len(rawData) > 0 {
@@ -135,6 +138,7 @@ func (o *DeleteConstraintParams) bindFlagID(rawData []string, hasKey bool, forma
 	return nil
 }
 
+// validateFlagID carries on validations for parameter FlagID
 func (o *DeleteConstraintParams) validateFlagID(formats strfmt.Registry) error {
 
 	if err := validate.MinimumInt("flagID", "path", int64(o.FlagID), 1, false); err != nil {
@@ -144,6 +148,7 @@ func (o *DeleteConstraintParams) validateFlagID(formats strfmt.Registry) error {
 	return nil
 }
 
+// bindSegmentID binds and validates parameter SegmentID from path.
 func (o *DeleteConstraintParams) bindSegmentID(rawData []string, hasKey bool, formats strfmt.Registry) error {
 	var raw string
 	if len(rawData) > 0 {
@@ -166,6 +171,7 @@ func (o *DeleteConstraintParams) bindSegmentID(rawData []string, hasKey bool, fo
 	return nil
 }
 
+// validateSegmentID carries on validations for parameter SegmentID
 func (o *DeleteConstraintParams) validateSegmentID(formats strfmt.Registry) error {
 
 	if err := validate.MinimumInt("segmentID", "path", int64(o.SegmentID), 1, false); err != nil {

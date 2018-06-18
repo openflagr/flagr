@@ -99,20 +99,21 @@ func (s settings) MarshalJSON() ([]byte, error) {
 	return json.Marshal(fields)
 }
 
-func configConnectJSONInternal(c Config, pid int, util *utilization.Data, e internal.Environment, version string) ([]byte, error) {
+func configConnectJSONInternal(c Config, pid int, util *utilization.Data, e internal.Environment, version string, securityPolicies *internal.SecurityPolicies) ([]byte, error) {
 	return json.Marshal([]interface{}{struct {
-		Pid             int                  `json:"pid"`
-		Language        string               `json:"language"`
-		Version         string               `json:"agent_version"`
-		Host            string               `json:"host"`
-		HostDisplayName string               `json:"display_host,omitempty"`
-		Settings        interface{}          `json:"settings"`
-		AppName         []string             `json:"app_name"`
-		HighSecurity    bool                 `json:"high_security"`
-		Labels          internal.Labels      `json:"labels,omitempty"`
-		Environment     internal.Environment `json:"environment"`
-		Identifier      string               `json:"identifier"`
-		Util            *utilization.Data    `json:"utilization"`
+		Pid              int                        `json:"pid"`
+		Language         string                     `json:"language"`
+		Version          string                     `json:"agent_version"`
+		Host             string                     `json:"host"`
+		HostDisplayName  string                     `json:"display_host,omitempty"`
+		Settings         interface{}                `json:"settings"`
+		AppName          []string                   `json:"app_name"`
+		HighSecurity     bool                       `json:"high_security"`
+		Labels           internal.Labels            `json:"labels,omitempty"`
+		Environment      internal.Environment       `json:"environment"`
+		Identifier       string                     `json:"identifier"`
+		Util             *utilization.Data          `json:"utilization"`
+		SecurityPolicies *internal.SecurityPolicies `json:"security_policies,omitempty"`
 	}{
 		Pid:             pid,
 		Language:        agentLanguage,
@@ -135,12 +136,16 @@ func configConnectJSONInternal(c Config, pid int, util *utilization.Data, e inte
 		//
 		// Providing the identifier below works around this issue and
 		// allows users more flexibility in using application rollups.
-		Identifier: c.AppName,
-		Util:       util,
+		Identifier:       c.AppName,
+		Util:             util,
+		SecurityPolicies: securityPolicies,
 	}})
 }
 
-func configConnectJSON(c Config) ([]byte, error) {
+// config allows CreateConnectJSON to be a method on a non-public type.
+type config struct{ Config }
+
+func (c config) CreateConnectJSON(securityPolicies *internal.SecurityPolicies) ([]byte, error) {
 	env := internal.NewEnvironment()
 	util := utilization.Gather(utilization.Config{
 		DetectAWS:         c.Utilization.DetectAWS,
@@ -149,5 +154,5 @@ func configConnectJSON(c Config) ([]byte, error) {
 		TotalRAMMIB:       c.Utilization.TotalRAMMIB,
 		BillingHostname:   c.Utilization.BillingHostname,
 	}, c.Logger)
-	return configConnectJSONInternal(c, os.Getpid(), util, env, Version)
+	return configConnectJSONInternal(c.Config, os.Getpid(), util, env, Version, securityPolicies)
 }

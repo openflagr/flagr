@@ -1,2 +1,0 @@
-Seq Scan on blogs  (cost=0.00..1.01 rows=1 width=540)
-  Filter: ((title)::text = ?::text)
