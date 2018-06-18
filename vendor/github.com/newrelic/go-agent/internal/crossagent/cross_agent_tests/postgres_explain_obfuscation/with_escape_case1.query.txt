@@ -1,1 +1,0 @@
-EXPLAIN SELECT * FROM blogs WHERE blogs.title=E'foo\'bar'

@@ -1,1 +1,0 @@
-select * from blogs where title = E'\x08\x0c\n\r\t'

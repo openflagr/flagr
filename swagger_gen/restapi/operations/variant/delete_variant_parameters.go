@@ -71,6 +71,7 @@ func (o *DeleteVariantParams) BindRequest(r *http.Request, route *middleware.Mat
 	return nil
 }
 
+// bindFlagID binds and validates parameter FlagID from path.
 func (o *DeleteVariantParams) bindFlagID(rawData []string, hasKey bool, formats strfmt.Registry) error {
 	var raw string
 	if len(rawData) > 0 {
@@ -93,6 +94,7 @@ func (o *DeleteVariantParams) bindFlagID(rawData []string, hasKey bool, formats 
 	return nil
 }
 
+// validateFlagID carries on validations for parameter FlagID
 func (o *DeleteVariantParams) validateFlagID(formats strfmt.Registry) error {
 
 	if err := validate.MinimumInt("flagID", "path", int64(o.FlagID), 1, false); err != nil {
@@ -102,6 +104,7 @@ func (o *DeleteVariantParams) validateFlagID(formats strfmt.Registry) error {
 	return nil
 }
 
+// bindVariantID binds and validates parameter VariantID from path.
 func (o *DeleteVariantParams) bindVariantID(rawData []string, hasKey bool, formats strfmt.Registry) error {
 	var raw string
 	if len(rawData) > 0 {
@@ -124,6 +127,7 @@ func (o *DeleteVariantParams) bindVariantID(rawData []string, hasKey bool, forma
 	return nil
 }
 
+// validateVariantID carries on validations for parameter VariantID
 func (o *DeleteVariantParams) validateVariantID(formats strfmt.Registry) error {
 
 	if err := validate.MinimumInt("variantID", "path", int64(o.VariantID), 1, false); err != nil {

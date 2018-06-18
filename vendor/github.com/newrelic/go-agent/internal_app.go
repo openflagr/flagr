@@ -15,21 +15,11 @@ import (
 )
 
 var (
-	// NEW_RELIC_HOST can be used to override the New Relic endpoint.  This
-	// is useful for testing against staging.
-	envHost = "NEW_RELIC_HOST"
 	// NEW_RELIC_DEBUG_LOGGING can be set to anything to enable additional
 	// debug logging: the agent will log every transaction's data at info
 	// level.
 	envDebugLogging = "NEW_RELIC_DEBUG_LOGGING"
-
-	debugLogging = os.Getenv(envDebugLogging)
-	redirectHost = func() string {
-		if s := os.Getenv(envHost); "" != s {
-			return s
-		}
-		return "collector.newrelic.com"
-	}()
+	debugLogging    = os.Getenv(envDebugLogging)
 )
 
 type dataConsumer interface {
@@ -43,9 +33,11 @@ type appData struct {
 
 type app struct {
 	config      Config
-	attrConfig  *internal.AttributeConfig
 	rpmControls internal.RpmControls
 	testHarvest *internal.Harvest
+
+	// placeholderRun is used when the application is not connected.
+	placeholderRun *appRun
 
 	// initiateShutdown is used to tell the processor to shutdown.
 	initiateShutdown chan struct{}
@@ -64,7 +56,7 @@ type app struct {
 	// select option to prevent deadlock.
 	dataChan           chan appData
 	collectorErrorChan chan error
-	connectChan        chan *internal.AppRun
+	connectChan        chan *appRun
 
 	harvestTicker *time.Ticker
 
@@ -73,17 +65,33 @@ type app struct {
 	sync.RWMutex
 	// run is non-nil when the app is successfully connected.  It is
 	// immutable.
-	run *internal.AppRun
+	run *appRun
 	// err is non-nil if the application will never be connected again
 	// (disconnect, license exception, shutdown).
 	err error
 }
 
-var (
-	placeholderRun = &internal.AppRun{
-		ConnectReply: internal.ConnectReplyDefaults(),
+// appRun contains information regarding a single connection session with the
+// collector.  It is immutable after creation at application connect.
+type appRun struct {
+	*internal.ConnectReply
+
+	// AttributeConfig is calculated on every connect since it depends on
+	// the security policies.
+	AttributeConfig *internal.AttributeConfig
+}
+
+func newAppRun(config Config, reply *internal.ConnectReply) *appRun {
+	return &appRun{
+		ConnectReply: reply,
+		AttributeConfig: internal.CreateAttributeConfig(internal.AttributeConfigInput{
+			Attributes:        convertAttributeDestinationConfig(config.Attributes),
+			ErrorCollector:    convertAttributeDestinationConfig(config.ErrorCollector.Attributes),
+			TransactionEvents: convertAttributeDestinationConfig(config.TransactionEvents.Attributes),
+			TransactionTracer: convertAttributeDestinationConfig(config.TransactionTracer.Attributes),
+		}, reply.SecurityPolicies.AttributesInclude.Enabled()),
 	}
-)
+}
 
 func isFatalHarvestError(e error) bool {
 	return internal.IsDisconnect(e) ||
@@ -98,7 +106,7 @@ func shouldSaveFailedHarvest(e error) bool {
 	return true
 }
 
-func (app *app) doHarvest(h *internal.Harvest, harvestStart time.Time, run *internal.AppRun) {
+func (app *app) doHarvest(h *internal.Harvest, harvestStart time.Time, run *appRun) {
 	h.CreateFinalMetrics()
 	h.Metrics = h.Metrics.ApplyRules(run.MetricRules)
 
@@ -146,12 +154,12 @@ func (app *app) doHarvest(h *internal.Harvest, harvestStart time.Time, run *inte
 	}
 }
 
-func connectAttempt(app *app) (*internal.AppRun, error) {
-	js, e := configConnectJSON(app.config)
-	if nil != e {
-		return nil, e
+func connectAttempt(app *app) (*appRun, error) {
+	reply, err := internal.ConnectAttempt(config{app.config}, app.config.SecurityPoliciesToken, app.rpmControls)
+	if nil != err {
+		return nil, err
 	}
-	return internal.ConnectAttempt(js, redirectHost, app.rpmControls)
+	return newAppRun(app.config, reply), nil
 }
 
 func (app *app) connectRoutine() {
@@ -205,7 +213,7 @@ func debug(data internal.Harvestable, lg Logger) {
 	}
 }
 
-func processConnectMessages(run *internal.AppRun, lg Logger) {
+func processConnectMessages(run *appRun, lg Logger) {
 	for _, msg := range run.Messages {
 		event := "collector message"
 		cn := map[string]interface{}{"msg": msg.Message}
@@ -227,7 +235,7 @@ func (app *app) process() {
 	// Both the harvest and the run are non-nil when the app is connected,
 	// and nil otherwise.
 	var h *internal.Harvest
-	var run *internal.AppRun
+	var run *appRun
 
 	for {
 		select {
@@ -273,8 +281,9 @@ func (app *app) process() {
 			switch {
 			case internal.IsDisconnect(err):
 				app.setState(nil, err)
-				app.config.Logger.Error("application disconnected by New Relic", map[string]interface{}{
+				app.config.Logger.Error("application disconnected", map[string]interface{}{
 					"app": app.config.AppName,
+					"err": err.Error(),
 				})
 			case internal.IsLicenseException(err):
 				app.setState(nil, err)
@@ -384,12 +393,8 @@ func newApp(c Config) (Application, error) {
 	}
 	app := &app{
 		config: c,
-		attrConfig: internal.CreateAttributeConfig(internal.AttributeConfigInput{
-			Attributes:        convertAttributeDestinationConfig(c.Attributes),
-			ErrorCollector:    convertAttributeDestinationConfig(c.ErrorCollector.Attributes),
-			TransactionEvents: convertAttributeDestinationConfig(c.TransactionEvents.Attributes),
-			TransactionTracer: convertAttributeDestinationConfig(c.TransactionTracer.Attributes),
-		}),
+
+		placeholderRun: newAppRun(c, internal.ConnectReplyDefaults()),
 
 		// This channel must be buffered since Shutdown makes a
 		// non-blocking send attempt.
@@ -397,11 +402,10 @@ func newApp(c Config) (Application, error) {
 
 		shutdownStarted:    make(chan struct{}),
 		shutdownComplete:   make(chan struct{}),
-		connectChan:        make(chan *internal.AppRun, 1),
+		connectChan:        make(chan *appRun, 1),
 		collectorErrorChan: make(chan error, 1),
 		dataChan:           make(chan appData, internal.AppDataChanSize),
 		rpmControls: internal.RpmControls{
-			UseTLS:  c.UseTLS,
 			License: c.License,
 			Client: &http.Client{
 				Transport: c.Transport,
@@ -447,28 +451,26 @@ func newTestApp(replyfn func(*internal.ConnectReply), cfg Config) (expectApp, er
 	}
 	app := application.(*app)
 	if nil != replyfn {
-		reply := internal.ConnectReplyDefaults()
-		replyfn(reply)
-		app.setState(&internal.AppRun{ConnectReply: reply}, nil)
+		replyfn(app.placeholderRun.ConnectReply)
+		app.placeholderRun = newAppRun(cfg, app.placeholderRun.ConnectReply)
 	}
-
 	app.testHarvest = internal.NewHarvest(time.Now())
 
 	return app, nil
 }
 
-func (app *app) getState() (*internal.AppRun, error) {
+func (app *app) getState() (*appRun, error) {
 	app.RLock()
 	defer app.RUnlock()
 
 	run := app.run
 	if nil == run {
-		run = placeholderRun
+		run = app.placeholderRun
 	}
 	return run, app.err
 }
 
-func (app *app) setState(run *internal.AppRun, err error) {
+func (app *app) setState(run *appRun, err error) {
 	app.Lock()
 	defer app.Unlock()
 
@@ -484,7 +486,7 @@ func (app *app) StartTransaction(name string, w http.ResponseWriter, r *http.Req
 		Reply:      run.ConnectReply,
 		W:          w,
 		Consumer:   app,
-		attrConfig: app.attrConfig,
+		attrConfig: run.AttributeConfig,
 	}, r, name))
 }
 
@@ -512,6 +514,10 @@ func (app *app) RecordCustomEvent(eventType string, params map[string]interface{
 	run, _ := app.getState()
 	if !run.CollectCustomEvents {
 		return errCustomEventsRemoteDisabled
+	}
+
+	if !run.SecurityPolicies.CustomEvents.Enabled() {
+		return errSecurityPolicy
 	}
 
 	app.Consume(run.RunID, event)

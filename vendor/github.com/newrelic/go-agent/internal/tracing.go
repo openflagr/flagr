@@ -324,7 +324,8 @@ func EndDatastoreSegment(p EndDatastoreParams) error {
 	}
 
 	// We still want to create a slowQuery if the consumer has not provided
-	// a Query string since the stack trace has value.
+	// a Query string (or it has been removed by LASP) since the stack trace
+	// has value.
 	if p.ParameterizedQuery == "" {
 		collection := p.Collection
 		if "" == collection {

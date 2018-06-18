@@ -1,3 +1,0 @@
- Seq Scan on blogs  (cost=0.00..11.75 rows=1 width=540)
-   Filter: ((title)::text = '\x08\x0C
- \r      '::text)

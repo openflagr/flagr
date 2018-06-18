@@ -78,6 +78,7 @@ func (o *FindFlagsParams) BindRequest(r *http.Request, route *middleware.Matched
 	return nil
 }
 
+// bindDescription binds and validates parameter Description from query.
 func (o *FindFlagsParams) bindDescription(rawData []string, hasKey bool, formats strfmt.Registry) error {
 	var raw string
 	if len(rawData) > 0 {
@@ -95,6 +96,7 @@ func (o *FindFlagsParams) bindDescription(rawData []string, hasKey bool, formats
 	return nil
 }
 
+// bindEnabled binds and validates parameter Enabled from query.
 func (o *FindFlagsParams) bindEnabled(rawData []string, hasKey bool, formats strfmt.Registry) error {
 	var raw string
 	if len(rawData) > 0 {
@@ -116,6 +118,7 @@ func (o *FindFlagsParams) bindEnabled(rawData []string, hasKey bool, formats str
 	return nil
 }
 
+// bindLimit binds and validates parameter Limit from query.
 func (o *FindFlagsParams) bindLimit(rawData []string, hasKey bool, formats strfmt.Registry) error {
 	var raw string
 	if len(rawData) > 0 {

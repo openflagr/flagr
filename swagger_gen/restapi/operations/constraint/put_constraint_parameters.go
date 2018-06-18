@@ -80,7 +80,6 @@ func (o *PutConstraintParams) BindRequest(r *http.Request, route *middleware.Mat
 				res = append(res, errors.NewParseError("body", "body", "", err))
 			}
 		} else {
-
 			// validate body object
 			if err := body.Validate(route.Formats); err != nil {
 				res = append(res, err)
@@ -114,6 +113,7 @@ func (o *PutConstraintParams) BindRequest(r *http.Request, route *middleware.Mat
 	return nil
 }
 
+// bindConstraintID binds and validates parameter ConstraintID from path.
 func (o *PutConstraintParams) bindConstraintID(rawData []string, hasKey bool, formats strfmt.Registry) error {
 	var raw string
 	if len(rawData) > 0 {
@@ -136,6 +136,7 @@ func (o *PutConstraintParams) bindConstraintID(rawData []string, hasKey bool, fo
 	return nil
 }
 
+// validateConstraintID carries on validations for parameter ConstraintID
 func (o *PutConstraintParams) validateConstraintID(formats strfmt.Registry) error {
 
 	if err := validate.MinimumInt("constraintID", "path", int64(o.ConstraintID), 1, false); err != nil {
@@ -145,6 +146,7 @@ func (o *PutConstraintParams) validateConstraintID(formats strfmt.Registry) erro
 	return nil
 }
 
+// bindFlagID binds and validates parameter FlagID from path.
 func (o *PutConstraintParams) bindFlagID(rawData []string, hasKey bool, formats strfmt.Registry) error {
 	var raw string
 	if len(rawData) > 0 {
@@ -167,6 +169,7 @@ func (o *PutConstraintParams) bindFlagID(rawData []string, hasKey bool, formats 
 	return nil
 }
 
+// validateFlagID carries on validations for parameter FlagID
 func (o *PutConstraintParams) validateFlagID(formats strfmt.Registry) error {
 
 	if err := validate.MinimumInt("flagID", "path", int64(o.FlagID), 1, false); err != nil {
@@ -176,6 +179,7 @@ func (o *PutConstraintParams) validateFlagID(formats strfmt.Registry) error {
 	return nil
 }
 
+// bindSegmentID binds and validates parameter SegmentID from path.
 func (o *PutConstraintParams) bindSegmentID(rawData []string, hasKey bool, formats strfmt.Registry) error {
 	var raw string
 	if len(rawData) > 0 {
@@ -198,6 +202,7 @@ func (o *PutConstraintParams) bindSegmentID(rawData []string, hasKey bool, forma
 	return nil
 }
 
+// validateSegmentID carries on validations for parameter SegmentID
 func (o *PutConstraintParams) validateSegmentID(formats strfmt.Registry) error {
 
 	if err := validate.MinimumInt("segmentID", "path", int64(o.SegmentID), 1, false); err != nil {

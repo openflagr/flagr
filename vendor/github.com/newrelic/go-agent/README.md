@@ -1,4 +1,4 @@
-# New Relic Go Agent
+# New Relic Go Agent [![GoDoc](https://godoc.org/github.com/newrelic/go-agent?status.svg)](https://godoc.org/github.com/newrelic/go-agent)
 
 ## Description
 
@@ -151,7 +151,8 @@ func main() {
 
 ## Support
 
-You can find more detailed documentation [in the guide](GUIDE.md).
+You can find more detailed documentation [in the guide](GUIDE.md) and on
+[the New Relic Documentation site](https://docs.newrelic.com/docs/agents/go-agent).
 
 If you can't find what you're looking for there, reach out to us on our [support
 site](http://support.newrelic.com/) or our [community

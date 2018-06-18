@@ -1,1 +1,0 @@
-SELECT * FROM blogs WHERE blogs.title=U&'\0441\043B\043E\043D'

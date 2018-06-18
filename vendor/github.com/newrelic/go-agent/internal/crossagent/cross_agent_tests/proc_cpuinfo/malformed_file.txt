@@ -1,3 +1,0 @@
-This is a random text file that does NOT adhere to the /proc/cpuinfo format.
-xxxYYYZZz
-

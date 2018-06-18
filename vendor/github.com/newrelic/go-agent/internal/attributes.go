@@ -70,8 +70,7 @@ func (m byMatch) Len() int           { return len(m) }
 func (m byMatch) Swap(i, j int)      { m[i], m[j] = m[j], m[i] }
 func (m byMatch) Less(i, j int) bool { return m[i].match < m[j].match }
 
-// AttributeConfig is created at application creation and shared between all
-// transactions.
+// AttributeConfig is created at connect and shared between all transactions.
 type AttributeConfig struct {
 	disabledDestinations destinationSet
 	exactMatchModifiers  map[string]*attributeModifier
@@ -149,12 +148,14 @@ func addModifier(c *AttributeConfig, match string, d includeExclude) {
 	}
 }
 
-func processDest(c *AttributeConfig, dc *AttributeDestinationConfig, d destinationSet) {
+func processDest(c *AttributeConfig, includeEnabled bool, dc *AttributeDestinationConfig, d destinationSet) {
 	if !dc.Enabled {
 		c.disabledDestinations |= d
 	}
-	for _, match := range dc.Include {
-		addModifier(c, match, includeExclude{include: d})
+	if includeEnabled {
+		for _, match := range dc.Include {
+			addModifier(c, match, includeExclude{include: d})
+		}
 	}
 	for _, match := range dc.Exclude {
 		addModifier(c, match, includeExclude{exclude: d})
@@ -181,17 +182,17 @@ var (
 )
 
 // CreateAttributeConfig creates a new AttributeConfig.
-func CreateAttributeConfig(input AttributeConfigInput) *AttributeConfig {
+func CreateAttributeConfig(input AttributeConfigInput, includeEnabled bool) *AttributeConfig {
 	c := &AttributeConfig{
 		exactMatchModifiers: make(map[string]*attributeModifier),
 		wildcardModifiers:   make([]*attributeModifier, 0, 64),
 	}
 
-	processDest(c, &input.Attributes, DestAll)
-	processDest(c, &input.ErrorCollector, destError)
-	processDest(c, &input.TransactionEvents, destTxnEvent)
-	processDest(c, &input.TransactionTracer, destTxnTrace)
-	processDest(c, &input.browserMonitoring, destBrowser)
+	processDest(c, includeEnabled, &input.Attributes, DestAll)
+	processDest(c, includeEnabled, &input.ErrorCollector, destError)
+	processDest(c, includeEnabled, &input.TransactionEvents, destTxnEvent)
+	processDest(c, includeEnabled, &input.TransactionTracer, destTxnTrace)
+	processDest(c, includeEnabled, &input.browserMonitoring, destBrowser)
 
 	sort.Sort(byMatch(c.wildcardModifiers))
 

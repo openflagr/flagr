@@ -1,1 +1,0 @@
-explain select * from explain_plan_test_1 where c = 'three''three'
