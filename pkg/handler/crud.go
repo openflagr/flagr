@@ -75,6 +75,9 @@ func (c *crud) FindFlags(params flag.FindFlagsParams) middleware.Responder {
 	if params.Description != nil {
 		q = q.DescriptionEq(*params.Description)
 	}
+	if params.DescriptionLike != nil {
+		q = q.DescriptionLike(*params.DescriptionLike)
+	}
 	if params.Limit != nil {
 		q = q.Limit(int(*params.Limit))
 	}

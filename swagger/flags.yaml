@@ -11,11 +11,15 @@ get:
     - in: query
       name: enabled
       type: boolean
-      description: return only flags having given enabled status
+      description: return flags having given enabled status
     - in: query
       name: description
       type: string
-      description: return only flags matching given description
+      description: return flags exactly matching given description
+    - in: query
+      name: description_like
+      type: string
+      description: return flags partially matching given description
   responses:
     200:
       description: list all the flags
