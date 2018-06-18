@@ -47,8 +47,6 @@ paths:
           name: limit
           type: integer
           format: int64
-          default: 25
-          minimum: 1
           description: the numbers of flags to return
         - in: query
           name: enabled
