@@ -19,6 +19,7 @@ type FindFlagsURL struct {
 	DescriptionLike *string
 	Enabled         *bool
 	Limit           *int64
+	Offset          *int64
 
 	_basePath string
 	// avoid unkeyed usage
@@ -84,6 +85,14 @@ func (o *FindFlagsURL) Build() (*url.URL, error) {
 	}
 	if limit != "" {
 		qs.Set("limit", limit)
+	}
+
+	var offset string
+	if o.Offset != nil {
+		offset = swag.FormatInt64(*o.Offset)
+	}
+	if offset != "" {
+		qs.Set("offset", offset)
 	}
 
 	result.RawQuery = qs.Encode()

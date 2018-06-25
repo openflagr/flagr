@@ -31,7 +31,7 @@ func init() {
   "info": {
     "description": "Flagr is a feature flagging, A/B testing and dynamic configuration microservice",
     "title": "Flagr",
-    "version": "1.0.0"
+    "version": "1.0.7"
   },
   "basePath": "/api/v1",
   "paths": {
@@ -131,6 +131,13 @@ func init() {
             "type": "string",
             "description": "return flags partially matching given description",
             "name": "description_like",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "return flags given the offset, it should usually set together with limit",
+            "name": "offset",
             "in": "query"
           }
         ],
@@ -1634,7 +1641,7 @@ func init() {
   "info": {
     "description": "Flagr is a feature flagging, A/B testing and dynamic configuration microservice",
     "title": "Flagr",
-    "version": "1.0.0"
+    "version": "1.0.7"
   },
   "basePath": "/api/v1",
   "paths": {
@@ -1734,6 +1741,13 @@ func init() {
             "type": "string",
             "description": "return flags partially matching given description",
             "name": "description_like",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "return flags given the offset, it should usually set together with limit",
+            "name": "offset",
             "in": "query"
           }
         ],
