@@ -81,6 +81,9 @@ func (c *crud) FindFlags(params flag.FindFlagsParams) middleware.Responder {
 	if params.Limit != nil {
 		q = q.Limit(int(*params.Limit))
 	}
+	if params.Offset != nil {
+		q = q.Offset(int(*params.Offset))
+	}
 
 	err := q.All(&fs)
 	if err != nil {

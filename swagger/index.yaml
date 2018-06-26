@@ -3,7 +3,7 @@ swagger: "2.0"
 info:
   description: Flagr is a feature flagging, A/B testing and dynamic configuration microservice
   title: Flagr
-  version: 1.0.0
+  version: 1.0.7
 tags:
   - name: flag
     description: Everything about the flag
