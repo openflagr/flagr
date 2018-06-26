@@ -15,7 +15,7 @@ test: verifiers
 
 ci: verifiers
 	@echo "Running all coverage for flagr"
-	@courtney -v -o ./coverage.txt -t="-race" -t="-covermode=atomic" github.com/checkr/flagr/pkg/...
+	@retool do courtney -v -o ./coverage.txt -t="-race" -t="-covermode=atomic" github.com/checkr/flagr/pkg/...
 
 build:
 	@echo "Building flagr to $(PWD)/flagr ..."
@@ -27,18 +27,14 @@ run:
 gen: api_docs swagger goqueryset
 
 deps: checks
-	@echo "Installing dep" && go get -u github.com/golang/dep/cmd/dep
-	@echo "Installing gometalinter" && go get -u github.com/alecthomas/gometalinter
-	@gometalinter --install
-	@echo "Installing go-swagger" && go get -u github.com/go-swagger/go-swagger/cmd/swagger
-	@echo "Installing goqueryset" && go get -u github.com/jirfag/go-queryset/cmd/goqueryset
-	@echo "Installing courtney" && go get -u github.com/dave/courtney
-	@echo "Installing gomock" && go get -u github.com/golang/mock/gomock && go get github.com/golang/mock/mockgen
-	@echo "Installing fswatch" && go get -u github.com/codeskyblue/fswatch
+	@echo "Installing retool" && go get -u github.com/twitchtv/retool
+	@retool sync
+	@retool build
+	@retool do gometalinter --install
 	@echo "Sqlite3" && sqlite3 -version
 
 watch:
-	@fswatch
+	@retool do fswatch
 
 serve_docs:
 	@yarn global add docsify-cli@4
@@ -62,11 +58,11 @@ verifiers: verify_gometalinter verify_swagger
 
 verify_gometalinter:
 	@echo "Running $@"
-	@gometalinter --config=.gometalinter.json ./pkg/...
+	@retool do gometalinter --config=.gometalinter.json ./pkg/...
 
 verify_swagger:
 	@echo "Running $@"
-	@swagger validate $(PWD)/docs/api_docs/bundle.yaml
+	@retool do swagger validate $(PWD)/docs/api_docs/bundle.yaml
 
 clean:
 	@echo "Cleaning up all the generated files"
@@ -80,9 +76,9 @@ swagger: verify_swagger
 	@cp $(PWD)/swagger_gen/restapi/configure_flagr.go /tmp/configure_flagr.go 2>/dev/null || :
 	@rm -rf $(PWD)/swagger_gen
 	@mkdir $(PWD)/swagger_gen
-	@swagger generate server -t ./swagger_gen -f $(PWD)/docs/api_docs/bundle.yaml
+	@retool do swagger generate server -t ./swagger_gen -f $(PWD)/docs/api_docs/bundle.yaml
 	@cp /tmp/configure_flagr.go $(PWD)/swagger_gen/restapi/configure_flagr.go 2>/dev/null || :
 
 goqueryset:
-	@go generate ./pkg/...
+	@retool do go generate ./pkg/...
 	@./buildscripts/goqueryset.sh
