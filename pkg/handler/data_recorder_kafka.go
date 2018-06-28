@@ -40,7 +40,7 @@ func createTLSConfiguration(certFile string, keyFile string, caFile string, veri
 		t = &tls.Config{
 			Certificates:       []tls.Certificate{cert},
 			RootCAs:            caCertPool,
-			InsecureSkipVerify: verifySSL,
+			InsecureSkipVerify: !verifySSL,
 		}
 	}
 	// will be nil by default if nothing is provided
