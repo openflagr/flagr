@@ -222,6 +222,63 @@ func TestCrudFlagsWithFailures(t *testing.T) {
 	})
 }
 
+func TestFindFlags(t *testing.T) {
+	var res middleware.Responder
+	db := entity.NewTestDB()
+	c := &crud{}
+	numOfFlags := 20
+
+	defer db.Close()
+	defer gostub.StubFunc(&getDB, db).Reset()
+
+	for i := 0; i < numOfFlags; i++ {
+		c.CreateFlag(flag.CreateFlagParams{
+			Body: &models.CreateFlagRequest{
+				Description: util.StringPtr(fmt.Sprintf("flag_%d", i)),
+			},
+		})
+	}
+
+	t.Run("FindFlags - got all the results", func(t *testing.T) {
+		res = c.FindFlags(flag.FindFlagsParams{})
+		assert.Len(t, res.(*flag.FindFlagsOK).Payload, numOfFlags)
+	})
+
+	t.Run("FindFlags (with enabled only) - got all the enabled results", func(t *testing.T) {
+		res = c.FindFlags(flag.FindFlagsParams{
+			Enabled: util.BoolPtr(true),
+		})
+		assert.Len(t, res.(*flag.FindFlagsOK).Payload, 0)
+	})
+	t.Run("FindFlags (with matching description)", func(t *testing.T) {
+		res = c.FindFlags(flag.FindFlagsParams{
+			Description: util.StringPtr("flag_1"),
+		})
+		assert.Len(t, res.(*flag.FindFlagsOK).Payload, 1)
+	})
+	t.Run("FindFlags (with matching description_like)", func(t *testing.T) {
+		res = c.FindFlags(flag.FindFlagsParams{
+			DescriptionLike: util.StringPtr("flag_"),
+		})
+		assert.Len(t, res.(*flag.FindFlagsOK).Payload, numOfFlags)
+	})
+	t.Run("FindFlags (with limit)", func(t *testing.T) {
+		res = c.FindFlags(flag.FindFlagsParams{
+			Limit: util.Int64Ptr(int64(2)),
+		})
+		assert.Len(t, res.(*flag.FindFlagsOK).Payload, 2)
+	})
+	t.Run("FindFlags (with limit and offset)", func(t *testing.T) {
+		res = c.FindFlags(flag.FindFlagsParams{
+			Limit:  util.Int64Ptr(int64(2)),
+			Offset: util.Int64Ptr(int64(2)),
+		})
+		assert.Len(t, res.(*flag.FindFlagsOK).Payload, 2)
+		assert.Equal(t, res.(*flag.FindFlagsOK).Payload[0].ID, int64(3))
+		assert.Equal(t, res.(*flag.FindFlagsOK).Payload[1].ID, int64(4))
+	})
+}
+
 func TestCrudSegments(t *testing.T) {
 	var res middleware.Responder
 	db := entity.NewTestDB()
