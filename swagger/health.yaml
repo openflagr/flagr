@@ -1,0 +1,10 @@
+get:
+  tags:
+    - health
+  responses:
+    200:
+      description: Flagr is healthy
+    default:
+      description: generic error response
+      schema:
+        $ref: "#/definitions/error"
