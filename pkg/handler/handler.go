@@ -7,8 +7,10 @@ import (
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/distribution"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/evaluation"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/flag"
+	"github.com/checkr/flagr/swagger_gen/restapi/operations/health"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/segment"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/variant"
+	"github.com/go-openapi/runtime/middleware"
 )
 
 var getDB = repo.GetDB
@@ -17,6 +19,7 @@ var getDB = repo.GetDB
 func Setup(api *operations.FlagrAPI) {
 	setupCRUD(api)
 	setupEvaluation(api)
+	setupHealth(api)
 }
 
 func setupCRUD(api *operations.FlagrAPI) {
@@ -61,4 +64,12 @@ func setupEvaluation(api *operations.FlagrAPI) {
 	e := NewEval()
 	api.EvaluationPostEvaluationHandler = evaluation.PostEvaluationHandlerFunc(e.PostEvaluation)
 	api.EvaluationPostEvaluationBatchHandler = evaluation.PostEvaluationBatchHandlerFunc(e.PostEvaluationBatch)
+}
+
+func setupHealth(api *operations.FlagrAPI) {
+	api.HealthGetHealthHandler = health.GetHealthHandlerFunc(
+		func(health.GetHealthParams) middleware.Responder {
+			return &health.GetHealthOK{}
+		},
+	)
 }

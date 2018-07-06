@@ -64,6 +64,8 @@ paths:
     $ref: ./evaluation.yaml
   /evaluation/batch:
     $ref: ./evaluation_batch.yaml
+  /health:
+    $ref: ./health.yaml
 definitions:
   # Flag
   flag:
