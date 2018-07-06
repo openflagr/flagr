@@ -31,7 +31,7 @@ func init() {
   "info": {
     "description": "Flagr is a feature flagging, A/B testing and dynamic configuration microservice",
     "title": "Flagr",
-    "version": "1.0.7"
+    "version": "1.0.8"
   },
   "basePath": "/api/v1",
   "paths": {
@@ -1624,6 +1624,10 @@ func init() {
     {
       "description": "Evaluation is the process of evaluating a flag given the entity context",
       "name": "evaluation"
+    },
+    {
+      "description": "Check if Flagr is healthy",
+      "name": "health"
     }
   ],
   "x-tagGroups": [
@@ -1641,6 +1645,12 @@ func init() {
       "name": "Flag Evaluation",
       "tags": [
         "evaluation"
+      ]
+    },
+    {
+      "name": "Health Check",
+      "tags": [
+        "health"
       ]
     }
   ]
@@ -1659,7 +1669,7 @@ func init() {
   "info": {
     "description": "Flagr is a feature flagging, A/B testing and dynamic configuration microservice",
     "title": "Flagr",
-    "version": "1.0.7"
+    "version": "1.0.8"
   },
   "basePath": "/api/v1",
   "paths": {
@@ -3252,6 +3262,10 @@ func init() {
     {
       "description": "Evaluation is the process of evaluating a flag given the entity context",
       "name": "evaluation"
+    },
+    {
+      "description": "Check if Flagr is healthy",
+      "name": "health"
     }
   ],
   "x-tagGroups": [
@@ -3269,6 +3283,12 @@ func init() {
       "name": "Flag Evaluation",
       "tags": [
         "evaluation"
+      ]
+    },
+    {
+      "name": "Health Check",
+      "tags": [
+        "health"
       ]
     }
   ]
