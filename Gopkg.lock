@@ -39,6 +39,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/bouk/monkey"
+  packages = ["."]
+  revision = "5df1f207ff77e025801505ae4d903133a0b4353f"
+
+[[projects]]
+  branch = "master"
   name = "github.com/brandur/simplebox"
   packages = ["."]
   revision = "84e9865bb03ad38c464043bf5382ce8c68ca5f0c"
@@ -423,6 +429,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "3095751101f22c56773362993760d7f9d20f2be6786aac5184112de0cc6a800c"
+  inputs-digest = "a462c9ef93c43ec0d3e02c3a988cef9a4b411d5db504c79ed6372a23724c2124"
   solver-name = "gps-cdcl"
   solver-version = 1

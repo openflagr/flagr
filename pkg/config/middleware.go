@@ -41,7 +41,7 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 
 	if Config.JWTAuthEnabled {
 		n.Use(&auth{
-			WhitelistPaths: strings.Split(Config.JWTAuthWhitelistPaths, ","),
+			WhitelistPaths: Config.JWTAuthWhitelistPaths,
 			JWTMiddleware: jwtmiddleware.New(jwtmiddleware.Options{
 				ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
 					return []byte(Config.JWTAuthSecret), nil
@@ -57,7 +57,7 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 				UserProperty: Config.JWTAuthUserProperty,
 				Debug:        Config.JWTAuthDebug,
 				ErrorHandler: func(w http.ResponseWriter, r *http.Request, err string) {
-					http.Redirect(w, r, Config.JWTAuthNoTokenRedirectURL, 307)
+					http.Redirect(w, r, Config.JWTAuthNoTokenRedirectURL, http.StatusTemporaryRedirect)
 				},
 			}),
 		})
