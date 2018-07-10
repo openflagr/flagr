@@ -21,3 +21,11 @@ func TestSetupNewRelic(t *testing.T) {
 	})
 	Config.NewRelicEnabled = false
 }
+
+func TestSetupStatsd(t *testing.T) {
+	Config.StatsdEnabled = true
+	assert.NotPanics(t, func() {
+		setupStatsd()
+	})
+	Config.StatsdEnabled = false
+}
