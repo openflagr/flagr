@@ -22,37 +22,6 @@ var (
 	saramaNewAsyncProducer = sarama.NewAsyncProducer
 )
 
-func createTLSConfiguration(certFile string, keyFile string, caFile string, verifySSL bool) (t *tls.Config) {
-	if certFile != "" && keyFile != "" && caFile != "" {
-		cert, err := tls.LoadX509KeyPair(certFile, keyFile)
-		if err != nil {
-			logrus.WithField("TLSConfigurationError", err).Panic(err)
-		}
-
-		caCert, err := ioutil.ReadFile(caFile)
-		if err != nil {
-			logrus.WithField("TLSConfigurationError", err).Panic(err)
-		}
-
-		caCertPool := x509.NewCertPool()
-		caCertPool.AppendCertsFromPEM(caCert)
-
-		t = &tls.Config{
-			Certificates:       []tls.Certificate{cert},
-			RootCAs:            caCertPool,
-			InsecureSkipVerify: !verifySSL,
-		}
-	}
-	// will be nil by default if nothing is provided
-	return t
-}
-
-type kafkaRecorder struct {
-	producer sarama.AsyncProducer
-	topic    string
-	enabled  bool
-}
-
 // NewKafkaRecorder creates a new Kafka recorder
 var NewKafkaRecorder = func() DataRecorder {
 	cfg := sarama.NewConfig()
@@ -90,6 +59,37 @@ var NewKafkaRecorder = func() DataRecorder {
 		topic:    config.Config.RecorderKafkaTopic,
 		enabled:  config.Config.RecorderEnabled,
 	}
+}
+
+func createTLSConfiguration(certFile string, keyFile string, caFile string, verifySSL bool) (t *tls.Config) {
+	if certFile != "" && keyFile != "" && caFile != "" {
+		cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+		if err != nil {
+			logrus.WithField("TLSConfigurationError", err).Panic(err)
+		}
+
+		caCert, err := ioutil.ReadFile(caFile)
+		if err != nil {
+			logrus.WithField("TLSConfigurationError", err).Panic(err)
+		}
+
+		caCertPool := x509.NewCertPool()
+		caCertPool.AppendCertsFromPEM(caCert)
+
+		t = &tls.Config{
+			Certificates:       []tls.Certificate{cert},
+			RootCAs:            caCertPool,
+			InsecureSkipVerify: !verifySSL,
+		}
+	}
+	// will be nil by default if nothing is provided
+	return t
+}
+
+type kafkaRecorder struct {
+	producer sarama.AsyncProducer
+	topic    string
+	enabled  bool
 }
 
 func (k *kafkaRecorder) AsyncRecord(r *models.EvalResult) {
@@ -143,7 +143,7 @@ func (r *kafkaEvalResult) Length() int {
 
 // Key generates the partition key
 func (r *kafkaEvalResult) Key() string {
-	if r.EvalResult == nil {
+	if r.EvalResult == nil || r.EvalContext == nil {
 		return ""
 	}
 	return util.SafeString(r.EvalContext.EntityID)
