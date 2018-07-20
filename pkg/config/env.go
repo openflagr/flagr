@@ -90,4 +90,5 @@ var Config = struct {
 	JWTAuthSecret             string   `env:"FLAGR_JWT_AUTH_SECRET" envDefault:""`
 	JWTAuthNoTokenRedirectURL string   `env:"FLAGR_JWT_AUTH_NO_TOKEN_REDIRECT_URL" envDefault:""`
 	JWTAuthUserProperty       string   `env:"FLAGR_JWT_AUTH_USER_PROPERTY" envDefault:"flagr_user"`
+	JWTAuthSigningMethod      string   `env:"FLAGR_JWT_AUTH_SIGNING_METHOD" envDefault:"HS256"`
 }{}
