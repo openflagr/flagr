@@ -8,7 +8,7 @@ UIPATH := $(PWD)/browser/flagr-ui
 
 all: deps gen build run
 
-rebuild: gen run
+rebuild: gen build
 
 test: verifiers
 	@go test -race -covermode=atomic github.com/checkr/flagr/pkg/...
