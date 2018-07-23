@@ -116,6 +116,9 @@
                       <el-tag type="primary" :disable-transitions="true">
                         Flag ID: {{ $route.params.flagId }}
                       </el-tag>
+                      <el-tag type="primary" :disable-transitions="true">
+                        Flag Label: {{ flag.label }}
+                      </el-tag>
                     </div>
                     <div class="flex-row-right">
                       <el-button size="small" @click="putFlag(flag)">
