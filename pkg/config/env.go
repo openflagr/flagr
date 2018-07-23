@@ -79,10 +79,24 @@ var Config = struct {
 	RecorderKafkaEncrypted      bool          `env:"FLAGR_RECORDER_KAFKA_ENCRYPTED" envDefault:"false"`
 	RecorderKafkaEncryptionKey  string        `env:"FLAGR_RECORDER_KAFKA_ENCRYPTION_KEY" envDefault:""`
 
-	// JWTAuthEnabled enables the JWT Auth
-	// The pattern of using JWT auth token is that it redirects to the URL to set cross subdomain cookie
-	// For example, redirect to auth.example.com/signin, which sets Cookie access_token=jwt_token for domain ".example.com"
-	// One can also whitelist some routes so that they don't get blocked by JWT auth
+	/**
+	JWTAuthEnabled enables the JWT Auth
+
+	Via Cookies:
+		The pattern of using JWT auth token using cookies is that it redirects to the URL to set cross subdomain cookie
+		For example, redirect to auth.example.com/signin, which sets Cookie access_token=jwt_token for domain
+		".example.com". One can also whitelist some routes so that they don't get blocked by JWT auth
+
+	Via Headers:
+		If you wish to use JWT Auth via headers you can simply set the header `Authorization Bearer [access_token]`
+
+	Supported signing methods:
+		* HS256, in this case `FLAGR_JWT_AUTH_SECRET` contains the passphrase
+		* RS256, in this case `FLAGR_JWT_AUTH_SECRET` contains the key in PEM Format
+
+	Note:
+		If the access_token is present in both the header and cookie only the latest will be used
+	*/
 	JWTAuthEnabled            bool     `env:"FLAGR_JWT_AUTH_ENABLED" envDefault:"false"`
 	JWTAuthDebug              bool     `env:"FLAGR_JWT_AUTH_DEBUG" envDefault:"false"`
 	JWTAuthWhitelistPaths     []string `env:"FLAGR_JWT_AUTH_WHITELIST_PATHS" envDefault:"/api/v1/evaluation" envSeparator:","`
@@ -90,4 +104,7 @@ var Config = struct {
 	JWTAuthSecret             string   `env:"FLAGR_JWT_AUTH_SECRET" envDefault:""`
 	JWTAuthNoTokenRedirectURL string   `env:"FLAGR_JWT_AUTH_NO_TOKEN_REDIRECT_URL" envDefault:""`
 	JWTAuthUserProperty       string   `env:"FLAGR_JWT_AUTH_USER_PROPERTY" envDefault:"flagr_user"`
+
+	// "HS256" and "RS256" supported
+	JWTAuthSigningMethod string `env:"FLAGR_JWT_AUTH_SIGNING_METHOD" envDefault:"HS256"`
 }{}

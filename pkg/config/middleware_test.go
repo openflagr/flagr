@@ -15,6 +15,23 @@ import (
 
 type okHandler struct{}
 
+const (
+	// Signed with secret: ""
+	validHS256JWTToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmbGFncl91c2VyIjoiMTIzNDU2Nzg5MCJ9.CLXgNEtwPCqCOtUU-KmqDyO8S2wC_G6PZ0tml8DCuNw"
+
+	// Public Key:
+	//-----BEGIN PUBLIC KEY-----
+	//MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDdlatRjRjogo3WojgGHFHYLugd
+	//UWAY9iR3fy4arWNA1KoS8kVw33cJibXr8bvwUAUparCwlvdbH6dvEOfou0/gCFQs
+	//HUfQrSDv+MuSUMAe8jzKE4qW+jK+xQU9a03GUnKHkkle+Q0pX/g6jXZ7r1/xAK5D
+	//o2kQ+X5xK9cipRgEKwIDAQAB
+	//-----END PUBLIC KEY-----
+	validRS256JWTToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.TCYt5XsITJX1CxPCT8yAV-TVkIEq_PbChOMqsLfRoPsnsgw5WEuts01mq-pQy7UJiN5mgRxD-WUcX16dUEMGlv50aqzpqh4Qktb3rk-BuQy72IFLOqV0G_zS245-kronKb78cPN25DGlcTwLtjPAYuNzVBAh4vGHSrQyHUdBBPM"
+
+	// Signed with secret: "mysecret"
+	validHS256JWTTokenWithSecret = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.drt_po6bHhDOF_FJEHTrK-KD8OGjseJZpHwHIgsnoTM"
+)
+
 func (o *okHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	w.Write([]byte("OK"))
 }
@@ -83,7 +100,7 @@ func TestAuthMiddleware(t *testing.T) {
 		req, _ := http.NewRequest("GET", "http://localhost:18000/api/v1/flags", nil)
 		req.AddCookie(&http.Cookie{
 			Name:  "access_token",
-			Value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmbGFncl91c2VyIjoiMTIzNDU2Nzg5MCJ9.CLXgNEtwPCqCOtUU-KmqDyO8S2wC_G6PZ0tml8DCuNw", // {"flagr_user": "1234567890"}
+			Value: validHS256JWTToken,
 		})
 		hh.ServeHTTP(res, req)
 		assert.Equal(t, http.StatusOK, res.Code)
@@ -97,6 +114,120 @@ func TestAuthMiddleware(t *testing.T) {
 		res := httptest.NewRecorder()
 		res.Body = new(bytes.Buffer)
 		req, _ := http.NewRequest("GET", fmt.Sprintf("http://localhost:18000%s", Config.JWTAuthWhitelistPaths[0]), nil)
+		hh.ServeHTTP(res, req)
+		assert.Equal(t, http.StatusOK, res.Code)
+	})
+
+	t.Run("it will pass if jwt enabled with correct header token", func(t *testing.T) {
+		Config.JWTAuthEnabled = true
+		defer func() { Config.JWTAuthEnabled = false }()
+		hh := SetupGlobalMiddleware(h)
+
+		res := httptest.NewRecorder()
+		res.Body = new(bytes.Buffer)
+		req, _ := http.NewRequest("GET", "http://localhost:18000/api/v1/flags", nil)
+		req.Header.Add("Authorization", "Bearer "+validHS256JWTToken)
+		hh.ServeHTTP(res, req)
+		assert.Equal(t, http.StatusOK, res.Code)
+	})
+
+	t.Run("it will redirect if jwt enabled with invalid cookie token and valid header token", func(t *testing.T) {
+		Config.JWTAuthEnabled = true
+		defer func() { Config.JWTAuthEnabled = false }()
+		hh := SetupGlobalMiddleware(h)
+
+		res := httptest.NewRecorder()
+		res.Body = new(bytes.Buffer)
+		req, _ := http.NewRequest("GET", "http://localhost:18000/api/v1/flags", nil)
+		req.AddCookie(&http.Cookie{
+			Name:  "access_token",
+			Value: "invalid_jwt",
+		})
+		req.Header.Add("Authorization", "Bearer "+validHS256JWTToken)
+		hh.ServeHTTP(res, req)
+		assert.Equal(t, http.StatusTemporaryRedirect, res.Code)
+	})
+
+	t.Run("it will redirect if jwt enabled and a cookie token encrypted with the wrong method", func(t *testing.T) {
+		Config.JWTAuthEnabled = true
+		Config.JWTAuthSigningMethod = "RS256"
+		defer func() {
+			Config.JWTAuthEnabled = false
+			Config.JWTAuthSigningMethod = "HS256"
+		}()
+		hh := SetupGlobalMiddleware(h)
+
+		res := httptest.NewRecorder()
+		res.Body = new(bytes.Buffer)
+		req, _ := http.NewRequest("GET", "http://localhost:18000/api/v1/flags", nil)
+		req.AddCookie(&http.Cookie{
+			Name:  "access_token",
+			Value: "invalid_jwt",
+		})
+		hh.ServeHTTP(res, req)
+		assert.Equal(t, http.StatusTemporaryRedirect, res.Code)
+	})
+
+	t.Run("it will pass if jwt enabled with correct header token encrypted using RS256", func(t *testing.T) {
+		Config.JWTAuthEnabled = true
+		Config.JWTAuthSigningMethod = "RS256"
+		Config.JWTAuthSecret = `-----BEGIN PUBLIC KEY-----
+MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDdlatRjRjogo3WojgGHFHYLugd
+UWAY9iR3fy4arWNA1KoS8kVw33cJibXr8bvwUAUparCwlvdbH6dvEOfou0/gCFQs
+HUfQrSDv+MuSUMAe8jzKE4qW+jK+xQU9a03GUnKHkkle+Q0pX/g6jXZ7r1/xAK5D
+o2kQ+X5xK9cipRgEKwIDAQAB
+-----END PUBLIC KEY-----`
+		defer func() {
+			Config.JWTAuthEnabled = false
+			Config.JWTAuthSigningMethod = "HS256"
+			Config.JWTAuthSecret = ""
+		}()
+		hh := SetupGlobalMiddleware(h)
+
+		res := httptest.NewRecorder()
+		res.Body = new(bytes.Buffer)
+		req, _ := http.NewRequest("GET", "http://localhost:18000/api/v1/flags", nil)
+		req.Header.Add("Authorization", "Bearer "+validRS256JWTToken)
+		hh.ServeHTTP(res, req)
+		assert.Equal(t, http.StatusOK, res.Code)
+	})
+
+	t.Run("it will pass if jwt enabled with valid cookie token with passphrase", func(t *testing.T) {
+		Config.JWTAuthEnabled = true
+		Config.JWTAuthSecret = "mysecret"
+		defer func() {
+			Config.JWTAuthEnabled = false
+			Config.JWTAuthSecret = ""
+		}()
+		hh := SetupGlobalMiddleware(h)
+
+		res := httptest.NewRecorder()
+		res.Body = new(bytes.Buffer)
+		req, _ := http.NewRequest("GET", "http://localhost:18000/api/v1/flags", nil)
+		req.AddCookie(&http.Cookie{
+			Name:  "access_token",
+			Value: validHS256JWTTokenWithSecret,
+		})
+		hh.ServeHTTP(res, req)
+		assert.Equal(t, http.StatusOK, res.Code)
+	})
+
+	t.Run("it will pass with a correct HS256 token cookie when signing method is wrong and it defaults to empty string secret", func(t *testing.T) {
+		Config.JWTAuthEnabled = true
+		Config.JWTAuthSigningMethod = "invalid"
+		defer func() {
+			Config.JWTAuthEnabled = false
+			Config.JWTAuthSigningMethod = "HS256"
+		}()
+		hh := SetupGlobalMiddleware(h)
+
+		res := httptest.NewRecorder()
+		res.Body = new(bytes.Buffer)
+		req, _ := http.NewRequest("GET", "http://localhost:18000/api/v1/flags", nil)
+		req.AddCookie(&http.Cookie{
+			Name:  "access_token",
+			Value: validHS256JWTToken,
+		})
 		hh.ServeHTTP(res, req)
 		assert.Equal(t, http.StatusOK, res.Code)
 	})

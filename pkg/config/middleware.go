@@ -8,14 +8,14 @@ import (
 	"time"
 
 	"github.com/DataDog/datadog-go/statsd"
-	jwtmiddleware "github.com/auth0/go-jwt-middleware"
+	"github.com/auth0/go-jwt-middleware"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gohttp/pprof"
-	negronilogrus "github.com/meatballhat/negroni-logrus"
+	"github.com/meatballhat/negroni-logrus"
 	"github.com/rs/cors"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/negroni"
-	negroninewrelic "github.com/yadvendar/negroni-newrelic-go-agent"
+	"github.com/yadvendar/negroni-newrelic-go-agent"
 )
 
 // SetupGlobalMiddleware setup the global middleware
@@ -40,27 +40,7 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 	}
 
 	if Config.JWTAuthEnabled {
-		n.Use(&auth{
-			WhitelistPaths: Config.JWTAuthWhitelistPaths,
-			JWTMiddleware: jwtmiddleware.New(jwtmiddleware.Options{
-				ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
-					return []byte(Config.JWTAuthSecret), nil
-				},
-				SigningMethod: jwt.SigningMethodHS256,
-				Extractor: func(r *http.Request) (string, error) {
-					c, err := r.Cookie(Config.JWTAuthCookieTokenName)
-					if err != nil {
-						return "", err
-					}
-					return c.Value, nil
-				},
-				UserProperty: Config.JWTAuthUserProperty,
-				Debug:        Config.JWTAuthDebug,
-				ErrorHandler: func(w http.ResponseWriter, r *http.Request, err string) {
-					http.Redirect(w, r, Config.JWTAuthNoTokenRedirectURL, http.StatusTemporaryRedirect)
-				},
-			}),
-		})
+		n.Use(setupJWTAuthMiddleware())
 	}
 
 	if Config.MiddlewareVerboseLoggerEnabled {
@@ -77,6 +57,52 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 	}
 
 	return n
+}
+
+/**
+setupJWTAuthMiddleware setup an JWTMiddleware from the ENV config
+*/
+func setupJWTAuthMiddleware() *auth {
+	var signingMethod jwt.SigningMethod
+	var validationKey interface{}
+	var errParsingKey error
+
+	switch Config.JWTAuthSigningMethod {
+	case "HS256":
+		signingMethod = jwt.SigningMethodHS256
+		validationKey = []byte(Config.JWTAuthSecret)
+	case "RS256":
+		signingMethod = jwt.SigningMethodRS256
+		validationKey, errParsingKey = jwt.ParseRSAPublicKeyFromPEM([]byte(Config.JWTAuthSecret))
+	default:
+		signingMethod = jwt.SigningMethodHS256
+		validationKey = []byte("")
+	}
+
+	return &auth{
+		WhitelistPaths: Config.JWTAuthWhitelistPaths,
+		JWTMiddleware: jwtmiddleware.New(jwtmiddleware.Options{
+			ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
+				return validationKey, errParsingKey
+			},
+			SigningMethod: signingMethod,
+			Extractor: jwtmiddleware.FromFirst(
+				func(r *http.Request) (string, error) {
+					c, err := r.Cookie(Config.JWTAuthCookieTokenName)
+					if err != nil {
+						return "", nil
+					}
+					return c.Value, nil
+				},
+				jwtmiddleware.FromAuthHeader,
+			),
+			UserProperty: Config.JWTAuthUserProperty,
+			Debug:        Config.JWTAuthDebug,
+			ErrorHandler: func(w http.ResponseWriter, r *http.Request, err string) {
+				http.Redirect(w, r, Config.JWTAuthNoTokenRedirectURL, http.StatusTemporaryRedirect)
+			},
+		}),
+	}
 }
 
 type auth struct {
