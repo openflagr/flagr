@@ -212,7 +212,7 @@ o2kQ+X5xK9cipRgEKwIDAQAB
 		assert.Equal(t, http.StatusOK, res.Code)
 	})
 
-	t.Run("it will pass if jwt enabled with correct HS256 token cookie and signing method is wrong", func(t *testing.T) {
+	t.Run("it will pass with a correct HS256 token cookie when signing method is wrong and it defaults to empty string secret", func(t *testing.T) {
 		Config.JWTAuthEnabled = true
 		Config.JWTAuthSigningMethod = "invalid"
 		defer func() {
