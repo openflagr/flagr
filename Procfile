@@ -1,1 +1,1 @@
-web: /bin/sh -c ./flagr
+web: ./flagr
