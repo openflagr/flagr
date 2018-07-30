@@ -6,6 +6,7 @@ RUN make build
 
 FROM alpine:3.6
 RUN apk add --no-cache libc6-compat ca-certificates
+RUN apk update && apk add bash
 WORKDIR /go/src/github.com/checkr/flagr
 VOLUME ["/data"]
 ADD ./buildscripts/demo_sqlite3.db /data/demo_sqlite3.db
