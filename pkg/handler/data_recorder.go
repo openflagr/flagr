@@ -24,6 +24,8 @@ func GetDataRecorder() DataRecorder {
 		switch recorderType {
 		case "kafka":
 			singletonDataRecorder = NewKafkaRecorder()
+		case "kinesis":
+			singletonDataRecorder = NewKinesisRecorder()
 		default:
 			panic("recorderType not supported")
 		}

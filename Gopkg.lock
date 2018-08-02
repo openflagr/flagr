@@ -26,6 +26,12 @@
   version = "v1.17.0"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/a8m/kinesis-producer"
+  packages = ["."]
+  revision = "03228a9f79b384e1a25260f342a77c4dcdb9671b"
+
+[[projects]]
   name = "github.com/asaskevich/govalidator"
   packages = ["."]
   revision = "ccb8e960c48f04d6935e72476ae4a51028f9e22f"
@@ -36,6 +42,43 @@
   name = "github.com/auth0/go-jwt-middleware"
   packages = ["."]
   revision = "5493cabe49f7bfa6e2ec444a09d334d90cd4e2bd"
+
+[[projects]]
+  name = "github.com/aws/aws-sdk-go"
+  packages = [
+    "aws",
+    "aws/awserr",
+    "aws/awsutil",
+    "aws/client",
+    "aws/client/metadata",
+    "aws/corehandlers",
+    "aws/credentials",
+    "aws/credentials/ec2rolecreds",
+    "aws/credentials/endpointcreds",
+    "aws/credentials/stscreds",
+    "aws/csm",
+    "aws/defaults",
+    "aws/ec2metadata",
+    "aws/endpoints",
+    "aws/request",
+    "aws/session",
+    "aws/signer/v4",
+    "internal/sdkio",
+    "internal/sdkrand",
+    "internal/sdkuri",
+    "internal/shareddefaults",
+    "private/protocol",
+    "private/protocol/json/jsonutil",
+    "private/protocol/jsonrpc",
+    "private/protocol/query",
+    "private/protocol/query/queryutil",
+    "private/protocol/rest",
+    "private/protocol/xml/xmlutil",
+    "service/kinesis",
+    "service/sts"
+  ]
+  revision = "cc03a15b82ef2c52a4fd94c92655aecb70160a48"
+  version = "v1.15.3"
 
 [[projects]]
   branch = "master"
@@ -114,6 +157,12 @@
   name = "github.com/getsentry/raven-go"
   packages = ["."]
   revision = "ed7bcb39ff10f39ab08e317ce16df282845852fa"
+
+[[projects]]
+  name = "github.com/go-ini/ini"
+  packages = ["."]
+  revision = "358ee7663966325963d4e8b2e1fbd570c5195153"
+  version = "v1.38.1"
 
 [[projects]]
   branch = "master"
@@ -197,6 +246,12 @@
   revision = "c9d246cbb3ba6407f8b1decdfff558f0fe8f07e8"
 
 [[projects]]
+  name = "github.com/golang/protobuf"
+  packages = ["proto"]
+  revision = "b4deda0973fb4c70b50d226b1af49f3da59f5265"
+  version = "v1.1.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/golang/snappy"
   packages = ["."]
@@ -224,6 +279,17 @@
   name = "github.com/jinzhu/inflection"
   packages = ["."]
   revision = "04140366298a54a039076d798123ffa108fff46c"
+
+[[projects]]
+  name = "github.com/jmespath/go-jmespath"
+  packages = ["."]
+  revision = "0b12d6b5"
+
+[[projects]]
+  name = "github.com/jpillora/backoff"
+  packages = ["."]
+  revision = "8eab2debe79d12b7bd3d10653910df25fa9552ba"
+  version = "1.0.0"
 
 [[projects]]
   branch = "master"
@@ -429,6 +495,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a462c9ef93c43ec0d3e02c3a988cef9a4b411d5db504c79ed6372a23724c2124"
+  inputs-digest = "747163ad9bdfc8804cdb2c62a1e8575c0171dc475fdfd4801a46b8c21508033d"
   solver-name = "gps-cdcl"
   solver-version = 1
