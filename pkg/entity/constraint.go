@@ -92,7 +92,7 @@ func (cs ConstraintArray) ToExpr() (conditions.Expr, error) {
 	p := conditions.NewParser(strings.NewReader(exprStr))
 	expr, err := p.Parse()
 	if err != nil {
-		return nil, fmt.Errorf("%s. Note: if it's string or array of string, warp it with quotes \"...\"", err)
+		return nil, fmt.Errorf("%s. Note: if it's string or array of string, wrap it with quotes \"...\"", err)
 	}
 	return expr, nil
 }
