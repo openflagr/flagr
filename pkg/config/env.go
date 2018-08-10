@@ -66,7 +66,7 @@ var Config = struct {
 	// RecorderType - the pipeline to log data records, e.g. Kafka
 	RecorderType string `env:"FLAGR_RECORDER_TYPE" envDefault:"kafka"`
 
-	// RecorderKafkaBrokers and etc. - Kafka related configurations for data records logging (Flagr Metrics)
+	// Kafka related configurations for data records logging (Flagr Metrics)
 	RecorderKafkaBrokers        string        `env:"FLAGR_RECORDER_KAFKA_BROKERS" envDefault:":9092"`
 	RecorderKafkaCertFile       string        `env:"FLAGR_RECORDER_KAFKA_CERTFILE" envDefault:""`
 	RecorderKafkaKeyFile        string        `env:"FLAGR_RECORDER_KAFKA_KEYFILE" envDefault:""`
@@ -78,6 +78,17 @@ var Config = struct {
 	RecorderKafkaFlushFrequency time.Duration `env:"FLAGR_RECORDER_KAFKA_FLUSHFREQUENCY" envDefault:"500ms"`
 	RecorderKafkaEncrypted      bool          `env:"FLAGR_RECORDER_KAFKA_ENCRYPTED" envDefault:"false"`
 	RecorderKafkaEncryptionKey  string        `env:"FLAGR_RECORDER_KAFKA_ENCRYPTION_KEY" envDefault:""`
+
+	// Kinesis related configurations for data records logging (Flagr Metrics)
+	RecorderKinesisStreamName          string        `env:"FLAGR_RECORDER_KINESIS_STREAM_NAME" envDefault:"flagr-records"`
+	RecorderKinesisBacklogCount        int           `env:"FLAGR_RECORDER_KINESIS_BACKLOG_COUNT" envDefault:"500"`
+	RecorderKinesisMaxConnections      int           `env:"FLAGR_RECORDER_KINESIS_MAX_CONNECTIONS" envDefault:"24"`
+	RecorderKinesisFlushInterval       time.Duration `env:"FLAGR_RECORDER_KINESIS_FLUSH_INTERVAL" envDefault:"5s"`
+	RecorderKinesisBatchCount          int           `env:"FLAGR_RECORDER_KINESIS_BATCH_COUNT" envDefault:"500"`
+	RecorderKinesisBatchSize           int           `env:"FLAGR_RECORDER_KINESIS_BATCH_SIZE" envDefault:"0"`
+	RecorderKinesisAggregateBatchCount int           `env:"FLAGR_RECORDER_KINESIS_AGGREGATE_BATCH_COUNT" envDefault:"4294967295"`
+	RecorderKinesisAggregateBatchSize  int           `env:"FLAGR_RECORDER_KINESIS_AGGREGATE_BATCH_SIZE" envDefault:"51200"`
+	RecorderKinesisVerbose             bool          `env:"FLAGR_RECORDER_KINESIS_VERBOSE" envDefault:"false"`
 
 	/**
 	JWTAuthEnabled enables the JWT Auth
