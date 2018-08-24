@@ -2,7 +2,7 @@
   "Tools": [
     {
       "Repository": "github.com/golang/dep/cmd/dep",
-      "Commit": "37d9ea0ac16f0e0a05afc3b60e1ac8c364b6c329"
+      "Commit": "6b79ccc4052b44b52a424209e2a32682cc84c11c"
     },
     {
       "Repository": "github.com/alecthomas/gometalinter",
@@ -10,11 +10,11 @@
     },
     {
       "Repository": "github.com/go-swagger/go-swagger/cmd/swagger",
-      "Commit": "abafcce68941b9313b95b94b32afe598f019637d"
+      "Commit": "a054598c6e12cefbc681c25e7c837f1614b32d5e"
     },
     {
       "Repository": "github.com/jirfag/go-queryset/cmd/goqueryset",
-      "Commit": "cb86bdf7e8dc8aac20bab0777e346db4aff8929c"
+      "Commit": "7510503da0acaf886bdcbaaced781b40c76076d1"
     },
     {
       "Repository": "github.com/dave/courtney",

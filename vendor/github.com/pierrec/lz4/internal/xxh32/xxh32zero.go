@@ -6,6 +6,17 @@ import (
 	"encoding/binary"
 )
 
+const (
+	prime32_1 uint32 = 2654435761
+	prime32_2 uint32 = 2246822519
+	prime32_3 uint32 = 3266489917
+	prime32_4 uint32 = 668265263
+	prime32_5 uint32 = 374761393
+
+	prime32_1plus2 uint32 = 606290984
+	prime32_minus1 uint32 = 1640531535
+)
+
 // XXHZero represents an xxhash32 object with seed 0.
 type XXHZero struct {
 	v1       uint32
@@ -47,6 +58,9 @@ func (xxh *XXHZero) BlockSize() int {
 // Write adds input bytes to the Hash.
 // It never returns an error.
 func (xxh *XXHZero) Write(input []byte) (int, error) {
+	if xxh.totalLen == 0 {
+		xxh.Reset()
+	}
 	n := len(input)
 	m := xxh.bufused
 
@@ -59,9 +73,9 @@ func (xxh *XXHZero) Write(input []byte) (int, error) {
 		return n, nil
 	}
 
+	p := 0
 	// Causes compiler to work directly from registers instead of stack:
 	v1, v2, v3, v4 := xxh.v1, xxh.v2, xxh.v3, xxh.v4
-	p := 0
 	if m > 0 {
 		// some data left from previous update
 		copy(xxh.buf[xxh.bufused:], input[:r])
@@ -69,10 +83,10 @@ func (xxh *XXHZero) Write(input []byte) (int, error) {
 
 		// fast rotl(13)
 		buf := xxh.buf[:16] // BCE hint.
-		xxh.v1 = rol13(v1+binary.LittleEndian.Uint32(buf[:])*prime32_2) * prime32_1
-		xxh.v2 = rol13(v2+binary.LittleEndian.Uint32(buf[4:])*prime32_2) * prime32_1
-		xxh.v3 = rol13(v3+binary.LittleEndian.Uint32(buf[8:])*prime32_2) * prime32_1
-		xxh.v4 = rol13(v4+binary.LittleEndian.Uint32(buf[12:])*prime32_2) * prime32_1
+		v1 = rol13(v1+binary.LittleEndian.Uint32(buf[:])*prime32_2) * prime32_1
+		v2 = rol13(v2+binary.LittleEndian.Uint32(buf[4:])*prime32_2) * prime32_1
+		v3 = rol13(v3+binary.LittleEndian.Uint32(buf[8:])*prime32_2) * prime32_1
+		v4 = rol13(v4+binary.LittleEndian.Uint32(buf[12:])*prime32_2) * prime32_1
 		p = r
 		xxh.bufused = 0
 	}
@@ -177,4 +191,32 @@ func Uint32Zero(x uint32) uint32 {
 	h *= prime32_3
 	h ^= h >> 16
 	return h
+}
+
+func rol1(u uint32) uint32 {
+	return u<<1 | u>>31
+}
+
+func rol7(u uint32) uint32 {
+	return u<<7 | u>>25
+}
+
+func rol11(u uint32) uint32 {
+	return u<<11 | u>>21
+}
+
+func rol12(u uint32) uint32 {
+	return u<<12 | u>>20
+}
+
+func rol13(u uint32) uint32 {
+	return u<<13 | u>>19
+}
+
+func rol17(u uint32) uint32 {
+	return u<<17 | u>>15
+}
+
+func rol18(u uint32) uint32 {
+	return u<<18 | u>>14
 }

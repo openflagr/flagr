@@ -31,7 +31,7 @@ func init() {
   "info": {
     "description": "Flagr is a feature flagging, A/B testing and dynamic configuration microservice",
     "title": "Flagr",
-    "version": "1.0.8"
+    "version": "1.0.9"
   },
   "basePath": "/api/v1",
   "paths": {
@@ -1669,7 +1669,7 @@ func init() {
   "info": {
     "description": "Flagr is a feature flagging, A/B testing and dynamic configuration microservice",
     "title": "Flagr",
-    "version": "1.0.8"
+    "version": "1.0.9"
   },
   "basePath": "/api/v1",
   "paths": {
