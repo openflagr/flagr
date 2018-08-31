@@ -1676,6 +1676,12 @@ func init() {
       "tags": [
         "health"
       ]
+    },
+    {
+      "name": "Export",
+      "tags": [
+        "export"
+      ]
     }
   ]
 }`))
@@ -3337,6 +3343,12 @@ func init() {
       "name": "Health Check",
       "tags": [
         "health"
+      ]
+    },
+    {
+      "name": "Export",
+      "tags": [
+        "export"
       ]
     }
   ]

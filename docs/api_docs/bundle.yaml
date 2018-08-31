@@ -34,6 +34,9 @@ x-tagGroups:
   - name: Health Check
     tags:
       - health
+  - name: Export
+    tags:
+      - export
 consumes:
   - application/json
 produces:
