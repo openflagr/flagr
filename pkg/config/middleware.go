@@ -2,7 +2,6 @@ package config
 
 import (
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -20,7 +19,6 @@ import (
 
 // SetupGlobalMiddleware setup the global middleware
 func SetupGlobalMiddleware(handler http.Handler) http.Handler {
-	pwd, _ := os.Getwd()
 	n := negroni.New()
 
 	if Config.CORSEnabled {
@@ -48,7 +46,7 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 	}
 
 	n.Use(negroni.NewRecovery())
-	n.Use(negroni.NewStatic(http.Dir(pwd + "/browser/flagr-ui/dist/")))
+	n.Use(negroni.NewStatic(http.Dir("./browser/flagr-ui/dist/")))
 
 	if Config.PProfEnabled {
 		n.UseHandler(pprof.New()(handler))

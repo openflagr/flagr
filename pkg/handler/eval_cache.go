@@ -76,7 +76,7 @@ func (ec *EvalCache) GetByFlagID(flagID uint) *entity.Flag {
 	return f
 }
 
-func fetchAllFlags() ([]entity.Flag, error) {
+var fetchAllFlags = func() ([]entity.Flag, error) {
 	// Use eager loading to avoid N+1 problem
 	// doc: http://jinzhu.me/gorm/crud.html#preloading-eager-loading
 	fs := []entity.Flag{}

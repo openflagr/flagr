@@ -9,10 +9,8 @@ var Config = struct {
 	// Port - Flagr server port
 	Port int `env:"PORT" envDefault:"18000"`
 
-	// GracefulCleanupTimeout - the timeout after graceful shutdown. It's useful to mitigate Kubernetes
-	// rolling update race condition.
-	GracefulCleanupTimeout time.Duration `env:"FLAGR_GRACEFUL_CLEANUP_TIMEOUT" envDefault:"2s"`
-
+	// LogrusLevel sets the logrus logging level
+	LogrusLevel string `env:"FLAGR_LOGRUS_LEVEL" envDefault:"info"`
 	// PProfEnabled - to enable the standard pprof of golang's http server
 	PProfEnabled bool `env:"FLAGR_PPROF_ENABLED" envDefault:"true"`
 
@@ -22,6 +20,7 @@ var Config = struct {
 
 	// EvalLoggingEnabled - to enable the logging for eval results
 	EvalLoggingEnabled bool `env:"FLAGR_EVAL_LOGGING_ENABLED" envDefault:"true"`
+
 	// RateLimiterPerFlagPerSecondConsoleLogging - to rate limit the logging rate
 	// per flag per second
 	RateLimiterPerFlagPerSecondConsoleLogging int `env:"FLAGR_RATELIMITER_PERFLAG_PERSECOND_CONSOLE_LOGGING" envDefault:"100"`

@@ -16,6 +16,7 @@ Flagr is a feature flagging, A/B testing and dynamic configuration microservice
 
     Produces:
     - application/json
+    - application/octet-stream
 
 swagger:meta
 */

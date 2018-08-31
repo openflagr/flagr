@@ -1,0 +1,14 @@
+get:
+  tags:
+    - export
+  produces:
+    - application/octet-stream
+  responses:
+    200:
+      description: Export sqlite3 format of the db dump, which is converted from the main database.
+      schema:
+        type: file
+    default:
+      description: generic error response
+      schema:
+        $ref: "#/definitions/error"
