@@ -22,6 +22,7 @@ import (
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/constraint"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/distribution"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/evaluation"
+	"github.com/checkr/flagr/swagger_gen/restapi/operations/export"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/flag"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/health"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/segment"
@@ -45,6 +46,10 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		BearerAuthenticator: security.BearerAuth,
 		JSONConsumer:        runtime.JSONConsumer(),
 		JSONProducer:        runtime.JSONProducer(),
+		BinProducer:         runtime.ByteStreamProducer(),
+		ExportGetExportSqliteHandler: export.GetExportSqliteHandlerFunc(func(params export.GetExportSqliteParams) middleware.Responder {
+			return middleware.NotImplemented("operation ExportGetExportSqlite has not yet been implemented")
+		}),
 		HealthGetHealthHandler: health.GetHealthHandlerFunc(func(params health.GetHealthParams) middleware.Responder {
 			return middleware.NotImplemented("operation HealthGetHealth has not yet been implemented")
 		}),
@@ -150,7 +155,11 @@ type FlagrAPI struct {
 
 	// JSONProducer registers a producer for a "application/json" mime type
 	JSONProducer runtime.Producer
+	// BinProducer registers a producer for a "application/octet-stream" mime type
+	BinProducer runtime.Producer
 
+	// ExportGetExportSqliteHandler sets the operation handler for the get export sqlite operation
+	ExportGetExportSqliteHandler export.GetExportSqliteHandler
 	// HealthGetHealthHandler sets the operation handler for the get health operation
 	HealthGetHealthHandler health.GetHealthHandler
 	// ConstraintCreateConstraintHandler sets the operation handler for the create constraint operation
@@ -262,6 +271,14 @@ func (o *FlagrAPI) Validate() error {
 
 	if o.JSONProducer == nil {
 		unregistered = append(unregistered, "JSONProducer")
+	}
+
+	if o.BinProducer == nil {
+		unregistered = append(unregistered, "BinProducer")
+	}
+
+	if o.ExportGetExportSqliteHandler == nil {
+		unregistered = append(unregistered, "export.GetExportSqliteHandler")
 	}
 
 	if o.HealthGetHealthHandler == nil {
@@ -420,6 +437,9 @@ func (o *FlagrAPI) ProducersFor(mediaTypes []string) map[string]runtime.Producer
 		case "application/json":
 			result["application/json"] = o.JSONProducer
 
+		case "application/octet-stream":
+			result["application/octet-stream"] = o.BinProducer
+
 		}
 
 		if p, ok := o.customProducers[mt]; ok {
@@ -461,6 +481,11 @@ func (o *FlagrAPI) initHandlerCache() {
 	if o.handlers == nil {
 		o.handlers = make(map[string]map[string]http.Handler)
 	}
+
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/export/sqlite"] = export.NewGetExportSqlite(o.context, o.ExportGetExportSqliteHandler)
 
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)

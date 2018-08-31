@@ -1,11 +1,12 @@
 package handler
 
 import (
-	"github.com/checkr/flagr/pkg/repo"
+	"github.com/checkr/flagr/pkg/entity"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/constraint"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/distribution"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/evaluation"
+	"github.com/checkr/flagr/swagger_gen/restapi/operations/export"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/flag"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/health"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/segment"
@@ -13,13 +14,14 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 )
 
-var getDB = repo.GetDB
+var getDB = entity.GetDB
 
 // Setup initialize all the handler functions
 func Setup(api *operations.FlagrAPI) {
 	setupCRUD(api)
 	setupEvaluation(api)
 	setupHealth(api)
+	setupExport(api)
 }
 
 func setupCRUD(api *operations.FlagrAPI) {
@@ -68,8 +70,10 @@ func setupEvaluation(api *operations.FlagrAPI) {
 
 func setupHealth(api *operations.FlagrAPI) {
 	api.HealthGetHealthHandler = health.GetHealthHandlerFunc(
-		func(health.GetHealthParams) middleware.Responder {
-			return &health.GetHealthOK{}
-		},
+		func(health.GetHealthParams) middleware.Responder { return &health.GetHealthOK{} },
 	)
+}
+
+func setupExport(api *operations.FlagrAPI) {
+	api.ExportGetExportSqliteHandler = export.GetExportSqliteHandlerFunc(exportSQLiteHandler)
 }

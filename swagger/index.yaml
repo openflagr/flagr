@@ -71,6 +71,8 @@ paths:
     $ref: ./evaluation_batch.yaml
   /health:
     $ref: ./health.yaml
+  /export/sqlite:
+    $ref: ./export_sqlite.yaml
 definitions:
   # Flag
   flag:

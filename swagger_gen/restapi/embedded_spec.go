@@ -101,6 +101,30 @@ func init() {
         }
       }
     },
+    "/export/sqlite": {
+      "get": {
+        "produces": [
+          "application/octet-stream"
+        ],
+        "tags": [
+          "export"
+        ],
+        "responses": {
+          "200": {
+            "description": "Export sqlite3 format of the db dump, which is converted from the main database.",
+            "schema": {
+              "type": "file"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
     "/flags": {
       "get": {
         "tags": [
@@ -1728,6 +1752,30 @@ func init() {
             "description": "evaluation batch result",
             "schema": {
               "$ref": "#/definitions/evaluationBatchResponse"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
+    "/export/sqlite": {
+      "get": {
+        "produces": [
+          "application/octet-stream"
+        ],
+        "tags": [
+          "export"
+        ],
+        "responses": {
+          "200": {
+            "description": "Export sqlite3 format of the db dump, which is converted from the main database.",
+            "schema": {
+              "type": "file"
             }
           },
           "default": {

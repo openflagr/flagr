@@ -4,13 +4,12 @@ import (
 	"time"
 
 	"github.com/checkr/flagr/pkg/entity"
-	"github.com/checkr/flagr/pkg/repo"
 	"github.com/checkr/flagr/pkg/util"
 
 	"github.com/checkr/flagr/swagger_gen/models"
 )
 
-var getDB = repo.GetDB
+var getDB = entity.GetDB
 
 // MapFlag maps flag
 func MapFlag(e *entity.Flag, preload bool) (*models.Flag, error) {

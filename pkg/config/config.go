@@ -28,8 +28,12 @@ func init() {
 }
 
 func setupLogrus() {
+	l, err := logrus.ParseLevel(Config.LogrusLevel)
+	if err != nil {
+		logrus.WithField("err", err).Fatalf("failed to set logrus level:%s", Config.LogrusLevel)
+	}
+	logrus.SetLevel(l)
 	logrus.SetOutput(os.Stdout)
-	logrus.SetLevel(logrus.InfoLevel)
 }
 
 func setupSentry() {
