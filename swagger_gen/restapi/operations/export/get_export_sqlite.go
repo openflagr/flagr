@@ -31,7 +31,7 @@ func NewGetExportSqlite(ctx *middleware.Context, handler GetExportSqliteHandler)
 
 /*GetExportSqlite swagger:route GET /export/sqlite export getExportSqlite
 
-GetExportSqlite get export sqlite API
+Export sqlite3 format of the db dump, which is converted from the main database.
 
 */
 type GetExportSqlite struct {

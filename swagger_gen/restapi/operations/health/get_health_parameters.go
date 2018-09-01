@@ -22,7 +22,7 @@ func NewGetHealthParams() GetHealthParams {
 // GetHealthParams contains all the bound params for the get health operation
 // typically these are obtained from a http.Request
 //
-// swagger:parameters GetHealth
+// swagger:parameters getHealth
 type GetHealthParams struct {
 
 	// HTTP Request Object

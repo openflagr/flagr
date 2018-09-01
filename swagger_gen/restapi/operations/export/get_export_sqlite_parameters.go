@@ -22,7 +22,7 @@ func NewGetExportSqliteParams() GetExportSqliteParams {
 // GetExportSqliteParams contains all the bound params for the get export sqlite operation
 // typically these are obtained from a http.Request
 //
-// swagger:parameters GetExportSqlite
+// swagger:parameters getExportSQLite
 type GetExportSqliteParams struct {
 
 	// HTTP Request Object
