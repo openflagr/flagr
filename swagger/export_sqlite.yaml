@@ -1,11 +1,13 @@
 get:
   tags:
     - export
+  operationId: getExportSQLite
+  description: Export sqlite3 format of the db dump, which is converted from the main database.
   produces:
     - application/octet-stream
   responses:
     200:
-      description: Export sqlite3 format of the db dump, which is converted from the main database.
+      description: OK
       schema:
         type: file
     default:

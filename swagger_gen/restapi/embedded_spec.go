@@ -103,15 +103,17 @@ func init() {
     },
     "/export/sqlite": {
       "get": {
+        "description": "Export sqlite3 format of the db dump, which is converted from the main database.",
         "produces": [
           "application/octet-stream"
         ],
         "tags": [
           "export"
         ],
+        "operationId": "getExportSQLite",
         "responses": {
           "200": {
-            "description": "Export sqlite3 format of the db dump, which is converted from the main database.",
+            "description": "OK",
             "schema": {
               "type": "file"
             }
@@ -1061,12 +1063,14 @@ func init() {
     },
     "/health": {
       "get": {
+        "description": "Check if Flagr is healthy",
         "tags": [
           "health"
         ],
+        "operationId": "getHealth",
         "responses": {
           "200": {
-            "description": "Flagr is healthy"
+            "description": "OK"
           },
           "default": {
             "description": "generic error response",
@@ -1771,15 +1775,17 @@ func init() {
     },
     "/export/sqlite": {
       "get": {
+        "description": "Export sqlite3 format of the db dump, which is converted from the main database.",
         "produces": [
           "application/octet-stream"
         ],
         "tags": [
           "export"
         ],
+        "operationId": "getExportSQLite",
         "responses": {
           "200": {
-            "description": "Export sqlite3 format of the db dump, which is converted from the main database.",
+            "description": "OK",
             "schema": {
               "type": "file"
             }
@@ -2729,12 +2735,14 @@ func init() {
     },
     "/health": {
       "get": {
+        "description": "Check if Flagr is healthy",
         "tags": [
           "health"
         ],
+        "operationId": "getHealth",
         "responses": {
           "200": {
-            "description": "Flagr is healthy"
+            "description": "OK"
           },
           "default": {
             "description": "generic error response",

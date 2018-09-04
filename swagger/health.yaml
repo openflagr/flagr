@@ -1,9 +1,11 @@
 get:
   tags:
     - health
+  operationId: getHealth
+  description: Check if Flagr is healthy
   responses:
     200:
-      description: Flagr is healthy
+      description: OK
     default:
       description: generic error response
       schema:

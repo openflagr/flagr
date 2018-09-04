@@ -31,7 +31,7 @@ func NewGetHealth(ctx *middleware.Context, handler GetHealthHandler) *GetHealth 
 
 /*GetHealth swagger:route GET /health health getHealth
 
-GetHealth get health API
+Check if Flagr is healthy
 
 */
 type GetHealth struct {

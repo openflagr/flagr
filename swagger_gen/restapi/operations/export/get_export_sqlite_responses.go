@@ -17,7 +17,7 @@ import (
 // GetExportSqliteOKCode is the HTTP code returned for type GetExportSqliteOK
 const GetExportSqliteOKCode int = 200
 
-/*GetExportSqliteOK Export sqlite3 format of the db dump, which is converted from the main database.
+/*GetExportSqliteOK OK
 
 swagger:response getExportSqliteOK
 */

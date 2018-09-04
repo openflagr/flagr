@@ -16,7 +16,7 @@ import (
 // GetHealthOKCode is the HTTP code returned for type GetHealthOK
 const GetHealthOKCode int = 200
 
-/*GetHealthOK Flagr is healthy
+/*GetHealthOK OK
 
 swagger:response getHealthOK
 */
