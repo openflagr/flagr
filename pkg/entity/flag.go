@@ -33,23 +33,17 @@ type FlagEvaluation struct {
 	VariantsMap map[uint]*Variant
 }
 
-// BeforeCreate register a hook before create in gorm
-func (f *Flag) BeforeCreate() error {
-	if f.Key == "" {
-		f.Key = util.NewSecureRandomKey()
-	}
-	return nil
-}
-
-// BeforeSave register a hook before create or update in gorm
-func (f *Flag) BeforeSave() error {
-	if f.Key != "" {
-		ok, reason := util.IsSafeKey(f.Key)
+// CreateFlagKey creates the key based on the given key
+func CreateFlagKey(key string) (string, error) {
+	if key == "" {
+		key = util.NewSecureRandomKey()
+	} else {
+		ok, reason := util.IsSafeKey(key)
 		if !ok {
-			return fmt.Errorf("cannot create flag due to invalid key. reason: %s", reason)
+			return "", fmt.Errorf("cannot create flag due to invalid key. reason: %s", reason)
 		}
 	}
-	return nil
+	return key, nil
 }
 
 // Preload preloads the segments and variants into flags

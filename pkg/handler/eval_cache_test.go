@@ -20,7 +20,7 @@ func TestGetEvalCacheStart(t *testing.T) {
 	})
 }
 
-func TestGetByFlagIDs(t *testing.T) {
+func TestGetByFlagKeyOrID(t *testing.T) {
 	fixtureFlag := entity.GenFixtureFlag()
 	db := entity.PopulateTestDB(fixtureFlag)
 	defer db.Close()

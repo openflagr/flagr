@@ -25,21 +25,16 @@ func TestFlagPreload(t *testing.T) {
 	})
 }
 
-func TestFlagBeforeCreate(t *testing.T) {
+func TestCreateFlagKey(t *testing.T) {
 	t.Run("happy code path", func(t *testing.T) {
-		f := GenFixtureFlag()
-		f.Key = ""
-		db := NewTestDB()
-		err := f.Create(db)
+		key, err := CreateFlagKey("")
 		assert.NoError(t, err)
-		assert.NotZero(t, f.Key)
+		assert.NotZero(t, key)
 	})
 
 	t.Run("invalid key", func(t *testing.T) {
-		f := GenFixtureFlag()
-		f.Key = "1-2-3"
-		db := NewTestDB()
-		err := f.Create(db)
+		key, err := CreateFlagKey("1-2-3")
 		assert.Error(t, err)
+		assert.Zero(t, key)
 	})
 }

@@ -118,7 +118,7 @@
                       </el-tag>
                     </div>
                     <div class="flex-row-right">
-                      <el-tooltip content="Controls whether to log to data pipeline, e.g. Kafka" placement="top">
+                      <el-tooltip content="Controls whether to log to data pipeline, e.g. Kafka, Kinesis" placement="top">
                         <el-switch
                           size="small"
                           v-model="flag.dataRecordsEnabled"
@@ -390,7 +390,7 @@
                   No segments created for this feature flag yet
                 </div>
               </el-card>
-              <debug-console :flag-id="parseInt($route.params.flagId, 10)"></debug-console>
+              <debug-console :flag="this.flag"></debug-console>
               <el-card>
                 <div slot="header" class="el-card-header">
                   <h2>Flag Settings</h2>
@@ -517,7 +517,7 @@ export default {
       this.$http.put(`${API_URL}/flags/${flagId}`, {
         description: flag.description,
         dataRecordsEnabled: flag.dataRecordsEnabled,
-        key: flag.key
+        key: flag.key || ''
       }).then(() => {
         this.$message.success(`You've updated flag`)
       }, err => {

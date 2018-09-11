@@ -51,6 +51,7 @@ func TestKinesisEvalResult(t *testing.T) {
 					EntityID: "d08042018",
 				},
 				FlagID:         util.Int64Ptr(int64(1)),
+				FlagKey:        util.StringPtr("random_flag_key"),
 				FlagSnapshotID: 1,
 				SegmentID:      util.Int64Ptr(int64(1)),
 				VariantID:      util.Int64Ptr(int64(1)),
@@ -63,7 +64,7 @@ func TestKinesisEvalResult(t *testing.T) {
 
 		p, err := r.Payload()
 		assert.Equal(t, err, nil)
-		assert.Equal(t, "{\"evalContext\":{\"entityID\":\"d08042018\",\"entityType\":null},\"flagID\":1,\"flagKey\":null,\"flagSnapshotID\":1,\"segmentID\":1,\"timestamp\":null,\"variantAttachment\":null,\"variantID\":1,\"variantKey\":\"control\"}", string(p))
+		assert.Equal(t, "{\"evalContext\":{\"entityID\":\"d08042018\",\"entityType\":null},\"flagID\":1,\"flagKey\":\"random_flag_key\",\"flagSnapshotID\":1,\"segmentID\":1,\"timestamp\":null,\"variantAttachment\":null,\"variantID\":1,\"variantKey\":\"control\"}", string(p))
 	})
 
 	t.Run("empty EvalResult", func(t *testing.T) {

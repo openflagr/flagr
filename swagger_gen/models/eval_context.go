@@ -31,11 +31,11 @@ type EvalContext struct {
 	// Min Length: 1
 	EntityType *string `json:"entityType"`
 
-	// flag ID
+	// flagID
 	// Minimum: 1
 	FlagID int64 `json:"flagID,omitempty"`
 
-	// flag key
+	// flagKey. flagID or flagKey will resolve to the same flag. Either works.
 	FlagKey string `json:"flagKey,omitempty"`
 }
 

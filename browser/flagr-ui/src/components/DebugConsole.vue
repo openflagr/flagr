@@ -61,7 +61,7 @@ const {
 
 export default {
   name: 'debug-console',
-  props: ['flagId'],
+  props: ['flag'],
   data () {
     return {
       evalContext: {
@@ -71,7 +71,8 @@ export default {
           hello: 'world'
         },
         enableDebug: true,
-        flagID: this.$props.flagId
+        flagID: this.flag.id,
+        flagKey: this.flag.key
       },
       evalResult: {},
       batchEvalContext: {
@@ -93,7 +94,7 @@ export default {
         ],
         enableDebug: true,
         flagIDs: [
-          this.$props.flagId
+          this.flag.id
         ]
       },
       batchEvalResult: {}

@@ -27,11 +27,11 @@ type EvaluationBatchRequest struct {
 	// Min Items: 1
 	Entities []*EvaluationEntity `json:"entities"`
 
-	// flag ids
+	// flagIDs
 	// Min Items: 1
 	FlagIds []int64 `json:"flagIDs"`
 
-	// flag keys
+	// flagKeys. Either flagIDs or flagKeys works. If pass in both, Flagr may return duplicate results.
 	// Min Items: 1
 	FlagKeys []string `json:"flagKeys"`
 }

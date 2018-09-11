@@ -31,7 +31,7 @@ func init() {
   "info": {
     "description": "Flagr is a feature flagging, A/B testing and dynamic configuration microservice",
     "title": "Flagr",
-    "version": "1.0.9"
+    "version": "1.0.10"
   },
   "basePath": "/api/v1",
   "paths": {
@@ -1271,11 +1271,13 @@ func init() {
           "minLength": 1
         },
         "flagID": {
+          "description": "flagID",
           "type": "integer",
           "format": "int64",
           "minimum": 1
         },
         "flagKey": {
+          "description": "flagKey. flagID or flagKey will resolve to the same flag. Either works.",
           "type": "string"
         }
       }
@@ -1365,6 +1367,7 @@ func init() {
           }
         },
         "flagIDs": {
+          "description": "flagIDs",
           "type": "array",
           "minItems": 1,
           "items": {
@@ -1374,6 +1377,7 @@ func init() {
           }
         },
         "flagKeys": {
+          "description": "flagKeys. Either flagIDs or flagKeys works. If pass in both, Flagr may return duplicate results.",
           "type": "array",
           "minItems": 1,
           "items": {
@@ -1735,7 +1739,7 @@ func init() {
   "info": {
     "description": "Flagr is a feature flagging, A/B testing and dynamic configuration microservice",
     "title": "Flagr",
-    "version": "1.0.9"
+    "version": "1.0.10"
   },
   "basePath": "/api/v1",
   "paths": {
@@ -2975,11 +2979,13 @@ func init() {
           "minLength": 1
         },
         "flagID": {
+          "description": "flagID",
           "type": "integer",
           "format": "int64",
           "minimum": 1
         },
         "flagKey": {
+          "description": "flagKey. flagID or flagKey will resolve to the same flag. Either works.",
           "type": "string"
         }
       }
@@ -3069,6 +3075,7 @@ func init() {
           }
         },
         "flagIDs": {
+          "description": "flagIDs",
           "type": "array",
           "minItems": 1,
           "items": {
@@ -3078,6 +3085,7 @@ func init() {
           }
         },
         "flagKeys": {
+          "description": "flagKeys. Either flagIDs or flagKeys works. If pass in both, Flagr may return duplicate results.",
           "type": "array",
           "minItems": 1,
           "items": {

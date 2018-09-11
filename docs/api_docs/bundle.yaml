@@ -4,7 +4,7 @@ info:
     Flagr is a feature flagging, A/B testing and dynamic configuration
     microservice
   title: Flagr
-  version: 1.0.9
+  version: 1.0.10
 tags:
   - name: flag
     description: Everything about the flag
@@ -1062,10 +1062,14 @@ definitions:
       enableDebug:
         type: boolean
       flagID:
+        description: flagID
         type: integer
         format: int64
         minimum: 1
       flagKey:
+        description: >-
+          flagKey. flagID or flagKey will resolve to the same flag. Either
+          works.
         type: string
   evalResult:
     type: object
@@ -1151,6 +1155,7 @@ definitions:
       enableDebug:
         type: boolean
       flagIDs:
+        description: flagIDs
         type: array
         items:
           type: integer
@@ -1158,6 +1163,9 @@ definitions:
           minimum: 1
         minItems: 1
       flagKeys:
+        description: >-
+          flagKeys. Either flagIDs or flagKeys works. If pass in both, Flagr may
+          return duplicate results.
         type: array
         items:
           type: string
