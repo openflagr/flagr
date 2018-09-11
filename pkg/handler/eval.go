@@ -47,6 +47,7 @@ func (e *eval) PostEvaluation(params evaluation.PostEvaluationParams) middleware
 func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) middleware.Responder {
 	entities := params.Body.Entities
 	flagIDs := params.Body.FlagIds
+	flagKeys := params.Body.FlagKeys
 	results := &models.EvaluationBatchResponse{}
 
 	// TODO make it concurrent
@@ -57,7 +58,18 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 				EntityContext: entity.EntityContext,
 				EntityID:      entity.EntityID,
 				EntityType:    entity.EntityType,
-				FlagID:        util.Int64Ptr(flagID),
+				FlagID:        flagID,
+			}
+			evalResult := evalFlag(evalContext)
+			results.EvaluationResults = append(results.EvaluationResults, evalResult)
+		}
+		for _, flagKey := range flagKeys {
+			evalContext := models.EvalContext{
+				EnableDebug:   params.Body.EnableDebug,
+				EntityContext: entity.EntityContext,
+				EntityID:      entity.EntityID,
+				EntityType:    entity.EntityType,
+				FlagKey:       flagKey,
 			}
 			evalResult := evalFlag(evalContext)
 			results.EvaluationResults = append(results.EvaluationResults, evalResult)
@@ -72,10 +84,12 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 // BlankResult creates a blank result
 func BlankResult(f *entity.Flag, evalContext models.EvalContext, msg string) *models.EvalResult {
 	flagID := uint(0)
+	flagKey := ""
 	flagSnapshotID := uint(0)
 	if f != nil {
 		flagID = f.ID
 		flagSnapshotID = f.SnapshotID
+		flagKey = f.Key
 	}
 	return &models.EvalResult{
 		EvalContext: &evalContext,
@@ -84,6 +98,7 @@ func BlankResult(f *entity.Flag, evalContext models.EvalContext, msg string) *mo
 			SegmentDebugLogs: nil,
 		},
 		FlagID:         util.Int64Ptr(int64(flagID)),
+		FlagKey:        util.StringPtr(flagKey),
 		FlagSnapshotID: int64(flagSnapshotID),
 		SegmentID:      nil,
 		VariantID:      nil,
@@ -94,17 +109,22 @@ func BlankResult(f *entity.Flag, evalContext models.EvalContext, msg string) *mo
 var evalFlag = func(evalContext models.EvalContext) *models.EvalResult {
 	cache := GetEvalCache()
 	flagID := util.SafeUint(evalContext.FlagID)
-	f := cache.GetByFlagID(flagID)
+	flagKey := util.SafeString(evalContext.FlagKey)
+	f := cache.GetByFlagKeyOrID(flagID)
+	if f == nil {
+		f = cache.GetByFlagKeyOrID(flagKey)
+	}
 
 	if f == nil {
-		return BlankResult(f, evalContext, fmt.Sprintf("flagID %v not found", flagID))
+		return BlankResult(nil, evalContext, fmt.Sprintf("flagID %v not found", flagID))
 	}
+
 	if !f.Enabled {
-		return BlankResult(f, evalContext, fmt.Sprintf("flagID %v is not enabled", flagID))
+		return BlankResult(f, evalContext, fmt.Sprintf("flagID %v is not enabled", f.ID))
 	}
 
 	if len(f.Segments) == 0 {
-		return BlankResult(f, evalContext, fmt.Sprintf("flagID %v has no segments", flagID))
+		return BlankResult(f, evalContext, fmt.Sprintf("flagID %v has no segments", f.ID))
 	}
 
 	if evalContext.EntityID == "" {
@@ -116,7 +136,7 @@ var evalFlag = func(evalContext models.EvalContext) *models.EvalResult {
 	var sID *int64
 
 	for _, segment := range f.Segments {
-		variantID, log := evalSegment(evalContext, segment)
+		variantID, log := evalSegment(f.ID, evalContext, segment)
 		if evalContext.EnableDebug {
 			logs = append(logs, log)
 		}
@@ -153,6 +173,7 @@ var logEvalResult = func(r *models.EvalResult, dataRecordsEnabled bool) {
 }
 
 var evalSegment = func(
+	flagID uint,
 	evalContext models.EvalContext,
 	segment entity.Segment,
 ) (
@@ -189,7 +210,7 @@ var evalSegment = func(
 
 	vID, debugMsg := segment.SegmentEvaluation.DistributionArray.Rollout(
 		evalContext.EntityID,
-		fmt.Sprint(*evalContext.FlagID), // default use the flagID as salt
+		fmt.Sprint(flagID), // default use the flagID as salt
 		segment.RolloutPercent,
 	)
 

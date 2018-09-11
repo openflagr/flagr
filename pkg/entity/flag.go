@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/checkr/flagr/pkg/util"
 	"github.com/jinzhu/gorm"
 )
 
@@ -13,6 +14,8 @@ import (
 // gen:qs
 type Flag struct {
 	gorm.Model
+
+	Key                string `gorm:"type:varchar(64);unique_index"`
 	Description        string `sql:"type:text"`
 	CreatedBy          string
 	UpdatedBy          string
@@ -20,14 +23,27 @@ type Flag struct {
 	Segments           []Segment
 	Variants           []Variant
 	DataRecordsEnabled bool
+	SnapshotID         uint `json:"-"`
 
 	FlagEvaluation FlagEvaluation `gorm:"-" json:"-"`
-	SnapshotID     uint           `json:"-"`
 }
 
 // FlagEvaluation is a struct that holds the necessary info for evaluation
 type FlagEvaluation struct {
 	VariantsMap map[uint]*Variant
+}
+
+// CreateFlagKey creates the key based on the given key
+func CreateFlagKey(key string) (string, error) {
+	if key == "" {
+		key = util.NewSecureRandomKey()
+	} else {
+		ok, reason := util.IsSafeKey(key)
+		if !ok {
+			return "", fmt.Errorf("cannot create flag due to invalid key. reason: %s", reason)
+		}
+	}
+	return key, nil
 }
 
 // Preload preloads the segments and variants into flags

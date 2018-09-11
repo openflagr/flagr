@@ -78,6 +78,9 @@ func (c *crud) FindFlags(params flag.FindFlagsParams) middleware.Responder {
 	if params.DescriptionLike != nil {
 		q = q.DescriptionLike(*params.DescriptionLike)
 	}
+	if params.Key != nil {
+		q = q.KeyEq(*params.Key)
+	}
 	if params.Limit != nil {
 		q = q.Limit(int(*params.Limit))
 	}
@@ -105,6 +108,13 @@ func (c *crud) CreateFlag(params flag.CreateFlagParams) middleware.Responder {
 	if params.Body != nil {
 		f.Description = util.SafeString(params.Body.Description)
 		f.CreatedBy = getSubjectFromRequest(params.HTTPRequest)
+
+		key, err := entity.CreateFlagKey(params.Body.Key)
+		if err != nil {
+			return flag.NewCreateFlagDefault(400).WithPayload(
+				ErrorMessage("cannot create flag. %s", err))
+		}
+		f.Key = key
 	}
 	err := f.Create(getDB())
 	if err != nil {
@@ -169,6 +179,13 @@ func (c *crud) PutFlag(params flag.PutFlagParams) middleware.Responder {
 	}
 	if params.Body.DataRecordsEnabled != nil {
 		u = u.SetDataRecordsEnabled(*params.Body.DataRecordsEnabled)
+	}
+	if params.Body.Key != nil {
+		key, err := entity.CreateFlagKey(*params.Body.Key)
+		if err != nil {
+			return flag.NewPutFlagDefault(400).WithPayload(ErrorMessage("%s", err))
+		}
+		u = u.SetKey(key)
 	}
 	if err := u.Update(); err != nil {
 		return flag.NewPutFlagDefault(500).WithPayload(ErrorMessage("%s", err))

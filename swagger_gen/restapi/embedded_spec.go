@@ -31,7 +31,7 @@ func init() {
   "info": {
     "description": "Flagr is a feature flagging, A/B testing and dynamic configuration microservice",
     "title": "Flagr",
-    "version": "1.0.9"
+    "version": "1.0.10"
   },
   "basePath": "/api/v1",
   "paths": {
@@ -157,6 +157,12 @@ func init() {
             "type": "string",
             "description": "return flags partially matching given description",
             "name": "description_like",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "return flags matching given key",
+            "name": "key",
             "in": "query"
           },
           {
@@ -1156,6 +1162,10 @@ func init() {
         "description": {
           "type": "string",
           "minLength": 1
+        },
+        "key": {
+          "description": "unique key representation of the flag",
+          "type": "string"
         }
       }
     },
@@ -1243,8 +1253,7 @@ func init() {
     "evalContext": {
       "type": "object",
       "required": [
-        "entityType",
-        "flagID"
+        "entityType"
       ],
       "properties": {
         "enableDebug": {
@@ -1262,9 +1271,14 @@ func init() {
           "minLength": 1
         },
         "flagID": {
+          "description": "flagID",
           "type": "integer",
           "format": "int64",
           "minimum": 1
+        },
+        "flagKey": {
+          "description": "flagKey. flagID or flagKey will resolve to the same flag. Either works.",
+          "type": "string"
         }
       }
     },
@@ -1286,6 +1300,7 @@ func init() {
       "type": "object",
       "required": [
         "flagID",
+        "flagKey",
         "segmentID",
         "variantID",
         "variantKey",
@@ -1304,6 +1319,9 @@ func init() {
           "type": "integer",
           "format": "int64",
           "minimum": 1
+        },
+        "flagKey": {
+          "type": "string"
         },
         "flagSnapshotID": {
           "type": "integer",
@@ -1335,8 +1353,7 @@ func init() {
     "evaluationBatchRequest": {
       "type": "object",
       "required": [
-        "entities",
-        "flagIDs"
+        "entities"
       ],
       "properties": {
         "enableDebug": {
@@ -1350,12 +1367,22 @@ func init() {
           }
         },
         "flagIDs": {
+          "description": "flagIDs",
           "type": "array",
           "minItems": 1,
           "items": {
             "type": "integer",
             "format": "int64",
             "minimum": 1
+          }
+        },
+        "flagKeys": {
+          "description": "flagKeys. Either flagIDs or flagKeys works. If pass in both, Flagr may return duplicate results.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
           }
         }
       }
@@ -1416,6 +1443,11 @@ func init() {
           "format": "int64",
           "minimum": 1,
           "readOnly": true
+        },
+        "key": {
+          "description": "unique key representation of the flag",
+          "type": "string",
+          "minLength": 1
         },
         "segments": {
           "type": "array",
@@ -1484,6 +1516,10 @@ func init() {
         "description": {
           "type": "string",
           "minLength": 1
+        },
+        "key": {
+          "type": "string",
+          "x-nullable": true
         }
       }
     },
@@ -1703,7 +1739,7 @@ func init() {
   "info": {
     "description": "Flagr is a feature flagging, A/B testing and dynamic configuration microservice",
     "title": "Flagr",
-    "version": "1.0.9"
+    "version": "1.0.10"
   },
   "basePath": "/api/v1",
   "paths": {
@@ -1829,6 +1865,12 @@ func init() {
             "type": "string",
             "description": "return flags partially matching given description",
             "name": "description_like",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "return flags matching given key",
+            "name": "key",
             "in": "query"
           },
           {
@@ -2828,6 +2870,10 @@ func init() {
         "description": {
           "type": "string",
           "minLength": 1
+        },
+        "key": {
+          "description": "unique key representation of the flag",
+          "type": "string"
         }
       }
     },
@@ -2915,8 +2961,7 @@ func init() {
     "evalContext": {
       "type": "object",
       "required": [
-        "entityType",
-        "flagID"
+        "entityType"
       ],
       "properties": {
         "enableDebug": {
@@ -2934,9 +2979,14 @@ func init() {
           "minLength": 1
         },
         "flagID": {
+          "description": "flagID",
           "type": "integer",
           "format": "int64",
           "minimum": 1
+        },
+        "flagKey": {
+          "description": "flagKey. flagID or flagKey will resolve to the same flag. Either works.",
+          "type": "string"
         }
       }
     },
@@ -2958,6 +3008,7 @@ func init() {
       "type": "object",
       "required": [
         "flagID",
+        "flagKey",
         "segmentID",
         "variantID",
         "variantKey",
@@ -2976,6 +3027,9 @@ func init() {
           "type": "integer",
           "format": "int64",
           "minimum": 1
+        },
+        "flagKey": {
+          "type": "string"
         },
         "flagSnapshotID": {
           "type": "integer",
@@ -3007,8 +3061,7 @@ func init() {
     "evaluationBatchRequest": {
       "type": "object",
       "required": [
-        "entities",
-        "flagIDs"
+        "entities"
       ],
       "properties": {
         "enableDebug": {
@@ -3022,12 +3075,22 @@ func init() {
           }
         },
         "flagIDs": {
+          "description": "flagIDs",
           "type": "array",
           "minItems": 1,
           "items": {
             "type": "integer",
             "format": "int64",
             "minimum": 1
+          }
+        },
+        "flagKeys": {
+          "description": "flagKeys. Either flagIDs or flagKeys works. If pass in both, Flagr may return duplicate results.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
           }
         }
       }
@@ -3088,6 +3151,11 @@ func init() {
           "format": "int64",
           "minimum": 1,
           "readOnly": true
+        },
+        "key": {
+          "description": "unique key representation of the flag",
+          "type": "string",
+          "minLength": 1
         },
         "segments": {
           "type": "array",
@@ -3156,6 +3224,10 @@ func init() {
         "description": {
           "type": "string",
           "minLength": 1
+        },
+        "key": {
+          "type": "string",
+          "x-nullable": true
         }
       }
     },

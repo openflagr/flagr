@@ -34,9 +34,11 @@ func TestCrudFlags(t *testing.T) {
 	res = c.CreateFlag(flag.CreateFlagParams{
 		Body: &models.CreateFlagRequest{
 			Description: util.StringPtr("funny flag"),
+			Key:         "some_random_flag_key",
 		},
 	})
 	assert.NotZero(t, res.(*flag.CreateFlagOK).Payload.ID)
+	assert.Equal(t, "some_random_flag_key", res.(*flag.CreateFlagOK).Payload.Key)
 
 	// step 2. it should be able to find some flags after creation
 	res = c.FindFlags(flag.FindFlagsParams{})
@@ -45,6 +47,7 @@ func TestCrudFlags(t *testing.T) {
 	// step 3. it should be able to get the flag after creation
 	res = c.GetFlag(flag.GetFlagParams{FlagID: int64(1)})
 	assert.NotZero(t, res.(*flag.GetFlagOK).Payload.ID)
+	assert.NotZero(t, res.(*flag.GetFlagOK).Payload.Key)
 
 	// step 4. it should be able to put the flag
 	res = c.PutFlag(flag.PutFlagParams{
@@ -52,9 +55,11 @@ func TestCrudFlags(t *testing.T) {
 		Body: &models.PutFlagRequest{
 			Description:        util.StringPtr("another funny flag"),
 			DataRecordsEnabled: util.BoolPtr(true),
+			Key:                util.StringPtr("flag_key_1"),
 		}},
 	)
 	assert.NotZero(t, res.(*flag.PutFlagOK).Payload.ID)
+	assert.Equal(t, "flag_key_1", res.(*flag.PutFlagOK).Payload.Key)
 
 	// step 5. it should be able to set the flag enabled state
 	res = c.SetFlagEnabledState(flag.SetFlagEnabledParams{
@@ -91,6 +96,7 @@ func TestCrudFlagsWithFailures(t *testing.T) {
 		c.CreateFlag(flag.CreateFlagParams{
 			Body: &models.CreateFlagRequest{
 				Description: util.StringPtr("funny flag"),
+				Key:         "flag_key_1",
 			},
 		})
 		defer gostub.StubFunc(&e2rMapFlag, nil, fmt.Errorf("e2r MapFlag error")).Reset()
@@ -132,6 +138,16 @@ func TestCrudFlagsWithFailures(t *testing.T) {
 		db.Error = nil
 	})
 
+	t.Run("CreateFlag - invalid key error", func(t *testing.T) {
+		res = c.CreateFlag(flag.CreateFlagParams{
+			Body: &models.CreateFlagRequest{
+				Description: util.StringPtr("funny flag"),
+				Key:         "1-2-3", // invalid key
+			},
+		})
+		assert.NotZero(t, res.(*flag.CreateFlagDefault).Payload)
+	})
+
 	t.Run("PutFlag - try to update a non-existing flag", func(t *testing.T) {
 		res = c.PutFlag(flag.PutFlagParams{
 			FlagID: int64(99999),
@@ -166,6 +182,18 @@ func TestCrudFlagsWithFailures(t *testing.T) {
 		)
 		assert.NotZero(t, res.(*flag.PutFlagDefault).Payload)
 		db.Error = nil
+	})
+
+	t.Run("PutFlag - cannot set duplicate flag_key", func(t *testing.T) {
+		res = c.PutFlag(flag.PutFlagParams{
+			FlagID: int64(2),
+			Body: &models.PutFlagRequest{
+				Description:        util.StringPtr("another funny flag"),
+				DataRecordsEnabled: util.BoolPtr(true),
+				Key:                util.StringPtr("flag_key_1"),
+			}},
+		)
+		assert.NotZero(t, res.(*flag.PutFlagDefault).Payload)
 	})
 
 	t.Run("SetFlagEnabledState - try to set on a non-existing flag", func(t *testing.T) {
@@ -235,6 +263,7 @@ func TestFindFlags(t *testing.T) {
 		c.CreateFlag(flag.CreateFlagParams{
 			Body: &models.CreateFlagRequest{
 				Description: util.StringPtr(fmt.Sprintf("flag_%d", i)),
+				Key:         fmt.Sprintf("flag_key_%d", i),
 			},
 		})
 	}
@@ -253,6 +282,12 @@ func TestFindFlags(t *testing.T) {
 	t.Run("FindFlags (with matching description)", func(t *testing.T) {
 		res = c.FindFlags(flag.FindFlagsParams{
 			Description: util.StringPtr("flag_1"),
+		})
+		assert.Len(t, res.(*flag.FindFlagsOK).Payload, 1)
+	})
+	t.Run("FindFlags (with matching key)", func(t *testing.T) {
+		res = c.FindFlags(flag.FindFlagsParams{
+			Key: util.StringPtr("flag_key_1"),
 		})
 		assert.Len(t, res.(*flag.FindFlagsOK).Payload, 1)
 	})

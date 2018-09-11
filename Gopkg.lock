@@ -145,6 +145,14 @@
   version = "v1.1.1"
 
 [[projects]]
+  branch = "master"
+  digest = "1:fdae1c338ec6667687fb3fdbde842b3c421c930163981b5d441502b240b7f50b"
+  name = "github.com/dchest/uniuri"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "8902c56451e9b58ff940bbe5fec35d5f9c04584a"
+
+[[projects]]
   digest = "1:76dc72490af7174349349838f2fe118996381b31ea83243812a97e5a0fd5ed55"
   name = "github.com/dgrijalva/jwt-go"
   packages = ["."]
@@ -642,6 +650,7 @@
     "github.com/bsm/ratelimit",
     "github.com/caarlos0/env",
     "github.com/davecgh/go-spew/spew",
+    "github.com/dchest/uniuri",
     "github.com/dgrijalva/jwt-go",
     "github.com/evalphobia/logrus_sentry",
     "github.com/getsentry/raven-go",

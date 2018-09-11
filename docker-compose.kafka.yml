@@ -1,5 +1,5 @@
 mysql:
-  image: mysql:5.7
+  image: mysql:5.6
   ports:
     - "18100:3306"
   container_name: flagr-mysql
@@ -50,11 +50,3 @@ kafka-manager:
     ZK_HOSTS: "zookeeper:2181"
   extra_hosts:
     - "moby:127.0.0.1"
-
-elk:
-  image: sebp/elk
-  container_name: flagr-elk
-  ports:
-    - "5601:5601"
-    - "9200:9200"
-    - "5044:5044"

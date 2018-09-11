@@ -6,29 +6,38 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/dchest/uniuri"
 	"github.com/spf13/cast"
 )
 
-var keyRegex = regexp.MustCompile("^[a-z]+[a-z0-9_]*$")
+var (
+	keyLengthLimit            = 63
+	keyRegex                  = regexp.MustCompile("^[a-z]+[a-z0-9_]*$")
+	possibleSecureRandomChars = []byte("abcdefghijklmnopqrstuvwxyz")
+)
 
 // IsSafeKey return if the key is safe to store
 func IsSafeKey(s string) (bool, string) {
 	if !keyRegex.MatchString(s) {
-		return false, fmt.Sprintf("key should have the format %v", keyRegex)
+		return false, fmt.Sprintf("key:%s should have the format %v", s, keyRegex)
 	}
-	if len(s) > 63 {
-		return false, fmt.Sprintf("the key is too long")
+	if len(s) > keyLengthLimit {
+		return false, fmt.Sprintf("key:%s cannot be longer than %d", s, keyLengthLimit)
 	}
 	return true, ""
 }
 
-// SafeString safely dereference the string or string ptr
+// NewSecureRandomKey creates a new secure random key
+func NewSecureRandomKey() string {
+	return uniuri.NewLenChars(uniuri.StdLen, possibleSecureRandomChars)
+}
+
+// SafeString safely cast to string
 func SafeString(s interface{}) (ret string) {
 	return cast.ToString(s)
 }
 
 // SafeUint returns the uint of the value
-// nolint: gocyclo
 func SafeUint(s interface{}) (ret uint) {
 	return cast.ToUint(s)
 }

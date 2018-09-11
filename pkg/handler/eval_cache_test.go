@@ -20,7 +20,7 @@ func TestGetEvalCacheStart(t *testing.T) {
 	})
 }
 
-func TestGetByFlagIDs(t *testing.T) {
+func TestGetByFlagKeyOrID(t *testing.T) {
 	fixtureFlag := entity.GenFixtureFlag()
 	db := entity.PopulateTestDB(fixtureFlag)
 	defer db.Close()
@@ -28,10 +28,6 @@ func TestGetByFlagIDs(t *testing.T) {
 
 	ec := GetEvalCache()
 	ec.Start()
-	f := ec.GetByFlagID(fixtureFlag.ID)
+	f := ec.GetByFlagKeyOrID(fixtureFlag.ID)
 	assert.Equal(t, f.ID, fixtureFlag.ID)
-
-	fs := ec.GetByFlagIDs([]uint{fixtureFlag.ID})
-	assert.NotZero(t, len(fs))
-	assert.Equal(t, fs[fixtureFlag.ID].ID, fixtureFlag.ID)
 }

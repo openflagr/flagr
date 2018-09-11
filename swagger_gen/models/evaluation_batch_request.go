@@ -27,10 +27,13 @@ type EvaluationBatchRequest struct {
 	// Min Items: 1
 	Entities []*EvaluationEntity `json:"entities"`
 
-	// flag ids
-	// Required: true
+	// flagIDs
 	// Min Items: 1
 	FlagIds []int64 `json:"flagIDs"`
+
+	// flagKeys. Either flagIDs or flagKeys works. If pass in both, Flagr may return duplicate results.
+	// Min Items: 1
+	FlagKeys []string `json:"flagKeys"`
 }
 
 // Validate validates this evaluation batch request
@@ -42,6 +45,10 @@ func (m *EvaluationBatchRequest) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateFlagIds(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateFlagKeys(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -84,8 +91,8 @@ func (m *EvaluationBatchRequest) validateEntities(formats strfmt.Registry) error
 
 func (m *EvaluationBatchRequest) validateFlagIds(formats strfmt.Registry) error {
 
-	if err := validate.Required("flagIDs", "body", m.FlagIds); err != nil {
-		return err
+	if swag.IsZero(m.FlagIds) { // not required
+		return nil
 	}
 
 	iFlagIdsSize := int64(len(m.FlagIds))
@@ -97,6 +104,29 @@ func (m *EvaluationBatchRequest) validateFlagIds(formats strfmt.Registry) error 
 	for i := 0; i < len(m.FlagIds); i++ {
 
 		if err := validate.MinimumInt("flagIDs"+"."+strconv.Itoa(i), "body", int64(m.FlagIds[i]), 1, false); err != nil {
+			return err
+		}
+
+	}
+
+	return nil
+}
+
+func (m *EvaluationBatchRequest) validateFlagKeys(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.FlagKeys) { // not required
+		return nil
+	}
+
+	iFlagKeysSize := int64(len(m.FlagKeys))
+
+	if err := validate.MinItems("flagKeys", "body", iFlagKeysSize, 1); err != nil {
+		return err
+	}
+
+	for i := 0; i < len(m.FlagKeys); i++ {
+
+		if err := validate.MinLength("flagKeys"+"."+strconv.Itoa(i), "body", string(m.FlagKeys[i]), 1); err != nil {
 			return err
 		}
 

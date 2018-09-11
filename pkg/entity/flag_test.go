@@ -24,3 +24,17 @@ func TestFlagPreload(t *testing.T) {
 		assert.NoError(t, err)
 	})
 }
+
+func TestCreateFlagKey(t *testing.T) {
+	t.Run("happy code path", func(t *testing.T) {
+		key, err := CreateFlagKey("")
+		assert.NoError(t, err)
+		assert.NotZero(t, key)
+	})
+
+	t.Run("invalid key", func(t *testing.T) {
+		key, err := CreateFlagKey("1-2-3")
+		assert.Error(t, err)
+		assert.Zero(t, key)
+	})
+}

@@ -29,6 +29,10 @@ type EvalResult struct {
 	// Minimum: 1
 	FlagID *int64 `json:"flagID"`
 
+	// flag key
+	// Required: true
+	FlagKey *string `json:"flagKey"`
+
 	// flag snapshot ID
 	FlagSnapshotID int64 `json:"flagSnapshotID,omitempty"`
 
@@ -70,6 +74,10 @@ func (m *EvalResult) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateFlagID(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateFlagKey(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -142,6 +150,15 @@ func (m *EvalResult) validateFlagID(formats strfmt.Registry) error {
 	}
 
 	if err := validate.MinimumInt("flagID", "body", int64(*m.FlagID), 1, false); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *EvalResult) validateFlagKey(formats strfmt.Registry) error {
+
+	if err := validate.Required("flagKey", "body", m.FlagKey); err != nil {
 		return err
 	}
 
