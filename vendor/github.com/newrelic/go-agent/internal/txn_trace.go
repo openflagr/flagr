@@ -92,6 +92,15 @@ type TxnTrace struct {
 	maxNodes            int
 }
 
+// getMaxNodes allows the maximum number of nodes to be overwritten for unit
+// tests.
+func (trace *TxnTrace) getMaxNodes() int {
+	if 0 != trace.maxNodes {
+		return trace.maxNodes
+	}
+	return maxTxnTraceNodes
+}
+
 // considerNode exists to prevent unnecessary calls to witnessNode: constructing
 // the metric name and params map requires allocations.
 func (trace *TxnTrace) considerNode(end segmentEnd) bool {
@@ -110,11 +119,7 @@ func (trace *TxnTrace) witnessNode(end segmentEnd, name string, params *traceNod
 		return
 	}
 	if trace.nodes == nil {
-		max := trace.maxNodes
-		if 0 == max {
-			max = maxTxnTraceNodes
-		}
-		trace.nodes = make(traceNodeHeap, 0, max)
+		trace.nodes = make(traceNodeHeap, 0, startingTxnTraceNodes)
 	}
 	if end.exclusive >= trace.StackTraceThreshold {
 		if node.params == nil {
@@ -129,13 +134,14 @@ func (trace *TxnTrace) witnessNode(end segmentEnd, name string, params *traceNod
 		skip := 4
 		node.params.StackTrace = GetStackTrace(skip)
 	}
-	if len(trace.nodes) < cap(trace.nodes) {
+	if max := trace.getMaxNodes(); len(trace.nodes) < max {
 		trace.nodes = append(trace.nodes, node)
-		if len(trace.nodes) == cap(trace.nodes) {
+		if len(trace.nodes) == max {
 			heap.Init(trace.nodes)
 		}
 		return
 	}
+
 	if node.duration <= trace.nodes[0].duration {
 		return
 	}
@@ -398,3 +404,7 @@ func (traces *harvestTraces) slice() []*HarvestTrace {
 }
 
 func (traces *harvestTraces) MergeIntoHarvest(h *Harvest) {}
+
+func (traces *harvestTraces) EndpointMethod() string {
+	return cmdTxnTraces
+}

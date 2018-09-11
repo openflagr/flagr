@@ -108,10 +108,23 @@ type Expect interface {
 	ExpectCustomEvents(t Validator, want []WantEvent)
 	ExpectErrors(t Validator, want []WantError)
 	ExpectErrorEvents(t Validator, want []WantEvent)
+	ExpectErrorEventsPresent(t Validator, want []WantEvent)
+	ExpectErrorEventsAbsent(t Validator, names []string)
+
 	ExpectTxnEvents(t Validator, want []WantEvent)
+	ExpectTxnEventsPresent(t Validator, want []WantEvent)
+	ExpectTxnEventsAbsent(t Validator, names []string)
+
 	ExpectMetrics(t Validator, want []WantMetric)
+	ExpectMetricsPresent(t Validator, want []WantMetric)
+
 	ExpectTxnTraces(t Validator, want []WantTxnTrace)
 	ExpectSlowQueries(t Validator, want []WantSlowQuery)
+
+	ExpectSpanEvents(t Validator, want []WantEvent)
+	ExpectSpanEventsPresent(t Validator, want []WantEvent)
+	ExpectSpanEventsAbsent(t Validator, names []string)
+	ExpectSpanEventsCount(t Validator, c int)
 }
 
 func expectMetricField(t Validator, id metricID, v1, v2 float64, fieldName string) {
@@ -120,7 +133,36 @@ func expectMetricField(t Validator, id metricID, v1, v2 float64, fieldName strin
 	}
 }
 
-// ExpectMetrics allows testing of metrics.
+// ExpectMetricsPresent allows testing of metrics with requiring an exact match
+func ExpectMetricsPresent(t Validator, mt *metricTable, expect []WantMetric) {
+	expectedIds := make(map[metricID]struct{})
+	for _, e := range expect {
+		id := metricID{Name: e.Name, Scope: e.Scope}
+		expectedIds[id] = struct{}{}
+		m := mt.metrics[id]
+		if nil == m {
+			t.Error("unable to find metric", id)
+			continue
+		}
+
+		if b, ok := e.Forced.(bool); ok {
+			if b != (forced == m.forced) {
+				t.Error("metric forced incorrect", b, m.forced, id)
+			}
+		}
+
+		if nil != e.Data {
+			expectMetricField(t, id, e.Data[0], m.data.countSatisfied, "countSatisfied")
+			expectMetricField(t, id, e.Data[1], m.data.totalTolerated, "totalTolerated")
+			expectMetricField(t, id, e.Data[2], m.data.exclusiveFailed, "exclusiveFailed")
+			expectMetricField(t, id, e.Data[3], m.data.min, "min")
+			expectMetricField(t, id, e.Data[4], m.data.max, "max")
+			expectMetricField(t, id, e.Data[5], m.data.sumSquares, "sumSquares")
+		}
+	}
+}
+
+// ExpectMetrics allows testing of metrics.  It passes if mt exactly matches expect.
 func ExpectMetrics(t Validator, mt *metricTable, expect []WantMetric) {
 	if len(mt.metrics) != len(expect) {
 		t.Error("metric counts do not match expectations", len(mt.metrics), len(expect))
@@ -157,6 +199,24 @@ func ExpectMetrics(t Validator, mt *metricTable, expect []WantMetric) {
 	}
 }
 
+func expectAttributesPresent(v Validator, exists map[string]interface{}, expect map[string]interface{}) {
+	for key, val := range expect {
+		found, ok := exists[key]
+		if !ok {
+			v.Error("expected attribute not found: ", key)
+			continue
+		}
+		if val == MatchAnything {
+			continue
+		}
+		v1 := fmt.Sprint(found)
+		v2 := fmt.Sprint(val)
+		if v1 != v2 {
+			v.Error("value difference", fmt.Sprintf("key=%s", key), v1, v2)
+		}
+	}
+}
+
 func expectAttributes(v Validator, exists map[string]interface{}, expect map[string]interface{}) {
 	// TODO: This params comparison can be made smarter: Alert differences
 	// based on sub/super set behavior.
@@ -187,7 +247,7 @@ func expectAttributes(v Validator, exists map[string]interface{}, expect map[str
 	}
 }
 
-// ExpectCustomEvents allows testing of custom events.
+// ExpectCustomEvents allows testing of custom events.  It passes if cs exactly matches expect.
 func ExpectCustomEvents(v Validator, cs *customEvents, expect []WantEvent) {
 	if len(cs.events.events) != len(expect) {
 		v.Error("number of custom events does not match", len(cs.events.events),
@@ -201,6 +261,66 @@ func ExpectCustomEvents(v Validator, cs *customEvents, expect []WantEvent) {
 		} else {
 			expectEvent(v, event, e)
 		}
+	}
+}
+
+func expectEventAbsent(v Validator, e json.Marshaler, names []string) {
+	js, err := e.MarshalJSON()
+	if nil != err {
+		v.Error("unable to marshal event", err)
+		return
+	}
+
+	var event []map[string]interface{}
+	err = json.Unmarshal(js, &event)
+	if nil != err {
+		v.Error("unable to parse event json", err)
+		return
+	}
+
+	intrinsics := event[0]
+	userAttributes := event[1]
+	agentAttributes := event[2]
+
+	for _, name := range names {
+		if _, ok := intrinsics[name]; ok {
+			v.Error("unexpected key found", name)
+		}
+
+		if _, ok := userAttributes[name]; ok {
+			v.Error("unexpected key found", name)
+		}
+
+		if _, ok := agentAttributes[name]; ok {
+			v.Error("unexpected key found", name)
+		}
+	}
+}
+
+func expectEventPresent(v Validator, e json.Marshaler, expect WantEvent) {
+	js, err := e.MarshalJSON()
+	if nil != err {
+		v.Error("unable to marshal event", err)
+		return
+	}
+	var event []map[string]interface{}
+	err = json.Unmarshal(js, &event)
+	if nil != err {
+		v.Error("unable to parse event json", err)
+		return
+	}
+	intrinsics := event[0]
+	userAttributes := event[1]
+	agentAttributes := event[2]
+
+	if nil != expect.Intrinsics {
+		expectAttributesPresent(v, intrinsics, expect.Intrinsics)
+	}
+	if nil != expect.UserAttributes {
+		expectAttributesPresent(v, userAttributes, expect.UserAttributes)
+	}
+	if nil != expect.AgentAttributes {
+		expectAttributesPresent(v, agentAttributes, expect.AgentAttributes)
 	}
 }
 
@@ -243,7 +363,31 @@ func mergeAttributes(a1, a2 map[string]interface{}) map[string]interface{} {
 	return a
 }
 
-// ExpectErrorEvents allows testing of error events.
+// ExpectErrorEventsPresent allows testing of events with requiring an exact match
+func ExpectErrorEventsPresent(v Validator, events *errorEvents, expect []WantEvent) {
+	for i, e := range expect {
+		event, ok := events.events.events[i].jsonWriter.(*ErrorEvent)
+		if !ok {
+			v.Error("wrong span event in ExpectErrorEventsPresent")
+		} else {
+			expectEventPresent(v, event, e)
+		}
+	}
+}
+
+// ExpectErrorEventsAbsent allows testing that a set of attribute names are absent from the event data
+func ExpectErrorEventsAbsent(v Validator, events *errorEvents, names []string) {
+	for _, eventHarvested := range events.events.events {
+		event, ok := eventHarvested.jsonWriter.(*ErrorEvent)
+		if !ok {
+			v.Error("wrong span event in ExpectErrorEventsAbsent")
+		} else {
+			expectEventAbsent(v, event, names)
+		}
+	}
+}
+
+// ExpectErrorEvents allows testing of error events.  It passes if events exactly matches expect.
 func ExpectErrorEvents(v Validator, events *errorEvents, expect []WantEvent) {
 	if len(events.events.events) != len(expect) {
 		v.Error("number of custom events does not match",
@@ -269,6 +413,92 @@ func ExpectErrorEvents(v Validator, events *errorEvents, expect []WantEvent) {
 	}
 }
 
+// ExpectSpanEventsCount allows us to count how many events the system generated
+func ExpectSpanEventsCount(v Validator, events *spanEvents, c int) {
+	len := len(events.events.events)
+	if len != c {
+		v.Error(fmt.Sprintf("expected %d span events, found %d", c, len))
+	}
+}
+
+// ExpectSpanEventsPresent allows us to test for the presence and value of events
+// without also requiring an exact match
+func ExpectSpanEventsPresent(v Validator, events *spanEvents, expect []WantEvent) {
+	for i, e := range expect {
+		event, ok := events.events.events[i].jsonWriter.(*SpanEvent)
+		if !ok {
+			v.Error("wrong span event in ExpectSpanEventsPresent")
+		} else {
+			expectEventPresent(v, event, e)
+		}
+	}
+}
+
+// ExpectSpanEventsAbsent allows us to ensure that a set of attribute names are absent
+// from the event data
+func ExpectSpanEventsAbsent(v Validator, events *spanEvents, names []string) {
+	for _, eventHarvested := range events.events.events {
+		event, ok := eventHarvested.jsonWriter.(*SpanEvent)
+		if !ok {
+			v.Error("wrong span event in ExpectSpanEventsAbsent")
+		} else {
+			expectEventAbsent(v, event, names)
+		}
+	}
+}
+
+// ExpectSpanEvents allows testing of span events.  It passes if events exactly matches expect.
+func ExpectSpanEvents(v Validator, events *spanEvents, expect []WantEvent) {
+	if len(events.events.events) != len(expect) {
+		v.Error("number of txn events does not match",
+			len(events.events.events), len(expect))
+		return
+	}
+	for i, e := range expect {
+		event, ok := events.events.events[i].jsonWriter.(*SpanEvent)
+		if !ok {
+			v.Error("wrong span event")
+		} else {
+			if nil != e.Intrinsics {
+				e.Intrinsics = mergeAttributes(map[string]interface{}{
+					// The following intrinsics should always be present in
+					// span events:
+					"type":      "Transaction",
+					"timestamp": MatchAnything,
+					"duration":  MatchAnything,
+				}, e.Intrinsics)
+			}
+			expectEvent(v, event, e)
+		}
+	}
+}
+
+// ExpectTxnEventsPresent allows us to test for the presence and value of events
+// without also requiring an exact match
+func ExpectTxnEventsPresent(v Validator, events *txnEvents, expect []WantEvent) {
+	for i, e := range expect {
+		event, ok := events.events.events[i].jsonWriter.(*TxnEvent)
+		if !ok {
+			v.Error("wrong txn event in ExpectTxnEventsPresent")
+		} else {
+			expectEventPresent(v, event, e)
+		}
+	}
+}
+
+// ExpectTxnEventsAbsent allows us to ensure that a set of attribute names are absent
+// from the event data
+func ExpectTxnEventsAbsent(v Validator, events *txnEvents, names []string) {
+	for _, eventHarvested := range events.events.events {
+		event, ok := eventHarvested.jsonWriter.(*TxnEvent)
+		if !ok {
+			v.Error("wrong txn event in ExpectTxnEventsAbsent")
+		} else {
+			expectEventAbsent(v, event, names)
+		}
+	}
+}
+
 // ExpectTxnEvents allows testing of txn events.
 func ExpectTxnEvents(v Validator, events *txnEvents, expect []WantEvent) {
 	if len(events.events.events) != len(expect) {
@@ -288,6 +518,7 @@ func ExpectTxnEvents(v Validator, events *txnEvents, expect []WantEvent) {
 					"type":      "Transaction",
 					"timestamp": MatchAnything,
 					"duration":  MatchAnything,
+					"error":     MatchAnything,
 				}, e.Intrinsics)
 			}
 			expectEvent(v, event, e)
@@ -407,8 +638,8 @@ func expectSlowQuery(t Validator, slowQuery *slowQuery, want WantSlowQuery) {
 	}
 	validateStringField(t, "MetricName", slowQuery.DatastoreMetric, want.MetricName)
 	validateStringField(t, "Query", slowQuery.ParameterizedQuery, want.Query)
-	validateStringField(t, "TxnName", slowQuery.TxnName, want.TxnName)
-	validateStringField(t, "TxnURL", slowQuery.TxnURL, want.TxnURL)
+	validateStringField(t, "TxnEvent.FinalName", slowQuery.TxnEvent.FinalName, want.TxnName)
+	validateStringField(t, "TxnEvent.CleanURL", slowQuery.TxnEvent.CleanURL, want.TxnURL)
 	validateStringField(t, "DatabaseName", slowQuery.DatabaseName, want.DatabaseName)
 	validateStringField(t, "Host", slowQuery.Host, want.Host)
 	validateStringField(t, "PortPathOrID", slowQuery.PortPathOrID, want.PortPathOrID)

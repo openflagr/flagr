@@ -127,7 +127,7 @@ func gatherWithClient(config Config, lg logger.Logger, client *http.Client) *Dat
 	goGather := func(datatype string, gather func(*Data, *http.Client) error) {
 		wg.Add(1)
 		go func() {
-			// Note that locking around util is not neccesary since
+			// Note that locking around util is not necessary since
 			// WaitGroup provides acts as a memory barrier:
 			// https://groups.google.com/d/msg/golang-nuts/5oHzhzXCcmM/utEwIAApCQAJ
 			// Thus this code is fine as long as each routine is

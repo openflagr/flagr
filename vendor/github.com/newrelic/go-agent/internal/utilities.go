@@ -92,3 +92,16 @@ func StringLengthByteLimit(str string, byteLimit int) string {
 	}
 	return str[0:limitIndex]
 }
+
+func timeFromUnixMilliseconds(millis uint64) time.Time {
+	secs := int64(millis) / 1000
+	msecsRemaining := int64(millis) % 1000
+	nsecsRemaining := msecsRemaining * (1000 * 1000)
+	return time.Unix(secs, nsecsRemaining)
+}
+
+// TimeToUnixMilliseconds converts a time into a Unix timestamp in millisecond
+// units.
+func TimeToUnixMilliseconds(tm time.Time) uint64 {
+	return uint64(tm.UnixNano()) / uint64(1000*1000)
+}

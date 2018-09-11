@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"net/http"
@@ -10,6 +11,16 @@ import (
 	"github.com/newrelic/go-agent/internal/cat"
 	"github.com/newrelic/go-agent/internal/sysinfo"
 )
+
+// MarshalJSON limits the number of decimals.
+func (p *Priority) MarshalJSON() ([]byte, error) {
+	return []byte(fmt.Sprintf(priorityFormat, *p)), nil
+}
+
+// WriteJSON limits the number of decimals.
+func (p Priority) WriteJSON(buf *bytes.Buffer) {
+	fmt.Fprintf(buf, priorityFormat, p)
+}
 
 // TxnEvent represents a transaction.
 // https://source.datanerd.us/agents/agent-specs/blob/master/Transaction-Events-PORTED.md
@@ -25,6 +36,26 @@ type TxnEvent struct {
 	// CleanURL is not used in txn events, but is used in traced errors which embed TxnEvent.
 	CleanURL     string
 	CrossProcess TxnCrossProcess
+	BetterCAT    BetterCAT
+	HasError     bool
+}
+
+// BetterCAT stores the transaction's priority and all fields related
+// to a DistributedTracer's Cross-Application Trace.
+type BetterCAT struct {
+	Enabled  bool
+	Priority Priority
+	Sampled  bool
+	Inbound  *Payload
+	ID       string
+}
+
+// TraceID returns the trace id.
+func (e BetterCAT) TraceID() string {
+	if nil != e.Inbound {
+		return e.Inbound.TracedID
+	}
+	return e.ID
 }
 
 // TxnData contains the recorded data of a transaction.
@@ -41,6 +72,10 @@ type TxnData struct {
 	stamp            segmentStamp
 	stack            []segmentFrame
 
+	SpanEventsEnabled bool
+	rootSpanID        string
+	spanEvents        []*SpanEvent
+
 	customSegments    map[string]*metricData
 	datastoreSegments map[DatastoreMetricKey]*metricData
 	externalSegments  map[externalMetricKey]*metricData
@@ -50,6 +85,10 @@ type TxnData struct {
 	SlowQueriesEnabled bool
 	SlowQueryThreshold time.Duration
 	SlowQueries        *slowQueries
+
+	// These better CAT supportability fields are left outside of
+	// TxnEvent.BetterCAT to minimize the size of transaction event memory.
+	DistributedTracingSupport
 }
 
 type segmentStamp uint64
@@ -69,6 +108,7 @@ type SegmentStartTime struct {
 type segmentFrame struct {
 	segmentTime
 	children time.Duration
+	spanID   string
 }
 
 type segmentEnd struct {
@@ -76,6 +116,21 @@ type segmentEnd struct {
 	stop      segmentTime
 	duration  time.Duration
 	exclusive time.Duration
+	SpanID    string
+	ParentID  string
+}
+
+func (end segmentEnd) spanEvent() *SpanEvent {
+	if "" == end.SpanID {
+		return nil
+	}
+	return &SpanEvent{
+		GUID:         end.SpanID,
+		ParentID:     end.ParentID,
+		Timestamp:    end.start.Time,
+		Duration:     end.duration,
+		IsEntrypoint: false,
+	}
 }
 
 const (
@@ -120,6 +175,38 @@ func StartSegment(t *TxnData, now time.Time) SegmentStartTime {
 	}
 }
 
+// NewSpanID returns a random identifier in the format used for spans and
+// transactions.
+func NewSpanID() string {
+	bits := RandUint64()
+	return fmt.Sprintf("%016x", bits)
+}
+
+func (t *TxnData) getRootSpanID() string {
+	if "" == t.rootSpanID {
+		t.rootSpanID = NewSpanID()
+	}
+	return t.rootSpanID
+}
+
+// CurrentSpanIdentifier returns the identifier of the span at the top of the
+// segment stack.
+func (t *TxnData) CurrentSpanIdentifier() string {
+	if 0 == len(t.stack) {
+		return t.getRootSpanID()
+	}
+	if "" == t.stack[len(t.stack)-1].spanID {
+		t.stack[len(t.stack)-1].spanID = NewSpanID()
+	}
+	return t.stack[len(t.stack)-1].spanID
+}
+
+func (t *TxnData) saveSpanEvent(e *SpanEvent) {
+	if len(t.spanEvents) < maxSpanEvents {
+		t.spanEvents = append(t.spanEvents, e)
+	}
+}
+
 var (
 	errMalformedSegment = errors.New("segment identifier malformed: perhaps unsafe code has modified it?")
 	errSegmentOrder     = errors.New(`improper segment use: the Transaction must be used ` +
@@ -137,7 +224,8 @@ func endSegment(t *TxnData, start SegmentStartTime, now time.Time) (segmentEnd, 
 	if start.Depth < 0 {
 		return segmentEnd{}, errMalformedSegment
 	}
-	if start.Stamp != t.stack[start.Depth].Stamp {
+	frame := t.stack[start.Depth]
+	if start.Stamp != frame.Stamp {
 		return segmentEnd{}, errSegmentOrder
 	}
 
@@ -147,7 +235,7 @@ func endSegment(t *TxnData, start SegmentStartTime, now time.Time) (segmentEnd, 
 	}
 	s := segmentEnd{
 		stop:  t.time(now),
-		start: t.stack[start.Depth].segmentTime,
+		start: frame.segmentTime,
 	}
 	if s.stop.Time.After(s.start.Time) {
 		s.duration = s.stop.Time.Sub(s.start.Time)
@@ -167,6 +255,17 @@ func endSegment(t *TxnData, start SegmentStartTime, now time.Time) (segmentEnd, 
 	}
 
 	t.stack = t.stack[0:start.Depth]
+
+	if t.BetterCAT.Sampled && t.SpanEventsEnabled {
+		s.SpanID = frame.spanID
+		if "" == s.SpanID {
+			s.SpanID = NewSpanID()
+		}
+		// Note that the current span identifier is the parent's
+		// identifier because we've already popped the segment that's
+		// ending off of the stack.
+		s.ParentID = t.CurrentSpanIdentifier()
+	}
 
 	return s, nil
 }
@@ -195,11 +294,17 @@ func EndBasicSegment(t *TxnData, start SegmentStartTime, now time.Time, name str
 		t.TxnTrace.witnessNode(end, customSegmentMetric(name), nil)
 	}
 
+	if evt := end.spanEvent(); evt != nil {
+		evt.Name = customSegmentMetric(name)
+		evt.Category = spanCategoryGeneric
+		t.saveSpanEvent(evt)
+	}
+
 	return nil
 }
 
 // EndExternalSegment ends an external segment.
-func EndExternalSegment(t *TxnData, start SegmentStartTime, now time.Time, u *url.URL, resp *http.Response) error {
+func EndExternalSegment(t *TxnData, start SegmentStartTime, now time.Time, u *url.URL, method string, resp *http.Response) error {
 	end, err := endSegment(t, start, now)
 	if nil != err {
 		return err
@@ -255,6 +360,16 @@ func EndExternalSegment(t *TxnData, start SegmentStartTime, now time.Time, u *ur
 		})
 	}
 
+	if evt := end.spanEvent(); evt != nil {
+		evt.Name = externalHostMetric(key)
+		evt.Category = spanCategoryHTTP
+		evt.ExternalExtras = &spanExternalExtras{
+			URL:    SafeURL(u),
+			Method: method,
+		}
+		t.saveSpanEvent(evt)
+	}
+
 	return nil
 }
 
@@ -299,6 +414,16 @@ var (
 
 func (t TxnData) slowQueryWorthy(d time.Duration) bool {
 	return t.SlowQueriesEnabled && (d >= t.SlowQueryThreshold)
+}
+
+func datastoreSpanAddress(host, portPathOrID string) string {
+	if "" != host && "" != portPathOrID {
+		return host + ":" + portPathOrID
+	}
+	if "" != host {
+		return host
+	}
+	return portPathOrID
 }
 
 // EndDatastoreSegment ends a datastore segment.
@@ -390,6 +515,19 @@ func EndDatastoreSegment(p EndDatastoreParams) error {
 			DatabaseName:       p.Database,
 			StackTrace:         GetStackTrace(skipFrames),
 		})
+	}
+
+	if evt := end.spanEvent(); evt != nil {
+		evt.Name = scopedMetric
+		evt.Category = spanCategoryDatastore
+		evt.DatastoreExtras = &spanDatastoreExtras{
+			Component: p.Product,
+			Statement: p.ParameterizedQuery,
+			Instance:  p.Database,
+			Address:   datastoreSpanAddress(p.Host, p.PortPathOrID),
+			Hostname:  p.Host,
+		}
+		p.Tracer.saveSpanEvent(evt)
 	}
 
 	return nil

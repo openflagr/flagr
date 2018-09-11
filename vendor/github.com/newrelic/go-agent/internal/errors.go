@@ -168,3 +168,7 @@ func (errors harvestErrors) Data(agentRunID string, harvestStart time.Time) ([]b
 }
 
 func (errors harvestErrors) MergeIntoHarvest(h *Harvest) {}
+
+func (errors harvestErrors) EndpointMethod() string {
+	return cmdErrorData
+}

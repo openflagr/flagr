@@ -2,7 +2,6 @@ package internal
 
 import (
 	"bytes"
-	"math/rand"
 	"sort"
 	"strings"
 	"time"
@@ -25,10 +24,79 @@ func (e *TxnEvent) WriteJSON(buf *bytes.Buffer) {
 	w.stringField("type", "Transaction")
 	w.stringField("name", e.FinalName)
 	w.floatField("timestamp", timeToFloatSeconds(e.Start))
-	w.floatField("duration", e.Duration.Seconds())
 	if ApdexNone != e.Zone {
 		w.stringField("nr.apdexPerfZone", e.Zone.label())
 	}
+
+	w.boolField("error", e.HasError)
+
+	sharedTransactionIntrinsics(e, &w)
+
+	// Write better CAT intrinsics if enabled
+	sharedBetterCATIntrinsics(e, &w)
+
+	if e.BetterCAT.Enabled {
+		if p := e.BetterCAT.Inbound; nil != p {
+			if "" != p.TransactionID {
+				w.stringField("parentId", p.TransactionID)
+			}
+
+			if "" != p.ID {
+				w.stringField("parentSpanId", p.ID)
+			}
+		}
+	}
+
+	// Write old CAT intrinsics if enabled
+	oldCATIntrinsics(e, &w)
+
+	buf.WriteByte('}')
+	buf.WriteByte(',')
+	userAttributesJSON(e.Attrs, buf, destTxnEvent, nil)
+	buf.WriteByte(',')
+	agentAttributesJSON(e.Attrs, buf, destTxnEvent)
+	buf.WriteByte(']')
+}
+
+// oldCATIntrinsics reports old CAT intrinsics for Transaction
+// if CrossProcess.Used() is true
+func oldCATIntrinsics(e *TxnEvent, w *jsonFieldsWriter) {
+	if !e.CrossProcess.Used() {
+		return
+	}
+
+	if e.CrossProcess.ClientID != "" {
+		w.stringField("client_cross_process_id", e.CrossProcess.ClientID)
+	}
+	if e.CrossProcess.TripID != "" {
+		w.stringField("nr.tripId", e.CrossProcess.TripID)
+	}
+	if e.CrossProcess.PathHash != "" {
+		w.stringField("nr.pathHash", e.CrossProcess.PathHash)
+	}
+	if e.CrossProcess.ReferringPathHash != "" {
+		w.stringField("nr.referringPathHash", e.CrossProcess.ReferringPathHash)
+	}
+	if e.CrossProcess.GUID != "" {
+		w.stringField("nr.guid", e.CrossProcess.GUID)
+	}
+	if e.CrossProcess.ReferringTxnGUID != "" {
+		w.stringField("nr.referringTransactionGuid", e.CrossProcess.ReferringTxnGUID)
+	}
+	if len(e.CrossProcess.AlternatePathHashes) > 0 {
+		hashes := make([]string, 0, len(e.CrossProcess.AlternatePathHashes))
+		for hash := range e.CrossProcess.AlternatePathHashes {
+			hashes = append(hashes, hash)
+		}
+		sort.Strings(hashes)
+		w.stringField("nr.alternatePathHashes", strings.Join(hashes, ","))
+	}
+}
+
+// sharedTransactionIntrinsics reports intrinsics that are shared
+// by Transaction and TransactionError
+func sharedTransactionIntrinsics(e *TxnEvent, w *jsonFieldsWriter) {
+	w.floatField("duration", e.Duration.Seconds())
 	if e.Queuing > 0 {
 		w.floatField("queueDuration", e.Queuing.Seconds())
 	}
@@ -42,45 +110,31 @@ func (e *TxnEvent) WriteJSON(buf *bytes.Buffer) {
 		w.intField("databaseCallCount", int64(e.datastoreCallCount))
 		w.floatField("databaseDuration", e.datastoreDuration.Seconds())
 	}
-	if e.CrossProcess.Used() {
-		if e.CrossProcess.ClientID != "" {
-			w.stringField("client_cross_process_id", e.CrossProcess.ClientID)
-		}
-		if e.CrossProcess.TripID != "" {
-			w.stringField("nr.tripId", e.CrossProcess.TripID)
-		}
-		if e.CrossProcess.PathHash != "" {
-			w.stringField("nr.pathHash", e.CrossProcess.PathHash)
-		}
-		if e.CrossProcess.ReferringPathHash != "" {
-			w.stringField("nr.referringPathHash", e.CrossProcess.ReferringPathHash)
-		}
-		if e.CrossProcess.GUID != "" {
-			w.stringField("nr.guid", e.CrossProcess.GUID)
-		}
-		if e.CrossProcess.ReferringTxnGUID != "" {
-			w.stringField("nr.referringTransactionGuid", e.CrossProcess.ReferringTxnGUID)
-		}
-		if len(e.CrossProcess.AlternatePathHashes) > 0 {
-			hashes := make([]string, 0, len(e.CrossProcess.AlternatePathHashes))
-			for hash := range e.CrossProcess.AlternatePathHashes {
-				hashes = append(hashes, hash)
-			}
-			sort.Strings(hashes)
-			w.stringField("nr.alternatePathHashes", strings.Join(hashes, ","))
-		}
-		if e.CrossProcess.IsSynthetics() {
-			w.stringField("nr.syntheticsResourceId", e.CrossProcess.Synthetics.ResourceID)
-			w.stringField("nr.syntheticsJobId", e.CrossProcess.Synthetics.JobID)
-			w.stringField("nr.syntheticsMonitorId", e.CrossProcess.Synthetics.MonitorID)
-		}
+
+	if e.CrossProcess.IsSynthetics() {
+		w.stringField("nr.syntheticsResourceId", e.CrossProcess.Synthetics.ResourceID)
+		w.stringField("nr.syntheticsJobId", e.CrossProcess.Synthetics.JobID)
+		w.stringField("nr.syntheticsMonitorId", e.CrossProcess.Synthetics.MonitorID)
 	}
-	buf.WriteByte('}')
-	buf.WriteByte(',')
-	userAttributesJSON(e.Attrs, buf, destTxnEvent, nil)
-	buf.WriteByte(',')
-	agentAttributesJSON(e.Attrs, buf, destTxnEvent)
-	buf.WriteByte(']')
+}
+
+// sharedBetterCATIntrinsics reports intrinsics that are shared
+// by Transaction, TransactionError, and Slow SQL
+func sharedBetterCATIntrinsics(e *TxnEvent, w *jsonFieldsWriter) {
+	if e.BetterCAT.Enabled {
+		if p := e.BetterCAT.Inbound; nil != p {
+			w.stringField("parent.type", p.Type)
+			w.stringField("parent.app", p.App)
+			w.stringField("parent.account", p.Account)
+			w.stringField("parent.transportType", p.TransportType)
+			w.floatField("parent.transportDuration", p.TransportDuration.Seconds())
+		}
+
+		w.stringField("guid", e.BetterCAT.ID)
+		w.stringField("traceId", e.BetterCAT.TraceID())
+		w.writerField("priority", e.BetterCAT.Priority)
+		w.boolField("sampled", e.BetterCAT.Sampled)
+	}
 }
 
 // MarshalJSON is used for testing.
@@ -102,17 +156,14 @@ func newTxnEvents(max int) *txnEvents {
 	}
 }
 
-func (events *txnEvents) AddTxnEvent(e *TxnEvent) {
-	stamp := eventStamp(rand.Float32())
-
-	// Synthetics events always get priority: normal event stamps are in the
-	// range [0.0,1.0), so adding 1 means that a Synthetics event will always
+func (events *txnEvents) AddTxnEvent(e *TxnEvent, priority Priority) {
+	// Synthetics events always get priority: normal event priorities are in the
+	// range [0.0,1.99999], so adding 2 means that a Synthetics event will always
 	// win.
 	if e.CrossProcess.IsSynthetics() {
-		stamp += 1.0
+		priority += 2.0
 	}
-
-	events.events.addEvent(analyticsEvent{stamp, e})
+	events.events.addEvent(analyticsEvent{priority: priority, jsonWriter: e})
 }
 
 func (events *txnEvents) MergeIntoHarvest(h *Harvest) {
@@ -125,3 +176,18 @@ func (events *txnEvents) Data(agentRunID string, harvestStart time.Time) ([]byte
 
 func (events *txnEvents) numSeen() float64  { return events.events.NumSeen() }
 func (events *txnEvents) numSaved() float64 { return events.events.NumSaved() }
+
+func (events *txnEvents) EndpointMethod() string {
+	return cmdTxnEvents
+}
+
+func (events *txnEvents) payloads(limit int) []PayloadCreator {
+	if events.numSaved() < float64(limit) {
+		return []PayloadCreator{events}
+	}
+	e1, e2 := events.events.split()
+	return []PayloadCreator{
+		&txnEvents{events: e1},
+		&txnEvents{events: e2},
+	}
+}

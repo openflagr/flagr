@@ -27,7 +27,8 @@ type txn struct {
 	sync.Mutex
 	// finished indicates whether or not End() has been called.  After
 	// finished has been set to true, no recording should occur.
-	finished bool
+	finished           bool
+	numPayloadsCreated uint32
 
 	ignore bool
 
@@ -46,6 +47,22 @@ func newTxn(input txnInput, req *http.Request, name string) *txn {
 	txn.Name = name
 	txn.IsWeb = nil != req
 	txn.Attrs = internal.NewAttributes(input.attrConfig)
+
+	if input.Config.DistributedTracer.Enabled {
+		txn.BetterCAT.Enabled = true
+		txn.BetterCAT.Priority = internal.NewPriority()
+		txn.BetterCAT.ID = internal.NewSpanID()
+
+		// Calculate sampled at the beginning of the transaction (rather
+		// than lazily at payload creation time) because it controls the
+		// creation of span events.
+		txn.BetterCAT.Sampled = txn.Reply.AdaptiveSampler.ComputeSampled(txn.BetterCAT.Priority.Float32(), txn.Start)
+		if txn.BetterCAT.Sampled {
+			txn.BetterCAT.Priority += 1.0
+		}
+		txn.SpanEventsEnabled = input.Config.SpanEvents.Enabled
+	}
+
 	if nil != req {
 		txn.Queuing = internal.QueueDuration(req.Header, txn.Start)
 		internal.RequestAgentAttributes(txn.Attrs, req)
@@ -59,13 +76,16 @@ func newTxn(input txnInput, req *http.Request, name string) *txn {
 	if nil != req && nil != req.URL {
 		txn.CleanURL = internal.SafeURL(req.URL)
 	}
-	txn.CrossProcess.InitFromHTTPRequest(txn.crossProcessEnabled(), input.Reply, req)
+
+	// Synthetics support is tied up with a transaction's Old CAT field,
+	// CrossProcess. To support Synthetics with either BetterCAT or Old CAT,
+	// Initialize the CrossProcess field of the transaction, passing in
+	// the top-level configuration.
+	doOldCAT := txn.Config.CrossApplicationTracer.Enabled
+	noGUID := txn.Config.DistributedTracer.Enabled
+	txn.CrossProcess.InitFromHTTPRequest(doOldCAT, noGUID, input.Reply, req)
 
 	return txn
-}
-
-func (txn *txn) crossProcessEnabled() bool {
-	return txn.Config.CrossApplicationTracer.Enabled
 }
 
 func (txn *txn) slowQueriesEnabled() bool {
@@ -116,6 +136,14 @@ func (txn *txn) shouldSaveTrace() bool {
 }
 
 func (txn *txn) MergeIntoHarvest(h *internal.Harvest) {
+
+	var priority internal.Priority
+	if txn.BetterCAT.Enabled {
+		priority = txn.BetterCAT.Priority
+	} else {
+		priority = internal.NewPriority()
+	}
+
 	internal.CreateTxnMetrics(&txn.TxnData, h.Metrics)
 	internal.MergeBreakdownMetrics(&txn.TxnData, h.Metrics)
 
@@ -123,7 +151,7 @@ func (txn *txn) MergeIntoHarvest(h *internal.Harvest) {
 		// Allocate a new TxnEvent to prevent a reference to the large transaction.
 		alloc := new(internal.TxnEvent)
 		*alloc = txn.TxnData.TxnEvent
-		h.TxnEvents.AddTxnEvent(alloc)
+		h.TxnEvents.AddTxnEvent(alloc, priority)
 	}
 
 	internal.MergeTxnErrors(&h.ErrorTraces, txn.Errors, txn.TxnEvent)
@@ -137,7 +165,7 @@ func (txn *txn) MergeIntoHarvest(h *internal.Harvest) {
 			// Since the stack trace is not used in error events, remove the reference
 			// to minimize memory.
 			errEvent.Stack = nil
-			h.ErrorEvents.Add(errEvent)
+			h.ErrorEvents.Add(errEvent, priority)
 		}
 	}
 
@@ -149,8 +177,42 @@ func (txn *txn) MergeIntoHarvest(h *internal.Harvest) {
 	}
 
 	if nil != txn.SlowQueries {
-		h.SlowSQLs.Merge(txn.SlowQueries, txn.FinalName, txn.CleanURL)
+		h.SlowSQLs.Merge(txn.SlowQueries, txn.TxnEvent)
 	}
+
+	if txn.BetterCAT.Sampled && txn.Config.SpanEvents.Enabled {
+		h.SpanEvents.MergeFromTransaction(&txn.TxnData)
+	}
+}
+
+// TransportType's name field is not mutable outside of its package
+// however, it still periodically needs to be used and assigned within
+// the this package.  For testing purposes only.
+func getTransport(transport string) string {
+	var retVal string
+
+	switch transport {
+	case TransportHTTP.name:
+		retVal = TransportHTTP.name
+	case TransportHTTPS.name:
+		retVal = TransportHTTPS.name
+	case TransportKafka.name:
+		retVal = TransportKafka.name
+	case TransportJMS.name:
+		retVal = TransportJMS.name
+	case TransportIronMQ.name:
+		retVal = TransportIronMQ.name
+	case TransportAMQP.name:
+		retVal = TransportAMQP.name
+	case TransportQueue.name:
+		retVal = TransportQueue.name
+	case TransportOther.name:
+		retVal = TransportOther.name
+	case TransportUnknown.name:
+	default:
+		retVal = TransportUnknown.name
+	}
+	return retVal
 }
 
 func responseCodeIsError(cfg *Config, code int) bool {
@@ -370,7 +432,7 @@ func (txn *txn) noticeErrorInternal(err internal.ErrorData) error {
 	}
 
 	txn.Errors.Add(err)
-
+	txn.TxnData.TxnEvent.HasError = true //mark transaction as having an error
 	return nil
 }
 
@@ -533,6 +595,26 @@ func endDatastore(s *DatastoreSegment) error {
 	})
 }
 
+func externalSegmentMethod(s *ExternalSegment) string {
+	r := s.Request
+
+	// Is this a client request?
+	if nil != s.Response && nil != s.Response.Request {
+		r = s.Response.Request
+
+		// Golang's http package states that when a client's
+		// Request has an empty string for Method, the
+		// method is GET.
+		if "" == r.Method {
+			return "GET"
+		}
+	}
+	if nil == r {
+		return ""
+	}
+	return r.Method
+}
+
 func externalSegmentURL(s *ExternalSegment) (*url.URL, error) {
 	if "" != s.URL {
 		return url.Parse(s.URL)
@@ -558,18 +640,18 @@ func endExternal(s *ExternalSegment) error {
 	if txn.finished {
 		return errAlreadyEnded
 	}
+	m := externalSegmentMethod(s)
 	u, err := externalSegmentURL(s)
 	if nil != err {
 		return err
 	}
-	return internal.EndExternalSegment(&txn.TxnData, s.StartTime.start, time.Now(), u, s.Response)
+	return internal.EndExternalSegment(&txn.TxnData, s.StartTime.start, time.Now(), u, m, s.Response)
 }
 
-func outboundHeaders(s *ExternalSegment) http.Header {
-	txn := s.StartTime.txn
-	if nil == txn {
-		return http.Header{}
-	}
+// oldCATOutboundHeaders generates the Old CAT and Synthetics headers, depending
+// on whether Old CAT is enabled or any Synthetics functionality has been
+// triggered in the agent.
+func oldCATOutboundHeaders(txn *txn) http.Header {
 	txn.Lock()
 	defer txn.Unlock()
 
@@ -589,4 +671,184 @@ func outboundHeaders(s *ExternalSegment) http.Header {
 	}
 
 	return internal.MetadataToHTTPHeader(metadata)
+}
+
+func outboundHeaders(s *ExternalSegment) http.Header {
+	txn := s.StartTime.txn
+
+	if nil == txn {
+		return http.Header{}
+	}
+
+	hdr := oldCATOutboundHeaders(txn)
+
+	// hdr may be empty, or it may contain headers.  If DistributedTracer
+	// is enabled, add more to the existing hdr
+	if p := txn.CreateDistributedTracePayload().HTTPSafe(); "" != p {
+		hdr.Add(DistributedTracePayloadHeader, p)
+		return hdr
+	}
+
+	return hdr
+}
+
+const (
+	maxSampledDistributedPayloads = 35
+)
+
+type shimPayload struct{}
+
+func (s shimPayload) Text() string     { return "" }
+func (s shimPayload) HTTPSafe() string { return "" }
+
+func (txn *txn) CreateDistributedTracePayload() (payload DistributedTracePayload) {
+	payload = shimPayload{}
+
+	txn.Lock()
+	defer txn.Unlock()
+
+	if !txn.BetterCAT.Enabled {
+		return
+	}
+
+	if txn.finished {
+		txn.CreatePayloadException = true
+		return
+	}
+
+	if "" == txn.Reply.PrimaryAppID {
+		// Return a shimPayload if the application is not yet connected.
+		return
+	}
+
+	txn.numPayloadsCreated++
+
+	var p internal.Payload
+	p.Type = internal.CallerType
+	p.Account = txn.Reply.AccountID
+
+	p.App = txn.Reply.PrimaryAppID
+	p.TracedID = txn.BetterCAT.TraceID()
+	p.Priority = txn.BetterCAT.Priority
+	p.Timestamp.Set(time.Now())
+	p.TransactionID = txn.BetterCAT.ID // Set the transaction ID to the transaction guid.
+
+	if txn.Reply.AccountID != txn.Reply.TrustedAccountKey {
+		p.TrustedAccountKey = txn.Reply.TrustedAccountKey
+	}
+
+	if txn.BetterCAT.Sampled && txn.Config.SpanEvents.Enabled {
+		p.ID = txn.CurrentSpanIdentifier()
+	}
+
+	// limit the number of outbound sampled=true payloads to prevent too
+	// many downstream sampled events.
+	p.SetSampled(false)
+	if txn.numPayloadsCreated < maxSampledDistributedPayloads {
+		p.SetSampled(txn.BetterCAT.Sampled)
+	}
+
+	txn.CreatePayloadSuccess = true
+
+	payload = p
+	return
+}
+
+var (
+	errOutboundPayloadCreated   = errors.New("outbound payload already created")
+	errAlreadyAccepted          = errors.New("AcceptDistributedTracePayload has already been called")
+	errInboundPayloadDTDisabled = errors.New("DistributedTracer must be enabled to accept an inbound payload")
+)
+
+func (txn *txn) AcceptDistributedTracePayload(t TransportType, p interface{}) error {
+	txn.Lock()
+	defer txn.Unlock()
+
+	if !txn.BetterCAT.Enabled {
+		return errInboundPayloadDTDisabled
+	}
+
+	if txn.finished {
+		txn.AcceptPayloadException = true
+		return errAlreadyEnded
+	}
+
+	if txn.numPayloadsCreated > 0 {
+		txn.AcceptPayloadCreateBeforeAccept = true
+		return errOutboundPayloadCreated
+	}
+
+	if txn.BetterCAT.Inbound != nil {
+		txn.AcceptPayloadIgnoredMultiple = true
+		return errAlreadyAccepted
+	}
+
+	if nil == p {
+		txn.AcceptPayloadNullPayload = true
+		return nil
+	}
+
+	payload, err := internal.AcceptPayload(p)
+	if nil != err {
+		if _, ok := err.(internal.ErrPayloadParse); ok {
+			txn.AcceptPayloadParseException = true
+		} else if _, ok := err.(internal.ErrUnsupportedPayloadVersion); ok {
+			txn.AcceptPayloadIgnoredVersion = true
+		} else if _, ok := err.(internal.ErrPayloadMissingField); ok {
+			txn.AcceptPayloadParseException = true
+		} else {
+			txn.AcceptPayloadException = true
+		}
+		return err
+	}
+
+	if nil == payload {
+		return nil
+	}
+
+	// now that we have a parsed and alloc'd payload,
+	// let's make  sure it has the correct fields
+	if err := payload.IsValid(); nil != err {
+		txn.AcceptPayloadParseException = true
+		return err
+	}
+
+	// and let's also do our trustedKey check
+	receivedTrustKey := payload.TrustedAccountKey
+	if "" == receivedTrustKey {
+		receivedTrustKey = payload.Account
+	}
+	if receivedTrustKey != txn.Reply.TrustedAccountKey {
+		txn.AcceptPayloadUntrustedAccount = true
+		return internal.ErrTrustedAccountKey{Message: "trusted account key missing or does not match"}
+	}
+
+	if 0 != payload.Priority {
+		txn.BetterCAT.Priority = payload.Priority
+	}
+
+	// a nul payload.Sampled means the a field wasn't provided
+	if nil != payload.Sampled {
+		txn.BetterCAT.Sampled = *payload.Sampled
+	} else {
+		txn.BetterCAT.Sampled = txn.Reply.AdaptiveSampler.ComputeSampled(txn.BetterCAT.Priority.Float32(), time.Now())
+	}
+
+	txn.BetterCAT.Inbound = payload
+
+	// TransportType's name field is not mutable outside of its package
+	// so the only check needed is if the caller is using an empty TransportType
+	txn.BetterCAT.Inbound.TransportType = t.name
+	if t.name == "" {
+		txn.BetterCAT.Inbound.TransportType = TransportUnknown.name
+		txn.Config.Logger.Debug("Invalid transport type, defaulting to Unknown", map[string]interface{}{})
+	}
+
+	if tm := payload.Timestamp.Time(); txn.Start.After(tm) {
+		txn.BetterCAT.Inbound.TransportDuration = txn.Start.Sub(tm)
+	}
+
+	txn.AcceptPayloadSuccess = true
+
+	return nil
 }
