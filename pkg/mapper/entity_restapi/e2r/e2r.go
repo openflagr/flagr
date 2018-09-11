@@ -1,6 +1,7 @@
 package e2r
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/checkr/flagr/pkg/entity"
@@ -45,7 +46,11 @@ func MapFlags(e []entity.Flag) ([]*models.Flag, error) {
 
 // MapFlagSnapshot maps flag snapshot
 func MapFlagSnapshot(e *entity.FlagSnapshot) (*models.FlagSnapshot, error) {
-	f, err := MapFlag(e.Flag, false)
+	ef := &entity.Flag{}
+	if err := json.Unmarshal(e.Flag, ef); err != nil {
+		return nil, err
+	}
+	f, err := MapFlag(ef, false)
 	if err != nil {
 		return nil, err
 	}

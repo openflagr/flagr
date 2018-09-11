@@ -3,13 +3,10 @@
 package entity
 
 import (
-	"database/sql/driver"
 	"encoding/json"
-	"fmt"
 
 	"github.com/jinzhu/gorm"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/cast"
 )
 
 // FlagSnapshot is the snapshot of a flag
@@ -19,28 +16,7 @@ type FlagSnapshot struct {
 	gorm.Model
 	FlagID    uint `gorm:"index:idx_flagsnapshot_flagid"`
 	UpdatedBy string
-	Flag      *Flag `sql:"type:text"`
-}
-
-// Scan implements scanner interface
-func (f *Flag) Scan(value interface{}) error {
-	if value == nil {
-		return nil
-	}
-	s := cast.ToString(value)
-	if err := json.Unmarshal([]byte(s), f); err != nil {
-		return fmt.Errorf("cannot scan %v into Flag type. err: %v", value, err)
-	}
-	return nil
-}
-
-// Value implements valuer interface
-func (f *Flag) Value() (driver.Value, error) {
-	bytes, err := json.Marshal(f)
-	if err != nil {
-		return nil, err
-	}
-	return string(bytes), nil
+	Flag      []byte `sql:"type:text"`
 }
 
 // SaveFlagSnapshot saves the Flag Snapshot
@@ -58,7 +34,16 @@ func SaveFlagSnapshot(db *gorm.DB, flagID uint, updatedBy string) {
 	}
 	f.Preload(tx)
 
-	fs := FlagSnapshot{FlagID: f.ID, UpdatedBy: updatedBy, Flag: f}
+	b, err := json.Marshal(f)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"err":    err,
+			"flagID": flagID,
+		}).Error("failed to marshal the flag into JSON when SaveFlagSnapshot")
+		return
+	}
+
+	fs := FlagSnapshot{FlagID: f.ID, UpdatedBy: updatedBy, Flag: b}
 	if err := tx.Create(&fs).Error; err != nil {
 		logrus.WithFields(logrus.Fields{
 			"err":    err,
