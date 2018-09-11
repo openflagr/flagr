@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"regexp"
+	"time"
 
 	"github.com/newrelic/go-agent/internal/logger"
 )
@@ -27,6 +28,7 @@ const (
 	cmdErrorData    = "error_data"
 	cmdTxnTraces    = "transaction_sample_data"
 	cmdSlowSQLs     = "sql_trace_data"
+	cmdSpanEvents   = "span_event_data"
 )
 
 var (
@@ -327,6 +329,11 @@ func ConnectAttempt(config ConnectJSONCreator, securityPoliciesToken string, cs 
 	}
 
 	reply.PreconnectReply = preconnect
+
+	reply.AdaptiveSampler = newAdaptiveSampler(adaptiveSamplerInput{
+		Period: time.Duration(reply.SamplingTargetPeriodInSeconds) * time.Second,
+		Target: reply.SamplingTarget,
+	}, time.Now())
 
 	return reply, nil
 }

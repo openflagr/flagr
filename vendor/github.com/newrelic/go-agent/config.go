@@ -44,7 +44,7 @@ type Config struct {
 
 	// SecurityPoliciesToken enables security policies if set to a non-empty
 	// string.  Only set this if security policies have been enabled on your
-	// account.  This cannot be used in conjuction with HighSecurity.
+	// account.  This cannot be used in conjunction with HighSecurity.
 	SecurityPoliciesToken string
 
 	// CustomInsightsEvents controls the behavior of
@@ -148,8 +148,22 @@ type Config struct {
 	}
 
 	// CrossApplicationTracer controls behaviour relating to cross application
-	// tracing (CAT).
+	// tracing (CAT), available since Go Agent v0.11.  The CrossApplication
+	// Tracer and the DistributedTracer cannot be simultaneously enabled.
 	CrossApplicationTracer struct {
+		Enabled bool
+	}
+
+	// DistributedTracer controls behaviour relating to Distributed Tracing,
+	// available since Go Agent v2.1. The DistributedTracer and the
+	// CrossApplicationTracer cannot be simultaneously enabled.
+	DistributedTracer struct {
+		Enabled bool
+	}
+
+	// SpanEvents controls behavior relating to Span Events.  Span Events
+	// require that distributed tracing is enabled.
+	SpanEvents struct {
 		Enabled bool
 	}
 
@@ -228,6 +242,8 @@ func NewConfig(appname, license string) Config {
 	c.TransactionTracer.Attributes.Enabled = true
 
 	c.CrossApplicationTracer.Enabled = true
+	c.DistributedTracer.Enabled = false
+	c.SpanEvents.Enabled = true
 
 	c.DatastoreTracer.InstanceReporting.Enabled = true
 	c.DatastoreTracer.DatabaseNameReporting.Enabled = true
@@ -249,6 +265,7 @@ var (
 	errAppNameMissing                   = errors.New("string AppName required")
 	errAppNameLimit                     = fmt.Errorf("max of %d rollup application names", appNameLimit)
 	errHighSecurityWithSecurityPolicies = errors.New("SecurityPoliciesToken and HighSecurity are incompatible; please ensure HighSecurity is set to false if SecurityPoliciesToken is a non-empty string and a security policy has been set for your account")
+	errMixedTracers                     = errors.New("CrossApplicationTracer and DistributedTracer cannot be enabled simultaneously; please choose CrossApplicationTracer (available since v1.11) or DistributedTracer (available since v2.1)")
 )
 
 // Validate checks the config for improper fields.  If the config is invalid,
@@ -269,6 +286,9 @@ func (c Config) Validate() error {
 	}
 	if c.HighSecurity && "" != c.SecurityPoliciesToken {
 		return errHighSecurityWithSecurityPolicies
+	}
+	if c.CrossApplicationTracer.Enabled && c.DistributedTracer.Enabled {
+		return errMixedTracers
 	}
 	if strings.Count(c.AppName, ";") >= appNameLimit {
 		return errAppNameLimit

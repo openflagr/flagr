@@ -26,12 +26,12 @@
   revision = "de5bf2ad457846296e2031421a34e2568e304e35"
 
 [[projects]]
-  digest = "1:66b8ed452b31eb9075bc53295952487c333a9cb555de57ed61f5664c058d9050"
+  digest = "1:aef23e9ea9f154b965b9792e32c86f315c2c689883ead4eeca8a182f6edfdfbc"
   name = "github.com/Shopify/sarama"
   packages = ["."]
   pruneopts = "UT"
-  revision = "35324cf48e33d8260e1c7c18854465a904ade249"
-  version = "v1.17.0"
+  revision = "a6144ae922fd99dd0ea5046c8137acfb7fab0914"
+  version = "v1.18.0"
 
 [[projects]]
   branch = "master"
@@ -58,7 +58,7 @@
   revision = "5493cabe49f7bfa6e2ec444a09d334d90cd4e2bd"
 
 [[projects]]
-  digest = "1:2e370a9f1006eb405ef96c7b8a07bb3c23e1f65300ce2e1233602daf9b5e3613"
+  digest = "1:cf3aa97d961afe84ca9a934ffcbd1709385251336890fb6cc591bc15815224ff"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -93,8 +93,8 @@
     "service/sts",
   ]
   pruneopts = "UT"
-  revision = "ea2d2b9a8808d0c390d966daf855a7b3b74bc44e"
-  version = "v1.15.19"
+  revision = "71a2a92b0063297b055b6f5a014d441c142da2ce"
+  version = "v1.15.32"
 
 [[projects]]
   digest = "1:d8abdc866ebbe05fa3bce50863e23afd4c73c804b90c908caa864e86df1db8a1"
@@ -194,11 +194,22 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:608d0fe1621755354728fbaeef8ada8b4a33001aec88b66c970e641be950d850"
+  digest = "1:64ef2c2f0f508690f06c1b009e1e3103441ce60c2db0323ff94d8d1c560ec10b"
   name = "github.com/getsentry/raven-go"
   packages = ["."]
   pruneopts = "UT"
-  revision = "7535a8fa2ace0ffb684b19f28d00655459ea2dae"
+  revision = "084a9de9eb0361fbd5ded14b55c84e5493a5d7f6"
+
+[[projects]]
+  branch = "master"
+  digest = "1:7fb51688eadf38272411852d7a2b3538c7caff53309abee6c0964a83c00fe69e"
+  name = "github.com/globalsign/mgo"
+  packages = [
+    "bson",
+    "internal/json",
+  ]
+  pruneopts = "UT"
+  revision = "1ca0a4f7cbcbe61c005d1bd43fdd8bb8b71df6bc"
 
 [[projects]]
   digest = "1:5abd6a22805b1919f6a6bca0ae58b13cef1f3412812f38569978f43ef02743d4"
@@ -221,11 +232,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:7a90552bf0ad97b41a4ac036d42aad77956c19b28398188ff7a5cc70b0c8bbf4"
+  digest = "1:14ebaa1c8c615cdaaf9bbd18842ffe20722ffafa62f30cf072529f4590d36940"
   name = "github.com/go-openapi/errors"
   packages = ["."]
   pruneopts = "UT"
-  revision = "b2b2befaf267d082d779bcef52d682a47c779517"
+  revision = "87bb653288778f8b0d922c5c3fb8b3f00a47ff28"
 
 [[projects]]
   digest = "1:2997679181d901ac8aaf4330d11138ecf3974c6d3334995ff36f20cbd597daf8"
@@ -245,15 +256,15 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:ff04019588fc028ac28c3c565ce5316461a4641df197555041ee66cf45d213e3"
+  digest = "1:7204d50f94cd2e5ada07eb0f9daaa4b811252b6ecec867e3232ddb3a8603402b"
   name = "github.com/go-openapi/loads"
   packages = ["."]
   pruneopts = "UT"
-  revision = "2a2b323bab96e6b1fdee110e57d959322446e9c9"
+  revision = "fd899182a268dcf25de088722375311d9dee2662"
 
 [[projects]]
   branch = "master"
-  digest = "1:c5d674857728a31a6c91b67d4ef755b2301f5caa2b58e98f7a2684b1f950b449"
+  digest = "1:d87c9d59f871025d6cfdb56d3bb6aa6bf5fc90c119804276746edc379f7c9c48"
   name = "github.com/go-openapi/runtime"
   packages = [
     ".",
@@ -266,39 +277,39 @@
     "security",
   ]
   pruneopts = "UT"
-  revision = "9a3091f566c0811ef4d54b535179bc0fc484a11f"
+  revision = "41cb9a631c39f00f50d1a34b5ef0dd1fac745c15"
 
 [[projects]]
   branch = "master"
-  digest = "1:3e5bdbd2a071c72c778c28fd7b5dfde95cdfbcef412f364377e031877205e418"
+  digest = "1:d538832fc6033760440c9b7058504c495542905c83925f5d846bc954ff899a3b"
   name = "github.com/go-openapi/spec"
   packages = ["."]
   pruneopts = "UT"
-  revision = "384415f06ee238aae1df5caad877de6ceac3a5c4"
+  revision = "f1468acb3b29cdd5c5f6fa29435d2d2d6e6c9ff1"
 
 [[projects]]
   branch = "master"
-  digest = "1:efc548db999dacf6aaf6de81cc14bba9f602f017f927780c2e6f511a1292e599"
+  digest = "1:b92f042d3cdb08ba62dc301877d7af8d3fa316d68c10c1ec0d469ce8fde3328e"
   name = "github.com/go-openapi/strfmt"
   packages = ["."]
   pruneopts = "UT"
-  revision = "eed2e948ab461573432a715f4dd5f0ef51cbadd6"
+  revision = "776114108ccc228238641096ea5be3d24842d4ea"
 
 [[projects]]
   branch = "master"
-  digest = "1:c80984d4a9bb79539743aff5af91b595d84f513700150b0ed73c1697d1200d54"
+  digest = "1:e8e34b49eb622556a775ca4b10d76f665c1a7d94a1c94370ff0d40dbe62f45e1"
   name = "github.com/go-openapi/swag"
   packages = ["."]
   pruneopts = "UT"
-  revision = "becd2f08beafcca035645a8a101e0e3e18140458"
+  revision = "dd0dad036e67ae93c27dc64337b3f76296f3a5f0"
 
 [[projects]]
   branch = "master"
-  digest = "1:b0fa3721f1aeaf3aca9678376b393dffdfdd7415d65db9207ca7bcaf3f893f7f"
+  digest = "1:77ec92386c588ace52208dc2df27c59c45db2a74bca03d6cb653ac4376363102"
   name = "github.com/go-openapi/validate"
   packages = ["."]
   pruneopts = "UT"
-  revision = "7c1911976134d3a24d0c03127505163c9f16aa3b"
+  revision = "e0648ff405079d973622f8b2bf739ed3a1c5cd9b"
 
 [[projects]]
   digest = "1:adea5a94903eb4384abef30f3d878dc9ff6b6b5b0722da25b82e5169216dfb61"
@@ -341,7 +352,8 @@
   version = "v1.4.0"
 
 [[projects]]
-  digest = "1:8fe19266ce82209076d4a81007ff93f40dd349faca4a917aea59d33956bbd4fd"
+  branch = "master"
+  digest = "1:e36c0264435e199d2fc32d15d249ee51188bc974cdaf0918acb16d9c297ab97e"
   name = "github.com/jinzhu/gorm"
   packages = [
     ".",
@@ -350,8 +362,7 @@
     "dialects/sqlite",
   ]
   pruneopts = "UT"
-  revision = "6ed508ec6a4ecb3531899a69cbc746ccf65a4166"
-  version = "v1.9.1"
+  revision = "123d4f50ef8a8209ee8434daa41c6045a9111864"
 
 [[projects]]
   branch = "master"
@@ -425,7 +436,7 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:9ff30cba87a0683557c6da48b65b5fc141f6bb4f7ccb00739230b1508f87e6a1"
+  digest = "1:01f60ec456e70c9be269902c08fa189a9d47056a419c4a91a02f19df5e36ab59"
   name = "github.com/newrelic/go-agent"
   packages = [
     ".",
@@ -437,19 +448,19 @@
     "internal/utilization",
   ]
   pruneopts = "UT"
-  revision = "a5d75f2b4787aa1bbc76688187b2353f8ff581a6"
-  version = "v2.0.0"
+  revision = "46d73e6be8b4faeee70850d0df829e4fe00d6819"
+  version = "v2.1.0"
 
 [[projects]]
-  digest = "1:29803f52611cbcc1dfe55b456e9fdac362af7248b3d29d7ea1bec0a12e71dff4"
+  digest = "1:4f0885b3f0dba96128a09a6f4b4231c42688fbd05f323224c6aa5adc9f4e87bf"
   name = "github.com/pierrec/lz4"
   packages = [
     ".",
     "internal/xxh32",
   ]
   pruneopts = "UT"
-  revision = "1958fd8fff7f115e79725b1288e0b878b3e06b00"
-  version = "v2.0.3"
+  revision = "bb6bfd13c6a262f1943c0446eb25b7f54c1fb9a2"
+  version = "v2.0.6"
 
 [[projects]]
   digest = "1:40e195917a951a8bf867cd05de2a46aaf1806c50cf92eebf4c16f78cd196f747"
@@ -551,30 +562,29 @@
     "ssh/terminal",
   ]
   pruneopts = "UT"
-  revision = "614d502a4dac94afa3a6ce146bd1736da82514c6"
+  revision = "0e37d006457bf46f9e6692014ba72ef82c33022c"
 
 [[projects]]
   branch = "master"
-  digest = "1:500fd233d46dec5d64eaf3acbb0e585262c356947ec499f9d79aaa119ef62088"
+  digest = "1:bbd232f46e33dfb01068e0f4193a3da2d662a350873804bc964f697de5f39ac7"
   name = "golang.org/x/net"
   packages = [
-    "context",
     "idna",
     "netutil",
   ]
   pruneopts = "UT"
-  revision = "922f4815f713f213882e8ef45e0d315b164d705c"
+  revision = "161cd47e91fd58ac17490ef4d742dc98bb4cf60e"
 
 [[projects]]
   branch = "master"
-  digest = "1:7710ea76bd73d3154e86eaf2db8b36a6dffbd6114e4e37b516f1d232c03ddd8d"
+  digest = "1:374fc90fcb026e9a367e3fad29e988e5dd944b68ca3f24a184d77abc5307dda4"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
   ]
   pruneopts = "UT"
-  revision = "11551d06cbcc94edc80a0facaccbda56473c19c1"
+  revision = "d0be0721c37eeb5299f245a996a483160fc36940"
 
 [[projects]]
   digest = "1:0c56024909189aee3364b7f21a95a27459f718aa7c199a5c111c36cfffd9eaef"
@@ -607,17 +617,6 @@
   pruneopts = "UT"
   revision = "b1f26356af11148e710935ed1ac8a7f5702c7612"
   version = "v1.1.0"
-
-[[projects]]
-  branch = "v2"
-  digest = "1:2642fd0b6900c77247d61d80cf2eb59a374ef4ffc2d25a1b95b87dc355b2894e"
-  name = "gopkg.in/mgo.v2"
-  packages = [
-    "bson",
-    "internal/json",
-  ]
-  pruneopts = "UT"
-  revision = "9856a29383ce1c59f308dd1cf0363a79b5bef6b5"
 
 [[projects]]
   digest = "1:342378ac4dcb378a5448dd723f0784ae519383532f5e70ade24132c4c8693202"

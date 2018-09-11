@@ -9,13 +9,13 @@ import (
 // InitFromHTTPRequest initialises the TxnCrossProcess from the given request.
 // This is a convenience method to keep newTxn() as clean as possible, and to
 // support unit tests.
-func (txp *TxnCrossProcess) InitFromHTTPRequest(enabled bool, reply *ConnectReply, req *http.Request) error {
+func (txp *TxnCrossProcess) InitFromHTTPRequest(enabled bool, dt bool, reply *ConnectReply, req *http.Request) error {
 	metadata := CrossProcessMetadata{}
 	if req != nil {
 		metadata = HTTPHeaderToMetadata(req.Header)
 	}
 
-	return txp.Init(enabled, reply, metadata)
+	return txp.Init(enabled, dt, reply, metadata)
 }
 
 // AppDataToHTTPHeader encapsulates the given appData value in the correct HTTP

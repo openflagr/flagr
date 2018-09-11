@@ -110,9 +110,9 @@ func (app *app) doHarvest(h *internal.Harvest, harvestStart time.Time, run *appR
 	h.CreateFinalMetrics()
 	h.Metrics = h.Metrics.ApplyRules(run.MetricRules)
 
-	payloads := h.Payloads()
-	for cmd, p := range payloads {
-
+	payloads := h.Payloads(app.config.DistributedTracer.Enabled)
+	for _, p := range payloads {
+		cmd := p.EndpointMethod()
 		data, err := p.Data(run.RunID.String(), harvestStart)
 
 		if nil == data && nil == err {
@@ -193,8 +193,9 @@ func debug(data internal.Harvestable, lg Logger) {
 	now := time.Now()
 	h := internal.NewHarvest(now)
 	data.MergeIntoHarvest(h)
-	ps := h.Payloads()
-	for cmd, p := range ps {
+	ps := h.Payloads(false)
+	for _, p := range ps {
+		cmd := p.EndpointMethod()
 		d, err := p.Data("agent run id", now)
 		if nil == d && nil == err {
 			continue
@@ -478,16 +479,33 @@ func (app *app) setState(run *appRun, err error) {
 	app.err = err
 }
 
+func transportTypeFromRequest(r *http.Request) TransportType {
+	if strings.HasPrefix(r.Proto, "HTTP") {
+		if r.TLS != nil {
+			return TransportHTTPS
+		}
+		return TransportHTTP
+	}
+	return TransportUnknown
+}
+
 // StartTransaction implements newrelic.Application's StartTransaction.
 func (app *app) StartTransaction(name string, w http.ResponseWriter, r *http.Request) Transaction {
 	run, _ := app.getState()
-	return upgradeTxn(newTxn(txnInput{
+	txn := upgradeTxn(newTxn(txnInput{
 		Config:     app.config,
 		Reply:      run.ConnectReply,
 		W:          w,
 		Consumer:   app,
 		attrConfig: run.AttributeConfig,
 	}, r, name))
+
+	if nil != r {
+		if p := r.Header.Get(DistributedTracePayloadHeader); p != "" {
+			txn.AcceptDistributedTracePayload(transportTypeFromRequest(r), p)
+		}
+	}
+	return txn
 }
 
 var (
@@ -584,14 +602,59 @@ func (app *app) ExpectErrorEvents(t internal.Validator, want []internal.WantEven
 	internal.ExpectErrorEvents(t, app.testHarvest.ErrorEvents, want)
 }
 
+func (app *app) ExpectErrorEventsPresent(t internal.Validator, want []internal.WantEvent) {
+	t = internal.ExtendValidator(t, "error events")
+	internal.ExpectErrorEventsPresent(t, app.testHarvest.ErrorEvents, want)
+}
+
+func (app *app) ExpectErrorEventsAbsent(t internal.Validator, names []string) {
+	t = internal.ExtendValidator(t, "error events")
+	internal.ExpectErrorEventsAbsent(t, app.testHarvest.ErrorEvents, names)
+}
+
+func (app *app) ExpectSpanEvents(t internal.Validator, want []internal.WantEvent) {
+	t = internal.ExtendValidator(t, "txn events")
+	internal.ExpectSpanEvents(t, app.testHarvest.SpanEvents, want)
+}
+
+func (app *app) ExpectSpanEventsPresent(t internal.Validator, want []internal.WantEvent) {
+	t = internal.ExtendValidator(t, "span events")
+	internal.ExpectSpanEventsPresent(t, app.testHarvest.SpanEvents, want)
+}
+
+func (app *app) ExpectSpanEventsAbsent(t internal.Validator, names []string) {
+	t = internal.ExtendValidator(t, "span events")
+	internal.ExpectSpanEventsAbsent(t, app.testHarvest.SpanEvents, names)
+}
+
+func (app *app) ExpectSpanEventsCount(t internal.Validator, c int) {
+	t = internal.ExtendValidator(t, "span events")
+	internal.ExpectSpanEventsCount(t, app.testHarvest.SpanEvents, c)
+}
+
 func (app *app) ExpectTxnEvents(t internal.Validator, want []internal.WantEvent) {
 	t = internal.ExtendValidator(t, "txn events")
 	internal.ExpectTxnEvents(t, app.testHarvest.TxnEvents, want)
 }
 
+func (app *app) ExpectTxnEventsPresent(t internal.Validator, want []internal.WantEvent) {
+	t = internal.ExtendValidator(t, "txn events")
+	internal.ExpectTxnEventsPresent(t, app.testHarvest.TxnEvents, want)
+}
+
+func (app *app) ExpectTxnEventsAbsent(t internal.Validator, names []string) {
+	t = internal.ExtendValidator(t, "txn events")
+	internal.ExpectTxnEventsAbsent(t, app.testHarvest.TxnEvents, names)
+}
+
 func (app *app) ExpectMetrics(t internal.Validator, want []internal.WantMetric) {
 	t = internal.ExtendValidator(t, "metrics")
 	internal.ExpectMetrics(t, app.testHarvest.Metrics, want)
+}
+
+func (app *app) ExpectMetricsPresent(t internal.Validator, want []internal.WantMetric) {
+	t = internal.ExtendValidator(t, "metrics")
+	internal.ExpectMetricsPresent(t, app.testHarvest.Metrics, want)
 }
 
 func (app *app) ExpectTxnTraces(t internal.Validator, want []internal.WantTxnTrace) {

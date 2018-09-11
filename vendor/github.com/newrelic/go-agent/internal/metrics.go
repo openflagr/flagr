@@ -256,3 +256,7 @@ func (mt *metricTable) ApplyRules(rules metricRules) *metricTable {
 
 	return applied
 }
+
+func (mt *metricTable) EndpointMethod() string {
+	return cmdMetrics
+}

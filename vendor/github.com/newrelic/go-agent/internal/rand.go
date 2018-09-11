@@ -39,3 +39,21 @@ func RandUint32() uint32 {
 
 	return seededRand.Uint32()
 }
+
+// RandFloat32 returns a random float32 between 0.0 and 1.0.
+func RandFloat32() float32 {
+	seededRand.Lock()
+	defer seededRand.Unlock()
+
+	for {
+		if r := seededRand.Float32(); 0.0 != r {
+			return r
+		}
+	}
+}
+
+// RandUint64N returns a random int64 that's
+// between 0 and the passed in max, non-inclusive
+func RandUint64N(max uint64) uint64 {
+	return RandUint64() % max
+}

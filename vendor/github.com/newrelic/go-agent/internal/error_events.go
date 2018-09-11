@@ -2,7 +2,6 @@ package internal
 
 import (
 	"bytes"
-	"math/rand"
 	"time"
 )
 
@@ -26,20 +25,10 @@ func (e *ErrorEvent) WriteJSON(buf *bytes.Buffer) {
 	w.stringField("error.message", e.Msg)
 	w.floatField("timestamp", timeToFloatSeconds(e.When))
 	w.stringField("transactionName", e.FinalName)
-	w.floatField("duration", e.Duration.Seconds())
-	if e.Queuing > 0 {
-		w.floatField("queueDuration", e.Queuing.Seconds())
-	}
-	if e.externalCallCount > 0 {
-		w.intField("externalCallCount", int64(e.externalCallCount))
-		w.floatField("externalDuration", e.externalDuration.Seconds())
-	}
-	if e.datastoreCallCount > 0 {
-		// Note that "database" is used for the keys here instead of
-		// "datastore" for historical reasons.
-		w.intField("databaseCallCount", int64(e.datastoreCallCount))
-		w.floatField("databaseDuration", e.datastoreDuration.Seconds())
-	}
+
+	sharedTransactionIntrinsics(&e.TxnEvent, &w)
+	sharedBetterCATIntrinsics(&e.TxnEvent, &w)
+
 	buf.WriteByte('}')
 	buf.WriteByte(',')
 	userAttributesJSON(e.Attrs, buf, destError, e.ErrorData.ExtraAttributes)
@@ -58,9 +47,8 @@ func newErrorEvents(max int) *errorEvents {
 	}
 }
 
-func (events *errorEvents) Add(e *ErrorEvent) {
-	stamp := eventStamp(rand.Float32())
-	events.events.addEvent(analyticsEvent{stamp, e})
+func (events *errorEvents) Add(e *ErrorEvent, priority Priority) {
+	events.events.addEvent(analyticsEvent{priority, e})
 }
 
 func (events *errorEvents) MergeIntoHarvest(h *Harvest) {
@@ -73,3 +61,7 @@ func (events *errorEvents) Data(agentRunID string, harvestStart time.Time) ([]by
 
 func (events *errorEvents) numSeen() float64  { return events.events.NumSeen() }
 func (events *errorEvents) numSaved() float64 { return events.events.NumSaved() }
+
+func (events *errorEvents) EndpointMethod() string {
+	return cmdErrorEvents
+}

@@ -27,6 +27,8 @@ func WrapHandle(app Application, pattern string, handler http.Handler) (string, 
 		txn := app.StartTransaction(pattern, w, r)
 		defer txn.End()
 
+		r = RequestWithTransactionContext(r, txn)
+
 		handler.ServeHTTP(txn, r)
 	})
 }

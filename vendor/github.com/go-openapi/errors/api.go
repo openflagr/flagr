@@ -21,6 +21,9 @@ import (
 	"strings"
 )
 
+// DefaultHTTPCode is used when the error Code cannot be used as an HTTP code.
+var DefaultHTTPCode = 422
+
 // Error represents a error interface all swagger framework errors implement
 type Error interface {
 	error
@@ -155,7 +158,7 @@ func ServeError(rw http.ResponseWriter, r *http.Request, err error) {
 
 func asHTTPCode(input int) int {
 	if input >= 600 {
-		return 422
+		return DefaultHTTPCode
 	}
 	return input
 }

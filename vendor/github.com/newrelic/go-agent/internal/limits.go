@@ -24,8 +24,10 @@ const (
 	// MaxTxnErrors is the maximum number of errors captured per
 	// transaction.
 	MaxTxnErrors      = 5
-	maxTxnTraceNodes  = 256
 	maxTxnSlowQueries = 10
+
+	startingTxnTraceNodes = 16
+	maxTxnTraceNodes      = 256
 
 	// harvest data
 	maxMetrics          = 2 * 1000
@@ -36,6 +38,7 @@ const (
 	maxErrorEvents      = 100
 	maxHarvestErrors    = 20
 	maxHarvestSlowSQLs  = 10
+	maxSpanEvents       = 1000
 
 	// attributes
 	attributeKeyLengthLimit   = 255
