@@ -15,7 +15,7 @@ import (
 type Flag struct {
 	gorm.Model
 
-	Key                string `gorm:"type:varchar(64);unique_index"`
+	Key                string `gorm:"type:varchar(64);unique_index:idx_flag_key"`
 	Description        string `sql:"type:text"`
 	CreatedBy          string
 	UpdatedBy          string
