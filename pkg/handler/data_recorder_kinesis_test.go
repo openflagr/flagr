@@ -63,7 +63,7 @@ func TestKinesisEvalResult(t *testing.T) {
 
 		p, err := r.Payload()
 		assert.Equal(t, err, nil)
-		assert.Equal(t, string(p), "{\"evalContext\":{\"entityID\":\"d08042018\",\"entityType\":null,\"flagID\":null},\"flagID\":1,\"flagSnapshotID\":1,\"segmentID\":1,\"timestamp\":null,\"variantAttachment\":null,\"variantID\":1,\"variantKey\":\"control\"}")
+		assert.Equal(t, "{\"evalContext\":{\"entityID\":\"d08042018\",\"entityType\":null},\"flagID\":1,\"flagKey\":null,\"flagSnapshotID\":1,\"segmentID\":1,\"timestamp\":null,\"variantAttachment\":null,\"variantID\":1,\"variantKey\":\"control\"}", string(p))
 	})
 
 	t.Run("empty EvalResult", func(t *testing.T) {

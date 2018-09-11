@@ -24,3 +24,19 @@ func TestFlagPreload(t *testing.T) {
 		assert.NoError(t, err)
 	})
 }
+
+func TestFlagBeforeCreate(t *testing.T) {
+	t.Run("happy code path", func(t *testing.T) {
+		f := GenFixtureFlag()
+		err := f.BeforeCreate()
+		assert.NoError(t, err)
+		assert.NotZero(t, f.Key)
+	})
+
+	t.Run("invalid key", func(t *testing.T) {
+		f := GenFixtureFlag()
+		f.Key = "1-2-3"
+		err := f.BeforeCreate()
+		assert.Error(t, err)
+	})
+}

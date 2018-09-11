@@ -160,6 +160,12 @@ func init() {
             "in": "query"
           },
           {
+            "type": "string",
+            "description": "return flags matching given key",
+            "name": "key",
+            "in": "query"
+          },
+          {
             "type": "integer",
             "format": "int64",
             "description": "return flags given the offset, it should usually set together with limit",
@@ -1156,6 +1162,10 @@ func init() {
         "description": {
           "type": "string",
           "minLength": 1
+        },
+        "key": {
+          "description": "unique key representation of the flag",
+          "type": "string"
         }
       }
     },
@@ -1243,8 +1253,7 @@ func init() {
     "evalContext": {
       "type": "object",
       "required": [
-        "entityType",
-        "flagID"
+        "entityType"
       ],
       "properties": {
         "enableDebug": {
@@ -1265,6 +1274,9 @@ func init() {
           "type": "integer",
           "format": "int64",
           "minimum": 1
+        },
+        "flagKey": {
+          "type": "string"
         }
       }
     },
@@ -1286,6 +1298,7 @@ func init() {
       "type": "object",
       "required": [
         "flagID",
+        "flagKey",
         "segmentID",
         "variantID",
         "variantKey",
@@ -1304,6 +1317,9 @@ func init() {
           "type": "integer",
           "format": "int64",
           "minimum": 1
+        },
+        "flagKey": {
+          "type": "string"
         },
         "flagSnapshotID": {
           "type": "integer",
@@ -1335,8 +1351,7 @@ func init() {
     "evaluationBatchRequest": {
       "type": "object",
       "required": [
-        "entities",
-        "flagIDs"
+        "entities"
       ],
       "properties": {
         "enableDebug": {
@@ -1356,6 +1371,14 @@ func init() {
             "type": "integer",
             "format": "int64",
             "minimum": 1
+          }
+        },
+        "flagKeys": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
           }
         }
       }
@@ -1416,6 +1439,11 @@ func init() {
           "format": "int64",
           "minimum": 1,
           "readOnly": true
+        },
+        "key": {
+          "description": "unique key representation of the flag",
+          "type": "string",
+          "minLength": 1
         },
         "segments": {
           "type": "array",
@@ -1484,6 +1512,10 @@ func init() {
         "description": {
           "type": "string",
           "minLength": 1
+        },
+        "key": {
+          "type": "string",
+          "x-nullable": true
         }
       }
     },
@@ -1832,6 +1864,12 @@ func init() {
             "in": "query"
           },
           {
+            "type": "string",
+            "description": "return flags matching given key",
+            "name": "key",
+            "in": "query"
+          },
+          {
             "type": "integer",
             "format": "int64",
             "description": "return flags given the offset, it should usually set together with limit",
@@ -2828,6 +2866,10 @@ func init() {
         "description": {
           "type": "string",
           "minLength": 1
+        },
+        "key": {
+          "description": "unique key representation of the flag",
+          "type": "string"
         }
       }
     },
@@ -2915,8 +2957,7 @@ func init() {
     "evalContext": {
       "type": "object",
       "required": [
-        "entityType",
-        "flagID"
+        "entityType"
       ],
       "properties": {
         "enableDebug": {
@@ -2937,6 +2978,9 @@ func init() {
           "type": "integer",
           "format": "int64",
           "minimum": 1
+        },
+        "flagKey": {
+          "type": "string"
         }
       }
     },
@@ -2958,6 +3002,7 @@ func init() {
       "type": "object",
       "required": [
         "flagID",
+        "flagKey",
         "segmentID",
         "variantID",
         "variantKey",
@@ -2976,6 +3021,9 @@ func init() {
           "type": "integer",
           "format": "int64",
           "minimum": 1
+        },
+        "flagKey": {
+          "type": "string"
         },
         "flagSnapshotID": {
           "type": "integer",
@@ -3007,8 +3055,7 @@ func init() {
     "evaluationBatchRequest": {
       "type": "object",
       "required": [
-        "entities",
-        "flagIDs"
+        "entities"
       ],
       "properties": {
         "enableDebug": {
@@ -3028,6 +3075,14 @@ func init() {
             "type": "integer",
             "format": "int64",
             "minimum": 1
+          }
+        },
+        "flagKeys": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
           }
         }
       }
@@ -3088,6 +3143,11 @@ func init() {
           "format": "int64",
           "minimum": 1,
           "readOnly": true
+        },
+        "key": {
+          "description": "unique key representation of the flag",
+          "type": "string",
+          "minLength": 1
         },
         "segments": {
           "type": "array",
@@ -3156,6 +3216,10 @@ func init() {
         "description": {
           "type": "string",
           "minLength": 1
+        },
+        "key": {
+          "type": "string",
+          "x-nullable": true
         }
       }
     },

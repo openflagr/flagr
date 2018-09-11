@@ -21,6 +21,9 @@ type CreateFlagRequest struct {
 	// Required: true
 	// Min Length: 1
 	Description *string `json:"description"`
+
+	// unique key representation of the flag
+	Key string `json:"key,omitempty"`
 }
 
 // Validate validates this create flag request

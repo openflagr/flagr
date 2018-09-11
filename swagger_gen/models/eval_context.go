@@ -32,9 +32,11 @@ type EvalContext struct {
 	EntityType *string `json:"entityType"`
 
 	// flag ID
-	// Required: true
 	// Minimum: 1
-	FlagID *int64 `json:"flagID"`
+	FlagID int64 `json:"flagID,omitempty"`
+
+	// flag key
+	FlagKey string `json:"flagKey,omitempty"`
 }
 
 // Validate validates this eval context
@@ -70,11 +72,11 @@ func (m *EvalContext) validateEntityType(formats strfmt.Registry) error {
 
 func (m *EvalContext) validateFlagID(formats strfmt.Registry) error {
 
-	if err := validate.Required("flagID", "body", m.FlagID); err != nil {
-		return err
+	if swag.IsZero(m.FlagID) { // not required
+		return nil
 	}
 
-	if err := validate.MinimumInt("flagID", "body", int64(*m.FlagID), 1, false); err != nil {
+	if err := validate.MinimumInt("flagID", "body", int64(m.FlagID), 1, false); err != nil {
 		return err
 	}
 

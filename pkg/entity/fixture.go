@@ -11,6 +11,7 @@ import (
 func GenFixtureFlag() Flag {
 	f := Flag{
 		Model:       gorm.Model{ID: 100},
+		Key:         "flag_key_100",
 		Description: "",
 		Enabled:     true,
 		Segments:    []Segment{GenFixtureSegment()},

@@ -24,6 +24,9 @@ type PutFlagRequest struct {
 	// Required: true
 	// Min Length: 1
 	Description *string `json:"description"`
+
+	// key
+	Key *string `json:"key,omitempty"`
 }
 
 // Validate validates this put flag request

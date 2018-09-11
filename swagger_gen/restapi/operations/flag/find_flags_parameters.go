@@ -44,6 +44,10 @@ type FindFlagsParams struct {
 	  In: query
 	*/
 	Enabled *bool
+	/*return flags matching given key
+	  In: query
+	*/
+	Key *string
 	/*the numbers of flags to return
 	  In: query
 	*/
@@ -77,6 +81,11 @@ func (o *FindFlagsParams) BindRequest(r *http.Request, route *middleware.Matched
 
 	qEnabled, qhkEnabled, _ := qs.GetOK("enabled")
 	if err := o.bindEnabled(qEnabled, qhkEnabled, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
+	qKey, qhkKey, _ := qs.GetOK("key")
+	if err := o.bindKey(qKey, qhkKey, route.Formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -150,6 +159,24 @@ func (o *FindFlagsParams) bindEnabled(rawData []string, hasKey bool, formats str
 		return errors.InvalidType("enabled", "query", "bool", raw)
 	}
 	o.Enabled = &value
+
+	return nil
+}
+
+// bindKey binds and validates parameter Key from query.
+func (o *FindFlagsParams) bindKey(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+
+	// Required: false
+	// AllowEmptyValue: false
+	if raw == "" { // empty values pass all other validations
+		return nil
+	}
+
+	o.Key = &raw
 
 	return nil
 }

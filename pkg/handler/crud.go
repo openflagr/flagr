@@ -78,6 +78,9 @@ func (c *crud) FindFlags(params flag.FindFlagsParams) middleware.Responder {
 	if params.DescriptionLike != nil {
 		q = q.DescriptionLike(*params.DescriptionLike)
 	}
+	if params.Key != nil {
+		q = q.KeyEq(*params.Key)
+	}
 	if params.Limit != nil {
 		q = q.Limit(int(*params.Limit))
 	}
@@ -104,6 +107,7 @@ func (c *crud) CreateFlag(params flag.CreateFlagParams) middleware.Responder {
 	f := &entity.Flag{}
 	if params.Body != nil {
 		f.Description = util.SafeString(params.Body.Description)
+		f.Key = util.SafeString(params.Body.Key)
 		f.CreatedBy = getSubjectFromRequest(params.HTTPRequest)
 	}
 	err := f.Create(getDB())
@@ -169,6 +173,9 @@ func (c *crud) PutFlag(params flag.PutFlagParams) middleware.Responder {
 	}
 	if params.Body.DataRecordsEnabled != nil {
 		u = u.SetDataRecordsEnabled(*params.Body.DataRecordsEnabled)
+	}
+	if util.SafeString(params.Body.Key) != "" {
+		u = u.SetKey(*params.Body.Key)
 	}
 	if err := u.Update(); err != nil {
 		return flag.NewPutFlagDefault(500).WithPayload(ErrorMessage("%s", err))

@@ -18,6 +18,7 @@ type FindFlagsURL struct {
 	Description     *string
 	DescriptionLike *string
 	Enabled         *bool
+	Key             *string
 	Limit           *int64
 	Offset          *int64
 
@@ -77,6 +78,14 @@ func (o *FindFlagsURL) Build() (*url.URL, error) {
 	}
 	if enabled != "" {
 		qs.Set("enabled", enabled)
+	}
+
+	var key string
+	if o.Key != nil {
+		key = *o.Key
+	}
+	if key != "" {
+		qs.Set("key", key)
 	}
 
 	var limit string

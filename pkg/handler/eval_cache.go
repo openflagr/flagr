@@ -6,6 +6,7 @@ import (
 
 	"github.com/checkr/flagr/pkg/config"
 	"github.com/checkr/flagr/pkg/entity"
+	"github.com/checkr/flagr/pkg/util"
 	"github.com/jinzhu/gorm"
 	"github.com/sirupsen/logrus"
 )
@@ -17,7 +18,7 @@ var (
 
 // EvalCache is the in-memory cache just for evaluation
 type EvalCache struct {
-	mapCache     map[uint]*entity.Flag
+	mapCache     map[string]*entity.Flag
 	mapCacheLock sync.RWMutex
 
 	refreshTimeout  time.Duration
@@ -28,7 +29,7 @@ type EvalCache struct {
 var GetEvalCache = func() *EvalCache {
 	singletonEvalCacheOnce.Do(func() {
 		ec := &EvalCache{
-			mapCache:        make(map[uint]*entity.Flag),
+			mapCache:        make(map[string]*entity.Flag),
 			refreshTimeout:  config.Config.EvalCacheRefreshTimeout,
 			refreshInterval: config.Config.EvalCacheRefreshInterval,
 		}
@@ -53,25 +54,10 @@ func (ec *EvalCache) Start() {
 	}()
 }
 
-// GetByFlagIDs gets the flags by flagIDs from the EvalCache
-func (ec *EvalCache) GetByFlagIDs(flagIDs []uint) map[uint]*entity.Flag {
-	m := make(map[uint]*entity.Flag)
-
+// GetByFlagKeyOrID gets the flag by Key or ID
+func (ec *EvalCache) GetByFlagKeyOrID(keyOrID interface{}) *entity.Flag {
 	ec.mapCacheLock.RLock()
-	for _, flagID := range flagIDs {
-		f, ok := ec.mapCache[flagID]
-		if ok {
-			m[flagID] = f
-		}
-	}
-	ec.mapCacheLock.RUnlock()
-	return m
-}
-
-// GetByFlagID gets the flag by flagID
-func (ec *EvalCache) GetByFlagID(flagID uint) *entity.Flag {
-	ec.mapCacheLock.RLock()
-	f := ec.mapCache[flagID]
+	f := ec.mapCache[util.SafeString(keyOrID)]
 	ec.mapCacheLock.RUnlock()
 	return f
 }
@@ -99,10 +85,15 @@ func (ec *EvalCache) reloadMapCache() error {
 	if err != nil {
 		return err
 	}
-	m := make(map[uint]*entity.Flag)
+	m := make(map[string]*entity.Flag)
 	for i := range fs {
 		ptr := &fs[i]
-		m[ptr.ID] = ptr
+		if ptr.ID != 0 {
+			m[util.SafeString(ptr.ID)] = ptr
+		}
+		if ptr.Key != "" {
+			m[ptr.Key] = ptr
+		}
 	}
 
 	for _, f := range m {

@@ -21,6 +21,10 @@ get:
       type: string
       description: return flags partially matching given description
     - in: query
+      name: key
+      type: string
+      description: return flags matching given key
+    - in: query
       name: offset
       type: integer
       format: int64

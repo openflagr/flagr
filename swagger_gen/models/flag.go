@@ -37,6 +37,10 @@ type Flag struct {
 	// Minimum: 1
 	ID int64 `json:"id,omitempty"`
 
+	// unique key representation of the flag
+	// Min Length: 1
+	Key string `json:"key,omitempty"`
+
 	// segments
 	Segments []*Segment `json:"segments"`
 
@@ -61,6 +65,10 @@ func (m *Flag) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateID(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateKey(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -116,6 +124,19 @@ func (m *Flag) validateID(formats strfmt.Registry) error {
 	}
 
 	if err := validate.MinimumInt("id", "body", int64(m.ID), 1, false); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *Flag) validateKey(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Key) { // not required
+		return nil
+	}
+
+	if err := validate.MinLength("key", "body", string(m.Key), 1); err != nil {
 		return err
 	}
 
