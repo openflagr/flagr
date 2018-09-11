@@ -34,21 +34,26 @@
             No feature flags created yet
           </div>
           <div>
-            <p>
+            <p class="input-new-flag">
+              <el-input
+                placeholder="Specific new flag label"
+                v-model="newFlag.label">
+                <template slot="prepend">
+                  Label
+                </template>
+              </el-input>
               <el-input
                 placeholder="Specific new flag description"
                 v-model="newFlag.description">
                 <template slot="prepend">
                   Description
                 </template>
-                <template slot="append">
-                  <el-button
-                    :disabled="!newFlag.description"
-                    @click.prevent="createFlag">
-                    <span class="el-icon-plus"/> Create Flag
-                  </el-button>
-                </template>
               </el-input>
+              <el-button
+                :disabled="!newFlag.description"
+                @click.prevent="createFlag">
+                <span class="el-icon-plus"/> Create Flag
+              </el-button>
             </p>
           </div>
         </div>
@@ -76,7 +81,8 @@ export default {
       loadError: false,
       flags: [],
       newFlag: {
-        description: ''
+        description: '',
+        label: ''
       }
     }
   },
@@ -94,13 +100,14 @@ export default {
   },
   methods: {
     createFlag () {
-      if (!this.newFlag.description) {
+      if (!this.newFlag.description || !this.newFlag.label) {
         return
       }
 
       this.$http.post(`${API_URL}/flags`, this.newFlag)
         .then(response => {
           let flag = response.body
+          this.newFlag.label = ''
           this.newFlag.description = ''
           this.$message('flag created')
 
@@ -115,6 +122,18 @@ export default {
 </script>
 
 <style lang="less" scoped>
+
+.input-new-flag {
+  display: flex;
+  flex-grow: 1;
+
+  .el-input {
+    width: 40%;
+  }
+  .el-button {
+    width: 20%;
+  }
+}
 
 .flags-container {
   ul {

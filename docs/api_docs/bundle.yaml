@@ -65,6 +65,10 @@ paths:
           type: string
           description: return flags exactly matching given description
         - in: query
+          name: label
+          type: string
+          description: return flags exactly matching given label
+        - in: query
           name: description_like
           type: string
           description: return flags partially matching given description
@@ -762,6 +766,7 @@ definitions:
   flag:
     type: object
     required:
+      - label
       - description
       - enabled
       - dataRecordsEnabled
@@ -771,6 +776,9 @@ definitions:
         format: int64
         minimum: 1
         readOnly: true
+      label:
+        type: string
+        description: test
       description:
         type: string
         minLength: 1
@@ -795,6 +803,9 @@ definitions:
       - description
     properties:
       description:
+        type: string
+        minLength: 1
+      label:
         type: string
         minLength: 1
   putFlagRequest:

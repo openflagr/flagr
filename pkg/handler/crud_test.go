@@ -34,6 +34,7 @@ func TestCrudFlags(t *testing.T) {
 	res = c.CreateFlag(flag.CreateFlagParams{
 		Body: &models.CreateFlagRequest{
 			Description: util.StringPtr("funny flag"),
+			Label:       "evenfunnierlabel",
 		},
 	})
 	assert.NotZero(t, res.(*flag.CreateFlagOK).Payload.ID)
@@ -220,6 +221,26 @@ func TestCrudFlagsWithFailures(t *testing.T) {
 		res = c.GetFlagSnapshots(flag.GetFlagSnapshotsParams{FlagID: int64(99999)})
 		assert.NotZero(t, res.(*flag.GetFlagSnapshotsDefault).Payload)
 	})
+
+	t.Run("CreateNonUniqueFlagLabel - db unique error", func(t *testing.T) {
+		res := c.CreateFlag(flag.CreateFlagParams{
+			Body: &models.CreateFlagRequest{
+				Description: util.StringPtr("funny flag"),
+				Label:       "funnierlabel",
+			},
+		})
+
+		assert.NotZero(t, res.(*flag.CreateFlagOK).Payload.ID)
+
+		res = c.CreateFlag(flag.CreateFlagParams{
+			Body: &models.CreateFlagRequest{
+				Description: util.StringPtr("other funny flag"),
+				Label:       "funnierlabel",
+			},
+		})
+
+		assert.Equal(t, *res.(*flag.CreateFlagDefault).Payload.Message, "cannot create flag. UNIQUE constraint failed: flags.label")
+	})
 }
 
 func TestFindFlags(t *testing.T) {
@@ -235,6 +256,7 @@ func TestFindFlags(t *testing.T) {
 		c.CreateFlag(flag.CreateFlagParams{
 			Body: &models.CreateFlagRequest{
 				Description: util.StringPtr(fmt.Sprintf("flag_%d", i)),
+				Label:       fmt.Sprintf("label_%d", i),
 			},
 		})
 	}
@@ -276,6 +298,12 @@ func TestFindFlags(t *testing.T) {
 		assert.Len(t, res.(*flag.FindFlagsOK).Payload, 2)
 		assert.Equal(t, res.(*flag.FindFlagsOK).Payload[0].ID, int64(3))
 		assert.Equal(t, res.(*flag.FindFlagsOK).Payload[1].ID, int64(4))
+	})
+	t.Run("FindFlags (with matching label)", func(t *testing.T) {
+		res = c.FindFlags(flag.FindFlagsParams{
+			Label: util.StringPtr("label_1"),
+		})
+		assert.Len(t, res.(*flag.FindFlagsOK).Payload, 1)
 	})
 }
 

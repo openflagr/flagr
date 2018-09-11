@@ -1,6 +1,9 @@
 package handler
 
 import (
+	"fmt"
+	"math/rand"
+
 	"github.com/checkr/flagr/pkg/entity"
 	"github.com/checkr/flagr/pkg/mapper/entity_restapi/e2r"
 	"github.com/checkr/flagr/pkg/mapper/entity_restapi/r2e"
@@ -84,6 +87,9 @@ func (c *crud) FindFlags(params flag.FindFlagsParams) middleware.Responder {
 	if params.Offset != nil {
 		q = q.Offset(int(*params.Offset))
 	}
+	if params.Label != nil {
+		q = q.LabelEq(*params.Label)
+	}
 
 	err := q.All(&fs)
 	if err != nil {
@@ -105,7 +111,13 @@ func (c *crud) CreateFlag(params flag.CreateFlagParams) middleware.Responder {
 	if params.Body != nil {
 		f.Description = util.SafeString(params.Body.Description)
 		f.CreatedBy = getSubjectFromRequest(params.HTTPRequest)
+		f.Label = util.SafeString(params.Body.Label)
 	}
+
+	if f.Label == "" {
+		f.Label = fmt.Sprintf("label_%d", rand.Int31())
+	}
+
 	err := f.Create(getDB())
 	if err != nil {
 		return flag.NewCreateFlagDefault(500).WithPayload(

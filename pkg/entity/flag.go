@@ -13,6 +13,7 @@ import (
 // gen:qs
 type Flag struct {
 	gorm.Model
+	Label              string `gorm:"unique;not null" index:"idx_flag_label"`
 	Description        string `sql:"type:text"`
 	CreatedBy          string
 	UpdatedBy          string

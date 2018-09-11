@@ -155,6 +155,12 @@ func init() {
           },
           {
             "type": "string",
+            "description": "return flags exactly matching given label",
+            "name": "label",
+            "in": "query"
+          },
+          {
+            "type": "string",
             "description": "return flags partially matching given description",
             "name": "description_like",
             "in": "query"
@@ -1156,6 +1162,10 @@ func init() {
         "description": {
           "type": "string",
           "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
         }
       }
     },
@@ -1395,6 +1405,7 @@ func init() {
     "flag": {
       "type": "object",
       "required": [
+        "label",
         "description",
         "enabled",
         "dataRecordsEnabled"
@@ -1416,6 +1427,10 @@ func init() {
           "format": "int64",
           "minimum": 1,
           "readOnly": true
+        },
+        "label": {
+          "description": "test",
+          "type": "string"
         },
         "segments": {
           "type": "array",
@@ -1827,6 +1842,12 @@ func init() {
           },
           {
             "type": "string",
+            "description": "return flags exactly matching given label",
+            "name": "label",
+            "in": "query"
+          },
+          {
+            "type": "string",
             "description": "return flags partially matching given description",
             "name": "description_like",
             "in": "query"
@@ -2828,6 +2849,10 @@ func init() {
         "description": {
           "type": "string",
           "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
         }
       }
     },
@@ -3067,6 +3092,7 @@ func init() {
     "flag": {
       "type": "object",
       "required": [
+        "label",
         "description",
         "enabled",
         "dataRecordsEnabled"
@@ -3088,6 +3114,10 @@ func init() {
           "format": "int64",
           "minimum": 1,
           "readOnly": true
+        },
+        "label": {
+          "description": "test",
+          "type": "string"
         },
         "segments": {
           "type": "array",
