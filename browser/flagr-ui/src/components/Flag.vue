@@ -118,21 +118,6 @@
                       </el-tag>
                     </div>
                     <div class="flex-row-right">
-                      <el-button size="small" @click="putFlag(flag)">
-                        Save Flag
-                      </el-button>
-                    </div>
-                  </div>
-                  <el-row :gutter="10" class="flag-content">
-                    <el-col :span="17">
-                      <el-input
-                        size="small"
-                        placeholder="Key"
-                        v-model="flag.description">
-                        <template slot="prepend">Flag Description</template>
-                      </el-input>
-                    </el-col>
-                    <el-col :span="7" style="text-align: right">
                       <el-tooltip content="Controls whether to log to data pipeline, e.g. Kafka" placement="top">
                         <el-switch
                           size="small"
@@ -143,6 +128,27 @@
                         </el-switch>
                       </el-tooltip>
                       <span size="small">Data Records</span>
+                      <el-button size="small" @click="putFlag(flag)">
+                        Save Flag
+                      </el-button>
+                    </div>
+                  </div>
+                  <el-row class="flag-content">
+                    <el-col :span="24">
+                      <el-input
+                        size="small"
+                        placeholder="Key"
+                        v-model="flag.key">
+                        <template slot="prepend">Flag Key</template>
+                      </el-input>
+                    </el-col>
+                    <el-col :span="24">
+                      <el-input
+                        size="small"
+                        placeholder="Description"
+                        v-model="flag.description">
+                        <template slot="prepend">Flag Description</template>
+                      </el-input>
                     </el-col>
                   </el-row>
                 </el-card>
@@ -170,11 +176,13 @@
                           </div>
                         </div>
                         <el-input
+                          size="small"
                           placeholder="Key"
                           v-model="variant.key">
-                          <template slot="prepend">Key&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</template>
+                          <template slot="prepend">Key</template>
                         </el-input>
                         <el-input
+                          size="small"
                           placeholder="{}"
                           v-model="variant.attachmentStr">
                           <template slot="prepend">Attachment </template>
@@ -508,7 +516,8 @@ export default {
       const flagId = this.$route.params.flagId
       this.$http.put(`${API_URL}/flags/${flagId}`, {
         description: flag.description,
-        dataRecordsEnabled: flag.dataRecordsEnabled
+        dataRecordsEnabled: flag.dataRecordsEnabled,
+        key: flag.key
       }).then(() => {
         this.$message.success(`You've updated flag`)
       }, err => {
@@ -739,7 +748,7 @@ export default {
 }
 </script>
 
-<style lang="less" scoped>
+<style lang="less">
 h4 {
   padding: 0;
   margin: 10px 0;
@@ -789,6 +798,9 @@ ol.constraints-inner {
   .el-card {
     margin-bottom: 1em;
   }
+  .el-input-group__prepend {
+    width: 8em;
+  }
 }
 
 .segment-description-rollout {
@@ -817,5 +829,8 @@ ol.constraints-inner {
 
 .flag-content{
   margin-top: 8px;
+  .el-input-group__prepend {
+    width: 8em;
+  }
 }
 </style>

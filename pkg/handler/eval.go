@@ -47,6 +47,7 @@ func (e *eval) PostEvaluation(params evaluation.PostEvaluationParams) middleware
 func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) middleware.Responder {
 	entities := params.Body.Entities
 	flagIDs := params.Body.FlagIds
+	flagKeys := params.Body.FlagKeys
 	results := &models.EvaluationBatchResponse{}
 
 	// TODO make it concurrent
@@ -58,6 +59,17 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 				EntityID:      entity.EntityID,
 				EntityType:    entity.EntityType,
 				FlagID:        flagID,
+			}
+			evalResult := evalFlag(evalContext)
+			results.EvaluationResults = append(results.EvaluationResults, evalResult)
+		}
+		for _, flagKey := range flagKeys {
+			evalContext := models.EvalContext{
+				EnableDebug:   params.Body.EnableDebug,
+				EntityContext: entity.EntityContext,
+				EntityID:      entity.EntityID,
+				EntityType:    entity.EntityType,
+				FlagKey:       flagKey,
 			}
 			evalResult := evalFlag(evalContext)
 			results.EvaluationResults = append(results.EvaluationResults, evalResult)
@@ -108,11 +120,11 @@ var evalFlag = func(evalContext models.EvalContext) *models.EvalResult {
 	}
 
 	if !f.Enabled {
-		return BlankResult(f, evalContext, fmt.Sprintf("flagID %v is not enabled", flagID))
+		return BlankResult(f, evalContext, fmt.Sprintf("flagID %v is not enabled", f.ID))
 	}
 
 	if len(f.Segments) == 0 {
-		return BlankResult(f, evalContext, fmt.Sprintf("flagID %v has no segments", flagID))
+		return BlankResult(f, evalContext, fmt.Sprintf("flagID %v has no segments", f.ID))
 	}
 
 	if evalContext.EntityID == "" {
@@ -124,7 +136,7 @@ var evalFlag = func(evalContext models.EvalContext) *models.EvalResult {
 	var sID *int64
 
 	for _, segment := range f.Segments {
-		variantID, log := evalSegment(evalContext, segment)
+		variantID, log := evalSegment(f.ID, evalContext, segment)
 		if evalContext.EnableDebug {
 			logs = append(logs, log)
 		}
@@ -161,6 +173,7 @@ var logEvalResult = func(r *models.EvalResult, dataRecordsEnabled bool) {
 }
 
 var evalSegment = func(
+	flagID uint,
 	evalContext models.EvalContext,
 	segment entity.Segment,
 ) (
@@ -197,7 +210,7 @@ var evalSegment = func(
 
 	vID, debugMsg := segment.SegmentEvaluation.DistributionArray.Rollout(
 		evalContext.EntityID,
-		fmt.Sprint(evalContext.FlagID), // default use the flagID as salt
+		fmt.Sprint(flagID), // default use the flagID as salt
 		segment.RolloutPercent,
 	)
 

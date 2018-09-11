@@ -16,7 +16,7 @@ import (
 func TestEvalSegment(t *testing.T) {
 	t.Run("test empty evalContext", func(t *testing.T) {
 		s := entity.GenFixtureSegment()
-		vID, log := evalSegment(models.EvalContext{}, s)
+		vID, log := evalSegment(100, models.EvalContext{}, s)
 
 		assert.Nil(t, vID)
 		assert.NotEmpty(t, log)
@@ -25,7 +25,7 @@ func TestEvalSegment(t *testing.T) {
 	t.Run("test happy code path", func(t *testing.T) {
 		s := entity.GenFixtureSegment()
 		s.RolloutPercent = uint(100)
-		vID, log := evalSegment(models.EvalContext{
+		vID, log := evalSegment(100, models.EvalContext{
 			EnableDebug:   true,
 			EntityContext: map[string]interface{}{"dl_state": "CA"},
 			EntityID:      "entityID1",
@@ -40,7 +40,7 @@ func TestEvalSegment(t *testing.T) {
 	t.Run("test constraint evaluation error", func(t *testing.T) {
 		s := entity.GenFixtureSegment()
 		s.RolloutPercent = uint(100)
-		vID, log := evalSegment(models.EvalContext{
+		vID, log := evalSegment(100, models.EvalContext{
 			EnableDebug:   true,
 			EntityContext: map[string]interface{}{},
 			EntityID:      "entityID1",
@@ -55,7 +55,7 @@ func TestEvalSegment(t *testing.T) {
 	t.Run("test constraint not match", func(t *testing.T) {
 		s := entity.GenFixtureSegment()
 		s.RolloutPercent = uint(100)
-		vID, log := evalSegment(models.EvalContext{
+		vID, log := evalSegment(100, models.EvalContext{
 			EnableDebug:   true,
 			EntityContext: map[string]interface{}{"dl_state": "NY"},
 			EntityID:      "entityID1",
@@ -70,7 +70,7 @@ func TestEvalSegment(t *testing.T) {
 	t.Run("test evalContext wrong format", func(t *testing.T) {
 		s := entity.GenFixtureSegment()
 		s.RolloutPercent = uint(100)
-		vID, log := evalSegment(models.EvalContext{
+		vID, log := evalSegment(100, models.EvalContext{
 			EnableDebug:   true,
 			EntityContext: nil,
 			EntityID:      "entityID1",
@@ -101,6 +101,19 @@ func TestEvalFlag(t *testing.T) {
 			EntityID:      "entityID1",
 			EntityType:    util.StringPtr("entityType1"),
 			FlagID:        int64(100),
+		})
+		assert.NotNil(t, result)
+		assert.NotNil(t, result.VariantID)
+	})
+
+	t.Run("test happy code path with flagKey", func(t *testing.T) {
+		defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
+		result := evalFlag(models.EvalContext{
+			EnableDebug:   true,
+			EntityContext: map[string]interface{}{"dl_state": "CA"},
+			EntityID:      "entityID1",
+			EntityType:    util.StringPtr("entityType1"),
+			FlagKey:       "flag_key_100",
 		})
 		assert.NotNil(t, result)
 		assert.NotNil(t, result.VariantID)
@@ -245,7 +258,8 @@ func TestPostEvaluationBatch(t *testing.T) {
 						EntityType:    util.StringPtr("entityType1"),
 					},
 				},
-				FlagIds: []int64{100, 200},
+				FlagIds:  []int64{100, 200},
+				FlagKeys: []string{"flag_key_1", "flag_key_2"},
 			},
 		})
 		assert.NotNil(t, resp)
