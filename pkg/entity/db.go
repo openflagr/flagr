@@ -30,7 +30,7 @@ func GetDB() *gorm.DB {
 			}
 		}
 		db.SetLogger(logrus.StandardLogger())
-		db.AutoMigrate(AutoMigrateTables...)
+		db.Debug().AutoMigrate(AutoMigrateTables...)
 		singletonDB = db
 	})
 

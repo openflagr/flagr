@@ -103,3 +103,11 @@ func TestRound(t *testing.T) {
 	assert.Equal(t, Round(float64(-1.5)), -2)
 	assert.Equal(t, Round(float64(0.0)), 0)
 }
+
+func TestNewSecureRandomKey(t *testing.T) {
+	assert.NotZero(t, NewSecureRandomKey())
+	assert.Contains(t, NewSecureRandomKey(), randomKeyPrefix)
+
+	ok, _ := IsSafeKey(NewSecureRandomKey())
+	assert.True(t, ok)
+}
