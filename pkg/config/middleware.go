@@ -80,7 +80,8 @@ func setupJWTAuthMiddleware() *auth {
 	}
 
 	return &auth{
-		WhitelistPaths: Config.JWTAuthWhitelistPaths,
+		PrefixWhitelistPaths: Config.JWTAuthPrefixWhitelistPaths,
+		ExactWhitelistPaths:  Config.JWTAuthExactWhitelistPaths,
 		JWTMiddleware: jwtmiddleware.New(jwtmiddleware.Options{
 			ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
 				return validationKey, errParsingKey
@@ -116,17 +117,35 @@ func jwtErrorHandler(w http.ResponseWriter, r *http.Request, err string) {
 }
 
 type auth struct {
-	WhitelistPaths []string
-	JWTMiddleware  *jwtmiddleware.JWTMiddleware
+	PrefixWhitelistPaths []string
+	ExactWhitelistPaths  []string
+	JWTMiddleware        *jwtmiddleware.JWTMiddleware
+}
+
+func (a *auth) whitelist(req *http.Request) bool {
+	path := req.URL.Path
+
+	// If we set to 401 unauthorized, let the client handles the 401 itself
+	if Config.JWTAuthNoTokenStatusCode == http.StatusUnauthorized {
+		for _, p := range a.ExactWhitelistPaths {
+			if p == path {
+				return true
+			}
+		}
+	}
+
+	for _, p := range a.PrefixWhitelistPaths {
+		if p != "" && strings.HasPrefix(path, p) {
+			return true
+		}
+	}
+	return false
 }
 
 func (a *auth) ServeHTTP(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
-	path := req.URL.Path
-	for _, p := range a.WhitelistPaths {
-		if p != "" && strings.HasPrefix(path, p) {
-			next(w, req)
-			return
-		}
+	if a.whitelist(req) {
+		next(w, req)
+		return
 	}
 	a.JWTMiddleware.HandlerWithNext(w, req, next)
 }
