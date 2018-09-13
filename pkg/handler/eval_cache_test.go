@@ -9,17 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetEvalCacheStart(t *testing.T) {
-	db := entity.PopulateTestDB(entity.GenFixtureFlag())
-	defer db.Close()
-	defer gostub.StubFunc(&getDB, db).Reset()
-
-	ec := GetEvalCache()
-	assert.NotPanics(t, func() {
-		ec.Start()
-	})
-}
-
 func TestGetByFlagKeyOrID(t *testing.T) {
 	fixtureFlag := entity.GenFixtureFlag()
 	db := entity.PopulateTestDB(fixtureFlag)
@@ -27,7 +16,7 @@ func TestGetByFlagKeyOrID(t *testing.T) {
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	ec := GetEvalCache()
-	ec.Start()
+	ec.reloadMapCache()
 	f := ec.GetByFlagKeyOrID(fixtureFlag.ID)
 	assert.Equal(t, f.ID, fixtureFlag.ID)
 }

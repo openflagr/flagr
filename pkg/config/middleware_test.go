@@ -113,7 +113,7 @@ func TestAuthMiddleware(t *testing.T) {
 
 		res := httptest.NewRecorder()
 		res.Body = new(bytes.Buffer)
-		req, _ := http.NewRequest("GET", fmt.Sprintf("http://localhost:18000%s", Config.JWTAuthWhitelistPaths[0]), nil)
+		req, _ := http.NewRequest("GET", fmt.Sprintf("http://localhost:18000%s", Config.JWTAuthPrefixWhitelistPaths[0]), nil)
 		hh.ServeHTTP(res, req)
 		assert.Equal(t, http.StatusOK, res.Code)
 	})
@@ -230,6 +230,67 @@ o2kQ+X5xK9cipRgEKwIDAQAB
 		})
 		hh.ServeHTTP(res, req)
 		assert.Equal(t, http.StatusOK, res.Code)
+	})
+}
+
+func TestAuthMiddlewareWithUnauthorized(t *testing.T) {
+	h := &okHandler{}
+
+	t.Run("it will return 401 if no cookie passed", func(t *testing.T) {
+		Config.JWTAuthEnabled = true
+		Config.JWTAuthNoTokenStatusCode = http.StatusUnauthorized
+		defer func() {
+			Config.JWTAuthEnabled = false
+			Config.JWTAuthNoTokenStatusCode = http.StatusTemporaryRedirect
+		}()
+
+		hh := SetupGlobalMiddleware(h)
+		res := httptest.NewRecorder()
+		res.Body = new(bytes.Buffer)
+		req, _ := http.NewRequest("GET", "http://localhost:18000/api/v1/flags", nil)
+		hh.ServeHTTP(res, req)
+		assert.Equal(t, http.StatusUnauthorized, res.Code)
+	})
+
+	t.Run("it will return 200 if cookie passed", func(t *testing.T) {
+		Config.JWTAuthEnabled = true
+		Config.JWTAuthNoTokenStatusCode = http.StatusUnauthorized
+		defer func() {
+			Config.JWTAuthEnabled = false
+			Config.JWTAuthNoTokenStatusCode = http.StatusTemporaryRedirect
+		}()
+
+		hh := SetupGlobalMiddleware(h)
+		res := httptest.NewRecorder()
+		res.Body = new(bytes.Buffer)
+		req, _ := http.NewRequest("GET", "http://localhost:18000/api/v1/flags", nil)
+		req.AddCookie(&http.Cookie{
+			Name:  "access_token",
+			Value: validHS256JWTToken,
+		})
+		hh.ServeHTTP(res, req)
+		assert.Equal(t, http.StatusOK, res.Code)
+	})
+
+	t.Run("it will return 200 for some paths", func(t *testing.T) {
+		Config.JWTAuthEnabled = true
+		Config.JWTAuthNoTokenStatusCode = http.StatusUnauthorized
+		defer func() {
+			Config.JWTAuthEnabled = false
+			Config.JWTAuthNoTokenStatusCode = http.StatusTemporaryRedirect
+		}()
+
+		testPaths := []string{"/", "", "/#", "/#/", "/static", "/static/"}
+		for _, path := range testPaths {
+			t.Run(fmt.Sprintf("path: %s", path), func(t *testing.T) {
+				hh := SetupGlobalMiddleware(h)
+				res := httptest.NewRecorder()
+				res.Body = new(bytes.Buffer)
+				req, _ := http.NewRequest("GET", fmt.Sprintf("http://localhost:18000%s", path), nil)
+				hh.ServeHTTP(res, req)
+				assert.Equal(t, http.StatusOK, res.Code)
+			})
+		}
 	})
 }
 

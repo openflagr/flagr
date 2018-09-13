@@ -107,14 +107,15 @@ var Config = struct {
 	Note:
 		If the access_token is present in both the header and cookie only the latest will be used
 	*/
-	JWTAuthEnabled            bool     `env:"FLAGR_JWT_AUTH_ENABLED" envDefault:"false"`
-	JWTAuthDebug              bool     `env:"FLAGR_JWT_AUTH_DEBUG" envDefault:"false"`
-	JWTAuthWhitelistPaths     []string `env:"FLAGR_JWT_AUTH_WHITELIST_PATHS" envDefault:"/api/v1/evaluation" envSeparator:","`
-	JWTAuthCookieTokenName    string   `env:"FLAGR_JWT_AUTH_COOKIE_TOKEN_NAME" envDefault:"access_token"`
-	JWTAuthSecret             string   `env:"FLAGR_JWT_AUTH_SECRET" envDefault:""`
-	JWTAuthNoTokenStatusCode  int      `env:"FLAGR_JWT_AUTH_NO_TOKEN_STATUS_CODE" envDefault:"307"` // "307" or "401"
-	JWTAuthNoTokenRedirectURL string   `env:"FLAGR_JWT_AUTH_NO_TOKEN_REDIRECT_URL" envDefault:""`
-	JWTAuthUserProperty       string   `env:"FLAGR_JWT_AUTH_USER_PROPERTY" envDefault:"flagr_user"`
+	JWTAuthEnabled              bool     `env:"FLAGR_JWT_AUTH_ENABLED" envDefault:"false"`
+	JWTAuthDebug                bool     `env:"FLAGR_JWT_AUTH_DEBUG" envDefault:"false"`
+	JWTAuthPrefixWhitelistPaths []string `env:"FLAGR_JWT_AUTH_WHITELIST_PATHS" envDefault:"/api/v1/evaluation,/static" envSeparator:","`
+	JWTAuthExactWhitelistPaths  []string `env:"FLAGR_JWT_AUTH_EXACT_WHITELIST_PATHS" envDefault:",/" envSeparator:","`
+	JWTAuthCookieTokenName      string   `env:"FLAGR_JWT_AUTH_COOKIE_TOKEN_NAME" envDefault:"access_token"`
+	JWTAuthSecret               string   `env:"FLAGR_JWT_AUTH_SECRET" envDefault:""`
+	JWTAuthNoTokenStatusCode    int      `env:"FLAGR_JWT_AUTH_NO_TOKEN_STATUS_CODE" envDefault:"307"` // "307" or "401"
+	JWTAuthNoTokenRedirectURL   string   `env:"FLAGR_JWT_AUTH_NO_TOKEN_REDIRECT_URL" envDefault:""`
+	JWTAuthUserProperty         string   `env:"FLAGR_JWT_AUTH_USER_PROPERTY" envDefault:"flagr_user"`
 
 	// "HS256" and "RS256" supported
 	JWTAuthSigningMethod string `env:"FLAGR_JWT_AUTH_SIGNING_METHOD" envDefault:"HS256"`
