@@ -6,6 +6,7 @@ import (
 
 	"github.com/checkr/flagr/pkg/entity"
 	"github.com/checkr/flagr/pkg/util"
+	"github.com/go-openapi/strfmt"
 
 	"github.com/checkr/flagr/swagger_gen/models"
 )
@@ -20,6 +21,9 @@ func MapFlag(e *entity.Flag, preload bool) (*models.Flag, error) {
 	r.Description = util.StringPtr(e.Description)
 	r.Enabled = util.BoolPtr(e.Enabled)
 	r.DataRecordsEnabled = util.BoolPtr(e.DataRecordsEnabled)
+	r.UpdatedAt = strfmt.DateTime(e.UpdatedAt)
+	r.CreatedBy = e.CreatedBy
+	r.UpdatedBy = e.UpdatedBy
 
 	if preload {
 		if err := e.Preload(getDB()); err != nil {

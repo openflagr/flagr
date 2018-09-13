@@ -26,8 +26,10 @@
 </template>
 
 <script>
-import constants from '@/constants'
+import Axios from 'axios'
 import {diffJson, convertChangesToXML} from 'diff'
+
+import constants from '@/constants'
 
 const {
   API_URL
@@ -60,11 +62,9 @@ export default {
   },
   methods: {
     getFlagSnapshots () {
-      this.$http.get(`${API_URL}/flags/${this.$props.flagId}/snapshots`).then((response) => {
-        this.flagSnapshots = response.body
-      }, () => {
-        this.$message.error(`failed to get flag snapshots`)
-      })
+      Axios.get(`${API_URL}/flags/${this.$props.flagId}/snapshots`).then((response) => {
+        this.flagSnapshots = response.data
+      }, () => { this.$message.error(`failed to get flag snapshots`) })
     },
     getDiff (newFlag, oldFlag) {
       const o = JSON.parse(JSON.stringify(oldFlag))

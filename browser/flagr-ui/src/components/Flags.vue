@@ -2,18 +2,13 @@
   <el-row>
     <el-col :span="14" :offset="5">
       <div class="flags-container container">
-        <el-breadcrumb separator="/" v-if="loaded && !loadError">
+        <el-breadcrumb separator="/" v-if="loaded">
           <el-breadcrumb-item>Home page</el-breadcrumb-item>
         </el-breadcrumb>
 
         <spinner v-if="!loaded" />
 
-        <div v-if="loadError" class="card--error">
-          <span class="el-icon-circle-close"></span>
-          Failed to load feature flags
-        </div>
-
-        <div v-if="loaded && !loadError">
+        <div v-if="loaded">
           <ul v-if="flags.length">
             <li
               v-for="flag in flags" class="flag"
@@ -58,8 +53,15 @@
 </template>
 
 <script>
+import Axios from 'axios'
+
 import constants from '@/constants'
 import Spinner from '@/components/Spinner'
+import helpers from '@/helpers/helpers'
+
+const {
+  handleErr
+} = helpers
 
 const {
   API_URL
@@ -73,7 +75,6 @@ export default {
   data () {
     return {
       loaded: false,
-      loadError: false,
       flags: [],
       newFlag: {
         description: ''
@@ -81,16 +82,13 @@ export default {
     }
   },
   created () {
-    this.$http.get(`${API_URL}/flags`)
+    Axios.get(`${API_URL}/flags`)
       .then(response => {
-        let flags = response.body
+        let flags = response.data
         this.loaded = true
         flags.reverse()
         this.flags = flags
-      }, (err) => {
-        this.$message.error(err.body.message)
-        this.loadError = true
-      })
+      }, handleErr.bind(this))
   },
   methods: {
     createFlag () {
@@ -98,17 +96,15 @@ export default {
         return
       }
 
-      this.$http.post(`${API_URL}/flags`, this.newFlag)
+      Axios.post(`${API_URL}/flags`, this.newFlag)
         .then(response => {
-          let flag = response.body
+          let flag = response.data
           this.newFlag.description = ''
-          this.$message('flag created')
+          this.$message.success('flag created')
 
           flag._new = true
           this.flags.unshift(flag)
-        }, err => {
-          this.$message.error(err.body.message)
-        })
+        }, handleErr.bind(this))
     }
   }
 }

@@ -19,6 +19,9 @@ import (
 // swagger:model flag
 type Flag struct {
 
+	// created by
+	CreatedBy string `json:"createdBy,omitempty"`
+
 	// enabled data records will get data logging in the metrics pipeline, for example, kafka.
 	// Required: true
 	DataRecordsEnabled *bool `json:"dataRecordsEnabled"`
@@ -43,6 +46,13 @@ type Flag struct {
 
 	// segments
 	Segments []*Segment `json:"segments"`
+
+	// updated at
+	// Format: date-time
+	UpdatedAt strfmt.DateTime `json:"updatedAt,omitempty"`
+
+	// updated by
+	UpdatedBy string `json:"updatedBy,omitempty"`
 
 	// variants
 	Variants []*Variant `json:"variants"`
@@ -73,6 +83,10 @@ func (m *Flag) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateSegments(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateUpdatedAt(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -163,6 +177,19 @@ func (m *Flag) validateSegments(formats strfmt.Registry) error {
 			}
 		}
 
+	}
+
+	return nil
+}
+
+func (m *Flag) validateUpdatedAt(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.UpdatedAt) { // not required
+		return nil
+	}
+
+	if err := validate.FormatOf("updatedAt", "body", "date-time", m.UpdatedAt.String(), formats); err != nil {
+		return err
 	}
 
 	return nil

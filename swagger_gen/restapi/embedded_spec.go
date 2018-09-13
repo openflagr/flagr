@@ -1427,6 +1427,9 @@ func init() {
         "dataRecordsEnabled"
       ],
       "properties": {
+        "createdBy": {
+          "type": "string"
+        },
         "dataRecordsEnabled": {
           "description": "enabled data records will get data logging in the metrics pipeline, for example, kafka.",
           "type": "boolean"
@@ -1454,6 +1457,13 @@ func init() {
           "items": {
             "$ref": "#/definitions/segment"
           }
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedBy": {
+          "type": "string"
         },
         "variants": {
           "type": "array",
@@ -3135,6 +3145,9 @@ func init() {
         "dataRecordsEnabled"
       ],
       "properties": {
+        "createdBy": {
+          "type": "string"
+        },
         "dataRecordsEnabled": {
           "description": "enabled data records will get data logging in the metrics pipeline, for example, kafka.",
           "type": "boolean"
@@ -3162,6 +3175,13 @@ func init() {
           "items": {
             "$ref": "#/definitions/segment"
           }
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedBy": {
+          "type": "string"
         },
         "variants": {
           "type": "array",
