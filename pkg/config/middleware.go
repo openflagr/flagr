@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -24,7 +25,8 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 	if Config.CORSEnabled {
 		n.Use(cors.New(cors.Options{
 			AllowedOrigins: []string{"*"},
-			AllowedHeaders: []string{"Content-Type", "Accepts"},
+			AllowedHeaders: []string{"Content-Type"},
+			ExposedHeaders: []string{"Www-Authenticate"},
 			AllowedMethods: []string{"GET", "POST", "PUT", "DELETE"},
 		}))
 	}
@@ -96,10 +98,20 @@ func setupJWTAuthMiddleware() *auth {
 			),
 			UserProperty: Config.JWTAuthUserProperty,
 			Debug:        Config.JWTAuthDebug,
-			ErrorHandler: func(w http.ResponseWriter, r *http.Request, err string) {
-				http.Redirect(w, r, Config.JWTAuthNoTokenRedirectURL, http.StatusTemporaryRedirect)
-			},
+			ErrorHandler: jwtErrorHandler,
 		}),
+	}
+}
+
+func jwtErrorHandler(w http.ResponseWriter, r *http.Request, err string) {
+	switch Config.JWTAuthNoTokenStatusCode {
+	case http.StatusTemporaryRedirect:
+		http.Redirect(w, r, Config.JWTAuthNoTokenRedirectURL, http.StatusTemporaryRedirect)
+		return
+	default:
+		w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer realm="%s"`, Config.JWTAuthNoTokenRedirectURL))
+		http.Error(w, "Not authorized", http.StatusUnauthorized)
+		return
 	}
 }
 

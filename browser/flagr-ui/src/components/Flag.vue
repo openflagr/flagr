@@ -416,6 +416,7 @@
 <script>
 import clone from 'lodash.clone'
 import draggable from 'vuedraggable'
+import Axios from 'axios'
 
 import constants from '@/constants'
 import helpers from '@/helpers/helpers'
@@ -431,7 +432,8 @@ const OPERATOR_VALUE_TO_LABEL_MAP = operators.reduce((acc, el) => {
 
 const {
   sum,
-  pluck
+  pluck,
+  handleErr
 } = helpers
 
 const {
@@ -482,8 +484,17 @@ export default {
       dialogDeleteFlagVisible: false,
       dialogEditDistributionOpen: false,
       dialogCreateSegmentOpen: false,
-      flag: {},
-      flagId: this.$route.params.id,
+      flag: {
+        createdBy: '',
+        dataRecordsEnabled: false,
+        description: '',
+        enabled: false,
+        id: 0,
+        key: '',
+        segments: [],
+        updatedAt: '',
+        variants: []
+      },
       newSegment: clone(DEFAULT_SEGMENT),
       newVariant: clone(DEFAULT_VARIANT),
       selectedSegment: null,
@@ -499,42 +510,37 @@ export default {
     newDistributionIsValid () {
       const percentageSum = sum(pluck(Object.values(this.newDistributions), 'percent'))
       return percentageSum === 100
+    },
+    flagId () {
+      return this.$route.params.flagId
     }
   },
   methods: {
     deleteFlag () {
-      const {flagId} = this.$route.params
-      this.$http.delete(`${API_URL}/flags/${flagId}`)
-        .then(() => {
-          this.$router.replace({name: 'home'})
-          this.$message.success(`You deleted flag ${flagId}`)
-        }, err => {
-          this.$message.error(err.body.message)
-        })
+      Axios.delete(
+        `${API_URL}/flags/${this.flagId}`
+      ).then(() => {
+        this.$router.replace({name: 'home'})
+        this.$message.success(`You deleted flag ${this.flagId}`)
+      }, handleErr.bind(this))
     },
     putFlag (flag) {
-      const flagId = this.$route.params.flagId
-      this.$http.put(`${API_URL}/flags/${flagId}`, {
+      Axios.put(`${API_URL}/flags/${this.flagId}`, {
         description: flag.description,
         dataRecordsEnabled: flag.dataRecordsEnabled,
         key: flag.key || ''
       }).then(() => {
         this.$message.success(`You've updated flag`)
-      }, err => {
-        this.$message.error(err.body.message)
-      })
+      }, handleErr.bind(this))
     },
     setFlagEnabled (checked) {
-      const flagId = this.$route.params.flagId
-      this.$http.put(
-        `${API_URL}/flags/${flagId}/enabled`,
+      Axios.put(
+        `${API_URL}/flags/${this.flagId}/enabled`,
         {enabled: checked}
       ).then(() => {
         const checkedStr = checked ? 'on' : 'off'
         this.$message.success(`You turned ${checkedStr} this feature flag`)
-      }, err => {
-        this.$message.error(err.body.message)
-      })
+      }, handleErr.bind(this))
     },
     selectVariant ($event, variant) {
       const checked = $event
@@ -560,39 +566,30 @@ export default {
       this.dialogEditDistributionOpen = true
     },
     saveDistribution (segment) {
-      const flagId = this.$route.params.flagId
-
       const distributions = Object.values(this.newDistributions).filter(distribution => distribution.percent !== 0)
 
-      this.$http.put(
-        `${API_URL}/flags/${flagId}/segments/${segment.id}/distributions`,
+      Axios.put(
+        `${API_URL}/flags/${this.flagId}/segments/${segment.id}/distributions`,
         {distributions}
       ).then(response => {
-        let distributions = response.body
+        let distributions = response.data
         this.selectedSegment.distributions = distributions
         this.dialogEditDistributionOpen = false
         this.$message.success('distributions updated')
-      }, err => {
-        this.$message.error(err.body.message)
-      })
+      }, handleErr.bind(this))
     },
     createVariant () {
-      const flagId = this.$route.params.flagId
-      this.$http.post(
-        `${API_URL}/flags/${flagId}/variants`,
+      Axios.post(
+        `${API_URL}/flags/${this.flagId}/variants`,
         this.newVariant
       ).then(response => {
-        let variant = response.body
+        let variant = response.data
         this.newVariant = clone(DEFAULT_VARIANT)
         this.flag.variants.push(variant)
         this.$message.success('new variant created')
-      }, err => {
-        this.$message.error(err.body.message)
-      })
+      }, handleErr.bind(this))
     },
     deleteVariant (variant) {
-      const {flagId} = this.$route.params
-
       const isVariantInUse = this.flag.segments.some(segment => (
         segment.distributions.some(distribution => distribution.variantID === variant.id)
       ))
@@ -606,140 +603,108 @@ export default {
         return
       }
 
-      this.$http.delete(
-        `${API_URL}/flags/${flagId}/variants/${variant.id}`
+      Axios.delete(
+        `${API_URL}/flags/${this.flagId}/variants/${variant.id}`
       ).then(() => {
         this.$message.success('variant deleted')
         this.fetchFlag()
-      }, err => {
-        this.$message.error(err.body.message)
-      })
+      }, handleErr.bind(this))
     },
     putVariant (variant) {
-      const flagId = this.$route.params.flagId
       variant.attachment = JSON.parse(variant.attachmentStr)
-      this.$http.put(
-        `${API_URL}/flags/${flagId}/variants/${variant.id}`,
+      Axios.put(
+        `${API_URL}/flags/${this.flagId}/variants/${variant.id}`,
         variant
       ).then(() => {
         this.$message.success('variant updated')
-      }, err => {
-        this.$message.error(err.body.message)
-      })
+      }, handleErr.bind(this))
     },
     createConstraint (segment) {
-      const {flagId} = this.$route.params
-      this.$http.post(
-        `${API_URL}/flags/${flagId}/segments/${segment.id}/constraints`,
+      Axios.post(
+        `${API_URL}/flags/${this.flagId}/segments/${segment.id}/constraints`,
         segment.newConstraint
       ).then(response => {
-        let constraint = response.body
+        let constraint = response.data
         segment.constraints.push(constraint)
         segment.newConstraint = clone(DEFAULT_CONSTRAINT)
         this.$message.success('new constraint created')
-      }, err => {
-        this.$message.error(err.body.message)
-      })
+      }, handleErr.bind(this))
     },
     putConstraint (segment, constraint) {
-      const {flagId} = this.$route.params
-
-      this.$http.put(
-        `${API_URL}/flags/${flagId}/segments/${segment.id}/constraints/${constraint.id}`,
+      Axios.put(
+        `${API_URL}/flags/${this.flagId}/segments/${segment.id}/constraints/${constraint.id}`,
         constraint
       ).then(() => {
         this.$message.success('constraint updated')
-      }, err => {
-        this.$message.error(err.body.message)
-      })
+      }, handleErr.bind(this))
     },
     deleteConstraint (segment, constraint) {
-      const {flagId} = this.$route.params
-
       if (!confirm('Are you sure you want to delete this constraint?')) {
         return
       }
 
-      this.$http.delete(
-        `${API_URL}/flags/${flagId}/segments/${segment.id}/constraints/${constraint.id}`
+      Axios.delete(
+        `${API_URL}/flags/${this.flagId}/segments/${segment.id}/constraints/${constraint.id}`
       ).then(() => {
         const index = segment.constraints.findIndex(constraint => constraint.id === constraint.id)
         segment.constraints.splice(index, 1)
         this.$message.success('constraint deleted')
-      }, err => {
-        this.$message.error(err.body.message)
-      })
+      }, handleErr.bind(this))
     },
     putSegment (segment) {
-      const flagId = this.$route.params.flagId
-      this.$http.put(
-        `${API_URL}/flags/${flagId}/segments/${segment.id}`,
+      Axios.put(
+        `${API_URL}/flags/${this.flagId}/segments/${segment.id}`,
         {
           description: segment.description,
           rolloutPercent: parseInt(segment.rolloutPercent, 10)
         }
       ).then(() => {
         this.$message.success('segment updated')
-      }, err => {
-        this.$message.error(err.body.message)
-      })
+      }, handleErr.bind(this))
     },
     putSegmentsReorder (segments) {
-      const flagId = this.$route.params.flagId
-      this.$http.put(
-        `${API_URL}/flags/${flagId}/segments/reorder`,
+      Axios.put(
+        `${API_URL}/flags/${this.flagId}/segments/reorder`,
         { segmentIDs: pluck(segments, 'id') }
       ).then(() => {
         this.$message.success('segment reordered')
-      }, err => {
-        this.$message.error(err.body.message)
-      })
+      }, handleErr.bind(this))
     },
     deleteSegment (segment) {
-      const {flagId} = this.$route.params
-
       if (!confirm('Are you sure you want to delete this segment?')) {
         return
       }
 
-      this.$http.delete(
-        `${API_URL}/flags/${flagId}/segments/${segment.id}`
+      Axios.delete(
+        `${API_URL}/flags/${this.flagId}/segments/${segment.id}`
       ).then(() => {
         const index = this.flag.segments.findIndex(el => el.id === segment.id)
         this.flag.segments.splice(index, 1)
         this.$message.success('segment deleted')
-      }, err => {
-        this.$message.error(err.body.message)
-      })
+      }, handleErr.bind(this))
     },
     createSegment () {
-      const flagId = this.$route.params.flagId
-      this.$http.post(
-        `${API_URL}/flags/${flagId}/segments`,
+      Axios.post(
+        `${API_URL}/flags/${this.flagId}/segments`,
         this.newSegment
       ).then(response => {
-        let segment = response.body
+        let segment = response.data
         processSegment(segment)
         segment.constraints = []
         this.newSegment = clone(DEFAULT_SEGMENT)
         this.flag.segments.push(segment)
         this.$message.success('new segment created')
         this.dialogCreateSegmentOpen = false
-      }, err => {
-        this.$message.error(err.body.message)
-      })
+      }, handleErr.bind(this))
     },
     fetchFlag () {
-      const flagId = this.$route.params.flagId
-      this.$http.get(`${API_URL}/flags/${flagId}`).then(response => {
-        let flag = response.body
+      Axios.get(`${API_URL}/flags/${this.flagId}`).then(response => {
+        let flag = response.data
         flag.segments.forEach(segment => processSegment(segment))
         flag.variants.forEach(variant => processVariant(variant))
         this.flag = flag
         this.loaded = true
-      }, err => {
-        this.$message.error(err.body.message)
-      })
+      }, handleErr.bind(this))
     }
   },
   mounted () {

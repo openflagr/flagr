@@ -110,6 +110,13 @@ definitions:
       dataRecordsEnabled:
         description: enabled data records will get data logging in the metrics pipeline, for example, kafka.
         type: boolean
+      createdBy:
+        type: string
+      updatedBy:
+        type: string
+      updatedAt:
+        type: string
+        format: date-time
   createFlagRequest:
     type: object
     required:

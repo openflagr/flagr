@@ -16,8 +16,34 @@ function sum (arr) {
   }, 0)
 }
 
+function get (obj, path, def) {
+  const fullPath = path
+    .replace(/\[/g, '.')
+    .replace(/]/g, '')
+    .split('.')
+    .filter(Boolean)
+
+  return fullPath.every(everyFunc) ? obj : def
+
+  function everyFunc (step) {
+    return !(step && (obj = obj[step]) === undefined)
+  }
+}
+
+function handleErr (err) {
+  let msg = get(err, 'response.data.message', 'request error')
+  this.$message.error(msg)
+  if (get(err, 'response.status') === 401) {
+    let redirectURL = err.response.headers['www-authenticate'].split(`"`)[1]
+    window.location = redirectURL
+    return
+  }
+}
+
 export default {
   indexBy,
   pluck,
-  sum
+  sum,
+  get,
+  handleErr
 }

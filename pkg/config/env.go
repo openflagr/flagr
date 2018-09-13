@@ -112,6 +112,7 @@ var Config = struct {
 	JWTAuthWhitelistPaths     []string `env:"FLAGR_JWT_AUTH_WHITELIST_PATHS" envDefault:"/api/v1/evaluation" envSeparator:","`
 	JWTAuthCookieTokenName    string   `env:"FLAGR_JWT_AUTH_COOKIE_TOKEN_NAME" envDefault:"access_token"`
 	JWTAuthSecret             string   `env:"FLAGR_JWT_AUTH_SECRET" envDefault:""`
+	JWTAuthNoTokenStatusCode  int      `env:"FLAGR_JWT_AUTH_NO_TOKEN_STATUS_CODE" envDefault:"307"` // "307" or "401"
 	JWTAuthNoTokenRedirectURL string   `env:"FLAGR_JWT_AUTH_NO_TOKEN_REDIRECT_URL" envDefault:""`
 	JWTAuthUserProperty       string   `env:"FLAGR_JWT_AUTH_USER_PROPERTY" envDefault:"flagr_user"`
 
