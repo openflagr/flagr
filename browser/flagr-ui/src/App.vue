@@ -3,11 +3,11 @@
     <el-menu mode="horizontal" class="navbar">
       <el-row>
         <el-col :span="6">
-          <div class="img-frame">
-            <router-link :to="{name: 'home'}"><img src="./assets/logo.png"></router-link>
-          </div>
+          <router-link :to="{name: 'home'}">
+            <h3 class="logo">Flagr</h3>
+          </router-link>
         </el-col>
-        <el-col :span="3" :offset="12">
+        <el-col :span="2" :offset="13">
           <a href="https://checkr.github.io/flagr/api_docs" target="_blank"><h3>API</h3></a>
         </el-col>
         <el-col :span="2">
@@ -29,7 +29,6 @@ export default {
 
 <style lang="less">
 body {
-  background-color: #f7f7f7;
   margin: 0;
   padding: 0;
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
@@ -69,27 +68,9 @@ ul {
 
   .navbar {
     background-color: #74E5E0;
-    .img-frame {
-      height: 80px;
-      width: 150px;
-      position: relative;
-    }
-    img {
-      max-height: 100%;
-      max-width: 100%;
-      width: auto;
-      height: auto;
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      margin: auto;
-    }
     h3 {
       color: white;
-      text-align: right;
-      margin-right: 1em;
+      margin-left: 2em;
       &:hover {
         color: #f7f7f7;
       }
@@ -174,10 +155,10 @@ ul {
   }
 
   .jsoneditor{
-    border-color: #d8dce5;
+    border-color: #E4E7ED;
     .jsoneditor-menu {
-      background-color: #74E5E0;
-      border-bottom-color: #74E5E0;
+      background-color: #E4E7ED;
+      border-bottom-color: #E4E7ED;
     }
     .jsoneditor-poweredBy {
       display: none;

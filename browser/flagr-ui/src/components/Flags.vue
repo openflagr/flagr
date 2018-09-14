@@ -1,6 +1,6 @@
 <template>
   <el-row>
-    <el-col :span="14" :offset="5">
+    <el-col :span="20" :offset="2">
       <div class="flags-container container">
         <el-breadcrumb separator="/" v-if="loaded">
           <el-breadcrumb-item>Home page</el-breadcrumb-item>
@@ -9,43 +9,73 @@
         <spinner v-if="!loaded" />
 
         <div v-if="loaded">
-          <ul v-if="flags.length">
-            <li
-              v-for="flag in flags" class="flag"
-              :class="{new: flag._new}">
-              <router-link
-                class="flag-link flex-row"
-                :to="{name: 'flag', params: {flagId: flag.id}}">
-                <div class="flex-row-left">
-                  <el-tag type="primary" :disable-transitions="true">Flag ID: {{ flag.id }}</el-tag> {{ flag.description }}
-                </div>
-                <div class="flex-row-right">
-                  <span :class="{'flag-enabled-icon': true, enabled: flag.enabled}"></span>
-                </div>
-              </router-link>
-            </li>
-          </ul>
-          <div class="card--empty" v-else>
-            No feature flags created yet
-          </div>
-          <div>
-            <p>
+          <el-row>
+            <el-col>
               <el-input
                 placeholder="Specific new flag description"
                 v-model="newFlag.description">
                 <template slot="prepend">
-                  Description
+                  <span class="el-icon-plus"/>
                 </template>
                 <template slot="append">
                   <el-button
+                    type="primary"
                     :disabled="!newFlag.description"
                     @click.prevent="createFlag">
-                    <span class="el-icon-plus"/> Create Flag
+                    Create New Flag
                   </el-button>
                 </template>
               </el-input>
-            </p>
-          </div>
+            </el-col>
+          </el-row>
+
+          <el-table
+            :data="flags"
+            :stripe="true"
+            :highlight-current-row="false"
+            :default-sort="{prop: 'id', order: 'descending'}"
+            v-on:row-click="goToFlag"
+            style="width: 100%">
+            <el-table-column
+              prop="id"
+              align="center"
+              label="Flag ID"
+              sortable
+              fixed
+              width="100">
+            </el-table-column>
+            <el-table-column
+              prop="description"
+              label="Description"
+              min-width="380">
+            </el-table-column>
+            <el-table-column
+              prop="updatedBy"
+              label="Last Updated By"
+              sortable
+              width="200">
+            </el-table-column>
+            <el-table-column
+              prop="updatedAt"
+              label="Updated At (UTC)"
+              :formatter="datetimeFormatter"
+              sortable
+              width="200">
+            </el-table-column>
+            <el-table-column
+              prop="enabled"
+              label="Enabled"
+              sortable
+              align="center"
+              fixed="right"
+              width="100">
+              <template slot-scope="scope">
+                <el-tag
+                  :type="scope.row.enabled ? 'primary' : 'danger'"
+                  disable-transitions>{{scope.row.enabled ? 'on' : 'off'}}</el-tag>
+              </template>
+            </el-table-column>
+          </el-table>
         </div>
       </div>
     </el-col>
@@ -91,6 +121,15 @@ export default {
       }, handleErr.bind(this))
   },
   methods: {
+    flagEnabledFormatter (row, col, val) {
+      return val ? 'on' : 'off'
+    },
+    datetimeFormatter (row, col, val) {
+      return val.split('.')[0]
+    },
+    goToFlag (row) {
+      this.$router.push({name: 'flag', params: {flagId: row.id}})
+    },
     createFlag () {
       if (!this.newFlag.description) {
         return
@@ -110,51 +149,11 @@ export default {
 }
 </script>
 
-<style lang="less" scoped>
+<style lang="less">
 
 .flags-container {
-  ul {
-    border-radius: 3px;
-    border: 1px solid #ddd;
-    background-color: white;
-    overflow-x: hidden;
-    list-style-type: none;
-    padding: 0;
-    li.flag {
-      text-align: left;
-      display: block;
-      padding: 0;
-      border-bottom: 1px solid #ccc;
-      &.new {
-        background-color: #13ce66;
-        .flag-link {
-          color: white;
-        }
-      }
-      .flag-link {
-        display: inline-block;
-        box-sizing: border-box;
-        padding: 8px 12px;
-        font-size: 1.1em;
-        width: 100%;
-        text-decoration: none;
-        color: #2c3e50;
-        &:hover {
-          background-color: #74E5E0;
-          color: white;
-        }
-      }
-      .flag-enabled-icon {
-        display: inline-block;
-        width: 10px;
-        height: 10px;
-        border-radius: 5px;
-        background-color: #ff4949;
-        &.enabled {
-          background-color: #13ce66;
-        }
-      }
-    }
+  .el-table {
+    margin-top: 2em;
   }
 }
 
