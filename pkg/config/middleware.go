@@ -12,6 +12,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gohttp/pprof"
 	"github.com/meatballhat/negroni-logrus"
+	"github.com/phyber/negroni-gzip/gzip"
 	"github.com/rs/cors"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/negroni"
@@ -21,6 +22,12 @@ import (
 // SetupGlobalMiddleware setup the global middleware
 func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 	n := negroni.New()
+
+	n.Use(negroni.NewRecovery())
+
+	if Config.MiddlewareGzipEnabled {
+		n.Use(gzip.Gzip(gzip.DefaultCompression))
+	}
 
 	if Config.CORSEnabled {
 		n.Use(cors.New(cors.Options{
@@ -47,7 +54,6 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 		n.Use(negronilogrus.NewMiddlewareFromLogger(logrus.StandardLogger(), "flagr"))
 	}
 
-	n.Use(negroni.NewRecovery())
 	n.Use(negroni.NewStatic(http.Dir("./browser/flagr-ui/dist/")))
 
 	if Config.PProfEnabled {

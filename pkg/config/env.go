@@ -14,9 +14,10 @@ var Config = struct {
 	// PProfEnabled - to enable the standard pprof of golang's http server
 	PProfEnabled bool `env:"FLAGR_PPROF_ENABLED" envDefault:"true"`
 
-	// MiddlewareVerboseLoggerEnabled - to enable the negroni-logrus logger for all the endpoints
-	// useful for debugging
+	// MiddlewareVerboseLoggerEnabled - to enable the negroni-logrus logger for all the endpoints useful for debugging
 	MiddlewareVerboseLoggerEnabled bool `env:"FLAGR_MIDDLEWARE_VERBOSE_LOGGER_ENABLED" envDefault:"true"`
+	// MiddlewareGzipEnabled - to enable gzip middleware
+	MiddlewareGzipEnabled bool `env:"FLAGR_MIDDLEWARE_GZIP_ENABLED" envDefault:"true"`
 
 	// EvalLoggingEnabled - to enable the logging for eval results
 	EvalLoggingEnabled bool `env:"FLAGR_EVAL_LOGGING_ENABLED" envDefault:"true"`
