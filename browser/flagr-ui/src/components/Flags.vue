@@ -155,6 +155,9 @@ export default {
   .el-table {
     margin-top: 2em;
   }
+  .el-table__row {
+    cursor: pointer;
+  }
 }
 
 </style>
