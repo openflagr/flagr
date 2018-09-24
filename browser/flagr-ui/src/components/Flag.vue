@@ -298,7 +298,7 @@
                                       </el-input>
                                     </el-col>
                                     <el-col :span="4">
-                                      <el-select size="small" v-model="constraint.operator" placeholder="operator">
+                                      <el-select class="width--full" size="small" v-model="constraint.operator" placeholder="operator">
                                         <el-option
                                           v-for="item in operatorOptions"
                                           :key="item.value"
