@@ -29,7 +29,7 @@ func TestEvalSegment(t *testing.T) {
 			EnableDebug:   true,
 			EntityContext: map[string]interface{}{"dl_state": "CA"},
 			EntityID:      "entityID1",
-			EntityType:    util.StringPtr("entityType1"),
+			EntityType:    "entityType1",
 			FlagID:        int64(100),
 		}, s)
 
@@ -44,7 +44,7 @@ func TestEvalSegment(t *testing.T) {
 			EnableDebug:   true,
 			EntityContext: map[string]interface{}{},
 			EntityID:      "entityID1",
-			EntityType:    util.StringPtr("entityType1"),
+			EntityType:    "entityType1",
 			FlagID:        int64(100),
 		}, s)
 
@@ -59,7 +59,7 @@ func TestEvalSegment(t *testing.T) {
 			EnableDebug:   true,
 			EntityContext: map[string]interface{}{"dl_state": "NY"},
 			EntityID:      "entityID1",
-			EntityType:    util.StringPtr("entityType1"),
+			EntityType:    "entityType1",
 			FlagID:        int64(100),
 		}, s)
 
@@ -74,7 +74,7 @@ func TestEvalSegment(t *testing.T) {
 			EnableDebug:   true,
 			EntityContext: nil,
 			EntityID:      "entityID1",
-			EntityType:    util.StringPtr("entityType1"),
+			EntityType:    "entityType1",
 			FlagID:        int64(100),
 		}, s)
 
@@ -99,7 +99,7 @@ func TestEvalFlag(t *testing.T) {
 			EnableDebug:   true,
 			EntityContext: map[string]interface{}{"dl_state": "CA"},
 			EntityID:      "entityID1",
-			EntityType:    util.StringPtr("entityType1"),
+			EntityType:    "entityType1",
 			FlagID:        int64(100),
 		})
 		assert.NotNil(t, result)
@@ -112,7 +112,7 @@ func TestEvalFlag(t *testing.T) {
 			EnableDebug:   true,
 			EntityContext: map[string]interface{}{"dl_state": "CA"},
 			EntityID:      "entityID1",
-			EntityType:    util.StringPtr("entityType1"),
+			EntityType:    "entityType1",
 			FlagKey:       "flag_key_100",
 		})
 		assert.NotNil(t, result)
@@ -125,7 +125,7 @@ func TestEvalFlag(t *testing.T) {
 			EnableDebug:   true,
 			EntityContext: map[string]interface{}{"dl_state": "CA"},
 			EntityID:      "entityID1",
-			EntityType:    util.StringPtr("entityType1"),
+			EntityType:    "entityType1",
 			FlagKey:       "flag_key_100",
 		})
 		assert.NotNil(t, result)
@@ -164,7 +164,7 @@ func TestEvalFlag(t *testing.T) {
 			EnableDebug:   true,
 			EntityContext: map[string]interface{}{"dl_state": "CA", "state": "CA", "rate": 2000},
 			EntityID:      "entityID1",
-			EntityType:    util.StringPtr("entityType1"),
+			EntityType:    "entityType1",
 			FlagID:        int64(100),
 		})
 		assert.NotNil(t, result)
@@ -196,7 +196,7 @@ func TestEvalFlag(t *testing.T) {
 			EnableDebug:   true,
 			EntityContext: map[string]interface{}{"dl_state": "CA", "state": "NY"},
 			EntityID:      "entityID1",
-			EntityType:    util.StringPtr("entityType1"),
+			EntityType:    "entityType1",
 			FlagID:        int64(100),
 		})
 		assert.NotNil(t, result)
@@ -212,11 +212,47 @@ func TestEvalFlag(t *testing.T) {
 			EnableDebug:   true,
 			EntityContext: map[string]interface{}{"dl_state": "CA"},
 			EntityID:      "entityID1",
-			EntityType:    util.StringPtr("entityType1"),
+			EntityType:    "entityType1",
 			FlagID:        int64(100),
 		})
 		assert.NotNil(t, result)
 		assert.Nil(t, result.VariantID)
+	})
+
+	t.Run("test entityType override", func(t *testing.T) {
+		t.Run("empty entityType case", func(t *testing.T) {
+			f := entity.GenFixtureFlag()
+			f.EntityType = ""
+			cache := &EvalCache{mapCache: map[string]*entity.Flag{"100": &f}}
+			defer gostub.StubFunc(&GetEvalCache, cache).Reset()
+			result := evalFlag(models.EvalContext{
+				EnableDebug:   true,
+				EntityContext: map[string]interface{}{"dl_state": "CA"},
+				EntityID:      "entityID1",
+				EntityType:    "entityType1",
+				FlagID:        int64(100),
+			})
+			assert.NotNil(t, result)
+			assert.NotNil(t, result.VariantID)
+			assert.Equal(t, "entityType1", result.EvalContext.EntityType)
+		})
+		t.Run("override case", func(t *testing.T) {
+			f := entity.GenFixtureFlag()
+			f.EntityType = "some_entity_type"
+			cache := &EvalCache{mapCache: map[string]*entity.Flag{"100": &f}}
+			defer gostub.StubFunc(&GetEvalCache, cache).Reset()
+			result := evalFlag(models.EvalContext{
+				EnableDebug:   true,
+				EntityContext: map[string]interface{}{"dl_state": "CA"},
+				EntityID:      "entityID1",
+				EntityType:    "entityType1",
+				FlagID:        int64(100),
+			})
+			assert.NotNil(t, result)
+			assert.NotNil(t, result.VariantID)
+			assert.NotEqual(t, "entityType1", result.EvalContext.EntityType)
+			assert.Equal(t, "some_entity_type", result.EvalContext.EntityType)
+		})
 	})
 }
 
@@ -236,7 +272,7 @@ func TestPostEvaluation(t *testing.T) {
 				EnableDebug:   true,
 				EntityContext: map[string]interface{}{"dl_state": "CA", "state": "NY"},
 				EntityID:      "entityID1",
-				EntityType:    util.StringPtr("entityType1"),
+				EntityType:    "entityType1",
 				FlagID:        int64(100),
 			},
 		})
@@ -255,7 +291,7 @@ func TestPostEvaluationBatch(t *testing.T) {
 					{
 						EntityContext: map[string]interface{}{"dl_state": "CA", "state": "NY"},
 						EntityID:      "entityID1",
-						EntityType:    util.StringPtr("entityType1"),
+						EntityType:    "entityType1",
 					},
 				},
 				FlagIds:  []int64{100, 200},

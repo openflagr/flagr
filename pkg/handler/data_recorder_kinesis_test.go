@@ -63,8 +63,9 @@ func TestKinesisEvalResult(t *testing.T) {
 		assert.Equal(t, k, "d08042018")
 
 		p, err := r.Payload()
-		assert.Equal(t, err, nil)
-		assert.Equal(t, "{\"evalContext\":{\"entityID\":\"d08042018\",\"entityType\":null},\"flagID\":1,\"flagKey\":\"random_flag_key\",\"flagSnapshotID\":1,\"segmentID\":1,\"timestamp\":null,\"variantAttachment\":null,\"variantID\":1,\"variantKey\":\"control\"}", string(p))
+		assert.NoError(t, err)
+		assert.NotEmpty(t, p)
+		assert.Regexp(t, "d08042018", string(p))
 	})
 
 	t.Run("empty EvalResult", func(t *testing.T) {

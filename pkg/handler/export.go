@@ -40,6 +40,9 @@ var exportSQLiteFile = func() (file io.ReadCloser, done func(), err error) {
 	if err := exportFlagSnapshots(tmpDB); err != nil {
 		return nil, done, err
 	}
+	if err := exportFlagEntityTypes(tmpDB); err != nil {
+		return nil, done, err
+	}
 
 	content, err := ioutil.ReadFile(fname)
 	if err != nil {
@@ -75,5 +78,20 @@ var exportFlagSnapshots = func(tmpDB *gorm.DB) error {
 		}
 	}
 	logrus.WithField("count", len(snapshots)).Debugf("export flag snapshots")
+	return nil
+}
+
+var exportFlagEntityTypes = func(tmpDB *gorm.DB) error {
+	qs := entity.NewFlagEntityTypeQuerySet(getDB())
+	var ts []entity.FlagEntityType
+	if err := qs.All(&ts); err != nil {
+		return err
+	}
+	for _, s := range ts {
+		if err := s.Create(tmpDB); err != nil {
+			return err
+		}
+	}
+	logrus.WithField("count", len(ts)).Debugf("export flag entity types")
 	return nil
 }

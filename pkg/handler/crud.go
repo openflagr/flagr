@@ -24,6 +24,7 @@ type CRUD interface {
 	DeleteFlag(flag.DeleteFlagParams) middleware.Responder
 	SetFlagEnabledState(flag.SetFlagEnabledParams) middleware.Responder
 	GetFlagSnapshots(params flag.GetFlagSnapshotsParams) middleware.Responder
+	GetFlagEntityTypes(params flag.GetFlagEntityTypesParams) middleware.Responder
 
 	// Segments
 	CreateSegment(segment.CreateSegmentParams) middleware.Responder
@@ -170,6 +171,23 @@ func (c *crud) GetFlagSnapshots(params flag.GetFlagSnapshotsParams) middleware.R
 	return resp
 }
 
+func (c *crud) GetFlagEntityTypes(params flag.GetFlagEntityTypesParams) middleware.Responder {
+	entityTypes := []entity.FlagEntityType{}
+	if err := getDB().Order("key ASC").Find(&entityTypes).Error; err != nil {
+		return flag.NewGetFlagEntityTypesDefault(500).WithPayload(
+			ErrorMessage("cannot find flag entity types. err:%s", err))
+
+	}
+
+	payload := []string{}
+	for _, t := range entityTypes {
+		payload = append(payload, t.Key)
+	}
+	resp := flag.NewGetFlagEntityTypesOK()
+	resp.SetPayload(payload)
+	return resp
+}
+
 func (c *crud) PutFlag(params flag.PutFlagParams) middleware.Responder {
 	q := entity.NewFlagQuerySet(getDB())
 
@@ -187,6 +205,14 @@ func (c *crud) PutFlag(params flag.PutFlagParams) middleware.Responder {
 		}
 		u = u.SetKey(key)
 	}
+	if params.Body.EntityType != nil {
+		key := *params.Body.EntityType
+		if err := entity.CreateFlagEntityType(getDB(), key); err != nil {
+			return flag.NewPutFlagDefault(400).WithPayload(ErrorMessage("%s", err))
+		}
+		u = u.SetEntityType(key)
+	}
+
 	if err := u.Update(); err != nil {
 		return flag.NewPutFlagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}

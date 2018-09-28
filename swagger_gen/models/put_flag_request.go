@@ -21,9 +21,14 @@ type PutFlagRequest struct {
 	DataRecordsEnabled *bool `json:"dataRecordsEnabled,omitempty"`
 
 	// description
-	// Required: true
 	// Min Length: 1
-	Description *string `json:"description"`
+	Description *string `json:"description,omitempty"`
+
+	// enabled
+	Enabled *bool `json:"enabled,omitempty"`
+
+	// it will overwrite entityType into evaluation logs if it's not empty
+	EntityType *string `json:"entityType,omitempty"`
 
 	// key
 	Key *string `json:"key,omitempty"`
@@ -45,8 +50,8 @@ func (m *PutFlagRequest) Validate(formats strfmt.Registry) error {
 
 func (m *PutFlagRequest) validateDescription(formats strfmt.Registry) error {
 
-	if err := validate.Required("description", "body", m.Description); err != nil {
-		return err
+	if swag.IsZero(m.Description) { // not required
+		return nil
 	}
 
 	if err := validate.MinLength("description", "body", string(*m.Description), 1); err != nil {

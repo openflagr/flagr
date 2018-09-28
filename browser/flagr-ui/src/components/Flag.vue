@@ -97,7 +97,7 @@
                       <h2>Flag</h2>
                     </div>
                     <div class="flex-row-right" v-if="flag">
-                      <el-tooltip content="Enable/Disable Flag" placement="top">
+                      <el-tooltip content="Enable/Disable Flag" placement="top" effect="light">
                         <el-switch
                           v-model="flag.enabled"
                           active-color="#13ce66"
@@ -118,7 +118,26 @@
                       </el-tag>
                     </div>
                     <div class="flex-row-right">
-                      <el-tooltip content="Controls whether to log to data pipeline, e.g. Kafka, Kinesis" placement="top">
+                      <el-button size="small" @click="putFlag(flag)">
+                        Save Flag
+                      </el-button>
+                    </div>
+                  </div>
+                  <el-row class="flag-content" type="flex" align="middle">
+                    <el-col :span=17>
+                      <el-row>
+                        <el-col :span="24">
+                          <el-input
+                            size="small"
+                            placeholder="Key"
+                            v-model="flag.key">
+                            <template slot="prepend">Flag Key</template>
+                          </el-input>
+                        </el-col>
+                      </el-row>
+                    </el-col>
+                    <el-col style="text-align:right" :span=5>
+                      <div>
                         <el-switch
                           size="small"
                           v-model="flag.dataRecordsEnabled"
@@ -126,29 +145,56 @@
                           :active-value="true"
                           :inactive-value="false">
                         </el-switch>
-                      </el-tooltip>
-                      <span size="small" class="data-records-label">Data Records</span>
-                      <el-button size="small" @click="putFlag(flag)">
-                        Save Flag
-                      </el-button>
-                    </div>
-                  </div>
-                  <el-row class="flag-content">
-                    <el-col :span="24">
-                      <el-input
-                        size="small"
-                        placeholder="Key"
-                        v-model="flag.key">
-                        <template slot="prepend">Flag Key</template>
-                      </el-input>
+                      </div>
                     </el-col>
-                    <el-col :span="24">
-                      <el-input
-                        size="small"
-                        placeholder="Description"
-                        v-model="flag.description">
-                        <template slot="prepend">Flag Description</template>
-                      </el-input>
+                    <el-col :span=2>
+                      <div class="data-records-label">
+                        Data Records
+                        <el-tooltip content="Controls whether to log to data pipeline, e.g. Kafka, Kinesis" placement="top-end" effect="light">
+                          <span class="el-icon-info"/>
+                        </el-tooltip>
+                      </div>
+                    </el-col>
+                  </el-row>
+                  <el-row class="flag-content" type="flex" align="middle">
+                    <el-col :span=17>
+                      <el-row>
+                        <el-col :span="24">
+                          <el-input
+                            size="small"
+                            placeholder="Description"
+                            v-model="flag.description">
+                            <template slot="prepend">Flag Description</template>
+                          </el-input>
+                        </el-col>
+                      </el-row>
+                    </el-col>
+                    <el-col style="text-align:right" :span=5>
+                      <div>
+                        <el-select
+                          v-show="!!flag.dataRecordsEnabled"
+                          v-model="flag.entityType"
+                          size="mini"
+                          filterable
+                          allow-create
+                          default-first-option
+                          placeholder="<null>">
+                          <el-option
+                            v-for="item in entityTypes"
+                            :key="item.value"
+                            :label="item.label"
+                            :value="item.value">
+                          </el-option>
+                        </el-select>
+                      </div>
+                    </el-col>
+                    <el-col :span=2>
+                      <div v-show="!!flag.dataRecordsEnabled" class="data-records-label">
+                        Entity Type
+                        <el-tooltip content="Overrides the entityType in data records logging" placement="top-end" effect="light">
+                          <span class="el-icon-info"/>
+                        </el-tooltip>
+                      </div>
                     </el-col>
                   </el-row>
                 </el-card>
@@ -225,7 +271,7 @@
                       <h2>Segments</h2>
                     </div>
                     <div class="flex-row-right">
-                      <el-tooltip content="You can drag and drop segments to reorder" placement="top">
+                      <el-tooltip content="You can drag and drop segments to reorder" placement="top" effect="light">
                         <el-button @click="putSegmentsReorder(flag.segments)">
                           Reorder
                         </el-button>
@@ -504,9 +550,11 @@ export default {
       dialogDeleteFlagVisible: false,
       dialogEditDistributionOpen: false,
       dialogCreateSegmentOpen: false,
+      entityTypes: [],
       flag: {
         createdBy: '',
         dataRecordsEnabled: false,
+        entityType: '',
         description: '',
         enabled: false,
         id: 0,
@@ -548,7 +596,8 @@ export default {
       Axios.put(`${API_URL}/flags/${this.flagId}`, {
         description: flag.description,
         dataRecordsEnabled: flag.dataRecordsEnabled,
-        key: flag.key || ''
+        key: flag.key || '',
+        entityType: flag.entityType || ''
       }).then(() => {
         this.$message.success(`You've updated flag`)
       }, handleErr.bind(this))
@@ -725,6 +774,17 @@ export default {
         this.flag = flag
         this.loaded = true
       }, handleErr.bind(this))
+
+      Axios.get(`${API_URL}/flags/entity_types`).then(response => {
+        let arr = response.data.map(key => {
+          let label = key === '' ? '<null>' : key
+          return {'label': label, 'value': key}
+        })
+        if (response.data.indexOf('') === -1) {
+          arr.unshift({label: '<null>', value: ''})
+        }
+        this.entityTypes = arr
+      }, handleErr.bind(this))
     }
   },
   mounted () {
@@ -828,12 +888,18 @@ ol.constraints-inner {
 .flag-config-card {
   .flag-content {
     margin-top: 8px;
+    margin-bottom: -8px;
     .el-input-group__prepend {
       width: 8em;
     }
   }
   .data-records-label {
-    margin-right: 8px;
+    margin-left: 3px;
+    margin-bottom: 5px;
+    margin-top: 6px;
+    font-size: 0.65em;
+    white-space: nowrap;
+    vertical-align: middle;
   }
 }
 

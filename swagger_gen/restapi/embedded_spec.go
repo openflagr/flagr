@@ -223,6 +223,32 @@ func init() {
         }
       }
     },
+    "/flags/entity_types": {
+      "get": {
+        "tags": [
+          "flag"
+        ],
+        "operationId": "getFlagEntityTypes",
+        "responses": {
+          "200": {
+            "description": "returns all the FlagEntityTypes",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
     "/flags/{flagID}": {
       "get": {
         "tags": [
@@ -1252,9 +1278,6 @@ func init() {
     },
     "evalContext": {
       "type": "object",
-      "required": [
-        "entityType"
-      ],
       "properties": {
         "enableDebug": {
           "type": "boolean"
@@ -1267,8 +1290,7 @@ func init() {
           "type": "string"
         },
         "entityType": {
-          "type": "string",
-          "minLength": 1
+          "type": "string"
         },
         "flagID": {
           "description": "flagID",
@@ -1403,9 +1425,6 @@ func init() {
     },
     "evaluationEntity": {
       "type": "object",
-      "required": [
-        "entityType"
-      ],
       "properties": {
         "entityContext": {
           "type": "object"
@@ -1414,8 +1433,7 @@ func init() {
           "type": "string"
         },
         "entityType": {
-          "type": "string",
-          "minLength": 1
+          "type": "string"
         }
       }
     },
@@ -1440,6 +1458,10 @@ func init() {
         },
         "enabled": {
           "type": "boolean"
+        },
+        "entityType": {
+          "description": "it will override the entityType in the evaluation logs if it's not empty",
+          "type": "string"
         },
         "id": {
           "type": "integer",
@@ -1514,9 +1536,6 @@ func init() {
     },
     "putFlagRequest": {
       "type": "object",
-      "required": [
-        "description"
-      ],
       "properties": {
         "dataRecordsEnabled": {
           "description": "enabled data records will get data logging in the metrics pipeline, for example, kafka.",
@@ -1525,7 +1544,17 @@ func init() {
         },
         "description": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "x-nullable": true
+        },
+        "enabled": {
+          "type": "boolean",
+          "x-nullable": true
+        },
+        "entityType": {
+          "description": "it will overwrite entityType into evaluation logs if it's not empty",
+          "type": "string",
+          "x-nullable": true
         },
         "key": {
           "type": "string",
@@ -1941,6 +1970,32 @@ func init() {
         }
       }
     },
+    "/flags/entity_types": {
+      "get": {
+        "tags": [
+          "flag"
+        ],
+        "operationId": "getFlagEntityTypes",
+        "responses": {
+          "200": {
+            "description": "returns all the FlagEntityTypes",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
     "/flags/{flagID}": {
       "get": {
         "tags": [
@@ -2970,9 +3025,6 @@ func init() {
     },
     "evalContext": {
       "type": "object",
-      "required": [
-        "entityType"
-      ],
       "properties": {
         "enableDebug": {
           "type": "boolean"
@@ -2985,8 +3037,7 @@ func init() {
           "type": "string"
         },
         "entityType": {
-          "type": "string",
-          "minLength": 1
+          "type": "string"
         },
         "flagID": {
           "description": "flagID",
@@ -3121,9 +3172,6 @@ func init() {
     },
     "evaluationEntity": {
       "type": "object",
-      "required": [
-        "entityType"
-      ],
       "properties": {
         "entityContext": {
           "type": "object"
@@ -3132,8 +3180,7 @@ func init() {
           "type": "string"
         },
         "entityType": {
-          "type": "string",
-          "minLength": 1
+          "type": "string"
         }
       }
     },
@@ -3158,6 +3205,10 @@ func init() {
         },
         "enabled": {
           "type": "boolean"
+        },
+        "entityType": {
+          "description": "it will override the entityType in the evaluation logs if it's not empty",
+          "type": "string"
         },
         "id": {
           "type": "integer",
@@ -3232,9 +3283,6 @@ func init() {
     },
     "putFlagRequest": {
       "type": "object",
-      "required": [
-        "description"
-      ],
       "properties": {
         "dataRecordsEnabled": {
           "description": "enabled data records will get data logging in the metrics pipeline, for example, kafka.",
@@ -3243,7 +3291,17 @@ func init() {
         },
         "description": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "x-nullable": true
+        },
+        "enabled": {
+          "type": "boolean",
+          "x-nullable": true
+        },
+        "entityType": {
+          "description": "it will overwrite entityType into evaluation logs if it's not empty",
+          "type": "string",
+          "x-nullable": true
         },
         "key": {
           "type": "string",

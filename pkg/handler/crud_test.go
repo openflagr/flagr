@@ -26,57 +26,85 @@ func TestCrudFlags(t *testing.T) {
 	defer db.Close()
 	defer gostub.StubFunc(&getDB, db).Reset()
 
-	// step 0. it should get 0 flags when db is empty
-	res = c.FindFlags(flag.FindFlagsParams{})
-	assert.Len(t, res.(*flag.FindFlagsOK).Payload, 0)
-
-	// step 1. it should be able to create one flag
-	res = c.CreateFlag(flag.CreateFlagParams{
-		Body: &models.CreateFlagRequest{
-			Description: util.StringPtr("funny flag"),
-			Key:         "some_random_flag_key",
-		},
+	t.Run("it should get 0 flags when db is empty", func(t *testing.T) {
+		res = c.FindFlags(flag.FindFlagsParams{})
+		assert.Len(t, res.(*flag.FindFlagsOK).Payload, 0)
 	})
-	assert.NotZero(t, res.(*flag.CreateFlagOK).Payload.ID)
-	assert.Equal(t, "some_random_flag_key", res.(*flag.CreateFlagOK).Payload.Key)
 
-	// step 2. it should be able to find some flags after creation
-	res = c.FindFlags(flag.FindFlagsParams{})
-	assert.NotZero(t, len(res.(*flag.FindFlagsOK).Payload))
+	t.Run("it should be able to create one flag", func(t *testing.T) {
+		res = c.CreateFlag(flag.CreateFlagParams{
+			Body: &models.CreateFlagRequest{
+				Description: util.StringPtr("funny flag"),
+				Key:         "some_random_flag_key",
+			},
+		})
+		assert.NotZero(t, res.(*flag.CreateFlagOK).Payload.ID)
+		assert.Equal(t, "some_random_flag_key", res.(*flag.CreateFlagOK).Payload.Key)
+	})
 
-	// step 3. it should be able to get the flag after creation
-	res = c.GetFlag(flag.GetFlagParams{FlagID: int64(1)})
-	assert.NotZero(t, res.(*flag.GetFlagOK).Payload.ID)
-	assert.NotZero(t, res.(*flag.GetFlagOK).Payload.Key)
+	t.Run("it should be able to find some flags after creation", func(t *testing.T) {
+		res = c.FindFlags(flag.FindFlagsParams{})
+		assert.NotZero(t, len(res.(*flag.FindFlagsOK).Payload))
+	})
 
-	// step 4. it should be able to put the flag
-	res = c.PutFlag(flag.PutFlagParams{
-		FlagID: int64(1),
-		Body: &models.PutFlagRequest{
-			Description:        util.StringPtr("another funny flag"),
-			DataRecordsEnabled: util.BoolPtr(true),
-			Key:                util.StringPtr("flag_key_1"),
-		}},
-	)
-	assert.NotZero(t, res.(*flag.PutFlagOK).Payload.ID)
-	assert.Equal(t, "flag_key_1", res.(*flag.PutFlagOK).Payload.Key)
+	t.Run("it should be able to get the flag after creation", func(t *testing.T) {
+		res = c.GetFlag(flag.GetFlagParams{FlagID: int64(1)})
+		assert.NotZero(t, res.(*flag.GetFlagOK).Payload.ID)
+		assert.NotZero(t, res.(*flag.GetFlagOK).Payload.Key)
+	})
 
-	// step 5. it should be able to set the flag enabled state
-	res = c.SetFlagEnabledState(flag.SetFlagEnabledParams{
-		FlagID: int64(1),
-		Body: &models.SetFlagEnabledRequest{
-			Enabled: util.BoolPtr(true),
-		}},
-	)
-	assert.True(t, *res.(*flag.SetFlagEnabledOK).Payload.Enabled)
+	t.Run("it should be able to put the flag", func(t *testing.T) {
+		res = c.PutFlag(flag.PutFlagParams{
+			FlagID: int64(1),
+			Body: &models.PutFlagRequest{
+				Description:        util.StringPtr("another funny flag"),
+				DataRecordsEnabled: util.BoolPtr(true),
+				Key:                util.StringPtr("flag_key_1"),
+			}},
+		)
+		assert.NotZero(t, res.(*flag.PutFlagOK).Payload.ID)
+		assert.Equal(t, "flag_key_1", res.(*flag.PutFlagOK).Payload.Key)
+	})
 
-	// step 6. it should be able to get the flag snapshot
-	res = c.GetFlagSnapshots(flag.GetFlagSnapshotsParams{FlagID: int64(1)})
-	assert.NotZero(t, res.(*flag.GetFlagSnapshotsOK).Payload)
+	t.Run("it should be able to set the flag enabled state", func(t *testing.T) {
+		res = c.SetFlagEnabledState(flag.SetFlagEnabledParams{
+			FlagID: int64(1),
+			Body: &models.SetFlagEnabledRequest{
+				Enabled: util.BoolPtr(true),
+			}},
+		)
+		assert.True(t, *res.(*flag.SetFlagEnabledOK).Payload.Enabled)
+	})
 
-	// step 7. it should be able to delete the flag
-	res = c.DeleteFlag(flag.DeleteFlagParams{FlagID: int64(1)})
-	assert.NotZero(t, res.(*flag.DeleteFlagOK))
+	t.Run("it should be able to put flag's EntityType", func(t *testing.T) {
+		res = c.PutFlag(flag.PutFlagParams{
+			FlagID: int64(1),
+			Body: &models.PutFlagRequest{
+				EntityType: util.StringPtr("report"),
+			}},
+		)
+		assert.NotZero(t, res.(*flag.PutFlagOK).Payload.ID)
+		assert.Equal(t, "report", res.(*flag.PutFlagOK).Payload.EntityType)
+		ds := []entity.FlagEntityType{}
+		entity.NewFlagEntityTypeQuerySet(db).All(&ds)
+		assert.NotZero(t, len(ds))
+	})
+
+	t.Run("it should be able to get all the flags' EntityType", func(t *testing.T) {
+		res = c.GetFlagEntityTypes(flag.GetFlagEntityTypesParams{})
+		assert.NotZero(t, len(res.(*flag.GetFlagEntityTypesOK).Payload))
+	})
+
+	t.Run("it should be able to get the flag snapshot", func(t *testing.T) {
+		res = c.GetFlagSnapshots(flag.GetFlagSnapshotsParams{FlagID: int64(1)})
+		assert.NotZero(t, res.(*flag.GetFlagSnapshotsOK).Payload)
+
+	})
+
+	t.Run("it should be able to delete the flag", func(t *testing.T) {
+		res = c.DeleteFlag(flag.DeleteFlagParams{FlagID: int64(1)})
+		assert.NotZero(t, res.(*flag.DeleteFlagOK))
+	})
 }
 
 func TestCrudFlagsWithFailures(t *testing.T) {

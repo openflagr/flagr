@@ -6,7 +6,7 @@
     },
     {
       "Repository": "github.com/alecthomas/gometalinter",
-      "Commit": "a0a6cc517e763fe2cfe7618b819ec02fc11651f3"
+      "Commit": "8edca99e8a88355e29f550113bcba6ecfa39ae11"
     },
     {
       "Repository": "github.com/go-swagger/go-swagger/cmd/swagger",

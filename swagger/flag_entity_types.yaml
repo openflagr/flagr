@@ -1,0 +1,16 @@
+get:
+  tags:
+    - flag
+  operationId: getFlagEntityTypes
+  responses:
+    200:
+      description: returns all the FlagEntityTypes
+      schema:
+        type: array
+        items:
+          type: string
+          minLength: 1
+    default:
+      description: generic error response
+      schema:
+        $ref: "#/definitions/error"

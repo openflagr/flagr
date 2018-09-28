@@ -38,3 +38,21 @@ func TestCreateFlagKey(t *testing.T) {
 		assert.Zero(t, key)
 	})
 }
+
+func TestCreateFlagEntityType(t *testing.T) {
+	t.Run("happy code path", func(t *testing.T) {
+		f := GenFixtureFlag()
+		db := PopulateTestDB(f)
+
+		err := CreateFlagEntityType(db, "")
+		assert.NoError(t, err)
+	})
+
+	t.Run("invalid key", func(t *testing.T) {
+		f := GenFixtureFlag()
+		db := PopulateTestDB(f)
+
+		err := CreateFlagEntityType(db, "123-invalid-key")
+		assert.Error(t, err)
+	})
+}

@@ -9,9 +9,6 @@ import (
 func GenFixtureEvalCache() *EvalCache {
 	f := entity.GenFixtureFlag()
 	return &EvalCache{
-		mapCache: map[string]*entity.Flag{
-			util.SafeString(f.ID): &f,
-			f.Key: &f,
-		},
+		mapCache: map[string]*entity.Flag{util.SafeString(f.ID): &f, f.Key: &f},
 	}
 }

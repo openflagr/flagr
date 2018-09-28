@@ -8,9 +8,7 @@ package models
 import (
 	strfmt "github.com/go-openapi/strfmt"
 
-	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
-	"github.com/go-openapi/validate"
 )
 
 // EvaluationEntity evaluation entity
@@ -24,35 +22,11 @@ type EvaluationEntity struct {
 	EntityID string `json:"entityID,omitempty"`
 
 	// entity type
-	// Required: true
-	// Min Length: 1
-	EntityType *string `json:"entityType"`
+	EntityType string `json:"entityType,omitempty"`
 }
 
 // Validate validates this evaluation entity
 func (m *EvaluationEntity) Validate(formats strfmt.Registry) error {
-	var res []error
-
-	if err := m.validateEntityType(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if len(res) > 0 {
-		return errors.CompositeValidationError(res...)
-	}
-	return nil
-}
-
-func (m *EvaluationEntity) validateEntityType(formats strfmt.Registry) error {
-
-	if err := validate.Required("entityType", "body", m.EntityType); err != nil {
-		return err
-	}
-
-	if err := validate.MinLength("entityType", "body", string(*m.EntityType), 1); err != nil {
-		return err
-	}
-
 	return nil
 }
 

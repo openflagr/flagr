@@ -27,9 +27,7 @@ type EvalContext struct {
 	EntityID string `json:"entityID,omitempty"`
 
 	// entity type
-	// Required: true
-	// Min Length: 1
-	EntityType *string `json:"entityType"`
+	EntityType string `json:"entityType,omitempty"`
 
 	// flagID
 	// Minimum: 1
@@ -43,10 +41,6 @@ type EvalContext struct {
 func (m *EvalContext) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateEntityType(formats); err != nil {
-		res = append(res, err)
-	}
-
 	if err := m.validateFlagID(formats); err != nil {
 		res = append(res, err)
 	}
@@ -54,19 +48,6 @@ func (m *EvalContext) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (m *EvalContext) validateEntityType(formats strfmt.Registry) error {
-
-	if err := validate.Required("entityType", "body", m.EntityType); err != nil {
-		return err
-	}
-
-	if err := validate.MinLength("entityType", "body", string(*m.EntityType), 1); err != nil {
-		return err
-	}
-
 	return nil
 }
 
