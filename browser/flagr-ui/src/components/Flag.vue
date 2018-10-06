@@ -390,7 +390,7 @@
                                   <el-progress
                                     type="circle"
                                     color="#74E5E0"
-                                    width="70"
+                                    :width="70"
                                     :percentage="distribution.percent">
                                   </el-progress>
                                 </el-card>

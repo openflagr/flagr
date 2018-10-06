@@ -13,10 +13,10 @@
     "lint": "eslint --ext .js,.vue src test/unit/specs"
   },
   "dependencies": {
+    "axios": "^0.18.0",
     "diff": "^3.4.0",
     "element-ui": "^2.4.6",
     "lodash.clone": "^4.5.0",
-    "axios": "^0.18.0",
     "vue": "^2.5.0",
     "vue-json-editor": "^1.2.0",
     "vue-router": "^2.7.0",
