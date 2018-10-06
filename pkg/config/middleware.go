@@ -54,11 +54,14 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 		n.Use(negronilogrus.NewMiddlewareFromLogger(logrus.StandardLogger(), "flagr"))
 	}
 
-	n.Use(&negroni.Static{
-		Dir:       http.Dir("./browser/flagr-ui/dist/"),
-		Prefix:    Config.WebPrefix,
-		IndexFile: "index.html",
-	})
+	if !Config.SidecarModeEnabled {
+		// don't serve UI under sidecar mode
+		n.Use(&negroni.Static{
+			Dir:       http.Dir("./browser/flagr-ui/dist/"),
+			Prefix:    Config.WebPrefix,
+			IndexFile: "index.html",
+		})
+	}
 
 	if Config.PProfEnabled {
 		n.UseHandler(pprof.New()(handler))

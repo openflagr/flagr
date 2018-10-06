@@ -101,6 +101,32 @@ func init() {
         }
       }
     },
+    "/export/sidecar": {
+      "get": {
+        "description": "Export a JSON file that can be used for flagr's sidecar mode",
+        "produces": [
+          "application/octet-stream"
+        ],
+        "tags": [
+          "export"
+        ],
+        "operationId": "getExportSidecar",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "file"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
     "/export/sqlite": {
       "get": {
         "description": "Export sqlite3 format of the db dump, which is converted from the main database.",
@@ -1808,6 +1834,32 @@ func init() {
             "description": "evaluation batch result",
             "schema": {
               "$ref": "#/definitions/evaluationBatchResponse"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
+    "/export/sidecar": {
+      "get": {
+        "description": "Export a JSON file that can be used for flagr's sidecar mode",
+        "produces": [
+          "application/octet-stream"
+        ],
+        "tags": [
+          "export"
+        ],
+        "operationId": "getExportSidecar",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "file"
             }
           },
           "default": {

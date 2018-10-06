@@ -76,6 +76,8 @@ paths:
     $ref: ./health.yaml
   /export/sqlite:
     $ref: ./export_sqlite.yaml
+  /export/sidecar:
+    $ref: ./export_sidecar.yaml
 definitions:
   # Flag
   flag:

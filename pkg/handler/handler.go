@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"github.com/checkr/flagr/pkg/config"
 	"github.com/checkr/flagr/pkg/entity"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/constraint"
@@ -18,10 +19,12 @@ var getDB = entity.GetDB
 
 // Setup initialize all the handler functions
 func Setup(api *operations.FlagrAPI) {
-	setupCRUD(api)
+	if !config.Config.SidecarModeEnabled {
+		setupCRUD(api)
+		setupExport(api)
+	}
 	setupEvaluation(api)
 	setupHealth(api)
-	setupExport(api)
 }
 
 func setupCRUD(api *operations.FlagrAPI) {
@@ -76,4 +79,5 @@ func setupHealth(api *operations.FlagrAPI) {
 
 func setupExport(api *operations.FlagrAPI) {
 	api.ExportGetExportSqliteHandler = export.GetExportSqliteHandlerFunc(exportSQLiteHandler)
+	api.ExportGetExportSidecarHandler = export.GetExportSidecarHandlerFunc(exportSidecarHandler)
 }

@@ -123,4 +123,8 @@ var Config = struct {
 
 	// WebPrefix - base path for web
 	WebPrefix string `env:"FLAGR_WEB_PREFIX" envDefault:""`
+
+	// Sidecar Mode
+	SidecarModeEnabled   bool   `env:"FLAGR_SIDECAR_MODE_ENABLED" envDefault:"false"`
+	SidecarFileRemoteURL string `env:"FLAGR_SIDECAR_FILE_REMOTE_URL" envDefault:""`
 }{}

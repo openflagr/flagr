@@ -1,6 +1,9 @@
 package handler
 
 import (
+	"encoding/json"
+	"io/ioutil"
+	"net/http"
 	"sync"
 	"time"
 
@@ -62,7 +65,37 @@ func (ec *EvalCache) GetByFlagKeyOrID(keyOrID interface{}) *entity.Flag {
 	return f
 }
 
+// GetAll get all the flags in the map
+func (ec *EvalCache) GetAll() (all []entity.Flag) {
+	ec.mapCacheLock.RLock()
+	for _, f := range ec.mapCache {
+		all = append(all, *f)
+	}
+	ec.mapCacheLock.RUnlock()
+	return all
+}
+
+var fetchSidecarFlags = func(url string) ([]entity.Flag, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	j, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	sf := SidecarFile{}
+	if err := json.Unmarshal(j, &sf); err != nil {
+		return nil, err
+	}
+	return sf.Flags, nil
+}
+
 var fetchAllFlags = func() ([]entity.Flag, error) {
+	if config.Config.SidecarModeEnabled {
+		return fetchSidecarFlags(config.Config.SidecarFileRemoteURL)
+	}
+
 	// Use eager loading to avoid N+1 problem
 	// doc: http://jinzhu.me/gorm/crud.html#preloading-eager-loading
 	fs := []entity.Flag{}

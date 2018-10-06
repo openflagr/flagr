@@ -762,6 +762,23 @@ paths:
           description: generic error response
           schema:
             $ref: '#/definitions/error'
+  /export/sidecar:
+    get:
+      tags:
+        - export
+      operationId: getExportSidecar
+      description: Export a JSON file that can be used for flagr's sidecar mode
+      produces:
+        - application/octet-stream
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: file
+        default:
+          description: generic error response
+          schema:
+            $ref: '#/definitions/error'
 definitions:
   flag:
     type: object

@@ -89,6 +89,9 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		ExportGetExportSqliteHandler: export.GetExportSqliteHandlerFunc(func(params export.GetExportSqliteParams) middleware.Responder {
 			return middleware.NotImplemented("operation ExportGetExportSqlite has not yet been implemented")
 		}),
+		ExportGetExportSidecarHandler: export.GetExportSidecarHandlerFunc(func(params export.GetExportSidecarParams) middleware.Responder {
+			return middleware.NotImplemented("operation ExportGetExportSidecar has not yet been implemented")
+		}),
 		FlagGetFlagHandler: flag.GetFlagHandlerFunc(func(params flag.GetFlagParams) middleware.Responder {
 			return middleware.NotImplemented("operation FlagGetFlag has not yet been implemented")
 		}),
@@ -186,6 +189,8 @@ type FlagrAPI struct {
 	VariantFindVariantsHandler variant.FindVariantsHandler
 	// ExportGetExportSqliteHandler sets the operation handler for the get export sqlite operation
 	ExportGetExportSqliteHandler export.GetExportSqliteHandler
+	// ExportGetExportSidecarHandler sets the operation handler for the get export sidecar operation
+	ExportGetExportSidecarHandler export.GetExportSidecarHandler
 	// FlagGetFlagHandler sets the operation handler for the get flag operation
 	FlagGetFlagHandler flag.GetFlagHandler
 	// FlagGetFlagSnapshotsHandler sets the operation handler for the get flag snapshots operation
@@ -331,6 +336,10 @@ func (o *FlagrAPI) Validate() error {
 
 	if o.ExportGetExportSqliteHandler == nil {
 		unregistered = append(unregistered, "export.GetExportSqliteHandler")
+	}
+
+	if o.ExportGetExportSidecarHandler == nil {
+		unregistered = append(unregistered, "export.GetExportSidecarHandler")
 	}
 
 	if o.FlagGetFlagHandler == nil {
@@ -551,6 +560,11 @@ func (o *FlagrAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/export/sqlite"] = export.NewGetExportSqlite(o.context, o.ExportGetExportSqliteHandler)
+
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/export/sidecar"] = export.NewGetExportSidecar(o.context, o.ExportGetExportSidecarHandler)
 
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)

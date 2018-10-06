@@ -23,7 +23,7 @@ type Flag struct {
 	Segments           []Segment
 	Variants           []Variant
 	DataRecordsEnabled bool
-	SnapshotID         uint `json:"-"`
+	SnapshotID         uint
 
 	FlagEvaluation FlagEvaluation `gorm:"-" json:"-"`
 }
