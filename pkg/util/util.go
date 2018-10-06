@@ -12,9 +12,8 @@ import (
 
 var (
 	keyLengthLimit = 63
-	keyRegex       = regexp.MustCompile("^[a-z]+[a-z0-9_]*$")
+	keyRegex       = regexp.MustCompile("(?i)^[a-z0-9_]+$")
 
-	randomKeyCharset = []byte("123456789abcdefghijkmnopqrstuvwxyz")
 	randomKeyPrefix  = "k"
 )
 
@@ -31,7 +30,7 @@ func IsSafeKey(s string) (bool, string) {
 
 // NewSecureRandomKey creates a new secure random key
 func NewSecureRandomKey() string {
-	return randomKeyPrefix + uniuri.NewLenChars(uniuri.StdLen, randomKeyCharset)
+	return randomKeyPrefix + uniuri.New()
 }
 
 // SafeString safely cast to string
