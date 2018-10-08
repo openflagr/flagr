@@ -176,7 +176,7 @@
                           v-model="flag.entityType"
                           size="mini"
                           filterable
-                          allow-create
+                          :allow-create="allowCreateEntityType"
                           default-first-option
                           placeholder="<null>">
                           <el-option
@@ -551,6 +551,7 @@ export default {
       dialogEditDistributionOpen: false,
       dialogCreateSegmentOpen: false,
       entityTypes: [],
+      allowCreateEntityType: true,
       flag: {
         createdBy: '',
         dataRecordsEnabled: false,
@@ -774,16 +775,29 @@ export default {
         this.flag = flag
         this.loaded = true
       }, handleErr.bind(this))
-
-      Axios.get(`${API_URL}/flags/entity_types`).then(response => {
-        let arr = response.data.map(key => {
+      this.fetchEntityTypes()
+    },
+    fetchEntityTypes () {
+      function prepareEntityTypes (entityTypes) {
+        let arr = entityTypes.map(key => {
           let label = key === '' ? '<null>' : key
           return {'label': label, 'value': key}
         })
-        if (response.data.indexOf('') === -1) {
+        if (entityTypes.indexOf('') === -1) {
           arr.unshift({label: '<null>', value: ''})
         }
-        this.entityTypes = arr
+        return arr
+      }
+
+      if (process.env.FLAGR_UI_POSSIBLE_ENTITY_TYPES) {
+        let entityTypes = process.env.FLAGR_UI_POSSIBLE_ENTITY_TYPES.split(',')
+        this.entityTypes = prepareEntityTypes(entityTypes)
+        this.allowCreateEntityType = false
+        return
+      }
+
+      Axios.get(`${API_URL}/flags/entity_types`).then(response => {
+        this.entityTypes = prepareEntityTypes(response.data)
       }, handleErr.bind(this))
     }
   },
