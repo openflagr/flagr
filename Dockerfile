@@ -1,11 +1,23 @@
+######################################
+# Prepare yarn and go build in builder
+######################################
 FROM checkr/flagr-ci as builder
 WORKDIR /go/src/github.com/checkr/flagr
 ADD . .
+
+# Build UI
+# FLAGR_UI_POSSIBLE_ENTITY_TYPES is useful for limiting the choices of entity types
+ARG FLAGR_UI_POSSIBLE_ENTITY_TYPES=null
+ENV FLAGR_UI_POSSIBLE_ENTITY_TYPES ${FLAGR_UI_POSSIBLE_ENTITY_TYPES}
 RUN cd ./browser/flagr-ui/ && yarn install && yarn run build
+
+# Build Go server
 RUN make build
 
 
-
+######################################
+# Copy from builder to alpine image
+######################################
 FROM alpine:3.6
 RUN apk add --no-cache libc6-compat ca-certificates curl
 WORKDIR /go/src/github.com/checkr/flagr
