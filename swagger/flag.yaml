@@ -19,6 +19,25 @@ get:
       description: generic error response
       schema:
         $ref: "#/definitions/error"
+delete:
+  tags:
+    - flag
+  operationId: deleteFlag
+  parameters:
+    - in: path
+      name: flagID
+      description: numeric ID of the flag
+      required: true
+      type: integer
+      format: int64
+      minimum: 1
+  responses:
+    200:
+      description: OK deleted
+    default:
+      description: generic error response
+      schema:
+        $ref: "#/definitions/error"
 put:
   tags:
     - flag
@@ -42,25 +61,6 @@ put:
       description: returns the flag
       schema:
         $ref: "#/definitions/flag"
-    default:
-      description: generic error response
-      schema:
-        $ref: "#/definitions/error"
-delete:
-  tags:
-    - flag
-  operationId: deleteFlag
-  parameters:
-    - in: path
-      name: flagID
-      description: numeric ID of the flag
-      required: true
-      type: integer
-      format: int64
-      minimum: 1
-  responses:
-    200:
-      description: OK deleted
     default:
       description: generic error response
       schema:

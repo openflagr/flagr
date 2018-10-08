@@ -92,6 +92,9 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		FlagGetFlagHandler: flag.GetFlagHandlerFunc(func(params flag.GetFlagParams) middleware.Responder {
 			return middleware.NotImplemented("operation FlagGetFlag has not yet been implemented")
 		}),
+		FlagGetFlagEntityTypesHandler: flag.GetFlagEntityTypesHandlerFunc(func(params flag.GetFlagEntityTypesParams) middleware.Responder {
+			return middleware.NotImplemented("operation FlagGetFlagEntityTypes has not yet been implemented")
+		}),
 		FlagGetFlagSnapshotsHandler: flag.GetFlagSnapshotsHandlerFunc(func(params flag.GetFlagSnapshotsParams) middleware.Responder {
 			return middleware.NotImplemented("operation FlagGetFlagSnapshots has not yet been implemented")
 		}),
@@ -188,6 +191,8 @@ type FlagrAPI struct {
 	ExportGetExportSqliteHandler export.GetExportSqliteHandler
 	// FlagGetFlagHandler sets the operation handler for the get flag operation
 	FlagGetFlagHandler flag.GetFlagHandler
+	// FlagGetFlagEntityTypesHandler sets the operation handler for the get flag entity types operation
+	FlagGetFlagEntityTypesHandler flag.GetFlagEntityTypesHandler
 	// FlagGetFlagSnapshotsHandler sets the operation handler for the get flag snapshots operation
 	FlagGetFlagSnapshotsHandler flag.GetFlagSnapshotsHandler
 	// HealthGetHealthHandler sets the operation handler for the get health operation
@@ -335,6 +340,10 @@ func (o *FlagrAPI) Validate() error {
 
 	if o.FlagGetFlagHandler == nil {
 		unregistered = append(unregistered, "flag.GetFlagHandler")
+	}
+
+	if o.FlagGetFlagEntityTypesHandler == nil {
+		unregistered = append(unregistered, "flag.GetFlagEntityTypesHandler")
 	}
 
 	if o.FlagGetFlagSnapshotsHandler == nil {
@@ -556,6 +565,11 @@ func (o *FlagrAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/flags/{flagID}"] = flag.NewGetFlag(o.context, o.FlagGetFlagHandler)
+
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/flags/entity_types"] = flag.NewGetFlagEntityTypes(o.context, o.FlagGetFlagEntityTypesHandler)
 
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)

@@ -15,15 +15,17 @@ import (
 type Flag struct {
 	gorm.Model
 
-	Key                string `gorm:"type:varchar(64);unique_index:idx_flag_key"`
-	Description        string `sql:"type:text"`
-	CreatedBy          string
-	UpdatedBy          string
-	Enabled            bool
-	Segments           []Segment
-	Variants           []Variant
+	Key         string `gorm:"type:varchar(64);unique_index:idx_flag_key"`
+	Description string `sql:"type:text"`
+	CreatedBy   string
+	UpdatedBy   string
+	Enabled     bool
+	Segments    []Segment
+	Variants    []Variant
+	SnapshotID  uint `json:"-"`
+
 	DataRecordsEnabled bool
-	SnapshotID         uint `json:"-"`
+	EntityType         string
 
 	FlagEvaluation FlagEvaluation `gorm:"-" json:"-"`
 }
@@ -33,21 +35,9 @@ type FlagEvaluation struct {
 	VariantsMap map[uint]*Variant
 }
 
-// CreateFlagKey creates the key based on the given key
-func CreateFlagKey(key string) (string, error) {
-	if key == "" {
-		key = util.NewSecureRandomKey()
-	} else {
-		ok, reason := util.IsSafeKey(key)
-		if !ok {
-			return "", fmt.Errorf("cannot create flag due to invalid key. reason: %s", reason)
-		}
-	}
-	return key, nil
-}
-
 // Preload preloads the segments and variants into flags
 func (f *Flag) Preload(db *gorm.DB) error {
+	// preload Segments
 	ss := []Segment{}
 	segmentQuery := NewSegmentQuerySet(db)
 	if err := segmentQuery.FlagIDEq(f.ID).OrderAscByRank().OrderAscByID().All(&ss); err != nil {
@@ -61,6 +51,7 @@ func (f *Flag) Preload(db *gorm.DB) error {
 	}
 	f.Segments = ss
 
+	// preload Variants
 	vs := []Variant{}
 	variantQuery := NewVariantQuerySet(db)
 	err := variantQuery.FlagIDEq(f.ID).OrderAscByID().All(&vs)
@@ -94,4 +85,30 @@ func (qs FlagQuerySet) DescriptionLike(description string) FlagQuerySet {
 		"lower(description) like ?",
 		fmt.Sprintf("%%%s%%", strings.ToLower(description)),
 	))
+}
+
+// CreateFlagKey creates the key based on the given key
+func CreateFlagKey(key string) (string, error) {
+	if key == "" {
+		key = util.NewSecureRandomKey()
+	} else {
+		ok, reason := util.IsSafeKey(key)
+		if !ok {
+			return "", fmt.Errorf("cannot create flag due to invalid key. reason: %s", reason)
+		}
+	}
+	return key, nil
+}
+
+// CreateFlagEntityType creates the FlagEntityType if not exists
+func CreateFlagEntityType(db *gorm.DB, key string) error {
+	ok, reason := util.IsSafeKey(key)
+	if !ok && key != "" {
+		return fmt.Errorf("invalid DataRecordsEntityType. reason: %s", reason)
+	}
+	d := FlagEntityType{Key: key}
+	if err := db.Where(d).FirstOrCreate(&d).Error; err != nil {
+		return err
+	}
+	return nil
 }

@@ -18,11 +18,12 @@ func MapFlag(e *entity.Flag, preload bool) (*models.Flag, error) {
 	r := &models.Flag{}
 	r.ID = int64(e.ID)
 	r.Key = e.Key
+	r.CreatedBy = e.CreatedBy
+	r.DataRecordsEnabled = util.BoolPtr(e.DataRecordsEnabled)
+	r.EntityType = e.EntityType
 	r.Description = util.StringPtr(e.Description)
 	r.Enabled = util.BoolPtr(e.Enabled)
-	r.DataRecordsEnabled = util.BoolPtr(e.DataRecordsEnabled)
 	r.UpdatedAt = strfmt.DateTime(e.UpdatedAt)
-	r.CreatedBy = e.CreatedBy
 	r.UpdatedBy = e.UpdatedBy
 
 	if preload {
@@ -30,8 +31,11 @@ func MapFlag(e *entity.Flag, preload bool) (*models.Flag, error) {
 			return nil, err
 		}
 	}
+
+	// preloaded fields
 	r.Segments = MapSegments(e.Segments, preload)
 	r.Variants = MapVariants(e.Variants)
+
 	return r, nil
 }
 

@@ -18,6 +18,18 @@ var (
 	singletonOnce sync.Once
 )
 
+// AutoMigrateTables stores the entity tables that we can auto migrate in gorm
+var AutoMigrateTables = []interface{}{
+	Constraint{},
+	Distribution{},
+	FlagSnapshot{},
+	Flag{},
+	Segment{},
+	User{},
+	Variant{},
+	FlagEntityType{},
+}
+
 // GetDB gets the db singleton
 func GetDB() *gorm.DB {
 	singletonOnce.Do(func() {

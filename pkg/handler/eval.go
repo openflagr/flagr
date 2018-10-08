@@ -131,6 +131,10 @@ var evalFlag = func(evalContext models.EvalContext) *models.EvalResult {
 		evalContext.EntityID = fmt.Sprintf("randomly_generated_%d", rand.Int31())
 	}
 
+	if f.EntityType != "" {
+		evalContext.EntityType = f.EntityType
+	}
+
 	logs := []*models.SegmentDebugLog{}
 	var vID *int64
 	var sID *int64

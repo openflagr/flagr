@@ -35,6 +35,9 @@ type Flag struct {
 	// Required: true
 	Enabled *bool `json:"enabled"`
 
+	// it will override the entityType in the evaluation logs if it's not empty
+	EntityType string `json:"entityType,omitempty"`
+
 	// id
 	// Read Only: true
 	// Minimum: 1

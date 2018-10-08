@@ -68,6 +68,8 @@ paths:
     $ref: ./flag_segment_distributions.yaml
   /flags/{flagID}/snapshots:
     $ref: ./flag_snapshots.yaml
+  /flags/entity_types:
+    $ref: ./flag_entity_types.yaml
   /evaluation:
     $ref: ./evaluation.yaml
   /evaluation/batch:
@@ -76,7 +78,10 @@ paths:
     $ref: ./health.yaml
   /export/sqlite:
     $ref: ./export_sqlite.yaml
+
+
 definitions:
+
   # Flag
   flag:
     type: object
@@ -110,6 +115,9 @@ definitions:
       dataRecordsEnabled:
         description: enabled data records will get data logging in the metrics pipeline, for example, kafka.
         type: boolean
+      entityType:
+        description: it will override the entityType in the evaluation logs if it's not empty
+        type: string
       createdBy:
         type: string
       updatedBy:
@@ -130,15 +138,21 @@ definitions:
         type: string
   putFlagRequest:
     type: object
-    required:
-      - description
     properties:
       description:
         type: string
         minLength: 1
+        x-nullable: true
       dataRecordsEnabled:
         type: boolean
         description: enabled data records will get data logging in the metrics pipeline, for example, kafka.
+        x-nullable: true
+      entityType:
+        description: it will overwrite entityType into evaluation logs if it's not empty
+        type: string
+        x-nullable: true
+      enabled:
+        type: boolean
         x-nullable: true
       key:
         type: string
@@ -376,15 +390,12 @@ definitions:
   # Evaluation
   evalContext:
     type: object
-    required:
-      - entityType
     properties:
       entityID:
         type: string
         description: entityID is used to deterministically at random to evaluate the flag result. If it's empty, flagr will randomly generate one.
       entityType:
         type: string
-        minLength: 1
       entityContext:
         type: object
       enableDebug:
@@ -460,14 +471,11 @@ definitions:
   # Evaluation Batch
   evaluationEntity:
     type: object
-    required:
-      - entityType
     properties:
       entityID:
         type: string
       entityType:
         type: string
-        minLength: 1
       entityContext:
         type: object
   evaluationBatchRequest:
@@ -516,3 +524,4 @@ definitions:
       message:
         type: string
         minLength: 1
+
