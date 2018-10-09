@@ -17,6 +17,18 @@ func TestSafeString(t *testing.T) {
 	assert.Equal(t, SafeString(ptr), "")
 }
 
+func TestSafeStringWithDefault(t *testing.T) {
+	assert.Equal(t, SafeStringWithDefault("123", ""), "123")
+	assert.Equal(t, SafeStringWithDefault(StringPtr("123"), ""), "123")
+	assert.Equal(t, SafeStringWithDefault(123, ""), "123")
+	assert.Equal(t, SafeStringWithDefault(nil, ""), "")
+
+	assert.Equal(t, SafeStringWithDefault("123", "<nil>"), "123")
+	assert.Equal(t, SafeStringWithDefault(StringPtr("123"), "<nil>"), "123")
+	assert.Equal(t, SafeStringWithDefault(123, "<nil>"), "123")
+	assert.Equal(t, SafeStringWithDefault(nil, "<nil>"), "<nil>")
+}
+
 func TestSafeUint(t *testing.T) {
 	assert.Equal(t, SafeUint(nil), uint(0))
 	assert.Equal(t, SafeUint("123"), uint(123))
