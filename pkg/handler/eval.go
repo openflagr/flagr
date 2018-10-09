@@ -169,11 +169,32 @@ var logEvalResult = func(r *models.EvalResult, dataRecordsEnabled bool) {
 		rateLimitPerFlagConsoleLogging(r)
 	}
 
+	logEvalResultToDatadog(r)
+
 	if !config.Config.RecorderEnabled || !dataRecordsEnabled {
 		return
 	}
 	rec := GetDataRecorder()
 	rec.AsyncRecord(r)
+}
+
+var logEvalResultToDatadog = func(r *models.EvalResult) {
+	if config.Global.StatsdClient == nil {
+		return
+	}
+
+	config.Global.StatsdClient.Incr(
+		"evaluation",
+		[]string{
+			fmt.Sprintf("EntityType:%s", util.SafeStringWithDefault(r.EvalContext.EntityType, "null")),
+			fmt.Sprintf("FlagID:%d", util.SafeUint(r.FlagID)),
+			fmt.Sprintf("FlagSnapshotID:%d", util.SafeUint(r.FlagSnapshotID)),
+			fmt.Sprintf("SegmentID:%d", util.SafeUint(r.SegmentID)),
+			fmt.Sprintf("VariantID:%d", util.SafeUint(r.VariantID)),
+			fmt.Sprintf("VariantKey:%s", util.SafeStringWithDefault(r.VariantKey, "null")),
+		},
+		float64(1),
+	)
 }
 
 var evalSegment = func(

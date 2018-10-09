@@ -4,7 +4,10 @@ package entity
 
 import (
 	"encoding/json"
+	"fmt"
 
+	"github.com/checkr/flagr/pkg/config"
+	"github.com/checkr/flagr/pkg/util"
 	"github.com/jinzhu/gorm"
 	"github.com/sirupsen/logrus"
 )
@@ -66,4 +69,21 @@ func SaveFlagSnapshot(db *gorm.DB, flagID uint, updatedBy string) {
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
 	}
+
+	logFlagSnapshotUpdate(flagID, updatedBy)
+}
+
+var logFlagSnapshotUpdate = func(flagID uint, updatedBy string) {
+	if config.Global.StatsdClient == nil {
+		return
+	}
+
+	config.Global.StatsdClient.Incr(
+		"flag.snapshot.updated",
+		[]string{
+			fmt.Sprintf("FlagID:%d", flagID),
+			fmt.Sprintf("UpdatedBy:%s", util.SafeStringWithDefault(updatedBy, "null")),
+		},
+		float64(1),
+	)
 }
