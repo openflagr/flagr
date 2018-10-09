@@ -173,7 +173,7 @@ func (c *crud) GetFlagSnapshots(params flag.GetFlagSnapshotsParams) middleware.R
 
 func (c *crud) GetFlagEntityTypes(params flag.GetFlagEntityTypesParams) middleware.Responder {
 	entityTypes := []entity.FlagEntityType{}
-	if err := getDB().Order("key ASC").Find(&entityTypes).Error; err != nil {
+	if err := entity.NewFlagEntityTypeQuerySet(getDB()).All(&entityTypes); err != nil {
 		return flag.NewGetFlagEntityTypesDefault(500).WithPayload(
 			ErrorMessage("cannot find flag entity types. err:%s", err))
 
