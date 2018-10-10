@@ -188,8 +188,6 @@ var logEvalResultToDatadog = func(r *models.EvalResult) {
 		[]string{
 			fmt.Sprintf("EntityType:%s", util.SafeStringWithDefault(r.EvalContext.EntityType, "null")),
 			fmt.Sprintf("FlagID:%d", util.SafeUint(r.FlagID)),
-			fmt.Sprintf("FlagSnapshotID:%d", util.SafeUint(r.FlagSnapshotID)),
-			fmt.Sprintf("SegmentID:%d", util.SafeUint(r.SegmentID)),
 			fmt.Sprintf("VariantID:%d", util.SafeUint(r.VariantID)),
 			fmt.Sprintf("VariantKey:%s", util.SafeStringWithDefault(r.VariantKey, "null")),
 		},
