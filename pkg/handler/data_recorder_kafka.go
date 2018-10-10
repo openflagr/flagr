@@ -5,6 +5,7 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"strings"
 	"time"
@@ -106,6 +107,21 @@ func (k *kafkaRecorder) AsyncRecord(r *models.EvalResult) {
 		Value:     kr,
 		Timestamp: time.Now().UTC(),
 	}
+
+	logKafkaAsyncRecordToDatadog(r)
+}
+
+var logKafkaAsyncRecordToDatadog = func(r *models.EvalResult) {
+	if config.Global.StatsdClient == nil {
+		return
+	}
+	config.Global.StatsdClient.Incr(
+		"data_recorder.kafka",
+		[]string{
+			fmt.Sprintf("FlagID:%d", util.SafeUint(r.FlagID)),
+		},
+		float64(1),
+	)
 }
 
 type kafkaEvalResult struct {
