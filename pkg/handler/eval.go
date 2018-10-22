@@ -140,13 +140,15 @@ var evalFlag = func(evalContext models.EvalContext) *models.EvalResult {
 	var sID *int64
 
 	for _, segment := range f.Segments {
-		variantID, log := evalSegment(f.ID, evalContext, segment)
+		sID = util.Int64Ptr(int64(segment.ID))
+		variantID, log, evalNextSegment := evalSegment(f.ID, evalContext, segment)
 		if evalContext.EnableDebug {
 			logs = append(logs, log)
 		}
 		if variantID != nil {
-			sID = util.Int64Ptr(int64(segment.ID))
 			vID = util.Int64Ptr(int64(*variantID))
+		}
+		if !evalNextSegment {
 			break
 		}
 	}
@@ -202,6 +204,7 @@ var evalSegment = func(
 ) (
 	vID *uint, // returns VariantID
 	log *models.SegmentDebugLog,
+	evalNextSegment bool,
 ) {
 	if len(segment.Constraints) != 0 {
 		m, ok := evalContext.EntityContext.(map[string]interface{})
@@ -210,7 +213,7 @@ var evalSegment = func(
 				Msg:       fmt.Sprintf("constraints are present in the segment_id %v, but got invalid entity_context: %s.", segment.ID, spew.Sdump(evalContext.EntityContext)),
 				SegmentID: int64(segment.ID),
 			}
-			return nil, log
+			return nil, log, false
 		}
 
 		expr := segment.SegmentEvaluation.ConditionsExpr
@@ -220,14 +223,14 @@ var evalSegment = func(
 				Msg:       err.Error(),
 				SegmentID: int64(segment.ID),
 			}
-			return nil, log
+			return nil, log, true
 		}
 		if !match {
 			log = &models.SegmentDebugLog{
 				Msg:       debugConstraintMsg(expr, m),
 				SegmentID: int64(segment.ID),
 			}
-			return nil, log
+			return nil, log, true
 		}
 	}
 
@@ -242,7 +245,9 @@ var evalSegment = func(
 		SegmentID: int64(segment.ID),
 	}
 
-	return vID, log
+	// at this point, all constraints are matched, so we shouldn't go to next segment
+	// thus setting evalNextSegment = false
+	return vID, log, false
 }
 
 func debugConstraintMsg(expr conditions.Expr, m map[string]interface{}) string {
