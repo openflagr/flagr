@@ -16,16 +16,17 @@ import (
 func TestEvalSegment(t *testing.T) {
 	t.Run("test empty evalContext", func(t *testing.T) {
 		s := entity.GenFixtureSegment()
-		vID, log := evalSegment(100, models.EvalContext{}, s)
+		vID, log, evalNextSegment := evalSegment(100, models.EvalContext{}, s)
 
 		assert.Nil(t, vID)
 		assert.NotEmpty(t, log)
+		assert.False(t, evalNextSegment)
 	})
 
 	t.Run("test happy code path", func(t *testing.T) {
 		s := entity.GenFixtureSegment()
 		s.RolloutPercent = uint(100)
-		vID, log := evalSegment(100, models.EvalContext{
+		vID, log, evalNextSegment := evalSegment(100, models.EvalContext{
 			EnableDebug:   true,
 			EntityContext: map[string]interface{}{"dl_state": "CA"},
 			EntityID:      "entityID1",
@@ -35,12 +36,13 @@ func TestEvalSegment(t *testing.T) {
 
 		assert.NotNil(t, vID)
 		assert.NotEmpty(t, log)
+		assert.False(t, evalNextSegment)
 	})
 
 	t.Run("test constraint evaluation error", func(t *testing.T) {
 		s := entity.GenFixtureSegment()
 		s.RolloutPercent = uint(100)
-		vID, log := evalSegment(100, models.EvalContext{
+		vID, log, evalNextSegment := evalSegment(100, models.EvalContext{
 			EnableDebug:   true,
 			EntityContext: map[string]interface{}{},
 			EntityID:      "entityID1",
@@ -50,12 +52,13 @@ func TestEvalSegment(t *testing.T) {
 
 		assert.Nil(t, vID)
 		assert.NotEmpty(t, log)
+		assert.True(t, evalNextSegment)
 	})
 
 	t.Run("test constraint not match", func(t *testing.T) {
 		s := entity.GenFixtureSegment()
 		s.RolloutPercent = uint(100)
-		vID, log := evalSegment(100, models.EvalContext{
+		vID, log, evalNextSegment := evalSegment(100, models.EvalContext{
 			EnableDebug:   true,
 			EntityContext: map[string]interface{}{"dl_state": "NY"},
 			EntityID:      "entityID1",
@@ -65,12 +68,13 @@ func TestEvalSegment(t *testing.T) {
 
 		assert.Nil(t, vID)
 		assert.NotEmpty(t, log)
+		assert.True(t, evalNextSegment)
 	})
 
 	t.Run("test evalContext wrong format", func(t *testing.T) {
 		s := entity.GenFixtureSegment()
 		s.RolloutPercent = uint(100)
-		vID, log := evalSegment(100, models.EvalContext{
+		vID, log, evalNextSegment := evalSegment(100, models.EvalContext{
 			EnableDebug:   true,
 			EntityContext: nil,
 			EntityID:      "entityID1",
@@ -80,6 +84,7 @@ func TestEvalSegment(t *testing.T) {
 
 		assert.Nil(t, vID)
 		assert.NotEmpty(t, log)
+		assert.False(t, evalNextSegment)
 	})
 }
 
@@ -169,6 +174,26 @@ func TestEvalFlag(t *testing.T) {
 		})
 		assert.NotNil(t, result)
 		assert.NotNil(t, result.VariantID)
+	})
+
+	t.Run("test multiple segments with the first segment 0% rollout", func(t *testing.T) {
+		f := entity.GenFixtureFlag()
+		f.Segments = append(f.Segments, entity.GenFixtureSegment())
+		f.Segments[0].Constraints = []entity.Constraint{}
+		f.Segments[0].RolloutPercent = uint(0)
+
+		f.PrepareEvaluation()
+		cache := &EvalCache{mapCache: map[string]*entity.Flag{"100": &f}}
+		defer gostub.StubFunc(&GetEvalCache, cache).Reset()
+		result := evalFlag(models.EvalContext{
+			EnableDebug:   true,
+			EntityContext: map[string]interface{}{"dl_state": "CA", "state": "CA", "rate": 2000},
+			EntityID:      "entityID1",
+			EntityType:    "entityType1",
+			FlagID:        int64(100),
+		})
+		assert.NotNil(t, result)
+		assert.Nil(t, result.VariantID)
 	})
 
 	t.Run("test no match path with multiple constraints", func(t *testing.T) {
