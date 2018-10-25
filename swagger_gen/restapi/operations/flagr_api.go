@@ -131,7 +131,8 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 	}
 }
 
-/*FlagrAPI Flagr is a feature flagging, A/B testing and dynamic configuration microservice */
+/*FlagrAPI Flagr is a feature flagging, A/B testing and dynamic configuration microservice. The base path for all the APIs is "/api/v1".
+ */
 type FlagrAPI struct {
 	spec            *loads.Document
 	context         *middleware.Context

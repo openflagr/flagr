@@ -29,9 +29,9 @@ func init() {
   ],
   "swagger": "2.0",
   "info": {
-    "description": "Flagr is a feature flagging, A/B testing and dynamic configuration microservice",
+    "description": "Flagr is a feature flagging, A/B testing and dynamic configuration microservice. The base path for all the APIs is \"/api/v1\".\n",
     "title": "Flagr",
-    "version": "1.0.10"
+    "version": "1.0.12"
   },
   "basePath": "/api/v1",
   "paths": {
@@ -1776,9 +1776,9 @@ func init() {
   ],
   "swagger": "2.0",
   "info": {
-    "description": "Flagr is a feature flagging, A/B testing and dynamic configuration microservice",
+    "description": "Flagr is a feature flagging, A/B testing and dynamic configuration microservice. The base path for all the APIs is \"/api/v1\".\n",
     "title": "Flagr",
-    "version": "1.0.10"
+    "version": "1.0.12"
   },
   "basePath": "/api/v1",
   "paths": {
