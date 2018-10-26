@@ -72,7 +72,9 @@ Error Set:
 
 ## Flagr UI
 
+Flagr UI is available by appending `/flagr` to the backoffice URL.
+In b2c : https://backoffice-b2c.integration.chpr.fr/flagr
+
 <p align="center">
     <img src="./docs/images/demo_readme.png" width="900">
 </p>
-
