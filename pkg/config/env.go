@@ -117,6 +117,9 @@ var Config = struct {
 	JWTAuthNoTokenStatusCode    int      `env:"FLAGR_JWT_AUTH_NO_TOKEN_STATUS_CODE" envDefault:"307"` // "307" or "401"
 	JWTAuthNoTokenRedirectURL   string   `env:"FLAGR_JWT_AUTH_NO_TOKEN_REDIRECT_URL" envDefault:""`
 	JWTAuthUserProperty         string   `env:"FLAGR_JWT_AUTH_USER_PROPERTY" envDefault:"flagr_user"`
+	// JWTAuthUserClaim can be used as the indicator of a user for created_by or updated_by.
+	// E.g. sub, email, user, name, and etc in a JWT token.
+	JWTAuthUserClaim string `env:"FLAGR_JWT_AUTH_USER_CLAIM" envDefault:"sub"`
 
 	// "HS256" and "RS256" supported
 	JWTAuthSigningMethod string `env:"FLAGR_JWT_AUTH_SIGNING_METHOD" envDefault:"HS256"`
