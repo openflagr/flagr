@@ -20,7 +20,7 @@ func getSubjectFromRequest(r *http.Request) string {
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		return util.SafeString(claims["sub"])
+		return util.SafeString(claims[config.Config.JWTAuthUserClaim])
 	}
 	return ""
 }
