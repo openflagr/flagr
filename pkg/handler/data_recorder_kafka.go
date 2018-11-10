@@ -23,6 +23,14 @@ var (
 	saramaNewAsyncProducer = sarama.NewAsyncProducer
 )
 
+func mustParseKafkaVersion() sarama.KafkaVersion {
+	v, err := sarama.ParseKafkaVersion(config.Config.RecorderKafkaVersion)
+	if err != nil {
+		panic(err)
+	}
+	return v
+}
+
 // NewKafkaRecorder creates a new Kafka recorder
 var NewKafkaRecorder = func() DataRecorder {
 	cfg := sarama.NewConfig()
@@ -39,6 +47,7 @@ var NewKafkaRecorder = func() DataRecorder {
 	cfg.Producer.RequiredAcks = sarama.WaitForLocal
 	cfg.Producer.Retry.Max = config.Config.RecorderKafkaRetryMax
 	cfg.Producer.Flush.Frequency = config.Config.RecorderKafkaFlushFrequency
+	cfg.Version = mustParseKafkaVersion()
 
 	brokerList := strings.Split(config.Config.RecorderKafkaBrokers, ",")
 	producer, err := saramaNewAsyncProducer(brokerList, cfg)
