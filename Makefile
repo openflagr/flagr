@@ -11,11 +11,9 @@ all: deps gen build run
 rebuild: gen build
 
 test: verifiers
-	@go test -race -covermode=atomic github.com/checkr/flagr/pkg/...
+	@go test -race -covermode=atomic -coverprofile=coverage.txt github.com/checkr/flagr/pkg/...
 
-ci: verifiers
-	@echo "Running all coverage for flagr"
-	@retool do courtney -v -o ./coverage.txt -t="-race" -t="-covermode=atomic" github.com/checkr/flagr/pkg/...
+ci: test
 
 build:
 	@echo "Building flagr to $(PWD)/flagr ..."
@@ -24,7 +22,7 @@ build:
 run:
 	@$(PWD)/flagr --port 18000
 
-gen: api_docs swagger goqueryset
+gen: api_docs swagger
 
 deps: checks
 	@echo "Installing retool" && go get -u github.com/twitchtv/retool
@@ -78,7 +76,3 @@ swagger: verify_swagger
 	@mkdir $(PWD)/swagger_gen
 	@retool do swagger generate server -t ./swagger_gen -f $(PWD)/docs/api_docs/bundle.yaml
 	@cp /tmp/configure_flagr.go $(PWD)/swagger_gen/restapi/configure_flagr.go 2>/dev/null || :
-
-goqueryset:
-	@retool do go generate ./pkg/...
-	@./buildscripts/goqueryset.sh

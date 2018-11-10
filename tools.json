@@ -13,14 +13,6 @@
       "Commit": "a054598c6e12cefbc681c25e7c837f1614b32d5e"
     },
     {
-      "Repository": "github.com/jirfag/go-queryset/cmd/goqueryset",
-      "Commit": "7510503da0acaf886bdcbaaced781b40c76076d1"
-    },
-    {
-      "Repository": "github.com/dave/courtney",
-      "Commit": "c0942a0bb8c6ae1aad6bc12bf061aaa3b1304d98"
-    },
-    {
       "Repository": "github.com/codeskyblue/fswatch",
       "Commit": "bd8f761a1a25dc50dc84c0aefe9f1e084fadb1fc"
     }

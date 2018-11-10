@@ -71,6 +71,6 @@ func NewTestDB() *gorm.DB {
 // PopulateTestDB seeds the test db
 func PopulateTestDB(flag Flag) *gorm.DB {
 	testDB := NewTestDB()
-	flag.Create(testDB)
+	testDB.Create(&flag)
 	return testDB
 }

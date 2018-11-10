@@ -25,3 +25,4 @@ stage/
 .env.local
 _tools/
 _data
+coverage.txt

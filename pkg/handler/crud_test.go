@@ -86,7 +86,7 @@ func TestCrudFlags(t *testing.T) {
 		assert.NotZero(t, res.(*flag.PutFlagOK).Payload.ID)
 		assert.Equal(t, "report", res.(*flag.PutFlagOK).Payload.EntityType)
 		ds := []entity.FlagEntityType{}
-		entity.NewFlagEntityTypeQuerySet(db).All(&ds)
+		db.Find(&ds)
 		assert.NotZero(t, len(ds))
 	})
 
@@ -400,7 +400,7 @@ func TestCrudSegments(t *testing.T) {
 
 	// step 5. it should have the correct order of segments
 	res = c.FindSegments(segment.FindSegmentsParams{FlagID: int64(1)})
-	assert.Equal(t, res.(*segment.FindSegmentsOK).Payload[0].ID, int64(2))
+	assert.Equal(t, int64(2), res.(*segment.FindSegmentsOK).Payload[0].ID)
 
 	// step 6. it should be able to delete the segment
 	res = c.DeleteSegment(segment.DeleteSegmentParams{

@@ -20,8 +20,7 @@ var validatePutDistributions = func(params distribution.PutDistributionsParams) 
 	}
 
 	f := &entity.Flag{}
-	err := entity.NewFlagQuerySet(getDB()).IDEq(uint(params.FlagID)).One(f)
-	if err != nil {
+	if err := getDB().First(f, params.FlagID).Error; err != nil {
 		return NewError(400, "error finding flagID %v. reason %s", params.FlagID, err)
 	}
 	f.Preload(getDB())
@@ -49,20 +48,18 @@ var validatePutDistributions = func(params distribution.PutDistributionsParams) 
 
 var validateDeleteVariant = func(params variant.DeleteVariantParams) *Error {
 	f := &entity.Flag{}
-	err := entity.NewFlagQuerySet(getDB()).IDEq(uint(params.FlagID)).One(f)
-	if err != nil {
-		return NewError(400, "error finding flagID %v. reason %s", params.FlagID, err)
+	if err := getDB().First(f, params.FlagID).Error; err != nil {
+		return NewError(404, "error finding flagID %v. reason %s", params.FlagID, err)
 	}
 	f.Preload(getDB())
 
-	q := entity.NewDistributionQuerySet(getDB())
 	for _, s := range f.Segments {
 		for _, d := range s.Distributions {
 			if d.VariantID == util.SafeUint(params.VariantID) {
 				if d.Percent != uint(0) {
 					return NewError(400, "error deleting variant %v. distribution %v still has non-zero distribution %v", params.VariantID, d.ID, d.Percent)
 				}
-				if err := q.IDEq(d.ID).Delete(); err != nil {
+				if err := getDB().Delete(entity.Distribution{}, d.ID).Error; err != nil {
 					return NewError(500, "error deleting distribution %v. reason: %s", d.ID, err)
 				}
 			}
@@ -73,8 +70,12 @@ var validateDeleteVariant = func(params variant.DeleteVariantParams) *Error {
 }
 
 var validatePutVariantForDistributions = func(v *entity.Variant) *Error {
-	q := entity.NewDistributionQuerySet(getDB())
-	if err := q.VariantIDEq(v.ID).GetUpdater().SetVariantKey(v.Key).Update(); err != nil {
+	err := getDB().
+		Model(entity.Distribution{}).
+		Where(entity.Distribution{VariantID: v.ID}).
+		Updates(entity.Distribution{VariantKey: v.Key}).
+		Error
+	if err != nil {
 		return NewError(500, "error updating distribution to sync with variantID %v with variantKey %v. reason: %s", v.ID, v.Key, err)
 	}
 	return nil
