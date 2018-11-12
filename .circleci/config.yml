@@ -3,7 +3,7 @@
 # Check https://circleci.com/docs/2.0/language-go/ for more details
 version: 2
 jobs:
-  build:
+  unit_test:
     docker:
       - image: checkr/flagr-ci
     working_directory: /go/src/github.com/checkr/flagr
@@ -13,3 +13,23 @@ jobs:
       - run: make ci
       - run: bash <(curl -s https://codecov.io/bash)
       - run: cd browser/flagr-ui && yarn install && yarn run test
+
+  integration_test:
+    docker:
+      - image: checkr/docker-docker-compose
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: 18.06.0-ce
+          docker_layer_caching: true
+      - run: cd integration_tests && make build-image
+      - run: cd integration_tests && make down
+      - run: cd integration_tests && make up
+      - run: cd integration_tests && make test
+
+workflows:
+  version: 2
+  test:
+    jobs:
+      - unit_test
+      - integration_test

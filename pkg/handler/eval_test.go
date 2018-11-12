@@ -20,7 +20,7 @@ func TestEvalSegment(t *testing.T) {
 
 		assert.Nil(t, vID)
 		assert.NotEmpty(t, log)
-		assert.False(t, evalNextSegment)
+		assert.True(t, evalNextSegment)
 	})
 
 	t.Run("test happy code path", func(t *testing.T) {
@@ -84,7 +84,7 @@ func TestEvalSegment(t *testing.T) {
 
 		assert.Nil(t, vID)
 		assert.NotEmpty(t, log)
-		assert.False(t, evalNextSegment)
+		assert.True(t, evalNextSegment)
 	})
 }
 

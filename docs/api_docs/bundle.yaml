@@ -4,7 +4,7 @@ info:
     Flagr is a feature flagging, A/B testing and dynamic configuration
     microservice. The base path for all the APIs is "/api/v1".
   title: Flagr
-  version: 1.0.12
+  version: 1.0.13
 tags:
   - name: flag
     description: Everything about the flag
@@ -986,7 +986,6 @@ definitions:
     type: object
     required:
       - key
-      - attachment
     properties:
       key:
         type: string
@@ -1060,9 +1059,6 @@ definitions:
         format: int64
         minimum: 0
         maximum: 100
-      bitmap:
-        type: string
-        minLength: 1
       variantKey:
         type: string
         minLength: 1

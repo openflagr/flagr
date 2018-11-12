@@ -31,7 +31,7 @@ func init() {
   "info": {
     "description": "Flagr is a feature flagging, A/B testing and dynamic configuration microservice. The base path for all the APIs is \"/api/v1\".\n",
     "title": "Flagr",
-    "version": "1.0.12"
+    "version": "1.0.13"
   },
   "basePath": "/api/v1",
   "paths": {
@@ -1237,10 +1237,6 @@ func init() {
         "variantKey"
       ],
       "properties": {
-        "bitmap": {
-          "type": "string",
-          "minLength": 1
-        },
         "id": {
           "type": "integer",
           "format": "int64",
@@ -1601,8 +1597,7 @@ func init() {
     "putVariantRequest": {
       "type": "object",
       "required": [
-        "key",
-        "attachment"
+        "key"
       ],
       "properties": {
         "attachment": {
@@ -1778,7 +1773,7 @@ func init() {
   "info": {
     "description": "Flagr is a feature flagging, A/B testing and dynamic configuration microservice. The base path for all the APIs is \"/api/v1\".\n",
     "title": "Flagr",
-    "version": "1.0.12"
+    "version": "1.0.13"
   },
   "basePath": "/api/v1",
   "paths": {
@@ -2984,10 +2979,6 @@ func init() {
         "variantKey"
       ],
       "properties": {
-        "bitmap": {
-          "type": "string",
-          "minLength": 1
-        },
         "id": {
           "type": "integer",
           "format": "int64",
@@ -3348,8 +3339,7 @@ func init() {
     "putVariantRequest": {
       "type": "object",
       "required": [
-        "key",
-        "attachment"
+        "key"
       ],
       "properties": {
         "attachment": {
