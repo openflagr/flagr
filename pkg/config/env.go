@@ -67,6 +67,7 @@ var Config = struct {
 	RecorderType string `env:"FLAGR_RECORDER_TYPE" envDefault:"kafka"`
 
 	// Kafka related configurations for data records logging (Flagr Metrics)
+	RecorderKafkaVersion        string        `env:"FLAGR_RECORDER_KAFKA_VERSION" envDefault:"0.8.2.0"`
 	RecorderKafkaBrokers        string        `env:"FLAGR_RECORDER_KAFKA_BROKERS" envDefault:":9092"`
 	RecorderKafkaCertFile       string        `env:"FLAGR_RECORDER_KAFKA_CERTFILE" envDefault:""`
 	RecorderKafkaKeyFile        string        `env:"FLAGR_RECORDER_KAFKA_KEYFILE" envDefault:""`
