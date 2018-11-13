@@ -1,5 +1,3 @@
-//go:generate goqueryset -in flag_snapshot.go
-
 package entity
 
 import (
@@ -14,7 +12,6 @@ import (
 
 // FlagSnapshot is the snapshot of a flag
 // Any change of the flag will create a new snapshot
-// gen:qs
 type FlagSnapshot struct {
 	gorm.Model
 	FlagID    uint `gorm:"index:idx_flagsnapshot_flagid"`
@@ -25,10 +22,8 @@ type FlagSnapshot struct {
 // SaveFlagSnapshot saves the Flag Snapshot
 func SaveFlagSnapshot(db *gorm.DB, flagID uint, updatedBy string) {
 	tx := db.Begin()
-
 	f := &Flag{}
-	q := NewFlagQuerySet(tx).IDEq(flagID)
-	if err := q.One(f); err != nil {
+	if err := tx.First(f, flagID).Error; err != nil {
 		logrus.WithFields(logrus.Fields{
 			"err":    err,
 			"flagID": flagID,
@@ -56,7 +51,10 @@ func SaveFlagSnapshot(db *gorm.DB, flagID uint, updatedBy string) {
 		return
 	}
 
-	if err := q.GetUpdater().SetUpdatedBy(updatedBy).SetSnapshotID(fs.ID).Update(); err != nil {
+	f.UpdatedBy = updatedBy
+	f.SnapshotID = fs.ID
+
+	if err := tx.Save(f).Error; err != nil {
 		logrus.WithFields(logrus.Fields{
 			"err":            err,
 			"flagID":         f.ID,

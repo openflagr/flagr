@@ -1,5 +1,3 @@
-//go:generate goqueryset -in constraint.go
-
 package entity
 
 import (
@@ -12,7 +10,6 @@ import (
 )
 
 // Constraint is the unit of constraints
-// gen:qs
 type Constraint struct {
 	gorm.Model
 

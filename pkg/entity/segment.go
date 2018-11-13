@@ -1,5 +1,3 @@
-//go:generate goqueryset -in segment.go
-
 package entity
 
 import (
@@ -11,7 +9,6 @@ import (
 const SegmentDefaultRank = uint(999)
 
 // Segment is the unit of segmentation
-// gen:qs
 type Segment struct {
 	gorm.Model
 	FlagID         uint   `gorm:"index:idx_segment_flagid"`
@@ -28,8 +25,7 @@ type Segment struct {
 // Preload preloads the segment
 func (s *Segment) Preload(db *gorm.DB) error {
 	cs := []Constraint{}
-	constraintQuery := NewConstraintQuerySet(db)
-	err := constraintQuery.SegmentIDEq(s.ID).OrderAscByCreatedAt().All(&cs)
+	err := db.Order("created_at").Where(Constraint{SegmentID: s.ID}).Find(&cs).Error
 
 	if err != nil {
 		return err
@@ -37,8 +33,7 @@ func (s *Segment) Preload(db *gorm.DB) error {
 	s.Constraints = cs
 
 	ds := []Distribution{}
-	distributionQuery := NewDistributionQuerySet(db)
-	err = distributionQuery.SegmentIDEq(s.ID).OrderAscByVariantID().All(&ds)
+	err = db.Order("variant_id").Where(Distribution{SegmentID: s.ID}).Find(&ds).Error
 	if err != nil {
 		return err
 	}

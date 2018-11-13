@@ -109,6 +109,11 @@ step_2_test_crud_flag()
         status 200
         matches '"description":"flag_[^1]"'
         matches '"description":"flag_2"'
+
+    shakedown GET "$flagr_url/flags?key=key_1" -H 'Content-Type:application/json'
+        status 200
+        matches '"description":"flag_1"'
+        matches '"key":"key_1"'
 }
 
 step_3_test_crud_segment()

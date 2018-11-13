@@ -58,7 +58,7 @@ var exportFlags = func(tmpDB *gorm.DB) error {
 		return err
 	}
 	for _, f := range flags {
-		if err := f.Create(tmpDB); err != nil {
+		if err := tmpDB.Create(f).Error; err != nil {
 			return err
 		}
 	}
@@ -67,13 +67,12 @@ var exportFlags = func(tmpDB *gorm.DB) error {
 }
 
 var exportFlagSnapshots = func(tmpDB *gorm.DB) error {
-	qs := entity.NewFlagSnapshotQuerySet(getDB())
 	var snapshots []entity.FlagSnapshot
-	if err := qs.All(&snapshots); err != nil {
+	if err := getDB().Find(&snapshots).Error; err != nil {
 		return err
 	}
 	for _, s := range snapshots {
-		if err := s.Create(tmpDB); err != nil {
+		if err := tmpDB.Create(s).Error; err != nil {
 			return err
 		}
 	}
@@ -82,13 +81,12 @@ var exportFlagSnapshots = func(tmpDB *gorm.DB) error {
 }
 
 var exportFlagEntityTypes = func(tmpDB *gorm.DB) error {
-	qs := entity.NewFlagEntityTypeQuerySet(getDB())
 	var ts []entity.FlagEntityType
-	if err := qs.All(&ts); err != nil {
+	if err := getDB().Find(&ts).Error; err != nil {
 		return err
 	}
 	for _, s := range ts {
-		if err := s.Create(tmpDB); err != nil {
+		if err := tmpDB.Create(s).Error; err != nil {
 			return err
 		}
 	}
