@@ -1,0 +1,51 @@
+version: "3.6"
+
+networks:
+  default:
+    external:
+      name: flagr_integration_tests
+
+services:
+  mysql:
+    image: mysql:5.6
+    container_name: flagr-mysql
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: "flagr"
+      MYSQL_USER: "root"
+
+  postgres:
+    image: postgres:9
+    container_name: flagr-postgres
+    environment:
+      POSTGRES_PASSWORD: "test"
+      POSTGRES_USER: "test"
+      POSTGRES_DB: "flagr"
+
+  flagr_with_sqlite:
+    image: flagr_integration_tests
+    environment:
+      FLAGR_DB_DBDRIVER: "sqlite3"
+      FLAGR_DB_DBCONNECTIONSTR: "/tmp/flagr.sqlite3"
+    command: sh -c "sleep 15 && ./flagr"
+
+  flagr_with_mysql:
+    image: flagr_integration_tests
+    ports:
+      - "18002:18000"
+    environment:
+      FLAGR_DB_DBDRIVER: "mysql"
+      FLAGR_DB_DBCONNECTIONSTR: "root:@tcp(mysql:3306)/flagr?parseTime=true"
+    command: sh -c "sleep 15 && ./flagr"
+
+  flagr_with_postgres:
+    image: flagr_integration_tests
+    environment:
+      FLAGR_DB_DBDRIVER: "postgres"
+      FLAGR_DB_DBCONNECTIONSTR: "sslmode=disable host=postgres user=test password=test dbname=flagr"
+    command: sh -c "sleep 15 && ./flagr"
+
+  shakedown:
+    image: zhouzhuojie/docker-shakedown
+    container_name: flagr-shakedown
+    command: sh -c "tail -F /dev/null"

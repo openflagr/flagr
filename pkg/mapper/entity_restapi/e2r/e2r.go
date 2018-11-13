@@ -131,7 +131,6 @@ func MapConstraints(e []entity.Constraint) []*models.Constraint {
 // MapDistribution maps to a distribution
 func MapDistribution(e *entity.Distribution) *models.Distribution {
 	r := &models.Distribution{
-		Bitmap:     e.Bitmap,
 		ID:         int64(e.ID),
 		Percent:    util.Int64Ptr(int64(e.Percent)),
 		VariantID:  util.Int64Ptr(int64(e.VariantID)),

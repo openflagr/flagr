@@ -89,7 +89,7 @@ func (c *crud) FindFlags(params flag.FindFlagsParams) middleware.Responder {
 		q = q.Offset(int(*params.Offset))
 	}
 
-	err := q.All(&fs)
+	err := q.OrderAscByID().All(&fs)
 	if err != nil {
 		return flag.NewFindFlagsDefault(500).WithPayload(
 			ErrorMessage("cannot query all flags. %s", err))

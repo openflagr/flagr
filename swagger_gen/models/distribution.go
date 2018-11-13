@@ -17,10 +17,6 @@ import (
 // swagger:model distribution
 type Distribution struct {
 
-	// bitmap
-	// Min Length: 1
-	Bitmap string `json:"bitmap,omitempty"`
-
 	// id
 	// Read Only: true
 	// Minimum: 1
@@ -47,10 +43,6 @@ type Distribution struct {
 func (m *Distribution) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateBitmap(formats); err != nil {
-		res = append(res, err)
-	}
-
 	if err := m.validateID(formats); err != nil {
 		res = append(res, err)
 	}
@@ -70,19 +62,6 @@ func (m *Distribution) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (m *Distribution) validateBitmap(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.Bitmap) { // not required
-		return nil
-	}
-
-	if err := validate.MinLength("bitmap", "body", string(m.Bitmap), 1); err != nil {
-		return err
-	}
-
 	return nil
 }
 

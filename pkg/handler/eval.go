@@ -213,7 +213,7 @@ var evalSegment = func(
 				Msg:       fmt.Sprintf("constraints are present in the segment_id %v, but got invalid entity_context: %s.", segment.ID, spew.Sdump(evalContext.EntityContext)),
 				SegmentID: int64(segment.ID),
 			}
-			return nil, log, false
+			return nil, log, true
 		}
 
 		expr := segment.SegmentEvaluation.ConditionsExpr

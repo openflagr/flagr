@@ -18,8 +18,7 @@ import (
 type PutVariantRequest struct {
 
 	// attachment
-	// Required: true
-	Attachment interface{} `json:"attachment"`
+	Attachment interface{} `json:"attachment,omitempty"`
 
 	// key
 	// Required: true
@@ -31,10 +30,6 @@ type PutVariantRequest struct {
 func (m *PutVariantRequest) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateAttachment(formats); err != nil {
-		res = append(res, err)
-	}
-
 	if err := m.validateKey(formats); err != nil {
 		res = append(res, err)
 	}
@@ -42,15 +37,6 @@ func (m *PutVariantRequest) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (m *PutVariantRequest) validateAttachment(formats strfmt.Registry) error {
-
-	if err := validate.Required("attachment", "body", m.Attachment); err != nil {
-		return err
-	}
-
 	return nil
 }
 
