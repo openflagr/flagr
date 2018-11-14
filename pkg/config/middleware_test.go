@@ -295,16 +295,19 @@ func TestAuthMiddlewareWithUnauthorized(t *testing.T) {
 }
 
 func TestStatsMiddleware(t *testing.T) {
+	h := &okHandler{}
+
 	t.Run("it will setup statsd if statsd is enabled", func(t *testing.T) {
 		Config.StatsdEnabled = true
 		defer func() { Config.StatsdEnabled = false }()
-		hh := SetupGlobalMiddleware(nil)
+		hh := SetupGlobalMiddleware(h)
 
 		res := httptest.NewRecorder()
 		res.Body = new(bytes.Buffer)
 		req, _ := http.NewRequest("GET", "http://localhost:18000/api/v1/flags", nil)
 
 		incrCalled := false
+		timingCalled := false
 		defer monkey.PatchInstanceMethod(
 			reflect.TypeOf(Global.StatsdClient),
 			"Incr",
@@ -313,8 +316,18 @@ func TestStatsMiddleware(t *testing.T) {
 				return nil
 			},
 		).Unpatch()
+		defer monkey.PatchInstanceMethod(
+			reflect.TypeOf(Global.StatsdClient),
+			"TimeInMilliseconds",
+			func(_ *statsd.Client, _ string, _ float64, _ []string, _ float64) error {
+				timingCalled = true
+				return nil
+			},
+		).Unpatch()
 
 		hh.ServeHTTP(res, req)
+		assert.Equal(t, http.StatusOK, res.Code)
 		assert.True(t, incrCalled)
+		assert.True(t, timingCalled)
 	})
 }

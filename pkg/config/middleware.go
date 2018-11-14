@@ -23,10 +23,20 @@ import (
 func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 	n := negroni.New()
 
-	n.Use(negroni.NewRecovery())
-
 	if Config.MiddlewareGzipEnabled {
 		n.Use(gzip.Gzip(gzip.DefaultCompression))
+	}
+
+	if Config.MiddlewareVerboseLoggerEnabled {
+		n.Use(negronilogrus.NewMiddlewareFromLogger(logrus.StandardLogger(), "flagr"))
+	}
+
+	if Config.StatsdEnabled {
+		n.Use(&statsdMiddleware{StatsdClient: Global.StatsdClient})
+	}
+
+	if Config.NewRelicEnabled {
+		n.Use(&negroninewrelic.Newrelic{Application: &Global.NewrelicApp})
 	}
 
 	if Config.CORSEnabled {
@@ -39,20 +49,8 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 		}))
 	}
 
-	if Config.StatsdEnabled {
-		n.Use(&statsdMiddleware{StatsdClient: Global.StatsdClient})
-	}
-
-	if Config.NewRelicEnabled {
-		n.Use(&negroninewrelic.Newrelic{Application: &Global.NewrelicApp})
-	}
-
 	if Config.JWTAuthEnabled {
 		n.Use(setupJWTAuthMiddleware())
-	}
-
-	if Config.MiddlewareVerboseLoggerEnabled {
-		n.Use(negronilogrus.NewMiddlewareFromLogger(logrus.StandardLogger(), "flagr"))
 	}
 
 	n.Use(&negroni.Static{
@@ -61,6 +59,8 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 		IndexFile: "index.html",
 	})
 
+	n.Use(setupRecoveryMiddleware())
+
 	if Config.PProfEnabled {
 		n.UseHandler(pprof.New()(handler))
 	} else {
@@ -68,6 +68,22 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 	}
 
 	return n
+}
+
+type recoveryLogger struct{}
+
+func (r *recoveryLogger) Printf(format string, v ...interface{}) {
+	logrus.Errorf(format, v...)
+}
+
+func (r *recoveryLogger) Println(v ...interface{}) {
+	logrus.Errorln(v...)
+}
+
+func setupRecoveryMiddleware() *negroni.Recovery {
+	r := negroni.NewRecovery()
+	r.Logger = &recoveryLogger{}
+	return r
 }
 
 /**

@@ -23,8 +23,8 @@ var (
 	saramaNewAsyncProducer = sarama.NewAsyncProducer
 )
 
-func mustParseKafkaVersion() sarama.KafkaVersion {
-	v, err := sarama.ParseKafkaVersion(config.Config.RecorderKafkaVersion)
+func mustParseKafkaVersion(version string) sarama.KafkaVersion {
+	v, err := sarama.ParseKafkaVersion(version)
 	if err != nil {
 		panic(err)
 	}
@@ -47,7 +47,7 @@ var NewKafkaRecorder = func() DataRecorder {
 	cfg.Producer.RequiredAcks = sarama.WaitForLocal
 	cfg.Producer.Retry.Max = config.Config.RecorderKafkaRetryMax
 	cfg.Producer.Flush.Frequency = config.Config.RecorderKafkaFlushFrequency
-	cfg.Version = mustParseKafkaVersion()
+	cfg.Version = mustParseKafkaVersion(config.Config.RecorderKafkaVersion)
 
 	brokerList := strings.Split(config.Config.RecorderKafkaBrokers, ",")
 	producer, err := saramaNewAsyncProducer(brokerList, cfg)
