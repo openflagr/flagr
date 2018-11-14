@@ -157,3 +157,14 @@ func TestAsyncRecord(t *testing.T) {
 		assert.NotNil(t, r)
 	})
 }
+
+func TestMustParseKafkaVersion(t *testing.T) {
+	assert.NotPanics(t, func() {
+		mustParseKafkaVersion("0.8.2.0")
+		mustParseKafkaVersion("1.1.0") // for version >1.0, use 3 numbers
+	})
+
+	assert.Panics(t, func() {
+		mustParseKafkaVersion("1.1.0.0") // for version >1.0, use 3 numbers
+	})
+}
