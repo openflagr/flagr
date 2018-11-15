@@ -6,7 +6,7 @@ UIPATH := $(PWD)/browser/flagr-ui
 ### Public
 ################################
 
-all: deps gen build run
+all: deps gen build build_ui run
 
 rebuild: gen build
 
@@ -16,8 +16,12 @@ test: verifiers
 ci: test
 
 build:
-	@echo "Building flagr to $(PWD)/flagr ..."
+	@echo "Building Flagr Server to $(PWD)/flagr ..."
 	@CGO_ENABLED=1 go build -o $(PWD)/flagr github.com/checkr/flagr/swagger_gen/cmd/flagr-server
+
+build_ui:
+	@echo "Building Flagr UI ..."
+	@cd ./browser/flagr-ui/; yarn install && yarn run build
 
 run:
 	@$(PWD)/flagr --port 18000
