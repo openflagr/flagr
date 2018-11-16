@@ -30,10 +30,11 @@ Flagr is an open source Go service that delivers the right experience to the rig
 Try it with Docker.
 
 ```sh
-# Get the checkr/flagr docker image
+# Start the docker container
+docker pull checkr/flagr
 docker run -it -p 18000:18000 checkr/flagr
 
-# Open the flagr homepage
+# Open the Flagr UI
 open localhost:18000
 ```
 

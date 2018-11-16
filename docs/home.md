@@ -9,7 +9,11 @@ Run directly with docker. https://hub.docker.com/r/checkr/flagr/
 
 ```bash
 # Start the docker container
+docker pull checkr/flagr
 docker run -it -p 18000:18000 checkr/flagr
+
+# Open the Flagr UI
+open localhost:18000
 ```
 
 ## Deploy
