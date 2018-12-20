@@ -38,7 +38,7 @@ docker run -it -p 18000:18000 checkr/flagr
 open localhost:18000
 ```
 
-Or try it on [https://try-flagr.herokuapp.com](https://try-flagr.herokuapp.com)
+Or try it on [https://try-flagr.herokuapp.com](https://try-flagr.herokuapp.com), it may take a while for a cold start.
 
 ```
 curl --request POST \
