@@ -53,6 +53,25 @@ func TestCrudFlags(t *testing.T) {
 		assert.NotZero(t, res.(*flag.GetFlagOK).Payload.Key)
 	})
 
+	t.Run("it should be able to get preloaded segments and variants", func(t *testing.T) {
+		c.CreateSegment(segment.CreateSegmentParams{
+			FlagID: int64(1),
+			Body: &models.CreateSegmentRequest{
+				Description:    util.StringPtr("segment1"),
+				RolloutPercent: util.Int64Ptr(int64(100)),
+			},
+		})
+		c.CreateVariant(variant.CreateVariantParams{
+			FlagID: int64(1),
+			Body: &models.CreateVariantRequest{
+				Key: util.StringPtr("variant1"),
+			},
+		})
+		res = c.GetFlag(flag.GetFlagParams{FlagID: int64(1)})
+		assert.NotZero(t, len(res.(*flag.GetFlagOK).Payload.Segments))
+		assert.NotZero(t, len(res.(*flag.GetFlagOK).Payload.Variants))
+	})
+
 	t.Run("it should be able to put the flag", func(t *testing.T) {
 		res = c.PutFlag(flag.PutFlagParams{
 			FlagID: int64(1),
@@ -64,6 +83,8 @@ func TestCrudFlags(t *testing.T) {
 		)
 		assert.NotZero(t, res.(*flag.PutFlagOK).Payload.ID)
 		assert.Equal(t, "flag_key_1", res.(*flag.PutFlagOK).Payload.Key)
+		assert.NotZero(t, len(res.(*flag.PutFlagOK).Payload.Segments))
+		assert.NotZero(t, len(res.(*flag.PutFlagOK).Payload.Variants))
 	})
 
 	t.Run("it should be able to set the flag enabled state", func(t *testing.T) {
@@ -299,6 +320,48 @@ func TestFindFlags(t *testing.T) {
 	t.Run("FindFlags - got all the results", func(t *testing.T) {
 		res = c.FindFlags(flag.FindFlagsParams{})
 		assert.Len(t, res.(*flag.FindFlagsOK).Payload, numOfFlags)
+	})
+
+	t.Run("FindFlags - got all the results without segments and variants", func(t *testing.T) {
+		c.CreateSegment(segment.CreateSegmentParams{
+			FlagID: int64(1),
+			Body: &models.CreateSegmentRequest{
+				Description:    util.StringPtr("segment1"),
+				RolloutPercent: util.Int64Ptr(int64(100)),
+			},
+		})
+		c.CreateVariant(variant.CreateVariantParams{
+			FlagID: int64(1),
+			Body: &models.CreateVariantRequest{
+				Key: util.StringPtr("variant1"),
+			},
+		})
+		res = c.FindFlags(flag.FindFlagsParams{})
+		assert.Len(t, res.(*flag.FindFlagsOK).Payload, numOfFlags)
+		assert.Zero(t, len(res.(*flag.FindFlagsOK).Payload[0].Segments))
+		assert.Zero(t, len(res.(*flag.FindFlagsOK).Payload[0].Variants))
+	})
+
+	t.Run("FindFlags - got all the results with preloaded segments and variants", func(t *testing.T) {
+		c.CreateSegment(segment.CreateSegmentParams{
+			FlagID: 1,
+			Body: &models.CreateSegmentRequest{
+				Description:    util.StringPtr("segment2"),
+				RolloutPercent: util.Int64Ptr(int64(100)),
+			},
+		})
+		c.CreateVariant(variant.CreateVariantParams{
+			FlagID: int64(1),
+			Body: &models.CreateVariantRequest{
+				Key: util.StringPtr("variant2"),
+			},
+		})
+		res = c.FindFlags(flag.FindFlagsParams{
+			Preload: util.BoolPtr(true),
+		})
+		assert.Len(t, res.(*flag.FindFlagsOK).Payload, numOfFlags)
+		assert.NotZero(t, len(res.(*flag.FindFlagsOK).Payload[0].Segments))
+		assert.NotZero(t, len(res.(*flag.FindFlagsOK).Payload[0].Variants))
 	})
 
 	t.Run("FindFlags (with enabled only) - got all the enabled results", func(t *testing.T) {

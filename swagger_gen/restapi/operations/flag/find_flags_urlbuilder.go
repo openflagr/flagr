@@ -21,6 +21,7 @@ type FindFlagsURL struct {
 	Key             *string
 	Limit           *int64
 	Offset          *int64
+	Preload         *bool
 
 	_basePath string
 	// avoid unkeyed usage
@@ -102,6 +103,14 @@ func (o *FindFlagsURL) Build() (*url.URL, error) {
 	}
 	if offset != "" {
 		qs.Set("offset", offset)
+	}
+
+	var preload string
+	if o.Preload != nil {
+		preload = swag.FormatBool(*o.Preload)
+	}
+	if preload != "" {
+		qs.Set("preload", preload)
 	}
 
 	result.RawQuery = qs.Encode()

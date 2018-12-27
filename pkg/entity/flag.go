@@ -31,28 +31,22 @@ type FlagEvaluation struct {
 	VariantsMap map[uint]*Variant
 }
 
+// PreloadSegmentsVariants preloads segments and variants for flag
+func PreloadSegmentsVariants(db *gorm.DB) *gorm.DB {
+	return db.
+		Preload("Segments", func(db *gorm.DB) *gorm.DB {
+			return PreloadConstraintsDistribution(db).
+				Order("rank ASC").
+				Order("id ASC")
+		}).
+		Preload("Variants", func(db *gorm.DB) *gorm.DB {
+			return db.Order("id ASC")
+		})
+}
+
 // Preload preloads the segments and variants into flags
 func (f *Flag) Preload(db *gorm.DB) error {
-	// preload Segments
-	ss := []Segment{}
-	if err := db.Order("rank").Order("id").Where(Segment{FlagID: f.ID}).Find(&ss).Error; err != nil {
-		return err
-	}
-	for i, s := range ss {
-		if err := s.Preload(db); err != nil {
-			return err
-		}
-		ss[i] = s
-	}
-	f.Segments = ss
-
-	// preload Variants
-	vs := []Variant{}
-	if err := db.Order("id").Where(Variant{FlagID: f.ID}).Find(&vs).Error; err != nil {
-		return err
-	}
-	f.Variants = vs
-	return nil
+	return PreloadSegmentsVariants(db).First(f, f.ID).Error
 }
 
 // PrepareEvaluation prepares the information for evaluation

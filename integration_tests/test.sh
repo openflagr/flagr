@@ -283,6 +283,34 @@ step_7_test_evaluation()
         matches "\"segmentID\":2"
 }
 
+step_8_test_preload()
+{
+    flagr_url=$1:18000/api/v1
+    sleep 5
+
+    ################################################
+    # Test preload for /flags (depends on ?preload=true/false
+    ################################################
+    shakedown GET $flagr_url/flags
+        status 200
+        matches "\"variants\":\[\]"
+        matches "\"segments\":\[\]"
+
+    shakedown GET $flagr_url/flags?preload=true
+        status 200
+        matches "\"variantKey\":\"key_1\""
+        matches "\"variantID\":1"
+
+    ################################################
+    # Test preload for /flag
+    # always preload for getting a single flag
+    ################################################
+    shakedown GET $flagr_url/flags/1
+        status 200
+        matches "\"variantKey\":\"key_1\""
+        matches "\"variantID\":1"
+}
+
 
 start_test()
 {
@@ -301,6 +329,7 @@ start_test()
     step_5_test_crud_variant $flagr_host
     step_6_test_crud_distribution $flagr_host
     step_7_test_evaluation $flagr_host
+    step_8_test_preload $flagr_host
 }
 
 start(){

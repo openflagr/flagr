@@ -29,6 +29,10 @@ get:
       type: integer
       format: int64
       description: return flags given the offset, it should usually set together with limit
+    - in: query
+      name: preload
+      type: boolean
+      description: return flags with preloaded segments and variants
   responses:
     200:
       description: list all the flags
