@@ -11,10 +11,8 @@ import (
 	"github.com/checkr/flagr/swagger_gen/models"
 )
 
-var getDB = entity.GetDB
-
 // MapFlag maps flag
-func MapFlag(e *entity.Flag, preload bool) (*models.Flag, error) {
+func MapFlag(e *entity.Flag) (*models.Flag, error) {
 	r := &models.Flag{}
 	r.ID = int64(e.ID)
 	r.Key = e.Key
@@ -25,15 +23,7 @@ func MapFlag(e *entity.Flag, preload bool) (*models.Flag, error) {
 	r.Enabled = util.BoolPtr(e.Enabled)
 	r.UpdatedAt = strfmt.DateTime(e.UpdatedAt)
 	r.UpdatedBy = e.UpdatedBy
-
-	if preload {
-		if err := e.Preload(getDB()); err != nil {
-			return nil, err
-		}
-	}
-
-	// preloaded fields
-	r.Segments = MapSegments(e.Segments, preload)
+	r.Segments = MapSegments(e.Segments)
 	r.Variants = MapVariants(e.Variants)
 
 	return r, nil
@@ -43,7 +33,7 @@ func MapFlag(e *entity.Flag, preload bool) (*models.Flag, error) {
 func MapFlags(e []entity.Flag) ([]*models.Flag, error) {
 	ret := make([]*models.Flag, len(e), len(e))
 	for i, f := range e {
-		rf, err := MapFlag(&f, false)
+		rf, err := MapFlag(&f)
 		if err != nil {
 			return nil, err
 		}
@@ -58,7 +48,7 @@ func MapFlagSnapshot(e *entity.FlagSnapshot) (*models.FlagSnapshot, error) {
 	if err := json.Unmarshal(e.Flag, ef); err != nil {
 		return nil, err
 	}
-	f, err := MapFlag(ef, false)
+	f, err := MapFlag(ef)
 	if err != nil {
 		return nil, err
 	}
@@ -85,11 +75,7 @@ func MapFlagSnapshots(e []entity.FlagSnapshot) ([]*models.FlagSnapshot, error) {
 }
 
 // MapSegment maps segment
-func MapSegment(e *entity.Segment, preload bool) *models.Segment {
-	if preload {
-		e.Preload(getDB())
-	}
-
+func MapSegment(e *entity.Segment) *models.Segment {
 	r := &models.Segment{}
 	r.ID = int64(e.ID)
 	r.Description = util.StringPtr(e.Description)
@@ -101,10 +87,10 @@ func MapSegment(e *entity.Segment, preload bool) *models.Segment {
 }
 
 // MapSegments maps segments
-func MapSegments(e []entity.Segment, preload bool) []*models.Segment {
+func MapSegments(e []entity.Segment) []*models.Segment {
 	ret := make([]*models.Segment, len(e), len(e))
 	for i, s := range e {
-		ret[i] = MapSegment(&s, preload)
+		ret[i] = MapSegment(&s)
 	}
 	return ret
 }

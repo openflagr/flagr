@@ -89,6 +89,9 @@ func (c *crud) FindFlags(params flag.FindFlagsParams) middleware.Responder {
 	if params.Limit != nil {
 		tx = tx.Limit(int(*params.Limit))
 	}
+	if params.Preload != nil && *params.Preload {
+		tx = entity.PreloadSegmentsVariants(tx)
+	}
 	if params.DescriptionLike != nil {
 		tx = tx.Where(
 			"lower(description) like ?",
@@ -131,7 +134,7 @@ func (c *crud) CreateFlag(params flag.CreateFlagParams) middleware.Responder {
 	}
 
 	resp := flag.NewCreateFlagOK()
-	payload, err := e2rMapFlag(f, true)
+	payload, err := e2rMapFlag(f)
 	if err != nil {
 		return flag.NewCreateFlagDefault(500).WithPayload(
 			ErrorMessage("cannot map flag. %s", err))
@@ -144,14 +147,14 @@ func (c *crud) CreateFlag(params flag.CreateFlagParams) middleware.Responder {
 
 func (c *crud) GetFlag(params flag.GetFlagParams) middleware.Responder {
 	f := &entity.Flag{}
-	err := getDB().First(f, params.FlagID).Error
+	err := entity.PreloadSegmentsVariants(getDB()).First(f, params.FlagID).Error
 	if err != nil {
 		return flag.NewGetFlagDefault(404).WithPayload(
 			ErrorMessage("cannot find flag %v. %s", params.FlagID, err))
 	}
 
 	resp := flag.NewGetFlagOK()
-	payload, err := e2rMapFlag(f, true)
+	payload, err := e2rMapFlag(f)
 	if err != nil {
 		return flag.NewGetFlagDefault(500).WithPayload(
 			ErrorMessage("cannot map flag %v. %s", params.FlagID, err))
@@ -230,12 +233,12 @@ func (c *crud) PutFlag(params flag.PutFlagParams) middleware.Responder {
 		return flag.NewPutFlagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
-	if err := tx.First(f, params.FlagID).Error; err != nil {
+	if err := entity.PreloadSegmentsVariants(tx).First(f, params.FlagID).Error; err != nil {
 		return flag.NewPutFlagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
 	resp := flag.NewPutFlagOK()
-	payload, err := e2rMapFlag(f, true)
+	payload, err := e2rMapFlag(f)
 	if err != nil {
 		return flag.NewPutFlagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
@@ -258,7 +261,7 @@ func (c *crud) SetFlagEnabledState(params flag.SetFlagEnabledParams) middleware.
 	}
 
 	resp := flag.NewSetFlagEnabledOK()
-	payload, err := e2rMapFlag(f, true)
+	payload, err := e2rMapFlag(f)
 	if err != nil {
 		return flag.NewSetFlagEnabledDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
@@ -288,7 +291,7 @@ func (c *crud) CreateSegment(params segment.CreateSegmentParams) middleware.Resp
 	}
 
 	resp := segment.NewCreateSegmentOK()
-	resp.SetPayload(e2r.MapSegment(s, true))
+	resp.SetPayload(e2r.MapSegment(s))
 
 	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
 	return resp
@@ -296,19 +299,30 @@ func (c *crud) CreateSegment(params segment.CreateSegmentParams) middleware.Resp
 
 func (c *crud) FindSegments(params segment.FindSegmentsParams) middleware.Responder {
 	ss := []entity.Segment{}
-	err := getDB().Order("rank").Order("id").Where(entity.Segment{FlagID: uint(params.FlagID)}).Find(&ss).Error
+	err := entity.
+		PreloadConstraintsDistribution(getDB()).
+		Order("rank").
+		Order("id").
+		Where(entity.Segment{FlagID: uint(params.FlagID)}).
+		Find(&ss).
+		Error
 	if err != nil {
-		return segment.NewFindSegmentsDefault(500).WithPayload(ErrorMessage("%s", err))
+		return segment.NewFindSegmentsDefault(500).
+			WithPayload(ErrorMessage("%s", err))
 	}
 
 	resp := segment.NewFindSegmentsOK()
-	resp.SetPayload(e2r.MapSegments(ss, true))
+	resp.SetPayload(e2r.MapSegments(ss))
 	return resp
 }
 
 func (c *crud) PutSegment(params segment.PutSegmentParams) middleware.Responder {
 	s := &entity.Segment{}
-	if err := getDB().First(s, params.SegmentID).Error; err != nil {
+	err := entity.
+		PreloadConstraintsDistribution(getDB()).
+		First(s, params.SegmentID).
+		Error
+	if err != nil {
 		return segment.NewPutSegmentDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
@@ -320,7 +334,7 @@ func (c *crud) PutSegment(params segment.PutSegmentParams) middleware.Responder 
 	}
 
 	resp := segment.NewPutSegmentOK()
-	resp.SetPayload(e2r.MapSegment(s, true))
+	resp.SetPayload(e2r.MapSegment(s))
 
 	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
 	return resp

@@ -171,6 +171,12 @@ func init() {
             "description": "return flags given the offset, it should usually set together with limit",
             "name": "offset",
             "in": "query"
+          },
+          {
+            "type": "boolean",
+            "description": "return flags with preloaded segments and variants",
+            "name": "preload",
+            "in": "query"
           }
         ],
         "responses": {
@@ -1912,6 +1918,12 @@ func init() {
             "format": "int64",
             "description": "return flags given the offset, it should usually set together with limit",
             "name": "offset",
+            "in": "query"
+          },
+          {
+            "type": "boolean",
+            "description": "return flags with preloaded segments and variants",
+            "name": "preload",
             "in": "query"
           }
         ],

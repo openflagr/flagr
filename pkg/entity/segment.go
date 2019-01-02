@@ -22,24 +22,21 @@ type Segment struct {
 	SegmentEvaluation SegmentEvaluation `gorm:"-" json:"-"`
 }
 
+// PreloadConstraintsDistribution preloads constraints and distributions
+// for segment
+func PreloadConstraintsDistribution(db *gorm.DB) *gorm.DB {
+	return db.
+		Preload("Distributions", func(db *gorm.DB) *gorm.DB {
+			return db.Order("variant_id ASC")
+		}).
+		Preload("Constraints", func(db *gorm.DB) *gorm.DB {
+			return db.Order("created_at ASC")
+		})
+}
+
 // Preload preloads the segment
 func (s *Segment) Preload(db *gorm.DB) error {
-	cs := []Constraint{}
-	err := db.Order("created_at").Where(Constraint{SegmentID: s.ID}).Find(&cs).Error
-
-	if err != nil {
-		return err
-	}
-	s.Constraints = cs
-
-	ds := []Distribution{}
-	err = db.Order("variant_id").Where(Distribution{SegmentID: s.ID}).Find(&ds).Error
-	if err != nil {
-		return err
-	}
-	s.Distributions = ds
-
-	return nil
+	return PreloadConstraintsDistribution(db).First(s, s.ID).Error
 }
 
 // SegmentEvaluation is a struct that holds the necessary info for evaluation
