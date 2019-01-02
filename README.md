@@ -46,12 +46,12 @@ curl --request POST \
        --header 'content-type: application/json' \
        --data '{
          "entityID": "127",
-           "entityType": "user",
-           "entityContext": {
-             "state": "NY"
-           },
-           "flagID": 1,
-           "enableDebug": true
+         "entityType": "user",
+         "entityContext": {
+           "state": "NY"
+         },
+         "flagID": 1,
+         "enableDebug": true
        }'
 ```
 
