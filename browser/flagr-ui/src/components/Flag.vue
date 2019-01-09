@@ -411,7 +411,7 @@
                                       plain
                                       :disabled="!segment.newConstraint.property || !segment.newConstraint.value"
                                       @click.prevent="() => createConstraint(segment)">
-                                      <span class="el-icon-plus"/>
+                                      Add Constraint
                                     </el-button>
                                   </el-col>
                                 </el-row>
