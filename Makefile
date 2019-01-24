@@ -11,13 +11,13 @@ all: deps gen build build_ui run
 rebuild: gen build
 
 test: verifiers
-	@go test -race -covermode=atomic -coverprofile=coverage.txt github.com/checkr/flagr/pkg/...
+	@go test -race -covermode=atomic -coverprofile=coverage.txt ./pkg/...
 
 ci: test
 
 build:
 	@echo "Building Flagr Server to $(PWD)/flagr ..."
-	@CGO_ENABLED=1 go build -o $(PWD)/flagr github.com/checkr/flagr/swagger_gen/cmd/flagr-server
+	@CGO_ENABLED=1 go build -o $(PWD)/flagr ./swagger_gen/cmd/flagr-server
 
 build_ui:
 	@echo "Building Flagr UI ..."
