@@ -29,7 +29,7 @@ run:
 gen: api_docs swagger
 
 deps: checks
-	@echo "Installing retool" && go get -u github.com/twitchtv/retool
+	@echo "Installing retool" && GO111MODULE=off go get -u github.com/twitchtv/retool
 	@retool sync
 	@retool build
 	@retool do gometalinter --install
