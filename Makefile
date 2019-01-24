@@ -53,8 +53,8 @@ api_docs:
 checks:
 	@echo "Check deps"
 	@(env bash $(PWD)/buildscripts/checkdeps.sh)
-	@echo "Checking project is in GOPATH"
-	@(env bash $(PWD)/buildscripts/checkgopath.sh)
+	# @echo "Checking project is in GOPATH"
+	# @(env bash $(PWD)/buildscripts/checkgopath.sh)
 
 verifiers: verify_gometalinter verify_swagger
 
