@@ -17,7 +17,16 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/negroni"
 	"github.com/yadvendar/negroni-newrelic-go-agent"
+	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
+
+// ServerShutdown is a callback function that will be called when
+// we tear down the flagr server
+func ServerShutdown() {
+	if Config.StatsdEnabled && Config.StatsdAPMEnabled {
+		tracer.Stop()
+	}
+}
 
 // SetupGlobalMiddleware setup the global middleware
 func SetupGlobalMiddleware(handler http.Handler) http.Handler {
@@ -33,6 +42,13 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 
 	if Config.StatsdEnabled {
 		n.Use(&statsdMiddleware{StatsdClient: Global.StatsdClient})
+
+		if Config.StatsdAPMEnabled {
+			tracer.Start(
+				tracer.WithAgentAddr(fmt.Sprintf("%s:%s", Config.StatsdHost, Config.StatsdAPMPort)),
+				tracer.WithServiceName(Config.StatsdAPMServiceName),
+			)
+		}
 	}
 
 	if Config.NewRelicEnabled {
