@@ -85,8 +85,5 @@ func CreateFlagEntityType(db *gorm.DB, key string) error {
 		return fmt.Errorf("invalid DataRecordsEntityType. reason: %s", reason)
 	}
 	d := FlagEntityType{Key: key}
-	if err := db.Where(d).FirstOrCreate(&d).Error; err != nil {
-		return err
-	}
-	return nil
+	return db.Where(d).FirstOrCreate(&d).Error
 }
