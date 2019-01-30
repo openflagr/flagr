@@ -54,7 +54,7 @@ func (p *pubsubRecorder) AsyncRecord(r *models.EvalResult) {
 	if config.Config.RecorderPubsubVerbose {
 		id, err := res.Get(ctx)
 		if err != nil {
-			logrus.WithField("pubsub_error", err).Errorf("error pushing to pubsub: %v", id)
+			logrus.WithFields(logrus.Fields{"pubsub_error": err, "id": id}).Error("error pushing to pubsub")
 		}
 	}
 }
