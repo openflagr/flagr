@@ -58,6 +58,14 @@
   revision = "5493cabe49f7bfa6e2ec444a09d334d90cd4e2bd"
 
 [[projects]]
+  digest = "1:1c9dffe45896d21dc8e183fdc3cdb405249e6c7dd3d00792e534af3597d5e4fc"
+  name = "github.com/avast/retry-go"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "08d411bf8302219fe47ca04dbdf9de892010c5e5"
+  version = "v2.2.0"
+
+[[projects]]
   digest = "1:cf3aa97d961afe84ca9a934ffcbd1709385251336890fb6cc591bc15815224ff"
   name = "github.com/aws/aws-sdk-go"
   packages = [
@@ -679,6 +687,7 @@
     "github.com/Shopify/sarama",
     "github.com/a8m/kinesis-producer",
     "github.com/auth0/go-jwt-middleware",
+    "github.com/avast/retry-go",
     "github.com/aws/aws-sdk-go/aws",
     "github.com/aws/aws-sdk-go/aws/session",
     "github.com/aws/aws-sdk-go/service/kinesis",
