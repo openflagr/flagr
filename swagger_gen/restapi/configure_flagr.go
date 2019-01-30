@@ -29,6 +29,7 @@ func configureAPI(api *operations.FlagrAPI) http.Handler {
 	api.JSONConsumer = runtime.JSONConsumer()
 	api.JSONProducer = runtime.JSONProducer()
 	api.Logger = logrus.Infof
+	api.ServerShutdown = config.ServerShutdown
 
 	handler.Setup(api)
 	return setupGlobalMiddleware(api.Serve(setupMiddlewares))

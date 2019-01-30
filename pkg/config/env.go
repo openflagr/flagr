@@ -56,10 +56,13 @@ var Config = struct {
 	NewRelicKey     string `env:"FLAGR_NEWRELIC_KEY" envDefault:""`
 
 	// StatsdEnabled - enable statsd metrics for all the endpoints and DB operations
-	StatsdEnabled bool   `env:"FLAGR_STATSD_ENABLED" envDefault:"false"`
-	StatsdHost    string `env:"FLAGR_STATSD_HOST" envDefault:"127.0.0.1"`
-	StatsdPort    string `env:"FLAGR_STATSD_PORT" envDefault:"8125"`
-	StatsdPrefix  string `env:"FLAGR_STATSD_PREFIX" envDefault:"flagr."`
+	StatsdEnabled        bool   `env:"FLAGR_STATSD_ENABLED" envDefault:"false"`
+	StatsdHost           string `env:"FLAGR_STATSD_HOST" envDefault:"127.0.0.1"`
+	StatsdPort           string `env:"FLAGR_STATSD_PORT" envDefault:"8125"`
+	StatsdPrefix         string `env:"FLAGR_STATSD_PREFIX" envDefault:"flagr."`
+	StatsdAPMEnabled     bool   `env:"FLAGR_STATSD_APM_ENABLED" envDefault:"false"`
+	StatsdAPMPort        string `env:"FLAGR_STATSD_APM_PORT" envDefault:"8126"`
+	StatsdAPMServiceName string `env:"FLAGR_STATSD_APM_SERVICE_NAME" envDefault:"flagr"`
 
 	// RecorderEnabled - enable data records logging
 	RecorderEnabled bool `env:"FLAGR_RECORDER_ENABLED" envDefault:"false"`
