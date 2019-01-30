@@ -42,6 +42,9 @@ var Config = struct {
 	// DBConnectionDebug controls whether to show the database connection debugging logs
 	// warning: it may log the credentials to the stdout
 	DBConnectionDebug bool `env:"FLAGR_DB_DBCONNECTION_DEBUG" envDefault:"true"`
+	// DBConnectionRetryAttempts controls how we are going to retry on db connection when start the flagr server
+	DBConnectionRetryAttempts uint          `env:"FLAGR_DB_DBCONNECTION_RETRY_ATTEMPTS" envDefault:"9"`
+	DBConnectionRetryDelay    time.Duration `env:"FLAGR_DB_DBCONNECTION_RETRY_DELAY" envDefault:"100ms"`
 
 	// CORSEnabled - enable CORS
 	CORSEnabled bool `env:"FLAGR_CORS_ENABLED" envDefault:"true"`

@@ -8,6 +8,7 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/postgres" // postgres driver
 	_ "github.com/jinzhu/gorm/dialects/sqlite"   // sqlite driver
 
+	retry "github.com/avast/retry-go"
 	"github.com/checkr/flagr/pkg/config"
 	"github.com/jinzhu/gorm"
 	"github.com/sirupsen/logrus"
@@ -30,10 +31,22 @@ var AutoMigrateTables = []interface{}{
 	FlagEntityType{},
 }
 
+func connectDB() (db *gorm.DB, err error) {
+	err = retry.Do(
+		func() error {
+			db, err = gorm.Open(config.Config.DBDriver, config.Config.DBConnectionStr)
+			return err
+		},
+		retry.Attempts(config.Config.DBConnectionRetryAttempts),
+		retry.Delay(config.Config.DBConnectionRetryDelay),
+	)
+	return db, err
+}
+
 // GetDB gets the db singleton
 func GetDB() *gorm.DB {
 	singletonOnce.Do(func() {
-		db, err := gorm.Open(config.Config.DBDriver, config.Config.DBConnectionStr)
+		db, err := connectDB()
 		if err != nil {
 			if config.Config.DBConnectionDebug {
 				logrus.WithField("err", err).Fatal("failed to connect to db")
