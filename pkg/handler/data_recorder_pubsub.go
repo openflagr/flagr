@@ -19,7 +19,11 @@ type pubsubRecorder struct {
 
 // NewPubsubRecorder creates a new Pubsub recorder
 var NewPubsubRecorder = func() DataRecorder {
-	client := pubsub.NewClient(context.Background(), config.Config.RecorderPubsubProjectID, option.WithServiceAccountFile(RecorderPubsubKeyFile))
+	client, err := pubsub.NewClient(
+		context.Background(),
+		config.Config.RecorderPubsubProjectID,
+		option.WithServiceAccountFile(config.Config.RecorderPubsubKeyFile),
+	)
 	if err != nil {
 		logrus.WithField("pubsub_error", err).Error("error getting pubsub client")
 	}
@@ -47,7 +51,7 @@ func (p *pubsubRecorder) AsyncRecord(r *models.EvalResult) {
 
 	ctx := context.Background()
 	res := p.topic.Publish(ctx, &pubsub.Message{Data: payload})
-	if config.RecorderPubsubVerbose {
+	if config.Config.RecorderPubsubVerbose {
 		id, err := res.Get(ctx)
 		if err != nil {
 			logrus.WithField("pubsub_error", err).Errorf("error pushing to pubsub: %v", id)
