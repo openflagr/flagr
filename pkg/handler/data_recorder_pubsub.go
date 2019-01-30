@@ -22,7 +22,7 @@ var NewPubsubRecorder = func() DataRecorder {
 	client, err := pubsub.NewClient(
 		context.Background(),
 		config.Config.RecorderPubsubProjectID,
-		option.WithServiceAccountFile(config.Config.RecorderPubsubKeyFile),
+		option.WithCredentialsFile(config.Config.RecorderPubsubKeyFile),
 	)
 	if err != nil {
 		logrus.WithField("pubsub_error", err).Error("error getting pubsub client")
