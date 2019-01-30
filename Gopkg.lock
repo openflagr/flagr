@@ -58,6 +58,12 @@
   revision = "5493cabe49f7bfa6e2ec444a09d334d90cd4e2bd"
 
 [[projects]]
+  name = "github.com/avast/retry-go"
+  packages = ["."]
+  revision = "08d411bf8302219fe47ca04dbdf9de892010c5e5"
+  version = "v2.2.0"
+
+[[projects]]
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -691,6 +697,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "dc9aab626256c92cc11dc34670e59fcb2ff13e5b6fbfb74877fc93336e71ce15"
+  inputs-digest = "8839804fdaff3b128f537ea0f1e7fe3c91cf8a4d40fcef9c1ae4f250b192240d"
   solver-name = "gps-cdcl"
   solver-version = 1

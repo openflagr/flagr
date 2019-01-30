@@ -153,6 +153,10 @@
   branch = "master"
   name = "github.com/dchest/uniuri"
 
+[[constraint]]
+  name = "github.com/avast/retry-go"
+  version = "2.2.0"
+
 
 [prune]
   go-tests = true
