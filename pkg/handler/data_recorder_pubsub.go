@@ -55,7 +55,7 @@ func (p *pubsubRecorder) AsyncRecord(r *models.EvalResult) {
 		Encrypted: false,
 	}
 
-	_, err := messageFrame.encode()
+	_, err = messageFrame.encode()
 	if err != nil {
 		logrus.WithField("pubsub_error", err).Error("error marshaling")
 	}
