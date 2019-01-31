@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"encoding/json"
 
 	"cloud.google.com/go/pubsub"
 	"github.com/checkr/flagr/pkg/config"
@@ -49,6 +50,16 @@ func (p *pubsubRecorder) AsyncRecord(r *models.EvalResult) {
 		logrus.WithField("pubsub_error", err).Error("error marshaling")
 	}
 
+	messageFrame := pubsubMessageFrame{
+		Payload:   string(payload),
+		Encrypted: false,
+	}
+
+	_, err := messageFrame.encode()
+	if err != nil {
+		logrus.WithField("pubsub_error", err).Error("error marshaling")
+	}
+
 	ctx := context.Background()
 	res := p.topic.Publish(ctx, &pubsub.Message{Data: payload})
 	if config.Config.RecorderPubsubVerbose {
@@ -61,6 +72,15 @@ func (p *pubsubRecorder) AsyncRecord(r *models.EvalResult) {
 
 type pubsubEvalResult struct {
 	*models.EvalResult
+}
+
+type pubsubMessageFrame struct {
+	Payload   string `json:"payload"`
+	Encrypted bool   `json:"encrypted"`
+}
+
+func (pmf *pubsubMessageFrame) encode() ([]byte, error) {
+	return json.MarshalIndent(pmf, "", "  ")
 }
 
 // Payload marshals the EvalResult
