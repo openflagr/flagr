@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"time"
 
 	"cloud.google.com/go/pubsub"
 	"github.com/checkr/flagr/pkg/config"
@@ -26,7 +27,7 @@ var NewPubsubRecorder = func() DataRecorder {
 		option.WithCredentialsFile(config.Config.RecorderPubsubKeyFile),
 	)
 	if err != nil {
-		logrus.WithField("pubsub_error", err).Error("error getting pubsub client")
+		logrus.WithField("pubsub_error", err).Fatal("error getting pubsub client")
 	}
 
 	return &pubsubRecorder{
@@ -60,7 +61,7 @@ func (p *pubsubRecorder) AsyncRecord(r *models.EvalResult) {
 		logrus.WithField("pubsub_error", err).Error("error marshaling")
 	}
 
-	ctx := context.Background()
+	ctx := context.WithTimeout(context.Background(), 10*time.Second) // TODO: make it configurable
 	res := p.topic.Publish(ctx, &pubsub.Message{Data: payload})
 	if config.Config.RecorderPubsubVerbose {
 		id, err := res.Get(ctx)
