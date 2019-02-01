@@ -56,13 +56,13 @@ func (p *pubsubRecorder) AsyncRecord(r *models.EvalResult) {
 		Encrypted: false,
 	}
 
-	_, err = messageFrame.encode()
+	message, err := messageFrame.encode()
 	if err != nil {
 		logrus.WithField("pubsub_error", err).Error("error marshaling")
 	}
 
 	ctx := context.Background()
-	res := p.topic.Publish(ctx, &pubsub.Message{Data: payload})
+	res := p.topic.Publish(ctx, &pubsub.Message{Data: []byte(message)})
 	if config.Config.RecorderPubsubVerbose {
 		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
