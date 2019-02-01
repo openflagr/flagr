@@ -61,9 +61,11 @@ func (p *pubsubRecorder) AsyncRecord(r *models.EvalResult) {
 		logrus.WithField("pubsub_error", err).Error("error marshaling")
 	}
 
-	ctx := context.WithTimeout(context.Background(), 10*time.Second) // TODO: make it configurable
+	ctx := context.Background()
 	res := p.topic.Publish(ctx, &pubsub.Message{Data: payload})
 	if config.Config.RecorderPubsubVerbose {
+		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		defer cancel()
 		id, err := res.Get(ctx)
 		if err != nil {
 			logrus.WithFields(logrus.Fields{"pubsub_error": err, "id": id}).Error("error pushing to pubsub")
