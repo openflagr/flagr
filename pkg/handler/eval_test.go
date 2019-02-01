@@ -95,6 +95,7 @@ func TestEvalFlag(t *testing.T) {
 		defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
 		result := evalFlag(models.EvalContext{FlagID: int64(100)})
 		assert.Nil(t, result.VariantID)
+		assert.NotZero(t, result.FlagID)
 		assert.NotEmpty(t, result.EvalContext.EntityID)
 	})
 

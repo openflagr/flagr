@@ -11,6 +11,7 @@ import (
 	"github.com/checkr/flagr/pkg/util"
 	"github.com/checkr/flagr/swagger_gen/models"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/evaluation"
+	"github.com/jinzhu/gorm"
 
 	"github.com/bsm/ratelimit"
 	"github.com/davecgh/go-spew/spew"
@@ -116,7 +117,8 @@ var evalFlag = func(evalContext models.EvalContext) *models.EvalResult {
 	}
 
 	if f == nil {
-		return BlankResult(nil, evalContext, fmt.Sprintf("flagID %v not found", flagID))
+		emptyFlag := &entity.Flag{Model: gorm.Model{ID: flagID}, Key: flagKey}
+		return BlankResult(emptyFlag, evalContext, fmt.Sprintf("flagID %v not found or deleted", flagID))
 	}
 
 	if !f.Enabled {
