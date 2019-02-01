@@ -10,6 +10,7 @@ import (
 	raven "github.com/getsentry/raven-go"
 	newrelic "github.com/newrelic/go-agent"
 	"github.com/sirupsen/logrus"
+	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
 
 // Global is the global dependency we can use, such as the new relic app instance
@@ -61,6 +62,13 @@ func setupStatsd() {
 		client.Namespace = Config.StatsdPrefix
 
 		Global.StatsdClient = client
+
+		if Config.StatsdAPMEnabled {
+			tracer.Start(
+				tracer.WithAgentAddr(fmt.Sprintf("%s:%s", Config.StatsdHost, Config.StatsdAPMPort)),
+				tracer.WithServiceName(Config.StatsdAPMServiceName),
+			)
+		}
 	}
 }
 

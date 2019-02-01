@@ -12,6 +12,7 @@ import (
 	"github.com/checkr/flagr/pkg/config"
 	"github.com/jinzhu/gorm"
 	"github.com/sirupsen/logrus"
+	gormtrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/jinzhu/gorm"
 )
 
 var (
@@ -31,10 +32,17 @@ var AutoMigrateTables = []interface{}{
 	FlagEntityType{},
 }
 
+func openDB() (db *gorm.DB, err error) {
+	if config.Config.StatsdEnabled && config.Config.StatsdAPMEnabled {
+		return gormtrace.Open(config.Config.DBDriver, config.Config.DBConnectionStr)
+	}
+	return gorm.Open(config.Config.DBDriver, config.Config.DBConnectionStr)
+}
+
 func connectDB() (db *gorm.DB, err error) {
 	err = retry.Do(
 		func() error {
-			db, err = gorm.Open(config.Config.DBDriver, config.Config.DBConnectionStr)
+			db, err = openDB()
 			return err
 		},
 		retry.Attempts(config.Config.DBConnectionRetryAttempts),

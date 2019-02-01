@@ -17,6 +17,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/negroni"
 	"github.com/yadvendar/negroni-newrelic-go-agent"
+	ddhttp "gopkg.in/DataDog/dd-trace-go.v1/contrib/net/http"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
 
@@ -44,10 +45,7 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 		n.Use(&statsdMiddleware{StatsdClient: Global.StatsdClient})
 
 		if Config.StatsdAPMEnabled {
-			tracer.Start(
-				tracer.WithAgentAddr(fmt.Sprintf("%s:%s", Config.StatsdHost, Config.StatsdAPMPort)),
-				tracer.WithServiceName(Config.StatsdAPMServiceName),
-			)
+			handler = ddhttp.WrapHandler(handler, Config.StatsdAPMServiceName, "server")
 		}
 	}
 
@@ -78,11 +76,10 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 	n.Use(setupRecoveryMiddleware())
 
 	if Config.PProfEnabled {
-		n.UseHandler(pprof.New()(handler))
-	} else {
-		n.UseHandler(handler)
+		handler = pprof.New()(handler)
 	}
 
+	n.UseHandler(handler)
 	return n
 }
 
