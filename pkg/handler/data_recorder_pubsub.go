@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"time"
 
 	"cloud.google.com/go/pubsub"
 	"github.com/checkr/flagr/pkg/config"
@@ -64,12 +63,14 @@ func (p *pubsubRecorder) AsyncRecord(r *models.EvalResult) {
 	ctx := context.Background()
 	res := p.topic.Publish(ctx, &pubsub.Message{Data: []byte(message)})
 	if config.Config.RecorderPubsubVerbose {
-		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-		defer cancel()
-		id, err := res.Get(ctx)
-		if err != nil {
-			logrus.WithFields(logrus.Fields{"pubsub_error": err, "id": id}).Error("error pushing to pubsub")
-		}
+		go func() {
+			ctx, cancel := context.WithTimeout(ctx, config.Config.RecorderPubsubVerboseCancel)
+			defer cancel()
+			id, err := res.Get(ctx)
+			if err != nil {
+				logrus.WithFields(logrus.Fields{"pubsub_error": err, "id": id}).Error("error pushing to pubsub")
+			}
+		}()
 	}
 }
 
