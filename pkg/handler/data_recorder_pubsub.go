@@ -61,7 +61,7 @@ func (p *pubsubRecorder) AsyncRecord(r *models.EvalResult) {
 	}
 
 	ctx := context.Background()
-	res := p.topic.Publish(ctx, &pubsub.Message{Data: []byte(message)})
+	res := p.topic.Publish(ctx, &pubsub.Message{Data: message})
 	if config.Config.RecorderPubsubVerbose {
 		go func() {
 			ctx, cancel := context.WithTimeout(ctx, config.Config.RecorderPubsubVerboseCancel)
