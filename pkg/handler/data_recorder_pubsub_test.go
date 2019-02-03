@@ -5,6 +5,9 @@ import (
 	"testing"
 
 	"cloud.google.com/go/pubsub"
+	"cloud.google.com/go/pubsub/pstest"
+	"google.golang.org/api/option"
+	"google.golang.org/grpc"
 
 	"github.com/checkr/flagr/pkg/util"
 	"github.com/checkr/flagr/swagger_gen/models"
@@ -78,7 +81,16 @@ func TestPubsubAsyncRecord(t *testing.T) {
 	})
 
 	t.Run("enabled and valid", func(t *testing.T) {
-		client, err := pubsub.NewClient(context.Background(), "")
+		ctx := context.Background()
+		srv := pstest.NewServer()
+		defer srv.Close()
+		conn, err := grpc.Dial(srv.Addr, grpc.WithInsecure())
+		if err != nil {
+			t.Fatal("cannot connect to mocked server")
+		}
+		defer conn.Close()
+		client, err := pubsub.NewClient(ctx, "project", option.WithGRPCConn(conn))
+		defer client.Close()
 		assert.NoError(t, err)
 		topic := client.Topic("test")
 		assert.NotPanics(t, func() {
