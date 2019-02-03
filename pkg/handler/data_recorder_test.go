@@ -33,7 +33,7 @@ func TestGetDataRecorderWhenKinesisIsSet(t *testing.T) {
 
 func TestGetDataRecorderWhenPubsubIsSet(t *testing.T) {
 	singletonDataRecorderOnce = sync.Once{}
-	// defer gostub.StubFunc(&NewPubsubRecorder, nil).Reset()
+	defer gostub.StubFunc(&NewPubsubRecorder, nil).Reset()
 	config.Config.RecorderType = "pubsub"
 
 	assert.NotPanics(t, func() {
