@@ -98,11 +98,11 @@ var Config = struct {
 	RecorderKinesisVerbose             bool          `env:"FLAGR_RECORDER_KINESIS_VERBOSE" envDefault:"false"`
 
 	// Pubsub related configurations for data records logging (Flagr Metrics)
-	RecorderPubsubProjectID     string        `env:"FLAGR_RECORDER_PUBSUB_PROJECT_ID" envDefault:""`
-	RecorderPubsubTopicName     string        `env:"FLAGR_RECORDER_PUBSUB_TOPIC_NAME" envDefault:"flagr-records"`
-	RecorderPubsubKeyFile       string        `env:"FLAGR_RECORDER_PUBSUB_KEYFILE" envDefault:""`
-	RecorderPubsubVerbose       bool          `env:"FLAGR_RECORDER_PUBSUB_VERBOSE" envDefault:"false"`
-	RecorderPubsubVerboseCancel time.Duration `env:"FLAGR_RECORDER_PUBSUB_VERBOSE_CANCEL" envDefault:"5s"`
+	RecorderPubsubProjectID            string        `env:"FLAGR_RECORDER_PUBSUB_PROJECT_ID" envDefault:""`
+	RecorderPubsubTopicName            string        `env:"FLAGR_RECORDER_PUBSUB_TOPIC_NAME" envDefault:"flagr-records"`
+	RecorderPubsubKeyFile              string        `env:"FLAGR_RECORDER_PUBSUB_KEYFILE" envDefault:""`
+	RecorderPubsubVerbose              bool          `env:"FLAGR_RECORDER_PUBSUB_VERBOSE" envDefault:"false"`
+	RecorderPubsubVerboseCancelTimeout time.Duration `env:"FLAGR_RECORDER_PUBSUB_VERBOSE_CANCEL_TIMEOUT" envDefault:"5s"`
 
 	/**
 	JWTAuthEnabled enables the JWT Auth

@@ -70,7 +70,7 @@ func (p *pubsubRecorder) AsyncRecord(r *models.EvalResult) {
 	res := p.topic.Publish(ctx, &pubsub.Message{Data: message})
 	if config.Config.RecorderPubsubVerbose {
 		go func() {
-			ctx, cancel := context.WithTimeout(ctx, config.Config.RecorderPubsubVerboseCancel)
+			ctx, cancel := context.WithTimeout(ctx, config.Config.RecorderPubsubVerboseCancelTimeout)
 			defer cancel()
 			id, err := res.Get(ctx)
 			if err != nil {
