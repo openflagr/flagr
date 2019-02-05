@@ -18,17 +18,21 @@ type pubsubRecorder struct {
 	topic    *pubsub.Topic
 }
 
+var (
+	pubsubClient = func() (*pubsub.Client, error) {
+		return pubsub.NewClient(
+			context.Background(),
+			config.Config.RecorderPubsubProjectID,
+			option.WithCredentialsFile(config.Config.RecorderPubsubKeyFile),
+		)
+	}
+)
+
 // NewPubsubRecorder creates a new Pubsub recorder
 var NewPubsubRecorder = func() DataRecorder {
-	client, err := pubsub.NewClient(
-		context.Background(),
-		config.Config.RecorderPubsubProjectID,
-		option.WithCredentialsFile(config.Config.RecorderPubsubKeyFile),
-	)
+	client, err := pubsubClient()
 	if err != nil {
-		// TODO: use Fatal again after fixing the test expecting to not panic.
-		// logrus.WithField("pubsub_error", err).Fatal("error getting pubsub client")
-		logrus.WithField("pubsub_error", err).Error("error getting pubsub client")
+		logrus.WithField("pubsub_error", err).Fatal("error getting pubsub client")
 	}
 
 	return &pubsubRecorder{
@@ -66,7 +70,7 @@ func (p *pubsubRecorder) AsyncRecord(r *models.EvalResult) {
 	res := p.topic.Publish(ctx, &pubsub.Message{Data: message})
 	if config.Config.RecorderPubsubVerbose {
 		go func() {
-			ctx, cancel := context.WithTimeout(ctx, config.Config.RecorderPubsubVerboseCancel)
+			ctx, cancel := context.WithTimeout(ctx, config.Config.RecorderPubsubVerboseCancelTimeout)
 			defer cancel()
 			id, err := res.Get(ctx)
 			if err != nil {
