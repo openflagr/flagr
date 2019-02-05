@@ -53,7 +53,8 @@ func (p *pubsubRecorder) AsyncRecord(r *models.EvalResult) {
 
 	payload, err := pr.Payload()
 	if err != nil {
-		logrus.WithField("pubsub_error", err).Error("error marshaling")
+		logrus.WithField("pubsub_error", err).Error("error marshaling payload")
+		return
 	}
 
 	messageFrame := pubsubMessageFrame{
@@ -63,7 +64,8 @@ func (p *pubsubRecorder) AsyncRecord(r *models.EvalResult) {
 
 	message, err := messageFrame.encode()
 	if err != nil {
-		logrus.WithField("pubsub_error", err).Error("error marshaling")
+		logrus.WithField("pubsub_error", err).Error("error marshaling message frame")
+		return
 	}
 
 	ctx := context.Background()
