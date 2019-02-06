@@ -150,7 +150,7 @@
                     <el-col :span=2>
                       <div class="data-records-label">
                         Data Records
-                        <el-tooltip content="Controls whether to log to data pipeline, e.g. Kafka, Kinesis" placement="top-end" effect="light">
+                        <el-tooltip content="Controls whether to log to data pipeline, e.g. Kafka, Kinesis, Pubsub" placement="top-end" effect="light">
                           <span class="el-icon-info"/>
                         </el-tooltip>
                       </div>

@@ -97,6 +97,13 @@ var Config = struct {
 	RecorderKinesisAggregateBatchSize  int           `env:"FLAGR_RECORDER_KINESIS_AGGREGATE_BATCH_SIZE" envDefault:"51200"`
 	RecorderKinesisVerbose             bool          `env:"FLAGR_RECORDER_KINESIS_VERBOSE" envDefault:"false"`
 
+	// Pubsub related configurations for data records logging (Flagr Metrics)
+	RecorderPubsubProjectID            string        `env:"FLAGR_RECORDER_PUBSUB_PROJECT_ID" envDefault:""`
+	RecorderPubsubTopicName            string        `env:"FLAGR_RECORDER_PUBSUB_TOPIC_NAME" envDefault:"flagr-records"`
+	RecorderPubsubKeyFile              string        `env:"FLAGR_RECORDER_PUBSUB_KEYFILE" envDefault:""`
+	RecorderPubsubVerbose              bool          `env:"FLAGR_RECORDER_PUBSUB_VERBOSE" envDefault:"false"`
+	RecorderPubsubVerboseCancelTimeout time.Duration `env:"FLAGR_RECORDER_PUBSUB_VERBOSE_CANCEL_TIMEOUT" envDefault:"5s"`
+
 	/**
 	JWTAuthEnabled enables the JWT Auth
 

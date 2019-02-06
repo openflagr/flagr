@@ -26,6 +26,8 @@ func GetDataRecorder() DataRecorder {
 			singletonDataRecorder = NewKafkaRecorder()
 		case "kinesis":
 			singletonDataRecorder = NewKinesisRecorder()
+		case "pubsub":
+			singletonDataRecorder = NewPubsubRecorder()
 		default:
 			panic("recorderType not supported")
 		}

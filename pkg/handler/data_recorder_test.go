@@ -31,6 +31,18 @@ func TestGetDataRecorderWhenKinesisIsSet(t *testing.T) {
 	config.Config.RecorderType = "kafka"
 }
 
+func TestGetDataRecorderWhenPubsubIsSet(t *testing.T) {
+	singletonDataRecorderOnce = sync.Once{}
+	defer gostub.StubFunc(&NewPubsubRecorder, nil).Reset()
+	config.Config.RecorderType = "pubsub"
+
+	assert.NotPanics(t, func() {
+		GetDataRecorder()
+	})
+
+	config.Config.RecorderType = "kafka"
+}
+
 func TestGetDataRecorderPanicsWhenRecorderIsInvalid(t *testing.T) {
 	singletonDataRecorderOnce = sync.Once{}
 	config.Config.RecorderType = "invalid"
