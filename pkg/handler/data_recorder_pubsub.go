@@ -7,13 +7,11 @@ import (
 	"cloud.google.com/go/pubsub"
 	"github.com/checkr/flagr/pkg/config"
 	"github.com/checkr/flagr/swagger_gen/models"
-	"google.golang.org/api/option"
-
 	"github.com/sirupsen/logrus"
+	"google.golang.org/api/option"
 )
 
 type pubsubRecorder struct {
-	enabled  bool
 	producer *pubsub.Client
 	topic    *pubsub.Topic
 }
@@ -38,15 +36,10 @@ var NewPubsubRecorder = func() DataRecorder {
 	return &pubsubRecorder{
 		producer: client,
 		topic:    client.Topic(config.Config.RecorderPubsubTopicName),
-		enabled:  config.Config.RecorderEnabled,
 	}
 }
 
 func (p *pubsubRecorder) AsyncRecord(r *models.EvalResult) {
-	if !p.enabled {
-		return
-	}
-
 	pr := &pubsubEvalResult{
 		EvalResult: r,
 	}
