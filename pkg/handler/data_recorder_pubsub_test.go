@@ -82,14 +82,6 @@ func TestNewPubsubRecorder(t *testing.T) {
 }
 
 func TestPubsubAsyncRecord(t *testing.T) {
-	t.Run("not enabled", func(t *testing.T) {
-		p := &pubsubRecorder{
-			enabled: false,
-		}
-
-		p.AsyncRecord(nil)
-	})
-
 	t.Run("enabled and valid", func(t *testing.T) {
 		client := mockClient(t)
 		defer client.Close()
@@ -98,7 +90,6 @@ func TestPubsubAsyncRecord(t *testing.T) {
 			pr := &pubsubRecorder{
 				producer: client,
 				topic:    topic,
-				enabled:  true,
 			}
 
 			pr.AsyncRecord(
