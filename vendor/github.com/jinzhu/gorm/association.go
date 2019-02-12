@@ -267,16 +267,15 @@ func (association *Association) Count() int {
 		query        = scope.DB()
 	)
 
-	switch relationship.Kind {
-	case "many_to_many":
+	if relationship.Kind == "many_to_many" {
 		query = relationship.JoinTableHandler.JoinWith(relationship.JoinTableHandler, query, scope.Value)
-	case "has_many", "has_one":
+	} else if relationship.Kind == "has_many" || relationship.Kind == "has_one" {
 		primaryKeys := scope.getColumnAsArray(relationship.AssociationForeignFieldNames, scope.Value)
 		query = query.Where(
 			fmt.Sprintf("%v IN (%v)", toQueryCondition(scope, relationship.ForeignDBNames), toQueryMarks(primaryKeys)),
 			toQueryValues(primaryKeys)...,
 		)
-	case "belongs_to":
+	} else if relationship.Kind == "belongs_to" {
 		primaryKeys := scope.getColumnAsArray(relationship.ForeignFieldNames, scope.Value)
 		query = query.Where(
 			fmt.Sprintf("%v IN (%v)", toQueryCondition(scope, relationship.AssociationForeignDBNames), toQueryMarks(primaryKeys)),
@@ -368,7 +367,6 @@ func (association *Association) saveAssociations(values ...interface{}) *Associa
 	return association
 }
 
-// setErr set error when the error is not nil. And return Association.
 func (association *Association) setErr(err error) *Association {
 	if err != nil {
 		association.Error = err

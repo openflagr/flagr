@@ -19,7 +19,6 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"net/mail"
 	"regexp"
 	"strings"
 
@@ -49,15 +48,7 @@ const (
 	//  <subdomain> ::= <label> | <subdomain> "." <label>
 	//  var subdomain = /^[a-zA-Z](([-0-9a-zA-Z]+)?[0-9a-zA-Z])?(\.[a-zA-Z](([-0-9a-zA-Z]+)?[0-9a-zA-Z])?)*$/;
 	//  <domain> ::= <subdomain> | " "
-	//
-	// Additional validations:
-	//   - for FDQNs, top-level domain (e.g. ".com"), is at least to letters long (no special characters here)
-	//   - hostnames may start with a digit [RFC1123]
-	//   - special registered names with an underscore ('_') are not allowed in this context
-	//   - dashes are permitted, but not at the start or the end of a segment
-	//   - long top-level domain names (e.g. example.london) are permitted
-	//   - symbol unicode points are permitted (e.g. emoji) (not for top-level domain)
-	HostnamePattern = `^([a-zA-Z0-9\p{S}\p{L}]((-?[a-zA-Z0-9\p{S}\p{L}]{0,62})?)|([a-zA-Z0-9\p{S}\p{L}](([a-zA-Z0-9-\p{S}\p{L}]{0,61}[a-zA-Z0-9\p{S}\p{L}])?)(\.)){1,}([a-zA-Z\p{L}]){2,63})$`
+	HostnamePattern = `^[a-zA-Z](([-0-9a-zA-Z]+)?[0-9a-zA-Z])?(\.[a-zA-Z](([-0-9a-zA-Z]+)?[0-9a-zA-Z])?)*$`
 	// UUIDPattern Regex for UUID that allows uppercase
 	UUIDPattern = `(?i)^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$`
 	// UUID3Pattern Regex for UUID3 that allows uppercase
@@ -120,12 +111,6 @@ func IsUUID5(str string) bool {
 	return rxUUID5.MatchString(str)
 }
 
-// IsEmail validates an email address.
-func IsEmail(str string) bool {
-	addr, e := mail.ParseAddress(str)
-	return e == nil && addr.Address != ""
-}
-
 func init() {
 	// register formats in the default registry:
 	//   - byte
@@ -151,7 +136,7 @@ func init() {
 	Default.Add("uri", &u, govalidator.IsRequestURI)
 
 	eml := Email("")
-	Default.Add("email", &eml, IsEmail)
+	Default.Add("email", &eml, govalidator.IsEmail)
 
 	hn := Hostname("")
 	Default.Add("hostname", &hn, IsHostname)
@@ -205,7 +190,13 @@ func init() {
 	Default.Add("password", &pw, func(_ string) bool { return true })
 }
 
-// Base64 represents a base64 encoded string, using URLEncoding alphabet
+/* unused:
+var formatCheckers = map[string]Validator{
+	"byte": govalidator.IsBase64,
+}
+*/
+
+// Base64 represents a base64 encoded string
 //
 // swagger:strfmt byte
 type Base64 []byte
@@ -311,22 +302,6 @@ func (b *Base64) SetBSON(raw bson.Raw) error {
 	return errors.New("couldn't unmarshal bson raw value as Base64")
 }
 
-// DeepCopyInto copies the receiver and writes its value into out.
-func (in *Base64) DeepCopyInto(out *Base64) {
-	*out = *in
-	return
-}
-
-// DeepCopy copies the receiver into a new Base64.
-func (in *Base64) DeepCopy() *Base64 {
-	if in == nil {
-		return nil
-	}
-	out := new(Base64)
-	in.DeepCopyInto(out)
-	return out
-}
-
 // URI represents the uri string format as specified by the json schema spec
 //
 // swagger:strfmt uri
@@ -410,22 +385,6 @@ func (u *URI) SetBSON(raw bson.Raw) error {
 	}
 
 	return errors.New("couldn't unmarshal bson raw value as URI")
-}
-
-// DeepCopyInto copies the receiver and writes its value into out.
-func (in *URI) DeepCopyInto(out *URI) {
-	*out = *in
-	return
-}
-
-// DeepCopy copies the receiver into a new URI.
-func (in *URI) DeepCopy() *URI {
-	if in == nil {
-		return nil
-	}
-	out := new(URI)
-	in.DeepCopyInto(out)
-	return out
 }
 
 // Email represents the email string format as specified by the json schema spec
@@ -513,22 +472,6 @@ func (e *Email) SetBSON(raw bson.Raw) error {
 	return errors.New("couldn't unmarshal bson raw value as Email")
 }
 
-// DeepCopyInto copies the receiver and writes its value into out.
-func (in *Email) DeepCopyInto(out *Email) {
-	*out = *in
-	return
-}
-
-// DeepCopy copies the receiver into a new Email.
-func (in *Email) DeepCopy() *Email {
-	if in == nil {
-		return nil
-	}
-	out := new(Email)
-	in.DeepCopyInto(out)
-	return out
-}
-
 // Hostname represents the hostname string format as specified by the json schema spec
 //
 // swagger:strfmt hostname
@@ -612,22 +555,6 @@ func (h *Hostname) SetBSON(raw bson.Raw) error {
 	}
 
 	return errors.New("couldn't unmarshal bson raw value as Hostname")
-}
-
-// DeepCopyInto copies the receiver and writes its value into out.
-func (in *Hostname) DeepCopyInto(out *Hostname) {
-	*out = *in
-	return
-}
-
-// DeepCopy copies the receiver into a new Hostname.
-func (in *Hostname) DeepCopy() *Hostname {
-	if in == nil {
-		return nil
-	}
-	out := new(Hostname)
-	in.DeepCopyInto(out)
-	return out
 }
 
 // IPv4 represents an IP v4 address
@@ -715,22 +642,6 @@ func (u *IPv4) SetBSON(raw bson.Raw) error {
 	return errors.New("couldn't unmarshal bson raw value as IPv4")
 }
 
-// DeepCopyInto copies the receiver and writes its value into out.
-func (in *IPv4) DeepCopyInto(out *IPv4) {
-	*out = *in
-	return
-}
-
-// DeepCopy copies the receiver into a new IPv4.
-func (in *IPv4) DeepCopy() *IPv4 {
-	if in == nil {
-		return nil
-	}
-	out := new(IPv4)
-	in.DeepCopyInto(out)
-	return out
-}
-
 // IPv6 represents an IP v6 address
 //
 // swagger:strfmt ipv6
@@ -816,22 +727,6 @@ func (u *IPv6) SetBSON(raw bson.Raw) error {
 	return errors.New("couldn't unmarshal bson raw value as IPv6")
 }
 
-// DeepCopyInto copies the receiver and writes its value into out.
-func (in *IPv6) DeepCopyInto(out *IPv6) {
-	*out = *in
-	return
-}
-
-// DeepCopy copies the receiver into a new IPv6.
-func (in *IPv6) DeepCopy() *IPv6 {
-	if in == nil {
-		return nil
-	}
-	out := new(IPv6)
-	in.DeepCopyInto(out)
-	return out
-}
-
 // MAC represents a 48 bit MAC address
 //
 // swagger:strfmt mac
@@ -915,22 +810,6 @@ func (u *MAC) SetBSON(raw bson.Raw) error {
 	}
 
 	return errors.New("couldn't unmarshal bson raw value as MAC")
-}
-
-// DeepCopyInto copies the receiver and writes its value into out.
-func (in *MAC) DeepCopyInto(out *MAC) {
-	*out = *in
-	return
-}
-
-// DeepCopy copies the receiver into a new MAC.
-func (in *MAC) DeepCopy() *MAC {
-	if in == nil {
-		return nil
-	}
-	out := new(MAC)
-	in.DeepCopyInto(out)
-	return out
 }
 
 // UUID represents a uuid string format
@@ -1021,22 +900,6 @@ func (u *UUID) SetBSON(raw bson.Raw) error {
 	return errors.New("couldn't unmarshal bson raw value as UUID")
 }
 
-// DeepCopyInto copies the receiver and writes its value into out.
-func (in *UUID) DeepCopyInto(out *UUID) {
-	*out = *in
-	return
-}
-
-// DeepCopy copies the receiver into a new UUID.
-func (in *UUID) DeepCopy() *UUID {
-	if in == nil {
-		return nil
-	}
-	out := new(UUID)
-	in.DeepCopyInto(out)
-	return out
-}
-
 // UUID3 represents a uuid3 string format
 //
 // swagger:strfmt uuid3
@@ -1123,22 +986,6 @@ func (u *UUID3) SetBSON(raw bson.Raw) error {
 	}
 
 	return errors.New("couldn't unmarshal bson raw value as UUID3")
-}
-
-// DeepCopyInto copies the receiver and writes its value into out.
-func (in *UUID3) DeepCopyInto(out *UUID3) {
-	*out = *in
-	return
-}
-
-// DeepCopy copies the receiver into a new UUID3.
-func (in *UUID3) DeepCopy() *UUID3 {
-	if in == nil {
-		return nil
-	}
-	out := new(UUID3)
-	in.DeepCopyInto(out)
-	return out
 }
 
 // UUID4 represents a uuid4 string format
@@ -1229,22 +1076,6 @@ func (u *UUID4) SetBSON(raw bson.Raw) error {
 	return errors.New("couldn't unmarshal bson raw value as UUID4")
 }
 
-// DeepCopyInto copies the receiver and writes its value into out.
-func (in *UUID4) DeepCopyInto(out *UUID4) {
-	*out = *in
-	return
-}
-
-// DeepCopy copies the receiver into a new UUID4.
-func (in *UUID4) DeepCopy() *UUID4 {
-	if in == nil {
-		return nil
-	}
-	out := new(UUID4)
-	in.DeepCopyInto(out)
-	return out
-}
-
 // UUID5 represents a uuid5 string format
 //
 // swagger:strfmt uuid5
@@ -1333,22 +1164,6 @@ func (u *UUID5) SetBSON(raw bson.Raw) error {
 	return errors.New("couldn't unmarshal bson raw value as UUID5")
 }
 
-// DeepCopyInto copies the receiver and writes its value into out.
-func (in *UUID5) DeepCopyInto(out *UUID5) {
-	*out = *in
-	return
-}
-
-// DeepCopy copies the receiver into a new UUID5.
-func (in *UUID5) DeepCopy() *UUID5 {
-	if in == nil {
-		return nil
-	}
-	out := new(UUID5)
-	in.DeepCopyInto(out)
-	return out
-}
-
 // ISBN represents an isbn string format
 //
 // swagger:strfmt isbn
@@ -1432,22 +1247,6 @@ func (u *ISBN) SetBSON(raw bson.Raw) error {
 	}
 
 	return errors.New("couldn't unmarshal bson raw value as ISBN")
-}
-
-// DeepCopyInto copies the receiver and writes its value into out.
-func (in *ISBN) DeepCopyInto(out *ISBN) {
-	*out = *in
-	return
-}
-
-// DeepCopy copies the receiver into a new ISBN.
-func (in *ISBN) DeepCopy() *ISBN {
-	if in == nil {
-		return nil
-	}
-	out := new(ISBN)
-	in.DeepCopyInto(out)
-	return out
 }
 
 // ISBN10 represents an isbn 10 string format
@@ -1535,22 +1334,6 @@ func (u *ISBN10) SetBSON(raw bson.Raw) error {
 	return errors.New("couldn't unmarshal bson raw value as ISBN10")
 }
 
-// DeepCopyInto copies the receiver and writes its value into out.
-func (in *ISBN10) DeepCopyInto(out *ISBN10) {
-	*out = *in
-	return
-}
-
-// DeepCopy copies the receiver into a new ISBN10.
-func (in *ISBN10) DeepCopy() *ISBN10 {
-	if in == nil {
-		return nil
-	}
-	out := new(ISBN10)
-	in.DeepCopyInto(out)
-	return out
-}
-
 // ISBN13 represents an isbn 13 string format
 //
 // swagger:strfmt isbn13
@@ -1634,22 +1417,6 @@ func (u *ISBN13) SetBSON(raw bson.Raw) error {
 	}
 
 	return errors.New("couldn't unmarshal bson raw value as ISBN13")
-}
-
-// DeepCopyInto copies the receiver and writes its value into out.
-func (in *ISBN13) DeepCopyInto(out *ISBN13) {
-	*out = *in
-	return
-}
-
-// DeepCopy copies the receiver into a new ISBN13.
-func (in *ISBN13) DeepCopy() *ISBN13 {
-	if in == nil {
-		return nil
-	}
-	out := new(ISBN13)
-	in.DeepCopyInto(out)
-	return out
 }
 
 // CreditCard represents a credit card string format
@@ -1737,22 +1504,6 @@ func (u *CreditCard) SetBSON(raw bson.Raw) error {
 	return errors.New("couldn't unmarshal bson raw value as CreditCard")
 }
 
-// DeepCopyInto copies the receiver and writes its value into out.
-func (in *CreditCard) DeepCopyInto(out *CreditCard) {
-	*out = *in
-	return
-}
-
-// DeepCopy copies the receiver into a new CreditCard.
-func (in *CreditCard) DeepCopy() *CreditCard {
-	if in == nil {
-		return nil
-	}
-	out := new(CreditCard)
-	in.DeepCopyInto(out)
-	return out
-}
-
 // SSN represents a social security string format
 //
 // swagger:strfmt ssn
@@ -1836,22 +1587,6 @@ func (u *SSN) SetBSON(raw bson.Raw) error {
 	}
 
 	return errors.New("couldn't unmarshal bson raw value as SSN")
-}
-
-// DeepCopyInto copies the receiver and writes its value into out.
-func (in *SSN) DeepCopyInto(out *SSN) {
-	*out = *in
-	return
-}
-
-// DeepCopy copies the receiver into a new SSN.
-func (in *SSN) DeepCopy() *SSN {
-	if in == nil {
-		return nil
-	}
-	out := new(SSN)
-	in.DeepCopyInto(out)
-	return out
 }
 
 // HexColor represents a hex color string format
@@ -1939,22 +1674,6 @@ func (h *HexColor) SetBSON(raw bson.Raw) error {
 	return errors.New("couldn't unmarshal bson raw value as HexColor")
 }
 
-// DeepCopyInto copies the receiver and writes its value into out.
-func (in *HexColor) DeepCopyInto(out *HexColor) {
-	*out = *in
-	return
-}
-
-// DeepCopy copies the receiver into a new HexColor.
-func (in *HexColor) DeepCopy() *HexColor {
-	if in == nil {
-		return nil
-	}
-	out := new(HexColor)
-	in.DeepCopyInto(out)
-	return out
-}
-
 // RGBColor represents a RGB color string format
 //
 // swagger:strfmt rgbcolor
@@ -2038,22 +1757,6 @@ func (r *RGBColor) SetBSON(raw bson.Raw) error {
 	}
 
 	return errors.New("couldn't unmarshal bson raw value as RGBColor")
-}
-
-// DeepCopyInto copies the receiver and writes its value into out.
-func (in *RGBColor) DeepCopyInto(out *RGBColor) {
-	*out = *in
-	return
-}
-
-// DeepCopy copies the receiver into a new RGBColor.
-func (in *RGBColor) DeepCopy() *RGBColor {
-	if in == nil {
-		return nil
-	}
-	out := new(RGBColor)
-	in.DeepCopyInto(out)
-	return out
 }
 
 // Password represents a password.
@@ -2140,20 +1843,4 @@ func (r *Password) SetBSON(raw bson.Raw) error {
 	}
 
 	return errors.New("couldn't unmarshal bson raw value as Password")
-}
-
-// DeepCopyInto copies the receiver and writes its value into out.
-func (in *Password) DeepCopyInto(out *Password) {
-	*out = *in
-	return
-}
-
-// DeepCopy copies the receiver into a new Password.
-func (in *Password) DeepCopy() *Password {
-	if in == nil {
-		return nil
-	}
-	out := new(Password)
-	in.DeepCopyInto(out)
-	return out
 }

@@ -3,8 +3,6 @@ package logrus
 import (
 	"bytes"
 	"fmt"
-	"os"
-	"runtime"
 	"sort"
 	"strings"
 	"sync"
@@ -37,9 +35,6 @@ type TextFormatter struct {
 	// Force disabling colors.
 	DisableColors bool
 
-	// Override coloring based on CLICOLOR and CLICOLOR_FORCE. - https://bixense.com/clicolors/
-	EnvironmentOverrideColors bool
-
 	// Disable timestamp logging. useful when output is redirected to logging
 	// system that already adds timestamps.
 	DisableTimestamp bool
@@ -55,9 +50,6 @@ type TextFormatter struct {
 	// that log extremely frequently and don't use the JSON formatter this may not
 	// be desired.
 	DisableSorting bool
-
-	// The keys sorting function, when uninitialized it uses sort.Strings.
-	SortingFunc func([]string)
 
 	// Disables the truncation of the level text to 4 characters.
 	DisableLevelTruncation bool
@@ -77,77 +69,26 @@ type TextFormatter struct {
 	//         FieldKeyMsg:   "@message"}}
 	FieldMap FieldMap
 
-	terminalInitOnce sync.Once
+	sync.Once
 }
 
 func (f *TextFormatter) init(entry *Entry) {
 	if entry.Logger != nil {
 		f.isTerminal = checkIfTerminal(entry.Logger.Out)
-
-		if f.isTerminal {
-			initTerminal(entry.Logger.Out)
-		}
 	}
-}
-
-func (f *TextFormatter) isColored() bool {
-	isColored := f.ForceColors || (f.isTerminal && (runtime.GOOS != "windows"))
-
-	if f.EnvironmentOverrideColors {
-		if force, ok := os.LookupEnv("CLICOLOR_FORCE"); ok && force != "0" {
-			isColored = true
-		} else if ok && force == "0" {
-			isColored = false
-		} else if os.Getenv("CLICOLOR") == "0" {
-			isColored = false
-		}
-	}
-
-	return isColored && !f.DisableColors
 }
 
 // Format renders a single log entry
 func (f *TextFormatter) Format(entry *Entry) ([]byte, error) {
-	data := make(Fields)
-	for k, v := range entry.Data {
-		data[k] = v
-	}
-	prefixFieldClashes(data, f.FieldMap, entry.HasCaller())
-	keys := make([]string, 0, len(data))
-	for k := range data {
+	prefixFieldClashes(entry.Data, f.FieldMap)
+
+	keys := make([]string, 0, len(entry.Data))
+	for k := range entry.Data {
 		keys = append(keys, k)
 	}
 
-	fixedKeys := make([]string, 0, 4+len(data))
-	if !f.DisableTimestamp {
-		fixedKeys = append(fixedKeys, f.FieldMap.resolve(FieldKeyTime))
-	}
-	fixedKeys = append(fixedKeys, f.FieldMap.resolve(FieldKeyLevel))
-	if entry.Message != "" {
-		fixedKeys = append(fixedKeys, f.FieldMap.resolve(FieldKeyMsg))
-	}
-	if entry.err != "" {
-		fixedKeys = append(fixedKeys, f.FieldMap.resolve(FieldKeyLogrusError))
-	}
-	if entry.HasCaller() {
-		fixedKeys = append(fixedKeys,
-			f.FieldMap.resolve(FieldKeyFunc), f.FieldMap.resolve(FieldKeyFile))
-	}
-
 	if !f.DisableSorting {
-		if f.SortingFunc == nil {
-			sort.Strings(keys)
-			fixedKeys = append(fixedKeys, keys...)
-		} else {
-			if !f.isColored() {
-				fixedKeys = append(fixedKeys, keys...)
-				f.SortingFunc(fixedKeys)
-			} else {
-				f.SortingFunc(keys)
-			}
-		}
-	} else {
-		fixedKeys = append(fixedKeys, keys...)
+		sort.Strings(keys)
 	}
 
 	var b *bytes.Buffer
@@ -157,34 +98,26 @@ func (f *TextFormatter) Format(entry *Entry) ([]byte, error) {
 		b = &bytes.Buffer{}
 	}
 
-	f.terminalInitOnce.Do(func() { f.init(entry) })
+	f.Do(func() { f.init(entry) })
+
+	isColored := (f.ForceColors || f.isTerminal) && !f.DisableColors
 
 	timestampFormat := f.TimestampFormat
 	if timestampFormat == "" {
 		timestampFormat = defaultTimestampFormat
 	}
-	if f.isColored() {
-		f.printColored(b, entry, keys, data, timestampFormat)
+	if isColored {
+		f.printColored(b, entry, keys, timestampFormat)
 	} else {
-		for _, key := range fixedKeys {
-			var value interface{}
-			switch {
-			case key == f.FieldMap.resolve(FieldKeyTime):
-				value = entry.Time.Format(timestampFormat)
-			case key == f.FieldMap.resolve(FieldKeyLevel):
-				value = entry.Level.String()
-			case key == f.FieldMap.resolve(FieldKeyMsg):
-				value = entry.Message
-			case key == f.FieldMap.resolve(FieldKeyLogrusError):
-				value = entry.err
-			case key == f.FieldMap.resolve(FieldKeyFunc) && entry.HasCaller():
-				value = entry.Caller.Function
-			case key == f.FieldMap.resolve(FieldKeyFile) && entry.HasCaller():
-				value = fmt.Sprintf("%s:%d", entry.Caller.File, entry.Caller.Line)
-			default:
-				value = data[key]
-			}
-			f.appendKeyValue(b, key, value)
+		if !f.DisableTimestamp {
+			f.appendKeyValue(b, f.FieldMap.resolve(FieldKeyTime), entry.Time.Format(timestampFormat))
+		}
+		f.appendKeyValue(b, f.FieldMap.resolve(FieldKeyLevel), entry.Level.String())
+		if entry.Message != "" {
+			f.appendKeyValue(b, f.FieldMap.resolve(FieldKeyMsg), entry.Message)
+		}
+		for _, key := range keys {
+			f.appendKeyValue(b, key, entry.Data[key])
 		}
 	}
 
@@ -192,10 +125,10 @@ func (f *TextFormatter) Format(entry *Entry) ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-func (f *TextFormatter) printColored(b *bytes.Buffer, entry *Entry, keys []string, data Fields, timestampFormat string) {
+func (f *TextFormatter) printColored(b *bytes.Buffer, entry *Entry, keys []string, timestampFormat string) {
 	var levelColor int
 	switch entry.Level {
-	case DebugLevel, TraceLevel:
+	case DebugLevel:
 		levelColor = gray
 	case WarnLevel:
 		levelColor = yellow
@@ -210,26 +143,15 @@ func (f *TextFormatter) printColored(b *bytes.Buffer, entry *Entry, keys []strin
 		levelText = levelText[0:4]
 	}
 
-	// Remove a single newline if it already exists in the message to keep
-	// the behavior of logrus text_formatter the same as the stdlib log package
-	entry.Message = strings.TrimSuffix(entry.Message, "\n")
-
-	caller := ""
-
-	if entry.HasCaller() {
-		caller = fmt.Sprintf("%s:%d %s()",
-			entry.Caller.File, entry.Caller.Line, entry.Caller.Function)
-	}
-
 	if f.DisableTimestamp {
-		fmt.Fprintf(b, "\x1b[%dm%s\x1b[0m%s %-44s ", levelColor, levelText, caller, entry.Message)
+		fmt.Fprintf(b, "\x1b[%dm%s\x1b[0m %-44s ", levelColor, levelText, entry.Message)
 	} else if !f.FullTimestamp {
-		fmt.Fprintf(b, "\x1b[%dm%s\x1b[0m[%04d]%s %-44s ", levelColor, levelText, int(entry.Time.Sub(baseTimestamp)/time.Second), caller, entry.Message)
+		fmt.Fprintf(b, "\x1b[%dm%s\x1b[0m[%04d] %-44s ", levelColor, levelText, int(entry.Time.Sub(baseTimestamp)/time.Second), entry.Message)
 	} else {
-		fmt.Fprintf(b, "\x1b[%dm%s\x1b[0m[%s]%s %-44s ", levelColor, levelText, entry.Time.Format(timestampFormat), caller, entry.Message)
+		fmt.Fprintf(b, "\x1b[%dm%s\x1b[0m[%s] %-44s ", levelColor, levelText, entry.Time.Format(timestampFormat), entry.Message)
 	}
 	for _, k := range keys {
-		v := data[k]
+		v := entry.Data[k]
 		fmt.Fprintf(b, " \x1b[%dm%s\x1b[0m=", levelColor, k)
 		f.appendValue(b, v)
 	}

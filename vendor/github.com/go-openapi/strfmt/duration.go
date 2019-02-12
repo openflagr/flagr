@@ -121,7 +121,7 @@ func ParseDuration(cand string) (time.Duration, error) {
 	if ok {
 		return dur, nil
 	}
-	return 0, fmt.Errorf("unable to parse %s as duration", cand)
+	return 0, fmt.Errorf("Unable to parse %s as duration", cand)
 }
 
 // Scan reads a Duration value from database driver type.
@@ -200,20 +200,4 @@ func (d *Duration) SetBSON(raw bson.Raw) error {
 	}
 
 	return errors.New("couldn't unmarshal bson raw value as Duration")
-}
-
-// DeepCopyInto copies the receiver and writes its value into out.
-func (in *Duration) DeepCopyInto(out *Duration) {
-	*out = *in
-	return
-}
-
-// DeepCopy copies the receiver into a new Duration.
-func (in *Duration) DeepCopy() *Duration {
-	if in == nil {
-		return nil
-	}
-	out := new(Duration)
-	in.DeepCopyInto(out)
-	return out
 }

@@ -62,8 +62,8 @@
   version = "0.4.6"
 
 [[constraint]]
+  branch = "master"
   name = "github.com/getsentry/raven-go"
-  version = "0.1.1"
 
 [[constraint]]
   branch = "master"
@@ -157,15 +157,11 @@
   name = "github.com/avast/retry-go"
   version = "2.2.0"
 
-[[constraint]]
-  name = "cloud.google.com/go"
-  version = "0.35.1"
-
-[[constraint]]
-  name = "github.com/a8m/kinesis-producer"
-  revision = "38d02428f70c9bbe43aaaf84017bee4e2f0acdf6"
-
 
 [prune]
   go-tests = true
   unused-packages = true
+
+[[constraint]]
+  name = "cloud.google.com/go"
+  version = "0.35.1"

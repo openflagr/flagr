@@ -9,49 +9,26 @@ import (
 	"strings"
 )
 
-// AgentAttributeID uniquely identifies each agent attribute.
-type AgentAttributeID int
-
 // New agent attributes must be added in the following places:
 // * Constants here.
 // * Top level attributes.go file.
-// * agentAttributeInfo
+// * agentAttributes
+// * agentAttributeDests
+// * calculateAgentAttributeDests
+// * writeAgentAttributes
 const (
-	AttributeHostDisplayName AgentAttributeID = iota
-	attributeRequestMethod
-	attributeRequestAcceptHeader
-	attributeRequestContentType
-	attributeRequestContentLength
-	attributeRequestHeadersHost
-	attributeRequestHeadersUserAgent
-	attributeRequestHeadersReferer
-	attributeResponseHeadersContentType
-	attributeResponseHeadersContentLength
-	attributeResponseCode
+	responseCode          = "httpResponseCode"
+	requestMethod         = "request.method"
+	requestAccept         = "request.headers.accept"
+	requestContentType    = "request.headers.contentType"
+	requestContentLength  = "request.headers.contentLength"
+	requestHost           = "request.headers.host"
+	responseContentType   = "response.headers.contentType"
+	responseContentLength = "response.headers.contentLength"
+	hostDisplayName       = "host.displayName"
+	requestUserAgent      = "request.headers.User-Agent"
+	requestReferer        = "request.headers.referer"
 )
-
-var (
-	usualDests         = DestAll &^ destBrowser
-	tracesDests        = destTxnTrace | destError
-	agentAttributeInfo = map[AgentAttributeID]struct {
-		name         string
-		defaultDests destinationSet
-	}{
-		AttributeHostDisplayName:              {name: "host.displayName", defaultDests: usualDests},
-		attributeRequestMethod:                {name: "request.method", defaultDests: usualDests},
-		attributeRequestAcceptHeader:          {name: "request.headers.accept", defaultDests: usualDests},
-		attributeRequestContentType:           {name: "request.headers.contentType", defaultDests: usualDests},
-		attributeRequestContentLength:         {name: "request.headers.contentLength", defaultDests: usualDests},
-		attributeRequestHeadersHost:           {name: "request.headers.host", defaultDests: usualDests},
-		attributeRequestHeadersUserAgent:      {name: "request.headers.User-Agent", defaultDests: tracesDests},
-		attributeRequestHeadersReferer:        {name: "request.headers.referer", defaultDests: tracesDests},
-		attributeResponseHeadersContentType:   {name: "response.headers.contentType", defaultDests: usualDests},
-		attributeResponseHeadersContentLength: {name: "response.headers.contentLength", defaultDests: usualDests},
-		attributeResponseCode:                 {name: "httpResponseCode", defaultDests: usualDests},
-	}
-)
-
-func (id AgentAttributeID) name() string { return agentAttributeInfo[id].name }
 
 // https://source.datanerd.us/agents/agent-specs/blob/master/Agent-Attributes-PORTED.md
 
@@ -101,7 +78,7 @@ type AttributeConfig struct {
 	// lexicographical order.  Modifiers appearing later have precedence
 	// over modifiers appearing earlier.
 	wildcardModifiers []*attributeModifier
-	agentDests        map[AgentAttributeID]destinationSet
+	agentDests        agentAttributeDests
 }
 
 type includeExclude struct {
@@ -219,10 +196,7 @@ func CreateAttributeConfig(input AttributeConfigInput, includeEnabled bool) *Att
 
 	sort.Sort(byMatch(c.wildcardModifiers))
 
-	c.agentDests = make(map[AgentAttributeID]destinationSet)
-	for id, info := range agentAttributeInfo {
-		c.agentDests[id] = applyAttributeConfig(c, info.name, info.defaultDests)
-	}
+	c.agentDests = calculateAgentAttributeDests(c)
 
 	return c
 }
@@ -232,25 +206,6 @@ type userAttribute struct {
 	dests destinationSet
 }
 
-type agentAttributeValue struct {
-	stringVal string
-	otherVal  interface{}
-}
-
-type agentAttributes map[AgentAttributeID]agentAttributeValue
-
-// Add is used to add agent attributes.  Only one of stringVal and otherVal
-// should be populated.  Since most agent attribute values are strings,
-// stringVal exists to avoid allocations.
-func (attr agentAttributes) Add(id AgentAttributeID, stringVal string, otherVal interface{}) {
-	if "" != stringVal || otherVal != nil {
-		attr[id] = agentAttributeValue{
-			stringVal: truncateStringValueIfLong(stringVal),
-			otherVal:  otherVal,
-		}
-	}
-}
-
 // Attributes are key value pairs attached to the various collected data types.
 type Attributes struct {
 	config *AttributeConfig
@@ -258,11 +213,97 @@ type Attributes struct {
 	Agent  agentAttributes
 }
 
+type agentAttributes struct {
+	HostDisplayName              string
+	RequestMethod                string
+	RequestAcceptHeader          string
+	RequestContentType           string
+	RequestContentLength         int
+	RequestHeadersHost           string
+	RequestHeadersUserAgent      string
+	RequestHeadersReferer        string
+	ResponseHeadersContentType   string
+	ResponseHeadersContentLength int
+	ResponseCode                 string
+}
+
+type agentAttributeDests struct {
+	HostDisplayName              destinationSet
+	RequestMethod                destinationSet
+	RequestAcceptHeader          destinationSet
+	RequestContentType           destinationSet
+	RequestContentLength         destinationSet
+	RequestHeadersHost           destinationSet
+	RequestHeadersUserAgent      destinationSet
+	RequestHeadersReferer        destinationSet
+	ResponseHeadersContentType   destinationSet
+	ResponseHeadersContentLength destinationSet
+	ResponseCode                 destinationSet
+}
+
+func calculateAgentAttributeDests(c *AttributeConfig) agentAttributeDests {
+	usual := DestAll &^ destBrowser
+	traces := destTxnTrace | destError
+	return agentAttributeDests{
+		HostDisplayName:              applyAttributeConfig(c, hostDisplayName, usual),
+		RequestMethod:                applyAttributeConfig(c, requestMethod, usual),
+		RequestAcceptHeader:          applyAttributeConfig(c, requestAccept, usual),
+		RequestContentType:           applyAttributeConfig(c, requestContentType, usual),
+		RequestContentLength:         applyAttributeConfig(c, requestContentLength, usual),
+		RequestHeadersHost:           applyAttributeConfig(c, requestHost, usual),
+		RequestHeadersUserAgent:      applyAttributeConfig(c, requestUserAgent, traces),
+		RequestHeadersReferer:        applyAttributeConfig(c, requestReferer, traces),
+		ResponseHeadersContentType:   applyAttributeConfig(c, responseContentType, usual),
+		ResponseHeadersContentLength: applyAttributeConfig(c, responseContentLength, usual),
+		ResponseCode:                 applyAttributeConfig(c, responseCode, usual),
+	}
+}
+
+type agentAttributeWriter struct {
+	jsonFieldsWriter
+	d destinationSet
+}
+
+func (w *agentAttributeWriter) writeString(name string, val string, d destinationSet) {
+	if "" != val && 0 != w.d&d {
+		w.stringField(name, truncateStringValueIfLong(val))
+	}
+}
+
+func (w *agentAttributeWriter) writeInt(name string, val int, d destinationSet) {
+	if val >= 0 && 0 != w.d&d {
+		w.intField(name, int64(val))
+	}
+}
+
+func writeAgentAttributes(buf *bytes.Buffer, d destinationSet, values agentAttributes, dests agentAttributeDests) {
+	w := &agentAttributeWriter{
+		jsonFieldsWriter: jsonFieldsWriter{buf: buf},
+		d:                d,
+	}
+	buf.WriteByte('{')
+	w.writeString(hostDisplayName, values.HostDisplayName, dests.HostDisplayName)
+	w.writeString(requestMethod, values.RequestMethod, dests.RequestMethod)
+	w.writeString(requestAccept, values.RequestAcceptHeader, dests.RequestAcceptHeader)
+	w.writeString(requestContentType, values.RequestContentType, dests.RequestContentType)
+	w.writeInt(requestContentLength, values.RequestContentLength, dests.RequestContentLength)
+	w.writeString(requestHost, values.RequestHeadersHost, dests.RequestHeadersHost)
+	w.writeString(requestUserAgent, values.RequestHeadersUserAgent, dests.RequestHeadersUserAgent)
+	w.writeString(requestReferer, values.RequestHeadersReferer, dests.RequestHeadersReferer)
+	w.writeString(responseContentType, values.ResponseHeadersContentType, dests.ResponseHeadersContentType)
+	w.writeInt(responseContentLength, values.ResponseHeadersContentLength, dests.ResponseHeadersContentLength)
+	w.writeString(responseCode, values.ResponseCode, dests.ResponseCode)
+	buf.WriteByte('}')
+}
+
 // NewAttributes creates a new Attributes.
 func NewAttributes(config *AttributeConfig) *Attributes {
 	return &Attributes{
 		config: config,
-		Agent:  make(agentAttributes),
+		Agent: agentAttributes{
+			RequestContentLength:         -1,
+			ResponseHeadersContentLength: -1,
+		},
 	}
 }
 
@@ -304,7 +345,7 @@ func ValidateUserAttribute(key string, val interface{}) (interface{}, error) {
 	}
 
 	switch val.(type) {
-	case string, bool,
+	case string, bool, nil,
 		uint8, uint16, uint32, uint64, int8, int16, int32, int64,
 		float32, float64, uint, int, uintptr:
 	default:
@@ -351,6 +392,8 @@ func AddUserAttribute(a *Attributes, key string, val interface{}, d destinationS
 
 func writeAttributeValueJSON(w *jsonFieldsWriter, key string, val interface{}) {
 	switch v := val.(type) {
+	case nil:
+		w.rawField(key, `null`)
 	case string:
 		w.stringField(key, v)
 	case bool:
@@ -395,19 +438,7 @@ func agentAttributesJSON(a *Attributes, buf *bytes.Buffer, d destinationSet) {
 		buf.WriteString("{}")
 		return
 	}
-	w := jsonFieldsWriter{buf: buf}
-	buf.WriteByte('{')
-	for id, val := range a.Agent {
-		if 0 != a.config.agentDests[id]&d {
-			if val.stringVal != "" {
-				w.stringField(id.name(), val.stringVal)
-			} else {
-				writeAttributeValueJSON(&w, id.name(), val.otherVal)
-			}
-		}
-	}
-	buf.WriteByte('}')
-
+	writeAgentAttributes(buf, d, a.Agent, a.config.agentDests)
 }
 
 func userAttributesJSON(a *Attributes, buf *bytes.Buffer, d destinationSet, extraAttributes map[string]interface{}) {
@@ -441,21 +472,23 @@ func userAttributesStringJSON(a *Attributes, d destinationSet, extraAttributes m
 }
 
 // RequestAgentAttributes gathers agent attributes out of the request.
-func RequestAgentAttributes(a *Attributes, method string, h http.Header) {
-	a.Agent.Add(attributeRequestMethod, method, nil)
+func RequestAgentAttributes(a *Attributes, r *http.Request) {
+	a.Agent.RequestMethod = r.Method
 
+	h := r.Header
 	if nil == h {
 		return
 	}
-	a.Agent.Add(attributeRequestAcceptHeader, h.Get("Accept"), nil)
-	a.Agent.Add(attributeRequestContentType, h.Get("Content-Type"), nil)
-	a.Agent.Add(attributeRequestHeadersHost, h.Get("Host"), nil)
-	a.Agent.Add(attributeRequestHeadersUserAgent, h.Get("User-Agent"), nil)
-	a.Agent.Add(attributeRequestHeadersReferer, SafeURLFromString(h.Get("Referer")), nil)
+	a.Agent.RequestAcceptHeader = h.Get("Accept")
+	a.Agent.RequestContentType = h.Get("Content-Type")
+	a.Agent.RequestHeadersHost = h.Get("Host")
+	a.Agent.RequestHeadersUserAgent = h.Get("User-Agent")
+	a.Agent.RequestHeadersReferer = SafeURLFromString(h.Get("Referer"))
 
-	if l := GetContentLengthFromHeader(h); l >= 0 {
-		a.Agent.Add(attributeRequestContentLength, "", l)
-	}
+	// Per NewAttributes(), the default for this field is -1 (which is also what
+	// GetContentLengthFromHeader() returns if no content length is found), so we
+	// can just use the return value unconditionally.
+	a.Agent.RequestContentLength = int(GetContentLengthFromHeader(h))
 }
 
 // ResponseHeaderAttributes gather agent attributes from the response headers.
@@ -463,11 +496,12 @@ func ResponseHeaderAttributes(a *Attributes, h http.Header) {
 	if nil == h {
 		return
 	}
-	a.Agent.Add(attributeResponseHeadersContentType, h.Get("Content-Type"), nil)
+	a.Agent.ResponseHeadersContentType = h.Get("Content-Type")
 
-	if l := GetContentLengthFromHeader(h); l >= 0 {
-		a.Agent.Add(attributeResponseHeadersContentLength, "", l)
-	}
+	// Per NewAttributes(), the default for this field is -1 (which is also what
+	// GetContentLengthFromHeader() returns if no content length is found), so we
+	// can just use the return value unconditionally.
+	a.Agent.ResponseHeadersContentLength = int(GetContentLengthFromHeader(h))
 }
 
 var (
@@ -486,9 +520,8 @@ var (
 
 // ResponseCodeAttribute sets the response code agent attribute.
 func ResponseCodeAttribute(a *Attributes, code int) {
-	rc := statusCodeLookup[code]
-	if rc == "" {
-		rc = strconv.Itoa(code)
+	a.Agent.ResponseCode = statusCodeLookup[code]
+	if a.Agent.ResponseCode == "" {
+		a.Agent.ResponseCode = strconv.Itoa(code)
 	}
-	a.Agent.Add(attributeResponseCode, rc, nil)
 }

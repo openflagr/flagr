@@ -261,18 +261,24 @@ func applyIN(l, r Expr) (*BooleanLiteral, error) {
 	switch t := l.(type) {
 	case *StringLiteral:
 		var a string
-		var b map[string]struct{}
-
+		var b []string
 		a, err = getString(l)
 		if err != nil {
 			return nil, err
 		}
 
-		b, err = getMapString(r)
+		b, err = getSliceString(r)
+
 		if err != nil {
 			return nil, err
 		}
-		_, found = b[a]
+
+		found = false
+		for _, e := range b {
+			if a == e {
+				found = true
+			}
+		}
 	case *NumberLiteral:
 		var a float64
 		var b []float64
@@ -526,20 +532,13 @@ func getSliceNumber(e Expr) ([]float64, error) {
 	}
 }
 
-// getMapString performs type assertion and returns map[string]struct{} value or error
-func getMapString(e Expr) (map[string]struct{}, error) {
+// getSliceString performs type assertion and returns []string value or error
+func getSliceString(e Expr) ([]string, error) {
 	switch n := e.(type) {
 	case *SliceStringLiteral:
-		if n.m != nil {
-			return n.m, nil
-		}
-		n.m = make(map[string]struct{})
-		for _, item := range n.Val {
-			n.m[item] = struct{}{}
-		}
-		return n.m, nil
+		return n.Val, nil
 	default:
-		return nil, fmt.Errorf("Literal is not a slice of string: %v", n)
+		return []string{}, fmt.Errorf("Literal is not a slice of string: %v", n)
 	}
 }
 

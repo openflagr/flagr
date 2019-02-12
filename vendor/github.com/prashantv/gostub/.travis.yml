@@ -2,9 +2,10 @@ language: go
 sudo: false
 
 go:
-  - 1.9.x
-  - 1.10.x
-  - 1.11.x
+  - 1.5
+  - 1.6
+  - 1.7
+  - tip
 
 before_install:
   - go get github.com/axw/gocov/gocov

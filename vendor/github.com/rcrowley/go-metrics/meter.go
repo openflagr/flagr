@@ -126,6 +126,8 @@ func (NilMeter) Stop() {}
 
 // StandardMeter is the standard implementation of a Meter.
 type StandardMeter struct {
+	// Only used on stop.
+	lock        sync.Mutex
 	snapshot    *MeterSnapshot
 	a1, a5, a15 EWMA
 	startTime   time.Time
@@ -144,7 +146,11 @@ func newStandardMeter() *StandardMeter {
 
 // Stop stops the meter, Mark() will be a no-op if you use it after being stopped.
 func (m *StandardMeter) Stop() {
-	if atomic.CompareAndSwapUint32(&m.stopped, 0, 1) {
+	m.lock.Lock()
+	stopped := m.stopped
+	m.stopped = 1
+	m.lock.Unlock()
+	if stopped != 1 {
 		arbiter.Lock()
 		delete(arbiter.meters, m)
 		arbiter.Unlock()
