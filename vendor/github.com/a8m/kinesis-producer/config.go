@@ -18,7 +18,7 @@ const (
 	// it's kinda odd, because the maxAggregationSize is limit to 51200L;
 	maxAggregationCount   = 4294967295
 	defaultMaxConnections = 24
-	defaultFlushInterval  = time.Second
+	defaultFlushInterval  = 5 * time.Second
 )
 
 // Putter is the interface that wraps the KinesisAPI.PutRecords method.
@@ -93,7 +93,7 @@ func (c *Config) defaults() {
 	}
 	falseOrPanic(c.MaxConnections < 1 || c.MaxConnections > 256, "kinesis: MaxConnections must be between 1 and 256")
 	if c.FlushInterval == 0 {
-		c.FlushInterval = time.Second * 5
+		c.FlushInterval = defaultFlushInterval
 	}
 	falseOrPanic(len(c.StreamName) == 0, "kinesis: StreamName length must be at least 1")
 }

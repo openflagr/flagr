@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"go/build"
 	"io/ioutil"
+	"net/url"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -143,7 +144,7 @@ func NewStacktraceFrame(pc uintptr, file string, line, context int, appPackagePr
 	}
 
 	if context > 0 {
-		contextLines, lineIdx := fileContext(file, line, context)
+		contextLines, lineIdx := sourceCodeLoader.Load(file, line, context)
 		if len(contextLines) > 0 {
 			for i, line := range contextLines {
 				switch {
@@ -157,7 +158,7 @@ func NewStacktraceFrame(pc uintptr, file string, line, context int, appPackagePr
 			}
 		}
 	} else if context == -1 {
-		contextLine, _ := fileContext(file, line, 0)
+		contextLine, _ := sourceCodeLoader.Load(file, line, 0)
 		if len(contextLine) > 0 {
 			frame.ContextLine = string(contextLine[0])
 		}
@@ -188,27 +189,43 @@ func splitFunctionName(name string) (string, string) {
 		name = name[pos+1:]
 	}
 
+	if p, err := url.QueryUnescape(pack); err == nil {
+		pack = p
+	}
+
 	return pack, name
 }
 
-var fileCacheLock sync.Mutex
-var fileCache = make(map[string][][]byte)
+type SourceCodeLoader interface {
+	Load(filename string, line, context int) ([][]byte, int)
+}
 
-func fileContext(filename string, line, context int) ([][]byte, int) {
-	fileCacheLock.Lock()
-	defer fileCacheLock.Unlock()
-	lines, ok := fileCache[filename]
+var sourceCodeLoader SourceCodeLoader = &fsLoader{cache: make(map[string][][]byte)}
+
+func SetSourceCodeLoader(loader SourceCodeLoader) {
+	sourceCodeLoader = loader
+}
+
+type fsLoader struct {
+	mu    sync.Mutex
+	cache map[string][][]byte
+}
+
+func (fs *fsLoader) Load(filename string, line, context int) ([][]byte, int) {
+	fs.mu.Lock()
+	defer fs.mu.Unlock()
+	lines, ok := fs.cache[filename]
 	if !ok {
 		data, err := ioutil.ReadFile(filename)
 		if err != nil {
 			// cache errors as nil slice: code below handles it correctly
 			// otherwise when missing the source or running as a different user, we try
 			// reading the file on each error which is unnecessary
-			fileCache[filename] = nil
+			fs.cache[filename] = nil
 			return nil, 0
 		}
 		lines = bytes.Split(data, []byte{'\n'})
-		fileCache[filename] = lines
+		fs.cache[filename] = lines
 	}
 
 	if lines == nil {

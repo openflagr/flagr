@@ -3,6 +3,7 @@ package internal
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -50,18 +51,15 @@ func absTimeDiff(t1, t2 time.Time) time.Duration {
 	return t2.Sub(t1)
 }
 
-func compactJSON(js []byte) []byte {
-	buf := new(bytes.Buffer)
-	if err := json.Compact(buf, js); err != nil {
-		return nil
-	}
-	return buf.Bytes()
-}
-
-// CompactJSONString removes the whitespace from a JSON string.
+// CompactJSONString removes the whitespace from a JSON string.  This function
+// will panic if the string provided is not valid JSON.  Thus is must only be
+// used in testing code!
 func CompactJSONString(js string) string {
-	out := compactJSON([]byte(js))
-	return string(out)
+	buf := new(bytes.Buffer)
+	if err := json.Compact(buf, []byte(js)); err != nil {
+		panic(fmt.Errorf("unable to compact JSON: %v", err))
+	}
+	return buf.String()
 }
 
 // GetContentLengthFromHeader gets the content length from a HTTP header, or -1

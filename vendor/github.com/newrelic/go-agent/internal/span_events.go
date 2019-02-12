@@ -15,7 +15,7 @@ const (
 	spanCategoryGeneric                = "generic"
 )
 
-// SpanEvent represents a span event, neccessary to support Distributed Tracing.
+// SpanEvent represents a span event, necessary to support Distributed Tracing.
 type SpanEvent struct {
 	TraceID         string
 	GUID            string
@@ -131,7 +131,11 @@ func (events *spanEvents) addEvent(e *SpanEvent, cat *BetterCAT) {
 	e.TransactionID = cat.ID
 	e.Sampled = cat.Sampled
 	e.Priority = cat.Priority
-	events.events.addEvent(analyticsEvent{priority: cat.Priority, jsonWriter: e})
+	events.addEventPopulated(e)
+}
+
+func (events *spanEvents) addEventPopulated(e *SpanEvent) {
+	events.events.addEvent(analyticsEvent{priority: e.Priority, jsonWriter: e})
 }
 
 // MergeFromTransaction merges the span events from a transaction into the

@@ -5,6 +5,7 @@ package utilization
 
 import (
 	"net/http"
+	"os"
 	"runtime"
 	"sync"
 
@@ -13,7 +14,7 @@ import (
 )
 
 const (
-	metadataVersion = 3
+	metadataVersion = 5
 )
 
 // Config controls the behavior of utilization information capture.
@@ -23,6 +24,7 @@ type Config struct {
 	DetectGCP         bool
 	DetectPCF         bool
 	DetectDocker      bool
+	DetectKubernetes  bool
 	LogicalProcessors int
 	TotalRAMMIB       int
 	BillingHostname   string
@@ -42,9 +44,11 @@ type Data struct {
 	LogicalProcessors *int      `json:"logical_processors"`
 	RAMMiB            *uint64   `json:"total_ram_mib"`
 	Hostname          string    `json:"hostname"`
+	FullHostname      string    `json:"full_hostname,omitempty"`
+	Addresses         []string  `json:"ip_address,omitempty"`
 	BootID            string    `json:"boot_id,omitempty"`
-	Vendors           *vendors  `json:"vendors,omitempty"`
 	Config            *override `json:"config,omitempty"`
+	Vendors           *vendors  `json:"vendors,omitempty"`
 }
 
 var (
@@ -63,16 +67,21 @@ type docker struct {
 	ID string `json:"id,omitempty"`
 }
 
+type kubernetes struct {
+	Host string `json:"kubernetes_service_host"`
+}
+
 type vendors struct {
-	AWS    *aws    `json:"aws,omitempty"`
-	Azure  *azure  `json:"azure,omitempty"`
-	GCP    *gcp    `json:"gcp,omitempty"`
-	PCF    *pcf    `json:"pcf,omitempty"`
-	Docker *docker `json:"docker,omitempty"`
+	AWS        *aws        `json:"aws,omitempty"`
+	Azure      *azure      `json:"azure,omitempty"`
+	GCP        *gcp        `json:"gcp,omitempty"`
+	PCF        *pcf        `json:"pcf,omitempty"`
+	Docker     *docker     `json:"docker,omitempty"`
+	Kubernetes *kubernetes `json:"kubernetes,omitempty"`
 }
 
 func (v *vendors) isEmpty() bool {
-	return v.AWS == nil && v.Azure == nil && v.GCP == nil && v.PCF == nil && v.Docker == nil
+	return nil == v || *v == vendors{}
 }
 
 func overrideFromConfig(config Config) *override {
@@ -121,6 +130,14 @@ func gatherWithClient(config Config, lg logger.Logger, client *http.Client) *Dat
 		})
 	}
 
+	// Gather IPs before spawning goroutines since the IPs are used in
+	// gathering full hostname.
+	if ips, err := utilizationIPs(); nil == err {
+		uDat.Addresses = ips
+	} else {
+		warnGatherError("addresses", err)
+	}
+
 	// This closure allows us to run each gather function in a separate goroutine
 	// and wait for them at the end by closing over the wg WaitGroup we
 	// instantiated at the start of the function.
@@ -157,6 +174,12 @@ func gatherWithClient(config Config, lg logger.Logger, client *http.Client) *Dat
 		goGather("gcp", gatherGCP)
 	}
 
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		uDat.FullHostname = getFQDN(uDat.Addresses)
+	}()
+
 	// Do non-network gathering sequentially since it is fast.
 
 	if id, err := sysinfo.BootID(); err != nil {
@@ -165,6 +188,10 @@ func gatherWithClient(config Config, lg logger.Logger, client *http.Client) *Dat
 		}
 	} else {
 		uDat.BootID = id
+	}
+
+	if config.DetectKubernetes {
+		gatherKubernetes(uDat.Vendors, os.Getenv)
 	}
 
 	if config.DetectDocker {
@@ -203,4 +230,10 @@ func gatherWithClient(config Config, lg logger.Logger, client *http.Client) *Dat
 	}
 
 	return uDat
+}
+
+func gatherKubernetes(v *vendors, getenv func(string) string) {
+	if host := getenv("KUBERNETES_SERVICE_HOST"); host != "" {
+		v.Kubernetes = &kubernetes{Host: host}
+	}
 }

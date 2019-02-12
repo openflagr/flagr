@@ -2,14 +2,18 @@ package newrelic
 
 import (
 	"net/http"
+	"net/url"
 )
 
 // Transaction represents a request or a background task.
 // Each Transaction should only be used in a single goroutine.
 type Transaction interface {
-	// If StartTransaction is called with a non-nil http.ResponseWriter then
-	// the Transaction may be used in its place.  This allows
-	// instrumentation of the response code and response headers.
+	// The transaction's http.ResponseWriter methods will delegate to the
+	// http.ResponseWriter provided as a parameter to
+	// Application.StartTransaction or Transaction.SetWebResponse. This
+	// allows instrumentation of the response code and response headers.
+	// These methods may still be called without panic if the transaction
+	// does not have a http.ResponseWriter.
 	http.ResponseWriter
 
 	// End finishes the current transaction, stopping all further
@@ -37,6 +41,24 @@ type Transaction interface {
 	// For more information, see:
 	// https://docs.newrelic.com/docs/agents/manage-apm-agents/agent-metrics/collect-custom-attributes
 	AddAttribute(key string, value interface{}) error
+
+	// SetWebRequest marks the transaction as a web transaction.  If
+	// WebRequest is non-nil, SetWebRequest will additionally collect
+	// details on request attributes, url, and method.  If headers are
+	// present, the agent will look for a distributed tracing header.  Use
+	// NewWebRequest to transform a *http.Request into a WebRequest.
+	SetWebRequest(WebRequest) error
+
+	// SetWebResponse sets transaction's http.ResponseWriter.  After calling
+	// this method, the transaction may be used in place of the
+	// ResponseWriter to intercept the response code.  This method is useful
+	// when the ResponseWriter is not available at the beginning of the
+	// transaction (if so, it can be given as a parameter to
+	// Application.StartTransaction).  This method will return a reference
+	// to the transaction which implements the combination of
+	// http.CloseNotifier, http.Flusher, http.Hijacker, and io.ReaderFrom
+	// implemented by the ResponseWriter.
+	SetWebResponse(http.ResponseWriter) Transaction
 
 	// StartSegmentNow allows the timing of functions, external calls, and
 	// datastore calls.  The segments of each transaction MUST be used in a
@@ -70,6 +92,9 @@ type Transaction interface {
 	//
 	// The payload parameter may be a DistributedTracePayload or a string.
 	AcceptDistributedTracePayload(t TransportType, payload interface{}) error
+
+	// Application returns the Application which started the transaction.
+	Application() Application
 }
 
 // DistributedTracePayload is used to instrument connections between
@@ -105,3 +130,28 @@ var (
 	TransportQueue   = TransportType{name: "Queue"}
 	TransportOther   = TransportType{name: "Other"}
 )
+
+// WebRequest may be implemented to provide request information to
+// Transaction.SetWebRequest.
+type WebRequest interface {
+	// Header may return nil if you don't have any headers or don't want to
+	// transform them to http.Header format.
+	Header() http.Header
+	// URL may return nil if you don't have a URL or don't want to transform
+	// it to *url.URL.
+	URL() *url.URL
+	Method() string
+	// If a distributed tracing header is found in the headers returned by
+	// Header(), this TransportType will be used in the distributed tracing
+	// metrics.
+	Transport() TransportType
+}
+
+// NewWebRequest turns a *http.Request into a WebRequest for input into
+// Transaction.SetWebRequest.
+func NewWebRequest(request *http.Request) WebRequest {
+	if nil == request {
+		return nil
+	}
+	return requestWrap{request: request}
+}

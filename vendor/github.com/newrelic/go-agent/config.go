@@ -139,6 +139,9 @@ type Config struct {
 		// DetectDocker controls whether the Application attempts to
 		// detect Docker.
 		DetectDocker bool
+		// DetectKubernetes controls whether the Application attempts to
+		// detect Kubernetes.
+		DetectKubernetes bool
 
 		// These settings provide system information when custom values
 		// are required.
@@ -231,6 +234,7 @@ func NewConfig(appname, license string) Config {
 	c.Utilization.DetectPCF = true
 	c.Utilization.DetectGCP = true
 	c.Utilization.DetectDocker = true
+	c.Utilization.DetectKubernetes = true
 	c.Attributes.Enabled = true
 	c.RuntimeSampler.Enabled = true
 
