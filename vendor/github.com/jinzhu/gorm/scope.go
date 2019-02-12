@@ -68,7 +68,7 @@ func (scope *Scope) Dialect() Dialect {
 
 // Quote used to quote string to escape them for database
 func (scope *Scope) Quote(str string) string {
-	if strings.Contains(str, ".") {
+	if strings.Index(str, ".") != -1 {
 		newStrs := []string{}
 		for _, str := range strings.Split(str, ".") {
 			newStrs = append(newStrs, scope.Dialect().Quote(str))
@@ -330,7 +330,7 @@ func (scope *Scope) TableName() string {
 // QuotedTableName return quoted table name
 func (scope *Scope) QuotedTableName() (name string) {
 	if scope.Search != nil && len(scope.Search.tableName) > 0 {
-		if strings.Contains(scope.Search.tableName, " ") {
+		if strings.Index(scope.Search.tableName, " ") != -1 {
 			return scope.Search.tableName
 		}
 		return scope.Quote(scope.Search.tableName)
@@ -855,14 +855,6 @@ func (scope *Scope) inlineCondition(values ...interface{}) *Scope {
 }
 
 func (scope *Scope) callCallbacks(funcs []*func(s *Scope)) *Scope {
-	defer func() {
-		if err := recover(); err != nil {
-			if db, ok := scope.db.db.(sqlTx); ok {
-				db.Rollback()
-			}
-			panic(err)
-		}
-	}()
 	for _, f := range funcs {
 		(*f)(scope)
 		if scope.skipLeft {
@@ -1309,7 +1301,6 @@ func (scope *Scope) autoIndex() *Scope {
 }
 
 func (scope *Scope) getColumnAsArray(columns []string, values ...interface{}) (results [][]interface{}) {
-	resultMap := make(map[string][]interface{})
 	for _, value := range values {
 		indirectValue := indirect(reflect.ValueOf(value))
 
@@ -1328,10 +1319,7 @@ func (scope *Scope) getColumnAsArray(columns []string, values ...interface{}) (r
 				}
 
 				if hasValue {
-					h := fmt.Sprint(result...)
-					if _, exist := resultMap[h]; !exist {
-						resultMap[h] = result
-					}
+					results = append(results, result)
 				}
 			}
 		case reflect.Struct:
@@ -1346,16 +1334,11 @@ func (scope *Scope) getColumnAsArray(columns []string, values ...interface{}) (r
 			}
 
 			if hasValue {
-				h := fmt.Sprint(result...)
-				if _, exist := resultMap[h]; !exist {
-					resultMap[h] = result
-				}
+				results = append(results, result)
 			}
 		}
 	}
-	for _, v := range resultMap {
-		results = append(results, v)
-	}
+
 	return
 }
 

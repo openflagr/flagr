@@ -99,7 +99,7 @@ func (s settings) MarshalJSON() ([]byte, error) {
 	return json.Marshal(fields)
 }
 
-func configConnectJSONInternal(c Config, pid int, util *utilization.Data, e internal.Environment, version string, securityPolicies *internal.SecurityPolicies, metadata map[string]string) ([]byte, error) {
+func configConnectJSONInternal(c Config, pid int, util *utilization.Data, e internal.Environment, version string, securityPolicies *internal.SecurityPolicies) ([]byte, error) {
 	return json.Marshal([]interface{}{struct {
 		Pid              int                        `json:"pid"`
 		Language         string                     `json:"language"`
@@ -114,7 +114,6 @@ func configConnectJSONInternal(c Config, pid int, util *utilization.Data, e inte
 		Identifier       string                     `json:"identifier"`
 		Util             *utilization.Data          `json:"utilization"`
 		SecurityPolicies *internal.SecurityPolicies `json:"security_policies,omitempty"`
-		Metadata         map[string]string          `json:"metadata"`
 	}{
 		Pid:             pid,
 		Language:        agentLanguage,
@@ -140,27 +139,7 @@ func configConnectJSONInternal(c Config, pid int, util *utilization.Data, e inte
 		Identifier:       c.AppName,
 		Util:             util,
 		SecurityPolicies: securityPolicies,
-		Metadata:         metadata,
 	}})
-}
-
-const (
-	// https://source.datanerd.us/agents/agent-specs/blob/master/Connect-LEGACY.md#metadata-hash
-	metadataPrefix = "NEW_RELIC_METADATA_"
-)
-
-func gatherMetadata(environ func() []string) map[string]string {
-	metadata := make(map[string]string)
-	env := environ()
-	for _, pair := range env {
-		if strings.HasPrefix(pair, metadataPrefix) {
-			idx := strings.Index(pair, "=")
-			if idx >= 0 {
-				metadata[pair[0:idx]] = pair[idx+1:]
-			}
-		}
-	}
-	return metadata
 }
 
 // config allows CreateConnectJSON to be a method on a non-public type.
@@ -170,14 +149,10 @@ func (c config) CreateConnectJSON(securityPolicies *internal.SecurityPolicies) (
 	env := internal.NewEnvironment()
 	util := utilization.Gather(utilization.Config{
 		DetectAWS:         c.Utilization.DetectAWS,
-		DetectAzure:       c.Utilization.DetectAzure,
-		DetectPCF:         c.Utilization.DetectPCF,
-		DetectGCP:         c.Utilization.DetectGCP,
 		DetectDocker:      c.Utilization.DetectDocker,
-		DetectKubernetes:  c.Utilization.DetectKubernetes,
 		LogicalProcessors: c.Utilization.LogicalProcessors,
 		TotalRAMMIB:       c.Utilization.TotalRAMMIB,
 		BillingHostname:   c.Utilization.BillingHostname,
 	}, c.Logger)
-	return configConnectJSONInternal(c.Config, os.Getpid(), util, env, Version, securityPolicies, gatherMetadata(os.Environ))
+	return configConnectJSONInternal(c.Config, os.Getpid(), util, env, Version, securityPolicies)
 }

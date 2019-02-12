@@ -2,7 +2,6 @@ package gorm
 
 import (
 	"database/sql"
-	"database/sql/driver"
 	"errors"
 	"fmt"
 	"reflect"
@@ -45,14 +44,7 @@ func (field *Field) Set(value interface{}) (err error) {
 			if reflectValue.Type().ConvertibleTo(fieldValue.Type()) {
 				fieldValue.Set(reflectValue.Convert(fieldValue.Type()))
 			} else if scanner, ok := fieldValue.Addr().Interface().(sql.Scanner); ok {
-				v := reflectValue.Interface()
-				if valuer, ok := v.(driver.Valuer); ok {
-					if v, err = valuer.Value(); err == nil {
-						err = scanner.Scan(v)
-					}
-				} else {
-					err = scanner.Scan(v)
-				}
+				err = scanner.Scan(reflectValue.Interface())
 			} else {
 				err = fmt.Errorf("could not convert argument of field %s from %s to %s", field.Name, reflectValue.Type(), fieldValue.Type())
 			}

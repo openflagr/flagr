@@ -100,7 +100,6 @@ func (n *NumberLiteral) Args() []string {
 
 type SliceStringLiteral struct {
 	Val []string
-	m   map[string]struct{}
 }
 
 // String returns a string representation of the literal.

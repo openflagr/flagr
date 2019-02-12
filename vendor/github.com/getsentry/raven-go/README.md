@@ -1,8 +1,4 @@
-# raven 
-
-[![Build Status](https://api.travis-ci.org/getsentry/raven-go.svg?branch=master)](https://travis-ci.org/getsentry/raven-go)
-[![Go Report Card](https://goreportcard.com/badge/github.com/getsentry/raven-go)](https://goreportcard.com/report/github.com/getsentry/raven-go)
-[![GoDoc](https://godoc.org/github.com/getsentry/raven-go?status.svg)](https://godoc.org/github.com/getsentry/raven-go)
+# raven [![Build Status](https://travis-ci.org/getsentry/raven-go.png?branch=master)](https://travis-ci.org/getsentry/raven-go)
 
 raven is a Go client for the [Sentry](https://github.com/getsentry/sentry)
 event/error logging system.

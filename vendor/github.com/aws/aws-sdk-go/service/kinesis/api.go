@@ -18,7 +18,7 @@ const opAddTagsToStream = "AddTagsToStream"
 // AddTagsToStreamRequest generates a "aws/request.Request" representing the
 // client's request for the AddTagsToStream operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfully.
+// successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -52,7 +52,8 @@ func (c *Kinesis) AddTagsToStreamRequest(input *AddTagsToStreamInput) (req *requ
 
 	output = &AddTagsToStreamOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -119,7 +120,7 @@ const opCreateStream = "CreateStream"
 // CreateStreamRequest generates a "aws/request.Request" representing the
 // client's request for the CreateStream operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfully.
+// successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -153,7 +154,8 @@ func (c *Kinesis) CreateStreamRequest(input *CreateStreamInput) (req *request.Re
 
 	output = &CreateStreamOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -246,7 +248,7 @@ const opDecreaseStreamRetentionPeriod = "DecreaseStreamRetentionPeriod"
 // DecreaseStreamRetentionPeriodRequest generates a "aws/request.Request" representing the
 // client's request for the DecreaseStreamRetentionPeriod operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfully.
+// successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -280,7 +282,8 @@ func (c *Kinesis) DecreaseStreamRetentionPeriodRequest(input *DecreaseStreamRete
 
 	output = &DecreaseStreamRetentionPeriodOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -345,7 +348,7 @@ const opDeleteStream = "DeleteStream"
 // DeleteStreamRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteStream operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfully.
+// successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -379,7 +382,8 @@ func (c *Kinesis) DeleteStreamRequest(input *DeleteStreamInput) (req *request.Re
 
 	output = &DeleteStreamOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -453,7 +457,7 @@ const opDeregisterStreamConsumer = "DeregisterStreamConsumer"
 // DeregisterStreamConsumerRequest generates a "aws/request.Request" representing the
 // client's request for the DeregisterStreamConsumer operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfully.
+// successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -487,7 +491,8 @@ func (c *Kinesis) DeregisterStreamConsumerRequest(input *DeregisterStreamConsume
 
 	output = &DeregisterStreamConsumerOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -551,7 +556,7 @@ const opDescribeLimits = "DescribeLimits"
 // DescribeLimitsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeLimits operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfully.
+// successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -636,7 +641,7 @@ const opDescribeStream = "DescribeStream"
 // DescribeStreamRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeStream operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfully.
+// successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -794,7 +799,7 @@ const opDescribeStreamConsumer = "DescribeStreamConsumer"
 // DescribeStreamConsumerRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeStreamConsumer operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfully.
+// successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -890,7 +895,7 @@ const opDescribeStreamSummary = "DescribeStreamSummary"
 // DescribeStreamSummaryRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeStreamSummary operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfully.
+// successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -979,7 +984,7 @@ const opDisableEnhancedMonitoring = "DisableEnhancedMonitoring"
 // DisableEnhancedMonitoringRequest generates a "aws/request.Request" representing the
 // client's request for the DisableEnhancedMonitoring operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfully.
+// successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1071,7 +1076,7 @@ const opEnableEnhancedMonitoring = "EnableEnhancedMonitoring"
 // EnableEnhancedMonitoringRequest generates a "aws/request.Request" representing the
 // client's request for the EnableEnhancedMonitoring operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfully.
+// successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1163,7 +1168,7 @@ const opGetRecords = "GetRecords"
 // GetRecordsRequest generates a "aws/request.Request" representing the
 // client's request for the GetRecords operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfully.
+// successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1339,7 +1344,7 @@ const opGetShardIterator = "GetShardIterator"
 // GetShardIteratorRequest generates a "aws/request.Request" representing the
 // client's request for the GetShardIterator operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfully.
+// successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1469,7 +1474,7 @@ const opIncreaseStreamRetentionPeriod = "IncreaseStreamRetentionPeriod"
 // IncreaseStreamRetentionPeriodRequest generates a "aws/request.Request" representing the
 // client's request for the IncreaseStreamRetentionPeriod operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfully.
+// successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1503,7 +1508,8 @@ func (c *Kinesis) IncreaseStreamRetentionPeriodRequest(input *IncreaseStreamRete
 
 	output = &IncreaseStreamRetentionPeriodOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -1572,7 +1578,7 @@ const opListShards = "ListShards"
 // ListShardsRequest generates a "aws/request.Request" representing the
 // client's request for the ListShards operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfully.
+// successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1674,7 +1680,7 @@ const opListStreamConsumers = "ListStreamConsumers"
 // ListStreamConsumersRequest generates a "aws/request.Request" representing the
 // client's request for the ListStreamConsumers operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfully.
+// successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1828,7 +1834,7 @@ const opListStreams = "ListStreams"
 // ListStreamsRequest generates a "aws/request.Request" representing the
 // client's request for the ListStreams operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfully.
+// successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1979,7 +1985,7 @@ const opListTagsForStream = "ListTagsForStream"
 // ListTagsForStreamRequest generates a "aws/request.Request" representing the
 // client's request for the ListTagsForStream operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfully.
+// successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2068,7 +2074,7 @@ const opMergeShards = "MergeShards"
 // MergeShardsRequest generates a "aws/request.Request" representing the
 // client's request for the MergeShards operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfully.
+// successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2102,7 +2108,8 @@ func (c *Kinesis) MergeShardsRequest(input *MergeShardsInput) (req *request.Requ
 
 	output = &MergeShardsOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2196,7 +2203,7 @@ const opPutRecord = "PutRecord"
 // PutRecordRequest generates a "aws/request.Request" representing the
 // client's request for the PutRecord operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfully.
+// successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2352,7 +2359,7 @@ const opPutRecords = "PutRecords"
 // PutRecordsRequest generates a "aws/request.Request" representing the
 // client's request for the PutRecords operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfully.
+// successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2528,7 +2535,7 @@ const opRegisterStreamConsumer = "RegisterStreamConsumer"
 // RegisterStreamConsumerRequest generates a "aws/request.Request" representing the
 // client's request for the RegisterStreamConsumer operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfully.
+// successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2628,7 +2635,7 @@ const opRemoveTagsFromStream = "RemoveTagsFromStream"
 // RemoveTagsFromStreamRequest generates a "aws/request.Request" representing the
 // client's request for the RemoveTagsFromStream operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfully.
+// successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2662,7 +2669,8 @@ func (c *Kinesis) RemoveTagsFromStreamRequest(input *RemoveTagsFromStreamInput) 
 
 	output = &RemoveTagsFromStreamOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2726,7 +2734,7 @@ const opSplitShard = "SplitShard"
 // SplitShardRequest generates a "aws/request.Request" representing the
 // client's request for the SplitShard operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfully.
+// successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2760,7 +2768,8 @@ func (c *Kinesis) SplitShardRequest(input *SplitShardInput) (req *request.Reques
 
 	output = &SplitShardOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2864,7 +2873,7 @@ const opStartStreamEncryption = "StartStreamEncryption"
 // StartStreamEncryptionRequest generates a "aws/request.Request" representing the
 // client's request for the StartStreamEncryption operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfully.
+// successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2898,7 +2907,8 @@ func (c *Kinesis) StartStreamEncryptionRequest(input *StartStreamEncryptionInput
 
 	output = &StartStreamEncryptionOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -3001,7 +3011,7 @@ const opStopStreamEncryption = "StopStreamEncryption"
 // StopStreamEncryptionRequest generates a "aws/request.Request" representing the
 // client's request for the StopStreamEncryption operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfully.
+// successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -3035,7 +3045,8 @@ func (c *Kinesis) StopStreamEncryptionRequest(input *StopStreamEncryptionInput) 
 
 	output = &StopStreamEncryptionOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -3111,7 +3122,7 @@ const opUpdateShardCount = "UpdateShardCount"
 // UpdateShardCountRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateShardCount operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfully.
+// successfuly.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.

@@ -21,26 +21,21 @@ var modelStructsMap sync.Map
 
 // ModelStruct model definition
 type ModelStruct struct {
-	PrimaryFields []*StructField
-	StructFields  []*StructField
-	ModelType     reflect.Type
-
+	PrimaryFields    []*StructField
+	StructFields     []*StructField
+	ModelType        reflect.Type
 	defaultTableName string
-	l                sync.Mutex
 }
 
 // TableName returns model's table name
 func (s *ModelStruct) TableName(db *DB) string {
-	s.l.Lock()
-	defer s.l.Unlock()
-
 	if s.defaultTableName == "" && db != nil && s.ModelType != nil {
 		// Set default table name
 		if tabler, ok := reflect.New(s.ModelType).Interface().(tabler); ok {
 			s.defaultTableName = tabler.TableName()
 		} else {
 			tableName := ToTableName(s.ModelType.Name())
-			if db == nil || (db.parent != nil && !db.parent.singularTable) {
+			if db == nil || !db.parent.singularTable {
 				tableName = inflection.Plural(tableName)
 			}
 			s.defaultTableName = tableName
@@ -70,52 +65,52 @@ type StructField struct {
 }
 
 // TagSettingsSet Sets a tag in the tag settings map
-func (sf *StructField) TagSettingsSet(key, val string) {
-	sf.tagSettingsLock.Lock()
-	defer sf.tagSettingsLock.Unlock()
-	sf.TagSettings[key] = val
+func (s *StructField) TagSettingsSet(key, val string) {
+	s.tagSettingsLock.Lock()
+	defer s.tagSettingsLock.Unlock()
+	s.TagSettings[key] = val
 }
 
 // TagSettingsGet returns a tag from the tag settings
-func (sf *StructField) TagSettingsGet(key string) (string, bool) {
-	sf.tagSettingsLock.RLock()
-	defer sf.tagSettingsLock.RUnlock()
-	val, ok := sf.TagSettings[key]
+func (s *StructField) TagSettingsGet(key string) (string, bool) {
+	s.tagSettingsLock.RLock()
+	defer s.tagSettingsLock.RUnlock()
+	val, ok := s.TagSettings[key]
 	return val, ok
 }
 
 // TagSettingsDelete deletes a tag
-func (sf *StructField) TagSettingsDelete(key string) {
-	sf.tagSettingsLock.Lock()
-	defer sf.tagSettingsLock.Unlock()
-	delete(sf.TagSettings, key)
+func (s *StructField) TagSettingsDelete(key string) {
+	s.tagSettingsLock.Lock()
+	defer s.tagSettingsLock.Unlock()
+	delete(s.TagSettings, key)
 }
 
-func (sf *StructField) clone() *StructField {
+func (structField *StructField) clone() *StructField {
 	clone := &StructField{
-		DBName:          sf.DBName,
-		Name:            sf.Name,
-		Names:           sf.Names,
-		IsPrimaryKey:    sf.IsPrimaryKey,
-		IsNormal:        sf.IsNormal,
-		IsIgnored:       sf.IsIgnored,
-		IsScanner:       sf.IsScanner,
-		HasDefaultValue: sf.HasDefaultValue,
-		Tag:             sf.Tag,
+		DBName:          structField.DBName,
+		Name:            structField.Name,
+		Names:           structField.Names,
+		IsPrimaryKey:    structField.IsPrimaryKey,
+		IsNormal:        structField.IsNormal,
+		IsIgnored:       structField.IsIgnored,
+		IsScanner:       structField.IsScanner,
+		HasDefaultValue: structField.HasDefaultValue,
+		Tag:             structField.Tag,
 		TagSettings:     map[string]string{},
-		Struct:          sf.Struct,
-		IsForeignKey:    sf.IsForeignKey,
+		Struct:          structField.Struct,
+		IsForeignKey:    structField.IsForeignKey,
 	}
 
-	if sf.Relationship != nil {
-		relationship := *sf.Relationship
+	if structField.Relationship != nil {
+		relationship := *structField.Relationship
 		clone.Relationship = &relationship
 	}
 
 	// copy the struct field tagSettings, they should be read-locked while they are copied
-	sf.tagSettingsLock.Lock()
-	defer sf.tagSettingsLock.Unlock()
-	for key, value := range sf.TagSettings {
+	structField.tagSettingsLock.Lock()
+	defer structField.tagSettingsLock.Unlock()
+	for key, value := range structField.TagSettings {
 		clone.TagSettings[key] = value
 	}
 

@@ -19,7 +19,6 @@ type Handlers struct {
 	UnmarshalError   HandlerList
 	Retry            HandlerList
 	AfterRetry       HandlerList
-	CompleteAttempt  HandlerList
 	Complete         HandlerList
 }
 
@@ -37,7 +36,6 @@ func (h *Handlers) Copy() Handlers {
 		UnmarshalMeta:    h.UnmarshalMeta.copy(),
 		Retry:            h.Retry.copy(),
 		AfterRetry:       h.AfterRetry.copy(),
-		CompleteAttempt:  h.CompleteAttempt.copy(),
 		Complete:         h.Complete.copy(),
 	}
 }
@@ -55,7 +53,6 @@ func (h *Handlers) Clear() {
 	h.ValidateResponse.Clear()
 	h.Retry.Clear()
 	h.AfterRetry.Clear()
-	h.CompleteAttempt.Clear()
 	h.Complete.Clear()
 }
 
