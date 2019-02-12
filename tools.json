@@ -2,7 +2,7 @@
   "Tools": [
     {
       "Repository": "github.com/golang/dep/cmd/dep",
-      "Commit": "6b79ccc4052b44b52a424209e2a32682cc84c11c"
+      "Commit": "73b3afefe4973c8d023870b691e9227a13569870"
     },
     {
       "Repository": "github.com/alecthomas/gometalinter",

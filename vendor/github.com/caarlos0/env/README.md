@@ -36,6 +36,7 @@ type config struct {
 	IsProduction bool          `env:"PRODUCTION"`
 	Hosts        []string      `env:"HOSTS" envSeparator:":"`
 	Duration     time.Duration `env:"DURATION"`
+	TempFolder   string        `env:"TEMP_FOLDER" envDefault:"${HOME}/tmp" envExpand:"true"`
 }
 
 func main() {
@@ -82,6 +83,9 @@ of the type will be used: empty for `string`s, `false` for `bool`s
 and `0` for `int`s.
 
 By default, slice types will split the environment value on `,`; you can change this behavior by setting the `envSeparator` tag.
+
+If you set the `envExpand` tag, environment variables (either in `${var}` or `$var` format)
+in the string will be replaced according with the actual value of the variable.
 
 ## Custom Parser Funcs
 

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"strings"
 	"sync"
 	"time"
 
@@ -13,7 +14,9 @@ import (
 )
 
 type txnInput struct {
-	W          http.ResponseWriter
+	// This ResponseWriter should only be accessed using txn.getWriter()
+	writer     http.ResponseWriter
+	app        Application
 	Config     Config
 	Reply      *internal.ConnectReply
 	Consumer   dataConsumer
@@ -39,13 +42,12 @@ type txn struct {
 	internal.TxnData
 }
 
-func newTxn(input txnInput, req *http.Request, name string) *txn {
+func newTxn(input txnInput, name string) *txn {
 	txn := &txn{
 		txnInput: input,
 	}
 	txn.Start = time.Now()
 	txn.Name = name
-	txn.IsWeb = nil != req
 	txn.Attrs = internal.NewAttributes(input.attrConfig)
 
 	if input.Config.DistributedTracer.Enabled {
@@ -60,22 +62,15 @@ func newTxn(input txnInput, req *http.Request, name string) *txn {
 		if txn.BetterCAT.Sampled {
 			txn.BetterCAT.Priority += 1.0
 		}
-		txn.SpanEventsEnabled = input.Config.SpanEvents.Enabled
+		txn.SpanEventsEnabled = txn.Config.SpanEvents.Enabled && txn.Reply.CollectSpanEvents
 	}
 
-	if nil != req {
-		txn.Queuing = internal.QueueDuration(req.Header, txn.Start)
-		internal.RequestAgentAttributes(txn.Attrs, req)
-	}
-	txn.Attrs.Agent.HostDisplayName = txn.Config.HostDisplayName
+	txn.Attrs.Agent.Add(internal.AttributeHostDisplayName, txn.Config.HostDisplayName, nil)
 	txn.TxnTrace.Enabled = txn.txnTracesEnabled()
 	txn.TxnTrace.SegmentThreshold = txn.Config.TransactionTracer.SegmentThreshold
 	txn.StackTraceThreshold = txn.Config.TransactionTracer.StackTraceThreshold
 	txn.SlowQueriesEnabled = txn.slowQueriesEnabled()
 	txn.SlowQueryThreshold = txn.Config.DatastoreTracer.SlowQuery.Threshold
-	if nil != req && nil != req.URL {
-		txn.CleanURL = internal.SafeURL(req.URL)
-	}
 
 	// Synthetics support is tied up with a transaction's Old CAT field,
 	// CrossProcess. To support Synthetics with either BetterCAT or Old CAT,
@@ -83,9 +78,71 @@ func newTxn(input txnInput, req *http.Request, name string) *txn {
 	// the top-level configuration.
 	doOldCAT := txn.Config.CrossApplicationTracer.Enabled
 	noGUID := txn.Config.DistributedTracer.Enabled
-	txn.CrossProcess.InitFromHTTPRequest(doOldCAT, noGUID, input.Reply, req)
+	txn.CrossProcess.Init(doOldCAT, noGUID, input.Reply)
 
 	return txn
+}
+
+type requestWrap struct{ request *http.Request }
+
+func (r requestWrap) Header() http.Header { return r.request.Header }
+func (r requestWrap) URL() *url.URL       { return r.request.URL }
+func (r requestWrap) Method() string      { return r.request.Method }
+
+func (r requestWrap) Transport() TransportType {
+	if strings.HasPrefix(r.request.Proto, "HTTP") {
+		if r.request.TLS != nil {
+			return TransportHTTPS
+		}
+		return TransportHTTP
+	}
+	return TransportUnknown
+
+}
+
+func (txn *txn) SetWebRequest(r WebRequest) error {
+	txn.Lock()
+	defer txn.Unlock()
+
+	if txn.finished {
+		return errAlreadyEnded
+	}
+
+	// Any call to SetWebRequest should indicate a web transaction.
+	txn.IsWeb = true
+
+	if nil == r {
+		return nil
+	}
+	if h := r.Header(); nil != h {
+		txn.Queuing = internal.QueueDuration(h, txn.Start)
+
+		if p := h.Get(DistributedTracePayloadHeader); p != "" {
+			txn.acceptDistributedTracePayloadLocked(r.Transport(), p)
+		}
+
+		txn.CrossProcess.InboundHTTPRequest(h)
+	}
+
+	internal.RequestAgentAttributes(txn.Attrs, r.Method(), r.Header())
+
+	if u := r.URL(); nil != u {
+		txn.CleanURL = internal.SafeURL(u)
+	}
+
+	return nil
+}
+
+func (txn *txn) SetWebResponse(w http.ResponseWriter) Transaction {
+	txn.Lock()
+	defer txn.Unlock()
+
+	// Replace the ResponseWriter even if the transaction has ended so that
+	// consumers calling ResponseWriter methods on the transactions see that
+	// data flowing through as expected.
+	txn.writer = w
+
+	return upgradeTxn(txn)
 }
 
 func (txn *txn) slowQueriesEnabled() bool {
@@ -180,39 +237,9 @@ func (txn *txn) MergeIntoHarvest(h *internal.Harvest) {
 		h.SlowSQLs.Merge(txn.SlowQueries, txn.TxnEvent)
 	}
 
-	if txn.BetterCAT.Sampled && txn.Config.SpanEvents.Enabled {
+	if txn.BetterCAT.Sampled && txn.SpanEventsEnabled {
 		h.SpanEvents.MergeFromTransaction(&txn.TxnData)
 	}
-}
-
-// TransportType's name field is not mutable outside of its package
-// however, it still periodically needs to be used and assigned within
-// the this package.  For testing purposes only.
-func getTransport(transport string) string {
-	var retVal string
-
-	switch transport {
-	case TransportHTTP.name:
-		retVal = TransportHTTP.name
-	case TransportHTTPS.name:
-		retVal = TransportHTTPS.name
-	case TransportKafka.name:
-		retVal = TransportKafka.name
-	case TransportJMS.name:
-		retVal = TransportJMS.name
-	case TransportIronMQ.name:
-		retVal = TransportIronMQ.name
-	case TransportAMQP.name:
-		retVal = TransportAMQP.name
-	case TransportQueue.name:
-		retVal = TransportQueue.name
-	case TransportOther.name:
-		retVal = TransportOther.name
-	case TransportUnknown.name:
-	default:
-		retVal = TransportUnknown.name
-	}
-	return retVal
 }
 
 func responseCodeIsError(cfg *Config, code int) bool {
@@ -227,7 +254,7 @@ func responseCodeIsError(cfg *Config, code int) bool {
 	return true
 }
 
-func headersJustWritten(txn *txn, code int) {
+func headersJustWritten(txn *txn, code int, hdr http.Header) {
 	txn.Lock()
 	defer txn.Unlock()
 
@@ -239,7 +266,7 @@ func headersJustWritten(txn *txn, code int) {
 	}
 	txn.wroteHeader = true
 
-	internal.ResponseHeaderAttributes(txn.Attrs, txn.W.Header())
+	internal.ResponseHeaderAttributes(txn.Attrs, hdr)
 	internal.ResponseCodeAttribute(txn.Attrs, code)
 
 	if responseCodeIsError(&txn.Config, code) {
@@ -249,7 +276,7 @@ func headersJustWritten(txn *txn, code int) {
 	}
 }
 
-func (txn *txn) responseHeader() http.Header {
+func (txn *txn) responseHeader(hdr http.Header) http.Header {
 	txn.Lock()
 	defer txn.Unlock()
 
@@ -266,7 +293,7 @@ func (txn *txn) responseHeader() http.Header {
 		return nil
 	}
 	txn.freezeName()
-	contentLength := internal.GetContentLengthFromHeader(txn.W.Header())
+	contentLength := internal.GetContentLengthFromHeader(hdr)
 
 	appData, err := txn.CrossProcess.CreateAppData(txn.FinalName, txn.Queuing, time.Since(txn.Start), contentLength)
 	if err != nil {
@@ -278,36 +305,70 @@ func (txn *txn) responseHeader() http.Header {
 	return internal.AppDataToHTTPHeader(appData)
 }
 
-func addCrossProcessHeaders(txn *txn) {
+func addCrossProcessHeaders(txn *txn, hdr http.Header) {
 	// responseHeader() checks the wroteHeader field and returns a nil map if the
 	// header has been written, so we don't need a check here.
-	for key, values := range txn.responseHeader() {
-		for _, value := range values {
-			txn.W.Header().Add(key, value)
+	if nil != hdr {
+		for key, values := range txn.responseHeader(hdr) {
+			for _, value := range values {
+				hdr.Add(key, value)
+			}
 		}
 	}
 }
 
-func (txn *txn) Header() http.Header { return txn.W.Header() }
+// getWriter is used to access the transaction's ResponseWriter. The
+// ResponseWriter is mutex protected since it may be changed with
+// txn.SetWebResponse, and we want changes to be visible across goroutines.  The
+// ResponseWriter is accessed using this getWriter() function rather than directly
+// in mutex protected methods since we do NOT want the transaction to be locked
+// while calling the ResponseWriter's methods.
+func (txn *txn) getWriter() http.ResponseWriter {
+	txn.Lock()
+	rw := txn.writer
+	txn.Unlock()
+	return rw
+}
 
-func (txn *txn) Write(b []byte) (int, error) {
+func nilSafeHeader(rw http.ResponseWriter) http.Header {
+	if nil == rw {
+		return nil
+	}
+	return rw.Header()
+}
+
+func (txn *txn) Header() http.Header {
+	return nilSafeHeader(txn.getWriter())
+}
+
+func (txn *txn) Write(b []byte) (n int, err error) {
+	rw := txn.getWriter()
+	hdr := nilSafeHeader(rw)
+
 	// This is safe to call unconditionally, even if Write() is called multiple
 	// times; see also the commentary in addCrossProcessHeaders().
-	addCrossProcessHeaders(txn)
+	addCrossProcessHeaders(txn, hdr)
 
-	n, err := txn.W.Write(b)
+	if rw != nil {
+		n, err = rw.Write(b)
+	}
 
-	headersJustWritten(txn, http.StatusOK)
+	headersJustWritten(txn, http.StatusOK, hdr)
 
-	return n, err
+	return
 }
 
 func (txn *txn) WriteHeader(code int) {
-	addCrossProcessHeaders(txn)
+	rw := txn.getWriter()
+	hdr := nilSafeHeader(rw)
 
-	txn.W.WriteHeader(code)
+	addCrossProcessHeaders(txn, hdr)
 
-	headersJustWritten(txn, code)
+	if nil != rw {
+		rw.WriteHeader(code)
+	}
+
+	headersJustWritten(txn, code, hdr)
 }
 
 func (txn *txn) End() error {
@@ -358,10 +419,10 @@ func (txn *txn) End() error {
 
 	if txn.Config.Logger.DebugEnabled() {
 		txn.Config.Logger.Debug("transaction ended", map[string]interface{}{
-			"name":        txn.FinalName,
-			"duration_ms": txn.Duration.Seconds() * 1000.0,
-			"ignored":     txn.ignore,
-			"run":         txn.Reply.RunID,
+			"name":          txn.FinalName,
+			"duration_ms":   txn.Duration.Seconds() * 1000.0,
+			"ignored":       txn.ignore,
+			"app_connected": "" != txn.Reply.RunID,
 		})
 	}
 
@@ -737,7 +798,7 @@ func (txn *txn) CreateDistributedTracePayload() (payload DistributedTracePayload
 		p.TrustedAccountKey = txn.Reply.TrustedAccountKey
 	}
 
-	if txn.BetterCAT.Sampled && txn.Config.SpanEvents.Enabled {
+	if txn.BetterCAT.Sampled && txn.SpanEventsEnabled {
 		p.ID = txn.CurrentSpanIdentifier()
 	}
 
@@ -758,11 +819,17 @@ var (
 	errOutboundPayloadCreated   = errors.New("outbound payload already created")
 	errAlreadyAccepted          = errors.New("AcceptDistributedTracePayload has already been called")
 	errInboundPayloadDTDisabled = errors.New("DistributedTracer must be enabled to accept an inbound payload")
+	errTrustedAccountKey        = errors.New("trusted account key missing or does not match")
 )
 
 func (txn *txn) AcceptDistributedTracePayload(t TransportType, p interface{}) error {
 	txn.Lock()
 	defer txn.Unlock()
+
+	return txn.acceptDistributedTracePayloadLocked(t, p)
+}
+
+func (txn *txn) acceptDistributedTracePayloadLocked(t TransportType, p interface{}) error {
 
 	if !txn.BetterCAT.Enabled {
 		return errInboundPayloadDTDisabled
@@ -820,7 +887,7 @@ func (txn *txn) AcceptDistributedTracePayload(t TransportType, p interface{}) er
 	}
 	if receivedTrustKey != txn.Reply.TrustedAccountKey {
 		txn.AcceptPayloadUntrustedAccount = true
-		return internal.ErrTrustedAccountKey{Message: "trusted account key missing or does not match"}
+		return errTrustedAccountKey
 	}
 
 	if 0 != payload.Priority {
@@ -851,4 +918,8 @@ func (txn *txn) AcceptDistributedTracePayload(t TransportType, p interface{}) er
 	txn.AcceptPayloadSuccess = true
 
 	return nil
+}
+
+func (txn *txn) Application() Application {
+	return txn.app
 }

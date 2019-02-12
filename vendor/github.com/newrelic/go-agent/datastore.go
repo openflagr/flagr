@@ -16,6 +16,7 @@ const (
 	DatastoreMongoDB                        = "MongoDB"
 	DatastoreMySQL                          = "MySQL"
 	DatastoreMSSQL                          = "MSSQL"
+	DatastoreNeptune                        = "Neptune"
 	DatastoreOracle                         = "Oracle"
 	DatastorePostgres                       = "Postgres"
 	DatastoreRedis                          = "Redis"

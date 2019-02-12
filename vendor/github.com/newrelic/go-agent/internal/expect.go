@@ -102,6 +102,62 @@ type WantSlowQuery struct {
 	Params       map[string]interface{}
 }
 
+// HarvestTestinger is implemented by the app.  It sets an empty test harvest
+// and modifies the connect reply if a callback is provided.
+type HarvestTestinger interface {
+	HarvestTesting(replyfn func(*ConnectReply))
+}
+
+// HarvestTesting allows integration packages to test instrumentation.
+func HarvestTesting(app interface{}, replyfn func(*ConnectReply)) {
+	ta, ok := app.(HarvestTestinger)
+	if !ok {
+		panic("HarvestTesting type assertion failure")
+	}
+	ta.HarvestTesting(replyfn)
+}
+
+// WantTxn provides the expectation parameters to ExpectTxnMetrics.
+type WantTxn struct {
+	Name      string
+	IsWeb     bool
+	NumErrors int
+}
+
+// ExpectTxnMetrics tests that the app contains metrics for a transaction.
+func ExpectTxnMetrics(t Validator, mt *metricTable, want WantTxn) {
+	var metrics []WantMetric
+	var scope string
+	var allWebOther string
+	if want.IsWeb {
+		scope = "WebTransaction/Go/" + want.Name
+		allWebOther = "allWeb"
+		metrics = []WantMetric{
+			{Name: "WebTransaction/Go/" + want.Name, Scope: "", Forced: true, Data: nil},
+			{Name: "WebTransaction", Scope: "", Forced: true, Data: nil},
+			{Name: "HttpDispatcher", Scope: "", Forced: true, Data: nil},
+			{Name: "Apdex", Scope: "", Forced: true, Data: nil},
+			{Name: "Apdex/Go/" + want.Name, Scope: "", Forced: false, Data: nil},
+		}
+	} else {
+		scope = "OtherTransaction/Go/" + want.Name
+		allWebOther = "allOther"
+		metrics = []WantMetric{
+			{Name: "OtherTransaction/Go/" + want.Name, Scope: "", Forced: true, Data: nil},
+			{Name: "OtherTransaction/all", Scope: "", Forced: true, Data: nil},
+		}
+	}
+	if want.NumErrors > 0 {
+		data := []float64{float64(want.NumErrors), 0, 0, 0, 0, 0}
+		metrics = append(metrics, []WantMetric{
+			{Name: "Errors/all", Scope: "", Forced: true, Data: data},
+			{Name: "Errors/" + allWebOther, Scope: "", Forced: true, Data: data},
+			{Name: "Errors/" + scope, Scope: "", Forced: true, Data: data},
+		}...)
+	}
+	ExpectMetrics(t, mt, metrics)
+}
+
 // Expect exposes methods that allow for testing whether the correct data was
 // captured.
 type Expect interface {
@@ -117,6 +173,7 @@ type Expect interface {
 
 	ExpectMetrics(t Validator, want []WantMetric)
 	ExpectMetricsPresent(t Validator, want []WantMetric)
+	ExpectTxnMetrics(t Validator, want WantTxn)
 
 	ExpectTxnTraces(t Validator, want []WantTxnTrace)
 	ExpectSlowQueries(t Validator, want []WantSlowQuery)
@@ -133,39 +190,21 @@ func expectMetricField(t Validator, id metricID, v1, v2 float64, fieldName strin
 	}
 }
 
-// ExpectMetricsPresent allows testing of metrics with requiring an exact match
+// ExpectMetricsPresent allows testing of metrics without requiring an exact match
 func ExpectMetricsPresent(t Validator, mt *metricTable, expect []WantMetric) {
-	expectedIds := make(map[metricID]struct{})
-	for _, e := range expect {
-		id := metricID{Name: e.Name, Scope: e.Scope}
-		expectedIds[id] = struct{}{}
-		m := mt.metrics[id]
-		if nil == m {
-			t.Error("unable to find metric", id)
-			continue
-		}
-
-		if b, ok := e.Forced.(bool); ok {
-			if b != (forced == m.forced) {
-				t.Error("metric forced incorrect", b, m.forced, id)
-			}
-		}
-
-		if nil != e.Data {
-			expectMetricField(t, id, e.Data[0], m.data.countSatisfied, "countSatisfied")
-			expectMetricField(t, id, e.Data[1], m.data.totalTolerated, "totalTolerated")
-			expectMetricField(t, id, e.Data[2], m.data.exclusiveFailed, "exclusiveFailed")
-			expectMetricField(t, id, e.Data[3], m.data.min, "min")
-			expectMetricField(t, id, e.Data[4], m.data.max, "max")
-			expectMetricField(t, id, e.Data[5], m.data.sumSquares, "sumSquares")
-		}
-	}
+	expectMetrics(t, mt, expect, false)
 }
 
 // ExpectMetrics allows testing of metrics.  It passes if mt exactly matches expect.
 func ExpectMetrics(t Validator, mt *metricTable, expect []WantMetric) {
-	if len(mt.metrics) != len(expect) {
-		t.Error("metric counts do not match expectations", len(mt.metrics), len(expect))
+	expectMetrics(t, mt, expect, true)
+}
+
+func expectMetrics(t Validator, mt *metricTable, expect []WantMetric, exactMatch bool) {
+	if exactMatch {
+		if len(mt.metrics) != len(expect) {
+			t.Error("metric counts do not match expectations", len(mt.metrics), len(expect))
+		}
 	}
 	expectedIds := make(map[metricID]struct{})
 	for _, e := range expect {
@@ -192,9 +231,11 @@ func ExpectMetrics(t Validator, mt *metricTable, expect []WantMetric) {
 			expectMetricField(t, id, e.Data[5], m.data.sumSquares, "sumSquares")
 		}
 	}
-	for id := range mt.metrics {
-		if _, ok := expectedIds[id]; !ok {
-			t.Error("expected metrics does not contain", id.Name, id.Scope)
+	if exactMatch {
+		for id := range mt.metrics {
+			if _, ok := expectedIds[id]; !ok {
+				t.Error("expected metrics does not contain", id.Name, id.Scope)
+			}
 		}
 	}
 }
@@ -450,7 +491,7 @@ func ExpectSpanEventsAbsent(v Validator, events *spanEvents, names []string) {
 // ExpectSpanEvents allows testing of span events.  It passes if events exactly matches expect.
 func ExpectSpanEvents(v Validator, events *spanEvents, expect []WantEvent) {
 	if len(events.events.events) != len(expect) {
-		v.Error("number of txn events does not match",
+		v.Error("number of span events does not match",
 			len(events.events.events), len(expect))
 		return
 	}
@@ -463,7 +504,7 @@ func ExpectSpanEvents(v Validator, events *spanEvents, expect []WantEvent) {
 				e.Intrinsics = mergeAttributes(map[string]interface{}{
 					// The following intrinsics should always be present in
 					// span events:
-					"type":      "Transaction",
+					"type":      "Span",
 					"timestamp": MatchAnything,
 					"duration":  MatchAnything,
 				}, e.Intrinsics)

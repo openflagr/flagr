@@ -148,3 +148,19 @@ func (d *Date) SetBSON(raw bson.Raw) error {
 
 	return errors.New("couldn't unmarshal bson raw value as Date")
 }
+
+// DeepCopyInto copies the receiver and writes its value into out.
+func (in *Date) DeepCopyInto(out *Date) {
+	*out = *in
+	return
+}
+
+// DeepCopy copies the receiver into a new Date.
+func (in *Date) DeepCopy() *Date {
+	if in == nil {
+		return nil
+	}
+	out := new(Date)
+	in.DeepCopyInto(out)
+	return out
+}

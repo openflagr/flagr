@@ -1,8 +1,5 @@
 language: go
-script: make default test-race
 go:
-  - 1.9
-  - 1.8.3
-install:
-  - go get github.com/golang/dep/cmd/dep
-  - dep ensure -v -vendor-only
+  - 1.11.x
+env:
+  - GO111MODULE=on

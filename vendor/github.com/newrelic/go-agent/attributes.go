@@ -10,7 +10,7 @@ package newrelic
 // For more information, see:
 // https://docs.newrelic.com/docs/agents/manage-apm-agents/agent-metrics/agent-attributes
 
-// Attributes destined for Transaction Events and Errors:
+// Attributes destined for Transaction Events, Errors, and Transaction Traces:
 const (
 	// AttributeResponseCode is the response status code for a web request.
 	AttributeResponseCode = "httpResponseCode"
@@ -32,7 +32,7 @@ const (
 	AttributeHostDisplayName = "host.displayName"
 )
 
-// Attributes destined for Errors:
+// Attributes destined for Errors and Transaction Traces:
 const (
 	// AttributeRequestUserAgent is the request's "User-Agent" header.
 	AttributeRequestUserAgent = "request.headers.User-Agent"
