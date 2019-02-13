@@ -2,8 +2,7 @@
   "entityID": "123",
     "entityType": "report",
     "entityContext": {
-      "dl_state": "CA"
+      "state": "CA"
     },
-    "flagID": 2,
-    "enableDebug": true
+    "flagID": 1
 }

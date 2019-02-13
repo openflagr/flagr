@@ -1,2 +1,2 @@
-POST http://localhost:18000/api/evaluation
+POST http://localhost:18000/api/v1/evaluation
 Content-Type: application/json

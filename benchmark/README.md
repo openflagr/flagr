@@ -2,7 +2,7 @@
 
 ```
 go get -u github.com/tsenart/vegeta
-vegeta attack -targets ./postEvaluation.target -body ./postEvaluation.json -output ./postEvaluation.output -workers 1000
+vegeta attack -targets ./postEvaluation.target -body ./postEvaluation.json -output ./postEvaluation.output -workers 100 -rate 2000
 ```
 
 ```
@@ -16,10 +16,11 @@ Status Codes  [code:count]             200:56521
 Error Set:
 ```
 
-## Getting the flamegraph from go-torch
+## Getting the flamegraph from go tool
 
 ```
-go-torch -u http://localhost:18000/
+curl http://localhost:18000/debug/pprof/profile -o /tmp/flagr_profile
+go tool pprof -http=":8081" /tmp/flagr_profile
 ```
 
-![torch.svg](./torch.svg)
+![torch.png](./torch.png)
