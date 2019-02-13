@@ -99,7 +99,8 @@ func evaluateSubtree(expr Expr, args map[string]interface{}) (Expr, error) {
 		case reflect.Slice:
 			switch args[index].(type) {
 			case []string:
-				return &SliceStringLiteral{Val: args[index].([]string)}, nil
+				ssl := NewSliceStringLiteral(args[index].([]string))
+				return ssl, nil
 			case []int:
 				snl := &SliceNumberLiteral{}
 				for _, v := range args[index].([]int) {
@@ -143,11 +144,12 @@ func evaluateSubtree(expr Expr, args map[string]interface{}) (Expr, error) {
 					item := items[0]
 					switch item.(type) {
 					case string:
-						snl := &SliceStringLiteral{}
+						val := []string{}
 						for _, v := range items {
-							snl.Val = append(snl.Val, v.(string))
+							val = append(val, v.(string))
 						}
-						return snl, nil
+						ssl := NewSliceStringLiteral(val)
+						return ssl, nil
 					case float64:
 						snl := &SliceNumberLiteral{}
 						for _, v := range items {
@@ -261,24 +263,18 @@ func applyIN(l, r Expr) (*BooleanLiteral, error) {
 	switch t := l.(type) {
 	case *StringLiteral:
 		var a string
-		var b []string
+		var b map[string]struct{}
+
 		a, err = getString(l)
 		if err != nil {
 			return nil, err
 		}
 
-		b, err = getSliceString(r)
-
+		b, err = getMapString(r)
 		if err != nil {
 			return nil, err
 		}
-
-		found = false
-		for _, e := range b {
-			if a == e {
-				found = true
-			}
-		}
+		_, found = b[a]
 	case *NumberLiteral:
 		var a float64
 		var b []float64
@@ -532,13 +528,13 @@ func getSliceNumber(e Expr) ([]float64, error) {
 	}
 }
 
-// getSliceString performs type assertion and returns []string value or error
-func getSliceString(e Expr) ([]string, error) {
+// getMapString performs type assertion and returns map[string]struct{} value or error
+func getMapString(e Expr) (map[string]struct{}, error) {
 	switch n := e.(type) {
 	case *SliceStringLiteral:
-		return n.Val, nil
+		return n.m, nil
 	default:
-		return []string{}, fmt.Errorf("Literal is not a slice of string: %v", n)
+		return nil, fmt.Errorf("Literal is not a slice of string: %v", n)
 	}
 }
 

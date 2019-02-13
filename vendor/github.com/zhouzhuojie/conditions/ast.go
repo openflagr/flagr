@@ -98,8 +98,19 @@ func (n *NumberLiteral) Args() []string {
 	return args
 }
 
+func NewSliceStringLiteral(val []string) *SliceStringLiteral {
+	ssl := &SliceStringLiteral{}
+	ssl.Val = val
+	ssl.m = make(map[string]struct{})
+	for _, item := range ssl.Val {
+		ssl.m[item] = struct{}{}
+	}
+	return ssl
+}
+
 type SliceStringLiteral struct {
 	Val []string
+	m   map[string]struct{}
 }
 
 // String returns a string representation of the literal.

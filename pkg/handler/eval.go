@@ -229,7 +229,7 @@ var evalSegment = func(
 		}
 		if !match {
 			log = &models.SegmentDebugLog{
-				Msg:       debugConstraintMsg(expr, m),
+				Msg:       debugConstraintMsg(evalContext.EnableDebug, expr, m),
 				SegmentID: int64(segment.ID),
 			}
 			return nil, log, true
@@ -252,7 +252,10 @@ var evalSegment = func(
 	return vID, log, false
 }
 
-func debugConstraintMsg(expr conditions.Expr, m map[string]interface{}) string {
+func debugConstraintMsg(enableDebug bool, expr conditions.Expr, m map[string]interface{}) string {
+	if !enableDebug {
+		return ""
+	}
 	return fmt.Sprintf("constraint not match. constraint: %s, entity_context: %+v.", expr, m)
 }
 

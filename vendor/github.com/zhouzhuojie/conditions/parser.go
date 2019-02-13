@@ -302,7 +302,8 @@ func (p *Parser) parseUnaryExpr() (Expr, error) {
 				}
 				values = append(values, str)
 			}
-			return &SliceStringLiteral{Val: values}, err
+			ssl := NewSliceStringLiteral(values)
+			return ssl, err
 		case float64:
 			values := []float64{}
 			for _, v := range mapVal {

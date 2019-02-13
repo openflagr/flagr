@@ -142,8 +142,8 @@
   name = "github.com/yadvendar/negroni-newrelic-go-agent"
 
 [[constraint]]
-  branch = "master"
   name = "github.com/zhouzhuojie/conditions"
+  version = "0.2.2"
 
 [[constraint]]
   branch = "master"
@@ -157,11 +157,11 @@
   name = "github.com/avast/retry-go"
   version = "2.2.0"
 
+[[constraint]]
+  name = "cloud.google.com/go"
+  version = "0.35.1"
+
 
 [prune]
   go-tests = true
   unused-packages = true
-
-[[constraint]]
-  name = "cloud.google.com/go"
-  version = "0.35.1"
