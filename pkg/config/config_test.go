@@ -3,6 +3,7 @@ package config
 import (
 	"testing"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -28,4 +29,26 @@ func TestSetupStatsd(t *testing.T) {
 		setupStatsd()
 	})
 	Config.StatsdEnabled = false
+}
+
+func TestSetupPrometheus(t *testing.T) {
+	prometheus.DefaultRegisterer = prometheus.NewRegistry()
+	Config.PrometheusEnabled = false
+	setupPrometheus()
+	assert.Nil(t, Global.Prometheus.EvalCounter)
+	Config.PrometheusEnabled = true
+	setupPrometheus()
+	assert.NotNil(t, Global.Prometheus.EvalCounter)
+	assert.NotNil(t, Global.Prometheus.RequestCounter)
+	assert.Nil(t, Global.Prometheus.RequestHistogram)
+}
+
+func TestSetupPrometheusWithLatencies(t *testing.T) {
+	prometheus.DefaultRegisterer = prometheus.NewRegistry()
+	Config.PrometheusEnabled = true
+	Config.PrometheusIncludeLatencyHistogram = true
+	setupPrometheus()
+	assert.NotNil(t, Global.Prometheus.EvalCounter)
+	assert.NotNil(t, Global.Prometheus.RequestCounter)
+	assert.NotNil(t, Global.Prometheus.RequestHistogram)
 }

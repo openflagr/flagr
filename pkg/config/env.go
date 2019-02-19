@@ -67,6 +67,13 @@ var Config = struct {
 	StatsdAPMPort        string `env:"FLAGR_STATSD_APM_PORT" envDefault:"8126"`
 	StatsdAPMServiceName string `env:"FLAGR_STATSD_APM_SERVICE_NAME" envDefault:"flagr"`
 
+	// PrometheusEnabled - enable prometheus metrics export
+	PrometheusEnabled bool `env:"FLAGR_PROMETHEUS_ENABLED" envDefault:"false"`
+	// PrometheusPath - set the path on which prometheus metrics are available to scrape
+	PrometheusPath string `env:"FLAGR_PROMETHEUS_PATH" envDefault:"/metrics"`
+	// PrometheusIncludeLatencyHistogram - set whether Prometheus should also export a histogram of request latencies (this increases cardinality significantly)
+	PrometheusIncludeLatencyHistogram bool `env:"FLAGR_PROMETHEUS_INCLUDE_LATENCY_HISTOGRAM" envDefault:"false"`
+
 	// RecorderEnabled - enable data records logging
 	RecorderEnabled bool `env:"FLAGR_RECORDER_ENABLED" envDefault:"false"`
 	// RecorderType - the pipeline to log data records, e.g. Kafka

@@ -51,6 +51,11 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 		}
 	}
 
+	n.Use(&prometheusMiddleware{
+		counter:   Global.Prometheus.RequestCounter,
+		latencies: Global.Prometheus.RequestHistogram,
+	})
+
 	if Config.NewRelicEnabled {
 		n.Use(&negroninewrelic.Newrelic{Application: &Global.NewrelicApp})
 	}
@@ -213,4 +218,29 @@ func (s *statsdMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request, nex
 	}(time.Now())
 
 	next(w, r)
+}
+
+type prometheusMiddleware struct {
+	counter   *prometheus.CounterVec
+	latencies *prometheus.HistogramVec
+}
+
+func (p *prometheusMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	if r.URL.EscapedPath() == Global.Prometheus.ScrapePath {
+		handler := promhttp.Handler()
+		handler.ServeHTTP(w, r)
+	} else {
+		defer func(start time.Time) {
+			response := w.(negroni.ResponseWriter)
+			status := strconv.Itoa(response.Status())
+			duration := float64(time.Since(start)) / float64(time.Second)
+			fmt.Println(duration)
+
+			p.counter.WithLabelValues(status, r.RequestURI, r.Method).Inc()
+			if p.latencies != nil {
+				p.latencies.WithLabelValues(status, r.RequestURI, r.Method).Observe(duration)
+			}
+		}(time.Now())
+		next(w, r)
+	}
 }

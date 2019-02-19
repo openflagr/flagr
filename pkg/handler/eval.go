@@ -174,6 +174,7 @@ var logEvalResult = func(r *models.EvalResult, dataRecordsEnabled bool) {
 	}
 
 	logEvalResultToDatadog(r)
+	logEvalResultToPrometheus(r)
 
 	if !config.Config.RecorderEnabled || !dataRecordsEnabled {
 		return
@@ -197,6 +198,19 @@ var logEvalResultToDatadog = func(r *models.EvalResult) {
 		},
 		float64(1),
 	)
+}
+
+var logEvalResultToPrometheus = func(r *models.EvalResult) {
+	if config.Global.Prometheus.EvalCounter == nil {
+		return
+	}
+	config.Global.Prometheus.EvalCounter.WithLabelValues(
+		util.SafeStringWithDefault(r.EvalContext.EntityType, "null"),
+		util.SafeStringWithDefault(r.FlagID, "null"),
+		util.SafeStringWithDefault(r.VariantID, "null"),
+		util.SafeStringWithDefault(r.VariantKey, "null"),
+	).Inc()
+
 }
 
 var evalSegment = func(
