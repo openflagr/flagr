@@ -8,15 +8,17 @@ import (
 	"time"
 
 	"github.com/DataDog/datadog-go/statsd"
-	"github.com/auth0/go-jwt-middleware"
-	"github.com/dgrijalva/jwt-go"
+	jwtmiddleware "github.com/auth0/go-jwt-middleware"
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gohttp/pprof"
-	"github.com/meatballhat/negroni-logrus"
+	negronilogrus "github.com/meatballhat/negroni-logrus"
 	"github.com/phyber/negroni-gzip/gzip"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/cors"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/negroni"
-	"github.com/yadvendar/negroni-newrelic-go-agent"
+	negroninewrelic "github.com/yadvendar/negroni-newrelic-go-agent"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
 
@@ -51,10 +53,12 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 		}
 	}
 
-	n.Use(&prometheusMiddleware{
-		counter:   Global.Prometheus.RequestCounter,
-		latencies: Global.Prometheus.RequestHistogram,
-	})
+	if Config.PrometheusEnabled {
+		n.Use(&prometheusMiddleware{
+			counter:   Global.Prometheus.RequestCounter,
+			latencies: Global.Prometheus.RequestHistogram,
+		})
+	}
 
 	if Config.NewRelicEnabled {
 		n.Use(&negroninewrelic.Newrelic{Application: &Global.NewrelicApp})
