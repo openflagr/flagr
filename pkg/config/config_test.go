@@ -41,6 +41,7 @@ func TestSetupPrometheus(t *testing.T) {
 	assert.NotNil(t, Global.Prometheus.EvalCounter)
 	assert.NotNil(t, Global.Prometheus.RequestCounter)
 	assert.Nil(t, Global.Prometheus.RequestHistogram)
+	Config.PrometheusEnabled = false
 }
 
 func TestSetupPrometheusWithLatencies(t *testing.T) {
@@ -51,4 +52,5 @@ func TestSetupPrometheusWithLatencies(t *testing.T) {
 	assert.NotNil(t, Global.Prometheus.EvalCounter)
 	assert.NotNil(t, Global.Prometheus.RequestCounter)
 	assert.NotNil(t, Global.Prometheus.RequestHistogram)
+	Config.PrometheusEnabled = false
 }
