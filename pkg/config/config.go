@@ -9,6 +9,8 @@ import (
 	"github.com/evalphobia/logrus_sentry"
 	raven "github.com/getsentry/raven-go"
 	newrelic "github.com/newrelic/go-agent"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/sirupsen/logrus"
 )
 
@@ -16,6 +18,7 @@ import (
 var Global = struct {
 	NewrelicApp  newrelic.Application
 	StatsdClient *statsd.Client
+	Prometheus   prometheusMetrics
 }{}
 
 func init() {
@@ -25,6 +28,7 @@ func init() {
 	setupLogrus()
 	setupStatsd()
 	setupNewrelic()
+	setupPrometheus()
 }
 
 func setupLogrus() {
@@ -73,5 +77,33 @@ func setupNewrelic() {
 			panic(fmt.Sprintf("unable to initialize newrelic. %s", err))
 		}
 		Global.NewrelicApp = app
+	}
+}
+
+type prometheusMetrics struct {
+	ScrapePath       string
+	EvalCounter      *prometheus.CounterVec
+	RequestCounter   *prometheus.CounterVec
+	RequestHistogram *prometheus.HistogramVec
+}
+
+func setupPrometheus() {
+	if Config.PrometheusEnabled {
+		Global.Prometheus.ScrapePath = Config.PrometheusPath
+		Global.Prometheus.EvalCounter = promauto.NewCounterVec(prometheus.CounterOpts{
+			Name: "flagr_eval_results",
+			Help: "A counter of eval results",
+		}, []string{"EntityType", "FlagID", "VariantID", "VariantKey"})
+		Global.Prometheus.RequestCounter = promauto.NewCounterVec(prometheus.CounterOpts{
+			Name: "flagr_requests_total",
+			Help: "The total http requests received",
+		}, []string{"status", "path", "method"})
+
+		if Config.PrometheusIncludeLatencyHistogram {
+			Global.Prometheus.RequestHistogram = promauto.NewHistogramVec(prometheus.HistogramOpts{
+				Name: "flagr_requests_buckets",
+				Help: "A histogram of latencies for requests received",
+			}, []string{"status", "path", "method"})
+		}
 	}
 }

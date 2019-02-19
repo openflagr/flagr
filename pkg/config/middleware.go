@@ -8,15 +8,17 @@ import (
 	"time"
 
 	"github.com/DataDog/datadog-go/statsd"
-	"github.com/auth0/go-jwt-middleware"
-	"github.com/dgrijalva/jwt-go"
+	jwtmiddleware "github.com/auth0/go-jwt-middleware"
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gohttp/pprof"
-	"github.com/meatballhat/negroni-logrus"
+	negronilogrus "github.com/meatballhat/negroni-logrus"
 	"github.com/phyber/negroni-gzip/gzip"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/cors"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/negroni"
-	"github.com/yadvendar/negroni-newrelic-go-agent"
+	negroninewrelic "github.com/yadvendar/negroni-newrelic-go-agent"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
 
@@ -49,6 +51,13 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 				tracer.WithServiceName(Config.StatsdAPMServiceName),
 			)
 		}
+	}
+
+	if Config.PrometheusEnabled {
+		n.Use(&prometheusMiddleware{
+			counter:   Global.Prometheus.RequestCounter,
+			latencies: Global.Prometheus.RequestHistogram,
+		})
 	}
 
 	if Config.NewRelicEnabled {
@@ -213,4 +222,29 @@ func (s *statsdMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request, nex
 	}(time.Now())
 
 	next(w, r)
+}
+
+type prometheusMiddleware struct {
+	counter   *prometheus.CounterVec
+	latencies *prometheus.HistogramVec
+}
+
+func (p *prometheusMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	if r.URL.EscapedPath() == Global.Prometheus.ScrapePath {
+		handler := promhttp.Handler()
+		handler.ServeHTTP(w, r)
+	} else {
+		defer func(start time.Time) {
+			response := w.(negroni.ResponseWriter)
+			status := strconv.Itoa(response.Status())
+			duration := float64(time.Since(start)) / float64(time.Second)
+			fmt.Println(duration)
+
+			p.counter.WithLabelValues(status, r.RequestURI, r.Method).Inc()
+			if p.latencies != nil {
+				p.latencies.WithLabelValues(status, r.RequestURI, r.Method).Observe(duration)
+			}
+		}(time.Now())
+		next(w, r)
+	}
 }
