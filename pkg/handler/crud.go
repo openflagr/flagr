@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"github.com/checkr/flagr/pkg/notify"
 	"strings"
 
 	"github.com/checkr/flagr/pkg/entity"
@@ -142,6 +143,7 @@ func (c *crud) CreateFlag(params flag.CreateFlagParams) middleware.Responder {
 	resp.SetPayload(payload)
 
 	entity.SaveFlagSnapshot(getDB(), f.ID, getSubjectFromRequest(params.HTTPRequest))
+	notify.All(getDB(), util.SafeUint(f.ID), notify.CREATED, notify.FLAG)
 	return resp
 }
 
@@ -245,6 +247,7 @@ func (c *crud) PutFlag(params flag.PutFlagParams) middleware.Responder {
 	resp.SetPayload(payload)
 
 	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
+	notify.All(getDB(), util.SafeUint(params.FlagID), notify.UPDATED, notify.FLAG)
 	return resp
 }
 
@@ -268,11 +271,16 @@ func (c *crud) SetFlagEnabledState(params flag.SetFlagEnabledParams) middleware.
 	resp.SetPayload(payload)
 
 	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
+	notify.All(getDB(), util.SafeUint(params.FlagID), notify.TOGGLED, notify.FLAG)
 	return resp
 }
 
 func (c *crud) DeleteFlag(params flag.DeleteFlagParams) middleware.Responder {
-	if err := getDB().Delete(&entity.Flag{}, params.FlagID).Error; err != nil {
+	f := &entity.Flag{}
+	if err := getDB().First(f, params.FlagID).Error; err == nil {
+		notify.All(getDB(), util.SafeUint(params.FlagID), notify.DELETED, notify.FLAG)
+	}
+	if err := getDB().Delete(f, params.FlagID).Error; err != nil {
 		return flag.NewDeleteFlagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 	return flag.NewDeleteFlagOK()
@@ -294,6 +302,7 @@ func (c *crud) CreateSegment(params segment.CreateSegmentParams) middleware.Resp
 	resp.SetPayload(e2r.MapSegment(s))
 
 	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
+	notify.All(getDB(), util.SafeUint(params.FlagID), notify.CREATED, notify.SEGMENT)
 	return resp
 }
 
@@ -337,6 +346,7 @@ func (c *crud) PutSegment(params segment.PutSegmentParams) middleware.Responder 
 	resp.SetPayload(e2r.MapSegment(s))
 
 	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
+	notify.All(getDB(), util.SafeUint(params.FlagID), notify.UPDATED, notify.SEGMENT)
 	return resp
 }
 
@@ -393,6 +403,8 @@ func (c *crud) CreateConstraint(params constraint.CreateConstraintParams) middle
 	resp.SetPayload(e2r.MapConstraint(cons))
 
 	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
+
+	notify.All(getDB(), util.SafeUint(params.FlagID), notify.CREATED, notify.CONSTRAINT)
 	return resp
 }
 
@@ -431,6 +443,7 @@ func (c *crud) PutConstraint(params constraint.PutConstraintParams) middleware.R
 	resp.SetPayload(e2r.MapConstraint(cons))
 
 	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
+	notify.All(getDB(), util.SafeUint(params.FlagID), notify.CREATED, notify.CONSTRAINT)
 	return resp
 }
 
@@ -478,6 +491,7 @@ func (c *crud) PutDistributions(params distribution.PutDistributionsParams) midd
 	resp.SetPayload(e2r.MapDistributions(ds))
 
 	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
+	notify.All(getDB(), util.SafeUint(params.FlagID), notify.UPDATED, notify.DISTRIBUTION)
 	return resp
 }
 
@@ -520,6 +534,7 @@ func (c *crud) CreateVariant(params variant.CreateVariantParams) middleware.Resp
 	resp.SetPayload(e2r.MapVariant(v))
 
 	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
+	notify.All(getDB(), util.SafeUint(params.FlagID), notify.CREATED, notify.VARIANT)
 	return resp
 }
 
@@ -571,6 +586,7 @@ func (c *crud) PutVariant(params variant.PutVariantParams) middleware.Responder 
 	resp.SetPayload(e2r.MapVariant(v))
 
 	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
+	notify.All(getDB(), util.SafeUint(params.FlagID), notify.UPDATED, notify.VARIANT)
 	return resp
 }
 
@@ -584,5 +600,6 @@ func (c *crud) DeleteVariant(params variant.DeleteVariantParams) middleware.Resp
 	}
 
 	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
+	notify.All(getDB(), util.SafeUint(params.FlagID), notify.DELETED, notify.VARIANT)
 	return variant.NewDeleteVariantOK()
 }

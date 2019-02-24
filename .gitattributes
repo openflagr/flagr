@@ -8,4 +8,3 @@ vendor/**/* -diff
 *.png binary
 *.jpg binary
 *.output binary
-*.yml binary

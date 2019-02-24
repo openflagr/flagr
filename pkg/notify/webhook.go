@@ -1,0 +1,74 @@
+package notify
+
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"github.com/checkr/flagr/pkg/config"
+	"github.com/checkr/flagr/pkg/entity"
+	"github.com/checkr/flagr/pkg/mapper/entity_restapi/e2r"
+	"github.com/checkr/flagr/swagger_gen/models"
+	"io/ioutil"
+	"net/http"
+)
+
+type Webhook struct {
+	client *http.Client
+}
+
+// NewWebhook returns a new Webhook
+func NewWebhook(c *http.Client) *Webhook {
+	return &Webhook{
+		client: c,
+	}
+}
+
+// WebhookMessage defines the JSON object send to webhook endpoints.
+type WebhookMessage struct {
+	Action   notify `json:"action"`
+	Type     itemType `json:"type"`
+	Data *models.Flag `json:"data"`
+	Version  string `json:"version"`
+}
+
+// Notify implements the Notifier interface for webhooks
+func (w *Webhook) Notify(f *entity.Flag, b notify, i itemType) error {
+	model, err := e2r.MapFlag(f)
+
+	if err != nil {
+		return err
+	}
+
+	msg := &WebhookMessage{
+		Action:   b,
+		Type:     i,
+		Version:  "1",
+		Data:     model,
+	}
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(msg); err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest("POST", config.Config.WebhookUrl, &buf)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", contentTypeJSON)
+	req.Header.Set("User-Agent", userAgentHeader)
+
+	resp, err := w.client.Do(req)
+	defer resp.Body.Close()
+
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode >= 400 {
+		b, _ := ioutil.ReadAll(resp.Body)
+		return errors.New(string(b))
+	}
+
+	return nil
+}
