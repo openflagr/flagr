@@ -5,13 +5,11 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"strings"
 	"time"
 
 	"github.com/rexmont/flagr/pkg/config"
-	"github.com/rexmont/flagr/pkg/util"
 	"github.com/rexmont/flagr/swagger_gen/models"
 
 	"github.com/Shopify/sarama"
@@ -127,7 +125,7 @@ var logKafkaAsyncRecordToDatadog = func(r *models.EvalResult) {
 	config.Global.StatsdClient.Incr(
 		"data_recorder.kafka",
 		[]string{
-			fmt.Sprintf("FlagID:%d", util.SafeUint(r.FlagID)),
+			//fmt.Sprintf("FlagID:%d", util.SafeUint(r.FlagID)),
 		},
 		float64(1),
 	)
@@ -168,10 +166,10 @@ func (r *kafkaEvalResult) Length() int {
 
 // Key generates the partition key
 func (r *kafkaEvalResult) Key() string {
-	if r.EvalResult == nil || r.EvalContext == nil {
+	//if r.EvalResult == nil || r.EvalContext == nil {
 		return ""
-	}
-	return util.SafeString(r.EvalContext.EntityID)
+	//}
+	//return util.SafeString(r.EvalContext.EntityID)
 }
 
 type kafkaMessageFrame struct {

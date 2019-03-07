@@ -1323,38 +1323,14 @@ func init() {
     "evalResult": {
       "type": "object",
       "required": [
-        "flagID",
         "flagKey",
-        "segmentID",
-        "variantID",
         "variantKey",
         "variantAttachment",
-        "evalContext",
         "timestamp"
       ],
       "properties": {
-        "evalContext": {
-          "$ref": "#/definitions/evalContext"
-        },
-        "evalDebugLog": {
-          "$ref": "#/definitions/evalDebugLog"
-        },
-        "flagID": {
-          "type": "integer",
-          "format": "int64",
-          "minimum": 1
-        },
         "flagKey": {
           "type": "string"
-        },
-        "flagSnapshotID": {
-          "type": "integer",
-          "format": "int64"
-        },
-        "segmentID": {
-          "type": "integer",
-          "format": "int64",
-          "minimum": 1
         },
         "timestamp": {
           "type": "string",
@@ -1362,11 +1338,6 @@ func init() {
         },
         "variantAttachment": {
           "type": "object"
-        },
-        "variantID": {
-          "type": "integer",
-          "format": "int64",
-          "minimum": 1
         },
         "variantKey": {
           "type": "string",
@@ -3049,38 +3020,14 @@ func init() {
     "evalResult": {
       "type": "object",
       "required": [
-        "flagID",
         "flagKey",
-        "segmentID",
-        "variantID",
         "variantKey",
         "variantAttachment",
-        "evalContext",
         "timestamp"
       ],
       "properties": {
-        "evalContext": {
-          "$ref": "#/definitions/evalContext"
-        },
-        "evalDebugLog": {
-          "$ref": "#/definitions/evalDebugLog"
-        },
-        "flagID": {
-          "type": "integer",
-          "format": "int64",
-          "minimum": 1
-        },
         "flagKey": {
           "type": "string"
-        },
-        "flagSnapshotID": {
-          "type": "integer",
-          "format": "int64"
-        },
-        "segmentID": {
-          "type": "integer",
-          "format": "int64",
-          "minimum": 1
         },
         "timestamp": {
           "type": "string",
@@ -3088,11 +3035,6 @@ func init() {
         },
         "variantAttachment": {
           "type": "object"
-        },
-        "variantID": {
-          "type": "integer",
-          "format": "int64",
-          "minimum": 1
         },
         "variantKey": {
           "type": "string",

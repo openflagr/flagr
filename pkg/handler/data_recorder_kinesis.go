@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 
 	"github.com/rexmont/flagr/pkg/config"
-	"github.com/rexmont/flagr/pkg/util"
 	"github.com/rexmont/flagr/swagger_gen/models"
 
 	"github.com/a8m/kinesis-producer"
@@ -105,8 +104,8 @@ func (r *kinesisEvalResult) Payload() ([]byte, error) {
 
 // Key generates the partition key
 func (r *kinesisEvalResult) Key() string {
-	if r.EvalResult == nil || r.EvalContext == nil {
+	//if r.EvalResult == nil || r.EvalContext == nil {
 		return ""
-	}
-	return util.SafeString(r.EvalContext.EntityID)
+	//}
+	//return util.SafeString(r.EvalContext.EntityID)
 }

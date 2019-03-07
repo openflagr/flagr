@@ -1,17 +1,14 @@
 package handler
 
 import (
-	"encoding/json"
 	"fmt"
-	"math/rand"
-	"time"
-
+	"github.com/jinzhu/gorm"
 	"github.com/rexmont/flagr/pkg/config"
 	"github.com/rexmont/flagr/pkg/entity"
 	"github.com/rexmont/flagr/pkg/util"
 	"github.com/rexmont/flagr/swagger_gen/models"
 	"github.com/rexmont/flagr/swagger_gen/restapi/operations/evaluation"
-	"github.com/jinzhu/gorm"
+	"math/rand"
 
 	"github.com/bsm/ratelimit"
 	"github.com/davecgh/go-spew/spew"
@@ -96,25 +93,25 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 
 // BlankResult creates a blank result
 func BlankResult(f *entity.Flag, evalContext models.EvalContext, msg string) *models.EvalResult {
-	flagID := uint(0)
+	//flagID := uint(0)
 	flagKey := ""
-	flagSnapshotID := uint(0)
+	//flagSnapshotID := uint(0)
 	if f != nil {
-		flagID = f.ID
-		flagSnapshotID = f.SnapshotID
+		//flagID = f.ID
+		//flagSnapshotID = f.SnapshotID
 		flagKey = f.Key
 	}
 	return &models.EvalResult{
-		EvalContext: &evalContext,
-		EvalDebugLog: &models.EvalDebugLog{
-			Msg:              msg,
-			SegmentDebugLogs: nil,
-		},
-		FlagID:         util.Int64Ptr(int64(flagID)),
+		//EvalContext: &evalContext,
+		//EvalDebugLog: &models.EvalDebugLog{
+		//	Msg:              msg,
+		//	SegmentDebugLogs: nil,
+		//},
+		//FlagID:         util.Int64Ptr(int64(flagID)),
 		FlagKey:        util.StringPtr(flagKey),
-		FlagSnapshotID: int64(flagSnapshotID),
-		SegmentID:      nil,
-		VariantID:      nil,
+		//FlagSnapshotID: int64(flagSnapshotID),
+		//SegmentID:      nil,
+		//VariantID:      nil,
 		Timestamp:      util.StringPtr(util.TimeNow()),
 	}
 }
@@ -151,10 +148,10 @@ var evalFlag = func(evalContext models.EvalContext) *models.EvalResult {
 
 	logs := []*models.SegmentDebugLog{}
 	var vID *int64
-	var sID *int64
+	//var sID *int64
 
 	for _, segment := range f.Segments {
-		sID = util.Int64Ptr(int64(segment.ID))
+		//sID = util.Int64Ptr(int64(segment.ID))
 		variantID, log, evalNextSegment := evalSegment(f.ID, evalContext, segment)
 		if evalContext.EnableDebug {
 			logs = append(logs, log)
@@ -167,9 +164,9 @@ var evalFlag = func(evalContext models.EvalContext) *models.EvalResult {
 		}
 	}
 	evalResult := BlankResult(f, evalContext, "")
-	evalResult.EvalDebugLog.SegmentDebugLogs = logs
-	evalResult.SegmentID = sID
-	evalResult.VariantID = vID
+	//evalResult.EvalDebugLog.SegmentDebugLogs = logs
+	//evalResult.SegmentID = sID
+	//evalResult.VariantID = vID
 	v := f.FlagEvaluation.VariantsMap[util.SafeUint(vID)]
 	if v != nil {
 		evalResult.VariantAttachment = v.Attachment
@@ -203,9 +200,9 @@ var logEvalResultToDatadog = func(r *models.EvalResult) {
 	config.Global.StatsdClient.Incr(
 		"evaluation",
 		[]string{
-			fmt.Sprintf("EntityType:%s", util.SafeStringWithDefault(r.EvalContext.EntityType, "null")),
-			fmt.Sprintf("FlagID:%d", util.SafeUint(r.FlagID)),
-			fmt.Sprintf("VariantID:%d", util.SafeUint(r.VariantID)),
+			//fmt.Sprintf("EntityType:%s", util.SafeStringWithDefault(r.EvalContext.EntityType, "null")),
+			//fmt.Sprintf("FlagID:%d", util.SafeUint(r.FlagID)),
+			//fmt.Sprintf("VariantID:%d", util.SafeUint(r.VariantID)),
 			fmt.Sprintf("VariantKey:%s", util.SafeStringWithDefault(r.VariantKey, "null")),
 		},
 		float64(1),
@@ -217,9 +214,9 @@ var logEvalResultToPrometheus = func(r *models.EvalResult) {
 		return
 	}
 	config.Global.Prometheus.EvalCounter.WithLabelValues(
-		util.SafeStringWithDefault(r.EvalContext.EntityType, "null"),
-		util.SafeStringWithDefault(r.FlagID, "null"),
-		util.SafeStringWithDefault(r.VariantID, "null"),
+		//util.SafeStringWithDefault(r.EvalContext.EntityType, "null"),
+		//util.SafeStringWithDefault(r.FlagID, "null"),
+		//util.SafeStringWithDefault(r.VariantID, "null"),
 		util.SafeStringWithDefault(r.VariantKey, "null"),
 	).Inc()
 
@@ -288,17 +285,17 @@ func debugConstraintMsg(enableDebug bool, expr conditions.Expr, m map[string]int
 var rateLimitMap = make(map[uint]*ratelimit.RateLimiter)
 
 var rateLimitPerFlagConsoleLogging = func(r *models.EvalResult) {
-	flagID := util.SafeUint(r.FlagID)
-	rl, ok := rateLimitMap[flagID]
-	if !ok {
-		rl = ratelimit.New(
-			config.Config.RateLimiterPerFlagPerSecondConsoleLogging,
-			time.Second,
-		)
-		rateLimitMap[flagID] = rl
-	}
-	if !rl.Limit() {
-		jsonStr, _ := json.Marshal(struct{ FlagEvalResult *models.EvalResult }{FlagEvalResult: r})
-		fmt.Println(string(jsonStr))
-	}
+	//flagID := util.SafeUint(r.FlagID)
+	//rl, ok := rateLimitMap[flagID]
+	//if !ok {
+	//	rl = ratelimit.New(
+	//		config.Config.RateLimiterPerFlagPerSecondConsoleLogging,
+	//		time.Second,
+	//	)
+	//	rateLimitMap[flagID] = rl
+	//}
+	//if !rl.Limit() {
+	//	jsonStr, _ := json.Marshal(struct{ FlagEvalResult *models.EvalResult }{FlagEvalResult: r})
+	//	fmt.Println(string(jsonStr))
+	//}
 }

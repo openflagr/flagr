@@ -409,44 +409,44 @@ definitions:
   evalResult:
     type: object
     required:
-      - flagID
+#      - flagID
       - flagKey
-      - segmentID
-      - variantID
+#      - segmentID
+#      - variantID
       - variantKey
       - variantAttachment
-      - evalContext
+#      - evalContext
       - timestamp
     properties:
-      flagID:
-        type: integer
-        format: int64
-        minimum: 1
+#      flagID:
+#        type: integer
+#        format: int64
+#        minimum: 1
       flagKey:
         type: string
-      flagSnapshotID:
-        type: integer
-        format: int64
-      segmentID:
-        type: integer
-        format: int64
-        minimum: 1
-      variantID:
-        type: integer
-        format: int64
-        minimum: 1
+#      flagSnapshotID:
+#        type: integer
+#        format: int64
+#      segmentID:
+#        type: integer
+#        format: int64
+#        minimum: 1
+#      variantID:
+#        type: integer
+#        format: int64
+#        minimum: 1
       variantKey:
         type: string
         minLength: 1
       variantAttachment:
         type: object
-      evalContext:
-        $ref: "#/definitions/evalContext"
+#      evalContext:
+#        $ref: "#/definitions/evalContext"
       timestamp:
         type: string
         minLength: 1
-      evalDebugLog:
-        $ref: "#/definitions/evalDebugLog"
+#      evalDebugLog:
+#        $ref: "#/definitions/evalDebugLog"
   evalDebugLog:
     type: object
     properties:
