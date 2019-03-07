@@ -74,7 +74,7 @@ paths:
     $ref: ./flag_entity_types.yaml
   /evaluation:
     $ref: ./evaluation.yaml
-  /evaluation/batch:
+  /remote_configs:
     $ref: ./evaluation_batch.yaml
   /health:
     $ref: ./health.yaml
@@ -478,14 +478,13 @@ definitions:
         type: object
   evaluationBatchRequest:
     type: object
-    required:
-      - entities
     properties:
-      entities:
-        type: array
-        items:
-          $ref: "#/definitions/evaluationEntity"
-        minItems: 1
+      entityID:
+        type: string
+#      entityType:
+#        type: string
+      entityContext:
+        type: object
 #      enableDebug:
 #        type: boolean
   #      flagIDs:

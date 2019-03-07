@@ -68,39 +68,6 @@ func init() {
         }
       }
     },
-    "/evaluation/batch": {
-      "post": {
-        "tags": [
-          "evaluation"
-        ],
-        "operationId": "postEvaluationBatch",
-        "parameters": [
-          {
-            "description": "evalution batch request",
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/evaluationBatchRequest"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "evaluation batch result",
-            "schema": {
-              "$ref": "#/definitions/evaluationBatchResponse"
-            }
-          },
-          "default": {
-            "description": "generic error response",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
-      }
-    },
     "/export/sqlite": {
       "get": {
         "description": "Export sqlite3 format of the db dump, which is converted from the main database.",
@@ -1118,6 +1085,39 @@ func init() {
           }
         }
       }
+    },
+    "/remote_configs": {
+      "post": {
+        "tags": [
+          "evaluation"
+        ],
+        "operationId": "postEvaluationBatch",
+        "parameters": [
+          {
+            "description": "evalution batch request",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/evaluationBatchRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "evaluation batch result",
+            "schema": {
+              "$ref": "#/definitions/evaluationBatchResponse"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -1347,16 +1347,12 @@ func init() {
     },
     "evaluationBatchRequest": {
       "type": "object",
-      "required": [
-        "entities"
-      ],
       "properties": {
-        "entities": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/evaluationEntity"
-          }
+        "entityContext": {
+          "type": "object"
+        },
+        "entityID": {
+          "type": "string"
         }
       }
     },
@@ -1765,39 +1761,6 @@ func init() {
         }
       }
     },
-    "/evaluation/batch": {
-      "post": {
-        "tags": [
-          "evaluation"
-        ],
-        "operationId": "postEvaluationBatch",
-        "parameters": [
-          {
-            "description": "evalution batch request",
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/evaluationBatchRequest"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "evaluation batch result",
-            "schema": {
-              "$ref": "#/definitions/evaluationBatchResponse"
-            }
-          },
-          "default": {
-            "description": "generic error response",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
-      }
-    },
     "/export/sqlite": {
       "get": {
         "description": "Export sqlite3 format of the db dump, which is converted from the main database.",
@@ -2815,6 +2778,39 @@ func init() {
           }
         }
       }
+    },
+    "/remote_configs": {
+      "post": {
+        "tags": [
+          "evaluation"
+        ],
+        "operationId": "postEvaluationBatch",
+        "parameters": [
+          {
+            "description": "evalution batch request",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/evaluationBatchRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "evaluation batch result",
+            "schema": {
+              "$ref": "#/definitions/evaluationBatchResponse"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -3044,16 +3040,12 @@ func init() {
     },
     "evaluationBatchRequest": {
       "type": "object",
-      "required": [
-        "entities"
-      ],
       "properties": {
-        "entities": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/evaluationEntity"
-          }
+        "entityContext": {
+          "type": "object"
+        },
+        "entityID": {
+          "type": "string"
         }
       }
     },

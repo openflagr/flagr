@@ -590,7 +590,7 @@ func (o *FlagrAPI) initHandlerCache() {
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
-	o.handlers["POST"]["/evaluation/batch"] = evaluation.NewPostEvaluationBatch(o.context, o.EvaluationPostEvaluationBatchHandler)
+	o.handlers["POST"]["/remote_configs"] = evaluation.NewPostEvaluationBatch(o.context, o.EvaluationPostEvaluationBatchHandler)
 
 	if o.handlers["PUT"] == nil {
 		o.handlers["PUT"] = make(map[string]http.Handler)

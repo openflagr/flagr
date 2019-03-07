@@ -29,7 +29,7 @@ func NewPostEvaluationBatch(ctx *middleware.Context, handler PostEvaluationBatch
 	return &PostEvaluationBatch{Context: ctx, Handler: handler}
 }
 
-/*PostEvaluationBatch swagger:route POST /evaluation/batch evaluation postEvaluationBatch
+/*PostEvaluationBatch swagger:route POST /remote_configs evaluation postEvaluationBatch
 
 PostEvaluationBatch post evaluation batch API
 

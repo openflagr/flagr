@@ -49,25 +49,26 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 	//flagIDs := params.Body.FlagIds
 
 	if err := getDB().Find(&flags).Error; err != nil {
-
+		return evaluation.NewPostEvaluationBatchDefault(400).WithPayload(
+			ErrorMessage("empty body"))
 	}
+
 	for _, f := range flags {
 		flagIDsFromDB = append(flagIDsFromDB, int64(f.ID))
 	}
 
-	entities := params.Body.Entities
+	entity := params.Body
 	flagIDs := flagIDsFromDB
 	//flagKeys := params.Body.FlagKeys
 	results := &models.EvaluationBatchResponse{}
 
 	// TODO make it concurrent
-	for _, entity := range entities {
 		for _, flagID := range flagIDs {
 			evalContext := models.EvalContext{
 				//EnableDebug:   params.Body.EnableDebug,
 				EntityContext: entity.EntityContext,
 				EntityID:      entity.EntityID,
-				EntityType:    entity.EntityType,
+				EntityType:    "user",
 				FlagID:        flagID,
 			}
 			evalResult := evalFlag(evalContext)
@@ -84,7 +85,6 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 		//	evalResult := evalFlag(evalContext)
 		//	results.EvaluationResults = append(results.EvaluationResults, evalResult)
 		//}
-	}
 
 	resp := evaluation.NewPostEvaluationBatchOK()
 	resp.SetPayload(results)

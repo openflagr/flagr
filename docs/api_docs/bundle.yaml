@@ -730,7 +730,7 @@ paths:
           description: generic error response
           schema:
             $ref: '#/definitions/error'
-  /evaluation/batch:
+  /remote_configs:
     post:
       tags:
         - evaluation
@@ -1150,14 +1150,11 @@ definitions:
         type: object
   evaluationBatchRequest:
     type: object
-    required:
-      - entities
     properties:
-      entities:
-        type: array
-        items:
-          $ref: '#/definitions/evaluationEntity'
-        minItems: 1
+      entityID:
+        type: string
+      entityContext:
+        type: object
   evaluationBatchResponse:
     type: object
     required:

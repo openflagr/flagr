@@ -35,7 +35,7 @@ func (o *PostEvaluationBatchURL) SetBasePath(bp string) {
 func (o *PostEvaluationBatchURL) Build() (*url.URL, error) {
 	var result url.URL
 
-	var _path = "/evaluation/batch"
+	var _path = "/remote_configs"
 
 	_basePath := o._basePath
 	if _basePath == "" {
