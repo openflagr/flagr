@@ -1181,25 +1181,6 @@ definitions:
         items:
           $ref: '#/definitions/evaluationEntity'
         minItems: 1
-      enableDebug:
-        type: boolean
-      flagIDs:
-        description: flagIDs
-        type: array
-        items:
-          type: integer
-          format: int64
-          minimum: 1
-        minItems: 1
-      flagKeys:
-        description: >-
-          flagKeys. Either flagIDs or flagKeys works. If pass in both, Flagr may
-          return duplicate results.
-        type: array
-        items:
-          type: string
-          minLength: 1
-        minItems: 1
   evaluationBatchResponse:
     type: object
     required:

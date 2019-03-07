@@ -46,16 +46,28 @@ func (e *eval) PostEvaluation(params evaluation.PostEvaluationParams) middleware
 }
 
 func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) middleware.Responder {
+	var flags  []entity.Flag
+	flagIDsFromDB := []int64{}
+
+	//flagIDs := params.Body.FlagIds
+
+	if err := getDB().Find(&flags).Error; err != nil {
+
+	}
+	for _, f := range flags {
+		flagIDsFromDB = append(flagIDsFromDB, int64(f.ID))
+	}
+
 	entities := params.Body.Entities
-	flagIDs := params.Body.FlagIds
-	flagKeys := params.Body.FlagKeys
+	flagIDs := flagIDsFromDB
+	//flagKeys := params.Body.FlagKeys
 	results := &models.EvaluationBatchResponse{}
 
 	// TODO make it concurrent
 	for _, entity := range entities {
 		for _, flagID := range flagIDs {
 			evalContext := models.EvalContext{
-				EnableDebug:   params.Body.EnableDebug,
+				//EnableDebug:   params.Body.EnableDebug,
 				EntityContext: entity.EntityContext,
 				EntityID:      entity.EntityID,
 				EntityType:    entity.EntityType,
@@ -64,17 +76,17 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 			evalResult := evalFlag(evalContext)
 			results.EvaluationResults = append(results.EvaluationResults, evalResult)
 		}
-		for _, flagKey := range flagKeys {
-			evalContext := models.EvalContext{
-				EnableDebug:   params.Body.EnableDebug,
-				EntityContext: entity.EntityContext,
-				EntityID:      entity.EntityID,
-				EntityType:    entity.EntityType,
-				FlagKey:       flagKey,
-			}
-			evalResult := evalFlag(evalContext)
-			results.EvaluationResults = append(results.EvaluationResults, evalResult)
-		}
+		//for _, flagKey := range flagKeys {
+		//	evalContext := models.EvalContext{
+		//		EnableDebug:   params.Body.EnableDebug,
+		//		EntityContext: entity.EntityContext,
+		//		EntityID:      entity.EntityID,
+		//		EntityType:    entity.EntityType,
+		//		FlagKey:       flagKey,
+		//	}
+		//	evalResult := evalFlag(evalContext)
+		//	results.EvaluationResults = append(results.EvaluationResults, evalResult)
+		//}
 	}
 
 	resp := evaluation.NewPostEvaluationBatchOK()

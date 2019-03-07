@@ -39,11 +39,11 @@ x-tagGroups:
     tags:
       - export
 consumes:
-- application/json
+  - application/json
 produces:
-- application/json
+  - application/json
 schemes:
-- http
+  - http
 basePath: "/api/v1"
 paths:
   /flags:
@@ -486,23 +486,23 @@ definitions:
         items:
           $ref: "#/definitions/evaluationEntity"
         minItems: 1
-      enableDebug:
-        type: boolean
-      flagIDs:
-        description: flagIDs
-        type: array
-        items:
-          type: integer
-          format: int64
-          minimum: 1
-        minItems: 1
-      flagKeys:
-        description: flagKeys. Either flagIDs or flagKeys works. If pass in both, Flagr may return duplicate results.
-        type: array
-        items:
-          type: string
-          minLength: 1
-        minItems: 1
+#      enableDebug:
+#        type: boolean
+  #      flagIDs:
+  #        description: flagIDs
+  #        type: array
+  #        items:
+  #          type: integer
+  #          format: int64
+  #          minimum: 0
+  #        minItems: 0
+  #      flagKeys:
+  #        description: flagKeys. Either flagIDs or flagKeys works. If pass in both, Flagr may return duplicate results.
+  #        type: array
+  #        items:
+  #          type: string
+  #          minLength: 0
+  #        minItems: 0
   evaluationBatchResponse:
     type: object
     required:
@@ -522,4 +522,3 @@ definitions:
       message:
         type: string
         minLength: 1
-

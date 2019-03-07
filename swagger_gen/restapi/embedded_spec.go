@@ -1380,33 +1380,11 @@ func init() {
         "entities"
       ],
       "properties": {
-        "enableDebug": {
-          "type": "boolean"
-        },
         "entities": {
           "type": "array",
           "minItems": 1,
           "items": {
             "$ref": "#/definitions/evaluationEntity"
-          }
-        },
-        "flagIDs": {
-          "description": "flagIDs",
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "integer",
-            "format": "int64",
-            "minimum": 1
-          }
-        },
-        "flagKeys": {
-          "description": "flagKeys. Either flagIDs or flagKeys works. If pass in both, Flagr may return duplicate results.",
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "string",
-            "minLength": 1
           }
         }
       }
@@ -3128,33 +3106,11 @@ func init() {
         "entities"
       ],
       "properties": {
-        "enableDebug": {
-          "type": "boolean"
-        },
         "entities": {
           "type": "array",
           "minItems": 1,
           "items": {
             "$ref": "#/definitions/evaluationEntity"
-          }
-        },
-        "flagIDs": {
-          "description": "flagIDs",
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "integer",
-            "format": "int64",
-            "minimum": 1
-          }
-        },
-        "flagKeys": {
-          "description": "flagKeys. Either flagIDs or flagKeys works. If pass in both, Flagr may return duplicate results.",
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "string",
-            "minLength": 1
           }
         }
       }
