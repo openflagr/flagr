@@ -1161,9 +1161,9 @@ definitions:
   evaluationBatchResponse:
     type: object
     required:
-      - evaluationResults
+      - configs
     properties:
-      evaluationResults:
+      configs:
         type: array
         items:
           $ref: '#/definitions/evalResult'

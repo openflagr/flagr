@@ -1363,10 +1363,10 @@ func init() {
     "evaluationBatchResponse": {
       "type": "object",
       "required": [
-        "evaluationResults"
+        "configs"
       ],
       "properties": {
-        "evaluationResults": {
+        "configs": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/evalResult"
@@ -3060,10 +3060,10 @@ func init() {
     "evaluationBatchResponse": {
       "type": "object",
       "required": [
-        "evaluationResults"
+        "configs"
       ],
       "properties": {
-        "evaluationResults": {
+        "configs": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/evalResult"

@@ -71,7 +71,7 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 				FlagID:        flagID,
 			}
 			evalResult := evalFlag(evalContext)
-			results.EvaluationResults = append(results.EvaluationResults, evalResult)
+			results.Configs = append(results.Configs, evalResult)
 		}
 		//for _, flagKey := range flagKeys {
 		//	evalContext := models.EvalContext{
