@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/checkr/flagr/pkg/config"
-	"github.com/checkr/flagr/pkg/util"
+	"github.com/rexmont/flagr/pkg/config"
+	"github.com/rexmont/flagr/pkg/util"
 	"github.com/jinzhu/gorm"
 	"github.com/sirupsen/logrus"
 )

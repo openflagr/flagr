@@ -3,9 +3,9 @@ package r2e
 import (
 	"fmt"
 
-	"github.com/checkr/flagr/pkg/entity"
-	"github.com/checkr/flagr/pkg/util"
-	"github.com/checkr/flagr/swagger_gen/models"
+	"github.com/rexmont/flagr/pkg/entity"
+	"github.com/rexmont/flagr/pkg/util"
+	"github.com/rexmont/flagr/swagger_gen/models"
 	"github.com/davecgh/go-spew/spew"
 )
 

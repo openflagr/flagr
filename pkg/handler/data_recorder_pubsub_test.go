@@ -9,8 +9,8 @@ import (
 	"google.golang.org/api/option"
 	"google.golang.org/grpc"
 
-	"github.com/checkr/flagr/pkg/util"
-	"github.com/checkr/flagr/swagger_gen/models"
+	"github.com/rexmont/flagr/pkg/util"
+	"github.com/rexmont/flagr/swagger_gen/models"
 	"github.com/prashantv/gostub"
 
 	"github.com/stretchr/testify/assert"

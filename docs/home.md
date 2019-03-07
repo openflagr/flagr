@@ -44,9 +44,9 @@ Build from source.
 
 ```bash
 # get the source
-go get -u github.com/checkr/flagr
+go get -u github.com/rexmont/flagr
 
 # install dependencies, generated code, and run the app
-cd $GOPATH/src/github.com/checkr/flagr
+cd $GOPATH/src/github.com/rexmont/flagr
 make all
 ```

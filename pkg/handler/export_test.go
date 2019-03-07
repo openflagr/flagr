@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/checkr/flagr/pkg/entity"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/export"
+	"github.com/rexmont/flagr/pkg/entity"
+	"github.com/rexmont/flagr/swagger_gen/restapi/operations/export"
 	"github.com/prashantv/gostub"
 	"github.com/stretchr/testify/assert"
 )

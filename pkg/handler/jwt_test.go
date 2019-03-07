@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/checkr/flagr/pkg/config"
+	"github.com/rexmont/flagr/pkg/config"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/stretchr/testify/assert"
 )

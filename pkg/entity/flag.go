@@ -3,7 +3,7 @@ package entity
 import (
 	"fmt"
 
-	"github.com/checkr/flagr/pkg/util"
+	"github.com/rexmont/flagr/pkg/util"
 	"github.com/jinzhu/gorm"
 )
 

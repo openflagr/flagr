@@ -17,7 +17,7 @@ import (
 
 	strfmt "github.com/go-openapi/strfmt"
 
-	models "github.com/checkr/flagr/swagger_gen/models"
+	models "github.com/rexmont/flagr/swagger_gen/models"
 )
 
 // NewCreateVariantParams creates a new CreateVariantParams object

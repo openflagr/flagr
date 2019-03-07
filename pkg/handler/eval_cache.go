@@ -4,9 +4,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/checkr/flagr/pkg/config"
-	"github.com/checkr/flagr/pkg/entity"
-	"github.com/checkr/flagr/pkg/util"
+	"github.com/rexmont/flagr/pkg/config"
+	"github.com/rexmont/flagr/pkg/entity"
+	"github.com/rexmont/flagr/pkg/util"
 	"github.com/sirupsen/logrus"
 )
 

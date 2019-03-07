@@ -3,7 +3,7 @@ package handler
 import (
 	"testing"
 
-	"github.com/checkr/flagr/pkg/entity"
+	"github.com/rexmont/flagr/pkg/entity"
 
 	"github.com/prashantv/gostub"
 	"github.com/stretchr/testify/assert"

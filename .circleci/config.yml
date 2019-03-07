@@ -6,7 +6,7 @@ jobs:
   unit_test:
     docker:
       - image: checkr/flagr-ci
-    working_directory: /go/src/github.com/checkr/flagr
+    working_directory: /go/src/github.com/rexmont/flagr
     steps:
       - checkout
       - run: make deps

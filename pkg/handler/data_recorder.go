@@ -3,8 +3,8 @@ package handler
 import (
 	"sync"
 
-	"github.com/checkr/flagr/pkg/config"
-	"github.com/checkr/flagr/swagger_gen/models"
+	"github.com/rexmont/flagr/pkg/config"
+	"github.com/rexmont/flagr/swagger_gen/models"
 )
 
 var (

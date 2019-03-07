@@ -3,8 +3,8 @@ package handler
 import (
 	"fmt"
 
-	"github.com/checkr/flagr/pkg/util"
-	"github.com/checkr/flagr/swagger_gen/models"
+	"github.com/rexmont/flagr/pkg/util"
+	"github.com/rexmont/flagr/swagger_gen/models"
 )
 
 // Error is the handler error

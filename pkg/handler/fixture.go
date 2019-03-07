@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"github.com/checkr/flagr/pkg/entity"
-	"github.com/checkr/flagr/pkg/util"
+	"github.com/rexmont/flagr/pkg/entity"
+	"github.com/rexmont/flagr/pkg/util"
 )
 
 // GenFixtureEvalCache generates a fixture

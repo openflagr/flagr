@@ -6,8 +6,8 @@ import (
 	"github.com/a8m/kinesis-producer"
 	"github.com/aws/aws-sdk-go/service/kinesis"
 
-	"github.com/checkr/flagr/pkg/util"
-	"github.com/checkr/flagr/swagger_gen/models"
+	"github.com/rexmont/flagr/pkg/util"
+	"github.com/rexmont/flagr/swagger_gen/models"
 
 	"github.com/stretchr/testify/assert"
 )

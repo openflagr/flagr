@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 
 	"cloud.google.com/go/pubsub"
-	"github.com/checkr/flagr/pkg/config"
-	"github.com/checkr/flagr/swagger_gen/models"
+	"github.com/rexmont/flagr/pkg/config"
+	"github.com/rexmont/flagr/swagger_gen/models"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/api/option"
 )

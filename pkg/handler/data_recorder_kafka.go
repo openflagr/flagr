@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/checkr/flagr/pkg/config"
-	"github.com/checkr/flagr/pkg/util"
-	"github.com/checkr/flagr/swagger_gen/models"
+	"github.com/rexmont/flagr/pkg/config"
+	"github.com/rexmont/flagr/pkg/util"
+	"github.com/rexmont/flagr/swagger_gen/models"
 
 	"github.com/Shopify/sarama"
 	"github.com/brandur/simplebox"

@@ -6,9 +6,9 @@ import (
 	"crypto/tls"
 	"net/http"
 
-	"github.com/checkr/flagr/pkg/config"
-	"github.com/checkr/flagr/pkg/handler"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations"
+	"github.com/rexmont/flagr/pkg/config"
+	"github.com/rexmont/flagr/pkg/handler"
+	"github.com/rexmont/flagr/swagger_gen/restapi/operations"
 	"github.com/sirupsen/logrus"
 
 	"github.com/go-openapi/errors"

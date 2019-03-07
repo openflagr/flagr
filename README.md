@@ -3,16 +3,16 @@
 </p>
 
 <p align="center">
-    <a href="https://goreportcard.com/report/github.com/checkr/flagr" target="_blank">
-        <img src="https://goreportcard.com/badge/github.com/checkr/flagr">
+    <a href="https://goreportcard.com/report/github.com/rexmont/flagr" target="_blank">
+        <img src="https://goreportcard.com/badge/github.com/rexmont/flagr">
     </a>
     <a href="https://circleci.com/gh/checkr/flagr" target="_blank">
         <img src="https://circleci.com/gh/checkr/flagr.svg?style=shield">
     </a>
-    <a href="https://godoc.org/github.com/checkr/flagr" target="_blank">
+    <a href="https://godoc.org/github.com/rexmont/flagr" target="_blank">
         <img src="https://img.shields.io/badge/godoc-reference-green.svg">
     </a>
-    <a href="https://github.com/checkr/flagr/releases" target="_blank">
+    <a href="https://github.com/rexmont/flagr/releases" target="_blank">
         <img src="https://img.shields.io/github/release/checkr/flagr.svg?style=flat&color=green">
     </a>
     <a href="https://codecov.io/gh/checkr/flagr" target="_blank">

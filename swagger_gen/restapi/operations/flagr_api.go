@@ -19,14 +19,14 @@ import (
 	strfmt "github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/constraint"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/distribution"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/evaluation"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/export"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/flag"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/health"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/segment"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/variant"
+	"github.com/rexmont/flagr/swagger_gen/restapi/operations/constraint"
+	"github.com/rexmont/flagr/swagger_gen/restapi/operations/distribution"
+	"github.com/rexmont/flagr/swagger_gen/restapi/operations/evaluation"
+	"github.com/rexmont/flagr/swagger_gen/restapi/operations/export"
+	"github.com/rexmont/flagr/swagger_gen/restapi/operations/flag"
+	"github.com/rexmont/flagr/swagger_gen/restapi/operations/health"
+	"github.com/rexmont/flagr/swagger_gen/restapi/operations/segment"
+	"github.com/rexmont/flagr/swagger_gen/restapi/operations/variant"
 )
 
 // NewFlagrAPI creates a new Flagr instance

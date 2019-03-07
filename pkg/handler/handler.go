@@ -1,16 +1,16 @@
 package handler
 
 import (
-	"github.com/checkr/flagr/pkg/entity"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/constraint"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/distribution"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/evaluation"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/export"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/flag"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/health"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/segment"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/variant"
+	"github.com/rexmont/flagr/pkg/entity"
+	"github.com/rexmont/flagr/swagger_gen/restapi/operations"
+	"github.com/rexmont/flagr/swagger_gen/restapi/operations/constraint"
+	"github.com/rexmont/flagr/swagger_gen/restapi/operations/distribution"
+	"github.com/rexmont/flagr/swagger_gen/restapi/operations/evaluation"
+	"github.com/rexmont/flagr/swagger_gen/restapi/operations/export"
+	"github.com/rexmont/flagr/swagger_gen/restapi/operations/flag"
+	"github.com/rexmont/flagr/swagger_gen/restapi/operations/health"
+	"github.com/rexmont/flagr/swagger_gen/restapi/operations/segment"
+	"github.com/rexmont/flagr/swagger_gen/restapi/operations/variant"
 	"github.com/go-openapi/runtime/middleware"
 )
 

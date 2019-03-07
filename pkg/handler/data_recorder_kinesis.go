@@ -3,9 +3,9 @@ package handler
 import (
 	"encoding/json"
 
-	"github.com/checkr/flagr/pkg/config"
-	"github.com/checkr/flagr/pkg/util"
-	"github.com/checkr/flagr/swagger_gen/models"
+	"github.com/rexmont/flagr/pkg/config"
+	"github.com/rexmont/flagr/pkg/util"
+	"github.com/rexmont/flagr/swagger_gen/models"
 
 	"github.com/a8m/kinesis-producer"
 	"github.com/aws/aws-sdk-go/aws"
@@ -71,7 +71,7 @@ func (k *kinesisRecorder) AsyncRecord(r *models.EvalResult) {
 
 	messageFrame := kinesisMessageFrame{
 		Payload:   string(payload),
-		Encrypted: false, // ignoring encryption at this time - https://github.com/checkr/flagr/pull/151#discussion_r208313230
+		Encrypted: false, // ignoring encryption at this time - https://github.com/rexmont/flagr/pull/151#discussion_r208313230
 	}
 
 	message, err := messageFrame.encode()
