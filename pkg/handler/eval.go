@@ -48,7 +48,7 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 
 	//flagIDs := params.Body.FlagIds
 
-	if err := getDB().Where("enabled = ?", 1).Find(&flags).Error; err != nil {
+	if err := getDB().Find(&flags).Error; err != nil {
 		return evaluation.NewPostEvaluationBatchDefault(400).WithPayload(
 			ErrorMessage("empty body"))
 	}
