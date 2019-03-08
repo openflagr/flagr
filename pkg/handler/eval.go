@@ -169,6 +169,12 @@ var evalFlag = func(evalContext models.EvalContext) *models.EvalResult {
 }
 
 var logEvalResult = func(r *models.EvalResult, dataRecordsEnabled bool) {
+	if r == nil {
+		// this is just a safety check, r is from BlankResult,
+		// and usually it cannot be nil
+		return
+	}
+
 	if config.Config.EvalLoggingEnabled {
 		rateLimitPerFlagConsoleLogging(r)
 	}
@@ -180,7 +186,7 @@ var logEvalResult = func(r *models.EvalResult, dataRecordsEnabled bool) {
 		return
 	}
 	rec := GetDataRecorder()
-	rec.AsyncRecord(r)
+	rec.AsyncRecord(*r)
 }
 
 var logEvalResultToDatadog = func(r *models.EvalResult) {

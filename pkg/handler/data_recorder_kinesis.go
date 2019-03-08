@@ -1,16 +1,12 @@
 package handler
 
 import (
-	"encoding/json"
-
-	"github.com/checkr/flagr/pkg/config"
-	"github.com/checkr/flagr/pkg/util"
-	"github.com/checkr/flagr/swagger_gen/models"
-
 	"github.com/a8m/kinesis-producer"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kinesis"
+	"github.com/checkr/flagr/pkg/config"
+	"github.com/checkr/flagr/swagger_gen/models"
 	"github.com/sirupsen/logrus"
 )
 
@@ -19,8 +15,8 @@ var (
 )
 
 type kinesisRecorder struct {
-	enabled  bool
 	producer *producer.Producer
+	options  DataRecordFrameOptions
 }
 
 // NewKinesisRecorder creates a new Kinesis recorder
@@ -51,62 +47,29 @@ var NewKinesisRecorder = func() DataRecorder {
 
 	return &kinesisRecorder{
 		producer: p,
-		enabled:  config.Config.RecorderEnabled,
+		options: DataRecordFrameOptions{
+			Encrypted:       false, // not implemented yet
+			FrameOutputMode: config.Config.RecorderFrameOutputMode,
+		},
 	}
 }
 
-func (k *kinesisRecorder) AsyncRecord(r *models.EvalResult) {
-	if !k.enabled {
+func (k *kinesisRecorder) NewDataRecordFrame(r models.EvalResult) DataRecordFrame {
+	return DataRecordFrame{
+		evalResult: r,
+		options:    k.options,
+	}
+}
+
+func (k *kinesisRecorder) AsyncRecord(r models.EvalResult) {
+	frame := k.NewDataRecordFrame(r)
+	output, err := frame.Output()
+	if err != nil {
+		logrus.WithField("err", err).Error("failed to generate data record frame for kinesis recorder")
 		return
 	}
-
-	kr := &kinesisEvalResult{
-		EvalResult: r,
-	}
-
-	payload, err := kr.Payload()
-	if err != nil {
-		logrus.WithField("kinesis_error", err).Error("error marshaling")
-	}
-
-	messageFrame := kinesisMessageFrame{
-		Payload:   string(payload),
-		Encrypted: false, // ignoring encryption at this time - https://github.com/checkr/flagr/pull/151#discussion_r208313230
-	}
-
-	message, err := messageFrame.encode()
-	if err != nil {
-		logrus.WithField("kinesis_error", err).Error("error marshaling")
-	}
-
-	err = k.producer.Put(message, kr.Key())
+	err = k.producer.Put(output, frame.GetPartitionKey())
 	if err != nil {
 		logrus.WithField("kinesis_error", err).Error("error pushing to kinesis")
 	}
-}
-
-type kinesisEvalResult struct {
-	*models.EvalResult
-}
-
-type kinesisMessageFrame struct {
-	Payload   string `json:"payload"`
-	Encrypted bool   `json:"encrypted"`
-}
-
-func (kmf *kinesisMessageFrame) encode() ([]byte, error) {
-	return json.MarshalIndent(kmf, "", "  ")
-}
-
-// Payload marshals the EvalResult
-func (r *kinesisEvalResult) Payload() ([]byte, error) {
-	return r.EvalResult.MarshalBinary()
-}
-
-// Key generates the partition key
-func (r *kinesisEvalResult) Key() string {
-	if r.EvalResult == nil || r.EvalContext == nil {
-		return ""
-	}
-	return util.SafeString(r.EvalContext.EntityID)
 }

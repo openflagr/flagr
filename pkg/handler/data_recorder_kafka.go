@@ -3,8 +3,6 @@ package handler
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"strings"
@@ -15,7 +13,6 @@ import (
 	"github.com/checkr/flagr/swagger_gen/models"
 
 	"github.com/Shopify/sarama"
-	"github.com/brandur/simplebox"
 	"github.com/sirupsen/logrus"
 )
 
@@ -64,10 +61,19 @@ var NewKafkaRecorder = func() DataRecorder {
 		}()
 	}
 
+	var encryptor dataRecordEncryptor
+	if config.Config.RecorderKafkaEncrypted && config.Config.RecorderKafkaEncryptionKey != "" {
+		encryptor = newSimpleboxEncryptor(config.Config.RecorderKafkaEncryptionKey)
+	}
+
 	return &kafkaRecorder{
-		producer: producer,
 		topic:    config.Config.RecorderKafkaTopic,
-		enabled:  config.Config.RecorderEnabled,
+		producer: producer,
+		options: DataRecordFrameOptions{
+			Encrypted:       config.Config.RecorderKafkaEncrypted,
+			Encryptor:       encryptor,
+			FrameOutputMode: config.Config.RecorderFrameOutputMode,
+		},
 	}
 }
 
@@ -99,28 +105,34 @@ func createTLSConfiguration(certFile string, keyFile string, caFile string, veri
 type kafkaRecorder struct {
 	producer sarama.AsyncProducer
 	topic    string
-	enabled  bool
+	options  DataRecordFrameOptions
 }
 
-func (k *kafkaRecorder) AsyncRecord(r *models.EvalResult) {
-	if !k.enabled {
-		return
+func (k *kafkaRecorder) NewDataRecordFrame(r models.EvalResult) DataRecordFrame {
+	return DataRecordFrame{
+		evalResult: r,
+		options:    k.options,
 	}
-	kr := &kafkaEvalResult{
-		EvalResult: r,
-		encrypted:  config.Config.RecorderKafkaEncrypted,
+}
+
+func (k *kafkaRecorder) AsyncRecord(r models.EvalResult) {
+	frame := k.NewDataRecordFrame(r)
+	output, err := frame.Output()
+	if err != nil {
+		logrus.WithField("err", err).Error("failed to generate data record frame for kafka recorder")
+		return
 	}
 	k.producer.Input() <- &sarama.ProducerMessage{
 		Topic:     k.topic,
-		Key:       sarama.StringEncoder(kr.Key()),
-		Value:     kr,
+		Key:       sarama.StringEncoder(frame.GetPartitionKey()),
+		Value:     sarama.ByteEncoder(output),
 		Timestamp: time.Now().UTC(),
 	}
 
 	logKafkaAsyncRecordToDatadog(r)
 }
 
-var logKafkaAsyncRecordToDatadog = func(r *models.EvalResult) {
+var logKafkaAsyncRecordToDatadog = func(r models.EvalResult) {
 	if config.Global.StatsdClient == nil {
 		return
 	}
@@ -131,61 +143,4 @@ var logKafkaAsyncRecordToDatadog = func(r *models.EvalResult) {
 		},
 		float64(1),
 	)
-}
-
-type kafkaEvalResult struct {
-	*models.EvalResult
-
-	encrypted bool
-	encoded   []byte
-	err       error
-}
-
-func (r *kafkaEvalResult) ensureEncoded() {
-	if r.encoded == nil && r.err == nil {
-		payload, err := r.EvalResult.MarshalBinary()
-		if err != nil {
-			r.err = err
-			return
-		}
-		kmf := &kafkaMessageFrame{
-			Payload:   string(payload),
-			Encrypted: r.encrypted,
-		}
-		r.encoded, r.err = kmf.encode(config.Config.RecorderKafkaEncryptionKey)
-	}
-}
-
-func (r *kafkaEvalResult) Encode() ([]byte, error) {
-	r.ensureEncoded()
-	return r.encoded, r.err
-}
-
-func (r *kafkaEvalResult) Length() int {
-	r.ensureEncoded()
-	return len(r.encoded)
-}
-
-// Key generates the partition key
-func (r *kafkaEvalResult) Key() string {
-	if r.EvalResult == nil || r.EvalContext == nil {
-		return ""
-	}
-	return util.SafeString(r.EvalContext.EntityID)
-}
-
-type kafkaMessageFrame struct {
-	Payload   string `json:"payload"`
-	Encrypted bool   `json:"encrypted"`
-}
-
-func (kmf *kafkaMessageFrame) encode(k string) ([]byte, error) {
-	if !kmf.Encrypted {
-		return json.MarshalIndent(kmf, "", "  ")
-	}
-
-	key := [simplebox.KeySize]byte{}
-	copy(key[:], k)
-	kmf.Payload = base64.StdEncoding.EncodeToString(simplebox.NewFromSecretKey(&key).Encrypt([]byte(kmf.Payload)))
-	return json.MarshalIndent(kmf, "", "  ")
 }

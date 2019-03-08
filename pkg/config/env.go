@@ -79,6 +79,23 @@ var Config = struct {
 	// RecorderType - the pipeline to log data records, e.g. Kafka
 	RecorderType string `env:"FLAGR_RECORDER_TYPE" envDefault:"kafka"`
 
+	/**
+	RecorderFrameOutputMode - indicates which data record frame output mode should we use.
+	Possible values: payload_string, payload_raw_json
+
+	* payload_string mode:
+		it respects the encryption settings, and it will stringify the payload to unify
+		the type of the output for both plaintext and encrypted payload.
+
+		{"payload":"{\"evalContext\":{\"entityID\":\"123\"},\"flagID\":1,\"flagKey\":null,\"flagSnapshotID\":1,\"segmentID\":1,\"timestamp\":null,\"variantAttachment\":null,\"variantID\":1,\"variantKey\":\"control\"}","encrypted": false}
+
+	* payload_raw_json mode:
+		it ignores the encryption settings.
+
+		{"payload":{"evalContext":{"entityID":"123"},"flagID":1,"flagKey":null,"flagSnapshotID":1,"segmentID":1,"timestamp":null,"variantAttachment":null,"variantID":1,"variantKey":"control"}}
+	*/
+	RecorderFrameOutputMode string `env:"FLAGR_RECORDER_FRAME_OUTPUT_MODE" envDefault:"payload_string"`
+
 	// Kafka related configurations for data records logging (Flagr Metrics)
 	RecorderKafkaVersion        string        `env:"FLAGR_RECORDER_KAFKA_VERSION" envDefault:"0.8.2.0"`
 	RecorderKafkaBrokers        string        `env:"FLAGR_RECORDER_KAFKA_BROKERS" envDefault:":9092"`

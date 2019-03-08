@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"encoding/json"
 
 	"cloud.google.com/go/pubsub"
 	"github.com/checkr/flagr/pkg/config"
@@ -14,6 +13,7 @@ import (
 type pubsubRecorder struct {
 	producer *pubsub.Client
 	topic    *pubsub.Topic
+	options  DataRecordFrameOptions
 }
 
 var (
@@ -36,33 +36,29 @@ var NewPubsubRecorder = func() DataRecorder {
 	return &pubsubRecorder{
 		producer: client,
 		topic:    client.Topic(config.Config.RecorderPubsubTopicName),
+		options: DataRecordFrameOptions{
+			Encrypted:       false, // not implemented yet
+			FrameOutputMode: config.Config.RecorderFrameOutputMode,
+		},
 	}
 }
 
-func (p *pubsubRecorder) AsyncRecord(r *models.EvalResult) {
-	pr := &pubsubEvalResult{
-		EvalResult: r,
+func (p *pubsubRecorder) NewDataRecordFrame(r models.EvalResult) DataRecordFrame {
+	return DataRecordFrame{
+		evalResult: r,
+		options:    p.options,
 	}
+}
 
-	payload, err := pr.Payload()
+func (p *pubsubRecorder) AsyncRecord(r models.EvalResult) {
+	frame := p.NewDataRecordFrame(r)
+	output, err := frame.Output()
 	if err != nil {
-		logrus.WithField("pubsub_error", err).Error("error marshaling payload")
+		logrus.WithField("err", err).Error("failed to generate data record frame for pubsub recorder")
 		return
 	}
-
-	messageFrame := pubsubMessageFrame{
-		Payload:   string(payload),
-		Encrypted: false,
-	}
-
-	message, err := messageFrame.encode()
-	if err != nil {
-		logrus.WithField("pubsub_error", err).Error("error marshaling message frame")
-		return
-	}
-
 	ctx := context.Background()
-	res := p.topic.Publish(ctx, &pubsub.Message{Data: message})
+	res := p.topic.Publish(ctx, &pubsub.Message{Data: output})
 	if config.Config.RecorderPubsubVerbose {
 		go func() {
 			ctx, cancel := context.WithTimeout(ctx, config.Config.RecorderPubsubVerboseCancelTimeout)
@@ -73,22 +69,4 @@ func (p *pubsubRecorder) AsyncRecord(r *models.EvalResult) {
 			}
 		}()
 	}
-}
-
-type pubsubEvalResult struct {
-	*models.EvalResult
-}
-
-type pubsubMessageFrame struct {
-	Payload   string `json:"payload"`
-	Encrypted bool   `json:"encrypted"`
-}
-
-func (pmf *pubsubMessageFrame) encode() ([]byte, error) {
-	return json.MarshalIndent(pmf, "", "  ")
-}
-
-// Payload marshals the EvalResult
-func (r *pubsubEvalResult) Payload() ([]byte, error) {
-	return r.EvalResult.MarshalBinary()
 }

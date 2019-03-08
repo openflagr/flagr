@@ -6,65 +6,13 @@ import (
 
 	"cloud.google.com/go/pubsub"
 	"cloud.google.com/go/pubsub/pstest"
-	"google.golang.org/api/option"
-	"google.golang.org/grpc"
-
 	"github.com/checkr/flagr/pkg/util"
 	"github.com/checkr/flagr/swagger_gen/models"
 	"github.com/prashantv/gostub"
-
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/api/option"
+	"google.golang.org/grpc"
 )
-
-func TestPubsubMessageFrame(t *testing.T) {
-	t.Run("happy code path - encrypted", func(t *testing.T) {
-		pmf := pubsubMessageFrame{
-			Payload:   "123",
-			Encrypted: true,
-		}
-		encoded, err := pmf.encode()
-		assert.NoError(t, err)
-		assert.NotEmpty(t, encoded)
-	})
-
-	t.Run("happy code path - not encrypted", func(t *testing.T) {
-		pmf := pubsubMessageFrame{
-			Payload:   "456",
-			Encrypted: false,
-		}
-		encoded, err := pmf.encode()
-		assert.NoError(t, err)
-		assert.NotEmpty(t, encoded)
-	})
-}
-
-func TestPubsubEvalResult(t *testing.T) {
-	t.Run("happy code path", func(t *testing.T) {
-		r := &pubsubEvalResult{
-			EvalResult: &models.EvalResult{
-				EvalContext: &models.EvalContext{
-					EntityID: "d08042018",
-				},
-				FlagID:         util.Int64Ptr(int64(1)),
-				FlagKey:        util.StringPtr("random_flag_key"),
-				FlagSnapshotID: 1,
-				SegmentID:      util.Int64Ptr(int64(1)),
-				VariantID:      util.Int64Ptr(int64(1)),
-				VariantKey:     util.StringPtr("control"),
-			},
-		}
-
-		p, err := r.Payload()
-		assert.NoError(t, err)
-		assert.NotEmpty(t, p)
-		assert.Regexp(t, "d08042018", string(p))
-	})
-
-	t.Run("empty EvalResult", func(t *testing.T) {
-		r := &pubsubEvalResult{}
-		assert.Zero(t, r.EvalResult)
-	})
-}
 
 func TestNewPubsubRecorder(t *testing.T) {
 	t.Run("no panics", func(t *testing.T) {
@@ -93,7 +41,7 @@ func TestPubsubAsyncRecord(t *testing.T) {
 			}
 
 			pr.AsyncRecord(
-				&models.EvalResult{
+				models.EvalResult{
 					EvalContext: &models.EvalContext{
 						EntityID: "d08042018",
 					},
