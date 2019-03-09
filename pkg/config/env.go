@@ -30,6 +30,11 @@ var Config = struct {
 	EvalCacheRefreshTimeout time.Duration `env:"FLAGR_EVALCACHE_REFRESHTIMEOUT" envDefault:"59s"`
 	// EvalCacheRefreshInterval - time interval of getting the flags data from DB into the in-memory evaluation cache
 	EvalCacheRefreshInterval time.Duration `env:"FLAGR_EVALCACHE_REFRESHINTERVAL" envDefault:"3s"`
+	// EvalEnableDebug - controls if we want to return evaluation debugging information back to the api requests
+	// Note that this is a global switch:
+	//     if it's disabled, no evaluation debug info will be returned.
+	//     if it's enabled, it respects evaluation request's enableDebug field
+	EvalDebugEnabled bool `env:"FLAGR_EVAL_DEBUG_ENABLED" envDefault:"true"`
 
 	// DBDriver - Flagr supports sqlite3, mysql, postgres
 	DBDriver string `env:"FLAGR_DB_DBDRIVER" envDefault:"sqlite3"`
