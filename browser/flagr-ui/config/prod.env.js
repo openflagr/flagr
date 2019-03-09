@@ -1,6 +1,6 @@
 module.exports = {
   NODE_ENV: '"production"',
-  API_URL: '"/api/v1"',
+  API_URL: '"api/v1"',
 
   // ',' separated string
   // For example
