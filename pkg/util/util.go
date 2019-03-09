@@ -59,9 +59,14 @@ func Round(f float64) int {
 	return int(f + math.Copysign(0.5, f))
 }
 
-// TimeNow follows RFC3339 time format
+// TimeNow prints TimeString with time.Now()
 func TimeNow() string {
-	return time.Now().UTC().Format(time.RFC3339)
+	return TimeString(time.Now())
+}
+
+// TimeString follows RFC3339 time format
+func TimeString(t time.Time) string {
+	return t.UTC().Format(time.RFC3339)
 }
 
 // Float32Ptr ...

@@ -22,15 +22,18 @@ type EvalCache struct {
 
 	refreshTimeout  time.Duration
 	refreshInterval time.Duration
+
+	flagRealtimeRepo *entity.FlagRealtimeRepo
 }
 
 // GetEvalCache gets the EvalCache
 var GetEvalCache = func() *EvalCache {
 	singletonEvalCacheOnce.Do(func() {
 		ec := &EvalCache{
-			mapCache:        make(map[string]*entity.Flag),
-			refreshTimeout:  config.Config.EvalCacheRefreshTimeout,
-			refreshInterval: config.Config.EvalCacheRefreshInterval,
+			mapCache:         make(map[string]*entity.Flag),
+			refreshTimeout:   config.Config.EvalCacheRefreshTimeout,
+			refreshInterval:  config.Config.EvalCacheRefreshInterval,
+			flagRealtimeRepo: entity.NewFlagRealtimeRepo(getDB(), config.Config.EvalFlagRealtimeSyncInterval),
 		}
 		singletonEvalCache = ec
 	})
@@ -51,6 +54,7 @@ func (ec *EvalCache) Start() {
 			}
 		}
 	}()
+	go ec.flagRealtimeRepo.Start()
 }
 
 // GetByFlagKeyOrID gets the flag by Key or ID

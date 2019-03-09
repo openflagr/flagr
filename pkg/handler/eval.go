@@ -121,6 +121,10 @@ var evalFlag = func(evalContext models.EvalContext) *models.EvalResult {
 		return BlankResult(emptyFlag, evalContext, fmt.Sprintf("flagID %v not found or deleted", flagID))
 	}
 
+	if cache.flagRealtimeRepo != nil {
+		go cache.flagRealtimeRepo.Update(entity.FlagRealtime{FlagID: f.ID, LastEvalAt: time.Now()})
+	}
+
 	if !f.Enabled {
 		return BlankResult(f, evalContext, fmt.Sprintf("flagID %v is not enabled", f.ID))
 	}

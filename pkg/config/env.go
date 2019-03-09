@@ -30,6 +30,9 @@ var Config = struct {
 	EvalCacheRefreshTimeout time.Duration `env:"FLAGR_EVALCACHE_REFRESHTIMEOUT" envDefault:"59s"`
 	// EvalCacheRefreshInterval - time interval of getting the flags data from DB into the in-memory evaluation cache
 	EvalCacheRefreshInterval time.Duration `env:"FLAGR_EVALCACHE_REFRESHINTERVAL" envDefault:"3s"`
+	// EvalFlagRealtimeSyncInterval - time interval of saving to flag_realtimes table
+	// So worst case, DB will have the delay of EvalFlagRealtimeSyncInterval
+	EvalFlagRealtimeSyncInterval time.Duration `env:"FLAGR_EVAL_FLAG_REALTIME_SYNC_INTERVAL" envDefault:"30s"`
 
 	// DBDriver - Flagr supports sqlite3, mysql, postgres
 	DBDriver string `env:"FLAGR_DB_DBDRIVER" envDefault:"sqlite3"`

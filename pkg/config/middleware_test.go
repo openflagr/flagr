@@ -5,11 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"testing"
 
-	"github.com/DataDog/datadog-go/statsd"
-	"github.com/bouk/monkey"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -291,43 +288,5 @@ func TestAuthMiddlewareWithUnauthorized(t *testing.T) {
 				assert.Equal(t, http.StatusOK, res.Code)
 			})
 		}
-	})
-}
-
-func TestStatsMiddleware(t *testing.T) {
-	h := &okHandler{}
-
-	t.Run("it will setup statsd if statsd is enabled", func(t *testing.T) {
-		Config.StatsdEnabled = true
-		defer func() { Config.StatsdEnabled = false }()
-		hh := SetupGlobalMiddleware(h)
-
-		res := httptest.NewRecorder()
-		res.Body = new(bytes.Buffer)
-		req, _ := http.NewRequest("GET", "http://localhost:18000/api/v1/flags", nil)
-
-		incrCalled := false
-		timingCalled := false
-		defer monkey.PatchInstanceMethod(
-			reflect.TypeOf(Global.StatsdClient),
-			"Incr",
-			func(_ *statsd.Client, _ string, _ []string, _ float64) error {
-				incrCalled = true
-				return nil
-			},
-		).Unpatch()
-		defer monkey.PatchInstanceMethod(
-			reflect.TypeOf(Global.StatsdClient),
-			"TimeInMilliseconds",
-			func(_ *statsd.Client, _ string, _ float64, _ []string, _ float64) error {
-				timingCalled = true
-				return nil
-			},
-		).Unpatch()
-
-		hh.ServeHTTP(res, req)
-		assert.Equal(t, http.StatusOK, res.Code)
-		assert.True(t, incrCalled)
-		assert.True(t, timingCalled)
 	})
 }
