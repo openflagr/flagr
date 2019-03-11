@@ -112,7 +112,7 @@ func BlankResult(f *entity.Flag, evalContext models.EvalContext, msg string) *mo
 		//FlagSnapshotID: int64(flagSnapshotID),
 		//SegmentID:      nil,
 		//VariantID:      nil,
-		Timestamp:      util.StringPtr(util.TimeNow()),
+		//Timestamp:      util.StringPtr(util.TimeNow()),
 	}
 }
 
@@ -169,8 +169,8 @@ var evalFlag = func(evalContext models.EvalContext) *models.EvalResult {
 	//evalResult.VariantID = vID
 	v := f.FlagEvaluation.VariantsMap[util.SafeUint(vID)]
 	if v != nil {
-		evalResult.VariantAttachment = v.Attachment
-		evalResult.VariantKey = util.StringPtr(v.Key)
+		evalResult.Payload = v.Attachment
+		evalResult.FlagValue = util.StringPtr(v.Key)
 	}
 
 	logEvalResult(evalResult, f.DataRecordsEnabled)
@@ -203,7 +203,7 @@ var logEvalResultToDatadog = func(r *models.EvalResult) {
 			//fmt.Sprintf("EntityType:%s", util.SafeStringWithDefault(r.EvalContext.EntityType, "null")),
 			//fmt.Sprintf("FlagID:%d", util.SafeUint(r.FlagID)),
 			//fmt.Sprintf("VariantID:%d", util.SafeUint(r.VariantID)),
-			fmt.Sprintf("VariantKey:%s", util.SafeStringWithDefault(r.VariantKey, "null")),
+			fmt.Sprintf("VariantKey:%s", util.SafeStringWithDefault(r.FlagValue, "null")),
 		},
 		float64(1),
 	)
@@ -217,7 +217,7 @@ var logEvalResultToPrometheus = func(r *models.EvalResult) {
 		//util.SafeStringWithDefault(r.EvalContext.EntityType, "null"),
 		//util.SafeStringWithDefault(r.FlagID, "null"),
 		//util.SafeStringWithDefault(r.VariantID, "null"),
-		util.SafeStringWithDefault(r.VariantKey, "null"),
+		util.SafeStringWithDefault(r.FlagValue, "null"),
 	).Inc()
 
 }

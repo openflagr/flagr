@@ -1324,24 +1324,19 @@ func init() {
       "type": "object",
       "required": [
         "flagKey",
-        "variantKey",
-        "variantAttachment",
-        "timestamp"
+        "flagValue",
+        "payload"
       ],
       "properties": {
         "flagKey": {
           "type": "string"
         },
-        "timestamp": {
+        "flagValue": {
           "type": "string",
           "minLength": 1
         },
-        "variantAttachment": {
+        "payload": {
           "type": "object"
-        },
-        "variantKey": {
-          "type": "string",
-          "minLength": 1
         }
       }
     },
@@ -3017,24 +3012,19 @@ func init() {
       "type": "object",
       "required": [
         "flagKey",
-        "variantKey",
-        "variantAttachment",
-        "timestamp"
+        "flagValue",
+        "payload"
       ],
       "properties": {
         "flagKey": {
           "type": "string"
         },
-        "timestamp": {
+        "flagValue": {
           "type": "string",
           "minLength": 1
         },
-        "variantAttachment": {
+        "payload": {
           "type": "object"
-        },
-        "variantKey": {
-          "type": "string",
-          "minLength": 1
         }
       }
     },

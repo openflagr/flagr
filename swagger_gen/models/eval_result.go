@@ -21,19 +21,14 @@ type EvalResult struct {
 	// Required: true
 	FlagKey *string `json:"flagKey"`
 
-	// timestamp
+	// flag value
 	// Required: true
 	// Min Length: 1
-	Timestamp *string `json:"timestamp"`
+	FlagValue *string `json:"flagValue"`
 
-	// variant attachment
+	// payload
 	// Required: true
-	VariantAttachment interface{} `json:"variantAttachment"`
-
-	// variant key
-	// Required: true
-	// Min Length: 1
-	VariantKey *string `json:"variantKey"`
+	Payload interface{} `json:"payload"`
 }
 
 // Validate validates this eval result
@@ -44,15 +39,11 @@ func (m *EvalResult) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
-	if err := m.validateTimestamp(formats); err != nil {
+	if err := m.validateFlagValue(formats); err != nil {
 		res = append(res, err)
 	}
 
-	if err := m.validateVariantAttachment(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateVariantKey(formats); err != nil {
+	if err := m.validatePayload(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -71,35 +62,22 @@ func (m *EvalResult) validateFlagKey(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *EvalResult) validateTimestamp(formats strfmt.Registry) error {
+func (m *EvalResult) validateFlagValue(formats strfmt.Registry) error {
 
-	if err := validate.Required("timestamp", "body", m.Timestamp); err != nil {
+	if err := validate.Required("flagValue", "body", m.FlagValue); err != nil {
 		return err
 	}
 
-	if err := validate.MinLength("timestamp", "body", string(*m.Timestamp), 1); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *EvalResult) validateVariantAttachment(formats strfmt.Registry) error {
-
-	if err := validate.Required("variantAttachment", "body", m.VariantAttachment); err != nil {
+	if err := validate.MinLength("flagValue", "body", string(*m.FlagValue), 1); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (m *EvalResult) validateVariantKey(formats strfmt.Registry) error {
+func (m *EvalResult) validatePayload(formats strfmt.Registry) error {
 
-	if err := validate.Required("variantKey", "body", m.VariantKey); err != nil {
-		return err
-	}
-
-	if err := validate.MinLength("variantKey", "body", string(*m.VariantKey), 1); err != nil {
+	if err := validate.Required("payload", "body", m.Payload); err != nil {
 		return err
 	}
 

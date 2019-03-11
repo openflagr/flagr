@@ -413,10 +413,10 @@ definitions:
       - flagKey
 #      - segmentID
 #      - variantID
-      - variantKey
-      - variantAttachment
+      - flagValue
+      - payload
 #      - evalContext
-      - timestamp
+#      - timestamp
     properties:
 #      flagID:
 #        type: integer
@@ -435,16 +435,16 @@ definitions:
 #        type: integer
 #        format: int64
 #        minimum: 1
-      variantKey:
+      flagValue:
         type: string
         minLength: 1
-      variantAttachment:
+      payload:
         type: object
 #      evalContext:
 #        $ref: "#/definitions/evalContext"
-      timestamp:
-        type: string
-        minLength: 1
+#      timestamp:
+#        type: string
+#        minLength: 1
 #      evalDebugLog:
 #        $ref: "#/definitions/evalDebugLog"
   evalDebugLog:
