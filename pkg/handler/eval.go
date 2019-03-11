@@ -144,7 +144,7 @@ var evalFlag = func(evalContext models.EvalContext) *models.EvalResult {
 	for _, segment := range f.Segments {
 		sID = util.Int64Ptr(int64(segment.ID))
 		variantID, log, evalNextSegment := evalSegment(f.ID, evalContext, segment)
-		if evalContext.EnableDebug {
+		if config.Config.EvalDebugEnabled && evalContext.EnableDebug {
 			logs = append(logs, log)
 		}
 		if variantID != nil {
