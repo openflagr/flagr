@@ -14,7 +14,8 @@ var (
 
 // DataRecorder can record and produce the evaluation result
 type DataRecorder interface {
-	AsyncRecord(*models.EvalResult)
+	AsyncRecord(models.EvalResult)
+	NewDataRecordFrame(models.EvalResult) DataRecordFrame
 }
 
 // GetDataRecorder gets the data recorder

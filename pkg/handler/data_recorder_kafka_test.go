@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/Shopify/sarama"
-	"github.com/checkr/flagr/pkg/util"
 	"github.com/checkr/flagr/swagger_gen/models"
 	"github.com/prashantv/gostub"
 	"github.com/stretchr/testify/assert"
@@ -21,28 +20,6 @@ func (m *mockAsyncProducer) Close() error                              { return 
 func (m *mockAsyncProducer) Input() chan<- *sarama.ProducerMessage     { return m.inputCh }
 func (m *mockAsyncProducer) Successes() <-chan *sarama.ProducerMessage { return m.successCh }
 func (m *mockAsyncProducer) Errors() <-chan *sarama.ProducerError      { return m.errorCh }
-
-func TestKafkaMessageFrame(t *testing.T) {
-	t.Run("happy code path - encrypted", func(t *testing.T) {
-		kmf := kafkaMessageFrame{
-			Payload:   "123",
-			Encrypted: true,
-		}
-		encoded, err := kmf.encode("o7hAxo52oOl7cmyq/X0UkJ3VMmIo5aAv")
-		assert.NoError(t, err)
-		assert.NotEmpty(t, encoded)
-	})
-
-	t.Run("happy code path - not encrypted", func(t *testing.T) {
-		kmf := kafkaMessageFrame{
-			Payload:   "456",
-			Encrypted: false,
-		}
-		encoded, err := kmf.encode("o7hAxo52oOl7cmyq/X0UkJ3VMmIo5aAv")
-		assert.NoError(t, err)
-		assert.NotEmpty(t, encoded)
-	})
-}
 
 func TestNewKafkaRecorder(t *testing.T) {
 	t.Run("no panics", func(t *testing.T) {
@@ -100,59 +77,15 @@ func TestCreateTLSConfiguration(t *testing.T) {
 	})
 }
 
-func TestKafkaEvalResult(t *testing.T) {
-	t.Run("happy code path", func(t *testing.T) {
-		r := &kafkaEvalResult{
-			EvalResult: &models.EvalResult{
-				EvalContext: &models.EvalContext{
-					EntityID: "123",
-				},
-				FlagID:         util.Int64Ptr(int64(1)),
-				FlagSnapshotID: 1,
-				SegmentID:      util.Int64Ptr(int64(1)),
-				VariantID:      util.Int64Ptr(int64(1)),
-				VariantKey:     util.StringPtr("control"),
-			},
-			encrypted: false,
-			encoded:   nil,
-			err:       nil,
-		}
-
-		b, err := r.Encode()
-		assert.NoError(t, err)
-		assert.NotZero(t, len(b))
-
-		l := r.Length()
-		assert.NotZero(t, l)
-
-		k := r.Key()
-		assert.Equal(t, k, "123")
-	})
-
-	t.Run("empty EvalResult", func(t *testing.T) {
-		r := &kafkaEvalResult{}
-		assert.Zero(t, r.Key())
-	})
-}
-
 func TestAsyncRecord(t *testing.T) {
-	t.Run("not enabled", func(t *testing.T) {
-		kr := &kafkaRecorder{
-			topic:   "test-topic",
-			enabled: false,
-		}
-		kr.AsyncRecord(nil)
-	})
-
-	t.Run("enabled", func(t *testing.T) {
+	t.Run("happy code path", func(t *testing.T) {
 		p := &mockAsyncProducer{inputCh: make(chan *sarama.ProducerMessage)}
 		kr := &kafkaRecorder{
 			producer: p,
 			topic:    "test-topic",
-			enabled:  true,
 		}
 
-		go kr.AsyncRecord(&models.EvalResult{})
+		go kr.AsyncRecord(models.EvalResult{})
 		r := <-p.inputCh
 		assert.NotNil(t, r)
 	})
