@@ -408,15 +408,6 @@ definitions:
         type: string
   evalResult:
     type: object
-    required:
-      - flagID
-      - flagKey
-      - segmentID
-      - variantID
-      - variantKey
-      - variantAttachment
-      - evalContext
-      - timestamp
     properties:
       flagID:
         type: integer
