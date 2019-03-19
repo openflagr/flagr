@@ -1322,16 +1322,6 @@ func init() {
     },
     "evalResult": {
       "type": "object",
-      "required": [
-        "flagID",
-        "flagKey",
-        "segmentID",
-        "variantID",
-        "variantKey",
-        "variantAttachment",
-        "evalContext",
-        "timestamp"
-      ],
       "properties": {
         "evalContext": {
           "$ref": "#/definitions/evalContext"
@@ -3070,16 +3060,6 @@ func init() {
     },
     "evalResult": {
       "type": "object",
-      "required": [
-        "flagID",
-        "flagKey",
-        "segmentID",
-        "variantID",
-        "variantKey",
-        "variantAttachment",
-        "evalContext",
-        "timestamp"
-      ],
       "properties": {
         "evalContext": {
           "$ref": "#/definitions/evalContext"

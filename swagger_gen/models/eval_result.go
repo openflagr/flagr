@@ -18,47 +18,39 @@ import (
 type EvalResult struct {
 
 	// eval context
-	// Required: true
-	EvalContext *EvalContext `json:"evalContext"`
+	EvalContext *EvalContext `json:"evalContext,omitempty"`
 
 	// eval debug log
 	EvalDebugLog *EvalDebugLog `json:"evalDebugLog,omitempty"`
 
 	// flag ID
-	// Required: true
 	// Minimum: 1
-	FlagID *int64 `json:"flagID"`
+	FlagID int64 `json:"flagID,omitempty"`
 
 	// flag key
-	// Required: true
-	FlagKey *string `json:"flagKey"`
+	FlagKey string `json:"flagKey,omitempty"`
 
 	// flag snapshot ID
 	FlagSnapshotID int64 `json:"flagSnapshotID,omitempty"`
 
 	// segment ID
-	// Required: true
 	// Minimum: 1
-	SegmentID *int64 `json:"segmentID"`
+	SegmentID int64 `json:"segmentID,omitempty"`
 
 	// timestamp
-	// Required: true
 	// Min Length: 1
-	Timestamp *string `json:"timestamp"`
+	Timestamp string `json:"timestamp,omitempty"`
 
 	// variant attachment
-	// Required: true
-	VariantAttachment interface{} `json:"variantAttachment"`
+	VariantAttachment interface{} `json:"variantAttachment,omitempty"`
 
 	// variant ID
-	// Required: true
 	// Minimum: 1
-	VariantID *int64 `json:"variantID"`
+	VariantID int64 `json:"variantID,omitempty"`
 
 	// variant key
-	// Required: true
 	// Min Length: 1
-	VariantKey *string `json:"variantKey"`
+	VariantKey string `json:"variantKey,omitempty"`
 }
 
 // Validate validates this eval result
@@ -77,19 +69,11 @@ func (m *EvalResult) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
-	if err := m.validateFlagKey(formats); err != nil {
-		res = append(res, err)
-	}
-
 	if err := m.validateSegmentID(formats); err != nil {
 		res = append(res, err)
 	}
 
 	if err := m.validateTimestamp(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateVariantAttachment(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -109,8 +93,8 @@ func (m *EvalResult) Validate(formats strfmt.Registry) error {
 
 func (m *EvalResult) validateEvalContext(formats strfmt.Registry) error {
 
-	if err := validate.Required("evalContext", "body", m.EvalContext); err != nil {
-		return err
+	if swag.IsZero(m.EvalContext) { // not required
+		return nil
 	}
 
 	if m.EvalContext != nil {
@@ -145,20 +129,11 @@ func (m *EvalResult) validateEvalDebugLog(formats strfmt.Registry) error {
 
 func (m *EvalResult) validateFlagID(formats strfmt.Registry) error {
 
-	if err := validate.Required("flagID", "body", m.FlagID); err != nil {
-		return err
+	if swag.IsZero(m.FlagID) { // not required
+		return nil
 	}
 
-	if err := validate.MinimumInt("flagID", "body", int64(*m.FlagID), 1, false); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *EvalResult) validateFlagKey(formats strfmt.Registry) error {
-
-	if err := validate.Required("flagKey", "body", m.FlagKey); err != nil {
+	if err := validate.MinimumInt("flagID", "body", int64(m.FlagID), 1, false); err != nil {
 		return err
 	}
 
@@ -167,11 +142,11 @@ func (m *EvalResult) validateFlagKey(formats strfmt.Registry) error {
 
 func (m *EvalResult) validateSegmentID(formats strfmt.Registry) error {
 
-	if err := validate.Required("segmentID", "body", m.SegmentID); err != nil {
-		return err
+	if swag.IsZero(m.SegmentID) { // not required
+		return nil
 	}
 
-	if err := validate.MinimumInt("segmentID", "body", int64(*m.SegmentID), 1, false); err != nil {
+	if err := validate.MinimumInt("segmentID", "body", int64(m.SegmentID), 1, false); err != nil {
 		return err
 	}
 
@@ -180,20 +155,11 @@ func (m *EvalResult) validateSegmentID(formats strfmt.Registry) error {
 
 func (m *EvalResult) validateTimestamp(formats strfmt.Registry) error {
 
-	if err := validate.Required("timestamp", "body", m.Timestamp); err != nil {
-		return err
+	if swag.IsZero(m.Timestamp) { // not required
+		return nil
 	}
 
-	if err := validate.MinLength("timestamp", "body", string(*m.Timestamp), 1); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *EvalResult) validateVariantAttachment(formats strfmt.Registry) error {
-
-	if err := validate.Required("variantAttachment", "body", m.VariantAttachment); err != nil {
+	if err := validate.MinLength("timestamp", "body", string(m.Timestamp), 1); err != nil {
 		return err
 	}
 
@@ -202,11 +168,11 @@ func (m *EvalResult) validateVariantAttachment(formats strfmt.Registry) error {
 
 func (m *EvalResult) validateVariantID(formats strfmt.Registry) error {
 
-	if err := validate.Required("variantID", "body", m.VariantID); err != nil {
-		return err
+	if swag.IsZero(m.VariantID) { // not required
+		return nil
 	}
 
-	if err := validate.MinimumInt("variantID", "body", int64(*m.VariantID), 1, false); err != nil {
+	if err := validate.MinimumInt("variantID", "body", int64(m.VariantID), 1, false); err != nil {
 		return err
 	}
 
@@ -215,11 +181,11 @@ func (m *EvalResult) validateVariantID(formats strfmt.Registry) error {
 
 func (m *EvalResult) validateVariantKey(formats strfmt.Registry) error {
 
-	if err := validate.Required("variantKey", "body", m.VariantKey); err != nil {
-		return err
+	if swag.IsZero(m.VariantKey) { // not required
+		return nil
 	}
 
-	if err := validate.MinLength("variantKey", "body", string(*m.VariantKey), 1); err != nil {
+	if err := validate.MinLength("variantKey", "body", string(m.VariantKey), 1); err != nil {
 		return err
 	}
 
