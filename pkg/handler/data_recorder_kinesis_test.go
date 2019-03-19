@@ -3,8 +3,7 @@ package handler
 import (
 	"testing"
 
-	"github.com/a8m/kinesis-producer"
-	"github.com/checkr/flagr/pkg/util"
+	producer "github.com/a8m/kinesis-producer"
 	"github.com/checkr/flagr/swagger_gen/models"
 	"github.com/stretchr/testify/assert"
 )
@@ -37,11 +36,11 @@ func TestKinesisAsyncRecord(t *testing.T) {
 					EvalContext: &models.EvalContext{
 						EntityID: "d08042018",
 					},
-					FlagID:         util.Int64Ptr(int64(1)),
+					FlagID:         1,
 					FlagSnapshotID: 1,
-					SegmentID:      util.Int64Ptr(int64(1)),
-					VariantID:      util.Int64Ptr(int64(1)),
-					VariantKey:     util.StringPtr("control"),
+					SegmentID:      1,
+					VariantID:      1,
+					VariantKey:     "control",
 				},
 			)
 		})

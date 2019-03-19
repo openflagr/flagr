@@ -1105,20 +1105,10 @@ definitions:
         type: string
   evalResult:
     type: object
-    required:
-      - flagID
-      - flagKey
-      - segmentID
-      - variantID
-      - variantKey
-      - variantAttachment
-      - evalContext
-      - timestamp
     properties:
       flagID:
         type: integer
         format: int64
-        minimum: 1
       flagKey:
         type: string
       flagSnapshotID:
@@ -1127,21 +1117,17 @@ definitions:
       segmentID:
         type: integer
         format: int64
-        minimum: 1
       variantID:
         type: integer
         format: int64
-        minimum: 1
       variantKey:
         type: string
-        minLength: 1
       variantAttachment:
         type: object
       evalContext:
         $ref: '#/definitions/evalContext'
       timestamp:
         type: string
-        minLength: 1
       evalDebugLog:
         $ref: '#/definitions/evalDebugLog'
   evalDebugLog:

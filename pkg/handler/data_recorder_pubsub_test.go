@@ -6,7 +6,6 @@ import (
 
 	"cloud.google.com/go/pubsub"
 	"cloud.google.com/go/pubsub/pstest"
-	"github.com/checkr/flagr/pkg/util"
 	"github.com/checkr/flagr/swagger_gen/models"
 	"github.com/prashantv/gostub"
 	"github.com/stretchr/testify/assert"
@@ -45,11 +44,11 @@ func TestPubsubAsyncRecord(t *testing.T) {
 					EvalContext: &models.EvalContext{
 						EntityID: "d08042018",
 					},
-					FlagID:         util.Int64Ptr(int64(1)),
+					FlagID:         1,
 					FlagSnapshotID: 1,
-					SegmentID:      util.Int64Ptr(int64(1)),
-					VariantID:      util.Int64Ptr(int64(1)),
-					VariantKey:     util.StringPtr("control"),
+					SegmentID:      1,
+					VariantID:      1,
+					VariantKey:     "control",
 				},
 			)
 		})
