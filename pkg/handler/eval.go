@@ -98,12 +98,10 @@ func BlankResult(f *entity.Flag, evalContext models.EvalContext, msg string) *mo
 			Msg:              msg,
 			SegmentDebugLogs: nil,
 		},
-		FlagID:         util.Int64Ptr(int64(flagID)),
-		FlagKey:        util.StringPtr(flagKey),
+		FlagID:         int64(flagID),
+		FlagKey:        flagKey,
 		FlagSnapshotID: int64(flagSnapshotID),
-		SegmentID:      nil,
-		VariantID:      nil,
-		Timestamp:      util.StringPtr(util.TimeNow()),
+		Timestamp:      util.TimeNow(),
 	}
 }
 
@@ -138,17 +136,17 @@ var evalFlag = func(evalContext models.EvalContext) *models.EvalResult {
 	}
 
 	logs := []*models.SegmentDebugLog{}
-	var vID *int64
-	var sID *int64
+	var vID int64
+	var sID int64
 
 	for _, segment := range f.Segments {
-		sID = util.Int64Ptr(int64(segment.ID))
+		sID = int64(segment.ID)
 		variantID, log, evalNextSegment := evalSegment(f.ID, evalContext, segment)
 		if config.Config.EvalDebugEnabled && evalContext.EnableDebug {
 			logs = append(logs, log)
 		}
 		if variantID != nil {
-			vID = util.Int64Ptr(int64(*variantID))
+			vID = int64(*variantID)
 		}
 		if !evalNextSegment {
 			break
@@ -161,7 +159,7 @@ var evalFlag = func(evalContext models.EvalContext) *models.EvalResult {
 	v := f.FlagEvaluation.VariantsMap[util.SafeUint(vID)]
 	if v != nil {
 		evalResult.VariantAttachment = v.Attachment
-		evalResult.VariantKey = util.StringPtr(v.Key)
+		evalResult.VariantKey = v.Key
 	}
 
 	logEvalResult(evalResult, f.DataRecordsEnabled)

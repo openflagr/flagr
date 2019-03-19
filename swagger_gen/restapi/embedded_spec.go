@@ -1322,16 +1322,6 @@ func init() {
     },
     "evalResult": {
       "type": "object",
-      "required": [
-        "flagID",
-        "flagKey",
-        "segmentID",
-        "variantID",
-        "variantKey",
-        "variantAttachment",
-        "evalContext",
-        "timestamp"
-      ],
       "properties": {
         "evalContext": {
           "$ref": "#/definitions/evalContext"
@@ -1341,8 +1331,7 @@ func init() {
         },
         "flagID": {
           "type": "integer",
-          "format": "int64",
-          "minimum": 1
+          "format": "int64"
         },
         "flagKey": {
           "type": "string"
@@ -1353,24 +1342,20 @@ func init() {
         },
         "segmentID": {
           "type": "integer",
-          "format": "int64",
-          "minimum": 1
+          "format": "int64"
         },
         "timestamp": {
-          "type": "string",
-          "minLength": 1
+          "type": "string"
         },
         "variantAttachment": {
           "type": "object"
         },
         "variantID": {
           "type": "integer",
-          "format": "int64",
-          "minimum": 1
+          "format": "int64"
         },
         "variantKey": {
-          "type": "string",
-          "minLength": 1
+          "type": "string"
         }
       }
     },
@@ -3070,16 +3055,6 @@ func init() {
     },
     "evalResult": {
       "type": "object",
-      "required": [
-        "flagID",
-        "flagKey",
-        "segmentID",
-        "variantID",
-        "variantKey",
-        "variantAttachment",
-        "evalContext",
-        "timestamp"
-      ],
       "properties": {
         "evalContext": {
           "$ref": "#/definitions/evalContext"
@@ -3089,8 +3064,7 @@ func init() {
         },
         "flagID": {
           "type": "integer",
-          "format": "int64",
-          "minimum": 1
+          "format": "int64"
         },
         "flagKey": {
           "type": "string"
@@ -3101,24 +3075,20 @@ func init() {
         },
         "segmentID": {
           "type": "integer",
-          "format": "int64",
-          "minimum": 1
+          "format": "int64"
         },
         "timestamp": {
-          "type": "string",
-          "minLength": 1
+          "type": "string"
         },
         "variantAttachment": {
           "type": "object"
         },
         "variantID": {
           "type": "integer",
-          "format": "int64",
-          "minimum": 1
+          "format": "int64"
         },
         "variantKey": {
-          "type": "string",
-          "minLength": 1
+          "type": "string"
         }
       }
     },

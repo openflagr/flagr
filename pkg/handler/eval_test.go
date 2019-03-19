@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/checkr/flagr/pkg/entity"
-	"github.com/checkr/flagr/pkg/util"
 	"github.com/checkr/flagr/swagger_gen/models"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/evaluation"
 	"github.com/jinzhu/gorm"
@@ -94,7 +93,7 @@ func TestEvalFlag(t *testing.T) {
 	t.Run("test empty evalContext", func(t *testing.T) {
 		defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
 		result := evalFlag(models.EvalContext{FlagID: int64(100)})
-		assert.Nil(t, result.VariantID)
+		assert.Zero(t, result.VariantID)
 		assert.NotZero(t, result.FlagID)
 		assert.NotEmpty(t, result.EvalContext.EntityID)
 	})
@@ -194,7 +193,7 @@ func TestEvalFlag(t *testing.T) {
 			FlagID:        int64(100),
 		})
 		assert.NotNil(t, result)
-		assert.Nil(t, result.VariantID)
+		assert.Zero(t, result.VariantID)
 	})
 
 	t.Run("test no match path with multiple constraints", func(t *testing.T) {
@@ -226,7 +225,7 @@ func TestEvalFlag(t *testing.T) {
 			FlagID:        int64(100),
 		})
 		assert.NotNil(t, result)
-		assert.Nil(t, result.VariantID)
+		assert.Zero(t, result.VariantID)
 	})
 
 	t.Run("test enabled=false", func(t *testing.T) {
@@ -242,7 +241,7 @@ func TestEvalFlag(t *testing.T) {
 			FlagID:        int64(100),
 		})
 		assert.NotNil(t, result)
-		assert.Nil(t, result.VariantID)
+		assert.Zero(t, result.VariantID)
 	})
 
 	t.Run("test entityType override", func(t *testing.T) {
@@ -329,7 +328,7 @@ func TestPostEvaluationBatch(t *testing.T) {
 }
 
 func TestRateLimitPerFlagConsoleLogging(t *testing.T) {
-	r := &models.EvalResult{FlagID: util.Int64Ptr(int64(1))}
+	r := &models.EvalResult{FlagID: 1}
 	t.Run("running fast triggers rate limiting", func(t *testing.T) {
 		for i := 0; i < 100; i++ {
 			rateLimitPerFlagConsoleLogging(r)
