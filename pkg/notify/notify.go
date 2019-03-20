@@ -1,11 +1,12 @@
 package notify
 
 import (
+	"net/http"
+
 	"github.com/checkr/flagr/pkg/config"
 	"github.com/checkr/flagr/pkg/entity"
 	"github.com/jinzhu/gorm"
 	"github.com/sirupsen/logrus"
-	"net/http"
 )
 
 const contentTypeJSON = "application/json"
@@ -20,55 +21,58 @@ type Notifier interface {
 // Integration holds a notifier and a string name for that notifier
 type Integration struct {
 	notifier Notifier
-	name string
+	name     string
 }
 
-var Integrations []Integration
+var integrations []Integration
 
 // NewClient returns a new http client
 func NewClient() *http.Client {
 	return &http.Client{}
 }
 
-type RoundTripFunc func(req *http.Request) *http.Response
+type roundTripFunc func(req *http.Request) *http.Response
 
-func (f RoundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
+func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
 	return f(req), nil
 }
+
 //NewTestClient returns *http.Client with Transport replaced to avoid making real calls
-func NewTestClient(fn RoundTripFunc) *http.Client {
+func NewTestClient(fn roundTripFunc) *http.Client {
 	return &http.Client{
-		Transport: RoundTripFunc(fn),
+		Transport: roundTripFunc(fn),
 	}
 }
 
 func init() {
 	client := NewClient()
 	if config.Config.WebhookEnabled {
-		Integrations = append(Integrations, Integration{notifier: NewWebhook(client), name: "webhook"})
+		integrations = append(integrations, Integration{notifier: NewWebhook(client), name: "webhook"})
 	}
 	if config.Config.SlackWebhookEnabled {
-		Integrations = append(Integrations, Integration{notifier: NewSlack(client), name: "slack"})
+		integrations = append(integrations, Integration{notifier: NewSlack(client), name: "slack"})
 	}
 }
 
 type notify string
 
+// Notification types
 const (
 	TOGGLED notify = "TOGGLED"
-	CREATED = "CREATED"
-	UPDATED = "UPDATED"
-	DELETED = "DELETED"
+	CREATED        = "CREATED"
+	UPDATED        = "UPDATED"
+	DELETED        = "DELETED"
 )
 
 type itemType string
 
+// Thing being updated
 const (
-	FLAG itemType = "FLAG"
-	VARIANT = "VARIANT"
-	SEGMENT = "SEGMENT"
-	DISTRIBUTION = "DISTRIBUTION"
-	CONSTRAINT = "CONSTRAINT"
+	FLAG         itemType = "FLAG"
+	VARIANT               = "VARIANT"
+	SEGMENT               = "SEGMENT"
+	DISTRIBUTION          = "DISTRIBUTION"
+	CONSTRAINT            = "CONSTRAINT"
 )
 
 // All notifies all integrations, and logs an error if any fail
@@ -83,15 +87,15 @@ func All(db *gorm.DB, flagID uint, b notify, i itemType) {
 	}
 	f.Preload(db)
 
-	for _, integration := range Integrations {
+	for _, integration := range integrations {
 		err := integration.notifier.Notify(f, b, i)
 
 		if err != nil {
 			logrus.WithFields(logrus.Fields{
-				"err":            err,
-				"flagID":         f.ID,
-				"flagStatus":     f.Enabled,
-				"integration":    integration.name,
+				"err":         err,
+				"flagID":      f.ID,
+				"flagStatus":  f.Enabled,
+				"integration": integration.name,
 			}).Error("failed to notify integration")
 		}
 	}
