@@ -86,6 +86,10 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 
 	n.Use(setupRecoveryMiddleware())
 
+	if Config.WebPrefix != "" {
+		handler = http.StripPrefix(Config.WebPrefix, handler)
+	}
+
 	if Config.PProfEnabled {
 		n.UseHandler(pprof.New()(handler))
 	} else {

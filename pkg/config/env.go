@@ -167,6 +167,9 @@ var Config = struct {
 	// "HS256" and "RS256" supported
 	JWTAuthSigningMethod string `env:"FLAGR_JWT_AUTH_SIGNING_METHOD" envDefault:"HS256"`
 
-	// WebPrefix - base path for web
+	// WebPrefix - base path for web and API
+	// e.g. FLAGR_WEB_PREFIX=/foo
+	// UI path  => localhost:18000/foo"
+	// API path => localhost:18000/foo/api/v1"
 	WebPrefix string `env:"FLAGR_WEB_PREFIX" envDefault:""`
 }{}
