@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/checkr/flagr/pkg/config"
-	"github.com/checkr/flagr/pkg/entity"
 	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/checkr/flagr/pkg/config"
+	"github.com/checkr/flagr/pkg/entity"
 )
 
 // Slack implements a Notifier for Slack notifications.
@@ -27,25 +28,25 @@ func NewSlack(c *http.Client) *Slack {
 
 // slackReq is the request for sending a slack notification.
 type slackReq struct {
-	Channel     string            `json:"channel,omitempty"`
-	Username    string            `json:"username,omitempty"`
-	IconEmoji   string            `json:"icon_emoji,omitempty"`
-	IconURL     string            `json:"icon_url,omitempty"`
-	LinkNames   bool              `json:"link_names,omitempty"`
-	Blocks      []block           `json:"blocks,omitempty"`
-	Text        string			  `json:"text,omitempty"`
+	Channel   string  `json:"channel,omitempty"`
+	Username  string  `json:"username,omitempty"`
+	IconEmoji string  `json:"icon_emoji,omitempty"`
+	IconURL   string  `json:"icon_url,omitempty"`
+	LinkNames bool    `json:"link_names,omitempty"`
+	Blocks    []block `json:"blocks,omitempty"`
+	Text      string  `json:"text,omitempty"`
 }
 
 // block is used to display a richly-formatted message block.
 type block struct {
-	Type      string                `json:"type,omitempty"`
-	Text      *field                 `json:"text,omitempty"`
-	Fields    []*field               `json:"fields,omitempty"`
+	Type   string   `json:"type,omitempty"`
+	Text   *field   `json:"text,omitempty"`
+	Fields []*field `json:"fields,omitempty"`
 }
 
 type field struct {
-	Type      string                `json:"type"`
-	Text      string                `json:"text"`
+	Type string `json:"type"`
+	Text string `json:"text"`
 }
 
 // Notify implements the Notifier interface for Slack Notifications
@@ -63,7 +64,7 @@ func (n *Slack) Notify(f *entity.Flag, b notify, i itemType) error {
 		return err
 	}
 
-	req, err := http.NewRequest("POST", config.Config.SlackUrl, &buf)
+	req, err := http.NewRequest("POST", config.Config.SlackURL, &buf)
 	if err != nil {
 		return err
 	}
@@ -71,10 +72,10 @@ func (n *Slack) Notify(f *entity.Flag, b notify, i itemType) error {
 	req.Header.Set("User-Agent", userAgentHeader)
 
 	resp, err := n.client.Do(req)
-	defer resp.Body.Close()
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode >= 400 {
 		b, _ := ioutil.ReadAll(resp.Body)

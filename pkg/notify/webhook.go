@@ -4,14 +4,16 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"io/ioutil"
+	"net/http"
+
 	"github.com/checkr/flagr/pkg/config"
 	"github.com/checkr/flagr/pkg/entity"
 	"github.com/checkr/flagr/pkg/mapper/entity_restapi/e2r"
 	"github.com/checkr/flagr/swagger_gen/models"
-	"io/ioutil"
-	"net/http"
 )
 
+// Webhook is a generic webhook that sends the flag and the event details alongside each other
 type Webhook struct {
 	client *http.Client
 }
@@ -25,10 +27,10 @@ func NewWebhook(c *http.Client) *Webhook {
 
 // WebhookMessage defines the JSON object send to webhook endpoints.
 type WebhookMessage struct {
-	Action   notify `json:"action"`
-	Type     itemType `json:"type"`
-	Data *models.Flag `json:"data"`
-	Version  string `json:"version"`
+	Action  notify       `json:"action"`
+	Type    itemType     `json:"type"`
+	Data    *models.Flag `json:"data"`
+	Version string       `json:"version"`
 }
 
 // Notify implements the Notifier interface for webhooks
@@ -40,10 +42,10 @@ func (w *Webhook) Notify(f *entity.Flag, b notify, i itemType) error {
 	}
 
 	msg := &WebhookMessage{
-		Action:   b,
-		Type:     i,
-		Version:  "1",
-		Data:     model,
+		Action:  b,
+		Type:    i,
+		Version: "1",
+		Data:    model,
 	}
 
 	var buf bytes.Buffer
@@ -51,7 +53,7 @@ func (w *Webhook) Notify(f *entity.Flag, b notify, i itemType) error {
 		return err
 	}
 
-	req, err := http.NewRequest("POST", config.Config.WebhookUrl, &buf)
+	req, err := http.NewRequest("POST", config.Config.WebhookURL, &buf)
 	if err != nil {
 		return err
 	}
@@ -59,11 +61,10 @@ func (w *Webhook) Notify(f *entity.Flag, b notify, i itemType) error {
 	req.Header.Set("User-Agent", userAgentHeader)
 
 	resp, err := w.client.Do(req)
-	defer resp.Body.Close()
-
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode >= 400 {
 		b, _ := ioutil.ReadAll(resp.Body)

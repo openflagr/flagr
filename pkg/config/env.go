@@ -171,11 +171,10 @@ var Config = struct {
 	WebPrefix string `env:"FLAGR_WEB_PREFIX" envDefault:""`
 
 	// Webhooks
-	WebhookEnabled              bool  `env:"FLAGR_WEBHOOK_ENABLED" envDefault:"false"`
-	WebhookUrl                  string  `env:"FLAGR_WEBHOOK_URL" envDefault:""`
+	WebhookEnabled bool   `env:"FLAGR_WEBHOOK_ENABLED" envDefault:"false"`
+	WebhookURL     string `env:"FLAGR_WEBHOOK_URL" envDefault:""`
 	// Slack webhooks
-	SlackWebhookEnabled         bool `env:"FLAGR_SLACK_ENABLED" envDefault: "false"`
-	SlackUrl                    string `env:"FLAGR_SLACK_URL" envDefault: ""`
-	SlackChannel                string `env:"FLAGR_SLACK_CHANNEL" envDefault: ""`
-	SlackBaseUrl                string `env:"FLAGR_SLACK_BASEURL" envDefault: "http://localhost"`
+	SlackWebhookEnabled bool   `env:"FLAGR_SLACK_ENABLED" envDefault:"false"`
+	SlackURL            string `env:"FLAGR_SLACK_URL" envDefault:""`
+	SlackChannel        string `env:"FLAGR_SLACK_CHANNEL" envDefault:""`
 }{}

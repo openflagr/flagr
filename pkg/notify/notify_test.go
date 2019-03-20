@@ -2,14 +2,15 @@ package notify
 
 import (
 	"errors"
+	"testing"
+
 	"github.com/checkr/flagr/pkg/entity"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 // TestIntegration implements a Notifier for testing purposes.
 type TestIntegration struct {
-	fakeErr error
+	fakeErr   error
 	callCount int
 }
 
@@ -40,7 +41,7 @@ func TestNotifyAll(t *testing.T) {
 
 		notifier := &TestIntegration{fakeErr: errors.New("failed to notify testcase")}
 		integration := Integration{notifier: notifier, name: "test"}
-		Integrations = append(Integrations, integration)
+		integrations = append(integrations, integration)
 		All(db, f.ID, TOGGLED, FLAG)
 		assert.Equal(t, 1, notifier.callCount)
 	})

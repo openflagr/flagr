@@ -2,8 +2,9 @@ package handler
 
 import (
 	"fmt"
-	"github.com/checkr/flagr/pkg/notify"
 	"strings"
+
+	"github.com/checkr/flagr/pkg/notify"
 
 	"github.com/checkr/flagr/pkg/entity"
 	"github.com/checkr/flagr/pkg/mapper/entity_restapi/e2r"
