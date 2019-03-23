@@ -195,7 +195,6 @@ var logEvalResultToDatadog = func(r *models.EvalResult) {
 	config.Global.StatsdClient.Incr(
 		"evaluation",
 		[]string{
-			fmt.Sprintf("EntityType:%s", util.SafeStringWithDefault(r.EvalContext.EntityType, "null")),
 			fmt.Sprintf("FlagID:%d", util.SafeUint(r.FlagID)),
 			fmt.Sprintf("VariantID:%d", util.SafeUint(r.VariantID)),
 			fmt.Sprintf("VariantKey:%s", util.SafeStringWithDefault(r.VariantKey, "null")),
