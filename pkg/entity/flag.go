@@ -18,7 +18,8 @@ type Flag struct {
 	Enabled     bool
 	Segments    []Segment
 	Variants    []Variant
-	SnapshotID  uint `json:"-"`
+	SnapshotID  uint   `json:"-"`
+	Notes       string `sql:"type:text"`
 
 	DataRecordsEnabled bool
 	EntityType         string

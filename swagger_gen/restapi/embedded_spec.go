@@ -1461,6 +1461,10 @@ func init() {
           "type": "string",
           "minLength": 1
         },
+        "notes": {
+          "description": "flag usage details in markdown format",
+          "type": "string"
+        },
         "segments": {
           "type": "array",
           "items": {
@@ -1544,6 +1548,10 @@ func init() {
           "x-nullable": true
         },
         "key": {
+          "type": "string",
+          "x-nullable": true
+        },
+        "notes": {
           "type": "string",
           "x-nullable": true
         }
@@ -3194,6 +3202,10 @@ func init() {
           "type": "string",
           "minLength": 1
         },
+        "notes": {
+          "description": "flag usage details in markdown format",
+          "type": "string"
+        },
         "segments": {
           "type": "array",
           "items": {
@@ -3277,6 +3289,10 @@ func init() {
           "x-nullable": true
         },
         "key": {
+          "type": "string",
+          "x-nullable": true
+        },
+        "notes": {
           "type": "string",
           "x-nullable": true
         }

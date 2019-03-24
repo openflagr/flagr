@@ -47,6 +47,9 @@ type Flag struct {
 	// Min Length: 1
 	Key string `json:"key,omitempty"`
 
+	// flag usage details in markdown format
+	Notes string `json:"notes,omitempty"`
+
 	// segments
 	Segments []*Segment `json:"segments"`
 

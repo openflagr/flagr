@@ -229,6 +229,10 @@ func (c *crud) PutFlag(params flag.PutFlagParams) middleware.Responder {
 		f.EntityType = et
 	}
 
+	if params.Body.Notes != nil {
+		f.Notes = *params.Body.Notes
+	}
+
 	if err := tx.Save(f).Error; err != nil {
 		return flag.NewPutFlagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}

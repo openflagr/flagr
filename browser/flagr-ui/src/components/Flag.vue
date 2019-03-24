@@ -198,6 +198,23 @@
                     </el-col>
                   </el-row>
                 </el-card>
+                <el-card>
+                  <div slot="header" class="el-card-header">
+                    <div class="flex-row">
+                      <div class="flex-row-left">
+                        <h2>Flag Notes</h2>
+                      </div>
+                      <div class="flex-row-right">
+                        <el-button circle style="float: right;" @click="toggleShowMdEditor" :class="editViewIcon"/>
+                      </div>
+                    </div>
+                  </div>
+                  <markdown-editor
+                    :showEditor="this.showMdEditor"
+                    :markdown.sync="flag.notes"
+                    @save="putFlag(flag)"
+                  ></markdown-editor>
+                </el-card>
               </el-card>
 
               <el-card class="variants-container">
@@ -489,6 +506,7 @@ import helpers from '@/helpers/helpers'
 import Spinner from '@/components/Spinner'
 import DebugConsole from '@/components/DebugConsole'
 import FlagHistory from '@/components/FlagHistory'
+import MarkdownEditor from '@/components/MarkdownEditor.vue'
 import {operators} from '@/../config/operators.json'
 
 const OPERATOR_VALUE_TO_LABEL_MAP = operators.reduce((acc, el) => {
@@ -542,7 +560,8 @@ export default {
     spinner: Spinner,
     debugConsole: DebugConsole,
     flagHistory: FlagHistory,
-    draggable: draggable
+    draggable: draggable,
+    MarkdownEditor
   },
   data () {
     return {
@@ -562,14 +581,16 @@ export default {
         key: '',
         segments: [],
         updatedAt: '',
-        variants: []
+        variants: [],
+        notes: ''
       },
       newSegment: clone(DEFAULT_SEGMENT),
       newVariant: clone(DEFAULT_VARIANT),
       selectedSegment: null,
       newDistributions: {},
       operatorOptions: operators,
-      operatorValueToLabelMap: OPERATOR_VALUE_TO_LABEL_MAP
+      operatorValueToLabelMap: OPERATOR_VALUE_TO_LABEL_MAP,
+      showMdEditor: false
     }
   },
   computed: {
@@ -582,6 +603,12 @@ export default {
     },
     flagId () {
       return this.$route.params.flagId
+    },
+    editViewIcon () {
+      return {
+        'el-icon-edit': !this.showMdEditor,
+        'el-icon-view': this.showMdEditor
+      }
     }
   },
   methods: {
@@ -598,9 +625,10 @@ export default {
         description: flag.description,
         dataRecordsEnabled: flag.dataRecordsEnabled,
         key: flag.key || '',
-        entityType: flag.entityType || ''
+        entityType: flag.entityType || '',
+        notes: flag.notes || ''
       }).then(() => {
-        this.$message.success(`You've updated flag`)
+        this.$message.success(`Flag updated`)
       }, handleErr.bind(this))
     },
     setFlagEnabled (checked) {
@@ -799,6 +827,9 @@ export default {
       Axios.get(`${API_URL}/flags/entity_types`).then(response => {
         this.entityTypes = prepareEntityTypes(response.data)
       }, handleErr.bind(this))
+    },
+    toggleShowMdEditor () {
+      this.showMdEditor = !this.showMdEditor
     }
   },
   mounted () {

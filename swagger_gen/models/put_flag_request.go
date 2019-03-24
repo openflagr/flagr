@@ -32,6 +32,9 @@ type PutFlagRequest struct {
 
 	// key
 	Key *string `json:"key,omitempty"`
+
+	// notes
+	Notes *string `json:"notes,omitempty"`
 }
 
 // Validate validates this put flag request

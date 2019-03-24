@@ -823,6 +823,9 @@ definitions:
           it will override the entityType in the evaluation logs if it's not
           empty
         type: string
+      notes:
+        description: flag usage details in markdown format
+        type: string
       createdBy:
         type: string
       updatedBy:
@@ -862,6 +865,9 @@ definitions:
         type: boolean
         x-nullable: true
       key:
+        type: string
+        x-nullable: true
+      notes:
         type: string
         x-nullable: true
   setFlagEnabledRequest:

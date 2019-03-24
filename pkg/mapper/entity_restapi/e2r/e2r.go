@@ -20,6 +20,7 @@ func MapFlag(e *entity.Flag) (*models.Flag, error) {
 	r.DataRecordsEnabled = util.BoolPtr(e.DataRecordsEnabled)
 	r.EntityType = e.EntityType
 	r.Description = util.StringPtr(e.Description)
+	r.Notes = e.Notes
 	r.Enabled = util.BoolPtr(e.Enabled)
 	r.UpdatedAt = strfmt.DateTime(e.UpdatedAt)
 	r.UpdatedBy = e.UpdatedBy
