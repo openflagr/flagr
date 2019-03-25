@@ -2,20 +2,21 @@ package notify
 
 import (
 	"fmt"
-	"github.com/checkr/flagr/pkg/config"
-	"github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
 	"math"
 	"net/http"
 	"time"
+
+	"github.com/checkr/flagr/pkg/config"
+	"github.com/sirupsen/logrus"
 )
 
 const contentTypeJSON = "application/json"
 const userAgentHeader = "checkr/flagr"
 
 // CheckForRetry specifies a policy for handling retries
-type CheckForRetry func (resp *http.Response, err error) (bool, error)
+type CheckForRetry func(resp *http.Response, err error) (bool, error)
 
 // DefaultRetryPolicy provides a default callback for Client.CheckForRetry
 func DefaultRetryPolicy(resp *http.Response, err error) (bool, error) {
@@ -46,8 +47,8 @@ func DefaultBackoff(min, max time.Duration, attemptNum int) time.Duration {
 var (
 	defaultRetryWaitMin = 1 * time.Second
 	defaultRetryWaitMax = 30 * time.Second
-	defaultRetryMax = 4
-	respReadLimit = int64(4096)
+	defaultRetryMax     = 4
+	respReadLimit       = int64(4096)
 )
 
 // Client holds a http.Client and retry configuration values
@@ -63,7 +64,7 @@ type Client struct {
 // NewClient spins up a Client with default retry configuration
 func NewClient() *Client {
 	client := &Client{
-		HTTPClient:    &http.Client{
+		HTTPClient: &http.Client{
 			Timeout: time.Duration(config.Config.NotifyTimeout * time.Second),
 		},
 		RetryWaitMin:  defaultRetryWaitMin,
@@ -94,7 +95,7 @@ func (c *Client) Do(req *Request) (*http.Response, error) {
 		var code int
 
 		if req.body != nil {
-			if _, err := req.body.Seek(0,0); err != nil {
+			if _, err := req.body.Seek(0, 0); err != nil {
 				return nil, fmt.Errorf("failed to seek body: %v", err)
 			}
 		}
@@ -132,10 +133,12 @@ func (c *Client) Do(req *Request) (*http.Response, error) {
 			break
 		}
 		wait := c.Backoff(c.RetryWaitMin, c.RetryWaitMax, i)
+
 		desc := fmt.Sprintf("%s %s", req.Method, req.URL)
 		if code > 0 {
 			desc = fmt.Sprintf("%s (status: %d)", desc, code)
 		}
+		fmt.Println(desc)
 		time.Sleep(wait)
 		i++
 	}
@@ -151,6 +154,7 @@ func (c *Client) drainBody(body io.ReadCloser) {
 	}
 }
 
+// Request is the request with a replayable body
 type Request struct {
 	body io.ReadSeeker
 	*http.Request
@@ -168,7 +172,7 @@ func NewRequest(method, url string, body io.ReadSeeker) (*Request, error) {
 		return nil, err
 	}
 
-	return &Request{body, httpReq }, nil
+	return &Request{body, httpReq}, nil
 }
 
 // Post executes a POST request on a Retryable Client

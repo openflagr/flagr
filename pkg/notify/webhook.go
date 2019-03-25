@@ -3,6 +3,7 @@ package notify
 import (
 	"bytes"
 	"encoding/json"
+
 	"github.com/checkr/flagr/pkg/config"
 	"github.com/checkr/flagr/pkg/entity"
 	"github.com/checkr/flagr/pkg/mapper/entity_restapi/e2r"
