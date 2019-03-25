@@ -2,6 +2,7 @@ package notify
 
 import (
 	"errors"
+	"net/http"
 	"testing"
 
 	"github.com/checkr/flagr/pkg/entity"
@@ -15,9 +16,22 @@ type TestIntegration struct {
 }
 
 // Notify handles notifications for a TestIntegration
-func (n *TestIntegration) Notify(f *entity.Flag, b notify, i itemType) error {
+func (n *TestIntegration) Notify(f *entity.Flag, b itemAction, i itemType) error {
 	n.callCount++
 	return n.fakeErr
+}
+
+type roundTripFunc func(req *http.Request) *http.Response
+
+func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
+	return f(req), nil
+}
+
+//NewTestClient returns *http.Client with Transport replaced to avoid making real calls
+func NewTestClient(fn roundTripFunc) *http.Client {
+	return &http.Client{
+		Transport: roundTripFunc(fn),
+	}
 }
 
 func TestNotifyAll(t *testing.T) {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/dchest/uniuri"
@@ -46,6 +47,7 @@ func SafeStringWithDefault(s interface{}, deft string) (ret string) {
 
 // SafeString safely cast to string
 func SafeString(s interface{}) (ret string) {
+	fmt.Println(cast.ToString(s))
 	return cast.ToString(s)
 }
 
@@ -96,3 +98,8 @@ func BoolPtr(v bool) *bool { return &v }
 
 // ByteSlicePtr ...
 func ByteSlicePtr(v []byte) *[]byte { return &v }
+
+// TitleCase ...
+func TitleCase(i interface{}) string {
+	return strings.Title(strings.ToLower(SafeString(i)))
+}

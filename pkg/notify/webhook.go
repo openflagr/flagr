@@ -27,14 +27,14 @@ func NewWebhook(c *http.Client) *Webhook {
 
 // WebhookMessage defines the JSON object send to webhook endpoints.
 type WebhookMessage struct {
-	Action  notify       `json:"action"`
+	Action  itemAction   `json:"action"`
 	Type    itemType     `json:"type"`
 	Data    *models.Flag `json:"data"`
 	Version string       `json:"version"`
 }
 
 // Notify implements the Notifier interface for webhooks
-func (w *Webhook) Notify(f *entity.Flag, b notify, i itemType) error {
+func (w *Webhook) Notify(f *entity.Flag, b itemAction, i itemType) error {
 	model, err := e2r.MapFlag(f)
 
 	if err != nil {
