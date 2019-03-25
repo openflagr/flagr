@@ -3,10 +3,7 @@ package notify
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"strings"
 	"time"
 
@@ -18,11 +15,11 @@ import (
 
 // Slack implements a Notifier for Slack notifications.
 type Slack struct {
-	client *http.Client
+	client *Client
 }
 
 // NewSlack returns a new Slack notification handler.
-func NewSlack(c *http.Client) *Slack {
+func NewSlack(c *Client) *Slack {
 	return &Slack{
 		client: c,
 	}
@@ -56,36 +53,26 @@ func (n *Slack) Notify(f *entity.Flag, b itemAction, i itemType) error {
 	var err error
 
 	slackReq := buildSlackRequest(f, b, i)
-
 	if err != nil {
 		return err
 	}
 
 	var buf bytes.Buffer
+
 	if err := json.NewEncoder(&buf).Encode(slackReq); err != nil {
 		return err
 	}
 
-	req, err := http.NewRequest("POST", config.Config.SlackURL, &buf)
+	_, err = n.client.Post(config.Config.WebhookURL, bytes.NewReader(buf.Bytes()))
+
 	if err != nil {
 		return err
 	}
-	req.Header.Set("Content-Type", contentTypeJSON)
-	req.Header.Set("User-Agent", userAgentHeader)
 
-	resp, err := n.client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode >= 400 {
-		b, _ := ioutil.ReadAll(resp.Body)
-		return errors.New(string(b))
-	}
 	return nil
 }
 
+// titleCase changes the case
 func titleCase(i interface{}) string {
 	if str, ok := i.(itemAction); ok {
 		return util.TitleCase(string(str))
@@ -102,29 +89,9 @@ func buildSlackRequest(f *entity.Flag, b itemAction, i itemType) *slackReq {
 	header := fmt.Sprintf("Flag #%d (%s)", f.ID, f.Description)
 
 	if b == TOGGLED {
-		var tmpl string
-		if f.Enabled {
-			tmpl = "%s has been enabled at %s"
-		} else {
-			tmpl = "%s has been disabled at %s"
-		}
-		field := newField(fmt.Sprintf(tmpl, header, time.Now().Format(time.RFC850)))
-		blocks = append(blocks, block{Type: "section", Text: field})
+		blocks = buildToggledReq(f, header, blocks)
 	} else {
-		titleStr := fmt.Sprintf("*%s*\n %s was %s", header, titleCase(i), titleCase(b))
-
-		blocks = append(blocks, section(newField(titleStr)))
-
-		variants := variants(f)
-		if len(variants) > 0 {
-			str := fmt.Sprintf("*Current variants*\n%s", strings.Join(variants, "\n"))
-			blocks = append(blocks, section(newField(str)))
-		}
-
-		segments := segments(f)
-		if len(segments) > 0 {
-			blocks = append(blocks, section(segments))
-		}
+		blocks = buildSectionedReq(header, i, b, blocks, f)
 	}
 
 	fallbackText := fmt.Sprintf("%s was updated", header)
@@ -136,6 +103,35 @@ func buildSlackRequest(f *entity.Flag, b itemAction, i itemType) *slackReq {
 		Text:     fallbackText,
 	}
 	return slackReq
+}
+
+// buildSectionedReq builds the sections for a crud update
+func buildSectionedReq(header string, i itemType, b itemAction, blocks []block, f *entity.Flag) []block {
+	titleStr := fmt.Sprintf("*%s*\n %s was %s", header, titleCase(i), titleCase(b))
+	blocks = append(blocks, section(newField(titleStr)))
+	variants := variants(f)
+	if len(variants) > 0 {
+		str := fmt.Sprintf("*Current variants*\n%s", strings.Join(variants, "\n"))
+		blocks = append(blocks, section(newField(str)))
+	}
+	segments := segments(f)
+	if len(segments) > 0 {
+		blocks = append(blocks, section(segments))
+	}
+	return blocks
+}
+
+// buildToggledReq builds the text block for a toggled request
+func buildToggledReq(f *entity.Flag, header string, blocks []block) []block {
+	var tmpl string
+	if f.Enabled {
+		tmpl = "%s has been enabled at %s"
+	} else {
+		tmpl = "%s has been disabled at %s"
+	}
+	field := newField(fmt.Sprintf(tmpl, header, time.Now().Format(time.RFC850)))
+	blocks = append(blocks, block{Type: "section", Text: field})
+	return blocks
 }
 
 // variants builds an array of strings containing all variants for a flag

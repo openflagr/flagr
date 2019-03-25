@@ -3,10 +3,6 @@ package notify
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
-	"io/ioutil"
-	"net/http"
-
 	"github.com/checkr/flagr/pkg/config"
 	"github.com/checkr/flagr/pkg/entity"
 	"github.com/checkr/flagr/pkg/mapper/entity_restapi/e2r"
@@ -15,11 +11,11 @@ import (
 
 // Webhook is a generic webhook that sends the flag and the event details alongside each other
 type Webhook struct {
-	client *http.Client
+	client *Client
 }
 
 // NewWebhook returns a new Webhook
-func NewWebhook(c *http.Client) *Webhook {
+func NewWebhook(c *Client) *Webhook {
 	return &Webhook{
 		client: c,
 	}
@@ -36,7 +32,6 @@ type WebhookMessage struct {
 // Notify implements the Notifier interface for webhooks
 func (w *Webhook) Notify(f *entity.Flag, b itemAction, i itemType) error {
 	model, err := e2r.MapFlag(f)
-
 	if err != nil {
 		return err
 	}
@@ -53,22 +48,9 @@ func (w *Webhook) Notify(f *entity.Flag, b itemAction, i itemType) error {
 		return err
 	}
 
-	req, err := http.NewRequest("POST", config.Config.WebhookURL, &buf)
+	_, err = w.client.Post(config.Config.WebhookURL, bytes.NewReader(buf.Bytes()))
 	if err != nil {
 		return err
-	}
-	req.Header.Set("Content-Type", contentTypeJSON)
-	req.Header.Set("User-Agent", userAgentHeader)
-
-	resp, err := w.client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode >= 400 {
-		b, _ := ioutil.ReadAll(resp.Body)
-		return errors.New(string(b))
 	}
 
 	return nil

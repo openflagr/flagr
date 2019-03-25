@@ -1,16 +1,11 @@
 package notify
 
 import (
-	"net/http"
-
 	"github.com/checkr/flagr/pkg/config"
 	"github.com/checkr/flagr/pkg/entity"
 	"github.com/jinzhu/gorm"
 	"github.com/sirupsen/logrus"
 )
-
-const contentTypeJSON = "application/json"
-const userAgentHeader = "checkr/flagr"
 
 // A Notifier notifies about flags state
 // It returns an error if unsuccessful
@@ -27,7 +22,8 @@ type Integration struct {
 var integrations []Integration
 
 func init() {
-	client := &http.Client{}
+	client := NewClient()
+
 	if config.Config.WebhookEnabled {
 		integrations = append(integrations, Integration{notifier: NewWebhook(client), name: "webhook"})
 	}

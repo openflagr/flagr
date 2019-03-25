@@ -170,6 +170,15 @@ var Config = struct {
 	// WebPrefix - base path for web
 	WebPrefix string `env:"FLAGR_WEB_PREFIX" envDefault:""`
 
+	// NotifyTimeout - for each notifier that uses http.Client to make requests
+	NotifyTimeout time.Duration `env:"FLAGR_NOTIFY_TIMEOUT" envDefault:"30"`
+	// NotifyNumRetries - how many attempts should be made for each notification after a failure
+	NotifyNumRetries int `env:"FLAGR_NOTIFY_NUM_RETRIES" envDefault:"0"`
+	// RetryMin - the minimum amount of time that should pass between retry attempts
+	RetryMin int `env:"FLAGR_NOTIFY_MIN_BACKOFF" envDefault:"0"`
+	// RetryMax - the maximum amount of time that should pass between retry attempts
+	RetryMax int `env:"FLAGR_NOTIFY_MAX_BACKOFFs" envDefault:"0"`
+
 	// Webhooks
 	WebhookEnabled bool   `env:"FLAGR_WEBHOOK_ENABLED" envDefault:"false"`
 	WebhookURL     string `env:"FLAGR_WEBHOOK_URL" envDefault:""`
