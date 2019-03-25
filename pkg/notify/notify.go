@@ -15,7 +15,7 @@ const userAgentHeader = "checkr/flagr"
 // A Notifier notifies about flags state
 // It returns an error if unsuccessful
 type Notifier interface {
-	Notify(*entity.Flag, notify, itemType) error
+	Notify(*entity.Flag, itemAction, itemType) error
 }
 
 // Integration holds a notifier and a string name for that notifier
@@ -26,26 +26,8 @@ type Integration struct {
 
 var integrations []Integration
 
-// NewClient returns a new http client
-func NewClient() *http.Client {
-	return &http.Client{}
-}
-
-type roundTripFunc func(req *http.Request) *http.Response
-
-func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
-	return f(req), nil
-}
-
-//NewTestClient returns *http.Client with Transport replaced to avoid making real calls
-func NewTestClient(fn roundTripFunc) *http.Client {
-	return &http.Client{
-		Transport: roundTripFunc(fn),
-	}
-}
-
 func init() {
-	client := NewClient()
+	client := &http.Client{}
 	if config.Config.WebhookEnabled {
 		integrations = append(integrations, Integration{notifier: NewWebhook(client), name: "webhook"})
 	}
@@ -54,14 +36,14 @@ func init() {
 	}
 }
 
-type notify string
+type itemAction string
 
 // Notification types
 const (
-	TOGGLED notify = "TOGGLED"
-	CREATED        = "CREATED"
-	UPDATED        = "UPDATED"
-	DELETED        = "DELETED"
+	TOGGLED itemAction = "TOGGLED"
+	CREATED itemAction = "CREATED"
+	UPDATED itemAction = "UPDATED"
+	DELETED itemAction = "DELETED"
 )
 
 type itemType string
@@ -69,14 +51,14 @@ type itemType string
 // Thing being updated
 const (
 	FLAG         itemType = "FLAG"
-	VARIANT               = "VARIANT"
-	SEGMENT               = "SEGMENT"
-	DISTRIBUTION          = "DISTRIBUTION"
-	CONSTRAINT            = "CONSTRAINT"
+	VARIANT      itemType = "VARIANT"
+	SEGMENT      itemType = "SEGMENT"
+	DISTRIBUTION itemType = "DISTRIBUTION"
+	CONSTRAINT   itemType = "CONSTRAINT"
 )
 
 // All notifies all integrations, and logs an error if any fail
-func All(db *gorm.DB, flagID uint, b notify, i itemType) {
+func All(db *gorm.DB, flagID uint, b itemAction, i itemType) {
 	f := &entity.Flag{}
 	if err := db.First(f, flagID).Error; err != nil {
 		logrus.WithFields(logrus.Fields{
@@ -85,7 +67,14 @@ func All(db *gorm.DB, flagID uint, b notify, i itemType) {
 		}).Error("failed to find the flag when trying to notify integrations")
 		return
 	}
-	f.Preload(db)
+
+	err := f.Preload(db)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"err":    err,
+			"flagID": f.ID,
+		}).Error("failed to preload flag")
+	}
 
 	for _, integration := range integrations {
 		err := integration.notifier.Notify(f, b, i)

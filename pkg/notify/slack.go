@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/checkr/flagr/pkg/util"
+
 	"github.com/checkr/flagr/pkg/config"
 	"github.com/checkr/flagr/pkg/entity"
 )
@@ -50,7 +52,7 @@ type field struct {
 }
 
 // Notify implements the Notifier interface for Slack Notifications
-func (n *Slack) Notify(f *entity.Flag, b notify, i itemType) error {
+func (n *Slack) Notify(f *entity.Flag, b itemAction, i itemType) error {
 	var err error
 
 	slackReq := buildSlackRequest(f, b, i)
@@ -84,19 +86,18 @@ func (n *Slack) Notify(f *entity.Flag, b notify, i itemType) error {
 	return nil
 }
 
-// titleCase returns a Title case string
 func titleCase(i interface{}) string {
-	if str, ok := i.(notify); ok {
-		return strings.Title(strings.ToLower(string(str)))
+	if str, ok := i.(itemAction); ok {
+		return util.TitleCase(string(str))
 	}
 	if str, ok := i.(itemType); ok {
-		return strings.Title(strings.ToLower(string(str)))
+		return util.TitleCase(string(str))
 	}
-	return strings.Title(strings.ToLower(""))
+	return util.TitleCase(i)
 }
 
 // buildSlackRequest builds the correct slack req ready for sending, based on the event in question
-func buildSlackRequest(f *entity.Flag, b notify, i itemType) *slackReq {
+func buildSlackRequest(f *entity.Flag, b itemAction, i itemType) *slackReq {
 	var blocks []block
 	header := fmt.Sprintf("Flag #%d (%s)", f.ID, f.Description)
 
