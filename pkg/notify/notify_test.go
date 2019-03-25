@@ -30,7 +30,7 @@ func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
 //NewTestClient returns *http.Client with Transport replaced to avoid making real calls
 func NewTestClient(fn roundTripFunc) *Client {
 	return &Client{
-		HTTPClient:    &http.Client{
+		HTTPClient: &http.Client{
 			Transport: roundTripFunc(fn),
 		},
 		RetryWaitMin:  defaultRetryWaitMin,
