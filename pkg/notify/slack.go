@@ -63,7 +63,7 @@ func (n *Slack) Notify(f *entity.Flag, b itemAction, i itemType) error {
 		return err
 	}
 
-	_, err = n.client.Post(config.Config.WebhookURL, bytes.NewReader(buf.Bytes()))
+	_, err = n.client.Post(config.Config.SlackURL, bytes.NewReader(buf.Bytes()))
 
 	if err != nil {
 		return err
