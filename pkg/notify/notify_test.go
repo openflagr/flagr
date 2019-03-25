@@ -28,9 +28,16 @@ func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 //NewTestClient returns *http.Client with Transport replaced to avoid making real calls
-func NewTestClient(fn roundTripFunc) *http.Client {
-	return &http.Client{
-		Transport: roundTripFunc(fn),
+func NewTestClient(fn roundTripFunc) *Client {
+	return &Client{
+		HTTPClient:    &http.Client{
+			Transport: roundTripFunc(fn),
+		},
+		RetryWaitMin:  defaultRetryWaitMin,
+		RetryWaitMax:  defaultRetryWaitMax,
+		RetryMax:      0, // Retries disabled deliberately so that unhappy paths dont take 15seconds!
+		CheckForRetry: DefaultRetryPolicy,
+		Backoff:       DefaultBackoff,
 	}
 }
 
