@@ -1,7 +1,6 @@
 <template>
-    <div id="editor">
+    <div id="editor" v-if="hideMdBox">
         <mavon-editor
-          v-if="hideMdBox"
           language="en"
           v-bind="editorSettings"
           :value="markdown"

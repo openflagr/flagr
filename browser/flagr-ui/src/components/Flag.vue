@@ -110,7 +110,7 @@
                     </div>
                   </div>
                 </div>
-                <el-card shadow="hover">
+                <el-card shadow="hover" :class="toggleInnerConfigCard">
                   <div class="flex-row id-row">
                     <div class="flex-row-left">
                       <el-tag type="primary" :disable-transitions="true">
@@ -607,6 +607,13 @@ export default {
         'el-icon-edit': !this.showMdEditor,
         'el-icon-view': this.showMdEditor
       }
+    },
+    toggleInnerConfigCard () {
+      if (!this.showMdEditor && !this.flag.notes) {
+        return 'flag-inner-config-card'
+      } else {
+        return ''
+      }
     }
   },
   methods: {
@@ -847,6 +854,12 @@ h5 {
     cursor: grab;
     cursor: -moz-grab;
     cursor: -webkit-grab;
+}
+
+.flag-inner-config-card {
+  .el-card__body {
+    padding-bottom: 0px;
+  }
 }
 
 .segment {
