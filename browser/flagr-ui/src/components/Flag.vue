@@ -197,23 +197,21 @@
                       </div>
                     </el-col>
                   </el-row>
-                </el-card>
-                <el-card>
-                  <div slot="header" class="el-card-header">
-                    <div class="flex-row">
-                      <div class="flex-row-left">
-                        <h2>Flag Notes</h2>
-                      </div>
-                      <div class="flex-row-right">
-                        <el-button circle style="float: right;" @click="toggleShowMdEditor" :class="editViewIcon"/>
-                      </div>
-                    </div>
-                  </div>
-                  <markdown-editor
-                    :showEditor="this.showMdEditor"
-                    :markdown.sync="flag.notes"
-                    @save="putFlag(flag)"
-                  ></markdown-editor>
+                  <el-row style="margin: 10px">
+                    <h5>
+                      <span>Flag Notes</span>
+                      <el-button round size="mini" @click="toggleShowMdEditor">
+                        <span :class="editViewIcon"></span> {{ !this.showMdEditor ? 'edit' : 'view' }}
+                      </el-button>
+                    </h5>
+                  </el-row>
+                  <el-row>
+                    <markdown-editor
+                      :showEditor="this.showMdEditor"
+                      :markdown.sync="flag.notes"
+                      @save="putFlag(flag)"
+                    ></markdown-editor>
+                  </el-row>
                 </el-card>
               </el-card>
 
