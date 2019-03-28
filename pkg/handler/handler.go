@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"github.com/checkr/flagr/pkg/config"
 	"github.com/checkr/flagr/pkg/entity"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/constraint"
@@ -67,6 +68,11 @@ func setupEvaluation(api *operations.FlagrAPI) {
 	e := NewEval()
 	api.EvaluationPostEvaluationHandler = evaluation.PostEvaluationHandlerFunc(e.PostEvaluation)
 	api.EvaluationPostEvaluationBatchHandler = evaluation.PostEvaluationBatchHandlerFunc(e.PostEvaluationBatch)
+
+	if config.Config.RecorderEnabled {
+		// Try GetDataRecorder to catch fatal errors before we start the evaluation api
+		GetDataRecorder()
+	}
 }
 
 func setupHealth(api *operations.FlagrAPI) {
