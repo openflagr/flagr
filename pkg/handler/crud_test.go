@@ -79,6 +79,7 @@ func TestCrudFlags(t *testing.T) {
 				Description:        util.StringPtr("another funny flag"),
 				DataRecordsEnabled: util.BoolPtr(true),
 				Key:                util.StringPtr("flag_key_1"),
+				Notes:              util.StringPtr("# funny flag notes"),
 			}},
 		)
 		assert.NotZero(t, res.(*flag.PutFlagOK).Payload.ID)
