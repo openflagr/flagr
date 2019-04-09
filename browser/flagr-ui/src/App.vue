@@ -146,12 +146,12 @@ ul {
   .el-card {
     .el-card__header {
       background-color: #74E5E0;
+      h2 {
+        margin: -0.2em;
+        color: white;
+      }
     }
     margin-bottom: 1em;
-    h2 {
-      margin: -0.2em;
-      color: white;
-    }
   }
 
   .jsoneditor{
