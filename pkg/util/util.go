@@ -13,6 +13,7 @@ import (
 var (
 	keyLengthLimit = 63
 	keyRegex       = regexp.MustCompile("^[a-z]+[a-z0-9_]*$")
+	variantRegex   = regexp.MustCompile("^[a-z]*[a-z0-9_]*$")
 
 	randomKeyCharset = []byte("123456789abcdefghijkmnopqrstuvwxyz")
 	randomKeyPrefix  = "k"
@@ -22,6 +23,17 @@ var (
 func IsSafeKey(s string) (bool, string) {
 	if !keyRegex.MatchString(s) {
 		return false, fmt.Sprintf("key:%s should have the format %v", s, keyRegex)
+	}
+	if len(s) > keyLengthLimit {
+		return false, fmt.Sprintf("key:%s cannot be longer than %d", s, keyLengthLimit)
+	}
+	return true, ""
+}
+
+// IsSafeVariant return if the variant is safe to store
+func IsSafeVariant(s string) (bool, string) {
+	if !variantRegex.MatchString(s) {
+		return false, fmt.Sprintf("key:%s should have the format %v", s, variantRegex)
 	}
 	if len(s) > keyLengthLimit {
 		return false, fmt.Sprintf("key:%s cannot be longer than %d", s, keyLengthLimit)
