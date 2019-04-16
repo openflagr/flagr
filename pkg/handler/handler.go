@@ -19,9 +19,15 @@ var getDB = entity.GetDB
 
 // Setup initialize all the handler functions
 func Setup(api *operations.FlagrAPI) {
-	setupCRUD(api)
-	setupEvaluation(api)
+	if config.Config.EvalOnlyMode {
+		setupHealth(api)
+		setupEvaluation(api)
+		return
+	}
+
 	setupHealth(api)
+	setupEvaluation(api)
+	setupCRUD(api)
 	setupExport(api)
 }
 
@@ -83,4 +89,5 @@ func setupHealth(api *operations.FlagrAPI) {
 
 func setupExport(api *operations.FlagrAPI) {
 	api.ExportGetExportSqliteHandler = export.GetExportSqliteHandlerFunc(exportSQLiteHandler)
+	api.ExportGetExportEvalCacheJSONHandler = export.GetExportEvalCacheJSONHandlerFunc(exportEvalCacheJSONHandler)
 }

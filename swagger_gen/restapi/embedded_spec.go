@@ -101,6 +101,32 @@ func init() {
         }
       }
     },
+    "/export/eval_cache/json": {
+      "get": {
+        "description": "Export JSON format of the eval cache dump",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "export"
+        ],
+        "operationId": "getExportEvalCacheJSON",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
     "/export/sqlite": {
       "get": {
         "description": "Export sqlite3 format of the db dump, which is converted from the main database.",
@@ -1831,6 +1857,32 @@ func init() {
             "description": "evaluation batch result",
             "schema": {
               "$ref": "#/definitions/evaluationBatchResponse"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
+    "/export/eval_cache/json": {
+      "get": {
+        "description": "Export JSON format of the eval cache dump",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "export"
+        ],
+        "operationId": "getExportEvalCacheJSON",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object"
             }
           },
           "default": {

@@ -92,3 +92,18 @@ func TestExportSQLiteHandler(t *testing.T) {
 		assert.IsType(t, res.(*export.GetExportSqliteDefault), res)
 	})
 }
+
+func TestExportEvalCacheJSONHandler(t *testing.T) {
+	fixtureFlag := entity.GenFixtureFlag()
+	db := entity.PopulateTestDB(fixtureFlag)
+	defer db.Close()
+	defer gostub.StubFunc(&getDB, db).Reset()
+
+	ec := GetEvalCache()
+	ec.reloadMapCache()
+
+	t.Run("happy code path", func(t *testing.T) {
+		res := exportEvalCacheJSONHandler(export.GetExportEvalCacheJSONParams{})
+		assert.IsType(t, res.(*export.GetExportEvalCacheJSONOK), res)
+	})
+}

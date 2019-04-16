@@ -1,0 +1,200 @@
+{
+  "Flags": [
+    {
+      "ID": 1,
+      "CreatedAt": "2018-10-05T23:10:25.234392-07:00",
+      "UpdatedAt": "2019-04-15T23:02:08.034382-07:00",
+      "DeletedAt": null,
+      "Key": "kmmcd1nsd6",
+      "Description": "demo_example123456",
+      "CreatedBy": "",
+      "UpdatedBy": "",
+      "Enabled": true,
+      "Segments": [
+        {
+          "ID": 6,
+          "CreatedAt": "2019-03-19T13:55:16.281094-07:00",
+          "UpdatedAt": "2019-04-15T23:02:08.03487-07:00",
+          "DeletedAt": null,
+          "FlagID": 1,
+          "Description": "2",
+          "Rank": 0,
+          "RolloutPercent": 100,
+          "Constraints": [
+            {
+              "ID": 3,
+              "CreatedAt": "2019-04-12T17:45:11.955157-07:00",
+              "UpdatedAt": "2019-04-15T23:02:08.035078-07:00",
+              "DeletedAt": null,
+              "SegmentID": 6,
+              "Property": "env",
+              "Operator": "EQ",
+              "Value": "\"local\""
+            }
+          ],
+          "Distributions": [
+            {
+              "ID": 7,
+              "CreatedAt": "2019-03-19T13:55:21.884681-07:00",
+              "UpdatedAt": "2019-04-15T23:02:08.035612-07:00",
+              "DeletedAt": null,
+              "SegmentID": 6,
+              "VariantID": 2,
+              "VariantKey": "blue123",
+              "Percent": 100
+            }
+          ]
+        },
+        {
+          "ID": 1,
+          "CreatedAt": "2018-10-05T23:11:14.908074-07:00",
+          "UpdatedAt": "2019-04-15T23:02:08.03662-07:00",
+          "DeletedAt": null,
+          "FlagID": 1,
+          "Description": "Users in CA",
+          "Rank": 1,
+          "RolloutPercent": 100,
+          "Constraints": [],
+          "Distributions": [
+            {
+              "ID": 1,
+              "CreatedAt": "2018-10-05T23:11:38.852941-07:00",
+              "UpdatedAt": "2019-04-15T23:02:08.036756-07:00",
+              "DeletedAt": null,
+              "SegmentID": 1,
+              "VariantID": 2,
+              "VariantKey": "blue123",
+              "Percent": 50
+            },
+            {
+              "ID": 2,
+              "CreatedAt": "2018-10-05T23:11:38.853333-07:00",
+              "UpdatedAt": "2019-04-15T23:02:08.036888-07:00",
+              "DeletedAt": null,
+              "SegmentID": 1,
+              "VariantID": 3,
+              "VariantKey": "red",
+              "Percent": 50
+            }
+          ]
+        }
+      ],
+      "Variants": [
+        {
+          "ID": 1,
+          "CreatedAt": "2018-10-05T23:10:44.066035-07:00",
+          "UpdatedAt": "2019-04-15T23:02:08.036989-07:00",
+          "DeletedAt": null,
+          "FlagID": 1,
+          "Key": "control222",
+          "Attachment": {}
+        },
+        {
+          "ID": 2,
+          "CreatedAt": "2018-10-05T23:10:46.775635-07:00",
+          "UpdatedAt": "2019-04-15T23:02:08.037348-07:00",
+          "DeletedAt": null,
+          "FlagID": 1,
+          "Key": "blue123",
+          "Attachment": {
+            "1": "12345"
+          }
+        },
+        {
+          "ID": 3,
+          "CreatedAt": "2018-10-05T23:10:49.496043-07:00",
+          "UpdatedAt": "2019-04-15T23:02:08.037487-07:00",
+          "DeletedAt": null,
+          "FlagID": 1,
+          "Key": "red",
+          "Attachment": {}
+        }
+      ],
+      "SnapshotID": 69,
+      "Notes": "",
+      "DataRecordsEnabled": true,
+      "EntityType": "a123"
+    },
+    {
+      "ID": 2,
+      "CreatedAt": "2019-02-12T17:06:45.28157-08:00",
+      "UpdatedAt": "2019-03-25T18:22:17.846004-07:00",
+      "DeletedAt": null,
+      "Key": "knkrkxnvfh8nk8aw4",
+      "Description": "demo_2",
+      "CreatedBy": "",
+      "UpdatedBy": "",
+      "Enabled": true,
+      "Segments": [
+        {
+          "ID": 5,
+          "CreatedAt": "2019-02-12T17:13:02.022024-08:00",
+          "UpdatedAt": "2019-03-25T18:22:17.846264-07:00",
+          "DeletedAt": null,
+          "FlagID": 2,
+          "Description": "segment1",
+          "Rank": 999,
+          "RolloutPercent": 100,
+          "Constraints": [
+            {
+              "ID": 2,
+              "CreatedAt": "2019-02-12T17:13:12.789073-08:00",
+              "UpdatedAt": "2019-03-25T18:22:17.846461-07:00",
+              "DeletedAt": null,
+              "SegmentID": 5,
+              "Property": "state",
+              "Operator": "EQ",
+              "Value": "\"CA\""
+            }
+          ],
+          "Distributions": [
+            {
+              "ID": 5,
+              "CreatedAt": "2019-02-12T17:13:24.846633-08:00",
+              "UpdatedAt": "2019-03-25T18:22:17.846655-07:00",
+              "DeletedAt": null,
+              "SegmentID": 5,
+              "VariantID": 4,
+              "VariantKey": "control",
+              "Percent": 50
+            },
+            {
+              "ID": 6,
+              "CreatedAt": "2019-02-12T17:13:24.849219-08:00",
+              "UpdatedAt": "2019-03-25T18:22:17.847076-07:00",
+              "DeletedAt": null,
+              "SegmentID": 5,
+              "VariantID": 5,
+              "VariantKey": "treatment",
+              "Percent": 50
+            }
+          ]
+        }
+      ],
+      "Variants": [
+        {
+          "ID": 4,
+          "CreatedAt": "2019-02-12T17:12:47.918306-08:00",
+          "UpdatedAt": "2019-03-25T18:22:17.847214-07:00",
+          "DeletedAt": null,
+          "FlagID": 2,
+          "Key": "control",
+          "Attachment": {}
+        },
+        {
+          "ID": 5,
+          "CreatedAt": "2019-02-12T17:12:52.506251-08:00",
+          "UpdatedAt": "2019-03-25T18:22:17.847426-07:00",
+          "DeletedAt": null,
+          "FlagID": 2,
+          "Key": "treatment",
+          "Attachment": {}
+        }
+      ],
+      "SnapshotID": 60,
+      "Notes": "123",
+      "DataRecordsEnabled": false,
+      "EntityType": ""
+    }
+  ]
+}

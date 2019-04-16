@@ -131,14 +131,6 @@
   revision = "3a771d992973f24aa725d07868b467d1ddfceafb"
 
 [[projects]]
-  digest = "1:d8abdc866ebbe05fa3bce50863e23afd4c73c804b90c908caa864e86df1db8a1"
-  name = "github.com/bouk/monkey"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "5df1f207ff77e025801505ae4d903133a0b4353f"
-  version = "v1.0.0"
-
-[[projects]]
   branch = "master"
   digest = "1:a2b3fb724251a4237e10b520bfbf1a39d9acde5ae31a28c43b3920289d119836"
   name = "github.com/brandur/simplebox"
@@ -701,6 +693,14 @@
   version = "0.2.2"
 
 [[projects]]
+  digest = "1:968309907f6174eb5ec1f9df1ceb0b4f492ab2bf333f8213740ddea2a21c4b61"
+  name = "github.com/zhouzhuojie/withtimeout"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "12b39eb2edd5059118f5461e97a255c7b1d56d4d"
+  version = "1.0.0"
+
+[[projects]]
   digest = "1:5baa1a55624558e55a544de8b81542193852b0d607a9e21d9296e82d3e698918"
   name = "go.opencensus.io"
   packages = [
@@ -946,7 +946,6 @@
     "github.com/aws/aws-sdk-go/aws",
     "github.com/aws/aws-sdk-go/aws/session",
     "github.com/aws/aws-sdk-go/service/kinesis",
-    "github.com/bouk/monkey",
     "github.com/brandur/simplebox",
     "github.com/bsm/ratelimit",
     "github.com/caarlos0/env",
@@ -985,6 +984,7 @@
     "github.com/urfave/negroni",
     "github.com/yadvendar/negroni-newrelic-go-agent",
     "github.com/zhouzhuojie/conditions",
+    "github.com/zhouzhuojie/withtimeout",
     "golang.org/x/net/netutil",
     "google.golang.org/api/option",
     "google.golang.org/grpc",

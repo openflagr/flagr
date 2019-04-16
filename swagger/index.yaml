@@ -80,6 +80,8 @@ paths:
     $ref: ./health.yaml
   /export/sqlite:
     $ref: ./export_sqlite.yaml
+  /export/eval_cache/json:
+    $ref: ./export_eval_cache_json.yaml
 
 
 definitions:
