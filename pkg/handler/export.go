@@ -93,3 +93,9 @@ var exportFlagEntityTypes = func(tmpDB *gorm.DB) error {
 	logrus.WithField("count", len(ts)).Debugf("export flag entity types")
 	return nil
 }
+
+var exportEvalCacheJSONHandler = func(export.GetExportEvalCacheJSONParams) middleware.Responder {
+	return export.NewGetExportEvalCacheJSONOK().WithPayload(
+		GetEvalCache().export(),
+	)
+}

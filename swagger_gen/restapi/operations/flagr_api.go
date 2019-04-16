@@ -86,6 +86,9 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		VariantFindVariantsHandler: variant.FindVariantsHandlerFunc(func(params variant.FindVariantsParams) middleware.Responder {
 			return middleware.NotImplemented("operation VariantFindVariants has not yet been implemented")
 		}),
+		ExportGetExportEvalCacheJSONHandler: export.GetExportEvalCacheJSONHandlerFunc(func(params export.GetExportEvalCacheJSONParams) middleware.Responder {
+			return middleware.NotImplemented("operation ExportGetExportEvalCacheJSON has not yet been implemented")
+		}),
 		ExportGetExportSqliteHandler: export.GetExportSqliteHandlerFunc(func(params export.GetExportSqliteParams) middleware.Responder {
 			return middleware.NotImplemented("operation ExportGetExportSqlite has not yet been implemented")
 		}),
@@ -188,6 +191,8 @@ type FlagrAPI struct {
 	SegmentFindSegmentsHandler segment.FindSegmentsHandler
 	// VariantFindVariantsHandler sets the operation handler for the find variants operation
 	VariantFindVariantsHandler variant.FindVariantsHandler
+	// ExportGetExportEvalCacheJSONHandler sets the operation handler for the get export eval cache JSON operation
+	ExportGetExportEvalCacheJSONHandler export.GetExportEvalCacheJSONHandler
 	// ExportGetExportSqliteHandler sets the operation handler for the get export sqlite operation
 	ExportGetExportSqliteHandler export.GetExportSqliteHandler
 	// FlagGetFlagHandler sets the operation handler for the get flag operation
@@ -333,6 +338,10 @@ func (o *FlagrAPI) Validate() error {
 
 	if o.VariantFindVariantsHandler == nil {
 		unregistered = append(unregistered, "variant.FindVariantsHandler")
+	}
+
+	if o.ExportGetExportEvalCacheJSONHandler == nil {
+		unregistered = append(unregistered, "export.GetExportEvalCacheJSONHandler")
 	}
 
 	if o.ExportGetExportSqliteHandler == nil {
@@ -556,6 +565,11 @@ func (o *FlagrAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/flags/{flagID}/variants"] = variant.NewFindVariants(o.context, o.VariantFindVariantsHandler)
+
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/export/eval_cache/json"] = export.NewGetExportEvalCacheJSON(o.context, o.ExportGetExportEvalCacheJSONHandler)
 
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)

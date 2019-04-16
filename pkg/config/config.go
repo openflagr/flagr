@@ -14,6 +14,12 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// EvalOnlyModeDBDrivers is a list of DBDrivers that we should only run in EvalOnlyMode.
+var EvalOnlyModeDBDrivers = map[string]struct{}{
+	"json_file": {},
+	"json_http": {},
+}
+
 // Global is the global dependency we can use, such as the new relic app instance
 var Global = struct {
 	NewrelicApp  newrelic.Application
@@ -24,11 +30,18 @@ var Global = struct {
 func init() {
 	env.Parse(&Config)
 
+	setupEvalOnlyMode()
 	setupSentry()
 	setupLogrus()
 	setupStatsd()
 	setupNewrelic()
 	setupPrometheus()
+}
+
+func setupEvalOnlyMode() {
+	if _, ok := EvalOnlyModeDBDrivers[Config.DBDriver]; ok {
+		Config.EvalOnlyMode = true
+	}
 }
 
 func setupLogrus() {

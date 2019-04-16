@@ -163,7 +163,7 @@ func TestEvalFlag(t *testing.T) {
 			},
 		}
 		f.PrepareEvaluation()
-		cache := &EvalCache{mapCache: map[string]*entity.Flag{"100": &f}}
+		cache := &EvalCache{idCache: map[string]*entity.Flag{"100": &f}}
 		defer gostub.StubFunc(&GetEvalCache, cache).Reset()
 		result := evalFlag(models.EvalContext{
 			EnableDebug:   true,
@@ -183,7 +183,7 @@ func TestEvalFlag(t *testing.T) {
 		f.Segments[0].RolloutPercent = uint(0)
 
 		f.PrepareEvaluation()
-		cache := &EvalCache{mapCache: map[string]*entity.Flag{"100": &f}}
+		cache := &EvalCache{idCache: map[string]*entity.Flag{"100": &f}}
 		defer gostub.StubFunc(&GetEvalCache, cache).Reset()
 		result := evalFlag(models.EvalContext{
 			EnableDebug:   true,
@@ -215,7 +215,7 @@ func TestEvalFlag(t *testing.T) {
 			},
 		}
 		f.PrepareEvaluation()
-		cache := &EvalCache{mapCache: map[string]*entity.Flag{"100": &f}}
+		cache := &EvalCache{idCache: map[string]*entity.Flag{"100": &f}}
 		defer gostub.StubFunc(&GetEvalCache, cache).Reset()
 		result := evalFlag(models.EvalContext{
 			EnableDebug:   true,
@@ -231,7 +231,7 @@ func TestEvalFlag(t *testing.T) {
 	t.Run("test enabled=false", func(t *testing.T) {
 		f := entity.GenFixtureFlag()
 		f.Enabled = false
-		cache := &EvalCache{mapCache: map[string]*entity.Flag{"100": &f}}
+		cache := &EvalCache{idCache: map[string]*entity.Flag{"100": &f}}
 		defer gostub.StubFunc(&GetEvalCache, cache).Reset()
 		result := evalFlag(models.EvalContext{
 			EnableDebug:   true,
@@ -248,7 +248,7 @@ func TestEvalFlag(t *testing.T) {
 		t.Run("empty entityType case", func(t *testing.T) {
 			f := entity.GenFixtureFlag()
 			f.EntityType = ""
-			cache := &EvalCache{mapCache: map[string]*entity.Flag{"100": &f}}
+			cache := &EvalCache{idCache: map[string]*entity.Flag{"100": &f}}
 			defer gostub.StubFunc(&GetEvalCache, cache).Reset()
 			result := evalFlag(models.EvalContext{
 				EnableDebug:   true,
@@ -264,7 +264,7 @@ func TestEvalFlag(t *testing.T) {
 		t.Run("override case", func(t *testing.T) {
 			f := entity.GenFixtureFlag()
 			f.EntityType = "some_entity_type"
-			cache := &EvalCache{mapCache: map[string]*entity.Flag{"100": &f}}
+			cache := &EvalCache{idCache: map[string]*entity.Flag{"100": &f}}
 			defer gostub.StubFunc(&GetEvalCache, cache).Reset()
 			result := evalFlag(models.EvalContext{
 				EnableDebug:   true,

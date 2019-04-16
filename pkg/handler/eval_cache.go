@@ -7,7 +7,9 @@ import (
 	"github.com/checkr/flagr/pkg/config"
 	"github.com/checkr/flagr/pkg/entity"
 	"github.com/checkr/flagr/pkg/util"
+
 	"github.com/sirupsen/logrus"
+	"github.com/zhouzhuojie/withtimeout"
 )
 
 var (
@@ -15,10 +17,13 @@ var (
 	singletonEvalCacheOnce sync.Once
 )
 
+type mapCache map[string]*entity.Flag
+
 // EvalCache is the in-memory cache just for evaluation
 type EvalCache struct {
-	mapCache     map[string]*entity.Flag
 	mapCacheLock sync.RWMutex
+	idCache      mapCache
+	keyCache     mapCache
 
 	refreshTimeout  time.Duration
 	refreshInterval time.Duration
@@ -28,7 +33,8 @@ type EvalCache struct {
 var GetEvalCache = func() *EvalCache {
 	singletonEvalCacheOnce.Do(func() {
 		ec := &EvalCache{
-			mapCache:        make(map[string]*entity.Flag),
+			idCache:         make(map[string]*entity.Flag),
+			keyCache:        make(map[string]*entity.Flag),
 			refreshTimeout:  config.Config.EvalCacheRefreshTimeout,
 			refreshInterval: config.Config.EvalCacheRefreshInterval,
 		}
@@ -56,17 +62,14 @@ func (ec *EvalCache) Start() {
 // GetByFlagKeyOrID gets the flag by Key or ID
 func (ec *EvalCache) GetByFlagKeyOrID(keyOrID interface{}) *entity.Flag {
 	ec.mapCacheLock.RLock()
-	f := ec.mapCache[util.SafeString(keyOrID)]
-	ec.mapCacheLock.RUnlock()
-	return f
-}
+	defer ec.mapCacheLock.RUnlock()
 
-var fetchAllFlags = func() ([]entity.Flag, error) {
-	// Use eager loading to avoid N+1 problem
-	// doc: http://jinzhu.me/gorm/crud.html#preloading-eager-loading
-	fs := []entity.Flag{}
-	err := entity.PreloadSegmentsVariants(getDB()).Find(&fs).Error
-	return fs, err
+	s := util.SafeString(keyOrID)
+	f, ok := ec.idCache[s]
+	if !ok {
+		f = ec.keyCache[s]
+	}
+	return f
 }
 
 func (ec *EvalCache) reloadMapCache() error {
@@ -74,30 +77,19 @@ func (ec *EvalCache) reloadMapCache() error {
 		defer config.Global.NewrelicApp.StartTransaction("eval_cache_reload", nil, nil).End()
 	}
 
-	fs, err := fetchAllFlags()
-	if err != nil {
-		return err
-	}
-	m := make(map[string]*entity.Flag)
-	for i := range fs {
-		ptr := &fs[i]
-		if ptr.ID != 0 {
-			m[util.SafeString(ptr.ID)] = ptr
-		}
-		if ptr.Key != "" {
-			m[ptr.Key] = ptr
-		}
-	}
-
-	for _, f := range m {
-		err := f.PrepareEvaluation()
+	_, _, err := withtimeout.Do(ec.refreshTimeout, func() (interface{}, error) {
+		idCache, keyCache, err := ec.fetchAllFlags()
 		if err != nil {
-			return err
+			return nil, err
 		}
-	}
 
-	ec.mapCacheLock.Lock()
-	ec.mapCache = m
-	ec.mapCacheLock.Unlock()
-	return nil
+		ec.mapCacheLock.Lock()
+		defer ec.mapCacheLock.Unlock()
+
+		ec.idCache = idCache
+		ec.keyCache = keyCache
+		return nil, err
+	})
+
+	return err
 }

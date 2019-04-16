@@ -783,6 +783,23 @@ paths:
           description: generic error response
           schema:
             $ref: '#/definitions/error'
+  /export/eval_cache/json:
+    get:
+      tags:
+        - export
+      operationId: getExportEvalCacheJSON
+      description: Export JSON format of the eval cache dump
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+        default:
+          description: generic error response
+          schema:
+            $ref: '#/definitions/error'
 definitions:
   flag:
     type: object
