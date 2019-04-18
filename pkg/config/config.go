@@ -18,6 +18,7 @@ import (
 var EvalOnlyModeDBDrivers = map[string]struct{}{
 	"json_file": {},
 	"json_http": {},
+	"s3":        {},
 }
 
 // Global is the global dependency we can use, such as the new relic app instance

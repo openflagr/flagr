@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 
+	"github.com/aws/aws-sdk-go/aws/s3"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/checkr/flagr/pkg/config"
 	"github.com/checkr/flagr/pkg/entity"
 	"github.com/checkr/flagr/pkg/util"
@@ -137,4 +140,26 @@ func (df *dbFetcher) fetch() ([]entity.Flag, error) {
 	fs := []entity.Flag{}
 	err := entity.PreloadSegmentsVariants(df.db).Find(&fs).Error
 	return fs, err
+}
+
+type s3Fetcher struct {
+	region  string
+	bucket  string
+	key     string
+	retries int
+	timeout time.Duration
+	session *session.Session
+}
+
+func (sf *s3Fetcher) fetch() ([]entity.Flag, error) {
+	svc := s3.New(sf.session)
+	req := &s3.GetObjectInput{
+		Bucket: sf.bucket,
+		Key:    sf.key,
+	}
+	res, err := svc.GetObject(req)
+	if err != nil {
+		return nil, err
+	}
+	return nil, nil
 }
