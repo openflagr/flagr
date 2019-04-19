@@ -3,12 +3,17 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws/s3"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/checkr/flagr/pkg/config"
 	"github.com/checkr/flagr/pkg/entity"
 	"github.com/checkr/flagr/pkg/util"
@@ -18,6 +23,20 @@ import (
 // EvalCacheJSON is the JSON serialization format of EvalCache's flags
 type EvalCacheJSON struct {
 	Flags []entity.Flag
+}
+
+func (ecj *EvalCacheJSON) read(r io.ReadCloser) error {
+	defer r.Close()
+
+	b, err := ioutil.ReadAll(r)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(b, ecj)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (ec *EvalCache) export() EvalCacheJSON {
@@ -93,12 +112,12 @@ type jsonFileFetcher struct {
 }
 
 func (ff *jsonFileFetcher) fetch() ([]entity.Flag, error) {
-	b, err := ioutil.ReadFile(ff.filePath)
+	file, err := os.Open(ff.filePath)
 	if err != nil {
 		return nil, err
 	}
 	ecj := &EvalCacheJSON{}
-	err = json.Unmarshal(b, ecj)
+	err = ecj.read(file)
 	if err != nil {
 		return nil, err
 	}
@@ -115,15 +134,9 @@ func (hf *jsonHTTPFetcher) fetch() ([]entity.Flag, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer res.Body.Close()
-
-	b, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return nil, err
-	}
 
 	ecj := &EvalCacheJSON{}
-	err = json.Unmarshal(b, ecj)
+	err = ecj.read(res.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -151,15 +164,37 @@ type s3Fetcher struct {
 	session *session.Session
 }
 
+func newS3Fetcher(connectionStr string) (*s3Fetcher, error) {
+	keyValus := strings.Split(connectionStr, " ")
+
+	se, err := session.NewSession(&aws.Config{
+		CredentialsChainVerboseErrors: nil,
+		Credentials:                   &credentials.Credentials{},
+		Endpoint:                      nil,
+		Region:                        nil,
+		MaxRetries:                    nil,
+		S3ForcePathStyle:              util.BoolPtr(true),
+	})
+	return &s3Fetcher{
+		session: se,
+	}, nil
+}
+
 func (sf *s3Fetcher) fetch() ([]entity.Flag, error) {
 	svc := s3.New(sf.session)
 	req := &s3.GetObjectInput{
-		Bucket: sf.bucket,
-		Key:    sf.key,
+		Bucket: util.StringPtr(sf.bucket),
+		Key:    util.StringPtr(sf.key),
 	}
 	res, err := svc.GetObject(req)
 	if err != nil {
 		return nil, err
 	}
-	return nil, nil
+
+	ecj := &EvalCacheJSON{}
+	err = ecj.read(res.Body)
+	if err != nil {
+		return nil, err
+	}
+	return ecj.Flags, nil
 }
