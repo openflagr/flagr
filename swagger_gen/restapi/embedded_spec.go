@@ -1241,8 +1241,7 @@ func init() {
         "rolloutPercent": {
           "type": "integer",
           "format": "int64",
-          "maximum": 100,
-          "minimum": 0
+          "maximum": 100
         }
       }
     },
@@ -1278,8 +1277,7 @@ func init() {
         "percent": {
           "type": "integer",
           "format": "int64",
-          "maximum": 100,
-          "minimum": 0
+          "maximum": 100
         },
         "variantID": {
           "type": "integer",
@@ -1614,8 +1612,7 @@ func init() {
         "rolloutPercent": {
           "type": "integer",
           "format": "int64",
-          "maximum": 100,
-          "minimum": 0
+          "maximum": 100
         }
       }
     },
@@ -1666,14 +1663,12 @@ func init() {
         },
         "rank": {
           "type": "integer",
-          "format": "int64",
-          "minimum": 0
+          "format": "int64"
         },
         "rolloutPercent": {
           "type": "integer",
           "format": "int64",
-          "maximum": 100,
-          "minimum": 0
+          "maximum": 100
         }
       }
     },

@@ -54,7 +54,6 @@ func (o *GetExportSqliteOK) WriteResponse(rw http.ResponseWriter, producer runti
 	if err := producer.Produce(rw, payload); err != nil {
 		panic(err) // let the recovery middleware deal with this
 	}
-
 }
 
 /*GetExportSqliteDefault generic error response

@@ -41,7 +41,7 @@ func (o *FindConstraintsURL) SetBasePath(bp string) {
 
 // Build a url path and query string
 func (o *FindConstraintsURL) Build() (*url.URL, error) {
-	var result url.URL
+	var _result url.URL
 
 	var _path = "/flags/{flagID}/segments/{segmentID}/constraints"
 
@@ -49,23 +49,23 @@ func (o *FindConstraintsURL) Build() (*url.URL, error) {
 	if flagID != "" {
 		_path = strings.Replace(_path, "{flagID}", flagID, -1)
 	} else {
-		return nil, errors.New("FlagID is required on FindConstraintsURL")
+		return nil, errors.New("flagId is required on FindConstraintsURL")
 	}
 
 	segmentID := swag.FormatInt64(o.SegmentID)
 	if segmentID != "" {
 		_path = strings.Replace(_path, "{segmentID}", segmentID, -1)
 	} else {
-		return nil, errors.New("SegmentID is required on FindConstraintsURL")
+		return nil, errors.New("segmentId is required on FindConstraintsURL")
 	}
 
 	_basePath := o._basePath
 	if _basePath == "" {
 		_basePath = "/api/v1"
 	}
-	result.Path = golangswaggerpaths.Join(_basePath, _path)
+	_result.Path = golangswaggerpaths.Join(_basePath, _path)
 
-	return &result, nil
+	return &_result, nil
 }
 
 // Must is a helper function to panic when the url builder returns an error

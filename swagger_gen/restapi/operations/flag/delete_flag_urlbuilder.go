@@ -40,7 +40,7 @@ func (o *DeleteFlagURL) SetBasePath(bp string) {
 
 // Build a url path and query string
 func (o *DeleteFlagURL) Build() (*url.URL, error) {
-	var result url.URL
+	var _result url.URL
 
 	var _path = "/flags/{flagID}"
 
@@ -48,16 +48,16 @@ func (o *DeleteFlagURL) Build() (*url.URL, error) {
 	if flagID != "" {
 		_path = strings.Replace(_path, "{flagID}", flagID, -1)
 	} else {
-		return nil, errors.New("FlagID is required on DeleteFlagURL")
+		return nil, errors.New("flagId is required on DeleteFlagURL")
 	}
 
 	_basePath := o._basePath
 	if _basePath == "" {
 		_basePath = "/api/v1"
 	}
-	result.Path = golangswaggerpaths.Join(_basePath, _path)
+	_result.Path = golangswaggerpaths.Join(_basePath, _path)
 
-	return &result, nil
+	return &_result, nil
 }
 
 // Must is a helper function to panic when the url builder returns an error

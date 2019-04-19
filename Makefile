@@ -11,13 +11,17 @@ all: deps gen build build_ui run
 rebuild: gen build
 
 test: verifiers
-	@go test -race -covermode=atomic -coverprofile=coverage.txt github.com/checkr/flagr/pkg/...
+	@GO111MODULE=on go test -mod=vendor -race -covermode=atomic -coverprofile=coverage.txt github.com/checkr/flagr/pkg/...
 
 ci: test
 
+vendor:
+	@GO111MODULE=on go mod tidy
+	@GO111MODULE=on go mod vendor
+
 build:
 	@echo "Building Flagr Server to $(PWD)/flagr ..."
-	@CGO_ENABLED=1 go build -o $(PWD)/flagr github.com/checkr/flagr/swagger_gen/cmd/flagr-server
+	@CGO_ENABLED=1 GO111MODULE=on go build -mod=vendor -o $(PWD)/flagr github.com/checkr/flagr/swagger_gen/cmd/flagr-server
 
 build_ui:
 	@echo "Building Flagr UI ..."
@@ -29,14 +33,14 @@ run:
 gen: api_docs swagger
 
 deps: checks
-	@echo "Installing retool" && go get -u github.com/twitchtv/retool
-	@retool sync
-	@retool build
-	@retool do gometalinter --install
+	@GO111MODULE=off go get -u github.com/myitcv/gobin
+	@gobin github.com/go-swagger/go-swagger/cmd/swagger@v0.19.0
+	@gobin github.com/codeskyblue/fswatch
+	@gobin github.com/golangci/golangci-lint/cmd/golangci-lint@v1.16.0
 	@echo "Sqlite3" && sqlite3 -version
 
 watch:
-	@retool do fswatch
+	@fswatch
 
 serve_docs:
 	@yarn global add docsify-cli@4
@@ -53,18 +57,16 @@ api_docs:
 checks:
 	@echo "Check deps"
 	@(env bash $(PWD)/buildscripts/checkdeps.sh)
-	@echo "Checking project is in GOPATH"
-	@(env bash $(PWD)/buildscripts/checkgopath.sh)
 
-verifiers: verify_gometalinter verify_swagger
+verifiers: verify_lint verify_swagger
 
-verify_gometalinter:
+verify_lint:
 	@echo "Running $@"
-	@retool do gometalinter --config=.gometalinter.json ./pkg/...
+	@golangci-lint run -D gosimple -D errcheck -D staticcheck ./pkg/...
 
 verify_swagger:
 	@echo "Running $@"
-	@retool do swagger validate $(PWD)/docs/api_docs/bundle.yaml
+	@swagger validate $(PWD)/docs/api_docs/bundle.yaml
 
 clean:
 	@echo "Cleaning up all the generated files"
@@ -78,5 +80,5 @@ swagger: verify_swagger
 	@cp $(PWD)/swagger_gen/restapi/configure_flagr.go /tmp/configure_flagr.go 2>/dev/null || :
 	@rm -rf $(PWD)/swagger_gen
 	@mkdir $(PWD)/swagger_gen
-	@retool do swagger generate server -t ./swagger_gen -f $(PWD)/docs/api_docs/bundle.yaml
+	@swagger generate server -t ./swagger_gen -f $(PWD)/docs/api_docs/bundle.yaml
 	@cp /tmp/configure_flagr.go $(PWD)/swagger_gen/restapi/configure_flagr.go 2>/dev/null || :
