@@ -5,7 +5,7 @@ version: 2
 jobs:
   unit_test:
     docker:
-      - image: checkr/flagr-ci
+      - image: checkr/flagr-ci:latest
     working_directory: /go/src/github.com/checkr/flagr
     steps:
       - checkout
@@ -22,6 +22,7 @@ jobs:
       - setup_remote_docker:
           version: 18.06.0-ce
           docker_layer_caching: true
+      - run: docker pull checkr/flagr-ci:latest
       - run: cd integration_tests && make build-image
       - run: cd integration_tests && make down
       - run: cd integration_tests && make up

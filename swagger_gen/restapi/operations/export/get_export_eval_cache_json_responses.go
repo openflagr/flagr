@@ -53,7 +53,6 @@ func (o *GetExportEvalCacheJSONOK) WriteResponse(rw http.ResponseWriter, produce
 	if err := producer.Produce(rw, payload); err != nil {
 		panic(err) // let the recovery middleware deal with this
 	}
-
 }
 
 /*GetExportEvalCacheJSONDefault generic error response
