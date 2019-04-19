@@ -11,7 +11,7 @@ import (
 
 // MapDistributions maps distribution
 func MapDistributions(r []*models.Distribution, segmentID uint) []entity.Distribution {
-	e := make([]entity.Distribution, len(r), len(r))
+	e := make([]entity.Distribution, len(r))
 	for i, d := range r {
 		e[i] = MapDistribution(d, segmentID)
 	}

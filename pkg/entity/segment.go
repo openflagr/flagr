@@ -51,8 +51,8 @@ func (s *Segment) PrepareEvaluation() error {
 	dLen := len(s.Distributions)
 	se := SegmentEvaluation{
 		DistributionArray: DistributionArray{
-			VariantIDs:          make([]uint, dLen, dLen),
-			PercentsAccumulated: make([]int, dLen, dLen),
+			VariantIDs:          make([]uint, dLen),
+			PercentsAccumulated: make([]int, dLen),
 		},
 	}
 

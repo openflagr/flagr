@@ -15,6 +15,7 @@ test: verifiers
 
 ci: test
 
+.PHONY: vendor
 vendor:
 	@GO111MODULE=on go mod tidy
 	@GO111MODULE=on go mod vendor
@@ -62,7 +63,7 @@ verifiers: verify_lint verify_swagger
 
 verify_lint:
 	@echo "Running $@"
-	@golangci-lint run -D gosimple -D errcheck -D staticcheck ./pkg/...
+	@golangci-lint run -D errcheck ./pkg/...
 
 verify_swagger:
 	@echo "Running $@"
