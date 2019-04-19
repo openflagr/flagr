@@ -18,9 +18,6 @@ require (
 	github.com/caarlos0/env v3.3.0+incompatible
 	github.com/certifi/gocertifi v0.0.0-20180118203423-deb3ae2ef261 // indirect
 	github.com/codegangsta/negroni v1.0.0 // indirect
-	github.com/codeskyblue/dockerignore v0.0.0-20151214070507-de82dee623d9 // indirect
-	github.com/codeskyblue/fswatch v0.0.0-20190409014817-776b613dacea // indirect
-	github.com/codeskyblue/kexec v0.0.0-20180119015717-5a4bed90d99a // indirect
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dchest/uniuri v0.0.0-20160212164326-8902c56451e9
 	github.com/denisenkom/go-mssqldb v0.0.0-20190418034912-35416408c946 // indirect
@@ -33,7 +30,6 @@ require (
 	github.com/go-ini/ini v1.38.2 // indirect
 	github.com/go-openapi/analysis v0.0.0-20180801175213-7c1bef8f6d9f // indirect
 	github.com/go-openapi/errors v0.0.0-20180827163446-87bb65328877
-	github.com/go-openapi/inflect v0.19.0 // indirect
 	github.com/go-openapi/jsonpointer v0.0.0-20180322222829-3a0015ad55fa // indirect
 	github.com/go-openapi/jsonreference v0.0.0-20180322222742-3fb327e6747d // indirect
 	github.com/go-openapi/loads v0.0.0-20180825180312-fd899182a268
@@ -43,22 +39,19 @@ require (
 	github.com/go-openapi/swag v0.0.0-20180908172849-dd0dad036e67
 	github.com/go-openapi/validate v0.0.0-20180825180342-e0648ff40507
 	github.com/go-sql-driver/mysql v1.4.0 // indirect
-	github.com/go-swagger/go-swagger v0.19.0 // indirect
-	github.com/gobuild/log v0.0.0-20140525152617-f1f03dc733eb // indirect
 	github.com/gohttp/pprof v0.0.0-20141119085724-c9d246cbb3ba
-	github.com/golangci/golangci-lint v1.16.0 // indirect
-	github.com/google/shlex v0.0.0-20181106134648-c34317bd91bf // indirect
-	github.com/gorilla/handlers v1.4.0 // indirect
 	github.com/gorilla/mux v1.7.1 // indirect
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/jinzhu/gorm v0.0.0-20180909231100-123d4f50ef8a
 	github.com/jinzhu/inflection v0.0.0-20180308033659-04140366298a // indirect
 	github.com/jinzhu/now v1.0.0 // indirect
 	github.com/jpillora/backoff v0.0.0-20170918002102-8eab2debe79d // indirect
+	github.com/kr/pretty v0.1.0 // indirect
 	github.com/lib/pq v1.0.0 // indirect
 	github.com/mailru/easyjson v0.0.0-20180823135443-60711f1a8329 // indirect
 	github.com/mattn/go-sqlite3 v1.9.0 // indirect
 	github.com/meatballhat/negroni-logrus v0.0.0-20170801195057-31067281800f
+	github.com/mitchellh/mapstructure v1.1.2 // indirect
 	github.com/newrelic/go-agent v2.1.0+incompatible
 	github.com/onsi/ginkgo v1.8.0 // indirect
 	github.com/onsi/gomega v1.5.0 // indirect
@@ -74,15 +67,14 @@ require (
 	github.com/sirupsen/logrus v1.2.0
 	github.com/smartystreets/goconvey v0.0.0-20190330032615-68dc04aab96a // indirect
 	github.com/spf13/cast v1.3.0
-	github.com/spf13/viper v1.3.2 // indirect
 	github.com/stretchr/testify v1.3.0
 	github.com/tinylib/msgp v1.1.0 // indirect
-	github.com/toqueteos/webbrowser v1.1.0 // indirect
 	github.com/urfave/negroni v0.3.0
 	github.com/yadvendar/negroni-newrelic-go-agent v0.0.0-20160803090806-3dc58758cb67
 	github.com/zhouzhuojie/conditions v0.0.0-20190213052452-7de314ba1d59
 	github.com/zhouzhuojie/withtimeout v0.0.0-20190405051827-12b39eb2edd5
 	golang.org/x/net v0.0.0-20190313220215-9f648a60d977
+	golang.org/x/sys v0.0.0-20190312061237-fead79001313 // indirect
 	google.golang.org/api v0.3.1
 	google.golang.org/grpc v1.19.0
 	gopkg.in/DataDog/dd-trace-go.v1 v1.9.0

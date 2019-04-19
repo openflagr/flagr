@@ -21,7 +21,12 @@ type kinesisRecorder struct {
 
 // NewKinesisRecorder creates a new Kinesis recorder
 var NewKinesisRecorder = func() DataRecorder {
-	client := kinesis.New(session.New(aws.NewConfig()))
+	se, err := session.NewSession(aws.NewConfig())
+	if err != nil {
+		logrus.WithField("kinesis_error", err).Fatal("error creating aws session")
+	}
+
+	client := kinesis.New(se)
 
 	p := newKinesisProducer(&producer.Config{
 		StreamName:          config.Config.RecorderKinesisStreamName,

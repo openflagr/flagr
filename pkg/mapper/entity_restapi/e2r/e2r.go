@@ -32,7 +32,7 @@ func MapFlag(e *entity.Flag) (*models.Flag, error) {
 
 // MapFlags maps flags
 func MapFlags(e []entity.Flag) ([]*models.Flag, error) {
-	ret := make([]*models.Flag, len(e), len(e))
+	ret := make([]*models.Flag, len(e))
 	for i, f := range e {
 		rf, err := MapFlag(&f)
 		if err != nil {
@@ -64,7 +64,7 @@ func MapFlagSnapshot(e *entity.FlagSnapshot) (*models.FlagSnapshot, error) {
 
 // MapFlagSnapshots maps flag snapshots
 func MapFlagSnapshots(e []entity.FlagSnapshot) ([]*models.FlagSnapshot, error) {
-	ret := make([]*models.FlagSnapshot, len(e), len(e))
+	ret := make([]*models.FlagSnapshot, len(e))
 	for i, fs := range e {
 		rf, err := MapFlagSnapshot(&fs)
 		if err != nil {
@@ -89,7 +89,7 @@ func MapSegment(e *entity.Segment) *models.Segment {
 
 // MapSegments maps segments
 func MapSegments(e []entity.Segment) []*models.Segment {
-	ret := make([]*models.Segment, len(e), len(e))
+	ret := make([]*models.Segment, len(e))
 	for i, s := range e {
 		ret[i] = MapSegment(&s)
 	}
@@ -108,7 +108,7 @@ func MapConstraint(e *entity.Constraint) *models.Constraint {
 
 // MapConstraints maps constraints
 func MapConstraints(e []entity.Constraint) []*models.Constraint {
-	ret := make([]*models.Constraint, len(e), len(e))
+	ret := make([]*models.Constraint, len(e))
 	for i, c := range e {
 		ret[i] = MapConstraint(&c)
 	}
@@ -128,7 +128,7 @@ func MapDistribution(e *entity.Distribution) *models.Distribution {
 
 // MapDistributions maps distribution
 func MapDistributions(e []entity.Distribution) []*models.Distribution {
-	ret := make([]*models.Distribution, len(e), len(e))
+	ret := make([]*models.Distribution, len(e))
 	for i, d := range e {
 		ret[i] = MapDistribution(&d)
 	}
@@ -147,7 +147,7 @@ func MapVariant(e *entity.Variant) *models.Variant {
 
 // MapVariants maps variant
 func MapVariants(e []entity.Variant) []*models.Variant {
-	ret := make([]*models.Variant, len(e), len(e))
+	ret := make([]*models.Variant, len(e))
 	for i, v := range e {
 		ret[i] = MapVariant(&v)
 	}
