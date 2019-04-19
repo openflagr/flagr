@@ -1,7 +1,7 @@
 ######################################
 # Prepare yarn and go build in builder
 ######################################
-FROM checkr/flagr-ci as builder
+FROM checkr/flagr-ci:go1.12 as builder
 WORKDIR /go/src/github.com/checkr/flagr
 ADD . .
 
