@@ -43,22 +43,9 @@ func (e *eval) PostEvaluation(params evaluation.PostEvaluationParams) middleware
 }
 
 func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) middleware.Responder {
-	var flags  []entity.Flag
-	flagIDsFromDB := []int64{}
-
-	//flagIDs := params.Body.FlagIds
-
-	if err := getDB().Where("enabled = ?", 1).Find(&flags).Error; err != nil {
-		return evaluation.NewPostEvaluationBatchDefault(400).WithPayload(
-			ErrorMessage("empty body"))
-	}
-
-	for _, f := range flags {
-		flagIDsFromDB = append(flagIDsFromDB, int64(f.ID))
-	}
-
+	flagIDs := GetEvalCache().activeFlagIDs
 	entity := params.Body
-	flagIDs := flagIDsFromDB
+
 	//flagKeys := params.Body.FlagKeys
 	results := &models.EvaluationBatchResponse{}
 

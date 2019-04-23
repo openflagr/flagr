@@ -19,7 +19,7 @@ var (
 type EvalCache struct {
 	mapCache     map[string]*entity.Flag
 	mapCacheLock sync.RWMutex
-
+	activeFlagIDs  []int64
 	refreshTimeout  time.Duration
 	refreshInterval time.Duration
 }
@@ -69,9 +69,29 @@ var fetchAllFlags = func() ([]entity.Flag, error) {
 	return fs, err
 }
 
+var fetchActiveFlagIDs = func() ([]int64, error) {
+	var flags  []entity.Flag
+	flagIDsFromDB := []int64{}
+
+	if err := getDB().Where("enabled = ?", 1).Find(&flags).Error; err != nil {
+		return flagIDsFromDB, err
+	}
+
+	for _, f := range flags {
+		flagIDsFromDB = append(flagIDsFromDB, int64(f.ID))
+	}
+
+	return flagIDsFromDB, nil
+}
+
 func (ec *EvalCache) reloadMapCache() error {
 	if config.Config.NewRelicEnabled {
 		defer config.Global.NewrelicApp.StartTransaction("eval_cache_reload", nil, nil).End()
+	}
+
+	fids, err := fetchActiveFlagIDs()
+	if err != nil {
+		return err
 	}
 
 	fs, err := fetchAllFlags()
@@ -98,6 +118,7 @@ func (ec *EvalCache) reloadMapCache() error {
 
 	ec.mapCacheLock.Lock()
 	ec.mapCache = m
+	ec.activeFlagIDs = fids
 	ec.mapCacheLock.Unlock()
 	return nil
 }
