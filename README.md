@@ -34,8 +34,8 @@ Try it with Docker.
 
 ```sh
 # Start the docker container
-docker pull checkr/flagr
-docker run -it -p 18000:18000 checkr/flagr
+docker pull connectedvideo/cvflagr
+docker run -it -p 18000:18000 connectedvideo/cvflagr
 
 # Open the Flagr UI
 open localhost:18000
