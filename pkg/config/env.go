@@ -11,6 +11,9 @@ var Config = struct {
 
 	// LogrusLevel sets the logrus logging level
 	LogrusLevel string `env:"FLAGR_LOGRUS_LEVEL" envDefault:"info"`
+	// LogrusFormat sets the logrus logging formatter
+	// Possible values: text, json
+	LogrusFormat string `env:"FLAGR_LOGRUS_FORMAT" envDefault:"text"`
 	// PProfEnabled - to enable the standard pprof of golang's http server
 	PProfEnabled bool `env:"FLAGR_PPROF_ENABLED" envDefault:"true"`
 
