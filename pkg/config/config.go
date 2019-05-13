@@ -51,6 +51,14 @@ func setupLogrus() {
 	}
 	logrus.SetLevel(l)
 	logrus.SetOutput(os.Stdout)
+	switch Config.LogrusFormat {
+	case "text":
+		logrus.SetFormatter(&logrus.TextFormatter{})
+	case "json":
+		logrus.SetFormatter(&logrus.JSONFormatter{})
+	default:
+		logrus.Warnf("unexpected logrus format: %s, should be one of: text, json", Config.LogrusFormat)
+	}
 }
 
 func setupSentry() {
