@@ -82,11 +82,15 @@ func TestIsSafeKey(t *testing.T) {
 	assert.Empty(t, msg)
 
 	b, msg = IsSafeKey("1a")
-	assert.False(t, b)
+	assert.True(t, b)
 	assert.NotEmpty(t, msg)
 
-	b, msg = IsSafeKey("_a")
+	b, msg = IsSafeKey("  ")
 	assert.False(t, b)
+	assert.NotEmpty(t, msg)	
+
+	b, msg = IsSafeKey("_a")
+	assert.True(t, b)
 	assert.NotEmpty(t, msg)
 
 	b, msg = IsSafeKey(strings.Repeat("a", 64))
