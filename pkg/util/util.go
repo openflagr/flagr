@@ -12,7 +12,7 @@ import (
 
 var (
 	keyLengthLimit = 63
-	keyRegex       = regexp.MustCompile("^[a-z]+[a-z0-9_]*$")
+	keyRegex       = regexp.MustCompile(`^[\w\d-]+$`)
 
 	randomKeyCharset = []byte("123456789abcdefghijkmnopqrstuvwxyz")
 	randomKeyPrefix  = "k"

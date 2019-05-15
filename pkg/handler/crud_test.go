@@ -191,8 +191,8 @@ func TestCrudFlagsWithFailures(t *testing.T) {
 	t.Run("CreateFlag - invalid key error", func(t *testing.T) {
 		res = c.CreateFlag(flag.CreateFlagParams{
 			Body: &models.CreateFlagRequest{
-				Description: util.StringPtr("funny flag"),
-				Key:         "1-2-3", // invalid key
+				Description: util.StringPtr(" flag with a space"),
+				Key:         " 1-2-3", // invalid key
 			},
 		})
 		assert.NotZero(t, res.(*flag.CreateFlagDefault).Payload)
@@ -811,7 +811,7 @@ func TestCrudVariantsWithFailures(t *testing.T) {
 		res = c.CreateVariant(variant.CreateVariantParams{
 			FlagID: int64(1),
 			Body: &models.CreateVariantRequest{
-				Key: util.StringPtr("123_invalid_key"),
+				Key: util.StringPtr(" 123_invalid_key"),
 			},
 		})
 		assert.NotZero(t, res.(*variant.CreateVariantDefault).Payload)
@@ -868,7 +868,7 @@ func TestCrudVariantsWithFailures(t *testing.T) {
 			FlagID:    int64(1),
 			VariantID: int64(1),
 			Body: &models.PutVariantRequest{
-				Key: util.StringPtr("123_invalid_key"),
+				Key: util.StringPtr(" spaces in key 123_invalid_key"),
 			},
 		})
 		assert.NotZero(t, *res.(*variant.PutVariantDefault).Payload)
