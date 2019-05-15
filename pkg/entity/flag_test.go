@@ -33,7 +33,7 @@ func TestCreateFlagKey(t *testing.T) {
 	})
 
 	t.Run("invalid key", func(t *testing.T) {
-		key, err := CreateFlagKey("1-2-3")
+		key, err := CreateFlagKey(" spaces in key are not allowed 1-2-3")
 		assert.Error(t, err)
 		assert.Zero(t, key)
 	})
@@ -52,7 +52,7 @@ func TestCreateFlagEntityType(t *testing.T) {
 		f := GenFixtureFlag()
 		db := PopulateTestDB(f)
 
-		err := CreateFlagEntityType(db, "123-invalid-key")
+		err := CreateFlagEntityType(db, " spaces in key are not allowed 123-invalid-key")
 		assert.Error(t, err)
 	})
 }
