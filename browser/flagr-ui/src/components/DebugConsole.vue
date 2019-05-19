@@ -128,7 +128,7 @@ export default {
 }
 </script>
 
-<style lang="less">
+<style lang="less" scoped>
 .json-editor {
   margin-top: 3px;
   .jsoneditor {
