@@ -246,12 +246,12 @@
                             </el-input>
                           </el-col>
                           <el-col :span="12">
-                            <el-input
-                              size="small"
-                              placeholder="{}"
-                              v-model="variant.attachmentStr">
-                              <template slot="prepend">Attachment </template>
-                            </el-input>
+                            <vue-json-editor
+                              v-model="variant.attachment"
+                              :showBtns="false"
+                              :ref="'json-editor-' + variant.id"
+                              class="json-editor"
+                            ></vue-json-editor>
                           </el-col>
                         </el-row>
                       </el-form>
@@ -505,6 +505,7 @@ import Spinner from '@/components/Spinner'
 import DebugConsole from '@/components/DebugConsole'
 import FlagHistory from '@/components/FlagHistory'
 import MarkdownEditor from '@/components/MarkdownEditor.vue'
+import vueJsonEditor from 'vue-json-editor'
 import {operators} from '@/../config/operators.json'
 
 const OPERATOR_VALUE_TO_LABEL_MAP = operators.reduce((acc, el) => {
@@ -549,7 +550,9 @@ function processSegment (segment) {
 }
 
 function processVariant (variant) {
-  variant.attachmentStr = JSON.stringify(variant.attachment)
+  if (typeof variant.attachment === 'string') {
+    variant.attachment = JSON.parse(variant.attachment)
+  }
 }
 
 export default {
@@ -559,10 +562,12 @@ export default {
     debugConsole: DebugConsole,
     flagHistory: FlagHistory,
     draggable: draggable,
-    MarkdownEditor
+    MarkdownEditor,
+    vueJsonEditor
   },
   data () {
     return {
+      refsIntervalId: false,
       loaded: false,
       dialogDeleteFlagVisible: false,
       dialogEditDistributionOpen: false,
@@ -714,7 +719,6 @@ export default {
       }, handleErr.bind(this))
     },
     putVariant (variant) {
-      variant.attachment = JSON.parse(variant.attachmentStr)
       Axios.put(
         `${API_URL}/flags/${this.flagId}/variants/${variant.id}`,
         variant
@@ -835,15 +839,29 @@ export default {
     },
     toggleShowMdEditor () {
       this.showMdEditor = !this.showMdEditor
+    },
+    setJsonEdiorModeWhenMounted () {
+      if (!this.$refs) {
+        return
+      }
+
+      const jsonEditorRefs = Object.keys(this.$refs).filter(key => key.startsWith('json-editor'))
+
+      jsonEditorRefs.forEach(ref => {
+        this.$refs[ref][0].editor.setMode('code')
+      })
+
+      clearInterval(this.refsIntervalId)
     }
   },
   mounted () {
     this.fetchFlag()
+    this.refsIntervalId = setInterval(this.setJsonEdiorModeWhenMounted, 50)
   }
 }
 </script>
 
-<style lang="less">
+<style lang="less" scoped>
 h5 {
   padding: 0;
   margin: 10px 0 5px;
@@ -956,6 +974,12 @@ ol.constraints-inner {
     font-size: 0.65em;
     white-space: nowrap;
     vertical-align: middle;
+  }
+}
+
+.json-editor {
+  .jsoneditor {
+    height: 200px;
   }
 }
 
