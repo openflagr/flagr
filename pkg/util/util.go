@@ -12,6 +12,7 @@ import (
 
 var (
 	keyLengthLimit = 63
+	variantLengthLimit = 254
 	keyRegex       = regexp.MustCompile("^[a-z]+[a-z0-9_]*$")
 	variantRegex   = regexp.MustCompile("[^\n]+")
 
@@ -35,8 +36,8 @@ func IsSafeVariant(s string) (bool, string) {
 	if !variantRegex.MatchString(s) {
 		return false, fmt.Sprintf("key:%s should have the format %v", s, variantRegex)
 	}
-	if len(s) > keyLengthLimit {
-		return false, fmt.Sprintf("key:%s cannot be longer than %d", s, keyLengthLimit)
+	if len(s) > variantLengthLimit {
+		return false, fmt.Sprintf("key:%s cannot be longer than %d", s, variantLengthLimit)
 	}
 	return true, ""
 }
