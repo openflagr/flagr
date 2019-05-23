@@ -768,6 +768,33 @@ func TestCrudVariants(t *testing.T) {
 	})
 	assert.Equal(t, *res.(*variant.PutVariantOK).Payload.Key, "another_control")
 
+	res = c.PutVariant(variant.PutVariantParams{
+		FlagID:    int64(1),
+		VariantID: int64(1),
+		Body: &models.PutVariantRequest{
+			Key: util.StringPtr("another_control"),
+			Attachment: map[string]interface{}{
+				"valid_int_value": 1,
+			},
+		},
+	})
+	assert.Equal(t, *res.(*variant.PutVariantOK).Payload.Key, "another_control")
+
+	res = c.PutVariant(variant.PutVariantParams{
+		FlagID:    int64(1),
+		VariantID: int64(1),
+		Body: &models.PutVariantRequest{
+			Key: util.StringPtr("another_control"),
+			Attachment: map[string]interface{}{
+				"valid_structured_value": map[string]interface{}{
+					"string_value": "string",
+					"int_value":    1,
+				},
+			},
+		},
+	})
+	assert.Equal(t, *res.(*variant.PutVariantOK).Payload.Key, "another_control")
+
 	// step 4. it should be able to delete the variant
 	res = c.DeleteVariant(variant.DeleteVariantParams{
 		FlagID:    int64(1),
@@ -844,20 +871,6 @@ func TestCrudVariantsWithFailures(t *testing.T) {
 			VariantID: int64(999999),
 			Body: &models.PutVariantRequest{
 				Key: util.StringPtr("another_control"),
-			},
-		})
-		assert.NotZero(t, *res.(*variant.PutVariantDefault).Payload)
-	})
-
-	t.Run("PutVariant - put invalid attachment", func(t *testing.T) {
-		res = c.PutVariant(variant.PutVariantParams{
-			FlagID:    int64(1),
-			VariantID: int64(1),
-			Body: &models.PutVariantRequest{
-				Key: util.StringPtr("another_control"),
-				Attachment: map[string]interface{}{
-					"invalid_int_value": 1,
-				},
 			},
 		})
 		assert.NotZero(t, *res.(*variant.PutVariantDefault).Payload)

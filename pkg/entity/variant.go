@@ -28,7 +28,7 @@ func (v *Variant) Validate() error {
 }
 
 // Attachment supports dynamic configuration in variant
-type Attachment map[string]string
+type Attachment map[string]interface{}
 
 // Scan implements scanner interface
 func (a *Attachment) Scan(value interface{}) error {
