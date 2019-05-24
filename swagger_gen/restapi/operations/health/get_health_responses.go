@@ -16,11 +16,16 @@ import (
 // GetHealthOKCode is the HTTP code returned for type GetHealthOK
 const GetHealthOKCode int = 200
 
-/*GetHealthOK OK
+/*GetHealthOK status of health check
 
 swagger:response getHealthOK
 */
 type GetHealthOK struct {
+
+	/*
+	  In: Body
+	*/
+	Payload *models.Health `json:"body,omitempty"`
 }
 
 // NewGetHealthOK creates GetHealthOK with default headers values
@@ -29,12 +34,27 @@ func NewGetHealthOK() *GetHealthOK {
 	return &GetHealthOK{}
 }
 
+// WithPayload adds the payload to the get health o k response
+func (o *GetHealthOK) WithPayload(payload *models.Health) *GetHealthOK {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the get health o k response
+func (o *GetHealthOK) SetPayload(payload *models.Health) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
 func (o *GetHealthOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
-	rw.Header().Del(runtime.HeaderContentType) //Remove Content-Type on empty responses
-
 	rw.WriteHeader(200)
+	if o.Payload != nil {
+		payload := o.Payload
+		if err := producer.Produce(rw, payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
+	}
 }
 
 /*GetHealthDefault generic error response
