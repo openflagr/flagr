@@ -52,7 +52,7 @@ serve_docs:
 ################################
 
 api_docs:
-	@echo "Installing swagger-merger" && yarn global add swagger-merger
+	@echo "Installing swagger-merger" && npm install swagger-merger -g
 	@swagger-merger -i $(PWD)/swagger/index.yaml -o $(PWD)/docs/api_docs/bundle.yaml
 
 checks:

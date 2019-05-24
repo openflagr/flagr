@@ -31,7 +31,7 @@ func init() {
   "info": {
     "description": "Flagr is a feature flagging, A/B testing and dynamic configuration microservice. The base path for all the APIs is \"/api/v1\".\n",
     "title": "Flagr",
-    "version": "1.1.0"
+    "version": "1.1.2"
   },
   "basePath": "/api/v1",
   "paths": {
@@ -1134,7 +1134,10 @@ func init() {
         "operationId": "getHealth",
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "status of health check",
+            "schema": {
+              "$ref": "#/definitions/health"
+            }
           },
           "default": {
             "description": "generic error response",
@@ -1531,6 +1534,14 @@ func init() {
           "minLength": 1
         },
         "updatedBy": {
+          "type": "string"
+        }
+      }
+    },
+    "health": {
+      "type": "object",
+      "properties": {
+        "status": {
           "type": "string"
         }
       }
@@ -1793,7 +1804,7 @@ func init() {
   "info": {
     "description": "Flagr is a feature flagging, A/B testing and dynamic configuration microservice. The base path for all the APIs is \"/api/v1\".\n",
     "title": "Flagr",
-    "version": "1.1.0"
+    "version": "1.1.2"
   },
   "basePath": "/api/v1",
   "paths": {
@@ -2896,7 +2907,10 @@ func init() {
         "operationId": "getHealth",
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "status of health check",
+            "schema": {
+              "$ref": "#/definitions/health"
+            }
           },
           "default": {
             "description": "generic error response",
@@ -3295,6 +3309,14 @@ func init() {
           "minLength": 1
         },
         "updatedBy": {
+          "type": "string"
+        }
+      }
+    },
+    "health": {
+      "type": "object",
+      "properties": {
+        "status": {
           "type": "string"
         }
       }

@@ -12,6 +12,7 @@ step_1_test_health()
 
     shakedown GET $flagr_url/health
         status 200
+        content_type 'application/json'
 }
 
 step_2_test_crud_flag()

@@ -5,7 +5,9 @@ get:
   description: Check if Flagr is healthy
   responses:
     200:
-      description: OK
+      description: status of health check
+      schema:
+        $ref: "#/definitions/health"
     default:
       description: generic error response
       schema:

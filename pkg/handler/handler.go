@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/checkr/flagr/pkg/config"
 	"github.com/checkr/flagr/pkg/entity"
+	"github.com/checkr/flagr/swagger_gen/models"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/constraint"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/distribution"
@@ -83,7 +84,9 @@ func setupEvaluation(api *operations.FlagrAPI) {
 
 func setupHealth(api *operations.FlagrAPI) {
 	api.HealthGetHealthHandler = health.GetHealthHandlerFunc(
-		func(health.GetHealthParams) middleware.Responder { return &health.GetHealthOK{} },
+		func(health.GetHealthParams) middleware.Responder {
+			return health.NewGetHealthOK().WithPayload(&models.Health{Status: "OK"})
+		},
 	)
 }
 
