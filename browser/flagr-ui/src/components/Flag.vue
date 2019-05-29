@@ -224,10 +224,15 @@
                     <el-card shadow="hover">
                       <el-form label-position="left" label-width="100px">
                         <div class="flex-row id-row">
-                          <div class="flex-row-left">
-                            <el-tag type="primary" :disable-transitions="true"> Variant ID: <b>{{ variant.id }}</b> </el-tag>
-                          </div>
-                          <div class="flex-row-right">
+                          <el-tag type="primary" :disable-transitions="true"> Variant ID: <b>{{ variant.id }}</b> </el-tag>
+                          <el-input
+                            class="variant-key-input"
+                            size="small"
+                            placeholder="Key"
+                            v-model="variant.key">
+                            <template slot="prepend">Key</template>
+                          </el-input>
+                          <div class="flex-row-right save-remove-variant-row">
                             <el-button slot="append" size="small" @click="putVariant(variant)">
                               Save Variant
                             </el-button>
@@ -236,24 +241,17 @@
                             </el-button>
                           </div>
                         </div>
-                        <el-row :gutter="10">
-                          <el-col :span="12">
-                            <el-input
-                              size="small"
-                              placeholder="Key"
-                              v-model="variant.key">
-                              <template slot="prepend">Key</template>
-                            </el-input>
-                          </el-col>
-                          <el-col :span="12">
+                        <el-collapse class="flex-row">
+                          <el-collapse-item title="Variant attachment" class="variant-attachment-collapsable-title">
+                            <p class="variant-attachment-title">You can add a key-value pair (string -> string)</p>
                             <vue-json-editor
                               v-model="variant.attachment"
                               :showBtns="false"
-                              :ref="'json-editor-' + variant.id"
-                              class="json-editor"
+                              :mode="'code'"
+                              class="variant-attachment-content"
                             ></vue-json-editor>
-                          </el-col>
-                        </el-row>
+                          </el-collapse-item>
+                        </el-collapse>
                       </el-form>
                     </el-card>
                   </div>
@@ -567,7 +565,6 @@ export default {
   },
   data () {
     return {
-      refsIntervalId: false,
       loaded: false,
       dialogDeleteFlagVisible: false,
       dialogEditDistributionOpen: false,
@@ -839,29 +836,15 @@ export default {
     },
     toggleShowMdEditor () {
       this.showMdEditor = !this.showMdEditor
-    },
-    setJsonEdiorModeWhenMounted () {
-      if (!this.$refs) {
-        return
-      }
-
-      const jsonEditorRefs = Object.keys(this.$refs).filter(key => key.startsWith('json-editor'))
-
-      jsonEditorRefs.forEach(ref => {
-        this.$refs[ref][0].editor.setMode('code')
-      })
-
-      clearInterval(this.refsIntervalId)
     }
   },
   mounted () {
     this.fetchFlag()
-    this.refsIntervalId = setInterval(this.setJsonEdiorModeWhenMounted, 50)
   }
 }
 </script>
 
-<style lang="less" scoped>
+<style lang="less">
 h5 {
   padding: 0;
   margin: 10px 0 5px;
@@ -977,10 +960,33 @@ ol.constraints-inner {
   }
 }
 
-.json-editor {
+.variant-attachment-content {
   .jsoneditor {
-    height: 200px;
+    height: 130px;
   }
+}
+
+.variant-attachment-collapsable-title {
+  margin: 0;
+  font-size: 13px;
+  color: #909399;
+  width: 100%;
+  text-align: center;
+}
+
+.variant-attachment-title {
+  margin: 0;
+  font-size: 13px;
+  color: #909399;
+}
+
+.variant-key-input {
+  margin-left: 10px;
+  width: 50%;
+}
+
+.save-remove-variant-row {
+  padding-bottom: 5px;
 }
 
 </style>
