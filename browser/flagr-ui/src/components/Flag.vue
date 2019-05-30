@@ -224,10 +224,15 @@
                     <el-card shadow="hover">
                       <el-form label-position="left" label-width="100px">
                         <div class="flex-row id-row">
-                          <div class="flex-row-left">
-                            <el-tag type="primary" :disable-transitions="true"> Variant ID: <b>{{ variant.id }}</b> </el-tag>
-                          </div>
-                          <div class="flex-row-right">
+                          <el-tag type="primary" :disable-transitions="true"> Variant ID: <b>{{ variant.id }}</b> </el-tag>
+                          <el-input
+                            class="variant-key-input"
+                            size="small"
+                            placeholder="Key"
+                            v-model="variant.key">
+                            <template slot="prepend">Key</template>
+                          </el-input>
+                          <div class="flex-row-right save-remove-variant-row">
                             <el-button slot="append" size="small" @click="putVariant(variant)">
                               Save Variant
                             </el-button>
@@ -236,24 +241,17 @@
                             </el-button>
                           </div>
                         </div>
-                        <el-row :gutter="10">
-                          <el-col :span="12">
-                            <el-input
-                              size="small"
-                              placeholder="Key"
-                              v-model="variant.key">
-                              <template slot="prepend">Key</template>
-                            </el-input>
-                          </el-col>
-                          <el-col :span="12">
-                            <el-input
-                              size="small"
-                              placeholder="{}"
-                              v-model="variant.attachmentStr">
-                              <template slot="prepend">Attachment </template>
-                            </el-input>
-                          </el-col>
-                        </el-row>
+                        <el-collapse class="flex-row">
+                          <el-collapse-item title="Variant attachment" class="variant-attachment-collapsable-title">
+                            <p class="variant-attachment-title">You can add JSON in key/value pairs format.</p>
+                            <vue-json-editor
+                              v-model="variant.attachment"
+                              :showBtns="false"
+                              :mode="'code'"
+                              class="variant-attachment-content"
+                            ></vue-json-editor>
+                          </el-collapse-item>
+                        </el-collapse>
                       </el-form>
                     </el-card>
                   </div>
@@ -505,6 +503,7 @@ import Spinner from '@/components/Spinner'
 import DebugConsole from '@/components/DebugConsole'
 import FlagHistory from '@/components/FlagHistory'
 import MarkdownEditor from '@/components/MarkdownEditor.vue'
+import vueJsonEditor from 'vue-json-editor'
 import {operators} from '@/../config/operators.json'
 
 const OPERATOR_VALUE_TO_LABEL_MAP = operators.reduce((acc, el) => {
@@ -549,7 +548,9 @@ function processSegment (segment) {
 }
 
 function processVariant (variant) {
-  variant.attachmentStr = JSON.stringify(variant.attachment)
+  if (typeof variant.attachment === 'string') {
+    variant.attachment = JSON.parse(variant.attachment)
+  }
 }
 
 export default {
@@ -559,7 +560,8 @@ export default {
     debugConsole: DebugConsole,
     flagHistory: FlagHistory,
     draggable: draggable,
-    MarkdownEditor
+    MarkdownEditor,
+    vueJsonEditor
   },
   data () {
     return {
@@ -714,7 +716,6 @@ export default {
       }, handleErr.bind(this))
     },
     putVariant (variant) {
-      variant.attachment = JSON.parse(variant.attachmentStr)
       Axios.put(
         `${API_URL}/flags/${this.flagId}/variants/${variant.id}`,
         variant
@@ -957,6 +958,35 @@ ol.constraints-inner {
     white-space: nowrap;
     vertical-align: middle;
   }
+}
+
+.variant-attachment-content {
+  .jsoneditor {
+    height: 130px;
+  }
+}
+
+.variant-attachment-collapsable-title {
+  margin: 0;
+  font-size: 13px;
+  color: #909399;
+  width: 100%;
+  text-align: center;
+}
+
+.variant-attachment-title {
+  margin: 0;
+  font-size: 13px;
+  color: #909399;
+}
+
+.variant-key-input {
+  margin-left: 10px;
+  width: 50%;
+}
+
+.save-remove-variant-row {
+  padding-bottom: 5px;
 }
 
 </style>
