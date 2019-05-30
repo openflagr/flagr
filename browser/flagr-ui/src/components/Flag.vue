@@ -243,7 +243,7 @@
                         </div>
                         <el-collapse class="flex-row">
                           <el-collapse-item title="Variant attachment" class="variant-attachment-collapsable-title">
-                            <p class="variant-attachment-title">You can add a key-value pair (string -> string)</p>
+                            <p class="variant-attachment-title">You can add JSON in key/value pairs format.</p>
                             <vue-json-editor
                               v-model="variant.attachment"
                               :showBtns="false"
