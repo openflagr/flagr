@@ -5,14 +5,23 @@ version: 2
 jobs:
   unit_test:
     docker:
-      - image: checkr/flagr-ci:go1.12
+      - image: golang:1.12
     working_directory: /go/src/github.com/checkr/flagr
     steps:
       - checkout
+      - run: apt update && apt install -y sqlite3
       - run: make deps
       - run: make ci
       - run: bash <(curl -s https://codecov.io/bash)
-      - run: cd browser/flagr-ui && yarn install && yarn run test
+
+  ui_lint:
+    docker:
+      - image: node:10
+    working_directory: /go/src/github.com/checkr/flagr
+    steps:
+      - checkout
+      - run: cd browser/flagr-ui && npm install
+      - run: cd browser/flagr-ui && npm run lint
 
   integration_test:
     docker:
@@ -22,7 +31,6 @@ jobs:
       - setup_remote_docker:
           version: 18.06.0-ce
           docker_layer_caching: true
-      - run: docker pull checkr/flagr-ci:go1.12
       - run: cd integration_tests && make build-image
       - run: cd integration_tests && make down
       - run: cd integration_tests && make up
@@ -33,4 +41,5 @@ workflows:
   test:
     jobs:
       - unit_test
+      - ui_lint
       - integration_test

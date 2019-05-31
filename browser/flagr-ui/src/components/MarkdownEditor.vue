@@ -46,7 +46,7 @@ export default {
       this.editorSettings.toolbarsFlag = show
       this.editorSettings.subfield = show
     },
-    syncMarkdown (md, _) {
+    syncMarkdown (md) {
       this.$emit('update:markdown', md)
     },
     save () {

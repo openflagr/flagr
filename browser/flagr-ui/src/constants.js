@@ -1,9 +1,7 @@
-const ENV = process.env.NODE_ENV
-const API_URL = process.env.API_URL
-const DEV = ENV === 'development'
+const API_URL = process.env.VUE_APP_API_URL
+const FLAGR_UI_POSSIBLE_ENTITY_TYPES = process.env.VUE_APP_FLAGR_UI_POSSIBLE_ENTITY_TYPES
 
 export default {
-  ENV,
-  DEV,
-  API_URL
+  API_URL,
+  FLAGR_UI_POSSIBLE_ENTITY_TYPES
 }

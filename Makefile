@@ -26,7 +26,7 @@ build:
 
 build_ui:
 	@echo "Building Flagr UI ..."
-	@cd ./browser/flagr-ui/; yarn install && yarn run build
+	@cd ./browser/flagr-ui/; npm install && npm run build
 
 run:
 	@$(PWD)/flagr --port 18000
@@ -44,7 +44,7 @@ watch:
 	@fswatch
 
 serve_docs:
-	@yarn global add docsify-cli@4
+	@npm install -g docsify-cli@4
 	@docsify serve $(PWD)/docs
 
 ################################

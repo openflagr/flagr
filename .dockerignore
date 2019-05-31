@@ -24,3 +24,4 @@ stage/
 _data/
 .env.local
 flagr.sqlite
+./browser/flagr-ui/node_modules

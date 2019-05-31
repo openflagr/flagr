@@ -504,7 +504,7 @@ import DebugConsole from '@/components/DebugConsole'
 import FlagHistory from '@/components/FlagHistory'
 import MarkdownEditor from '@/components/MarkdownEditor.vue'
 import vueJsonEditor from 'vue-json-editor'
-import {operators} from '@/../config/operators.json'
+import {operators} from '@/operators.json'
 
 const OPERATOR_VALUE_TO_LABEL_MAP = operators.reduce((acc, el) => {
   acc[el.value] = el.label
@@ -518,7 +518,8 @@ const {
 } = helpers
 
 const {
-  API_URL
+  API_URL,
+  FLAGR_UI_POSSIBLE_ENTITY_TYPES
 } = constants
 
 const DEFAULT_SEGMENT = {
@@ -823,8 +824,8 @@ export default {
         return arr
       }
 
-      if (process.env.FLAGR_UI_POSSIBLE_ENTITY_TYPES) {
-        let entityTypes = process.env.FLAGR_UI_POSSIBLE_ENTITY_TYPES.split(',')
+      if (FLAGR_UI_POSSIBLE_ENTITY_TYPES && FLAGR_UI_POSSIBLE_ENTITY_TYPES != 'null') {
+        let entityTypes = FLAGR_UI_POSSIBLE_ENTITY_TYPES.split(',')
         this.entityTypes = prepareEntityTypes(entityTypes)
         this.allowCreateEntityType = false
         return
@@ -971,7 +972,6 @@ ol.constraints-inner {
   font-size: 13px;
   color: #909399;
   width: 100%;
-  text-align: center;
 }
 
 .variant-attachment-title {
