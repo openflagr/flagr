@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="./browser/flagr-ui/src/assets/logo.png" width="150">
+    <img src="./docs/images/logo.png" width="150">
 </p>
 
 <p align="center">
