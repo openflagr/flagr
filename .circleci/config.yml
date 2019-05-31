@@ -5,14 +5,21 @@ version: 2
 jobs:
   unit_test:
     docker:
-      - image: checkr/flagr-ci:go1.12
+      - image: golang:1.12
     working_directory: /go/src/github.com/checkr/flagr
     steps:
       - checkout
       - run: make deps
       - run: make ci
       - run: bash <(curl -s https://codecov.io/bash)
-      - run: cd browser/flagr-ui && yarn install && yarn run test
+
+  ui_test:
+    docker:
+      - image: node:10
+    working_directory: /go/src/github.com/checkr/flagr
+    steps:
+      - checkout
+      - run: cd browser/flagr-ui && npm install && npm test
 
   integration_test:
     docker:
@@ -33,4 +40,5 @@ workflows:
   test:
     jobs:
       - unit_test
+      - ui_test
       - integration_test
