@@ -961,12 +961,6 @@ ol.constraints-inner {
   }
 }
 
-.variant-attachment-content {
-  .jsoneditor {
-    height: 130px;
-  }
-}
-
 .variant-attachment-collapsable-title {
   margin: 0;
   font-size: 13px;
