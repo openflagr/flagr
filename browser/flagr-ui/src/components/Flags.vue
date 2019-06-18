@@ -29,6 +29,19 @@
             </el-col>
           </el-row>
 
+          <el-row>
+            <el-col>
+              <el-button
+                type="primary"
+                icon="el-icon-caret-bottom"
+                v-on:click="exportFlags"
+              >
+                Export all flags
+              </el-button>
+              <a ref="exportFile"/>
+            </el-col>
+          </el-row>
+
           <el-table
             :data="flags"
             :stripe="true"
@@ -144,6 +157,28 @@ export default {
           flag._new = true
           this.flags.unshift(flag)
         }, handleErr.bind(this))
+    },
+    async getFlag (flagId) {
+      const { data } = await Axios.get(`${API_URL}/flags/${flagId}`)
+      return data;
+    },
+    async getAllFlags () {
+      const flagIds = this.flags.map(flag => flag.id)
+      const getAllFlagsTasks = flagIds.map(this.getFlag)
+      const flags = await Promise.all(getAllFlagsTasks)
+
+      return flags
+    },
+    async exportFlags () {
+      const exportFileHref = this.$refs.exportFile
+      const flagsText = await this.getAllFlags()
+
+      exportFileHref.setAttribute(
+        "href",
+        "data:text/plain;charset=utf-8," + encodeURIComponent(JSON.stringify(flagsText))
+      );
+      exportFileHref.setAttribute("download", 'flags.json');
+      exportFileHref.click();
     }
   }
 }
