@@ -136,8 +136,8 @@ export default {
       if (this.searchTerm) {
         this.filteredFlags = this.flags.filter(
           ({ id, description}) =>
-            id.toString().startsWith(this.searchTerm) ||
-            description.startsWith(this.searchTerm)
+            id.toString().includes(this.searchTerm) ||
+            description.includes(this.searchTerm)
         )
       }
       else {
