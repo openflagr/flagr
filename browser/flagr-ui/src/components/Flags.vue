@@ -30,16 +30,28 @@
           </el-row>
 
           <el-row>
-            <el-col>
-              <el-button
-                type="primary"
-                icon="el-icon-caret-bottom"
-                v-on:click="exportFlags"
-              >
-                Export all flags
-              </el-button>
-              <a ref="exportFile"/>
-            </el-col>
+            <el-button
+              type="primary"
+              icon="el-icon-caret-bottom"
+              v-on:click="exportFlags"
+            >
+              Export all flags
+            </el-button>
+            <a ref="exportFile"/>
+
+            <el-button
+              class="import-btn"
+              icon="el-icon-upload2"
+              @click="importFlags"
+            >
+              Import flags
+            </el-button>
+            <input
+              type="file"
+              hidden
+              id="importFlags"
+              @change="importFlagsChanged"
+            />
           </el-row>
 
           <el-table
@@ -179,6 +191,38 @@ export default {
       );
       exportFileHref.setAttribute("download", 'flags.json');
       exportFileHref.click();
+    },
+    onFileReaderLoaded (loadedFile) {
+      const fileContent = loadedFile.target.result;
+
+      try {
+        const flags = JSON.parse(fileContent);
+        debugger
+      }
+      catch (err) {
+        console.error('Failed to load flags from file', err)
+      }
+    },
+    importFlags (e) {
+      e.preventDefault()
+      if (!window.FileReader) {
+        console.info('Reading files is not supported for that browser. Please try using anthor one.')
+        return;
+      }
+
+      document.getElementById('importFlags').click()
+    },
+    importFlagsChanged (e) {
+      const file = e.target.files[0];
+
+      if (file.type !== 'application/json') {
+        console.info('Import flags supports only JSON format, please upload a new file')
+        return;
+      }
+
+      const fileReader = new FileReader()
+      fileReader.onload = this.onFileReaderLoaded
+      fileReader.readAsText(file)
     }
   }
 }
@@ -193,6 +237,12 @@ export default {
   .el-table__row {
     cursor: pointer;
   }
+  .import-btn {
+    margin-left: 10px;
+  }
+  // .import-flags-input {
+  //   display: none;
+  // }
 }
 
 </style>
