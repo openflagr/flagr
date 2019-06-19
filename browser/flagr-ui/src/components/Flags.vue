@@ -30,28 +30,7 @@
           </el-row>
 
           <el-row>
-            <el-button
-              type="primary"
-              icon="el-icon-caret-bottom"
-              v-on:click="exportFlags"
-            >
-              Export all flags
-            </el-button>
-            <a ref="exportFile"/>
-
-            <el-button
-              class="import-btn"
-              icon="el-icon-upload2"
-              @click="importFlags"
-            >
-              Import flags
-            </el-button>
-            <input
-              type="file"
-              hidden
-              id="importFlags"
-              @change="importFlagsChanged"
-            />
+            <import-export-flags :flags="this.flags" class="import-export-flags"></import-export-flags>
           </el-row>
 
           <el-table
@@ -112,6 +91,7 @@ import Axios from 'axios'
 
 import constants from '@/constants'
 import Spinner from '@/components/Spinner'
+import ImportExportFlags from '@/components/ImportExportFlags'
 import helpers from '@/helpers/helpers'
 
 const {
@@ -125,7 +105,8 @@ const {
 export default {
   name: 'flags',
   components: {
-    spinner: Spinner
+    spinner: Spinner,
+    ImportExportFlags
   },
   data () {
     return {
@@ -170,60 +151,6 @@ export default {
           this.flags.unshift(flag)
         }, handleErr.bind(this))
     },
-    async getFlag (flagId) {
-      const { data } = await Axios.get(`${API_URL}/flags/${flagId}`)
-      return data;
-    },
-    async getAllFlags () {
-      const flagIds = this.flags.map(flag => flag.id)
-      const getAllFlagsTasks = flagIds.map(this.getFlag)
-      const flags = await Promise.all(getAllFlagsTasks)
-
-      return flags
-    },
-    async exportFlags () {
-      const exportFileHref = this.$refs.exportFile
-      const flagsText = await this.getAllFlags()
-
-      exportFileHref.setAttribute(
-        "href",
-        "data:text/plain;charset=utf-8," + encodeURIComponent(JSON.stringify(flagsText))
-      );
-      exportFileHref.setAttribute("download", 'flags.json');
-      exportFileHref.click();
-    },
-    onFileReaderLoaded (loadedFile) {
-      const fileContent = loadedFile.target.result;
-
-      try {
-        const flags = JSON.parse(fileContent);
-        debugger
-      }
-      catch (err) {
-        console.error('Failed to load flags from file', err)
-      }
-    },
-    importFlags (e) {
-      e.preventDefault()
-      if (!window.FileReader) {
-        console.info('Reading files is not supported for that browser. Please try using anthor one.')
-        return;
-      }
-
-      document.getElementById('importFlags').click()
-    },
-    importFlagsChanged (e) {
-      const file = e.target.files[0];
-
-      if (file.type !== 'application/json') {
-        console.info('Import flags supports only JSON format, please upload a new file')
-        return;
-      }
-
-      const fileReader = new FileReader()
-      fileReader.onload = this.onFileReaderLoaded
-      fileReader.readAsText(file)
-    }
   }
 }
 </script>
@@ -237,12 +164,9 @@ export default {
   .el-table__row {
     cursor: pointer;
   }
-  .import-btn {
-    margin-left: 10px;
+  .import-export-flags {
+    margin-top: 5px;
   }
-  // .import-flags-input {
-  //   display: none;
-  // }
 }
 
 </style>
