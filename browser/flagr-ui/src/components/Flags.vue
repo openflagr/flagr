@@ -29,8 +29,16 @@
             </el-col>
           </el-row>
 
+          <el-row>
+            <el-input
+              placeholder="Search a flag"
+              prefix-icon="el-icon-search"
+              v-model="searchTerm">
+            </el-input>
+          </el-row>
+
           <el-table
-            :data="flags"
+            :data="filteredFlags"
             :stripe="true"
             :highlight-current-row="false"
             :default-sort="{prop: 'id', order: 'descending'}"
@@ -106,6 +114,8 @@ export default {
     return {
       loaded: false,
       flags: [],
+      filteredFlags: [],
+      searchTerm: '',
       newFlag: {
         description: ''
       }
@@ -118,7 +128,22 @@ export default {
         this.loaded = true
         flags.reverse()
         this.flags = flags
+        this.filteredFlags = [...flags];
       }, handleErr.bind(this))
+  },
+  watch: {
+    searchTerm: function() {
+      if (this.searchTerm) {
+        this.filteredFlags = this.flags.filter(
+          ({ id, description}) =>
+            id.toString().includes(this.searchTerm) ||
+            description.includes(this.searchTerm)
+        )
+      }
+      else {
+        this.filteredFlags = [...this.flags]
+      }
+    }
   },
   methods: {
     flagEnabledFormatter (row, col, val) {
