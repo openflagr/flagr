@@ -114,7 +114,6 @@ export default {
     return {
       loaded: false,
       flags: [],
-      filteredFlags: [],
       searchTerm: '',
       newFlag: {
         description: ''
@@ -128,21 +127,18 @@ export default {
         this.loaded = true
         flags.reverse()
         this.flags = flags
-        this.filteredFlags = [...flags];
       }, handleErr.bind(this))
   },
-  watch: {
-    searchTerm: function() {
+  computed: {
+    filteredFlags: function() {
       if (this.searchTerm) {
-        this.filteredFlags = this.flags.filter(
+        return this.flags.filter(
           ({ id, description}) =>
             id.toString().includes(this.searchTerm) ||
-            description.includes(this.searchTerm)
+            description.toLowerCase().includes(this.searchTerm.toLowerCase())
         )
       }
-      else {
-        this.filteredFlags = [...this.flags]
-      }
+      return this.flags
     }
   },
   methods: {
