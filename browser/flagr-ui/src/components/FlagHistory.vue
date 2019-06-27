@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-card v-for="diff in diffs" :key="diff.timestamp" class="snapshot-container">
+    <el-card v-for="diff in diffs" :key="diff.newId" class="snapshot-container">
       <div slot="header" class="el-card-header">
         <el-row>
           <el-col :span="14">
