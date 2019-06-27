@@ -32,6 +32,7 @@
           <el-row>
             <import-export-flags
               :flags="this.flags"
+              :loadFlags="this.loadFlags"
               class="import-export-flags"
             ></import-export-flags>
           </el-row>
@@ -121,15 +122,18 @@ export default {
     }
   },
   created () {
-    Axios.get(`${API_URL}/flags`)
-      .then(response => {
-        let flags = response.data
-        this.loaded = true
-        flags.reverse()
-        this.flags = flags
-      }, handleErr.bind(this))
+    this.loadFlags()
   },
   methods: {
+    loadFlags () {
+      Axios.get(`${API_URL}/flags`)
+        .then(response => {
+          let flags = response.data
+          this.loaded = true
+          flags.reverse()
+          this.flags = flags
+      }, handleErr.bind(this))
+    },
     flagEnabledFormatter (row, col, val) {
       return val ? 'on' : 'off'
     },

@@ -19,7 +19,7 @@ const { API_URL } = constants;
 
 export default {
   name: "import-export-flags",
-  props: ["flags"],
+  props: ["flags", "loadFlags"],
   data () {
     return {
       importFlagsInProcess: false,
@@ -181,11 +181,10 @@ export default {
 
       try {
         flags = JSON.parse(fileContent);
-        console.log("start import process");
         this.importFlagsInProcess = true;
         await Promise.all(flags.map(this.createFlagWithMetadata));
         this.importFlagsInProcess = false;
-        console.log("finished import process succesfully!");
+        this.loadFlags()
       } catch (err) {
         if (!flags) {
           console.error("Failed to load flags from file", err);
