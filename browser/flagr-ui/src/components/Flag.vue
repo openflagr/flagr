@@ -621,11 +621,12 @@ export default {
   },
   methods: {
     deleteFlag () {
+      const flagId = this.flagId;
       Axios.delete(
         `${API_URL}/flags/${this.flagId}`
       ).then(() => {
         this.$router.replace({name: 'home'})
-        this.$message.success(`You deleted flag ${this.flagId}`)
+        this.$message.success(`You deleted flag ${flagId}`)
       }, handleErr.bind(this))
     },
     putFlag (flag) {
