@@ -1,28 +1,51 @@
 <template>
   <div class="import-export-flags-container">
-    <div v-if="importFlagsInProcess">
-      Proccessing flags from files in work...
-    </div>
-    <el-button type="primary" icon="el-icon-caret-bottom" v-on:click="exportFlags">Export all flags</el-button>
+    <div v-if="importFlagsInProcess">Proccessing flags from files in work...</div>
+    <el-button
+      type="primary"
+      icon="el-icon-caret-bottom"
+      v-on:click="exportFlags"
+      :disabled="this.importFlagsInProcess"
+    >Export all flags</el-button>
     <a ref="exportFile"/>
 
-    <el-button class="import-btn" icon="el-icon-upload2" @click="importFlags">Import flags</el-button>
+    <el-button
+      class="import-btn"
+      icon="el-icon-upload2"
+      @click="importFlags"
+      :disabled="this.importFlagsInProcess"
+    >Import flags</el-button>
     <input type="file" hidden id="importFlags" @change="importFlagsChanged">
+    <el-row>
+      <el-progress
+        class="import-flags-progeress"
+        v-if="this.importFlagsInProcess"
+        type="circle"
+        :percentage="progressPercentage"
+      ></el-progress>
+    </el-row>
   </div>
 </template>
 
 <script>
-import Axios from 'axios';
-import constants from '@/constants';
+import Axios from "axios";
+import constants from "@/constants";
 
 const { API_URL } = constants;
 
 export default {
   name: "import-export-flags",
   props: ["flags", "loadFlags"],
-  data () {
+  data() {
     return {
       importFlagsInProcess: false,
+      numOfFlagsToProcess: 0,
+      finishedImportFlags: 0
+    };
+  },
+  computed: {
+    progressPercentage() {
+      return (this.finishedImportFlags / (this.numOfFlagsToProcess || 1)) * 100;
     }
   },
   methods: {
@@ -66,47 +89,20 @@ export default {
         entityType
       });
     },
-    async createSegmentWithConstraints(segment, newFlagId, newVariants) {
-      const {
-        constraints,
-        description,
-        rolloutPercent,
-        distributions
-      } = segment;
-
-      // 1. create segment
-      const { data: createdSegment } = await Axios.post(
-        `${API_URL}/flags/${newFlagId}/segments`,
-        {
-          description,
-          rolloutPercent
-        }
-      );
-
-      // 2. put constarints
-      await Promise.all(
-        constraints.map(({ id, ...propsToSend }) =>
-          Axios.post(
-            `${API_URL}/flags/${newFlagId}/segments/${
-              createdSegment.id
-            }/constraints`,
-            {
-              ...propsToSend // (property, operator, value)
-            }
-          )
-        )
-      );
-
+    updateDistributions(variants, flagId, segmentId, distributions) {
       // since distributions points to non exsiting variant keys, we have to
       // update the data by newVariants
       const distributionsWithUpdatedVariantIds = distributions.map(
         ({ percent, variantKey }) => {
-          const matchedVariant = newVariants.find(
+          const matchedVariant = variants.find(
             variant => variant.key === variantKey
           );
 
           if (!matchedVariant) {
-            console.error("Could not find match for variant id", variantKey);
+            this.$message({
+              message: `Could not find match for variant key=${variantKey}`,
+              type: "error"
+            });
           }
 
           return {
@@ -118,13 +114,48 @@ export default {
       );
 
       // 3. put distribution
-      await Axios.put(
-        `${API_URL}/flags/${newFlagId}/segments/${
-          createdSegment.id
-        }/distributions`,
+      return Axios.put(
+        `${API_URL}/flags/${flagId}/segments/${segmentId}/distributions`,
         {
           distributions: distributionsWithUpdatedVariantIds
         }
+      );
+    },
+    updateConstarints(flagId, segmentId, constraints) {
+      return Promise.all(
+        // eslint-disable-next-line
+        constraints.map(({ id, ...propsToSend }) =>
+          Axios.post(
+            `${API_URL}/flags/${flagId}/segments/${segmentId}/constraints`,
+            {
+              ...propsToSend // (property, operator, value)
+            }
+          )
+        )
+      );
+    },
+    createSegment(flagId, updateData) {
+      return Axios.post(`${API_URL}/flags/${flagId}/segments`, updateData);
+    },
+    async createSegmentWithConstraints(segment, newFlagId, newVariants) {
+      const {
+        constraints,
+        description,
+        rolloutPercent,
+        distributions
+      } = segment;
+
+      const { data: createdSegment } = await this.createSegment(newFlagId, {
+        description,
+        rolloutPercent
+      });
+
+      await this.updateConstarints(newFlagId, createdSegment.id, constraints);
+      await this.updateDistributions(
+        newVariants,
+        newFlagId,
+        createdSegment.id,
+        distributions
       );
     },
     async createSegments(segments, newFlagId, newVariants) {
@@ -163,17 +194,11 @@ export default {
 
       const { segments, variants } = flag;
 
-      try {
-        const { data: newFlag } = await this.createFlag(flag);
-        await this.updateFlagMetadata(flag, newFlag.id);
-        const newVariants = await this.createVariants(
-          variants,
-          newFlag.id
-        );
-        await this.createSegments(segments, newFlag.id, newVariants); // TODO
-      } catch (error) {
-        console.error('Failed to create flag', error);
-      }
+      const { data: newFlag } = await this.createFlag(flag);
+      await this.updateFlagMetadata(flag, newFlag.id);
+      const newVariants = await this.createVariants(variants, newFlag.id);
+      await this.createSegments(segments, newFlag.id, newVariants);
+      this.finishedImportFlags++;
     },
     async onFileReaderLoaded(loadedFile) {
       const fileContent = loadedFile.target.result;
@@ -181,25 +206,39 @@ export default {
 
       try {
         flags = JSON.parse(fileContent);
+        this.numOfFlagsToProcess = flags.length;
         this.importFlagsInProcess = true;
         await Promise.all(flags.map(this.createFlagWithMetadata));
-        this.importFlagsInProcess = false;
-        this.loadFlags()
+
+        this.$message({
+          message: `Finished import flags successfully!`,
+          type: "success"
+        });
+
+        this.loadFlags();
       } catch (err) {
         if (!flags) {
-          console.error("Failed to load flags from file", err);
+          this.$message({
+            message: `Failed to load flags from file`,
+            type: "error"
+          });
         } else {
-          console.error("Failed to update/create flag", err);
+          this.$message({
+            message: `Failed to update/create flag`,
+            type: "error"
+          });
         }
+      } finally {
+        this.importFlagsInProcess = false;
       }
     },
     importFlags(e) {
       e.preventDefault();
       if (!window.FileReader) {
-        console.info(
-          "Reading files is not supported for that browser. Please try using anthor one."
-        );
-        return;
+        return this.$message({
+          message: `Reading files is not supported for that browser. Please try using anthor one.`,
+          type: "error"
+        });
       }
 
       document.getElementById("importFlags").click();
@@ -208,10 +247,10 @@ export default {
       const file = e.target.files[0];
 
       if (file.type !== "application/json") {
-        console.info(
-          "Import flags supports only JSON format, please upload a new file"
-        );
-        return;
+        return this.$message({
+          message: `Import flags supports only JSON format, please upload a new file`,
+          type: "error"
+        });
       }
 
       const fileReader = new FileReader();
@@ -226,6 +265,9 @@ export default {
 .import-export-flags-container {
   .import-btn {
     margin-left: 10px;
+  }
+  .import-flags-progeress {
+    margin: 30px 45%;
   }
 }
 </style>
