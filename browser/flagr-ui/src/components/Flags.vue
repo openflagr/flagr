@@ -30,7 +30,10 @@
           </el-row>
 
           <el-row>
-            <import-export-flags :flags="this.flags" class="import-export-flags"></import-export-flags>
+            <import-export-flags
+              :flags="this.flags"
+              class="import-export-flags"
+            ></import-export-flags>
           </el-row>
 
           <el-table
