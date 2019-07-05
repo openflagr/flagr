@@ -224,7 +224,7 @@ github.com/tinylib/msgp/msgp
 github.com/urfave/negroni
 # github.com/yadvendar/negroni-newrelic-go-agent v0.0.0-20160803090806-3dc58758cb67
 github.com/yadvendar/negroni-newrelic-go-agent
-# github.com/zhouzhuojie/conditions v0.0.0-20190213052452-7de314ba1d59
+# github.com/zhouzhuojie/conditions v0.0.0-20190705160302-784df330cb87
 github.com/zhouzhuojie/conditions
 # github.com/zhouzhuojie/withtimeout v0.0.0-20190405051827-12b39eb2edd5
 github.com/zhouzhuojie/withtimeout

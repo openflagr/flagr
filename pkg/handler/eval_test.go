@@ -85,6 +85,60 @@ func TestEvalSegment(t *testing.T) {
 		assert.NotEmpty(t, log)
 		assert.True(t, evalNextSegment)
 	})
+
+	t.Run("test float comparison - 9990403>=9990404 evals to be false", func(t *testing.T) {
+		s := entity.GenFixtureSegment()
+		s.RolloutPercent = uint(100)
+		s.Constraints = []entity.Constraint{
+			{
+				Model:     gorm.Model{ID: 500},
+				SegmentID: 200,
+				Property:  "foo",
+				Operator:  models.ConstraintOperatorGTE,
+				Value:     `9990404`,
+			},
+		}
+		s.PrepareEvaluation()
+
+		vID, log, evalNextSegment := evalSegment(100, models.EvalContext{
+			EnableDebug:   true,
+			EntityContext: map[string]interface{}{"foo": float64(9990403)},
+			EntityID:      "entityID1",
+			EntityType:    "entityType1",
+			FlagID:        int64(100),
+		}, s)
+
+		assert.Nil(t, vID)
+		assert.NotZero(t, log)
+		assert.True(t, evalNextSegment)
+	})
+
+	t.Run("test float comparison - 9990404>=9990403 evals to be true", func(t *testing.T) {
+		s := entity.GenFixtureSegment()
+		s.RolloutPercent = uint(100)
+		s.Constraints = []entity.Constraint{
+			{
+				Model:     gorm.Model{ID: 500},
+				SegmentID: 200,
+				Property:  "foo",
+				Operator:  models.ConstraintOperatorGTE,
+				Value:     `9990403`,
+			},
+		}
+		s.PrepareEvaluation()
+
+		vID, log, evalNextSegment := evalSegment(100, models.EvalContext{
+			EnableDebug:   true,
+			EntityContext: map[string]interface{}{"foo": float64(9990404)},
+			EntityID:      "entityID1",
+			EntityType:    "entityType1",
+			FlagID:        int64(100),
+		}, s)
+
+		assert.NotZero(t, vID)
+		assert.NotZero(t, log)
+		assert.False(t, evalNextSegment)
+	})
 }
 
 func TestEvalFlag(t *testing.T) {
