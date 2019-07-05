@@ -553,11 +553,15 @@ func float64Equal(a float64, b float64, epsilon float64) bool {
 	absB := math.Abs(b)
 	diff := math.Abs(a - b)
 	zero := float64(0)
+
 	if a == b {
 		return true
-	} else if a == zero || b == zero {
-		return diff < epsilon*math.SmallestNonzeroFloat32
-	} else {
-		return diff/math.Min((absA+absB), math.MaxFloat64) < epsilon
 	}
+	if diff > epsilon {
+		return false
+	}
+	if a == zero || b == zero {
+		return diff < epsilon*math.SmallestNonzeroFloat32
+	}
+	return diff/math.Min((absA+absB), math.MaxFloat64) < epsilon
 }
