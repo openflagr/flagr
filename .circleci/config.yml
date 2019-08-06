@@ -29,7 +29,7 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker:
-          version: 18.06.0-ce
+          version: 18.09.3
           docker_layer_caching: true
       - run: cd integration_tests && make build-image
       - run: cd integration_tests && make down

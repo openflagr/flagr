@@ -19,8 +19,8 @@ RUN make build
 ######################################
 # Copy from builder to alpine image
 ######################################
-FROM alpine:3.6
-RUN apk add --no-cache libc6-compat ca-certificates curl
+FROM frolvlad/alpine-glibc:alpine-3.10
+RUN apk add --no-cache curl
 WORKDIR /go/src/github.com/checkr/flagr
 VOLUME ["/data"]
 
