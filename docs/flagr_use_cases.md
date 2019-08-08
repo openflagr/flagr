@@ -94,12 +94,11 @@ UI setting example (frontend looks may iterate quickly):
 
 ## Dynamic Configuration
 
-One can also leverage the **Variant Attachment** to run dynamic configuration.
-For example, the color_hex of green variant can be dynamically configured.
+One can also leverage the **Variant Attachment** to run dynamic configuration, by supplying a valid JSON object attachment.
 
-!> We note that for simplicity, Flagr only supports **string/string** key/value pairs
-as the attachment format now, and it's up to the application to determine how to
-interpret.
+!> Before [v1.1.3](https://github.com/checkr/flagr/releases/tag/1.1.3), only **string:string** key:value pairs were supported inside the JSON object attachment.
+
+For example, the color_hex of green variant can be dynamically configured.
 
 ```
 evaluation_result = flagr.post_evaluation( entity )
