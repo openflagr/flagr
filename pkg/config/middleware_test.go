@@ -240,6 +240,7 @@ o2kQ+X5xK9cipRgEKwIDAQAB
 		defer func() {
 			Config.JWTAuthEnabled = false
 			Config.JWTAuthSecret = ""
+			Config.JWTAuthSigningMethod = ""
 		}()
 		hh := SetupGlobalMiddleware(h)
 
