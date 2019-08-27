@@ -27,6 +27,9 @@ const (
 
 	// Signed with secret: "mysecret"
 	validHS256JWTTokenWithSecret = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.drt_po6bHhDOF_FJEHTrK-KD8OGjseJZpHwHIgsnoTM"
+
+	// Signed with secret: "mysecret"
+	validHS512JWTTokenWithSecret = "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.G4VTPaWRHtByF6SaHSQFTeu-896jFb2dF2KnYjJTa9MY_a6Tbb9BsO7Uu0Ju_QOGGDI_b-k6U0T6qwj9lA5_Aw"
 )
 
 func (o *okHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
@@ -224,6 +227,28 @@ o2kQ+X5xK9cipRgEKwIDAQAB
 		req.AddCookie(&http.Cookie{
 			Name:  "access_token",
 			Value: validHS256JWTToken,
+		})
+		hh.ServeHTTP(res, req)
+		assert.Equal(t, http.StatusOK, res.Code)
+	})
+
+	t.Run("it will pass if jwt enabled with correct header token encrypted using HS512", func(t *testing.T) {
+		Config.JWTAuthEnabled = true
+		Config.JWTAuthSecret = "mysecret"
+		Config.JWTAuthSigningMethod = "HS512"
+		Config.JWTAuthDebug = true
+		defer func() {
+			Config.JWTAuthEnabled = false
+			Config.JWTAuthSecret = ""
+		}()
+		hh := SetupGlobalMiddleware(h)
+
+		res := httptest.NewRecorder()
+		res.Body = new(bytes.Buffer)
+		req, _ := http.NewRequest("GET", "http://localhost:18000/api/v1/flags", nil)
+		req.AddCookie(&http.Cookie{
+			Name:  "access_token",
+			Value: validHS512JWTTokenWithSecret,
 		})
 		hh.ServeHTTP(res, req)
 		assert.Equal(t, http.StatusOK, res.Code)
