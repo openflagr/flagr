@@ -19,17 +19,17 @@ import (
 // swagger:model putSegmentReorderRequest
 type PutSegmentReorderRequest struct {
 
-	// segment ids
+	// segment i ds
 	// Required: true
 	// Min Items: 1
-	SegmentIds []int64 `json:"segmentIDs"`
+	SegmentIDs []int64 `json:"segmentIDs"`
 }
 
 // Validate validates this put segment reorder request
 func (m *PutSegmentReorderRequest) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateSegmentIds(formats); err != nil {
+	if err := m.validateSegmentIDs(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -39,21 +39,21 @@ func (m *PutSegmentReorderRequest) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *PutSegmentReorderRequest) validateSegmentIds(formats strfmt.Registry) error {
+func (m *PutSegmentReorderRequest) validateSegmentIDs(formats strfmt.Registry) error {
 
-	if err := validate.Required("segmentIDs", "body", m.SegmentIds); err != nil {
+	if err := validate.Required("segmentIDs", "body", m.SegmentIDs); err != nil {
 		return err
 	}
 
-	iSegmentIdsSize := int64(len(m.SegmentIds))
+	iSegmentIDsSize := int64(len(m.SegmentIDs))
 
-	if err := validate.MinItems("segmentIDs", "body", iSegmentIdsSize, 1); err != nil {
+	if err := validate.MinItems("segmentIDs", "body", iSegmentIDsSize, 1); err != nil {
 		return err
 	}
 
-	for i := 0; i < len(m.SegmentIds); i++ {
+	for i := 0; i < len(m.SegmentIDs); i++ {
 
-		if err := validate.MinimumInt("segmentIDs"+"."+strconv.Itoa(i), "body", int64(m.SegmentIds[i]), 1, false); err != nil {
+		if err := validate.MinimumInt("segmentIDs"+"."+strconv.Itoa(i), "body", int64(m.SegmentIDs[i]), 1, false); err != nil {
 			return err
 		}
 

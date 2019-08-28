@@ -1,7 +1,7 @@
 get:
   tags:
     - export
-  operationId: getExportSQLite
+  operationId: getExportSqlite
   description: Export sqlite3 format of the db dump, which is converted from the main database.
   produces:
     - application/octet-stream

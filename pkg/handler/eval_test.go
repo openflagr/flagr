@@ -373,7 +373,7 @@ func TestPostEvaluationBatch(t *testing.T) {
 						EntityType:    "entityType1",
 					},
 				},
-				FlagIds:  []int64{100, 200},
+				FlagIDs:  []int64{100, 200},
 				FlagKeys: []string{"flag_key_1", "flag_key_2"},
 			},
 		})

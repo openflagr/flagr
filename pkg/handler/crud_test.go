@@ -457,7 +457,7 @@ func TestCrudSegments(t *testing.T) {
 	res = c.PutSegmentsReorder(segment.PutSegmentsReorderParams{
 		FlagID: int64(1),
 		Body: &models.PutSegmentReorderRequest{
-			SegmentIds: []int64{int64(2), int64(1)},
+			SegmentIDs: []int64{int64(2), int64(1)},
 		},
 	})
 	assert.NotZero(t, res.(*segment.PutSegmentsReorderOK))
@@ -525,7 +525,7 @@ func TestCrudSegmentsWithFailures(t *testing.T) {
 		res = c.PutSegmentsReorder(segment.PutSegmentsReorderParams{
 			FlagID: int64(1),
 			Body: &models.PutSegmentReorderRequest{
-				SegmentIds: []int64{int64(999998), int64(1)},
+				SegmentIDs: []int64{int64(999998), int64(1)},
 			},
 		})
 		assert.NotZero(t, res.(*segment.PutSegmentsReorderDefault).Payload)

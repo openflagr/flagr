@@ -287,7 +287,6 @@ step_7_test_evaluation()
 step_8_test_preload()
 {
     flagr_url=$1:18000/api/v1
-    sleep 5
 
     ################################################
     # Test preload for /flags (depends on ?preload=true/false
@@ -312,6 +311,22 @@ step_8_test_preload()
         matches "\"variantID\":1"
 }
 
+step_9_test_export()
+{
+    flagr_url=$1:18000/api/v1
+
+    ################################################
+    # Test export
+    ################################################
+    shakedown GET $flagr_url/export/sqlite
+        status 200
+
+    shakedown GET $flagr_url/export/eval_cache/json
+        status 200
+        matches "\"VariantKey\":\"key_1\""
+        matches "\"VariantID\":1"
+}
+
 
 start_test()
 {
@@ -331,6 +346,7 @@ start_test()
     step_6_test_crud_distribution $flagr_host
     step_7_test_evaluation $flagr_host
     step_8_test_preload $flagr_host
+    step_9_test_export $flagr_host
 }
 
 start(){

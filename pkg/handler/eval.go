@@ -47,7 +47,7 @@ func (e *eval) PostEvaluation(params evaluation.PostEvaluationParams) middleware
 
 func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) middleware.Responder {
 	entities := params.Body.Entities
-	flagIDs := params.Body.FlagIds
+	flagIDs := params.Body.FlagIDs
 	flagKeys := params.Body.FlagKeys
 	results := &models.EvaluationBatchResponse{}
 

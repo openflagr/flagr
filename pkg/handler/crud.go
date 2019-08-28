@@ -346,7 +346,7 @@ func (c *crud) PutSegment(params segment.PutSegmentParams) middleware.Responder 
 
 func (c *crud) PutSegmentsReorder(params segment.PutSegmentsReorderParams) middleware.Responder {
 	tx := getDB().Begin()
-	for i, segmentID := range params.Body.SegmentIds {
+	for i, segmentID := range params.Body.SegmentIDs {
 		s := &entity.Segment{}
 		if err := tx.First(s, segmentID).Error; err != nil {
 			tx.Rollback()
