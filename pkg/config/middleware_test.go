@@ -236,7 +236,6 @@ o2kQ+X5xK9cipRgEKwIDAQAB
 		Config.JWTAuthEnabled = true
 		Config.JWTAuthSecret = "mysecret"
 		Config.JWTAuthSigningMethod = "HS512"
-		Config.JWTAuthDebug = true
 		defer func() {
 			Config.JWTAuthEnabled = false
 			Config.JWTAuthSecret = ""
