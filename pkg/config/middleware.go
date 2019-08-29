@@ -127,6 +127,9 @@ func setupJWTAuthMiddleware() *auth {
 	case "HS256":
 		signingMethod = jwt.SigningMethodHS256
 		validationKey = []byte(Config.JWTAuthSecret)
+	case "HS512":
+		signingMethod = jwt.SigningMethodHS512
+		validationKey = []byte(Config.JWTAuthSecret)
 	case "RS256":
 		signingMethod = jwt.SigningMethodRS256
 		validationKey, errParsingKey = jwt.ParseRSAPublicKeyFromPEM([]byte(Config.JWTAuthSecret))

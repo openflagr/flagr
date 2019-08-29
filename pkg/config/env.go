@@ -162,7 +162,7 @@ var Config = struct {
 		If you wish to use JWT Auth via headers you can simply set the header `Authorization Bearer [access_token]`
 
 	Supported signing methods:
-		* HS256, in this case `FLAGR_JWT_AUTH_SECRET` contains the passphrase
+		* HS256/HS512, in this case `FLAGR_JWT_AUTH_SECRET` contains the passphrase
 		* RS256, in this case `FLAGR_JWT_AUTH_SECRET` contains the key in PEM Format
 
 	Note:
