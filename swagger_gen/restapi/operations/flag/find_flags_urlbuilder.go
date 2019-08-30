@@ -57,60 +57,60 @@ func (o *FindFlagsURL) Build() (*url.URL, error) {
 
 	qs := make(url.Values)
 
-	var description string
+	var descriptionQ string
 	if o.Description != nil {
-		description = *o.Description
+		descriptionQ = *o.Description
 	}
-	if description != "" {
-		qs.Set("description", description)
+	if descriptionQ != "" {
+		qs.Set("description", descriptionQ)
 	}
 
-	var descriptionLike string
+	var descriptionLikeQ string
 	if o.DescriptionLike != nil {
-		descriptionLike = *o.DescriptionLike
+		descriptionLikeQ = *o.DescriptionLike
 	}
-	if descriptionLike != "" {
-		qs.Set("description_like", descriptionLike)
+	if descriptionLikeQ != "" {
+		qs.Set("description_like", descriptionLikeQ)
 	}
 
-	var enabled string
+	var enabledQ string
 	if o.Enabled != nil {
-		enabled = swag.FormatBool(*o.Enabled)
+		enabledQ = swag.FormatBool(*o.Enabled)
 	}
-	if enabled != "" {
-		qs.Set("enabled", enabled)
+	if enabledQ != "" {
+		qs.Set("enabled", enabledQ)
 	}
 
-	var key string
+	var keyQ string
 	if o.Key != nil {
-		key = *o.Key
+		keyQ = *o.Key
 	}
-	if key != "" {
-		qs.Set("key", key)
+	if keyQ != "" {
+		qs.Set("key", keyQ)
 	}
 
-	var limit string
+	var limitQ string
 	if o.Limit != nil {
-		limit = swag.FormatInt64(*o.Limit)
+		limitQ = swag.FormatInt64(*o.Limit)
 	}
-	if limit != "" {
-		qs.Set("limit", limit)
+	if limitQ != "" {
+		qs.Set("limit", limitQ)
 	}
 
-	var offset string
+	var offsetQ string
 	if o.Offset != nil {
-		offset = swag.FormatInt64(*o.Offset)
+		offsetQ = swag.FormatInt64(*o.Offset)
 	}
-	if offset != "" {
-		qs.Set("offset", offset)
+	if offsetQ != "" {
+		qs.Set("offset", offsetQ)
 	}
 
-	var preload string
+	var preloadQ string
 	if o.Preload != nil {
-		preload = swag.FormatBool(*o.Preload)
+		preloadQ = swag.FormatBool(*o.Preload)
 	}
-	if preload != "" {
-		qs.Set("preload", preload)
+	if preloadQ != "" {
+		qs.Set("preload", preloadQ)
 	}
 
 	_result.RawQuery = qs.Encode()

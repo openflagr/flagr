@@ -17,7 +17,7 @@ import (
 
 // This file is safe to edit. Once it exists it will not be overwritten
 
-//go:generate swagger generate server --target ../swagger_gen --name  --spec ../swagger.yml
+//go:generate swagger generate server --target ../../swagger_gen --name Flagr --spec ../../docs/api_docs/bundle.yaml
 
 func configureFlags(api *operations.FlagrAPI) {
 	// api.CommandLineOptionsGroups = []swag.CommandLineOptionsGroup{ ... }
@@ -28,6 +28,8 @@ func configureAPI(api *operations.FlagrAPI) http.Handler {
 
 	api.JSONConsumer = runtime.JSONConsumer()
 	api.JSONProducer = runtime.JSONProducer()
+	api.BinProducer = runtime.ByteStreamProducer()
+
 	api.Logger = logrus.Infof
 	api.ServerShutdown = config.ServerShutdown
 

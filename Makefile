@@ -35,7 +35,7 @@ gen: api_docs swagger
 
 deps: checks
 	@GO111MODULE=off go get -u github.com/myitcv/gobin
-	@gobin github.com/go-swagger/go-swagger/cmd/swagger@v0.19.0
+	@gobin github.com/go-swagger/go-swagger/cmd/swagger@v0.20.1
 	@gobin github.com/codeskyblue/fswatch
 	@gobin github.com/golangci/golangci-lint/cmd/golangci-lint@v1.16.0
 	@echo "Sqlite3" && sqlite3 -version

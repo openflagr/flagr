@@ -136,7 +136,7 @@ func init() {
         "tags": [
           "export"
         ],
-        "operationId": "getExportSQLite",
+        "operationId": "getExportSqlite",
         "responses": {
           "200": {
             "description": "OK",
@@ -1909,7 +1909,7 @@ func init() {
         "tags": [
           "export"
         ],
-        "operationId": "getExportSQLite",
+        "operationId": "getExportSqlite",
         "responses": {
           "200": {
             "description": "OK",
