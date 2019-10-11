@@ -53,7 +53,7 @@ var Config = struct {
 	"sqlite3"             "/tmp/file.db"
 	"sqlite3"             ":memory:"
 	"mysql"               "root:@tcp(127.0.0.1:18100)/flagr?parseTime=true"
-	"postgres"            "host=myhost user=root dbname=flagr password=mypassword"
+	"postgres"            "postgres://user:password@host:5432/flagr?sslmode=disable"
 
 	"json_file"           "/tmp/flags.json"                    # (it automatically sets EvalOnlyMode=true)
 	"json_http"           "https://example.com/flags.json"     # (it automatically sets EvalOnlyMode=true)
