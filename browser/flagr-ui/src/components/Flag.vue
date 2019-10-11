@@ -752,7 +752,7 @@ export default {
       Axios.delete(
         `${API_URL}/flags/${this.flagId}/segments/${segment.id}/constraints/${constraint.id}`
       ).then(() => {
-        const index = segment.constraints.findIndex(constraint => constraint.id === constraint.id)
+        const index = segment.constraints.findIndex(c => c.id === constraint.id)
         segment.constraints.splice(index, 1)
         this.$message.success('constraint deleted')
       }, handleErr.bind(this))
