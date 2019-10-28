@@ -39,7 +39,7 @@ func (e *eval) PostEvaluation(params evaluation.PostEvaluationParams) middleware
 			ErrorMessage("empty body"))
 	}
 
-	evalResult := evalFlag(*evalContext)
+	evalResult := EvalFlag(*evalContext)
 	resp := evaluation.NewPostEvaluationOK()
 	resp.SetPayload(evalResult)
 	return resp
@@ -61,7 +61,7 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 				EntityType:    entity.EntityType,
 				FlagID:        flagID,
 			}
-			evalResult := evalFlag(evalContext)
+			evalResult := EvalFlag(evalContext)
 			results.EvaluationResults = append(results.EvaluationResults, evalResult)
 		}
 		for _, flagKey := range flagKeys {
@@ -72,7 +72,7 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 				EntityType:    entity.EntityType,
 				FlagKey:       flagKey,
 			}
-			evalResult := evalFlag(evalContext)
+			evalResult := EvalFlag(evalContext)
 			results.EvaluationResults = append(results.EvaluationResults, evalResult)
 		}
 	}
@@ -105,7 +105,7 @@ func BlankResult(f *entity.Flag, evalContext models.EvalContext, msg string) *mo
 	}
 }
 
-var evalFlag = func(evalContext models.EvalContext) *models.EvalResult {
+var EvalFlag = func(evalContext models.EvalContext) *models.EvalResult {
 	cache := GetEvalCache()
 	flagID := util.SafeUint(evalContext.FlagID)
 	flagKey := util.SafeString(evalContext.FlagKey)

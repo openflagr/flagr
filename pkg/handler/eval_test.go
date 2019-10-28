@@ -146,7 +146,7 @@ func TestEvalFlag(t *testing.T) {
 
 	t.Run("test empty evalContext", func(t *testing.T) {
 		defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
-		result := evalFlag(models.EvalContext{FlagID: int64(100)})
+		result := EvalFlag(models.EvalContext{FlagID: int64(100)})
 		assert.Zero(t, result.VariantID)
 		assert.NotZero(t, result.FlagID)
 		assert.NotEmpty(t, result.EvalContext.EntityID)
@@ -154,7 +154,7 @@ func TestEvalFlag(t *testing.T) {
 
 	t.Run("test happy code path", func(t *testing.T) {
 		defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
-		result := evalFlag(models.EvalContext{
+		result := EvalFlag(models.EvalContext{
 			EnableDebug:   true,
 			EntityContext: map[string]interface{}{"dl_state": "CA"},
 			EntityID:      "entityID1",
@@ -167,7 +167,7 @@ func TestEvalFlag(t *testing.T) {
 
 	t.Run("test happy code path with flagKey", func(t *testing.T) {
 		defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
-		result := evalFlag(models.EvalContext{
+		result := EvalFlag(models.EvalContext{
 			EnableDebug:   true,
 			EntityContext: map[string]interface{}{"dl_state": "CA"},
 			EntityID:      "entityID1",
@@ -180,7 +180,7 @@ func TestEvalFlag(t *testing.T) {
 
 	t.Run("test happy code path with flagKey", func(t *testing.T) {
 		defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
-		result := evalFlag(models.EvalContext{
+		result := EvalFlag(models.EvalContext{
 			EnableDebug:   true,
 			EntityContext: map[string]interface{}{"dl_state": "CA"},
 			EntityID:      "entityID1",
@@ -219,7 +219,7 @@ func TestEvalFlag(t *testing.T) {
 		f.PrepareEvaluation()
 		cache := &EvalCache{idCache: map[string]*entity.Flag{"100": &f}}
 		defer gostub.StubFunc(&GetEvalCache, cache).Reset()
-		result := evalFlag(models.EvalContext{
+		result := EvalFlag(models.EvalContext{
 			EnableDebug:   true,
 			EntityContext: map[string]interface{}{"dl_state": "CA", "state": "CA", "rate": 2000},
 			EntityID:      "entityID1",
@@ -239,7 +239,7 @@ func TestEvalFlag(t *testing.T) {
 		f.PrepareEvaluation()
 		cache := &EvalCache{idCache: map[string]*entity.Flag{"100": &f}}
 		defer gostub.StubFunc(&GetEvalCache, cache).Reset()
-		result := evalFlag(models.EvalContext{
+		result := EvalFlag(models.EvalContext{
 			EnableDebug:   true,
 			EntityContext: map[string]interface{}{"dl_state": "CA", "state": "CA", "rate": 2000},
 			EntityID:      "entityID1",
@@ -271,7 +271,7 @@ func TestEvalFlag(t *testing.T) {
 		f.PrepareEvaluation()
 		cache := &EvalCache{idCache: map[string]*entity.Flag{"100": &f}}
 		defer gostub.StubFunc(&GetEvalCache, cache).Reset()
-		result := evalFlag(models.EvalContext{
+		result := EvalFlag(models.EvalContext{
 			EnableDebug:   true,
 			EntityContext: map[string]interface{}{"dl_state": "CA", "state": "NY"},
 			EntityID:      "entityID1",
@@ -287,7 +287,7 @@ func TestEvalFlag(t *testing.T) {
 		f.Enabled = false
 		cache := &EvalCache{idCache: map[string]*entity.Flag{"100": &f}}
 		defer gostub.StubFunc(&GetEvalCache, cache).Reset()
-		result := evalFlag(models.EvalContext{
+		result := EvalFlag(models.EvalContext{
 			EnableDebug:   true,
 			EntityContext: map[string]interface{}{"dl_state": "CA"},
 			EntityID:      "entityID1",
@@ -304,7 +304,7 @@ func TestEvalFlag(t *testing.T) {
 			f.EntityType = ""
 			cache := &EvalCache{idCache: map[string]*entity.Flag{"100": &f}}
 			defer gostub.StubFunc(&GetEvalCache, cache).Reset()
-			result := evalFlag(models.EvalContext{
+			result := EvalFlag(models.EvalContext{
 				EnableDebug:   true,
 				EntityContext: map[string]interface{}{"dl_state": "CA"},
 				EntityID:      "entityID1",
@@ -320,7 +320,7 @@ func TestEvalFlag(t *testing.T) {
 			f.EntityType = "some_entity_type"
 			cache := &EvalCache{idCache: map[string]*entity.Flag{"100": &f}}
 			defer gostub.StubFunc(&GetEvalCache, cache).Reset()
-			result := evalFlag(models.EvalContext{
+			result := EvalFlag(models.EvalContext{
 				EnableDebug:   true,
 				EntityContext: map[string]interface{}{"dl_state": "CA"},
 				EntityID:      "entityID1",
@@ -337,14 +337,14 @@ func TestEvalFlag(t *testing.T) {
 
 func TestPostEvaluation(t *testing.T) {
 	t.Run("test empty body", func(t *testing.T) {
-		defer gostub.StubFunc(&evalFlag, &models.EvalResult{}).Reset()
+		defer gostub.StubFunc(&EvalFlag, &models.EvalResult{}).Reset()
 		e := NewEval()
 		resp := e.PostEvaluation(evaluation.PostEvaluationParams{})
 		assert.NotNil(t, resp)
 	})
 
 	t.Run("test happy code path", func(t *testing.T) {
-		defer gostub.StubFunc(&evalFlag, &models.EvalResult{}).Reset()
+		defer gostub.StubFunc(&EvalFlag, &models.EvalResult{}).Reset()
 		e := NewEval()
 		resp := e.PostEvaluation(evaluation.PostEvaluationParams{
 			Body: &models.EvalContext{
@@ -361,7 +361,7 @@ func TestPostEvaluation(t *testing.T) {
 
 func TestPostEvaluationBatch(t *testing.T) {
 	t.Run("test happy code path", func(t *testing.T) {
-		defer gostub.StubFunc(&evalFlag, &models.EvalResult{}).Reset()
+		defer gostub.StubFunc(&EvalFlag, &models.EvalResult{}).Reset()
 		e := NewEval()
 		resp := e.PostEvaluationBatch(evaluation.PostEvaluationBatchParams{
 			Body: &models.EvaluationBatchRequest{
