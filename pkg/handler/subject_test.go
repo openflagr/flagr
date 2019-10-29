@@ -1,3 +1,4 @@
+
 package handler
 
 import (
@@ -10,8 +11,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetSubjectFromRequest(t *testing.T) {
+func TestGetSubjectFromJWT(t *testing.T) {
 	var ctx context.Context
+
+	config.Config.JWTAuthEnabled = true
 
 	r, _ := http.NewRequest("GET", "", nil)
 	assert.Equal(t, getSubjectFromRequest(r), "")
@@ -28,5 +31,18 @@ func TestGetSubjectFromRequest(t *testing.T) {
 		},
 		Valid: true,
 	})
+	assert.Equal(t, getSubjectFromRequest(r.WithContext(ctx)), "foo@example.com")
+}
+
+func TestGetSubjectFromOauthProxy(t *testing.T) {
+	var ctx = context.Background()
+
+	config.Config.JWTAuthEnabled = false
+	config.Config.AuthProxyEnabled = true
+
+	r, _ := http.NewRequest("GET", "", nil)
+	assert.Equal(t, getSubjectFromRequest(r), "")
+
+	r.Header.Set("X-Email", "foo@example.com")
 	assert.Equal(t, getSubjectFromRequest(r.WithContext(ctx)), "foo@example.com")
 }
