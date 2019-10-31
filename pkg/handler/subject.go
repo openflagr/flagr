@@ -24,9 +24,9 @@ func getSubjectFromRequest(r *http.Request) string {
 			return util.SafeString(claims[config.Config.JWTAuthUserClaim])
 		}
 
-		} else if config.Config.AuthProxyEnabled {
-			return r.Header.Get(config.Config.AuthProxyHeader)
-		}
+	} else if config.Config.HeaderAuthEnabled {
+		return r.Header.Get(config.Config.HeaderAuthUserField)
+	}
 
 	return ""
 }

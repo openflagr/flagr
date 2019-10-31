@@ -14,6 +14,7 @@ import (
 func TestGetSubjectFromJWT(t *testing.T) {
 	var ctx context.Context
 
+	defer func() { config.Config.JWTAuthEnabled = false }()
 	config.Config.JWTAuthEnabled = true
 
 	r, _ := http.NewRequest("GET", "", nil)
@@ -37,8 +38,8 @@ func TestGetSubjectFromJWT(t *testing.T) {
 func TestGetSubjectFromOauthProxy(t *testing.T) {
 	var ctx = context.Background()
 
-	config.Config.JWTAuthEnabled = false
-	config.Config.AuthProxyEnabled = true
+	defer func() { config.Config.HeaderAuthEnabled = false }()
+	config.Config.HeaderAuthEnabled = true
 
 	r, _ := http.NewRequest("GET", "", nil)
 	assert.Equal(t, getSubjectFromRequest(r), "")
