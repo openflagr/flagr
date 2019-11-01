@@ -44,6 +44,6 @@ func TestGetSubjectFromOauthProxy(t *testing.T) {
 	r, _ := http.NewRequest("GET", "", nil)
 	assert.Equal(t, getSubjectFromRequest(r), "")
 
-	r.Header.Set("X-Email", "foo@example.com")
+	r.Header.Set(config.Config.HeaderAuthUserField, "foo@example.com")
 	assert.Equal(t, getSubjectFromRequest(r.WithContext(ctx)), "foo@example.com")
 }
