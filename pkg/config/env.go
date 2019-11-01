@@ -185,8 +185,8 @@ var Config = struct {
 	JWTAuthSigningMethod string `env:"FLAGR_JWT_AUTH_SIGNING_METHOD" envDefault:"HS256"`
 
 	// Identify users through headers
-	HeaderAuthEnabled   bool   `env:"FLAGR_AUTH_PROXY_ENABLED" envDefault:"false"`
-	HeaderAuthUserField string `env:"FLAGR_AUTH_PROXY_HEADER" envDefault:"X-Email"`
+	HeaderAuthEnabled   bool   `env:"FLAGR_HEADER_AUTH_ENABLED" envDefault:"false"`
+	HeaderAuthUserField string `env:"FLAGR_HEADER_AUTH_USER_FIELD" envDefault:"X-Email"`
 
 	// WebPrefix - base path for web and API
 	// e.g. FLAGR_WEB_PREFIX=/foo
