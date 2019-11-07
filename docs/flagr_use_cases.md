@@ -7,7 +7,7 @@ a flag, and the code instrumentation looks similar among them.
 
 ## Feature Flagging
 
-A common pattern for feature flagging is a binary on/off toggle. Most of them are kill switches, and sometimes one will have targeted audience of the feature flags. Following is an example of the pseudocode: given an entity (a user, a request, or a web cookie), Flagr evaluates the entity according to the flag setting.
+A common pattern for feature flagging is a binary on/off toggle. Most of them are kill switches, and sometimes one will have targeted audience of the feature flags. Following is a pseudocode example: given an entity (a user, a request, or a web cookie), Flagr evaluates the entity according to the flag setting.
 
 ```
 evaluation_result = flagr.post_evaluation( entity )
@@ -40,8 +40,8 @@ UI setting example (frontend looks may iterate quickly):
 
 ## Experimenting - A/B testing
 
-If we want to run A/B testing experiments on serveral variants with a targeted audience,
-we may want to instrument the code to Flagr like the following pseudocode.
+If we want to run A/B testing experiments on several variants with a targeted audience,
+we may want to instrument the code to Flagr like the following pseudocode:
 
 ```
 evaluation_result = flagr.post_evaluation( entity )
@@ -57,7 +57,7 @@ if (evaluation_result.variant_id == treatment1) {
 }
 ```
 
-And a typical A/B testing flag can be configured from Flagr UI like the following.
+And a typical A/B testing flag can be configured from Flagr UI like the following:
 
 !> Multiple segments' order is important! Entities will fall
 into the **first** segment that match **all** the constraints of it.
@@ -98,7 +98,7 @@ One can also leverage the **Variant Attachment** to run dynamic configuration, b
 
 !> Before [v1.1.3](https://github.com/checkr/flagr/releases/tag/1.1.3), only **string:string** key:value pairs were supported inside the JSON object attachment.
 
-For example, the color_hex of green variant can be dynamically configured.
+For example, the color_hex of green variant can be dynamically configured:
 
 ```
 evaluation_result = flagr.post_evaluation( entity )
