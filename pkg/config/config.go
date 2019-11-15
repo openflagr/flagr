@@ -93,6 +93,9 @@ func setupNewrelic() {
 	if Config.NewRelicEnabled {
 		nCfg := newrelic.NewConfig(Config.NewRelicAppName, Config.NewRelicKey)
 		nCfg.Enabled = true
+		// These two cannot be enabled at the same time and cross application is enabled by default
+		nCfg.DistributedTracer.Enabled = Config.NewRelicDistributedTracingEnabled
+		nCfg.CrossApplicationTracer.Enabled = !Config.NewRelicDistributedTracingEnabled
 		app, err := newrelic.NewApplication(nCfg)
 		if err != nil {
 			panic(fmt.Sprintf("unable to initialize newrelic. %s", err))
