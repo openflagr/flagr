@@ -25,7 +25,7 @@ func GenFixtureFlag() Flag {
 				Model:  gorm.Model{ID: 301},
 				FlagID: 100,
 				Key:    "treatment",
-				Attachment: map[string]string{
+				Attachment: map[string]interface{}{
 					"value": "321",
 				},
 			},
