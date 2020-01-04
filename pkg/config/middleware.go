@@ -245,7 +245,6 @@ func (p *prometheusMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request,
 			response := w.(negroni.ResponseWriter)
 			status := strconv.Itoa(response.Status())
 			duration := float64(time.Since(start)) / float64(time.Second)
-			fmt.Println(duration)
 
 			p.counter.WithLabelValues(status, r.RequestURI, r.Method).Inc()
 			if p.latencies != nil {
