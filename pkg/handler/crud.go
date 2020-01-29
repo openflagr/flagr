@@ -158,7 +158,7 @@ func (c *crud) GetFlag(params flag.GetFlagParams) middleware.Responder {
 	// Something else happened, return a 500
 	if  err := result.Error; err != nil {
 		return flag.NewGetFlagDefault(500).WithPayload(
-			ErrorMessage("An unknown error occurred while looking up flag %v: %s", params.FlagID, err))
+			ErrorMessage("an unknown error occurred while looking up flag %v: %s", params.FlagID, err))
 	}
 
 	resp := flag.NewGetFlagOK()
