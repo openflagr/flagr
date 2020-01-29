@@ -152,11 +152,11 @@ func (c *crud) GetFlag(params flag.GetFlagParams) middleware.Responder {
 	// Flag with given ID doesn't exist, so we 404
 	if result.RecordNotFound() {
 		return flag.NewGetFlagDefault(404).WithPayload(
-			ErrorMessage("Unable to find flag %v in the database", params.FlagID))
+			ErrorMessage("unable to find flag %v in the database", params.FlagID))
 	}
 
 	// Something else happened, return a 500
-	if  err := result.Error; err != nil {
+	if err := result.Error; err != nil {
 		return flag.NewGetFlagDefault(500).WithPayload(
 			ErrorMessage("an unknown error occurred while looking up flag %v: %s", params.FlagID, err))
 	}
