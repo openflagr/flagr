@@ -96,6 +96,10 @@ func TestIsSafeKey(t *testing.T) {
 	b, msg = IsSafeKey(strings.Repeat("a", 64))
 	assert.False(t, b)
 	assert.NotEmpty(t, msg)
+
+	b, msg = IsSafeKey("slashes/are/valid")
+	assert.True(t, b)
+	assert.Empty(t, msg)
 }
 
 func TestPtrs(t *testing.T) {
