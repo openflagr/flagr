@@ -4,7 +4,12 @@
       <el-row>
         <el-col :span="6">
           <router-link :to="{name: 'home'}">
-            <h3 class="logo">Flagr</h3>
+            <div class="logo-container">
+              <h3 class="logo">Flagr</h3>
+              <div>
+                <span class="version">v{{ version }}</span>
+              </div>
+            </div>
           </router-link>
         </el-col>
         <el-col :span="2" :offset="13">
@@ -22,8 +27,12 @@
 </template>
 
 <script>
+const version = require("../package.json").version || "1.0.0"
 export default {
-  name: 'app'
+  name: 'app', 
+  data: () => ({
+    version
+  }),
 }
 </script>
 
@@ -68,14 +77,27 @@ ul {
 
   .navbar {
     background-color: #74E5E0;
-    h3 {
-      color: white;
-      margin-left: 2em;
-      &:hover {
-        color: #f7f7f7;
+    color: white;
+    .logo-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+
+      h3 {
+        margin-left: 2em;
+        margin-right: 10px;
+        &:hover {
+          color: #f7f7f7;
+        }
+      }
+
+      span {
+        font-size: 12px;
       }
     }
     a {
+      color: white;
       text-decoration: none;
     }
   }
