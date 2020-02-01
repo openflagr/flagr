@@ -5,7 +5,7 @@
         <el-col :span="6">
           <router-link :to="{name: 'home'}">
             <div class="logo-container">
-              <h2 class="logo">Flagr</h2>
+              <h3 class="logo">Flagr</h3>
               <div>
                 <span class="version">v{{ version }}</span>
               </div>
@@ -77,14 +77,14 @@ ul {
 
   .navbar {
     background-color: #74E5E0;
+    color: white;
     .logo-container {
       display: flex;
       justify-content: center;
       align-items: center;
       font-weight: bold;
 
-      h2 {
-        color: white;
+      h3 {
         margin-left: 2em;
         margin-right: 10px;
         &:hover {
@@ -94,10 +94,10 @@ ul {
 
       span {
         font-size: 12px;
-        color: #551a8b;
       }
     }
     a {
+      color: white;
       text-decoration: none;
     }
   }
