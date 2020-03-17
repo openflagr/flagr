@@ -43,7 +43,7 @@ var Config = struct {
 
 	/**
 	DBDriver and DBConnectionStr define how we can write and read flags data.
-	For databases, flagr supports sqlite3, mysql and postgres.
+	For databases, flagr supports sqlite3, mssql, mysql and postgres.
 	For read-only evaluation, flagr supports file and http.
 
 	Examples:
