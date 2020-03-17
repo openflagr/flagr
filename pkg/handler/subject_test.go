@@ -1,4 +1,3 @@
-
 package handler
 
 import (
@@ -23,10 +22,12 @@ func TestGetSubjectFromJWT(t *testing.T) {
 	ctx = context.TODO()
 	assert.Equal(t, getSubjectFromRequest(r.WithContext(ctx)), "")
 
-	ctx = context.WithValue(ctx, interface{}(config.Config.JWTAuthUserProperty), &jwt.Token{})
+	//nolint:staticcheck // jwt-middleware is using the string type of context key
+	ctx = context.WithValue(ctx, config.Config.JWTAuthUserProperty, &jwt.Token{})
 	assert.Equal(t, getSubjectFromRequest(r.WithContext(ctx)), "")
 
-	ctx = context.WithValue(ctx, interface{}(config.Config.JWTAuthUserProperty), &jwt.Token{
+	//nolint:staticcheck // jwt-middleware is using the string type of context key
+	ctx = context.WithValue(ctx, config.Config.JWTAuthUserProperty, &jwt.Token{
 		Claims: jwt.MapClaims{
 			"sub": "foo@example.com",
 		},
