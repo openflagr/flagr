@@ -4,6 +4,7 @@ import (
 	"os"
 	"sync"
 
+	_ "github.com/jinzhu/gorm/dialects/mssql"    // mssql driver
 	_ "github.com/jinzhu/gorm/dialects/mysql"    // mysql driver
 	_ "github.com/jinzhu/gorm/dialects/postgres" // postgres driver
 	_ "github.com/jinzhu/gorm/dialects/sqlite"   // sqlite driver
