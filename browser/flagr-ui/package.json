@@ -21,12 +21,12 @@
     "vuex": "^2.4.1"
   },
   "devDependencies": {
-    "@vue/cli-plugin-babel": "^4.1.2",
-    "@vue/cli-plugin-eslint": "^4.1.2",
-    "@vue/cli-service": "^4.1.2",
-    "babel-eslint": "^10.0.1",
-    "eslint": "^5.16.0",
-    "eslint-plugin-vue": "^5.0.0",
+    "@vue/cli-plugin-babel": "~4.2.3",
+    "@vue/cli-plugin-eslint": "~4.2.3",
+    "@vue/cli-service": "~4.2.3",
+    "babel-eslint": "^10.0.3",
+    "eslint": "^6.7.2",
+    "eslint-plugin-vue": "^6.1.2",
     "less": "^3.9.0",
     "less-loader": "^5.0.0",
     "lodash": "^4.17.13",
