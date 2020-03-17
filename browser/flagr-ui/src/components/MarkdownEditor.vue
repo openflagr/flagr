@@ -14,6 +14,7 @@
 
 import { mavonEditor } from 'mavon-editor'
 import 'mavon-editor/dist/css/index.css'
+import * as xss from "xss"
 
 export default {
   name: 'editor',
@@ -47,7 +48,7 @@ export default {
       this.editorSettings.subfield = show
     },
     syncMarkdown (md) {
-      this.$emit('update:markdown', md)
+      this.$emit('update:markdown', xss(md))
     },
     save () {
       this.$emit('save')
