@@ -248,6 +248,8 @@
                               v-model="variant.attachment"
                               :showBtns="false"
                               :mode="'code'"
+                              v-on:has-error="variant.attachmentValid = false"
+                              v-on:input="variant.attachmentValid = true"
                               class="variant-attachment-content"
                             ></vue-json-editor>
                           </el-collapse-item>
@@ -718,6 +720,10 @@ export default {
       }, handleErr.bind(this))
     },
     putVariant (variant) {
+      if (variant.attachmentValid === false) {
+        this.$message.error('variant attachment is not valid')
+        return
+      }
       Axios.put(
         `${API_URL}/flags/${this.flagId}/variants/${variant.id}`,
         variant
