@@ -11,7 +11,7 @@ RUN make build_ui
 ######################################
 # Prepare go_builder
 ######################################
-FROM golang:1.12 as go_builder
+FROM golang:1.14 as go_builder
 WORKDIR /go/src/github.com/checkr/flagr
 ADD . .
 RUN make build
