@@ -18,6 +18,9 @@
     <a href="https://codecov.io/gh/checkr/flagr" target="_blank">
         <img src="https://codecov.io/gh/checkr/flagr/branch/master/graph/badge.svg">
     </a>
+    <a href="https://hub.docker.com/r/checkr/flagr" target="_blank">
+        <img src="https://github.com/checkr/flagr/workflows/Publish%20DockerHub/badge.svg?branch=master&event=release">
+    </a>
 </p>
 
 ## Introduction
