@@ -53,6 +53,11 @@ func TestCrudFlags(t *testing.T) {
 		assert.NotZero(t, res.(*flag.GetFlagOK).Payload.Key)
 	})
 
+	t.Run("it should return 404 not found if flag is not there", func(t *testing.T) {
+		res = c.GetFlag(flag.GetFlagParams{FlagID: int64(4444444)})
+		assert.NotZero(t, res.(*flag.GetFlagDefault))
+	})
+
 	t.Run("it should be able to get preloaded segments and variants", func(t *testing.T) {
 		c.CreateSegment(segment.CreateSegmentParams{
 			FlagID: int64(1),
