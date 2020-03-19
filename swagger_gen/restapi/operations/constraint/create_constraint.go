@@ -8,7 +8,7 @@ package constraint
 import (
 	"net/http"
 
-	middleware "github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/runtime/middleware"
 )
 
 // CreateConstraintHandlerFunc turns a function with the right signature into a create constraint handler

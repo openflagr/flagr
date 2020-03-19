@@ -8,7 +8,7 @@ package distribution
 import (
 	"net/http"
 
-	middleware "github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/runtime/middleware"
 )
 
 // PutDistributionsHandlerFunc turns a function with the right signature into a put distributions handler

@@ -8,7 +8,7 @@ package evaluation
 import (
 	"net/http"
 
-	middleware "github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/runtime/middleware"
 )
 
 // PostEvaluationHandlerFunc turns a function with the right signature into a post evaluation handler

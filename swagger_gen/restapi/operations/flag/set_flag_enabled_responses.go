@@ -10,7 +10,7 @@ import (
 
 	"github.com/go-openapi/runtime"
 
-	models "github.com/checkr/flagr/swagger_gen/models"
+	"github.com/checkr/flagr/swagger_gen/models"
 )
 
 // SetFlagEnabledOKCode is the HTTP code returned for type SetFlagEnabledOK

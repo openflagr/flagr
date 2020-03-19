@@ -11,7 +11,7 @@ import (
 
 	"github.com/go-openapi/runtime"
 
-	models "github.com/checkr/flagr/swagger_gen/models"
+	"github.com/checkr/flagr/swagger_gen/models"
 )
 
 // GetExportSqliteOKCode is the HTTP code returned for type GetExportSqliteOK
