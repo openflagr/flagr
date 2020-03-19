@@ -8,7 +8,7 @@ package variant
 import (
 	"net/http"
 
-	middleware "github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/runtime/middleware"
 )
 
 // DeleteVariantHandlerFunc turns a function with the right signature into a delete variant handler

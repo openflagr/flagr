@@ -13,7 +13,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 
-	models "github.com/checkr/flagr/swagger_gen/models"
+	"github.com/checkr/flagr/swagger_gen/models"
 )
 
 // NewCreateFlagParams creates a new CreateFlagParams object

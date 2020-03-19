@@ -8,7 +8,7 @@ import (
 
 	"github.com/checkr/flagr/swagger_gen/restapi"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations"
-	loads "github.com/go-openapi/loads"
+	"github.com/go-openapi/loads"
 	flags "github.com/jessevdk/go-flags"
 )
 
@@ -29,7 +29,6 @@ func main() {
 	parser := flags.NewParser(server, flags.Default)
 	parser.ShortDescription = "Flagr"
 	parser.LongDescription = "Flagr is a feature flagging, A/B testing and dynamic configuration microservice. The base path for all the APIs is \"/api/v1\".\n"
-
 	server.ConfigureFlags()
 	for _, optsGroup := range api.CommandLineOptionsGroups {
 		_, err := parser.AddGroup(optsGroup.ShortDescription, optsGroup.LongDescription, optsGroup.Options)

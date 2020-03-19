@@ -8,7 +8,7 @@ package health
 import (
 	"net/http"
 
-	middleware "github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/runtime/middleware"
 )
 
 // GetHealthHandlerFunc turns a function with the right signature into a get health handler

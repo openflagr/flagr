@@ -8,7 +8,7 @@ package flag
 import (
 	"net/http"
 
-	middleware "github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/runtime/middleware"
 )
 
 // GetFlagEntityTypesHandlerFunc turns a function with the right signature into a get flag entity types handler
