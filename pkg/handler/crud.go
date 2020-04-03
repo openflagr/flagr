@@ -75,7 +75,7 @@ func (c *crud) FindFlags(params flag.FindFlagsParams) middleware.Responder {
 	q := entity.Flag{}
 
 	if params.Enabled != nil {
-		q.Enabled = *params.Enabled
+		tx = tx.Where("enabled = ?", *params.Enabled)
 	}
 	if params.Description != nil {
 		q.Description = *params.Description

@@ -47,6 +47,24 @@ func TestCrudFlags(t *testing.T) {
 		assert.NotZero(t, len(res.(*flag.FindFlagsOK).Payload))
 	})
 
+	t.Run("it should respect the ?enabled query param", func(t *testing.T) {
+		res = c.FindFlags(flag.FindFlagsParams{})
+		allFlags := len(res.(*flag.FindFlagsOK).Payload)
+
+		res = c.FindFlags(flag.FindFlagsParams{
+			Enabled: util.BoolPtr(true),
+		})
+		enabledFlags := len(res.(*flag.FindFlagsOK).Payload)
+
+		res = c.FindFlags(flag.FindFlagsParams{
+			Enabled: util.BoolPtr(false),
+		})
+		disabledFlags := len(res.(*flag.FindFlagsOK).Payload)
+
+		assert.Equal(t, allFlags, enabledFlags+disabledFlags)
+		assert.NotEqual(t, allFlags, enabledFlags)
+	})
+
 	t.Run("it should be able to get the flag after creation", func(t *testing.T) {
 		res = c.GetFlag(flag.GetFlagParams{FlagID: int64(1)})
 		assert.NotZero(t, res.(*flag.GetFlagOK).Payload.ID)
