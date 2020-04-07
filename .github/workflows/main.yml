@@ -1,0 +1,23 @@
+name: Publish DockerHub
+on:
+  release:
+    types: [published]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Publish Docker SemVer Tag
+      uses: elgohr/Publish-Docker-Github-Action@2.13
+      with:
+        name: checkr/flagr
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+        tag_semver: true
+    - name: Publish Docker Latest Tag
+      uses: elgohr/Publish-Docker-Github-Action@2.13
+      with:
+        name: checkr/flagr
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+        tag: latest

@@ -8,7 +8,7 @@ package segment
 import (
 	"net/http"
 
-	middleware "github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/runtime/middleware"
 )
 
 // PutSegmentHandlerFunc turns a function with the right signature into a put segment handler

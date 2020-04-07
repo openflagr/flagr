@@ -8,7 +8,7 @@ package flag
 import (
 	"net/http"
 
-	middleware "github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/runtime/middleware"
 )
 
 // GetFlagSnapshotsHandlerFunc turns a function with the right signature into a get flag snapshots handler

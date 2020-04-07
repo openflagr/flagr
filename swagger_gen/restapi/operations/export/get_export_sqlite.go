@@ -8,7 +8,7 @@ package export
 import (
 	"net/http"
 
-	middleware "github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/runtime/middleware"
 )
 
 // GetExportSqliteHandlerFunc turns a function with the right signature into a get export sqlite handler
