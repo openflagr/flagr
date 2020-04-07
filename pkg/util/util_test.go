@@ -100,6 +100,14 @@ func TestIsSafeKey(t *testing.T) {
 	b, msg = IsSafeKey("slashes/are/valid")
 	assert.True(t, b)
 	assert.Empty(t, msg)
+
+	b, msg = IsSafeKey("dots.are.valid")
+	assert.True(t, b)
+	assert.Empty(t, msg)
+
+	b, msg = IsSafeKey("colons:are:valid")
+	assert.True(t, b)
+	assert.Empty(t, msg)
 }
 
 func TestPtrs(t *testing.T) {
