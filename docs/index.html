@@ -1,14 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <title>Document</title>
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-    <meta name="description" content="Description">
-    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <link rel="icon" href="images/favicon.png">
-    <link rel="stylesheet" href="//unpkg.com/docsify/lib/themes/vue.css">
+    <meta name="description" content="Description" />
+    <meta
+      name="viewport"
+      content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
+    />
+    <link rel="icon" href="images/favicon.png" />
+    <link rel="stylesheet" href="//unpkg.com/docsify/lib/themes/vue.css" />
     <style>
+      :root {
+        --theme-color: #2e4960;
+      }
+
       code {
         font-size: 15px !important;
       }
@@ -33,25 +40,25 @@
         maxLevel: 4,
         subMaxLevel: 2,
         coverpage: true,
-        homepage: 'home.md',
+        homepage: "home.md",
         executeScript: true,
-        name: 'Flagr Docs',
+        name: "Flagr Docs",
         search: {
           noData: {
-            '/': 'No results!'
+            "/": "No results!",
           },
-          paths: 'auto',
+          paths: "auto",
           placeholder: {
-            '/': 'Search'
+            "/": "Search",
           },
         },
         plugins: [
           EditOnGithubPlugin.create(
-            'https://github.com/checkr/flagr/blob/master/docs/'
-          )
+            "https://github.com/checkr/flagr/blob/master/docs/"
+          ),
         ],
-        repo: 'https://github.com/checkr/flagr'
-      }
+        repo: "https://github.com/checkr/flagr",
+      };
     </script>
 
     <script src="//unpkg.com/docsify/lib/docsify.min.js"></script>
