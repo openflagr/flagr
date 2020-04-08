@@ -1,6 +1,7 @@
 package config
 
 import (
+	"crypto/subtle"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -78,6 +79,10 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 		n.Use(setupJWTAuthMiddleware())
 	}
 
+	if Config.BasicAuthEnabled {
+		n.Use(setupBasicAuthMiddleware())
+	}
+
 	n.Use(&negroni.Static{
 		Dir:       http.Dir("./browser/flagr-ui/dist/"),
 		Prefix:    Config.WebPrefix,
@@ -118,7 +123,7 @@ func setupRecoveryMiddleware() *negroni.Recovery {
 /**
 setupJWTAuthMiddleware setup an JWTMiddleware from the ENV config
 */
-func setupJWTAuthMiddleware() *auth {
+func setupJWTAuthMiddleware() *jwtAuth {
 	var signingMethod jwt.SigningMethod
 	var validationKey interface{}
 	var errParsingKey error
@@ -138,7 +143,7 @@ func setupJWTAuthMiddleware() *auth {
 		validationKey = []byte("")
 	}
 
-	return &auth{
+	return &jwtAuth{
 		PrefixWhitelistPaths: Config.JWTAuthPrefixWhitelistPaths,
 		ExactWhitelistPaths:  Config.JWTAuthExactWhitelistPaths,
 		JWTMiddleware: jwtmiddleware.New(jwtmiddleware.Options{
@@ -175,13 +180,13 @@ func jwtErrorHandler(w http.ResponseWriter, r *http.Request, err string) {
 	}
 }
 
-type auth struct {
+type jwtAuth struct {
 	PrefixWhitelistPaths []string
 	ExactWhitelistPaths  []string
 	JWTMiddleware        *jwtmiddleware.JWTMiddleware
 }
 
-func (a *auth) whitelist(req *http.Request) bool {
+func (a *jwtAuth) whitelist(req *http.Request) bool {
 	path := req.URL.Path
 
 	// If we set to 401 unauthorized, let the client handles the 401 itself
@@ -201,12 +206,64 @@ func (a *auth) whitelist(req *http.Request) bool {
 	return false
 }
 
-func (a *auth) ServeHTTP(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
+func (a *jwtAuth) ServeHTTP(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
 	if a.whitelist(req) {
 		next(w, req)
 		return
 	}
 	a.JWTMiddleware.HandlerWithNext(w, req, next)
+}
+
+/**
+setupBasicAuthMiddleware setup an BasicMiddleware from the ENV config
+*/
+func setupBasicAuthMiddleware() *basicAuth {
+	return &basicAuth{
+		Username:             []byte(Config.BasicAuthUsername),
+		Password:             []byte(Config.BasicAuthPassword),
+		PrefixWhitelistPaths: Config.BasicAuthPrefixWhitelistPaths,
+		ExactWhitelistPaths:  Config.BasicAuthExactWhitelistPaths,
+	}
+}
+
+type basicAuth struct {
+	Username             []byte
+	Password             []byte
+	PrefixWhitelistPaths []string
+	ExactWhitelistPaths  []string
+}
+
+func (a *basicAuth) whitelist(req *http.Request) bool {
+	path := req.URL.Path
+
+	for _, p := range a.ExactWhitelistPaths {
+		if p == path {
+			return true
+		}
+	}
+
+	for _, p := range a.PrefixWhitelistPaths {
+		if p != "" && strings.HasPrefix(path, p) {
+			return true
+		}
+	}
+	return false
+}
+
+func (a *basicAuth) ServeHTTP(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
+	if a.whitelist(req) {
+		next(w, req)
+		return
+	}
+
+	username, password, ok := req.BasicAuth()
+	if !ok || subtle.ConstantTimeCompare(a.Username, []byte(username)) != 1 || subtle.ConstantTimeCompare(a.Password, []byte(password)) != 1 {
+		w.Header().Set("WWW-Authenticate", `Basic realm="you shall not pass"`)
+		http.Error(w, "Not authorized", http.StatusUnauthorized)
+		return
+	}
+
+	next(w, req)
 }
 
 type statsdMiddleware struct {
