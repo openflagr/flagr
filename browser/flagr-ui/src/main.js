@@ -14,9 +14,9 @@ Vue.use(ElementUI, { locale })
 
 // Autofocus certain fields
 Vue.directive('focus', {
-      inserted: function (el) {
-                el.__vue__.focus()
-            }
+  inserted: function (el) {
+    el.__vue__.focus()
+  }
 })
 
 /* eslint-disable no-new */
