@@ -28,8 +28,14 @@ build_ui:
 	@echo "Building Flagr UI ..."
 	@cd ./browser/flagr-ui/; npm install && npm run build
 
+run_ui:
+	@cd ./browser/flagr-ui/; npm run serve
+
 run:
 	@$(PWD)/flagr --port 18000
+
+start:
+	$(MAKE) -j run run_ui
 
 gen: api_docs swagger
 
