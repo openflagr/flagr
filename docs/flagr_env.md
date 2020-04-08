@@ -65,3 +65,11 @@ The best way to configure service account for Flagr to use pubsub only use:
 FLAGR_RECORDER_PUBSUB_PROJECT_ID=google-project-id
 FLAGR_RECORDER_PUBSUB_KEYFILE=/path/to/service/account.json
 ```
+
+Basic Authentication for web interface
+
+```
+FLAGR_BASIC_AUTH_ENABLED=true
+FLAGR_BASIC_AUTH_USERNAME=admin
+FLAGR_BASIC_AUTH_PASSWORD=password
+```
