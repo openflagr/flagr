@@ -33,7 +33,8 @@
             <el-input
               placeholder="Search a flag"
               prefix-icon="el-icon-search"
-              v-model="searchTerm">
+              v-model="searchTerm"
+              v-focus>
             </el-input>
           </el-row>
 
