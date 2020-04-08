@@ -193,8 +193,8 @@ var Config = struct {
 	BasicAuthEnabled              bool     `env:"FLAGR_BASIC_AUTH_ENABLED" envDefault:"false"`
 	BasicAuthUsername             string   `env:"FLAGR_BASIC_AUTH_USERNAME" envDefault:""`
 	BasicAuthPassword             string   `env:"FLAGR_BASIC_AUTH_PASSWORD" envDefault:""`
-	BasicAuthPrefixWhitelistPaths []string `env:"FLAGR_BASIC_AUTH_WHITELIST_PATHS" envDefault:"/api/v1/evaluation,/static" envSeparator:","`
-	BasicAuthExactWhitelistPaths  []string `env:"FLAGR_BASIC_AUTH_EXACT_WHITELIST_PATHS" envDefault:",/" envSeparator:","`
+	BasicAuthPrefixWhitelistPaths []string `env:"FLAGR_BASIC_AUTH_WHITELIST_PATHS" envDefault:"/api/v1/flags,/api/v1/evaluation,/api/v1/evaluation/batch" envSeparator:","`
+	BasicAuthExactWhitelistPaths  []string `env:"FLAGR_BASIC_AUTH_EXACT_WHITELIST_PATHS" envDefault:"" envSeparator:","`
 
 	// WebPrefix - base path for web and API
 	// e.g. FLAGR_WEB_PREFIX=/foo
