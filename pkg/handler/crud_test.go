@@ -40,6 +40,45 @@ func TestCrudFlags(t *testing.T) {
 		})
 		assert.NotZero(t, res.(*flag.CreateFlagOK).Payload.ID)
 		assert.Equal(t, "some_random_flag_key", res.(*flag.CreateFlagOK).Payload.Key)
+
+		flagID := uint(res.(*flag.CreateFlagOK).Payload.ID)
+		segment := entity.Segment{FlagID: flagID}
+		db.First(&segment)
+		assert.Zero(t, segment.ID)
+	})
+
+	t.Run("it should be able to create one simple flag", func(t *testing.T) {
+		res = c.CreateFlag(flag.CreateFlagParams{
+			Body: &models.CreateFlagRequest{
+				Description: util.StringPtr("simple flag"),
+				Key:         "simple_flag_key",
+				Template:    "simple",
+			},
+		})
+		res := res.(*flag.CreateFlagOK)
+		assert.NotZero(t, res.Payload.ID)
+		assert.Equal(t, "simple_flag_key", res.Payload.Key)
+		assert.Equal(t, len(res.Payload.Variants), 1)
+		assert.Equal(t, len(res.Payload.Segments), 1)
+		assert.Equal(t, len(res.Payload.Segments[0].Distributions), 1)
+		flagID := uint(res.Payload.ID)
+		segment := entity.Segment{FlagID: flagID}
+		db.First(&segment)
+		assert.NotZero(t, segment.ID)
+		assert.Equal(t, segment.Rank, entity.SegmentDefaultRank)
+
+		variant := entity.Variant{FlagID: flagID}
+		db.First(&variant)
+		assert.NotZero(t, variant.ID)
+		assert.Equal(t, variant.Key, "on")
+
+		distribution := entity.Distribution{VariantID: variant.ID}
+		db.First(&distribution)
+		assert.NotZero(t, distribution.ID)
+		assert.Equal(t, distribution.Percent, uint(100))
+		assert.Equal(t, distribution.SegmentID, segment.ID)
+		assert.Equal(t, distribution.VariantKey, variant.Key)
+
 	})
 
 	t.Run("it should be able to find some flags after creation", func(t *testing.T) {

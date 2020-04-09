@@ -127,10 +127,58 @@ func (c *crud) CreateFlag(params flag.CreateFlagParams) middleware.Responder {
 		}
 		f.Key = key
 	}
-	err := getDB().Create(f).Error
-	if err != nil {
+
+	tx := getDB().Begin()
+
+	if err := tx.Create(f).Error; err != nil {
+		tx.Rollback()
 		return flag.NewCreateFlagDefault(500).WithPayload(
 			ErrorMessage("cannot create flag. %s", err))
+	}
+
+	if params.Body.Template == "simple" {
+		// Create our default segment
+		s := &entity.Segment{}
+		s.FlagID = f.ID
+		s.RolloutPercent = uint(100)
+		s.Rank = entity.SegmentDefaultRank
+
+		if err := tx.Create(s).Error; err != nil {
+			tx.Rollback()
+			return flag.NewCreateFlagDefault(500).WithPayload(ErrorMessage("%s", err))
+		}
+
+		// .. and our default Variant
+		v := &entity.Variant{}
+		v.FlagID = f.ID
+		v.Key = "on"
+
+		if err := tx.Create(v).Error; err != nil {
+			tx.Rollback()
+			return flag.NewCreateFlagDefault(500).WithPayload(ErrorMessage("%s", err))
+		}
+
+		// .. and our default Distribution
+		d := &entity.Distribution{}
+		d.SegmentID = s.ID
+		d.VariantID = v.ID
+		d.VariantKey = v.Key
+		d.Percent = uint(100)
+
+		if err := tx.Create(d).Error; err != nil {
+			tx.Rollback()
+			return flag.NewCreateFlagDefault(500).WithPayload(ErrorMessage("%s", err))
+		}
+
+		s.Distributions = append(s.Distributions, *d)
+		f.Variants = append(f.Variants, *v)
+		f.Segments = append(f.Segments, *s)
+	}
+
+	err := tx.Commit().Error
+	if err != nil {
+		tx.Rollback()
+		return flag.NewCreateFlagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
 	resp := flag.NewCreateFlagOK()
@@ -142,6 +190,7 @@ func (c *crud) CreateFlag(params flag.CreateFlagParams) middleware.Responder {
 	resp.SetPayload(payload)
 
 	entity.SaveFlagSnapshot(getDB(), f.ID, getSubjectFromRequest(params.HTTPRequest))
+
 	return resp
 }
 
