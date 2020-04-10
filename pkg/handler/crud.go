@@ -114,37 +114,6 @@ func (c *crud) FindFlags(params flag.FindFlagsParams) middleware.Responder {
 	return resp
 }
 
-func (c *crud) CreateFlag(params flag.CreateFlagParams) middleware.Responder {
-	f := &entity.Flag{}
-	if params.Body != nil {
-		f.Description = util.SafeString(params.Body.Description)
-		f.CreatedBy = getSubjectFromRequest(params.HTTPRequest)
-
-		key, err := entity.CreateFlagKey(params.Body.Key)
-		if err != nil {
-			return flag.NewCreateFlagDefault(400).WithPayload(
-				ErrorMessage("cannot create flag. %s", err))
-		}
-		f.Key = key
-	}
-	err := getDB().Create(f).Error
-	if err != nil {
-		return flag.NewCreateFlagDefault(500).WithPayload(
-			ErrorMessage("cannot create flag. %s", err))
-	}
-
-	resp := flag.NewCreateFlagOK()
-	payload, err := e2rMapFlag(f)
-	if err != nil {
-		return flag.NewCreateFlagDefault(500).WithPayload(
-			ErrorMessage("cannot map flag. %s", err))
-	}
-	resp.SetPayload(payload)
-
-	entity.SaveFlagSnapshot(getDB(), f.ID, getSubjectFromRequest(params.HTTPRequest))
-	return resp
-}
-
 func (c *crud) GetFlag(params flag.GetFlagParams) middleware.Responder {
 	f := &entity.Flag{}
 	result := entity.PreloadSegmentsVariants(getDB()).First(f, params.FlagID)
