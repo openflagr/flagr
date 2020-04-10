@@ -351,7 +351,7 @@ func TestBasicAuthMiddleware(t *testing.T) {
 		assert.Equal(t, http.StatusOK, res.Code)
 	})
 
-	t.Run("it will return 401 for web paths when enabled", func(t *testing.T) {
+	t.Run("it will return 401 for web paths when enabled and no basic auth passed", func(t *testing.T) {
 		Config.BasicAuthEnabled = true
 		Config.BasicAuthUsername = "admin"
 		Config.BasicAuthPassword = "password"
@@ -373,4 +373,29 @@ func TestBasicAuthMiddleware(t *testing.T) {
 			})
 		}
 	})
+
+	t.Run("it will return 200 for web paths when enabled and basic auth passed", func(t *testing.T) {
+		Config.BasicAuthEnabled = true
+		Config.BasicAuthUsername = "admin"
+		Config.BasicAuthPassword = "password"
+		defer func() {
+			Config.BasicAuthEnabled = false
+			Config.BasicAuthUsername = ""
+			Config.BasicAuthPassword = ""
+		}()
+
+		testPaths := []string{"/", "", "/#", "/#/", "/static", "/static/"}
+		for _, path := range testPaths {
+			t.Run(fmt.Sprintf("path: %s", path), func(t *testing.T) {
+				hh := SetupGlobalMiddleware(h)
+				res := httptest.NewRecorder()
+				res.Body = new(bytes.Buffer)
+				req, _ := http.NewRequest("GET", fmt.Sprintf("http://localhost:18000%s", path), nil)
+				req.SetBasicAuth(Config.BasicAuthUsername, Config.BasicAuthPassword)
+				hh.ServeHTTP(res, req)
+				assert.Equal(t, http.StatusOK, res.Code)
+			})
+		}
+	})
+
 }
