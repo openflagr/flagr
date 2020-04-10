@@ -143,6 +143,9 @@ definitions:
       key:
         description: unique key representation of the flag
         type: string
+      template:
+        description: template for flag creation
+        type: string
   putFlagRequest:
     type: object
     properties:

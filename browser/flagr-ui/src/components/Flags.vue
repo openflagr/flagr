@@ -26,7 +26,7 @@
                     Create New Flag
                     <el-dropdown-menu slot="dropdown">
                       <el-dropdown-item
-                        command="create-simple-flag"
+                        command="simple_boolean_flag"
                         :disabled="!newFlag.description"
                       >Create Simple Boolean Flag</el-dropdown-item>
                     </el-dropdown-menu>
@@ -142,8 +142,8 @@ export default {
       this.$router.push({ name: "flag", params: { flagId: row.id } });
     },
     onCommandDropdown(command) {
-      if (command === "create-simple-flag") {
-        this.createFlag({ template: "simple" });
+      if (command === "simple_boolean_flag") {
+        this.createFlag({ template: command });
       }
     },
     createFlag(params) {

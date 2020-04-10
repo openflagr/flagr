@@ -1227,6 +1227,10 @@ func init() {
         "key": {
           "description": "unique key representation of the flag",
           "type": "string"
+        },
+        "template": {
+          "description": "template for flag creation",
+          "type": "string"
         }
       }
     },
@@ -2999,6 +3003,10 @@ func init() {
         },
         "key": {
           "description": "unique key representation of the flag",
+          "type": "string"
+        },
+        "template": {
+          "description": "template for flag creation",
           "type": "string"
         }
       }
