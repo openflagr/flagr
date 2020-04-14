@@ -31,15 +31,11 @@ func TestCrudFlags(t *testing.T) {
 		assert.Len(t, res.(*flag.FindFlagsOK).Payload, 0)
 	})
 
-	t.Run("it should be able to create one flag", func(t *testing.T) {
-		res = c.CreateFlag(flag.CreateFlagParams{
-			Body: &models.CreateFlagRequest{
-				Description: util.StringPtr("funny flag"),
-				Key:         "some_random_flag_key",
-			},
-		})
-		assert.NotZero(t, res.(*flag.CreateFlagOK).Payload.ID)
-		assert.Equal(t, "some_random_flag_key", res.(*flag.CreateFlagOK).Payload.Key)
+	c.CreateFlag(flag.CreateFlagParams{
+		Body: &models.CreateFlagRequest{
+			Description: util.StringPtr("funny flag"),
+			Key:         "flag_key_1",
+		},
 	})
 
 	t.Run("it should be able to find some flags after creation", func(t *testing.T) {
@@ -188,37 +184,6 @@ func TestCrudFlagsWithFailures(t *testing.T) {
 		res = c.FindFlags(flag.FindFlagsParams{})
 		assert.NotZero(t, res.(*flag.FindFlagsDefault).Payload)
 		db.Error = nil
-	})
-
-	t.Run("CreateFlag - got e2r MapFlag error", func(t *testing.T) {
-		defer gostub.StubFunc(&e2rMapFlag, nil, fmt.Errorf("e2r MapFlag error")).Reset()
-		res = c.CreateFlag(flag.CreateFlagParams{
-			Body: &models.CreateFlagRequest{
-				Description: util.StringPtr("funny flag"),
-			},
-		})
-		assert.NotZero(t, res.(*flag.CreateFlagDefault).Payload)
-	})
-
-	t.Run("CreateFlag - db generic error", func(t *testing.T) {
-		db.Error = fmt.Errorf("db generic error")
-		res = c.CreateFlag(flag.CreateFlagParams{
-			Body: &models.CreateFlagRequest{
-				Description: util.StringPtr("funny flag"),
-			},
-		})
-		assert.NotZero(t, res.(*flag.CreateFlagDefault).Payload)
-		db.Error = nil
-	})
-
-	t.Run("CreateFlag - invalid key error", func(t *testing.T) {
-		res = c.CreateFlag(flag.CreateFlagParams{
-			Body: &models.CreateFlagRequest{
-				Description: util.StringPtr(" flag with a space"),
-				Key:         " 1-2-3", // invalid key
-			},
-		})
-		assert.NotZero(t, res.(*flag.CreateFlagDefault).Payload)
 	})
 
 	t.Run("PutFlag - try to update a non-existing flag", func(t *testing.T) {

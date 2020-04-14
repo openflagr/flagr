@@ -2,21 +2,29 @@
   <div id="app">
     <el-menu mode="horizontal" class="navbar">
       <el-row>
-        <el-col :span="6">
-          <router-link :to="{name: 'home'}">
-            <div class="logo-container">
-              <h3 class="logo">Flagr</h3>
-              <div>
-                <span class="version">v{{ version }}</span>
-              </div>
-            </div>
-          </router-link>
-        </el-col>
-        <el-col :span="2" :offset="13">
-          <a href="https://checkr.github.io/flagr/api_docs" target="_blank"><h3>API</h3></a>
-        </el-col>
-        <el-col :span="2">
-          <a href="https://checkr.github.io/flagr" target="_blank"><h3>Docs</h3></a>
+        <el-col :span="20" :offset="2">
+          <el-row>
+            <el-col :span="6">
+              <router-link :to="{ name: 'home' }">
+                <div class="logo-container">
+                  <h3 class="logo">Flagr</h3>
+                  <div>
+                    <span class="version">v{{ version }}</span>
+                  </div>
+                </div>
+              </router-link>
+            </el-col>
+            <el-col :span="1" :offset="15">
+              <a href="https://checkr.github.io/flagr/api_docs" target="_blank"
+                ><h3>API</h3></a
+              >
+            </el-col>
+            <el-col :span="1" :offset="1">
+              <a href="https://checkr.github.io/flagr" target="_blank"
+                ><h3>Docs</h3></a
+              >
+            </el-col>
+          </el-row>
         </el-col>
       </el-row>
     </el-menu>
@@ -27,25 +35,26 @@
 </template>
 
 <script>
-const version = require("../package.json").version || "1.0.0"
+const version = require("../package.json").version || "1.0.0";
 export default {
-  name: 'app', 
+  name: "app",
   data: () => ({
-    version
+    version,
   }),
-}
+};
 </script>
 
 <style lang="less">
 body {
   margin: 0;
   padding: 0;
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  font-family: "Avenir", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-h1, h2 {
+h1,
+h2 {
   font-weight: normal;
 }
 
@@ -72,23 +81,23 @@ ul {
   color: #2c3e50;
 
   span[size="small"] {
-    font-size: 0.85em
+    font-size: 0.85em;
   }
 
   .navbar {
-    background-color: #74E5E0;
-    color: white;
+    background-color: #74e5e0;
+    color: #2e4960;
+    border: 0;
+
     .logo-container {
       display: flex;
-      justify-content: center;
       align-items: center;
       font-weight: bold;
 
       h3 {
-        margin-left: 2em;
         margin-right: 10px;
         &:hover {
-          color: #f7f7f7;
+          color: #000;
         }
       }
 
@@ -96,9 +105,18 @@ ul {
         font-size: 12px;
       }
     }
+
     a {
-      color: white;
+      color: inherit;
       text-decoration: none;
+    }
+
+    .el-col {
+      text-align: right;
+
+      &:first-child {
+        text-align: left;
+      }
     }
   }
 
@@ -167,20 +185,24 @@ ul {
 
   .el-card {
     .el-card__header {
-      background-color: #74E5E0;
+      background-color: #74e5e0;
+      color: #2e4960;
+      border: 0;
+
       h2 {
         margin: -0.2em;
-        color: white;
+        color: inherit;
+        font-size: 20px;
       }
     }
     margin-bottom: 1em;
   }
 
-  .jsoneditor{
-    border-color: #E4E7ED;
+  .jsoneditor {
+    border-color: #e4e7ed;
     .jsoneditor-menu {
-      background-color: #E4E7ED;
-      border-bottom-color: #E4E7ED;
+      background-color: #e4e7ed;
+      border-bottom-color: #e4e7ed;
     }
     .jsoneditor-poweredBy {
       display: none;

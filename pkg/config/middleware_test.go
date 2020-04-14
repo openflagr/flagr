@@ -58,7 +58,7 @@ func TestSetupGlobalMiddleware(t *testing.T) {
 	Config.PProfEnabled = true
 }
 
-func TestAuthMiddleware(t *testing.T) {
+func TestJWTAuthMiddleware(t *testing.T) {
 	h := &okHandler{}
 
 	t.Run("it will redirect if jwt enabled but no cookie passed", func(t *testing.T) {
@@ -255,7 +255,7 @@ o2kQ+X5xK9cipRgEKwIDAQAB
 	})
 }
 
-func TestAuthMiddlewareWithUnauthorized(t *testing.T) {
+func TestJWTAuthMiddlewareWithUnauthorized(t *testing.T) {
 	h := &okHandler{}
 
 	t.Run("it will return 401 if no cookie passed", func(t *testing.T) {
@@ -314,4 +314,88 @@ func TestAuthMiddlewareWithUnauthorized(t *testing.T) {
 			})
 		}
 	})
+}
+
+func TestBasicAuthMiddleware(t *testing.T) {
+	h := &okHandler{}
+
+	t.Run("it will return 200 for web paths when disabled", func(t *testing.T) {
+		testPaths := []string{"/", "", "/#", "/#/", "/static", "/static/"}
+		for _, path := range testPaths {
+			t.Run(fmt.Sprintf("path: %s", path), func(t *testing.T) {
+				hh := SetupGlobalMiddleware(h)
+				res := httptest.NewRecorder()
+				res.Body = new(bytes.Buffer)
+				req, _ := http.NewRequest("GET", fmt.Sprintf("http://localhost:18000%s", path), nil)
+				hh.ServeHTTP(res, req)
+				assert.Equal(t, http.StatusOK, res.Code)
+			})
+		}
+	})
+
+	t.Run("it will return 200 for whitelist path if basic auth is enabled", func(t *testing.T) {
+		Config.BasicAuthEnabled = true
+		Config.BasicAuthUsername = "admin"
+		Config.BasicAuthPassword = "password"
+		defer func() {
+			Config.BasicAuthEnabled = false
+			Config.BasicAuthUsername = ""
+			Config.BasicAuthPassword = ""
+		}()
+
+		hh := SetupGlobalMiddleware(h)
+		res := httptest.NewRecorder()
+		res.Body = new(bytes.Buffer)
+		req, _ := http.NewRequest("GET", "http://localhost:18000/api/v1/flags", nil)
+		hh.ServeHTTP(res, req)
+		assert.Equal(t, http.StatusOK, res.Code)
+	})
+
+	t.Run("it will return 401 for web paths when enabled and no basic auth passed", func(t *testing.T) {
+		Config.BasicAuthEnabled = true
+		Config.BasicAuthUsername = "admin"
+		Config.BasicAuthPassword = "password"
+		defer func() {
+			Config.BasicAuthEnabled = false
+			Config.BasicAuthUsername = ""
+			Config.BasicAuthPassword = ""
+		}()
+
+		testPaths := []string{"/", "", "/#", "/#/", "/static", "/static/"}
+		for _, path := range testPaths {
+			t.Run(fmt.Sprintf("path: %s", path), func(t *testing.T) {
+				hh := SetupGlobalMiddleware(h)
+				res := httptest.NewRecorder()
+				res.Body = new(bytes.Buffer)
+				req, _ := http.NewRequest("GET", fmt.Sprintf("http://localhost:18000%s", path), nil)
+				hh.ServeHTTP(res, req)
+				assert.Equal(t, http.StatusUnauthorized, res.Code)
+			})
+		}
+	})
+
+	t.Run("it will return 200 for web paths when enabled and basic auth passed", func(t *testing.T) {
+		Config.BasicAuthEnabled = true
+		Config.BasicAuthUsername = "admin"
+		Config.BasicAuthPassword = "password"
+		defer func() {
+			Config.BasicAuthEnabled = false
+			Config.BasicAuthUsername = ""
+			Config.BasicAuthPassword = ""
+		}()
+
+		testPaths := []string{"/", "", "/#", "/#/", "/static", "/static/"}
+		for _, path := range testPaths {
+			t.Run(fmt.Sprintf("path: %s", path), func(t *testing.T) {
+				hh := SetupGlobalMiddleware(h)
+				res := httptest.NewRecorder()
+				res.Body = new(bytes.Buffer)
+				req, _ := http.NewRequest("GET", fmt.Sprintf("http://localhost:18000%s", path), nil)
+				req.SetBasicAuth(Config.BasicAuthUsername, Config.BasicAuthPassword)
+				hh.ServeHTTP(res, req)
+				assert.Equal(t, http.StatusOK, res.Code)
+			})
+		}
+	})
+
 }

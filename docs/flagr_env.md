@@ -65,3 +65,20 @@ The best way to configure service account for Flagr to use pubsub only use:
 FLAGR_RECORDER_PUBSUB_PROJECT_ID=google-project-id
 FLAGR_RECORDER_PUBSUB_KEYFILE=/path/to/service/account.json
 ```
+
+Basic Authentication for web interface
+
+```
+FLAGR_BASIC_AUTH_ENABLED=true
+FLAGR_BASIC_AUTH_USERNAME=admin
+FLAGR_BASIC_AUTH_PASSWORD=password
+```
+
+By default, UI access will prompt for a username/password login. Similar to JWT Auth, prefix and exact paths can be whitelisted to skip the username/password login. The default whitelist will allow api access to `/api/v1/flags` and `/api/v1/evaluation*`
+
+NOTE: this doesn't prevent people from directly curling /api/v1/flags to update flags.
+
+```
+FLAGR_BASIC_AUTH_WHITELIST_PATHS="/api/v1/flags,/api/v1/evaluation"
+FLAGR_BASIC_AUTH_EXACT_WHITELIST_PATHS=""
+```

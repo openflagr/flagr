@@ -6,7 +6,6 @@ Flagr is an open source Go service that delivers the right experience to the rig
 
 Run directly with docker. https://hub.docker.com/r/checkr/flagr/
 
-
 ```bash
 # Start the docker container
 docker pull checkr/flagr
@@ -46,7 +45,20 @@ Build from source.
 # get the source
 go get -u github.com/checkr/flagr
 
-# install dependencies, generated code, and run the app
+# install dependencies, generated code, and start the service in
+# development mode
 cd $GOPATH/src/github.com/checkr/flagr
-make all
+make build start
+```
+
+If you just want to run the pre-built backend (without the UI development service):
+
+```
+make run
+```
+
+And alternatively to just run the UI service:
+
+```
+make run_ui
 ```

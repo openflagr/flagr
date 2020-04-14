@@ -24,6 +24,9 @@ type CreateFlagRequest struct {
 
 	// unique key representation of the flag
 	Key string `json:"key,omitempty"`
+
+	// template for flag creation
+	Template string `json:"template,omitempty"`
 }
 
 // Validate validates this create flag request
