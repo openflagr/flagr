@@ -210,6 +210,14 @@ func (c *crud) PutFlag(params flag.PutFlagParams) middleware.Responder {
 		f.Notes = *params.Body.Notes
 	}
 
+	if params.Body.AuthorizedGroups != nil {
+		f.AuthorizedGroups = *params.Body.AuthorizedGroups
+	}
+
+	if params.Body.AuthorizedUsers != nil {
+		f.AuthorizedUsers = *params.Body.AuthorizedUsers
+	}
+
 	if err := tx.Save(f).Error; err != nil {
 		return flag.NewPutFlagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}

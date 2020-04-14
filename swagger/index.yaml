@@ -132,6 +132,10 @@ definitions:
       updatedAt:
         type: string
         format: date-time
+      authorizedUsers:
+        type: string
+      authorizedGroups:
+        type: string
   createFlagRequest:
     type: object
     required:
@@ -168,6 +172,12 @@ definitions:
         type: string
         x-nullable: true
       notes:
+        type: string
+        x-nullable: true
+      authorizedUsers:
+        type: string
+        x-nullable: true
+      authorizedGroups:
         type: string
         x-nullable: true
   setFlagEnabledRequest:

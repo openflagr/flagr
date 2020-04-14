@@ -19,6 +19,12 @@ import (
 // swagger:model flag
 type Flag struct {
 
+	// authorized groups
+	AuthorizedGroups string `json:"authorizedGroups,omitempty"`
+
+	// authorized users
+	AuthorizedUsers string `json:"authorizedUsers,omitempty"`
+
 	// created by
 	CreatedBy string `json:"createdBy,omitempty"`
 

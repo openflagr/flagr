@@ -26,6 +26,9 @@ func MapFlag(e *entity.Flag) (*models.Flag, error) {
 	r.UpdatedBy = e.UpdatedBy
 	r.Segments = MapSegments(e.Segments)
 	r.Variants = MapVariants(e.Variants)
+	r.AuthorizedUsers = e.AuthorizedUsers
+	r.AuthorizedGroups = e.AuthorizedGroups
+
 
 	return r, nil
 }
