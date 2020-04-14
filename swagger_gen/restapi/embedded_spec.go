@@ -1459,6 +1459,12 @@ func init() {
         "dataRecordsEnabled"
       ],
       "properties": {
+        "authorizedGroups": {
+          "type": "string"
+        },
+        "authorizedUsers": {
+          "type": "string"
+        },
         "createdBy": {
           "type": "string"
         },
@@ -1563,6 +1569,14 @@ func init() {
     "putFlagRequest": {
       "type": "object",
       "properties": {
+        "authorizedGroups": {
+          "type": "string",
+          "x-nullable": true
+        },
+        "authorizedUsers": {
+          "type": "string",
+          "x-nullable": true
+        },
         "dataRecordsEnabled": {
           "description": "enabled data records will get data logging in the metrics pipeline, for example, kafka.",
           "type": "boolean",
@@ -3234,6 +3248,12 @@ func init() {
         "dataRecordsEnabled"
       ],
       "properties": {
+        "authorizedGroups": {
+          "type": "string"
+        },
+        "authorizedUsers": {
+          "type": "string"
+        },
         "createdBy": {
           "type": "string"
         },
@@ -3338,6 +3358,14 @@ func init() {
     "putFlagRequest": {
       "type": "object",
       "properties": {
+        "authorizedGroups": {
+          "type": "string",
+          "x-nullable": true
+        },
+        "authorizedUsers": {
+          "type": "string",
+          "x-nullable": true
+        },
         "dataRecordsEnabled": {
           "description": "enabled data records will get data logging in the metrics pipeline, for example, kafka.",
           "type": "boolean",

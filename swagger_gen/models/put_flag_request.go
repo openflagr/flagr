@@ -17,6 +17,12 @@ import (
 // swagger:model putFlagRequest
 type PutFlagRequest struct {
 
+	// authorized groups
+	AuthorizedGroups *string `json:"authorizedGroups,omitempty"`
+
+	// authorized users
+	AuthorizedUsers *string `json:"authorizedUsers,omitempty"`
+
 	// enabled data records will get data logging in the metrics pipeline, for example, kafka.
 	DataRecordsEnabled *bool `json:"dataRecordsEnabled,omitempty"`
 

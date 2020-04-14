@@ -215,6 +215,51 @@
                 </el-card>
               </el-card>
 
+              <el-card class="flag-auth-card">
+                <div slot="header" class="el-card-header">
+                  <div class="flex-row">
+                    <div class="flex-row-left">
+                      <h2>Security</h2>
+                    </div>
+                    <div class="flex-row-right">
+                        <el-button @click="putFlag(flag)">
+                          Save
+                        </el-button>
+                    </div>
+                  </div>
+                </div>
+                <el-card shadow="hover" :class="toggleInnerConfigCard" style="padding-bottom: 20px">
+                  <el-row class="auth-content" type="flex" align="middle">
+                    <el-col :span=17>
+                      <el-row>
+                        <el-col :span="24">
+                          <el-input
+                                  size="small"
+                                  placeholder="Comma-separated list of groups that may maintain this flag"
+                                  v-model="flag.authorizedGroups">
+                            <template slot="prepend">Allowed Groups</template>
+                          </el-input>
+                        </el-col>
+                      </el-row>
+                    </el-col>
+                  </el-row>
+                  <el-row class="auth-content" type="flex" align="middle"  >
+                    <el-col :span=17>
+                      <el-row>
+                        <el-col :span="24">
+                          <el-input
+                                  size="small"
+                                  placeholder="Comma-separated list of users that may maintain this flag"
+                                  v-model="flag.authorizedUsers">
+                            <template slot="prepend">Allowed Users</template>
+                          </el-input>
+                        </el-col>
+                      </el-row>
+                    </el-col>
+                  </el-row>
+                </el-card>
+              </el-card>
+
               <el-card class="variants-container">
                 <div slot="header" class="clearfix">
                   <h2>Variants</h2>
@@ -585,7 +630,9 @@ export default {
         segments: [],
         updatedAt: '',
         variants: [],
-        notes: ''
+        notes: '',
+        authorizedUsers: '',
+        authorizedGroups: ''
       },
       newSegment: clone(DEFAULT_SEGMENT),
       newVariant: clone(DEFAULT_VARIANT),
@@ -637,7 +684,9 @@ export default {
         dataRecordsEnabled: flag.dataRecordsEnabled,
         key: flag.key || '',
         entityType: flag.entityType || '',
-        notes: flag.notes || ''
+        notes: flag.notes || '',
+        authorizedUsers: flag.authorizedUsers || '',
+        authorizedGroups: flag.authorizedGroups || ''
       }).then(() => {
         this.$message.success(`Flag updated`)
       }, handleErr.bind(this))
@@ -967,6 +1016,26 @@ ol.constraints-inner {
     vertical-align: middle;
   }
 }
+
+.flag-auth-card {
+  .auth-content {
+    margin-top: 8px;
+    margin-bottom: -8px;
+    .el-input-group__prepend {
+      width: 8em;
+    }
+}
+
+.data-records-label {
+  margin-left: 3px;
+  margin-bottom: 5px;
+  margin-top: 6px;
+  font-size: 0.65em;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+}
+
 
 .variant-attachment-collapsable-title {
   margin: 0;

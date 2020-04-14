@@ -24,7 +24,11 @@ type Flag struct {
 	DataRecordsEnabled bool
 	EntityType         string
 
+	AuthorizedUsers  string `sql:"type:text"`
+	AuthorizedGroups string `sql:"type:text"`
+
 	FlagEvaluation FlagEvaluation `gorm:"-" json:"-"`
+
 }
 
 // FlagEvaluation is a struct that holds the necessary info for evaluation
