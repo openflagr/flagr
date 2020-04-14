@@ -837,9 +837,6 @@ export default {
         key: flag.key || "",
         entityType: flag.entityType || "",
         notes: flag.notes || "",
-        key: flag.key || "",
-        entityType: flag.entityType || "",
-        notes: flag.notes || "",
         authorizedUsers: flag.authorizedUsers || "",
         authorizedGroups: flag.authorizedGroups || ""
       }).then(() => {
