@@ -39,12 +39,11 @@ start:
 
 gen: api_docs swagger
 
-deps: checks
+deps:
 	@GO111MODULE=off go get -u github.com/myitcv/gobin
 	@gobin github.com/go-swagger/go-swagger/cmd/swagger@v0.23.0
 	@gobin github.com/codeskyblue/fswatch
 	@gobin github.com/golangci/golangci-lint/cmd/golangci-lint@v1.24.0
-	@echo "Sqlite3" && sqlite3 -version
 
 watch:
 	@fswatch
@@ -60,10 +59,6 @@ serve_docs:
 api_docs:
 	@echo "Installing swagger-merger" && npm install swagger-merger -g
 	@swagger-merger -i $(PWD)/swagger/index.yaml -o $(PWD)/docs/api_docs/bundle.yaml
-
-checks:
-	@echo "Check deps"
-	@(env bash $(PWD)/buildscripts/checkdeps.sh)
 
 verifiers: verify_lint verify_swagger
 
