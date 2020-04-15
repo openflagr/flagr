@@ -9,7 +9,6 @@ jobs:
     working_directory: /go/src/github.com/checkr/flagr
     steps:
       - checkout
-      - run: apt update && apt install -y sqlite3
       - run: make deps
       - run: make ci
       - run: bash <(curl -s https://codecov.io/bash)

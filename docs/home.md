@@ -37,7 +37,6 @@ Install Dependencies.
 - Go
 - Make (for Makefile)
 - NPM (for building UI)
-- SQLite3 (for testing)
 
 Build from source.
 
