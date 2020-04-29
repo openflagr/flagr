@@ -160,33 +160,28 @@ func setupJWTAuthMiddleware() *jwtAuth {
 			}
 
 			// First we need to access the well known url to find out what the jwk_uri is.
-			logrus.Printf("Fetching Oidc Configuration...")
 			resp, err := http.Get(Config.JWTAuthOIDCWellKnownURL)
 			if err != nil {
 				return "", err
 			}
 
 			// Read in the oidc config information, and unmarshal it into our oidc config.
-			logrus.Printf("Reading Oidc Configuration...")
 			defer resp.Body.Close()
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
 				return "", err
 			}
 
-			logrus.Printf("Parsing Oidc Configuration...")
 			type OidcConfiguation struct {
 				JwkURI string `json:"jwks_uri"` // This is the only field we care about for now.
 			}
 			var oidcConfig OidcConfiguation
 			json.Unmarshal([]byte(body), &oidcConfig)
-			logrus.Printf("OIDC Config: " + string(body))
 
 			if oidcConfig.JwkURI == "" {
 				return "", errors.New("OIDC configuration didn't contain a valid jwks_uri")
 			}
 
-			logrus.Printf("Fetching Oidc Jwks...")
 			// Now we need to read in the jwks info.
 			oidcJwksResp, err := http.Get(oidcConfig.JwkURI)
 			if err != nil {
@@ -197,7 +192,6 @@ func setupJWTAuthMiddleware() *jwtAuth {
 				return "", err
 			}
 
-			logrus.Printf("Reading Oidc Jwks...")
 			// Read in the jwks and unmarshall it.
 			defer oidcJwksResp.Body.Close()
 			body, err = ioutil.ReadAll(oidcJwksResp.Body)
@@ -216,11 +210,8 @@ func setupJWTAuthMiddleware() *jwtAuth {
 
 			var oidcJwks OidcJwksConfiguration
 
-			logrus.Printf("Parsing Oidc Jwks...")
 			json.Unmarshal([]byte(body), &oidcJwks)
-			logrus.Printf("OIDC JWKS: " + string(body))
 
-			logrus.Printf("Finding matching key")
 			// Find the key that matches the one in the JWT
 			if oidcJwks.Jwks == nil {
 				return "", errors.New("Missing keys in the jwk config")
@@ -244,7 +235,6 @@ func setupJWTAuthMiddleware() *jwtAuth {
 			}
 
 			correctKey := oidcJwks.Jwks[matchingKey].SigningKeys[0]
-			logrus.Printf("Found key: " + correctKey)
 
 			// Now we will take the first key and convert it into a cert
 			// that the library we user are familiar with. This cert requires
@@ -252,7 +242,6 @@ func setupJWTAuthMiddleware() *jwtAuth {
 			// There can only be 64 characters on a line or else it won't read it
 			// so we have to do that manually. Also the BEGIN and END lines need to
 			// be their own lines.
-			logrus.Printf("Building cert!")
 			numCharsInKey := len(correctKey)
 			var numLines int = numCharsInKey / 64
 			if numLines%64 > 0 {
@@ -270,7 +259,6 @@ func setupJWTAuthMiddleware() *jwtAuth {
 				jwtCert += correctKey[startCharacter:endCharacter] + "\n"
 			}
 			jwtCert += "-----END PUBLIC KEY-----"
-			logrus.Printf("Cert created: \n" + jwtCert)
 
 			return jwt.ParseRSAPublicKeyFromPEM([]byte(jwtCert))
 		}
