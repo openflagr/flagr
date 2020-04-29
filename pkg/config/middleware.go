@@ -188,10 +188,6 @@ func setupJWTAuthMiddleware() *jwtAuth {
 				return "", err
 			}
 
-			if err != nil {
-				return "", err
-			}
-
 			// Read in the jwks and unmarshall it.
 			defer oidcJwksResp.Body.Close()
 			body, err = ioutil.ReadAll(oidcJwksResp.Body)
