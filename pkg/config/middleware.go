@@ -2,7 +2,10 @@ package config
 
 import (
 	"crypto/subtle"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
@@ -143,14 +146,142 @@ func setupJWTAuthMiddleware() *jwtAuth {
 		validationKey = []byte("")
 	}
 
+	var validationKeyGetter = func(token *jwt.Token) (interface{}, error) {
+		return validationKey, errParsingKey
+	}
+
+	if Config.JWTAuthOIDCWellKnownURL != "" {
+		validationKeyGetter = func(token *jwt.Token) (interface{}, error) {
+
+			// If this is truly an OIDC token, it should have a "kid" header in the token.
+			var tokenKeyID = token.Header["kid"]
+			if tokenKeyID == nil {
+				return "", errors.New("Missing key id in the JWT")
+			}
+
+			// First we need to access the well known url to find out what the jwk_uri is.
+			logrus.Printf("Fetching Oidc Configuration...")
+			resp, err := http.Get(Config.JWTAuthOIDCWellKnownURL)
+			if err != nil {
+				return "", err
+			}
+
+			// Read in the oidc config information, and unmarshal it into our oidc config.
+			logrus.Printf("Reading Oidc Configuration...")
+			defer resp.Body.Close()
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				return "", err
+			}
+
+			logrus.Printf("Parsing Oidc Configuration...")
+			type OidcConfiguation struct {
+				JwkURI string `json:"jwks_uri"` // This is the only field we care about for now.
+			}
+			var oidcConfig OidcConfiguation
+			json.Unmarshal([]byte(body), &oidcConfig)
+			logrus.Printf("OIDC Config: " + string(body))
+
+			if oidcConfig.JwkURI == "" {
+				return "", errors.New("OIDC configuration didn't contain a valid jwks_uri")
+			}
+
+			logrus.Printf("Fetching Oidc Jwks...")
+			// Now we need to read in the jwks info.
+			oidcJwksResp, err := http.Get(oidcConfig.JwkURI)
+			if err != nil {
+				return "", err
+			}
+
+			if err != nil {
+				return "", err
+			}
+
+			logrus.Printf("Reading Oidc Jwks...")
+			// Read in the jwks and unmarshall it.
+			defer oidcJwksResp.Body.Close()
+			body, err = ioutil.ReadAll(oidcJwksResp.Body)
+			if err != nil {
+				return "", err
+			}
+
+			type OidcJwk struct {
+				JWKeyID     string   `json:"kid"` // JWTs will have a "kid" that will match one of these
+				SigningKeys []string `json:"x5c"` // We only support x5c at the moment.
+			}
+
+			type OidcJwksConfiguration struct {
+				Jwks []OidcJwk `json:"keys"`
+			}
+
+			var oidcJwks OidcJwksConfiguration
+
+			logrus.Printf("Parsing Oidc Jwks...")
+			json.Unmarshal([]byte(body), &oidcJwks)
+			logrus.Printf("OIDC JWKS: " + string(body))
+
+			logrus.Printf("Finding matching key")
+			// Find the key that matches the one in the JWT
+			if oidcJwks.Jwks == nil {
+				return "", errors.New("Missing keys in the jwk config")
+			}
+
+			var numKeys = len(oidcJwks.Jwks)
+			if numKeys == 0 {
+				return "", errors.New("No keys in the jwk config")
+			}
+
+			matchingKey := -1
+			for currentKey := 0; currentKey < numKeys; currentKey++ {
+				if oidcJwks.Jwks[currentKey].JWKeyID == tokenKeyID {
+					matchingKey = currentKey
+					break
+				}
+			}
+
+			if matchingKey == -1 {
+				return "", errors.New("No matching key found in the jwk config")
+			}
+
+			correctKey := oidcJwks.Jwks[matchingKey].SigningKeys[0]
+			logrus.Printf("Found key: " + correctKey)
+
+			// Now we will take the first key and convert it into a cert
+			// that the library we user are familiar with. This cert requires
+			// a very specific format that is dependent on whitespace :/
+			// There can only be 64 characters on a line or else it won't read it
+			// so we have to do that manually. Also the BEGIN and END lines need to
+			// be their own lines.
+			logrus.Printf("Building cert!")
+			numCharsInKey := len(correctKey)
+			var numLines int = numCharsInKey / 64
+			if numLines%64 > 0 {
+				numLines++
+			}
+
+			var jwtCert string = "-----BEGIN PUBLIC KEY-----\n"
+			for currentLine := 0; currentLine < numLines; currentLine++ {
+				startCharacter := currentLine * 64
+				endCharacter := startCharacter + 64
+				if startCharacter+64 > numCharsInKey {
+					endCharacter = numCharsInKey
+				}
+
+				jwtCert += correctKey[startCharacter:endCharacter] + "\n"
+			}
+			jwtCert += "-----END PUBLIC KEY-----"
+			logrus.Printf("Cert created: \n" + jwtCert)
+
+			return jwt.ParseRSAPublicKeyFromPEM([]byte(jwtCert))
+		}
+	}
+
 	return &jwtAuth{
 		PrefixWhitelistPaths: Config.JWTAuthPrefixWhitelistPaths,
 		ExactWhitelistPaths:  Config.JWTAuthExactWhitelistPaths,
 		JWTMiddleware: jwtmiddleware.New(jwtmiddleware.Options{
-			ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
-				return validationKey, errParsingKey
-			},
-			SigningMethod: signingMethod,
+			ValidationKeyGetter: validationKeyGetter,
+			SigningMethod:       signingMethod,
 			Extractor: jwtmiddleware.FromFirst(
 				func(r *http.Request) (string, error) {
 					c, err := r.Cookie(Config.JWTAuthCookieTokenName)
