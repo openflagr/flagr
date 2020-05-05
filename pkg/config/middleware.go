@@ -1,11 +1,16 @@
 package config
 
 import (
+	"bytes"
+	"crypto/rsa"
 	"crypto/subtle"
+	"encoding/base64"
+	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"math/big"
 	"net/http"
 	"strconv"
 	"strings"
@@ -123,6 +128,165 @@ func setupRecoveryMiddleware() *negroni.Recovery {
 	return r
 }
 
+type OidcConfiguation struct {
+	JwkURI string `json:"jwks_uri"` // This is the only field we care about for now.
+}
+
+type OidcJwk struct {
+	JWKeyID     string   `json:"kid"` // JWTs will have a "kid" that will match one of these
+	SigningKeys []string `json:"x5c"` // We prefer the x5c since it's easier
+	Exponent    string   `json:"e"`   // The least preferred way is recreating the key through exponent.
+	Modulus     string   `json:"n"`   // The modulus
+}
+
+type OidcJwksConfiguration struct {
+	Jwks []OidcJwk `json:"keys"`
+}
+
+func discoverOidcJwk(tokenKeyID string) *OidcJwk {
+	// First we need to access the well known url to find out what the jwk_uri is.
+	resp, err := http.Get(Config.JWTAuthOIDCWellKnownURL)
+	if err != nil {
+		logrus.Errorln("Failed to contact OIDC well known URL")
+		return nil
+	}
+
+	// Read in the oidc config information, and unmarshal it into our oidc config.
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		logrus.Errorln("Failed to read from OIDC well known URL")
+		return nil
+	}
+
+	var oidcConfig OidcConfiguation
+	json.Unmarshal([]byte(body), &oidcConfig)
+
+	if oidcConfig.JwkURI == "" {
+		logrus.Errorln("OIDC configuration didn't contain a valid jwks_uri")
+		return nil
+	}
+
+	// Now we need to read in the jwks info.
+	oidcJwksResp, err := http.Get(oidcConfig.JwkURI)
+	if err != nil {
+		logrus.Errorln("Failed to contact the JWK URI")
+		return nil
+	}
+
+	// Read in the jwks and unmarshall it.
+	defer oidcJwksResp.Body.Close()
+	body, err = ioutil.ReadAll(oidcJwksResp.Body)
+	if err != nil {
+		logrus.Errorln("Failed to read the JWKs body")
+		return nil
+	}
+
+	var oidcJwks OidcJwksConfiguration
+
+	json.Unmarshal([]byte(body), &oidcJwks)
+
+	// Find the key that matches the one in the JWT
+	if oidcJwks.Jwks == nil {
+		logrus.Errorln("Missing keys in the jwk config")
+		return nil
+	}
+
+	var numKeys = len(oidcJwks.Jwks)
+	if numKeys == 0 {
+		logrus.Errorln("No keys in the jwk config")
+		return nil
+	}
+
+	matchingKey := -1
+	for currentKey := 0; currentKey < numKeys; currentKey++ {
+		if oidcJwks.Jwks[currentKey].JWKeyID == tokenKeyID {
+			matchingKey = currentKey
+			break
+		}
+	}
+
+	if matchingKey == -1 {
+		logrus.Errorln("No matching key found in the jwk config")
+		return nil
+	}
+
+	return &oidcJwks.Jwks[matchingKey]
+}
+
+func extractJWTSigningKeyFromX5C(oidcJwk *OidcJwk) (interface{}, error) {
+	correctKey := oidcJwk.SigningKeys[0]
+
+	// Now we will take the first key and convert it into a cert
+	// that the library we user are familiar with. This cert requires
+	// a very specific format that is dependent on whitespace :/
+	// There can only be 64 characters on a line or else it won't read it
+	// so we have to do that manually. Also the BEGIN and END lines need to
+	// be their own lines.
+	numCharsInKey := len(correctKey)
+	var numLines int = numCharsInKey / 64
+	if numLines%64 > 0 {
+		numLines++
+	}
+
+	var jwtCert string = "-----BEGIN PUBLIC KEY-----\n"
+	for currentLine := 0; currentLine < numLines; currentLine++ {
+		startCharacter := currentLine * 64
+		endCharacter := startCharacter + 64
+		if startCharacter+64 > numCharsInKey {
+			endCharacter = numCharsInKey
+		}
+
+		jwtCert += correctKey[startCharacter:endCharacter] + "\n"
+	}
+	jwtCert += "-----END PUBLIC KEY-----"
+
+	return jwt.ParseRSAPublicKeyFromPEM([]byte(jwtCert))
+}
+
+func calculateJWTSigningKey(jwk *OidcJwk) (interface{}, error) {
+	if jwk.Modulus == "" || jwk.Exponent == "" {
+		return "", errors.New("Invalid Modulus or Exponent provided")
+	}
+
+	// Decode the modulus and move it into a big int.
+	logrus.Printf("Modulus found: " + jwk.Modulus)
+	decN, err := base64.RawURLEncoding.DecodeString(jwk.Modulus)
+	if err != nil {
+		logrus.Errorf("Failed to decode modulus string.")
+		return "", err
+	}
+	n := big.NewInt(0)
+	n.SetBytes(decN)
+
+	// Decode the exponent
+	logrus.Printf("Exponent found: " + jwk.Exponent)
+	eStr := jwk.Exponent
+	decE, err := base64.RawURLEncoding.DecodeString(eStr)
+	if err != nil {
+		logrus.Errorf("Failed to decode exponent string")
+		return "", err
+	}
+
+	var eBytes []byte
+	if len(decE) < 8 {
+		eBytes = make([]byte, 8-len(decE), 8)
+		eBytes = append(eBytes, decE...)
+	} else {
+		eBytes = decE
+	}
+	eReader := bytes.NewReader(eBytes)
+	var e uint64
+	err = binary.Read(eReader, binary.BigEndian, &e)
+	if err != nil {
+		logrus.Errorf("Failed to read exponent bytes")
+		return "", err
+	}
+	pKey := &rsa.PublicKey{N: n, E: int(e)}
+	logrus.Printf("Created public key.")
+	return pKey, nil
+}
+
 /**
 setupJWTAuthMiddleware setup an JWTMiddleware from the ENV config
 */
@@ -159,104 +323,18 @@ func setupJWTAuthMiddleware() *jwtAuth {
 				return "", errors.New("Missing key id in the JWT")
 			}
 
-			// First we need to access the well known url to find out what the jwk_uri is.
-			resp, err := http.Get(Config.JWTAuthOIDCWellKnownURL)
-			if err != nil {
-				return "", err
+			var jwk = discoverOidcJwk(tokenKeyID.(string))
+			if jwk == nil {
+				return "", errors.New("Failed to find JWK for JWT")
 			}
 
-			// Read in the oidc config information, and unmarshal it into our oidc config.
-			defer resp.Body.Close()
-			body, err := ioutil.ReadAll(resp.Body)
-			if err != nil {
-				return "", err
+			if len(jwk.SigningKeys) > 0 {
+				return extractJWTSigningKeyFromX5C(jwk)
+			} else if jwk.Exponent != "" && jwk.Modulus != "" {
+				return calculateJWTSigningKey(jwk)
+			} else {
+				return "", errors.New("JWK is invalid")
 			}
-
-			type OidcConfiguation struct {
-				JwkURI string `json:"jwks_uri"` // This is the only field we care about for now.
-			}
-			var oidcConfig OidcConfiguation
-			json.Unmarshal([]byte(body), &oidcConfig)
-
-			if oidcConfig.JwkURI == "" {
-				return "", errors.New("OIDC configuration didn't contain a valid jwks_uri")
-			}
-
-			// Now we need to read in the jwks info.
-			oidcJwksResp, err := http.Get(oidcConfig.JwkURI)
-			if err != nil {
-				return "", err
-			}
-
-			// Read in the jwks and unmarshall it.
-			defer oidcJwksResp.Body.Close()
-			body, err = ioutil.ReadAll(oidcJwksResp.Body)
-			if err != nil {
-				return "", err
-			}
-
-			type OidcJwk struct {
-				JWKeyID     string   `json:"kid"` // JWTs will have a "kid" that will match one of these
-				SigningKeys []string `json:"x5c"` // We only support x5c at the moment.
-			}
-
-			type OidcJwksConfiguration struct {
-				Jwks []OidcJwk `json:"keys"`
-			}
-
-			var oidcJwks OidcJwksConfiguration
-
-			json.Unmarshal([]byte(body), &oidcJwks)
-
-			// Find the key that matches the one in the JWT
-			if oidcJwks.Jwks == nil {
-				return "", errors.New("Missing keys in the jwk config")
-			}
-
-			var numKeys = len(oidcJwks.Jwks)
-			if numKeys == 0 {
-				return "", errors.New("No keys in the jwk config")
-			}
-
-			matchingKey := -1
-			for currentKey := 0; currentKey < numKeys; currentKey++ {
-				if oidcJwks.Jwks[currentKey].JWKeyID == tokenKeyID {
-					matchingKey = currentKey
-					break
-				}
-			}
-
-			if matchingKey == -1 {
-				return "", errors.New("No matching key found in the jwk config")
-			}
-
-			correctKey := oidcJwks.Jwks[matchingKey].SigningKeys[0]
-
-			// Now we will take the first key and convert it into a cert
-			// that the library we user are familiar with. This cert requires
-			// a very specific format that is dependent on whitespace :/
-			// There can only be 64 characters on a line or else it won't read it
-			// so we have to do that manually. Also the BEGIN and END lines need to
-			// be their own lines.
-			numCharsInKey := len(correctKey)
-			var numLines int = numCharsInKey / 64
-			if numLines%64 > 0 {
-				numLines++
-			}
-
-			var jwtCert string = "-----BEGIN PUBLIC KEY-----\n"
-			for currentLine := 0; currentLine < numLines; currentLine++ {
-				startCharacter := currentLine * 64
-				endCharacter := startCharacter + 64
-				if startCharacter+64 > numCharsInKey {
-					endCharacter = numCharsInKey
-				}
-
-				jwtCert += correctKey[startCharacter:endCharacter] + "\n"
-			}
-			jwtCert += "-----END PUBLIC KEY-----"
-
-			return jwt.ParseRSAPublicKeyFromPEM([]byte(jwtCert))
 		}
 	}
 
