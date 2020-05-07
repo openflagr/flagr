@@ -250,7 +250,6 @@ func calculateJWTSigningKey(jwk *OidcJwk) (interface{}, error) {
 	}
 
 	// Decode the modulus and move it into a big int.
-	logrus.Printf("Modulus found: " + jwk.Modulus)
 	decN, err := base64.RawURLEncoding.DecodeString(jwk.Modulus)
 	if err != nil {
 		logrus.Errorf("Failed to decode modulus string.")
@@ -260,7 +259,6 @@ func calculateJWTSigningKey(jwk *OidcJwk) (interface{}, error) {
 	n.SetBytes(decN)
 
 	// Decode the exponent
-	logrus.Printf("Exponent found: " + jwk.Exponent)
 	eStr := jwk.Exponent
 	decE, err := base64.RawURLEncoding.DecodeString(eStr)
 	if err != nil {
@@ -283,7 +281,6 @@ func calculateJWTSigningKey(jwk *OidcJwk) (interface{}, error) {
 		return "", err
 	}
 	pKey := &rsa.PublicKey{N: n, E: int(e)}
-	logrus.Printf("Created public key.")
 	return pKey, nil
 }
 
