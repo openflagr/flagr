@@ -146,7 +146,7 @@ func TestEvalFlag(t *testing.T) {
 
 	t.Run("test empty evalContext", func(t *testing.T) {
 		defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
-		result := EvalFlag(models.EvalContext{FlagID: int64(100)})
+		result := EvalFlag(models.EvalContext{FlagID: int64(100)}, false)
 		assert.Zero(t, result.VariantID)
 		assert.NotZero(t, result.FlagID)
 		assert.NotEmpty(t, result.EvalContext.EntityID)
@@ -160,7 +160,7 @@ func TestEvalFlag(t *testing.T) {
 			EntityID:      "entityID1",
 			EntityType:    "entityType1",
 			FlagID:        int64(100),
-		})
+		}, false)
 		assert.NotNil(t, result)
 		assert.NotNil(t, result.VariantID)
 	})
@@ -173,7 +173,7 @@ func TestEvalFlag(t *testing.T) {
 			EntityID:      "entityID1",
 			EntityType:    "entityType1",
 			FlagKey:       "flag_key_100",
-		})
+		}, false)
 		assert.NotNil(t, result)
 		assert.NotNil(t, result.VariantID)
 	})
@@ -186,7 +186,7 @@ func TestEvalFlag(t *testing.T) {
 			EntityID:      "entityID1",
 			EntityType:    "entityType1",
 			FlagKey:       "flag_key_100",
-		})
+		}, false)
 		assert.NotNil(t, result)
 		assert.NotNil(t, result.VariantID)
 	})
@@ -225,7 +225,7 @@ func TestEvalFlag(t *testing.T) {
 			EntityID:      "entityID1",
 			EntityType:    "entityType1",
 			FlagID:        int64(100),
-		})
+		}, false)
 		assert.NotNil(t, result)
 		assert.NotNil(t, result.VariantID)
 	})
@@ -245,7 +245,7 @@ func TestEvalFlag(t *testing.T) {
 			EntityID:      "entityID1",
 			EntityType:    "entityType1",
 			FlagID:        int64(100),
-		})
+		}, false)
 		assert.NotNil(t, result)
 		assert.Zero(t, result.VariantID)
 	})
@@ -277,7 +277,7 @@ func TestEvalFlag(t *testing.T) {
 			EntityID:      "entityID1",
 			EntityType:    "entityType1",
 			FlagID:        int64(100),
-		})
+		}, false)
 		assert.NotNil(t, result)
 		assert.Zero(t, result.VariantID)
 	})
@@ -293,7 +293,7 @@ func TestEvalFlag(t *testing.T) {
 			EntityID:      "entityID1",
 			EntityType:    "entityType1",
 			FlagID:        int64(100),
-		})
+		}, false)
 		assert.NotNil(t, result)
 		assert.Zero(t, result.VariantID)
 	})
@@ -310,7 +310,7 @@ func TestEvalFlag(t *testing.T) {
 				EntityID:      "entityID1",
 				EntityType:    "entityType1",
 				FlagID:        int64(100),
-			})
+			}, false)
 			assert.NotNil(t, result)
 			assert.NotNil(t, result.VariantID)
 			assert.Equal(t, "entityType1", result.EvalContext.EntityType)
@@ -326,7 +326,7 @@ func TestEvalFlag(t *testing.T) {
 				EntityID:      "entityID1",
 				EntityType:    "entityType1",
 				FlagID:        int64(100),
-			})
+			}, false)
 			assert.NotNil(t, result)
 			assert.NotNil(t, result.VariantID)
 			assert.NotEqual(t, "entityType1", result.EvalContext.EntityType)

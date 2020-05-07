@@ -1424,6 +1424,10 @@ func init() {
             "type": "string",
             "minLength": 1
           }
+        },
+        "stripEvalContext": {
+          "type": "boolean",
+          "default": false
         }
       }
     },
@@ -3203,6 +3207,10 @@ func init() {
             "type": "string",
             "minLength": 1
           }
+        },
+        "stripEvalContext": {
+          "type": "boolean",
+          "default": false
         }
       }
     },
