@@ -34,6 +34,9 @@ type EvaluationBatchRequest struct {
 	// flagKeys. Either flagIDs or flagKeys works. If pass in both, Flagr may return duplicate results.
 	// Min Items: 1
 	FlagKeys []string `json:"flagKeys"`
+
+	// strip eval context
+	StripEvalContext *bool `json:"stripEvalContext,omitempty"`
 }
 
 // Validate validates this evaluation batch request

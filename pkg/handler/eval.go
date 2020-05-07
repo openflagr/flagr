@@ -39,7 +39,7 @@ func (e *eval) PostEvaluation(params evaluation.PostEvaluationParams) middleware
 			ErrorMessage("empty body"))
 	}
 
-	evalResult := EvalFlag(*evalContext)
+	evalResult := EvalFlag(*evalContext, false)
 	resp := evaluation.NewPostEvaluationOK()
 	resp.SetPayload(evalResult)
 	return resp
@@ -51,28 +51,38 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 	flagKeys := params.Body.FlagKeys
 	results := &models.EvaluationBatchResponse{}
 
+	stripEvalContextFromResults := false
+	if params.Body.StripEvalContext != nil && *params.Body.StripEvalContext {
+		stripEvalContextFromResults = *params.Body.StripEvalContext
+	}
+
 	// TODO make it concurrent
 	for _, entity := range entities {
 		for _, flagID := range flagIDs {
-			evalContext := models.EvalContext{
+
+			var evalContext models.EvalContext
+			evalContext = models.EvalContext{
 				EnableDebug:   params.Body.EnableDebug,
 				EntityContext: entity.EntityContext,
 				EntityID:      entity.EntityID,
 				EntityType:    entity.EntityType,
 				FlagID:        flagID,
 			}
-			evalResult := EvalFlag(evalContext)
+
+			evalResult := EvalFlag(evalContext, stripEvalContextFromResults)
 			results.EvaluationResults = append(results.EvaluationResults, evalResult)
 		}
 		for _, flagKey := range flagKeys {
-			evalContext := models.EvalContext{
+			var evalContext models.EvalContext
+			evalContext = models.EvalContext{
 				EnableDebug:   params.Body.EnableDebug,
 				EntityContext: entity.EntityContext,
 				EntityID:      entity.EntityID,
 				EntityType:    entity.EntityType,
 				FlagKey:       flagKey,
 			}
-			evalResult := EvalFlag(evalContext)
+
+			evalResult := EvalFlag(evalContext, stripEvalContextFromResults)
 			results.EvaluationResults = append(results.EvaluationResults, evalResult)
 		}
 	}
@@ -83,7 +93,7 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 }
 
 // BlankResult creates a blank result
-func BlankResult(f *entity.Flag, evalContext models.EvalContext, msg string) *models.EvalResult {
+func BlankResult(f *entity.Flag, evalContext *models.EvalContext, msg string) *models.EvalResult {
 	flagID := uint(0)
 	flagKey := ""
 	flagSnapshotID := uint(0)
@@ -93,7 +103,7 @@ func BlankResult(f *entity.Flag, evalContext models.EvalContext, msg string) *mo
 		flagKey = f.Key
 	}
 	return &models.EvalResult{
-		EvalContext: &evalContext,
+		EvalContext: evalContext,
 		EvalDebugLog: &models.EvalDebugLog{
 			Msg:              msg,
 			SegmentDebugLogs: nil,
@@ -105,26 +115,33 @@ func BlankResult(f *entity.Flag, evalContext models.EvalContext, msg string) *mo
 	}
 }
 
-var EvalFlag = func(evalContext models.EvalContext) *models.EvalResult {
+// Evaluates a flag for a given context and determines what segment, if any, that applies.
+var EvalFlag = func(evalContext models.EvalContext, stripEvalContextFromResults bool) *models.EvalResult {
 	cache := GetEvalCache()
 	flagID := util.SafeUint(evalContext.FlagID)
 	flagKey := util.SafeString(evalContext.FlagKey)
 	f := cache.GetByFlagKeyOrID(flagID)
+
+	outputEvalContext := &evalContext
+	if stripEvalContextFromResults {
+		outputEvalContext = nil
+	}
+
 	if f == nil {
 		f = cache.GetByFlagKeyOrID(flagKey)
 	}
 
 	if f == nil {
 		emptyFlag := &entity.Flag{Model: gorm.Model{ID: flagID}, Key: flagKey}
-		return BlankResult(emptyFlag, evalContext, fmt.Sprintf("flagID %v not found or deleted", flagID))
+		return BlankResult(emptyFlag, outputEvalContext, fmt.Sprintf("flagID %v not found or deleted", flagID))
 	}
 
 	if !f.Enabled {
-		return BlankResult(f, evalContext, fmt.Sprintf("flagID %v is not enabled", f.ID))
+		return BlankResult(f, outputEvalContext, fmt.Sprintf("flagID %v is not enabled", f.ID))
 	}
 
 	if len(f.Segments) == 0 {
-		return BlankResult(f, evalContext, fmt.Sprintf("flagID %v has no segments", f.ID))
+		return BlankResult(f, outputEvalContext, fmt.Sprintf("flagID %v has no segments", f.ID))
 	}
 
 	if evalContext.EntityID == "" {
@@ -152,7 +169,7 @@ var EvalFlag = func(evalContext models.EvalContext) *models.EvalResult {
 			break
 		}
 	}
-	evalResult := BlankResult(f, evalContext, "")
+	evalResult := BlankResult(f, outputEvalContext, "")
 	evalResult.EvalDebugLog.SegmentDebugLogs = logs
 	evalResult.SegmentID = sID
 	evalResult.VariantID = vID

@@ -485,6 +485,9 @@ definitions:
         minItems: 1
       enableDebug:
         type: boolean
+      stripEvalContext:
+        type: boolean
+        default: false
       flagIDs:
         description: flagIDs
         type: array
