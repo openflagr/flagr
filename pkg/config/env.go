@@ -72,8 +72,9 @@ var Config = struct {
 	CORSEnabled bool `env:"FLAGR_CORS_ENABLED" envDefault:"true"`
 
 	// SentryEnabled - enable Sentry and Sentry DSN
-	SentryEnabled bool   `env:"FLAGR_SENTRY_ENABLED" envDefault:"false"`
-	SentryDSN     string `env:"FLAGR_SENTRY_DSN" envDefault:""`
+	SentryEnabled     bool   `env:"FLAGR_SENTRY_ENABLED" envDefault:"false"`
+	SentryDSN         string `env:"FLAGR_SENTRY_DSN" envDefault:""`
+	SentryEnvironment string `env:"FLAGR_SENTRY_ENVIRONMENT" envDefault:""`
 
 	// NewRelicEnabled - enable the NewRelic monitoring for all the endpoints and DB operations
 	NewRelicEnabled                   bool   `env:"FLAGR_NEWRELIC_ENABLED" envDefault:"false"`
