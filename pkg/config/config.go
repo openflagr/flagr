@@ -115,18 +115,21 @@ func setupPrometheus() {
 	if Config.PrometheusEnabled {
 		Global.Prometheus.ScrapePath = Config.PrometheusPath
 		Global.Prometheus.EvalCounter = promauto.NewCounterVec(prometheus.CounterOpts{
-			Name: "flagr_eval_results",
-			Help: "A counter of eval results",
+			Namespace: Config.PrometheusNamespace,
+			Name:      "flagr_eval_results",
+			Help:      "A counter of eval results",
 		}, []string{"EntityType", "FlagID", "VariantID", "VariantKey"})
 		Global.Prometheus.RequestCounter = promauto.NewCounterVec(prometheus.CounterOpts{
-			Name: "flagr_requests_total",
-			Help: "The total http requests received",
+			Namespace: Config.PrometheusNamespace,
+			Name:      "flagr_requests_total",
+			Help:      "The total http requests received",
 		}, []string{"status", "path", "method"})
 
 		if Config.PrometheusIncludeLatencyHistogram {
 			Global.Prometheus.RequestHistogram = promauto.NewHistogramVec(prometheus.HistogramOpts{
-				Name: "flagr_requests_buckets",
-				Help: "A histogram of latencies for requests received",
+				Namespace: Config.PrometheusNamespace,
+				Name:      "flagr_requests_buckets",
+				Help:      "A histogram of latencies for requests received",
 			}, []string{"status", "path", "method"})
 		}
 	}

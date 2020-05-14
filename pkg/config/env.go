@@ -94,6 +94,8 @@ var Config = struct {
 	PrometheusEnabled bool `env:"FLAGR_PROMETHEUS_ENABLED" envDefault:"false"`
 	// PrometheusPath - set the path on which prometheus metrics are available to scrape
 	PrometheusPath string `env:"FLAGR_PROMETHEUS_PATH" envDefault:"/metrics"`
+	// PrometheusNamespace - set an optional namespace to prepend to all stats
+	PrometheusNamespace string `env:"FLAGR_PROMETHEUS_NAMESPACE" envDefault:""`
 	// PrometheusIncludeLatencyHistogram - set whether Prometheus should also export a histogram of request latencies (this increases cardinality significantly)
 	PrometheusIncludeLatencyHistogram bool `env:"FLAGR_PROMETHEUS_INCLUDE_LATENCY_HISTOGRAM" envDefault:"false"`
 
