@@ -69,6 +69,9 @@ func setupSentry() {
 			logrus.FatalLevel,
 			logrus.ErrorLevel,
 		})
+		if Config.SentryEnvironment != "" {
+			hook.SetEnvironment(Config.SentryEnvironment)
+		}
 		if err != nil {
 			logrus.WithField("err", err).Error("failed to hook logurs to sentry")
 			return
