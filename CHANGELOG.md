@@ -1,8 +1,16 @@
 # Changelog
 
+## [1.1.9](https://github.com/checkr/flagr/tree/HEAD)
+
+[Full Changelog](https://github.com/checkr/flagr/compare/1.1.8...HEAD)
+
+**Merged pull requests:**
+
+- Add exclude\_snapshots query param to export/sqlite [\#367](https://github.com/checkr/flagr/pull/367) ([zhouzhuojie](https://github.com/zhouzhuojie))
+
 ## [1.1.8](https://github.com/checkr/flagr/tree/1.1.8) (2020-04-17)
 
-[Full Changelog](https://github.com/checkr/flagr/compare/1.1.7...HEAD)
+[Full Changelog](https://github.com/checkr/flagr/compare/1.1.7...1.1.8)
 
 **Closed issues:**
 
@@ -18,6 +26,8 @@
 
 **Merged pull requests:**
 
+- Add sentry env configuration [\#365](https://github.com/checkr/flagr/pull/365) ([zhouzhuojie](https://github.com/zhouzhuojie))
+- Bump 1.1.8 [\#360](https://github.com/checkr/flagr/pull/360) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Cleanup deps and remove sqlite3 system requirement [\#359](https://github.com/checkr/flagr/pull/359) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Add flow to create simple boolean flag [\#354](https://github.com/checkr/flagr/pull/354) ([dcramer](https://github.com/dcramer))
 - Add basic auth support for interface [\#353](https://github.com/checkr/flagr/pull/353) ([jheth](https://github.com/jheth))
@@ -25,6 +35,7 @@
 - Improve UI consistency and contrast [\#349](https://github.com/checkr/flagr/pull/349) ([dcramer](https://github.com/dcramer))
 - Support additional characters for flag keys [\#348](https://github.com/checkr/flagr/pull/348) ([dcramer](https://github.com/dcramer))
 - Fix enabled query param [\#343](https://github.com/checkr/flagr/pull/343) ([zhouzhuojie](https://github.com/zhouzhuojie))
+- Add publish to dockerhub with latest tag [\#339](https://github.com/checkr/flagr/pull/339) ([zhouzhuojie](https://github.com/zhouzhuojie))
 
 ## [1.1.7](https://github.com/checkr/flagr/tree/1.1.7) (2020-03-19)
 
@@ -36,7 +47,6 @@
 
 **Merged pull requests:**
 
-- Add publish to dockerhub with latest tag [\#339](https://github.com/checkr/flagr/pull/339) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Upgrade swagger go version and bump to 1.1.7 [\#338](https://github.com/checkr/flagr/pull/338) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Add 404 get flag test [\#337](https://github.com/checkr/flagr/pull/337) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Add publish dockerhub action [\#336](https://github.com/checkr/flagr/pull/336) ([zhouzhuojie](https://github.com/zhouzhuojie))
@@ -213,6 +223,7 @@
 - Refactor data recorder [\#233](https://github.com/checkr/flagr/pull/233) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Add release badge [\#227](https://github.com/checkr/flagr/pull/227) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Use English as default locale for flagr instead of Chinese [\#226](https://github.com/checkr/flagr/pull/226) ([lawrenceong](https://github.com/lawrenceong))
+- Bump version [\#224](https://github.com/checkr/flagr/pull/224) ([zhouzhuojie](https://github.com/zhouzhuojie))
 
 ## [1.0.14](https://github.com/checkr/flagr/tree/1.0.14) (2019-02-22)
 
@@ -229,7 +240,6 @@
 
 **Merged pull requests:**
 
-- Bump version [\#224](https://github.com/checkr/flagr/pull/224) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Use relative assetsPublicPath [\#223](https://github.com/checkr/flagr/pull/223) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Adds Prometheus export \(requests and variant eval\) [\#221](https://github.com/checkr/flagr/pull/221) ([jasongwartz](https://github.com/jasongwartz))
 - Bump conditions [\#219](https://github.com/checkr/flagr/pull/219) ([zhouzhuojie](https://github.com/zhouzhuojie))
@@ -268,7 +278,6 @@
 - Add headers to CORS middleware [\#186](https://github.com/checkr/flagr/pull/186) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Make user claim configurable [\#183](https://github.com/checkr/flagr/pull/183) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Update version and docs [\#182](https://github.com/checkr/flagr/pull/182) ([zhouzhuojie](https://github.com/zhouzhuojie))
-- Add kafka data recorder dd metrics [\#178](https://github.com/checkr/flagr/pull/178) ([zhouzhuojie](https://github.com/zhouzhuojie))
 
 ## [1.0.12](https://github.com/checkr/flagr/tree/1.0.12) (2018-10-23)
 
@@ -290,6 +299,7 @@
 **Merged pull requests:**
 
 - Remove some dd metrics [\#179](https://github.com/checkr/flagr/pull/179) ([zhouzhuojie](https://github.com/zhouzhuojie))
+- Add kafka data recorder dd metrics [\#178](https://github.com/checkr/flagr/pull/178) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Add dd metrics [\#177](https://github.com/checkr/flagr/pull/177) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Fix mysql query [\#176](https://github.com/checkr/flagr/pull/176) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Add UI env for entity types override [\#175](https://github.com/checkr/flagr/pull/175) ([zhouzhuojie](https://github.com/zhouzhuojie))
@@ -424,6 +434,7 @@
 - Bump newrelic go-agent and add ca-certificates apk [\#109](https://github.com/checkr/flagr/pull/109) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Bump vendor [\#108](https://github.com/checkr/flagr/pull/108) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Use multi-stage build for dockerfile [\#107](https://github.com/checkr/flagr/pull/107) ([zhouzhuojie](https://github.com/zhouzhuojie))
+- Fix constraints composition bug [\#104](https://github.com/checkr/flagr/pull/104) ([zhouzhuojie](https://github.com/zhouzhuojie))
 
 ## [1.0.3](https://github.com/checkr/flagr/tree/1.0.3) (2018-03-19)
 
@@ -431,7 +442,6 @@
 
 **Merged pull requests:**
 
-- Fix constraints composition bug [\#104](https://github.com/checkr/flagr/pull/104) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Add test coverage in pkg/handler [\#103](https://github.com/checkr/flagr/pull/103) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Add console logging rate limiter [\#99](https://github.com/checkr/flagr/pull/99) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Add an option for middleware verbose logging [\#98](https://github.com/checkr/flagr/pull/98) ([zhouzhuojie](https://github.com/zhouzhuojie))
