@@ -15,8 +15,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var exportSQLiteHandler = func(export.GetExportSqliteParams) middleware.Responder {
-	f, done, err := exportSQLiteFile()
+var exportSQLiteHandler = func(p export.GetExportSqliteParams) middleware.Responder {
+	f, done, err := exportSQLiteFile(p.ExcludeSnapshots)
 	defer done()
 	if err != nil {
 		return export.NewGetExportSqliteDefault(500).WithPayload(ErrorMessage("%s", err))
@@ -24,7 +24,7 @@ var exportSQLiteHandler = func(export.GetExportSqliteParams) middleware.Responde
 	return export.NewGetExportSqliteOK().WithPayload(f)
 }
 
-var exportSQLiteFile = func() (file io.ReadCloser, done func(), err error) {
+var exportSQLiteFile = func(excludeSnapshots *bool) (file io.ReadCloser, done func(), err error) {
 	fname := fmt.Sprintf("/tmp/flagr_%d.sqlite", rand.Int31())
 	done = func() {
 		os.Remove(fname)
@@ -37,8 +37,10 @@ var exportSQLiteFile = func() (file io.ReadCloser, done func(), err error) {
 	if err := exportFlags(tmpDB); err != nil {
 		return nil, done, err
 	}
-	if err := exportFlagSnapshots(tmpDB); err != nil {
-		return nil, done, err
+	if excludeSnapshots == nil || !*excludeSnapshots {
+		if err := exportFlagSnapshots(tmpDB); err != nil {
+			return nil, done, err
+		}
 	}
 	if err := exportFlagEntityTypes(tmpDB); err != nil {
 		return nil, done, err

@@ -137,6 +137,14 @@ func init() {
           "export"
         ],
         "operationId": "getExportSqlite",
+        "parameters": [
+          {
+            "type": "boolean",
+            "description": "export without snapshots data - useful for smaller db without snapshots\n",
+            "name": "exclude_snapshots",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -1914,6 +1922,14 @@ func init() {
           "export"
         ],
         "operationId": "getExportSqlite",
+        "parameters": [
+          {
+            "type": "boolean",
+            "description": "export without snapshots data - useful for smaller db without snapshots\n",
+            "name": "exclude_snapshots",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",

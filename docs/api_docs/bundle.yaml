@@ -771,6 +771,13 @@ paths:
       tags:
         - export
       operationId: getExportSqlite
+      parameters:
+        - in: query
+          name: exclude_snapshots
+          type: boolean
+          description: >
+            export without snapshots data - useful for smaller db without
+            snapshots
       description: >-
         Export sqlite3 format of the db dump, which is converted from the main
         database.
