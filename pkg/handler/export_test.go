@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/checkr/flagr/pkg/entity"
+	"github.com/checkr/flagr/pkg/util"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/export"
 	"github.com/prashantv/gostub"
 	"github.com/stretchr/testify/assert"
@@ -63,8 +64,16 @@ func TestExportSQLiteFile(t *testing.T) {
 	defer db.Close()
 	defer gostub.StubFunc(&getDB, db).Reset()
 
-	t.Run("happy code path", func(t *testing.T) {
-		f, done, err := exportSQLiteFile()
+	t.Run("happy code path and export everything in db", func(t *testing.T) {
+		f, done, err := exportSQLiteFile(nil)
+		defer done()
+
+		assert.NoError(t, err)
+		assert.NotNil(t, f)
+	})
+
+	t.Run("happy code path and exclude_snapshots", func(t *testing.T) {
+		f, done, err := exportSQLiteFile(util.BoolPtr(true))
 		defer done()
 
 		assert.NoError(t, err)
