@@ -380,6 +380,26 @@ func TestPostEvaluationBatch(t *testing.T) {
 		assert.NotNil(t, resp)
 	})
 }
+func TestTagsPostEvaluationBatch(t *testing.T) {
+	t.Run("test happy code path", func(t *testing.T) {
+		defer gostub.StubFunc(&EvalFlag, &models.EvalResult{}).Reset()
+		e := NewEval()
+		resp := e.PostEvaluationBatch(evaluation.PostEvaluationBatchParams{
+			Body: &models.EvaluationBatchRequest{
+				EnableDebug: true,
+				FlagTags:    []string{"tag1", "tag2"},
+				Entities: []*models.EvaluationEntity{
+					{
+						EntityContext: map[string]interface{}{"dl_state": "CA", "state": "NY"},
+						EntityID:      "entityID1",
+						EntityType:    "entityType1",
+					},
+				},
+			},
+		})
+		assert.NotNil(t, resp)
+	})
+}
 
 func TestRateLimitPerFlagConsoleLogging(t *testing.T) {
 	r := &models.EvalResult{FlagID: 1}

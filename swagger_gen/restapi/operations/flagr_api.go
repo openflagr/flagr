@@ -26,6 +26,7 @@ import (
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/flag"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/health"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/segment"
+	"github.com/checkr/flagr/swagger_gen/restapi/operations/tag"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/variant"
 )
 
@@ -60,6 +61,9 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		SegmentCreateSegmentHandler: segment.CreateSegmentHandlerFunc(func(params segment.CreateSegmentParams) middleware.Responder {
 			return middleware.NotImplemented("operation segment.CreateSegment has not yet been implemented")
 		}),
+		TagCreateTagHandler: tag.CreateTagHandlerFunc(func(params tag.CreateTagParams) middleware.Responder {
+			return middleware.NotImplemented("operation tag.CreateTag has not yet been implemented")
+		}),
 		VariantCreateVariantHandler: variant.CreateVariantHandlerFunc(func(params variant.CreateVariantParams) middleware.Responder {
 			return middleware.NotImplemented("operation variant.CreateVariant has not yet been implemented")
 		}),
@@ -72,8 +76,14 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		SegmentDeleteSegmentHandler: segment.DeleteSegmentHandlerFunc(func(params segment.DeleteSegmentParams) middleware.Responder {
 			return middleware.NotImplemented("operation segment.DeleteSegment has not yet been implemented")
 		}),
+		TagDeleteTagHandler: tag.DeleteTagHandlerFunc(func(params tag.DeleteTagParams) middleware.Responder {
+			return middleware.NotImplemented("operation tag.DeleteTag has not yet been implemented")
+		}),
 		VariantDeleteVariantHandler: variant.DeleteVariantHandlerFunc(func(params variant.DeleteVariantParams) middleware.Responder {
 			return middleware.NotImplemented("operation variant.DeleteVariant has not yet been implemented")
+		}),
+		TagFindAllTagsHandler: tag.FindAllTagsHandlerFunc(func(params tag.FindAllTagsParams) middleware.Responder {
+			return middleware.NotImplemented("operation tag.FindAllTags has not yet been implemented")
 		}),
 		ConstraintFindConstraintsHandler: constraint.FindConstraintsHandlerFunc(func(params constraint.FindConstraintsParams) middleware.Responder {
 			return middleware.NotImplemented("operation constraint.FindConstraints has not yet been implemented")
@@ -86,6 +96,9 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		}),
 		SegmentFindSegmentsHandler: segment.FindSegmentsHandlerFunc(func(params segment.FindSegmentsParams) middleware.Responder {
 			return middleware.NotImplemented("operation segment.FindSegments has not yet been implemented")
+		}),
+		TagFindTagsHandler: tag.FindTagsHandlerFunc(func(params tag.FindTagsParams) middleware.Responder {
+			return middleware.NotImplemented("operation tag.FindTags has not yet been implemented")
 		}),
 		VariantFindVariantsHandler: variant.FindVariantsHandlerFunc(func(params variant.FindVariantsParams) middleware.Responder {
 			return middleware.NotImplemented("operation variant.FindVariants has not yet been implemented")
@@ -178,6 +191,8 @@ type FlagrAPI struct {
 	FlagCreateFlagHandler flag.CreateFlagHandler
 	// SegmentCreateSegmentHandler sets the operation handler for the create segment operation
 	SegmentCreateSegmentHandler segment.CreateSegmentHandler
+	// TagCreateTagHandler sets the operation handler for the create tag operation
+	TagCreateTagHandler tag.CreateTagHandler
 	// VariantCreateVariantHandler sets the operation handler for the create variant operation
 	VariantCreateVariantHandler variant.CreateVariantHandler
 	// ConstraintDeleteConstraintHandler sets the operation handler for the delete constraint operation
@@ -186,8 +201,12 @@ type FlagrAPI struct {
 	FlagDeleteFlagHandler flag.DeleteFlagHandler
 	// SegmentDeleteSegmentHandler sets the operation handler for the delete segment operation
 	SegmentDeleteSegmentHandler segment.DeleteSegmentHandler
+	// TagDeleteTagHandler sets the operation handler for the delete tag operation
+	TagDeleteTagHandler tag.DeleteTagHandler
 	// VariantDeleteVariantHandler sets the operation handler for the delete variant operation
 	VariantDeleteVariantHandler variant.DeleteVariantHandler
+	// TagFindAllTagsHandler sets the operation handler for the find all tags operation
+	TagFindAllTagsHandler tag.FindAllTagsHandler
 	// ConstraintFindConstraintsHandler sets the operation handler for the find constraints operation
 	ConstraintFindConstraintsHandler constraint.FindConstraintsHandler
 	// DistributionFindDistributionsHandler sets the operation handler for the find distributions operation
@@ -196,6 +215,8 @@ type FlagrAPI struct {
 	FlagFindFlagsHandler flag.FindFlagsHandler
 	// SegmentFindSegmentsHandler sets the operation handler for the find segments operation
 	SegmentFindSegmentsHandler segment.FindSegmentsHandler
+	// TagFindTagsHandler sets the operation handler for the find tags operation
+	TagFindTagsHandler tag.FindTagsHandler
 	// VariantFindVariantsHandler sets the operation handler for the find variants operation
 	VariantFindVariantsHandler variant.FindVariantsHandler
 	// ExportGetExportEvalCacheJSONHandler sets the operation handler for the get export eval cache JSON operation
@@ -306,6 +327,9 @@ func (o *FlagrAPI) Validate() error {
 	if o.SegmentCreateSegmentHandler == nil {
 		unregistered = append(unregistered, "segment.CreateSegmentHandler")
 	}
+	if o.TagCreateTagHandler == nil {
+		unregistered = append(unregistered, "tag.CreateTagHandler")
+	}
 	if o.VariantCreateVariantHandler == nil {
 		unregistered = append(unregistered, "variant.CreateVariantHandler")
 	}
@@ -318,8 +342,14 @@ func (o *FlagrAPI) Validate() error {
 	if o.SegmentDeleteSegmentHandler == nil {
 		unregistered = append(unregistered, "segment.DeleteSegmentHandler")
 	}
+	if o.TagDeleteTagHandler == nil {
+		unregistered = append(unregistered, "tag.DeleteTagHandler")
+	}
 	if o.VariantDeleteVariantHandler == nil {
 		unregistered = append(unregistered, "variant.DeleteVariantHandler")
+	}
+	if o.TagFindAllTagsHandler == nil {
+		unregistered = append(unregistered, "tag.FindAllTagsHandler")
 	}
 	if o.ConstraintFindConstraintsHandler == nil {
 		unregistered = append(unregistered, "constraint.FindConstraintsHandler")
@@ -332,6 +362,9 @@ func (o *FlagrAPI) Validate() error {
 	}
 	if o.SegmentFindSegmentsHandler == nil {
 		unregistered = append(unregistered, "segment.FindSegmentsHandler")
+	}
+	if o.TagFindTagsHandler == nil {
+		unregistered = append(unregistered, "tag.FindTagsHandler")
 	}
 	if o.VariantFindVariantsHandler == nil {
 		unregistered = append(unregistered, "variant.FindVariantsHandler")
@@ -486,6 +519,10 @@ func (o *FlagrAPI) initHandlerCache() {
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
+	o.handlers["POST"]["/flags/{flagID}/tags"] = tag.NewCreateTag(o.context, o.TagCreateTagHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
 	o.handlers["POST"]["/flags/{flagID}/variants"] = variant.NewCreateVariant(o.context, o.VariantCreateVariantHandler)
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
@@ -502,7 +539,15 @@ func (o *FlagrAPI) initHandlerCache() {
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
+	o.handlers["DELETE"]["/flags/{flagID}/tags/{tagID}"] = tag.NewDeleteTag(o.context, o.TagDeleteTagHandler)
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
 	o.handlers["DELETE"]["/flags/{flagID}/variants/{variantID}"] = variant.NewDeleteVariant(o.context, o.VariantDeleteVariantHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/tags"] = tag.NewFindAllTags(o.context, o.TagFindAllTagsHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
@@ -519,6 +564,10 @@ func (o *FlagrAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/flags/{flagID}/segments"] = segment.NewFindSegments(o.context, o.SegmentFindSegmentsHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/flags/{flagID}/tags"] = tag.NewFindTags(o.context, o.TagFindTagsHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}

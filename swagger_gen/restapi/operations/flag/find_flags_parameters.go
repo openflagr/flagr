@@ -59,6 +59,10 @@ type FindFlagsParams struct {
 	  In: query
 	*/
 	Preload *bool
+	/*return flags with the given tags (comma separated)
+	  In: query
+	*/
+	Tags *string
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -104,6 +108,11 @@ func (o *FindFlagsParams) BindRequest(r *http.Request, route *middleware.Matched
 
 	qPreload, qhkPreload, _ := qs.GetOK("preload")
 	if err := o.bindPreload(qPreload, qhkPreload, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
+	qTags, qhkTags, _ := qs.GetOK("tags")
+	if err := o.bindTags(qTags, qhkTags, route.Formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -251,6 +260,24 @@ func (o *FindFlagsParams) bindPreload(rawData []string, hasKey bool, formats str
 		return errors.InvalidType("preload", "query", "bool", raw)
 	}
 	o.Preload = &value
+
+	return nil
+}
+
+// bindTags binds and validates parameter Tags from query.
+func (o *FindFlagsParams) bindTags(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+
+	// Required: false
+	// AllowEmptyValue: false
+	if raw == "" { // empty values pass all other validations
+		return nil
+	}
+
+	o.Tags = &raw
 
 	return nil
 }

@@ -30,6 +30,14 @@ func GenFixtureFlag() Flag {
 				},
 			},
 		},
+		Tags: []Tag{
+			{
+				Value: "tag1",
+			},
+			{
+				Value: "tag2",
+			},
+		},
 	}
 	f.PrepareEvaluation()
 	return f

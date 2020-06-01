@@ -11,6 +11,7 @@ import (
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/distribution"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/flag"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/segment"
+	"github.com/checkr/flagr/swagger_gen/restapi/operations/tag"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/variant"
 
 	"github.com/go-openapi/runtime/middleware"
@@ -72,7 +73,7 @@ func TestCrudFlags(t *testing.T) {
 		assert.NotZero(t, res.(*flag.GetFlagDefault))
 	})
 
-	t.Run("it should be able to get preloaded segments and variants", func(t *testing.T) {
+	t.Run("it should be able to get preloaded segments and variants and tags", func(t *testing.T) {
 		c.CreateSegment(segment.CreateSegmentParams{
 			FlagID: int64(1),
 			Body: &models.CreateSegmentRequest{
@@ -86,9 +87,16 @@ func TestCrudFlags(t *testing.T) {
 				Key: util.StringPtr("variant1"),
 			},
 		})
+		c.CreateTag(tag.CreateTagParams{
+			FlagID: int64(1),
+			Body: &models.CreateTagRequest{
+				Value: util.StringPtr("Tag1"),
+			},
+		})
 		res = c.GetFlag(flag.GetFlagParams{FlagID: int64(1)})
 		assert.NotZero(t, len(res.(*flag.GetFlagOK).Payload.Segments))
 		assert.NotZero(t, len(res.(*flag.GetFlagOK).Payload.Variants))
+		assert.NotZero(t, len(res.(*flag.GetFlagOK).Payload.Tags))
 	})
 
 	t.Run("it should be able to put the flag", func(t *testing.T) {
@@ -325,10 +333,17 @@ func TestFindFlags(t *testing.T) {
 				Key: util.StringPtr("variant1"),
 			},
 		})
+		c.CreateTag(tag.CreateTagParams{
+			FlagID: int64(1),
+			Body: &models.CreateTagRequest{
+				Value: util.StringPtr("tag1"),
+			},
+		})
 		res = c.FindFlags(flag.FindFlagsParams{})
 		assert.Len(t, res.(*flag.FindFlagsOK).Payload, numOfFlags)
 		assert.Zero(t, len(res.(*flag.FindFlagsOK).Payload[0].Segments))
 		assert.Zero(t, len(res.(*flag.FindFlagsOK).Payload[0].Variants))
+		assert.NotZero(t, len(res.(*flag.FindFlagsOK).Payload[0].Tags))
 	})
 
 	t.Run("FindFlags - got all the results with preloaded segments and variants", func(t *testing.T) {
@@ -345,12 +360,18 @@ func TestFindFlags(t *testing.T) {
 				Key: util.StringPtr("variant2"),
 			},
 		})
+		c.CreateTag(tag.CreateTagParams{
+			FlagID: int64(1),
+			Body: &models.CreateTagRequest{
+				Value: util.StringPtr("tag2"),
+			},
+		})
 		res = c.FindFlags(flag.FindFlagsParams{
 			Preload: util.BoolPtr(true),
 		})
 		assert.Len(t, res.(*flag.FindFlagsOK).Payload, numOfFlags)
 		assert.NotZero(t, len(res.(*flag.FindFlagsOK).Payload[0].Segments))
-		assert.NotZero(t, len(res.(*flag.FindFlagsOK).Payload[0].Variants))
+		assert.NotZero(t, len(res.(*flag.FindFlagsOK).Payload[0].Tags))
 	})
 
 	t.Run("FindFlags (with enabled only) - got all the enabled results", func(t *testing.T) {
@@ -391,6 +412,20 @@ func TestFindFlags(t *testing.T) {
 		assert.Len(t, res.(*flag.FindFlagsOK).Payload, 2)
 		assert.Equal(t, res.(*flag.FindFlagsOK).Payload[0].ID, int64(3))
 		assert.Equal(t, res.(*flag.FindFlagsOK).Payload[1].ID, int64(4))
+	})
+	t.Run("FindFlags (with tags)", func(t *testing.T) {
+		c.CreateTag(tag.CreateTagParams{
+			FlagID: int64(1),
+			Body: &models.CreateTagRequest{
+				Value: util.StringPtr("tag1"),
+			},
+		})
+
+		res = c.FindFlags(flag.FindFlagsParams{
+			Tags: util.StringPtr("tag1"),
+		})
+		assert.Len(t, res.(*flag.FindFlagsOK).Payload, 1)
+		assert.Equal(t, res.(*flag.FindFlagsOK).Payload[0].ID, int64(1))
 	})
 }
 
@@ -903,6 +938,105 @@ func TestCrudVariantsWithFailures(t *testing.T) {
 			VariantID: int64(1),
 		})
 		assert.NotZero(t, res.(*variant.DeleteVariantDefault).Payload)
+		db.Error = nil
+	})
+}
+
+func TestCrudTags(t *testing.T) {
+	var res middleware.Responder
+	db := entity.NewTestDB()
+	c := &crud{}
+
+	defer db.Close()
+	defer gostub.StubFunc(&getDB, db).Reset()
+
+	c.CreateFlag(flag.CreateFlagParams{
+		Body: &models.CreateFlagRequest{
+			Description: util.StringPtr("funny flag"),
+		},
+	})
+
+	// step 0. it should return 0 tags before creaetion
+	res = c.FindTags(tag.FindTagsParams{
+		FlagID: int64(1),
+	})
+	assert.Zero(t, len(res.(*tag.FindTagsOK).Payload))
+
+	// step 1. it should be able to create tag
+	res = c.CreateTag(tag.CreateTagParams{
+		FlagID: int64(1),
+		Body: &models.CreateTagRequest{
+			Value: util.StringPtr("tag1"),
+		},
+	})
+	assert.NotZero(t, res.(*tag.CreateTagOK).Payload.ID)
+
+	// step 2. it should return some tags after creaetion
+	res = c.FindTags(tag.FindTagsParams{
+		FlagID: int64(1),
+	})
+	assert.NotZero(t, len(res.(*tag.FindTagsOK).Payload))
+
+	// step 3. it should be able to find all tags
+	res = c.FindAllTags(tag.FindAllTagsParams{})
+	assert.NotZero(t, len(res.(*tag.FindAllTagsOK).Payload))
+
+	// step 4. it should be able to delete the tag
+	res = c.DeleteTag(tag.DeleteTagParams{
+		FlagID: int64(1),
+		TagID:  int64(1),
+	})
+	assert.NotZero(t, res.(*tag.DeleteTagOK))
+}
+
+func TestCrudTagsWithFailures(t *testing.T) {
+	var res middleware.Responder
+	db := entity.NewTestDB()
+	c := &crud{}
+
+	defer db.Close()
+	defer gostub.StubFunc(&getDB, db).Reset()
+
+	c.CreateFlag(flag.CreateFlagParams{
+		Body: &models.CreateFlagRequest{
+			Description: util.StringPtr("funny flag"),
+		},
+	})
+	c.CreateTag(tag.CreateTagParams{
+		FlagID: int64(1),
+		Body: &models.CreateTagRequest{
+			Value: util.StringPtr("tag1"),
+		},
+	})
+
+	t.Run("CreateTag - db generic error", func(t *testing.T) {
+		db.Error = fmt.Errorf("db generic error")
+		res = c.CreateTag(tag.CreateTagParams{
+			FlagID: int64(1),
+			Body: &models.CreateTagRequest{
+				Value: util.StringPtr("tag1"),
+			},
+		})
+		assert.NotZero(t, res.(*tag.CreateTagDefault).Payload)
+		db.Error = nil
+	})
+
+	t.Run("FindTags - db generic error", func(t *testing.T) {
+		db.Error = fmt.Errorf("db generic error")
+		res = c.FindTags(tag.FindTagsParams{
+			FlagID: int64(1),
+		})
+		assert.NotZero(t, res.(*tag.FindTagsDefault).Payload)
+		db.Error = nil
+	})
+
+	t.Run("DeleteTag - db generic error", func(t *testing.T) {
+		db.Error = fmt.Errorf("db generic error")
+		res = c.DeleteTag(tag.DeleteTagParams{
+			FlagID: int64(1),
+			TagID:  int64(1),
+		})
+		assert.NotZero(t, res.(*tag.DeleteTagDefault).Payload)
 		db.Error = nil
 	})
 }

@@ -28,6 +28,7 @@ x-tagGroups:
       - constraint
       - distribution
       - variant
+      - tag
   - name: Flag Evaluation
     tags:
       - evaluation
@@ -64,6 +65,10 @@ paths:
           name: description
           type: string
           description: return flags exactly matching given description
+        - in: query
+          name: tags
+          type: string
+          description: return flags with the given tags (comma separated)
         - in: query
           name: description_like
           type: string
@@ -206,6 +211,84 @@ paths:
           description: returns the flag
           schema:
             $ref: '#/definitions/flag'
+        default:
+          description: generic error response
+          schema:
+            $ref: '#/definitions/error'
+  '/flags/{flagID}/tags':
+    get:
+      tags:
+        - tag
+      operationId: findTags
+      parameters:
+        - in: path
+          name: flagID
+          description: numeric ID of the flag
+          required: true
+          type: integer
+          format: int64
+          minimum: 1
+      responses:
+        '200':
+          description: tag ordered by tagID
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/tag'
+        default:
+          description: generic error response
+          schema:
+            $ref: '#/definitions/error'
+    post:
+      tags:
+        - tag
+      operationId: createTag
+      parameters:
+        - in: path
+          name: flagID
+          description: numeric ID of the flag
+          required: true
+          type: integer
+          format: int64
+          minimum: 1
+        - in: body
+          name: body
+          description: create a tag
+          required: true
+          schema:
+            $ref: '#/definitions/createTagRequest'
+      responses:
+        '200':
+          description: tag just created
+          schema:
+            $ref: '#/definitions/tag'
+        default:
+          description: generic error response
+          schema:
+            $ref: '#/definitions/error'
+  '/flags/{flagID}/tags/{tagID}':
+    delete:
+      tags:
+        - tag
+      operationId: deleteTag
+      parameters:
+        - in: path
+          name: flagID
+          description: numeric ID of the flag
+          required: true
+          type: integer
+          format: int64
+          minimum: 1
+        - in: path
+          name: tagID
+          description: numeric ID of the tag
+          required: true
+          type: integer
+          format: int64
+          minimum: 1
+      responses:
+        '200':
+          description: deleted
         default:
           description: generic error response
           schema:
@@ -709,6 +792,32 @@ paths:
           description: generic error response
           schema:
             $ref: '#/definitions/error'
+  /tags:
+    get:
+      tags:
+        - tag
+      operationId: findAllTags
+      parameters:
+        - in: query
+          name: limit
+          type: integer
+          format: int64
+          description: the numbers of tags to return
+        - in: query
+          name: value_like
+          type: string
+          description: return tags partially matching given value
+      responses:
+        '200':
+          description: list all the tags
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/tag'
+        default:
+          description: generic error response
+          schema:
+            $ref: '#/definitions/error'
   /evaluation:
     post:
       tags:
@@ -831,6 +940,10 @@ definitions:
         minLength: 1
       enabled:
         type: boolean
+      tags:
+        type: array
+        items:
+          $ref: '#/definitions/tag'
       segments:
         type: array
         items:
@@ -922,6 +1035,27 @@ definitions:
       flag:
         $ref: '#/definitions/flag'
       updatedAt:
+        type: string
+        minLength: 1
+  tag:
+    type: object
+    required:
+      - value
+    properties:
+      id:
+        type: integer
+        format: int64
+        minimum: 1
+        readOnly: true
+      value:
+        type: string
+        minLength: 1
+  createTagRequest:
+    type: object
+    required:
+      - value
+    properties:
+      value:
         type: string
         minLength: 1
   segment:
@@ -1138,6 +1272,12 @@ definitions:
           flagKey. flagID or flagKey will resolve to the same flag. Either
           works.
         type: string
+      flagTags:
+        description: flagTags. flagTags looks up flags by tag. Either works.
+        type: array
+        x-omitempty: true
+        items:
+          type: string
   evalResult:
     type: object
     properties:
@@ -1214,8 +1354,17 @@ definitions:
         minItems: 1
       flagKeys:
         description: >-
-          flagKeys. Either flagIDs or flagKeys works. If pass in both, Flagr may
-          return duplicate results.
+          flagKeys. Either flagIDs, flagKeys or flagTags works. If pass in
+          multiples, Flagr may return duplicate results.
+        type: array
+        items:
+          type: string
+          minLength: 1
+        minItems: 1
+      flagTags:
+        description: >-
+          flagTags. Either flagIDs, flagKeys or flagTags works. If pass in
+          multiples, Flagr may return duplicate results.
         type: array
         items:
           type: string

@@ -53,6 +53,9 @@ type Flag struct {
 	// segments
 	Segments []*Segment `json:"segments"`
 
+	// tags
+	Tags []*Tag `json:"tags"`
+
 	// updated at
 	// Format: date-time
 	UpdatedAt strfmt.DateTime `json:"updatedAt,omitempty"`
@@ -89,6 +92,10 @@ func (m *Flag) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateSegments(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateTags(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -178,6 +185,31 @@ func (m *Flag) validateSegments(formats strfmt.Registry) error {
 			if err := m.Segments[i].Validate(formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("segments" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *Flag) validateTags(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Tags) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.Tags); i++ {
+		if swag.IsZero(m.Tags[i]) { // not required
+			continue
+		}
+
+		if m.Tags[i] != nil {
+			if err := m.Tags[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("tags" + "." + strconv.Itoa(i))
 				}
 				return err
 			}

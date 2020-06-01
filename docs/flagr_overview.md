@@ -5,6 +5,7 @@
 The definitions of the following concepts are in [API doc](https://checkr.github.io/flagr/api_docs).
 
 - **Flag**. It can be a feature flag, an experiment, or a configuration.
+- **Tag**. This is a descriptive label attached to a flag for easy lookup and evaluation.
 - **Variant** represents the possible variation of a flag. For example, control/treatment, green/yellow/red, etc.
 - **Variant Attachment** represents the dynamic configuration of a variant. For example, if you have a variant for the `green` button, you can dynamically control what's the hex color of green you want to use (e.g. `{"hex_color": "#42b983"}`).
 - **Segment** represents the segmentation, i.e. the set of audience we want to target. Segment is the smallest unit of a component we can analyze in Flagr Metrics.

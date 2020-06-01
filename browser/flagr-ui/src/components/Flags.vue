@@ -53,15 +53,16 @@
             v-on:row-click="goToFlag"
             style="width: 100%"
           >
-            <el-table-column prop="id" align="center" label="Flag ID" sortable fixed width="100"></el-table-column>
-            <el-table-column prop="description" label="Description" min-width="380"></el-table-column>
+            <el-table-column prop="id" align="center" label="Flag ID" sortable fixed width="95"></el-table-column>
+            <el-table-column prop="description" label="Description" min-width="300"></el-table-column>
+            <el-table-column prop="tags" label="Tags" min-width="200" :formatter="tagFormatter"></el-table-column>
             <el-table-column prop="updatedBy" label="Last Updated By" sortable width="200"></el-table-column>
             <el-table-column
               prop="updatedAt"
               label="Updated At (UTC)"
               :formatter="datetimeFormatter"
               sortable
-              width="200"
+              width="165"
             ></el-table-column>
             <el-table-column
               prop="enabled"
@@ -123,15 +124,21 @@ export default {
     filteredFlags: function() {
       if (this.searchTerm) {
         return this.flags.filter(
-          ({ id, description }) =>
-            id.toString().includes(this.searchTerm) ||
-            description.toLowerCase().includes(this.searchTerm.toLowerCase())
+          ({ id, description, tags }) =>
+            this.searchTerm.split(',').map(term => {
+              return id.toString().includes(term) ||
+              description.toLowerCase().includes(term.toLowerCase()) ||
+              tags.map(tag => tag.value.toLowerCase().includes(term.toLowerCase())).includes(true)
+            }).every((e) => e)
         );
       }
       return this.flags;
     }
   },
   methods: {
+    tagFormatter(row, col, val) {
+      return val.map(tag => tag.value).join(', ');
+    },
     flagEnabledFormatter(row, col, val) {
       return val ? "on" : "off";
     },

@@ -12,6 +12,7 @@ import (
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/flag"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/health"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/segment"
+	"github.com/checkr/flagr/swagger_gen/restapi/operations/tag"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/variant"
 	"github.com/go-openapi/runtime/middleware"
 )
@@ -43,6 +44,12 @@ func setupCRUD(api *operations.FlagrAPI) {
 	api.FlagSetFlagEnabledHandler = flag.SetFlagEnabledHandlerFunc(c.SetFlagEnabledState)
 	api.FlagGetFlagSnapshotsHandler = flag.GetFlagSnapshotsHandlerFunc(c.GetFlagSnapshots)
 	api.FlagGetFlagEntityTypesHandler = flag.GetFlagEntityTypesHandlerFunc(c.GetFlagEntityTypes)
+
+	// tags
+	api.TagCreateTagHandler = tag.CreateTagHandlerFunc(c.CreateTag)
+	api.TagDeleteTagHandler = tag.DeleteTagHandlerFunc(c.DeleteTag)
+	api.TagFindTagsHandler = tag.FindTagsHandlerFunc(c.FindTags)
+	api.TagFindAllTagsHandler = tag.FindAllTagsHandlerFunc(c.FindAllTags)
 
 	// segments
 	api.SegmentCreateSegmentHandler = segment.CreateSegmentHandlerFunc(c.CreateSegment)

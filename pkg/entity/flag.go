@@ -18,6 +18,7 @@ type Flag struct {
 	Enabled     bool
 	Segments    []Segment
 	Variants    []Variant
+	Tags        []Tag `gorm:"many2many:flags_tags;"`
 	SnapshotID  uint
 	Notes       string `sql:"type:text"`
 
@@ -32,8 +33,15 @@ type FlagEvaluation struct {
 	VariantsMap map[uint]*Variant
 }
 
-// PreloadSegmentsVariants preloads segments and variants for flag
-func PreloadSegmentsVariants(db *gorm.DB) *gorm.DB {
+// Preloads just the tags
+func PreloadFlagTags(db *gorm.DB) *gorm.DB {
+	return db.Preload("Tags", func(db *gorm.DB) *gorm.DB {
+		return db.Order("id ASC")
+	})
+}
+
+// PreloadSegmentsVariantsTags preloads segments, variants and tags for flag
+func PreloadSegmentsVariantsTags(db *gorm.DB) *gorm.DB {
 	return db.
 		Preload("Segments", func(db *gorm.DB) *gorm.DB {
 			return PreloadConstraintsDistribution(db).
@@ -42,12 +50,20 @@ func PreloadSegmentsVariants(db *gorm.DB) *gorm.DB {
 		}).
 		Preload("Variants", func(db *gorm.DB) *gorm.DB {
 			return db.Order("id ASC")
+		}).
+		Preload("Tags", func(db *gorm.DB) *gorm.DB {
+			return db.Order("id ASC")
 		})
 }
 
-// Preload preloads the segments and variants into flags
+// Preload preloads the segments, variants and tags into flags
 func (f *Flag) Preload(db *gorm.DB) error {
-	return PreloadSegmentsVariants(db).First(f, f.ID).Error
+	return PreloadSegmentsVariantsTags(db).First(f, f.ID).Error
+}
+
+// PreloadTags preloads the tags into flags
+func (f *Flag) PreloadTags(db *gorm.DB) error {
+	return PreloadFlagTags(db).First(f, f.ID).Error
 }
 
 // PrepareEvaluation prepares the information for evaluation
