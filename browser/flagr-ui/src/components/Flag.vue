@@ -1252,16 +1252,15 @@ ol.constraints-inner {
 }
 
 .tag-key-input {
+  margin: 2.5px;
   width: 20%;
-}
-
-.el-tag + .el-tag,
-.el-tag + .el-autocomplete,
-.el-tag + .el-button {
-    margin-left: 10px;
 }
 
 .tags-container-inner {
   margin-bottom: 10px;
+}
+
+.button-new-tag {
+  margin: 2.5px;
 }
 </style>

@@ -38,7 +38,7 @@ func (ec *EvalCache) fetchAllFlags() (idCache mapCache, keyCache mapCache, tagCa
 
 	idCache = make(map[string]*entity.Flag)
 	keyCache = make(map[string]*entity.Flag)
-	tagCache = make(map[string][]*entity.Flag)
+	tagCache = make(map[string]map[uint]*entity.Flag)
 
 	for i := range fs {
 		f := &fs[i]
@@ -54,7 +54,10 @@ func (ec *EvalCache) fetchAllFlags() (idCache mapCache, keyCache mapCache, tagCa
 		}
 		if f.Tags != nil {
 			for _, s := range f.Tags {
-				tagCache[s.Value] = append(tagCache[s.Value], f)
+				if tagCache[s.Value] == nil {
+					tagCache[s.Value] = make(map[uint]*entity.Flag)
+				}
+				tagCache[s.Value][f.ID] = f
 			}
 		}
 	}

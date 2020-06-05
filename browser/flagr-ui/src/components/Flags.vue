@@ -55,7 +55,11 @@
           >
             <el-table-column prop="id" align="center" label="Flag ID" sortable fixed width="95"></el-table-column>
             <el-table-column prop="description" label="Description" min-width="300"></el-table-column>
-            <el-table-column prop="tags" label="Tags" min-width="200" :formatter="tagFormatter"></el-table-column>
+            <el-table-column prop="tags" label="Tags" min-width="200">
+              <template scope="scope">
+                <el-tag v-for="tag in scope.row.tags" :key="tag.id" :type="warning" disable-transitions>{{ tag.value }}</el-tag>
+              </template>
+            </el-table-column>
             <el-table-column prop="updatedBy" label="Last Updated By" sortable width="200"></el-table-column>
             <el-table-column
               prop="updatedAt"
@@ -136,9 +140,6 @@ export default {
     }
   },
   methods: {
-    tagFormatter(row, col, val) {
-      return val.map(tag => tag.value).join(', ');
-    },
     flagEnabledFormatter(row, col, val) {
       return val ? "on" : "off";
     },
@@ -184,5 +185,8 @@ export default {
   .el-button-group .el-button--primary:first-child {
     border-right-color: #dcdfe6;
   }
+}
+.el-tag {
+  margin: 2.5px;
 }
 </style>

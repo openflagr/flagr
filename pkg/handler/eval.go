@@ -39,8 +39,7 @@ func (e *eval) PostEvaluation(params evaluation.PostEvaluationParams) middleware
 			ErrorMessage("empty body"))
 	}
 
-	flag := LookupFlag(*evalContext)
-	evalResult := EvalFlagWithContext(flag, *evalContext)
+	evalResult := EvalFlag(*evalContext)
 	resp := evaluation.NewPostEvaluationOK()
 	resp.SetPayload(evalResult)
 	return resp
