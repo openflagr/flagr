@@ -87,7 +87,7 @@ func TestIsSafeKey(t *testing.T) {
 
 	b, msg = IsSafeKey(" spaces in key are not allowed ")
 	assert.False(t, b)
-	assert.NotEmpty(t, msg)	
+	assert.NotEmpty(t, msg)
 
 	b, msg = IsSafeKey("_a")
 	assert.True(t, b)
@@ -110,6 +110,58 @@ func TestIsSafeKey(t *testing.T) {
 	assert.Empty(t, msg)
 }
 
+func TestIsSafeValue(t *testing.T) {
+	var b bool
+	var msg string
+
+	b, msg = IsSafeValue("a")
+	assert.True(t, b)
+	assert.Empty(t, msg)
+
+	b, msg = IsSafeValue("a1")
+	assert.True(t, b)
+	assert.Empty(t, msg)
+
+	b, msg = IsSafeValue("a_1")
+	assert.True(t, b)
+	assert.Empty(t, msg)
+
+	b, msg = IsSafeValue(strings.Repeat("a", 63))
+	assert.True(t, b)
+	assert.Empty(t, msg)
+
+	b, msg = IsSafeValue("1a")
+	assert.True(t, b)
+	assert.Empty(t, msg)
+
+	b, msg = IsSafeValue(" spaces in value are allowed ")
+	assert.True(t, b)
+	assert.Empty(t, msg)
+
+	b, msg = IsSafeValue("a@$")
+	assert.False(t, b)
+	assert.NotEmpty(t, msg)
+
+	b, msg = IsSafeValue("_a")
+	assert.True(t, b)
+	assert.Empty(t, msg)
+
+	b, msg = IsSafeValue(strings.Repeat("a", 64))
+	assert.False(t, b)
+	assert.NotEmpty(t, msg)
+
+	b, msg = IsSafeValue("slashes/are/valid")
+	assert.True(t, b)
+	assert.Empty(t, msg)
+
+	b, msg = IsSafeValue("dots.are.valid")
+	assert.True(t, b)
+	assert.Empty(t, msg)
+
+	b, msg = IsSafeValue("colons:are:valid")
+	assert.True(t, b)
+	assert.Empty(t, msg)
+}
 func TestPtrs(t *testing.T) {
 	assert.Equal(t, "a", *StringPtr("a"))
 	assert.Equal(t, int(1), *IntPtr(int(1)))

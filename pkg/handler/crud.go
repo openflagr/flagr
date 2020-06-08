@@ -331,6 +331,9 @@ func (c *crud) CreateTag(params tag.CreateTagParams) middleware.Responder {
 	s.ID = uint(params.FlagID)
 	t := &entity.Tag{}
 	t.Value = util.SafeString(params.Body.Value)
+	if ok, reason := util.IsSafeValue(t.Value); !ok {
+		return tag.NewCreateTagDefault(400).WithPayload(ErrorMessage("%s", reason))
+	}
 
 	getDB().Where("value = ?", util.SafeString(params.Body.Value)).Find(t) // Find the existing tag to associate if it exists
 	if err := getDB().Model(s).Association("Tags").Append(t).Error; err != nil {

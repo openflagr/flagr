@@ -14,6 +14,9 @@ var (
 	keyLengthLimit = 63
 	keyRegex       = regexp.MustCompile(`^[\w\d-/\.\:]+$`)
 
+	valueLengthLimit = 63
+	valueRegex       = regexp.MustCompile(`^[ \w\d-/\.\:]+$`)
+
 	randomKeyCharset = []byte("123456789abcdefghijkmnopqrstuvwxyz")
 	randomKeyPrefix  = "k"
 )
@@ -25,6 +28,17 @@ func IsSafeKey(s string) (bool, string) {
 	}
 	if len(s) > keyLengthLimit {
 		return false, fmt.Sprintf("key:%s cannot be longer than %d", s, keyLengthLimit)
+	}
+	return true, ""
+}
+
+// IsSafeValue return if the value is safe to store
+func IsSafeValue(s string) (bool, string) {
+	if !valueRegex.MatchString(s) {
+		return false, fmt.Sprintf("value:%s should have the format %v", s, valueRegex)
+	}
+	if len(s) > valueLengthLimit {
+		return false, fmt.Sprintf("value:%s cannot be longer than %d", s, valueLengthLimit)
 	}
 	return true, ""
 }
