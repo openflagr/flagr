@@ -1041,6 +1041,57 @@ func TestCrudTagsWithFailures(t *testing.T) {
 	})
 }
 
+func TestFindAllTags(t *testing.T) {
+	var res middleware.Responder
+	db := entity.NewTestDB()
+	c := &crud{}
+	numOfTags := 20
+
+	defer db.Close()
+	defer gostub.StubFunc(&getDB, db).Reset()
+
+	c.CreateFlag(flag.CreateFlagParams{
+		Body: &models.CreateFlagRequest{
+			Description: util.StringPtr("funny flag"),
+		},
+	})
+
+	for i := 0; i < numOfTags; i++ {
+		c.CreateTag(tag.CreateTagParams{
+			FlagID: 1,
+			Body: &models.CreateTagRequest{
+				Value: util.StringPtr(fmt.Sprintf("tag_%d", i)),
+			},
+		})
+	}
+
+	t.Run("FindAllTags - got all the results", func(t *testing.T) {
+		res = c.FindAllTags(tag.FindAllTagsParams{})
+		assert.Len(t, res.(*tag.FindAllTagsOK).Payload, numOfTags)
+	})
+
+	t.Run("FindAllTags (with matching value_like)", func(t *testing.T) {
+		res = c.FindAllTags(tag.FindAllTagsParams{
+			ValueLike: util.StringPtr("tag_"),
+		})
+		assert.Len(t, res.(*tag.FindAllTagsOK).Payload, numOfTags)
+	})
+	t.Run("FindAllTags (with limit)", func(t *testing.T) {
+		res = c.FindAllTags(tag.FindAllTagsParams{
+			Limit: util.Int64Ptr(int64(2)),
+		})
+		assert.Len(t, res.(*tag.FindAllTagsOK).Payload, 2)
+	})
+	t.Run("FindAllTags (with limit and offset)", func(t *testing.T) {
+		res = c.FindAllTags(tag.FindAllTagsParams{
+			Limit:  util.Int64Ptr(int64(2)),
+			Offset: util.Int64Ptr(int64(2)),
+		})
+		assert.Len(t, res.(*tag.FindAllTagsOK).Payload, 2)
+		assert.Equal(t, res.(*tag.FindAllTagsOK).Payload[0].ID, int64(3))
+		assert.Equal(t, res.(*tag.FindAllTagsOK).Payload[1].ID, int64(4))
+	})
+}
 func TestCrudDistributions(t *testing.T) {
 	var res middleware.Responder
 	db := entity.NewTestDB()

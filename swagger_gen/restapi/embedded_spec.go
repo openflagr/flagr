@@ -1292,6 +1292,13 @@ func init() {
             "in": "query"
           },
           {
+            "type": "integer",
+            "format": "int64",
+            "description": "return tags given the offset, it should usually set together with limit",
+            "name": "offset",
+            "in": "query"
+          },
+          {
             "type": "string",
             "description": "return tags partially matching given value",
             "name": "value_like",
@@ -3289,6 +3296,13 @@ func init() {
             "format": "int64",
             "description": "the numbers of tags to return",
             "name": "limit",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "return tags given the offset, it should usually set together with limit",
+            "name": "offset",
             "in": "query"
           },
           {

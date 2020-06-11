@@ -289,6 +289,7 @@ func (c *crud) DeleteTag(params tag.DeleteTagParams) middleware.Responder {
 	if err := getDB().Find(s).Association("Tags").Delete(t).Error; err != nil {
 		return tag.NewDeleteTagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
+	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
 	return tag.NewDeleteTagOK()
 }
 
@@ -309,6 +310,9 @@ func (c *crud) FindAllTags(params tag.FindAllTagsParams) middleware.Responder {
 
 	if params.Limit != nil {
 		tx = tx.Limit(int(*params.Limit))
+	}
+	if params.Offset != nil {
+		tx = tx.Offset(int(*params.Offset))
 	}
 	if params.ValueLike != nil {
 		tx = tx.Where(

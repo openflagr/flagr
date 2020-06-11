@@ -804,6 +804,13 @@ paths:
           format: int64
           description: the numbers of tags to return
         - in: query
+          name: offset
+          type: integer
+          format: int64
+          description: >-
+            return tags given the offset, it should usually set together with
+            limit
+        - in: query
           name: value_like
           type: string
           description: return tags partially matching given value

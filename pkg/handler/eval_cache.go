@@ -70,27 +70,20 @@ func (ec *EvalCache) GetByTags(tags []string) []*entity.Flag {
 	for _, t := range tags {
 		f, ok := ec.tagCache[t]
 		if ok {
-			results = merge(results, f)
+			for ia, va := range results {
+				f[ia] = va
+			}
+
+			results = f
 		}
 	}
 
-	return values(results)
-}
-
-func values(m map[uint]*entity.Flag) []*entity.Flag {
-	results := []*entity.Flag{}
-	for _, f := range m {
-		results = append(results, f)
-	}
-	return results
-}
-
-func merge(first, second map[uint]*entity.Flag) map[uint]*entity.Flag {
-	for ia, va := range first {
-		second[ia] = va
+	values := []*entity.Flag{}
+	for _, f := range results {
+		values = append(values, f)
 	}
 
-	return second
+	return values
 }
 
 // GetByFlagKeyOrID gets the flag by Key or ID

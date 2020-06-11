@@ -16,6 +16,7 @@ import (
 // FindAllTagsURL generates an URL for the find all tags operation
 type FindAllTagsURL struct {
 	Limit     *int64
+	Offset    *int64
 	ValueLike *string
 
 	_basePath string
@@ -58,6 +59,14 @@ func (o *FindAllTagsURL) Build() (*url.URL, error) {
 	}
 	if limitQ != "" {
 		qs.Set("limit", limitQ)
+	}
+
+	var offsetQ string
+	if o.Offset != nil {
+		offsetQ = swag.FormatInt64(*o.Offset)
+	}
+	if offsetQ != "" {
+		qs.Set("offset", offsetQ)
 	}
 
 	var valueLikeQ string
