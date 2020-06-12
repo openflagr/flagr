@@ -225,7 +225,7 @@ var logEvalResultToPrometheus = func(r *models.EvalResult) {
 		return
 	}
 
-	if r.EvalContext != nil {
+	if r.EvalContext == nil {
 		config.Global.Prometheus.EvalCounter.WithLabelValues(
 			util.SafeStringWithDefault(r.FlagID, "null"),
 			util.SafeStringWithDefault(r.VariantID, "null"),
