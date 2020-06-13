@@ -257,6 +257,36 @@
                       @save="putFlag(flag)"
                     ></markdown-editor>
                   </el-row>
+                  <el-row style="margin: 10px;">
+                    <h5>
+                      <span style="margin-right: 10px;">Tags</span>
+                    </h5>
+                  </el-row>
+                  <el-row>
+                    <div class="tags-container-inner">
+                      <el-tag v-for="tag in flag.tags"
+                        :key="tag.id"
+                        closable
+                        :type="warning"
+                        @close="deleteTag(tag)">
+                        {{tag.value}}
+                      </el-tag>
+                      <el-autocomplete
+                        class="tag-key-input"
+                        v-if="tagInputVisible"
+                        v-model="newTag.value"
+                        ref="saveTagInput"
+                        size="mini"
+                        :trigger-on-focus="false"
+                        :fetch-suggestions="queryTags"
+                        @select="createTag"
+                        @keyup.enter.native="createTag"
+                        @keyup.esc.native="cancelCreateTag"
+                      >
+                      </el-autocomplete>
+                      <el-button v-else class="button-new-tag" size="small" @click="showTagInput">+ New Tag</el-button>
+                    </div>
+                  </el-row>
                 </el-card>
               </el-card>
 
@@ -691,6 +721,10 @@ const DEFAULT_VARIANT = {
   key: "",
 };
 
+const DEFAULT_TAG = {
+  value: "",
+};
+
 const DEFAULT_DISTRIBUTION = {
   bitmap: "",
   variantID: 0,
@@ -725,7 +759,9 @@ export default {
       dialogEditDistributionOpen: false,
       dialogCreateSegmentOpen: false,
       entityTypes: [],
+      allTags: [],
       allowCreateEntityType: true,
+      tagInputVisible: false,
       flag: {
         createdBy: "",
         dataRecordsEnabled: false,
@@ -734,6 +770,7 @@ export default {
         enabled: false,
         id: 0,
         key: "",
+        tags:[],
         segments: [],
         updatedAt: "",
         variants: [],
@@ -741,6 +778,7 @@ export default {
       },
       newSegment: clone(DEFAULT_SEGMENT),
       newVariant: clone(DEFAULT_VARIANT),
+      newTag: clone(DEFAULT_TAG),
       selectedSegment: null,
       newDistributions: {},
       operatorOptions: operators,
@@ -896,6 +934,60 @@ export default {
         this.$message.success("variant updated");
       }, handleErr.bind(this));
     },
+    createTag() {
+      Axios.post(
+        `${API_URL}/flags/${this.flagId}/tags`,
+        this.newTag
+      ).then((response) => {
+        let tag = response.data;
+        this.newTag = clone(DEFAULT_TAG);
+        if (!this.flag.tags.map((tag) => tag.value).includes(tag.value)) {
+          this.flag.tags.push(tag);
+          this.$message.success("new tag created");
+        }
+        this.tagInputVisible = false;
+        this.loadAllTags();
+      }, handleErr.bind(this));
+    },
+    cancelCreateTag() {
+      this.newTag = clone(DEFAULT_TAG);
+      this.tagInputVisible = false;
+    },
+    queryTags(queryString, cb) {
+      let results = this.allTags.filter((tag) => tag.value.toLowerCase().includes(queryString.toLowerCase()));
+      cb(results);
+    },
+    loadAllTags() {
+      Axios.get(
+        `${API_URL}/tags`
+      ).then((response) => {
+        let result = response.data;
+        this.allTags = result;
+      }, handleErr.bind(this)); 
+    },
+    showTagInput() {
+        this.tagInputVisible = true;
+        this.$nextTick(() => {
+          this.$refs.saveTagInput.$refs.input.focus();
+        });
+    },
+    deleteTag(tag) {
+      if (
+        !confirm(
+          `Are you sure you want to delete tag #${tag.value}`
+        )
+      ) {
+        return;
+      }
+
+      Axios.delete(
+        `${API_URL}/flags/${this.flagId}/tags/${tag.id}`
+      ).then(() => {
+        this.$message.success("tag deleted");
+        this.fetchFlag();
+        this.loadAllTags();
+      }, handleErr.bind(this));
+    },
     createConstraint(segment) {
       Axios.post(
         `${API_URL}/flags/${this.flagId}/segments/${segment.id}/constraints`,
@@ -1016,6 +1108,7 @@ export default {
   },
   mounted() {
     this.fetchFlag();
+    this.loadAllTags();
   },
 };
 </script>
@@ -1156,5 +1249,18 @@ ol.constraints-inner {
 
 .save-remove-variant-row {
   padding-bottom: 5px;
+}
+
+.tag-key-input {
+  margin: 2.5px;
+  width: 20%;
+}
+
+.tags-container-inner {
+  margin-bottom: 10px;
+}
+
+.button-new-tag {
+  margin: 2.5px;
 }
 </style>

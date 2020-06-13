@@ -30,19 +30,20 @@ func (ec *EvalCache) export() EvalCacheJSON {
 	return EvalCacheJSON{Flags: fs}
 }
 
-func (ec *EvalCache) fetchAllFlags() (idCache mapCache, keyCache mapCache, err error) {
+func (ec *EvalCache) fetchAllFlags() (idCache mapCache, keyCache mapCache, tagCache multiMapCache, err error) {
 	fs, err := fetchAllFlags()
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	idCache = make(map[string]*entity.Flag)
 	keyCache = make(map[string]*entity.Flag)
+	tagCache = make(map[string]map[uint]*entity.Flag)
 
 	for i := range fs {
 		f := &fs[i]
 		if err := f.PrepareEvaluation(); err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 
 		if f.ID != 0 {
@@ -51,8 +52,16 @@ func (ec *EvalCache) fetchAllFlags() (idCache mapCache, keyCache mapCache, err e
 		if f.Key != "" {
 			keyCache[f.Key] = f
 		}
+		if f.Tags != nil {
+			for _, s := range f.Tags {
+				if tagCache[s.Value] == nil {
+					tagCache[s.Value] = make(map[uint]*entity.Flag)
+				}
+				tagCache[s.Value][f.ID] = f
+			}
+		}
 	}
-	return idCache, keyCache, nil
+	return idCache, keyCache, tagCache, nil
 }
 
 type evalCacheFetcher interface {
@@ -135,6 +144,6 @@ func (df *dbFetcher) fetch() ([]entity.Flag, error) {
 	// Use eager loading to avoid N+1 problem
 	// doc: http://jinzhu.me/gorm/crud.html#preloading-eager-loading
 	fs := []entity.Flag{}
-	err := entity.PreloadSegmentsVariants(df.db).Find(&fs).Error
+	err := entity.PreloadSegmentsVariantsTags(df.db).Find(&fs).Error
 	return fs, err
 }

@@ -25,6 +25,8 @@ step_2_test_crud_flag()
     key_1=$(uuid_str)
     key_2=$(uuid_str)
     key_3=$(uuid_str)
+    value_1=$(uuid_str)
+    value_2=$(uuid_str)
 
     ################################################
     # Test create flag
@@ -327,6 +329,42 @@ step_9_test_export()
         matches "\"VariantID\":1"
 }
 
+step_10_test_crud_tag()
+{
+    flagr_url=$1:18000/api/v1
+    # sleep 5
+
+    ################################################
+    # Test create tags
+    ################################################
+    shakedown POST $flagr_url/flags/1/tags -H 'Content-Type:application/json' -d "{\"value\": \"value_1\"}"
+        status 200
+        matches "\"value\":\"value_1\""
+
+    shakedown POST $flagr_url/flags/1/tags -H 'Content-Type:application/json' -d "{\"value\": \"value_2\"}"
+        status 200
+        matches "\"value\":\"value_2\""
+
+    shakedown GET $flagr_url/flags/1/tags -H 'Content-Type:application/json'
+        status 200
+        matches "\"value\":\"value_1\""
+        matches "\"value\":\"value_2\""
+}
+
+
+step_11_test_tag_batch_evaluation()
+{
+    flagr_url=$1:18000/api/v1
+    sleep 5
+
+     shakedown POST $flagr_url/evaluation/batch -H 'Content-Type:application/json' -d '{"entities":[{ "entityType": "externalalert", "entityContext": {"property_1": "value_2"} }],"flagTags": ["value_1"], "enableDebug": false }'
+        status 200
+        matches "\"flagID\":1"
+        matches "\"variantKey\":\"key_1\""
+        matches "\"variantID\":1"
+
+}
+
 
 start_test()
 {
@@ -347,6 +385,8 @@ start_test()
     step_7_test_evaluation $flagr_host
     step_8_test_preload $flagr_host
     step_9_test_export $flagr_host
+    step_10_test_crud_tag $flagr_host
+    step_11_test_tag_batch_evaluation $flagr_host
 }
 
 start(){

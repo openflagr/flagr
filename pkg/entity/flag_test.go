@@ -11,6 +11,7 @@ func TestFlagPrepareEvaluation(t *testing.T) {
 		f := GenFixtureFlag()
 		assert.NoError(t, f.PrepareEvaluation())
 		assert.NotNil(t, f.FlagEvaluation.VariantsMap)
+		assert.NotNil(t, f.Tags)
 	})
 }
 
@@ -21,6 +22,17 @@ func TestFlagPreload(t *testing.T) {
 		defer db.Close()
 
 		err := f.Preload(db)
+		assert.NoError(t, err)
+	})
+}
+
+func TestFlagPreloadTags(t *testing.T) {
+	t.Run("happy code path", func(t *testing.T) {
+		f := GenFixtureFlag()
+		db := PopulateTestDB(f)
+		defer db.Close()
+
+		err := f.PreloadTags(db)
 		assert.NoError(t, err)
 	})
 }

@@ -1,0 +1,26 @@
+delete:
+  tags:
+    - tag
+  operationId: deleteTag
+  parameters:
+    - in: path
+      name: flagID
+      description: numeric ID of the flag
+      required: true
+      type: integer
+      format: int64
+      minimum: 1
+    - in: path
+      name: tagID
+      description: numeric ID of the tag
+      required: true
+      type: integer
+      format: int64
+      minimum: 1
+  responses:
+    200:
+      description: deleted
+    default:
+      description: generic error response
+      schema:
+        $ref: "#/definitions/error"

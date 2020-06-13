@@ -1,0 +1,50 @@
+get:
+  tags:
+    - tag
+  operationId: findTags
+  parameters:
+    - in: path
+      name: flagID
+      description: numeric ID of the flag
+      required: true
+      type: integer
+      format: int64
+      minimum: 1
+  responses:
+    200:
+      description: tag ordered by tagID
+      schema:
+        type: array
+        items:
+          $ref: "#/definitions/tag"
+    default:
+      description: generic error response
+      schema:
+        $ref: "#/definitions/error"
+post:
+  tags:
+    - tag
+  operationId: createTag
+  parameters:
+    - in: path
+      name: flagID
+      description: numeric ID of the flag
+      required: true
+      type: integer
+      format: int64
+      minimum: 1
+    - in: body
+      name: body
+      description: create a tag
+      required: true
+      schema:
+        $ref: "#/definitions/createTagRequest"
+  responses:
+    200:
+      description: tag just created
+      schema:
+        $ref: "#/definitions/tag"
+    default:
+      description: generic error response
+      schema:
+        $ref: "#/definitions/error"

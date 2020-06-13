@@ -49,10 +49,22 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 	entities := params.Body.Entities
 	flagIDs := params.Body.FlagIDs
 	flagKeys := params.Body.FlagKeys
+	flagTags := params.Body.FlagTags
 	results := &models.EvaluationBatchResponse{}
 
 	// TODO make it concurrent
 	for _, entity := range entities {
+		if len(flagTags) > 0 {
+			evalContext := models.EvalContext{
+				EnableDebug:   params.Body.EnableDebug,
+				EntityContext: entity.EntityContext,
+				EntityID:      entity.EntityID,
+				EntityType:    entity.EntityType,
+				FlagTags:      flagTags,
+			}
+			evalResults := EvalFlagsByTags(evalContext)
+			results.EvaluationResults = append(results.EvaluationResults, evalResults...)
+		}
 		for _, flagID := range flagIDs {
 			evalContext := models.EvalContext{
 				EnableDebug:   params.Body.EnableDebug,
@@ -61,6 +73,7 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 				EntityType:    entity.EntityType,
 				FlagID:        flagID,
 			}
+
 			evalResult := EvalFlag(evalContext)
 			results.EvaluationResults = append(results.EvaluationResults, evalResult)
 		}
@@ -72,6 +85,7 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 				EntityType:    entity.EntityType,
 				FlagKey:       flagKey,
 			}
+
 			evalResult := EvalFlag(evalContext)
 			results.EvaluationResults = append(results.EvaluationResults, evalResult)
 		}
@@ -105,7 +119,7 @@ func BlankResult(f *entity.Flag, evalContext models.EvalContext, msg string) *mo
 	}
 }
 
-var EvalFlag = func(evalContext models.EvalContext) *models.EvalResult {
+var LookupFlag = func(evalContext models.EvalContext) *entity.Flag {
 	cache := GetEvalCache()
 	flagID := util.SafeUint(evalContext.FlagID)
 	flagKey := util.SafeString(evalContext.FlagKey)
@@ -113,35 +127,57 @@ var EvalFlag = func(evalContext models.EvalContext) *models.EvalResult {
 	if f == nil {
 		f = cache.GetByFlagKeyOrID(flagKey)
 	}
+	return f
+}
 
-	if f == nil {
+var EvalFlagsByTags = func(evalContext models.EvalContext) []*models.EvalResult {
+	cache := GetEvalCache()
+
+	fs := cache.GetByTags(evalContext.FlagTags)
+	results := []*models.EvalResult{}
+	for _, f := range fs {
+		results = append(results, EvalFlagWithContext(f, evalContext))
+	}
+	return results
+}
+
+var EvalFlag = func(evalContext models.EvalContext) *models.EvalResult {
+	flag := LookupFlag(evalContext)
+	return EvalFlagWithContext(flag, evalContext)
+}
+
+var EvalFlagWithContext = func(flag *entity.Flag, evalContext models.EvalContext) *models.EvalResult {
+	flagID := util.SafeUint(evalContext.FlagID)
+	flagKey := util.SafeString(evalContext.FlagKey)
+
+	if flag == nil {
 		emptyFlag := &entity.Flag{Model: gorm.Model{ID: flagID}, Key: flagKey}
 		return BlankResult(emptyFlag, evalContext, fmt.Sprintf("flagID %v not found or deleted", flagID))
 	}
 
-	if !f.Enabled {
-		return BlankResult(f, evalContext, fmt.Sprintf("flagID %v is not enabled", f.ID))
+	if !flag.Enabled {
+		return BlankResult(flag, evalContext, fmt.Sprintf("flagID %v is not enabled", flag.ID))
 	}
 
-	if len(f.Segments) == 0 {
-		return BlankResult(f, evalContext, fmt.Sprintf("flagID %v has no segments", f.ID))
+	if len(flag.Segments) == 0 {
+		return BlankResult(flag, evalContext, fmt.Sprintf("flagID %v has no segments", flag.ID))
 	}
 
 	if evalContext.EntityID == "" {
 		evalContext.EntityID = fmt.Sprintf("randomly_generated_%d", rand.Int31())
 	}
 
-	if f.EntityType != "" {
-		evalContext.EntityType = f.EntityType
+	if flag.EntityType != "" {
+		evalContext.EntityType = flag.EntityType
 	}
 
 	logs := []*models.SegmentDebugLog{}
 	var vID int64
 	var sID int64
 
-	for _, segment := range f.Segments {
+	for _, segment := range flag.Segments {
 		sID = int64(segment.ID)
-		variantID, log, evalNextSegment := evalSegment(f.ID, evalContext, segment)
+		variantID, log, evalNextSegment := evalSegment(flag.ID, evalContext, segment)
 		if config.Config.EvalDebugEnabled && evalContext.EnableDebug {
 			logs = append(logs, log)
 		}
@@ -152,17 +188,17 @@ var EvalFlag = func(evalContext models.EvalContext) *models.EvalResult {
 			break
 		}
 	}
-	evalResult := BlankResult(f, evalContext, "")
+	evalResult := BlankResult(flag, evalContext, "")
 	evalResult.EvalDebugLog.SegmentDebugLogs = logs
 	evalResult.SegmentID = sID
 	evalResult.VariantID = vID
-	v := f.FlagEvaluation.VariantsMap[util.SafeUint(vID)]
+	v := flag.FlagEvaluation.VariantsMap[util.SafeUint(vID)]
 	if v != nil {
 		evalResult.VariantAttachment = v.Attachment
 		evalResult.VariantKey = v.Key
 	}
 
-	logEvalResult(evalResult, f.DataRecordsEnabled)
+	logEvalResult(evalResult, flag.DataRecordsEnabled)
 	return evalResult
 }
 

@@ -26,6 +26,7 @@ func MapFlag(e *entity.Flag) (*models.Flag, error) {
 	r.UpdatedBy = e.UpdatedBy
 	r.Segments = MapSegments(e.Segments)
 	r.Variants = MapVariants(e.Variants)
+	r.Tags = MapTags(e.Tags)
 
 	return r, nil
 }
@@ -92,6 +93,23 @@ func MapSegments(e []entity.Segment) []*models.Segment {
 	ret := make([]*models.Segment, len(e))
 	for i, s := range e {
 		ret[i] = MapSegment(&s)
+	}
+	return ret
+}
+
+// MapTagEntity maps tag entity
+func MapTag(e *entity.Tag) *models.Tag {
+	r := &models.Tag{}
+	r.ID = int64(e.ID)
+	r.Value = util.StringPtr(e.Value)
+	return r
+}
+
+// MapTags maps tags
+func MapTags(e []entity.Tag) []*models.Tag {
+	ret := make([]*models.Tag, len(e))
+	for i, s := range e {
+		ret[i] = MapTag(&s)
 	}
 	return ret
 }

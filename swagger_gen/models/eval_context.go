@@ -35,6 +35,9 @@ type EvalContext struct {
 
 	// flagKey. flagID or flagKey will resolve to the same flag. Either works.
 	FlagKey string `json:"flagKey,omitempty"`
+
+	// flagTags. flagTags looks up flags by tag. Either works.
+	FlagTags []string `json:"flagTags,omitempty"`
 }
 
 // Validate validates this eval context

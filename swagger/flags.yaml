@@ -17,6 +17,10 @@ get:
       type: string
       description: return flags exactly matching given description
     - in: query
+      name: tags
+      type: string
+      description: return flags with the given tags (comma separated)
+    - in: query
       name: description_like
       type: string
       description: return flags partially matching given description

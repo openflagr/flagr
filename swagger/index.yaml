@@ -29,6 +29,7 @@ x-tagGroups:
       - constraint
       - distribution
       - variant
+      - tag
   - name: Flag Evaluation
     tags:
       - evaluation
@@ -52,6 +53,10 @@ paths:
     $ref: ./flag.yaml
   /flags/{flagID}/enabled:
     $ref: ./flag_enabled.yaml
+  /flags/{flagID}/tags:
+    $ref: ./flag_tags.yaml
+  /flags/{flagID}/tags/{tagID}:
+    $ref: ./flag_tag.yaml
   /flags/{flagID}/variants:
     $ref: ./flag_variants.yaml
   /flags/{flagID}/variants/{variantID}:
@@ -72,6 +77,8 @@ paths:
     $ref: ./flag_snapshots.yaml
   /flags/entity_types:
     $ref: ./flag_entity_types.yaml
+  /tags:
+    $ref: ./tags.yaml
   /evaluation:
     $ref: ./evaluation.yaml
   /evaluation/batch:
@@ -108,6 +115,10 @@ definitions:
         minLength: 1
       enabled:
         type: boolean
+      tags:
+        type: array
+        items:
+          $ref: "#/definitions/tag"
       segments:
         type: array
         items:
@@ -195,6 +206,29 @@ definitions:
       flag:
         $ref: "#/definitions/flag"
       updatedAt:
+        type: string
+        minLength: 1
+
+  # Tag
+  tag:
+    type: object
+    required:
+      - value
+    properties:
+      id:
+        type: integer
+        format: int64
+        minimum: 1
+        readOnly: true
+      value:
+        type: string
+        minLength: 1
+  createTagRequest:
+    type: object
+    required:
+      - value
+    properties:
+      value:
         type: string
         minLength: 1
 
@@ -417,6 +451,12 @@ definitions:
       flagKey:
         description: flagKey. flagID or flagKey will resolve to the same flag. Either works.
         type: string
+      flagTags:
+        description: flagTags. flagTags looks up flags by tag. Either works.
+        type: array
+        x-omitempty: true
+        items:
+          type: string
   evalResult:
     type: object
     properties:
@@ -494,7 +534,14 @@ definitions:
           minimum: 1
         minItems: 1
       flagKeys:
-        description: flagKeys. Either flagIDs or flagKeys works. If pass in both, Flagr may return duplicate results.
+        description: flagKeys. Either flagIDs, flagKeys or flagTags works. If pass in multiples, Flagr may return duplicate results.
+        type: array
+        items:
+          type: string
+          minLength: 1
+        minItems: 1
+      flagTags:
+        description: flagTags. Either flagIDs, flagKeys or flagTags works. If pass in multiples, Flagr may return duplicate results.
         type: array
         items:
           type: string

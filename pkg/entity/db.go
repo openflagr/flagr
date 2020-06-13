@@ -28,6 +28,7 @@ var AutoMigrateTables = []interface{}{
 	Segment{},
 	User{},
 	Variant{},
+	Tag{},
 	FlagEntityType{},
 }
 

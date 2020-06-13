@@ -12,6 +12,7 @@ import (
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/distribution"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/flag"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/segment"
+	"github.com/checkr/flagr/swagger_gen/restapi/operations/tag"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/variant"
 
 	"github.com/go-openapi/runtime/middleware"
@@ -28,6 +29,12 @@ type CRUD interface {
 	SetFlagEnabledState(flag.SetFlagEnabledParams) middleware.Responder
 	GetFlagSnapshots(params flag.GetFlagSnapshotsParams) middleware.Responder
 	GetFlagEntityTypes(params flag.GetFlagEntityTypesParams) middleware.Responder
+
+	//Tags
+	CreateTag(tag.CreateTagParams) middleware.Responder
+	DeleteTag(tag.DeleteTagParams) middleware.Responder
+	FindTags(tag.FindTagsParams) middleware.Responder
+	FindAllTags(params tag.FindAllTagsParams) middleware.Responder
 
 	// Segments
 	CreateSegment(segment.CreateSegmentParams) middleware.Responder
@@ -90,7 +97,10 @@ func (c *crud) FindFlags(params flag.FindFlagsParams) middleware.Responder {
 		tx = tx.Limit(int(*params.Limit))
 	}
 	if params.Preload != nil && *params.Preload {
-		tx = entity.PreloadSegmentsVariants(tx)
+		tx = entity.PreloadSegmentsVariantsTags(tx)
+	} else {
+		// Always preload tags for searchability
+		tx = entity.PreloadFlagTags(tx)
 	}
 	if params.DescriptionLike != nil {
 		tx = tx.Where(
@@ -99,11 +109,21 @@ func (c *crud) FindFlags(params flag.FindFlagsParams) middleware.Responder {
 		)
 	}
 
-	err := tx.Order("id").Where(q).Find(&fs).Error
+	var err error
+	tx = tx.Order("id").Where(q)
+	if params.Tags != nil {
+		t := []entity.Tag{}
+		getDB().Where("value in (?)", strings.Split(*params.Tags, ",")).Find(&t)
+		err = tx.Model(&t).Group("flags.id").Related(&fs, "Flags").Error
+	} else {
+		err = tx.Find(&fs).Error
+	}
+
 	if err != nil {
 		return flag.NewFindFlagsDefault(500).WithPayload(
 			ErrorMessage("cannot query all flags. %s", err))
 	}
+
 	resp := flag.NewFindFlagsOK()
 	payload, err := e2rMapFlags(fs)
 	if err != nil {
@@ -116,7 +136,7 @@ func (c *crud) FindFlags(params flag.FindFlagsParams) middleware.Responder {
 
 func (c *crud) GetFlag(params flag.GetFlagParams) middleware.Responder {
 	f := &entity.Flag{}
-	result := entity.PreloadSegmentsVariants(getDB()).First(f, params.FlagID)
+	result := entity.PreloadSegmentsVariantsTags(getDB()).First(f, params.FlagID)
 
 	// Flag with given ID doesn't exist, so we 404
 	if result.RecordNotFound() {
@@ -214,7 +234,7 @@ func (c *crud) PutFlag(params flag.PutFlagParams) middleware.Responder {
 		return flag.NewPutFlagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
-	if err := entity.PreloadSegmentsVariants(tx).First(f, params.FlagID).Error; err != nil {
+	if err := entity.PreloadSegmentsVariantsTags(tx).First(f, params.FlagID).Error; err != nil {
 		return flag.NewPutFlagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
@@ -257,6 +277,78 @@ func (c *crud) DeleteFlag(params flag.DeleteFlagParams) middleware.Responder {
 		return flag.NewDeleteFlagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 	return flag.NewDeleteFlagOK()
+}
+
+func (c *crud) DeleteTag(params tag.DeleteTagParams) middleware.Responder {
+	t := &entity.Tag{}
+	t.ID = uint(params.TagID)
+
+	s := &entity.Flag{}
+	s.ID = uint(params.FlagID)
+
+	if err := getDB().Find(s).Association("Tags").Delete(t).Error; err != nil {
+		return tag.NewDeleteTagDefault(500).WithPayload(ErrorMessage("%s", err))
+	}
+	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
+	return tag.NewDeleteTagOK()
+}
+
+func (c *crud) FindTags(params tag.FindTagsParams) middleware.Responder {
+	ds := []entity.Tag{}
+	if err := getDB().First(&entity.Flag{}, params.FlagID).Related(&ds, "Tags").Error; err != nil {
+		return tag.NewFindTagsDefault(500).WithPayload(ErrorMessage("%s", err))
+	}
+
+	resp := tag.NewFindTagsOK()
+	resp.SetPayload(e2r.MapTags(ds))
+	return resp
+}
+
+func (c *crud) FindAllTags(params tag.FindAllTagsParams) middleware.Responder {
+	tx := getDB()
+	ds := []entity.Tag{}
+
+	if params.Limit != nil {
+		tx = tx.Limit(int(*params.Limit))
+	}
+	if params.Offset != nil {
+		tx = tx.Offset(int(*params.Offset))
+	}
+	if params.ValueLike != nil {
+		tx = tx.Where(
+			"lower(value) like ?",
+			fmt.Sprintf("%%%s%%", strings.ToLower(*params.ValueLike)),
+		)
+	}
+
+	if err := tx.Find(&ds).Error; err != nil {
+		return tag.NewFindAllTagsDefault(500).WithPayload(ErrorMessage("%s", err))
+	}
+
+	resp := tag.NewFindAllTagsOK()
+	resp.SetPayload(e2r.MapTags(ds))
+	return resp
+}
+
+func (c *crud) CreateTag(params tag.CreateTagParams) middleware.Responder {
+	s := &entity.Flag{}
+	s.ID = uint(params.FlagID)
+	t := &entity.Tag{}
+	t.Value = util.SafeString(params.Body.Value)
+	if ok, reason := util.IsSafeValue(t.Value); !ok {
+		return tag.NewCreateTagDefault(400).WithPayload(ErrorMessage("%s", reason))
+	}
+
+	getDB().Where("value = ?", util.SafeString(params.Body.Value)).Find(t) // Find the existing tag to associate if it exists
+	if err := getDB().Model(s).Association("Tags").Append(t).Error; err != nil {
+		return tag.NewCreateTagDefault(500).WithPayload(ErrorMessage("%s", err))
+	}
+
+	resp := tag.NewCreateTagOK()
+	resp.SetPayload(e2r.MapTag(t))
+
+	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
+	return resp
 }
 
 func (c *crud) CreateSegment(params segment.CreateSegmentParams) middleware.Responder {
