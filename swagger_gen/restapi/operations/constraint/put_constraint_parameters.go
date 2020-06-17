@@ -74,7 +74,7 @@ func (o *PutConstraintParams) BindRequest(r *http.Request, route *middleware.Mat
 		var body models.CreateConstraintRequest
 		if err := route.Consumer.Consume(r.Body, &body); err != nil {
 			if err == io.EOF {
-				res = append(res, errors.Required("body", "body"))
+				res = append(res, errors.Required("body", "body", ""))
 			} else {
 				res = append(res, errors.NewParseError("body", "body", "", err))
 			}
@@ -89,7 +89,7 @@ func (o *PutConstraintParams) BindRequest(r *http.Request, route *middleware.Mat
 			}
 		}
 	} else {
-		res = append(res, errors.Required("body", "body"))
+		res = append(res, errors.Required("body", "body", ""))
 	}
 	rConstraintID, rhkConstraintID, _ := route.Params.GetOK("constraintID")
 	if err := o.bindConstraintID(rConstraintID, rhkConstraintID, route.Formats); err != nil {

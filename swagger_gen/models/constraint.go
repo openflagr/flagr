@@ -133,7 +133,7 @@ const (
 
 // prop value enum
 func (m *Constraint) validateOperatorEnum(path, location string, value string) error {
-	if err := validate.Enum(path, location, value, constraintTypeOperatorPropEnum); err != nil {
+	if err := validate.EnumCase(path, location, value, constraintTypeOperatorPropEnum, true); err != nil {
 		return err
 	}
 	return nil

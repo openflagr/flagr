@@ -10,6 +10,7 @@ jobs:
     steps:
       - checkout
       - run: make deps
+      - run: make verify_swagger_nochange
       - run: make ci
       - run: bash <(curl -s https://codecov.io/bash)
 

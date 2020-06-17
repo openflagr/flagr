@@ -41,12 +41,8 @@ gen: api_docs swagger
 
 deps:
 	@GO111MODULE=off go get -u github.com/myitcv/gobin
-	@gobin github.com/go-swagger/go-swagger/cmd/swagger@v0.23.0
-	@gobin github.com/codeskyblue/fswatch
+	@gobin github.com/go-swagger/go-swagger/cmd/swagger@v0.24.0
 	@gobin github.com/golangci/golangci-lint/cmd/golangci-lint@v1.24.0
-
-watch:
-	@fswatch
 
 serve_docs:
 	@npm install -g docsify-cli@4
@@ -69,6 +65,10 @@ verify_lint:
 verify_swagger:
 	@echo "Running $@"
 	@swagger validate $(PWD)/docs/api_docs/bundle.yaml
+
+verify_swagger_nochange: swagger
+	@echo "Running verify_swagger_nochange to make sure the swagger generated code is checked in"
+	@git diff --exit-code
 
 clean:
 	@echo "Cleaning up all the generated files"
