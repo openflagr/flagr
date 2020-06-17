@@ -62,7 +62,7 @@ func (o *PutFlagParams) BindRequest(r *http.Request, route *middleware.MatchedRo
 		var body models.PutFlagRequest
 		if err := route.Consumer.Consume(r.Body, &body); err != nil {
 			if err == io.EOF {
-				res = append(res, errors.Required("body", "body"))
+				res = append(res, errors.Required("body", "body", ""))
 			} else {
 				res = append(res, errors.NewParseError("body", "body", "", err))
 			}
@@ -77,7 +77,7 @@ func (o *PutFlagParams) BindRequest(r *http.Request, route *middleware.MatchedRo
 			}
 		}
 	} else {
-		res = append(res, errors.Required("body", "body"))
+		res = append(res, errors.Required("body", "body", ""))
 	}
 	rFlagID, rhkFlagID, _ := route.Params.GetOK("flagID")
 	if err := o.bindFlagID(rFlagID, rhkFlagID, route.Formats); err != nil {

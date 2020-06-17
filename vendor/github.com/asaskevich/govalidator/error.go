@@ -1,6 +1,9 @@
 package govalidator
 
-import "strings"
+import (
+	"sort"
+	"strings"
+)
 
 // Errors is an array of multiple errors and conforms to the error interface.
 type Errors []error
@@ -15,6 +18,7 @@ func (es Errors) Error() string {
 	for _, e := range es {
 		errs = append(errs, e.Error())
 	}
+	sort.Strings(errs)
 	return strings.Join(errs, ";")
 }
 
@@ -26,11 +30,18 @@ type Error struct {
 
 	// Validator indicates the name of the validator that failed
 	Validator string
+	Path      []string
 }
 
 func (e Error) Error() string {
 	if e.CustomErrorMessageExists {
 		return e.Err.Error()
 	}
-	return e.Name + ": " + e.Err.Error()
+
+	errName := e.Name
+	if len(e.Path) > 0 {
+		errName = strings.Join(append(e.Path, e.Name), ".")
+	}
+
+	return errName + ": " + e.Err.Error()
 }

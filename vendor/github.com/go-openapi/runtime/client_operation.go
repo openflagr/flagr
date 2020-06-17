@@ -15,8 +15,8 @@
 package runtime
 
 import (
-	"net/http"
 	"context"
+	"net/http"
 )
 
 // ClientOperation represents the context for a swagger operation to be submitted to the transport

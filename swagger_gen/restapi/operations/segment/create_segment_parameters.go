@@ -62,7 +62,7 @@ func (o *CreateSegmentParams) BindRequest(r *http.Request, route *middleware.Mat
 		var body models.CreateSegmentRequest
 		if err := route.Consumer.Consume(r.Body, &body); err != nil {
 			if err == io.EOF {
-				res = append(res, errors.Required("body", "body"))
+				res = append(res, errors.Required("body", "body", ""))
 			} else {
 				res = append(res, errors.NewParseError("body", "body", "", err))
 			}
@@ -77,7 +77,7 @@ func (o *CreateSegmentParams) BindRequest(r *http.Request, route *middleware.Mat
 			}
 		}
 	} else {
-		res = append(res, errors.Required("body", "body"))
+		res = append(res, errors.Required("body", "body", ""))
 	}
 	rFlagID, rhkFlagID, _ := route.Params.GetOK("flagID")
 	if err := o.bindFlagID(rFlagID, rhkFlagID, route.Formats); err != nil {
