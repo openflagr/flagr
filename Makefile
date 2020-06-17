@@ -66,6 +66,10 @@ verify_swagger:
 	@echo "Running $@"
 	@swagger validate $(PWD)/docs/api_docs/bundle.yaml
 
+verify_swagger_nochange: swagger
+	@echo "Running verify_swagger_nochange to make sure the swagger generated code is checked in"
+	@git diff --exit-code
+
 clean:
 	@echo "Cleaning up all the generated files"
 	@find . -name '*.test' | xargs rm -fv
