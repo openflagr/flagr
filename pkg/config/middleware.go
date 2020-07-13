@@ -40,7 +40,13 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 	}
 
 	if Config.MiddlewareVerboseLoggerEnabled {
-		n.Use(negronilogrus.NewMiddlewareFromLogger(logrus.StandardLogger(), "flagr"))
+		middleware := negronilogrus.NewMiddlewareFromLogger(logrus.StandardLogger(), "flagr")
+
+		for _, u := range Config.MiddlewareVerboseLoggerExcludeURLs {
+			middleware.ExcludeURL(u)
+		}
+
+		n.Use(middleware)
 	}
 
 	if Config.StatsdEnabled {

@@ -19,6 +19,8 @@ var Config = struct {
 
 	// MiddlewareVerboseLoggerEnabled - to enable the negroni-logrus logger for all the endpoints useful for debugging
 	MiddlewareVerboseLoggerEnabled bool `env:"FLAGR_MIDDLEWARE_VERBOSE_LOGGER_ENABLED" envDefault:"true"`
+	// MiddlewareVerboseLoggerExcludeURLs - to exclude urls from the verbose logger via comma separated list
+	MiddlewareVerboseLoggerExcludeURLs []string `env:"FLAGR_MIDDLEWARE_VERBOSE_LOGGER_EXCLUDE_URLS" envDefault:"" envSeparator:","`
 	// MiddlewareGzipEnabled - to enable gzip middleware
 	MiddlewareGzipEnabled bool `env:"FLAGR_MIDDLEWARE_GZIP_ENABLED" envDefault:"true"`
 
