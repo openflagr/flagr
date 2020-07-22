@@ -15,6 +15,7 @@ import (
 
 // FindFlagsURL generates an URL for the find flags operation
 type FindFlagsURL struct {
+	Deleted         *bool
 	Description     *string
 	DescriptionLike *string
 	Enabled         *bool
@@ -57,6 +58,14 @@ func (o *FindFlagsURL) Build() (*url.URL, error) {
 	_result.Path = golangswaggerpaths.Join(_basePath, _path)
 
 	qs := make(url.Values)
+
+	var deletedQ string
+	if o.Deleted != nil {
+		deletedQ = swag.FormatBool(*o.Deleted)
+	}
+	if deletedQ != "" {
+		qs.Set("deleted", deletedQ)
+	}
 
 	var descriptionQ string
 	if o.Description != nil {

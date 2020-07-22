@@ -217,6 +217,12 @@ func init() {
             "description": "return flags with preloaded segments and variants",
             "name": "preload",
             "in": "query"
+          },
+          {
+            "type": "boolean",
+            "description": "return all deleted flags",
+            "name": "deleted",
+            "in": "query"
           }
         ],
         "responses": {
@@ -420,6 +426,39 @@ func init() {
             "schema": {
               "$ref": "#/definitions/setFlagEnabledRequest"
             }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "returns the flag",
+            "schema": {
+              "$ref": "#/definitions/flag"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
+    "/flags/{flagID}/restore": {
+      "put": {
+        "tags": [
+          "flag"
+        ],
+        "operationId": "restoreFlag",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the flag to get",
+            "name": "flagID",
+            "in": "path",
+            "required": true
           }
         ],
         "responses": {
@@ -2224,6 +2263,12 @@ func init() {
             "description": "return flags with preloaded segments and variants",
             "name": "preload",
             "in": "query"
+          },
+          {
+            "type": "boolean",
+            "description": "return all deleted flags",
+            "name": "deleted",
+            "in": "query"
           }
         ],
         "responses": {
@@ -2427,6 +2472,39 @@ func init() {
             "schema": {
               "$ref": "#/definitions/setFlagEnabledRequest"
             }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "returns the flag",
+            "schema": {
+              "$ref": "#/definitions/flag"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
+    "/flags/{flagID}/restore": {
+      "put": {
+        "tags": [
+          "flag"
+        ],
+        "operationId": "restoreFlag",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the flag to get",
+            "name": "flagID",
+            "in": "path",
+            "required": true
           }
         ],
         "responses": {

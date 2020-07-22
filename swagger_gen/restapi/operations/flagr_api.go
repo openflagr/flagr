@@ -145,6 +145,9 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		VariantPutVariantHandler: variant.PutVariantHandlerFunc(func(params variant.PutVariantParams) middleware.Responder {
 			return middleware.NotImplemented("operation variant.PutVariant has not yet been implemented")
 		}),
+		FlagRestoreFlagHandler: flag.RestoreFlagHandlerFunc(func(params flag.RestoreFlagParams) middleware.Responder {
+			return middleware.NotImplemented("operation flag.RestoreFlag has not yet been implemented")
+		}),
 		FlagSetFlagEnabledHandler: flag.SetFlagEnabledHandlerFunc(func(params flag.SetFlagEnabledParams) middleware.Responder {
 			return middleware.NotImplemented("operation flag.SetFlagEnabled has not yet been implemented")
 		}),
@@ -247,6 +250,8 @@ type FlagrAPI struct {
 	SegmentPutSegmentsReorderHandler segment.PutSegmentsReorderHandler
 	// VariantPutVariantHandler sets the operation handler for the put variant operation
 	VariantPutVariantHandler variant.PutVariantHandler
+	// FlagRestoreFlagHandler sets the operation handler for the restore flag operation
+	FlagRestoreFlagHandler flag.RestoreFlagHandler
 	// FlagSetFlagEnabledHandler sets the operation handler for the set flag enabled operation
 	FlagSetFlagEnabledHandler flag.SetFlagEnabledHandler
 	// ServeError is called when an error is received, there is a default handler
@@ -410,6 +415,9 @@ func (o *FlagrAPI) Validate() error {
 	}
 	if o.VariantPutVariantHandler == nil {
 		unregistered = append(unregistered, "variant.PutVariantHandler")
+	}
+	if o.FlagRestoreFlagHandler == nil {
+		unregistered = append(unregistered, "flag.RestoreFlagHandler")
 	}
 	if o.FlagSetFlagEnabledHandler == nil {
 		unregistered = append(unregistered, "flag.SetFlagEnabledHandler")
@@ -628,6 +636,10 @@ func (o *FlagrAPI) initHandlerCache() {
 		o.handlers["PUT"] = make(map[string]http.Handler)
 	}
 	o.handlers["PUT"]["/flags/{flagID}/variants/{variantID}"] = variant.NewPutVariant(o.context, o.VariantPutVariantHandler)
+	if o.handlers["PUT"] == nil {
+		o.handlers["PUT"] = make(map[string]http.Handler)
+	}
+	o.handlers["PUT"]["/flags/{flagID}/restore"] = flag.NewRestoreFlag(o.context, o.FlagRestoreFlagHandler)
 	if o.handlers["PUT"] == nil {
 		o.handlers["PUT"] = make(map[string]http.Handler)
 	}

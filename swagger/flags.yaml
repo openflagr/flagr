@@ -37,6 +37,10 @@ get:
       name: preload
       type: boolean
       description: return flags with preloaded segments and variants
+    - in: query
+      name: deleted
+      type: boolean
+      description: return all deleted flags
   responses:
     200:
       description: list all the flags

@@ -88,6 +88,10 @@ paths:
           name: preload
           type: boolean
           description: return flags with preloaded segments and variants
+        - in: query
+          name: deleted
+          type: boolean
+          description: return all deleted flags
       responses:
         '200':
           description: list all the flags
@@ -178,6 +182,28 @@ paths:
           required: true
           schema:
             $ref: '#/definitions/putFlagRequest'
+      responses:
+        '200':
+          description: returns the flag
+          schema:
+            $ref: '#/definitions/flag'
+        default:
+          description: generic error response
+          schema:
+            $ref: '#/definitions/error'
+  '/flags/{flagID}/restore':
+    put:
+      tags:
+        - flag
+      operationId: restoreFlag
+      parameters:
+        - in: path
+          name: flagID
+          description: numeric ID of the flag to get
+          required: true
+          type: integer
+          format: int64
+          minimum: 1
       responses:
         '200':
           description: returns the flag

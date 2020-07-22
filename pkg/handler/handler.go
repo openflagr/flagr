@@ -41,6 +41,7 @@ func setupCRUD(api *operations.FlagrAPI) {
 	api.FlagGetFlagHandler = flag.GetFlagHandlerFunc(c.GetFlag)
 	api.FlagPutFlagHandler = flag.PutFlagHandlerFunc(c.PutFlag)
 	api.FlagDeleteFlagHandler = flag.DeleteFlagHandlerFunc(c.DeleteFlag)
+	api.FlagRestoreFlagHandler = flag.RestoreFlagHandlerFunc(c.RestoreFlag)
 	api.FlagSetFlagEnabledHandler = flag.SetFlagEnabledHandlerFunc(c.SetFlagEnabledState)
 	api.FlagGetFlagSnapshotsHandler = flag.GetFlagSnapshotsHandlerFunc(c.GetFlagSnapshots)
 	api.FlagGetFlagEntityTypesHandler = flag.GetFlagEntityTypesHandlerFunc(c.GetFlagEntityTypes)
