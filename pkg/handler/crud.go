@@ -291,7 +291,7 @@ func (c *crud) RestoreFlag(params flag.RestoreFlagParams) middleware.Responder {
 		return flag.NewRestoreFlagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
-	resp := flag.NewSetFlagEnabledOK()
+	resp := flag.NewRestoreFlagOK()
 	payload, err := e2rMapFlag(f)
 	if err != nil {
 		return flag.NewRestoreFlagDefault(500).WithPayload(ErrorMessage("%s", err))
