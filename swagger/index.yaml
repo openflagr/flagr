@@ -51,6 +51,8 @@ paths:
     $ref: ./flags.yaml
   /flags/{flagID}:
     $ref: ./flag.yaml
+  /flags/{flagID}/restore:
+    $ref: ./flag_restore.yaml
   /flags/{flagID}/enabled:
     $ref: ./flag_enabled.yaml
   /flags/{flagID}/tags:

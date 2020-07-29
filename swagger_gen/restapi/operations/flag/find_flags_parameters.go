@@ -31,6 +31,10 @@ type FindFlagsParams struct {
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
+	/*return all deleted flags
+	  In: query
+	*/
+	Deleted *bool
 	/*return flags exactly matching given description
 	  In: query
 	*/
@@ -76,6 +80,11 @@ func (o *FindFlagsParams) BindRequest(r *http.Request, route *middleware.Matched
 
 	qs := runtime.Values(r.URL.Query())
 
+	qDeleted, qhkDeleted, _ := qs.GetOK("deleted")
+	if err := o.bindDeleted(qDeleted, qhkDeleted, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
 	qDescription, qhkDescription, _ := qs.GetOK("description")
 	if err := o.bindDescription(qDescription, qhkDescription, route.Formats); err != nil {
 		res = append(res, err)
@@ -119,6 +128,28 @@ func (o *FindFlagsParams) BindRequest(r *http.Request, route *middleware.Matched
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+// bindDeleted binds and validates parameter Deleted from query.
+func (o *FindFlagsParams) bindDeleted(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+
+	// Required: false
+	// AllowEmptyValue: false
+	if raw == "" { // empty values pass all other validations
+		return nil
+	}
+
+	value, err := swag.ConvertBool(raw)
+	if err != nil {
+		return errors.InvalidType("deleted", "query", "bool", raw)
+	}
+	o.Deleted = &value
+
 	return nil
 }
 
