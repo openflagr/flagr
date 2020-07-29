@@ -85,48 +85,51 @@
             </el-table-column>
           </el-table>
 
-          <h2>Deleted Flags</h2>
-          <el-table
-            :data="getDeletedFlags"
-            :stripe="true"
-            :highlight-current-row="false"
-            :default-sort="{ prop: 'id', order: 'descending' }"
-            style="width: 100%"
-          >
-            <el-table-column prop="id" align="center" label="Flag ID" sortable fixed width="95"></el-table-column>
-            <el-table-column prop="description" label="Description" min-width="300"></el-table-column>
-            <el-table-column prop="tags" label="Tags" min-width="200">
-              <template scope="scope">
-                <el-tag v-for="tag in scope.row.tags" :key="tag.id" :type="warning" disable-transitions>{{ tag.value }}</el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column prop="updatedBy" label="Last Updated By" sortable width="200"></el-table-column>
-            <el-table-column
-              prop="updatedAt"
-              label="Updated At (UTC)"
-              :formatter="datetimeFormatter"
-              sortable
-              width="165"
-            ></el-table-column>
-            <el-table-column
-              prop="enabled"
-              label="Enabled"
-              sortable
-              align="center"
-              fixed="right"
-              width="100"
-            >
-              <template slot-scope="scope">
-                <el-button
-                  @click="restoreFlag(scope.row)"
-                  type="success"
-                  width="90px"
+          <el-collapse @change="fetchDeletedFlags">
+            <el-collapse-item title="Deleted Flags">
+              <el-table
+                :data="getDeletedFlags"
+                :stripe="true"
+                :highlight-current-row="false"
+                :default-sort="{ prop: 'id', order: 'descending' }"
+                style="width: 100%"
+              >
+                <el-table-column prop="id" align="center" label="Flag ID" sortable fixed width="95"></el-table-column>
+                <el-table-column prop="description" label="Description" min-width="300"></el-table-column>
+                <el-table-column prop="tags" label="Tags" min-width="200">
+                  <template scope="scope">
+                    <el-tag v-for="tag in scope.row.tags" :key="tag.id" :type="warning" disable-transitions>{{ tag.value }}</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="updatedBy" label="Last Updated By" sortable width="200"></el-table-column>
+                <el-table-column
+                  prop="updatedAt"
+                  label="Updated At (UTC)"
+                  :formatter="datetimeFormatter"
+                  sortable
+                  width="165"
+                ></el-table-column>
+                <el-table-column
+                  prop="enabled"
+                  label="Enabled"
+                  sortable
+                  align="center"
+                  fixed="right"
+                  width="100"
                 >
-                  Restore
-                </el-button>
-              </template>
-            </el-table-column>
-          </el-table>
+                  <template slot-scope="scope">
+                    <el-button
+                      @click="restoreFlag(scope.row)"
+                      type="success"
+                      width="90px"
+                    >
+                      Restore
+                    </el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </el-collapse-item>
+          </el-collapse>
         </div>
       </div>
     </el-col>
@@ -152,6 +155,7 @@ export default {
   data() {
     return {
       loaded: false,
+      deletedFlagsLoaded: false,
       flags: [],
       deletedFlags: [],
       searchTerm: "",
@@ -166,13 +170,6 @@ export default {
       this.loaded = true;
       flags.reverse();
       this.flags = flags;
-    }, handleErr.bind(this));
-
-    Axios.get(`${API_URL}/flags?deleted=true`).then(response => {
-      let flags = response.data;
-      this.loaded = true;
-      flags.reverse();
-      this.deletedFlags = flags;
     }, handleErr.bind(this));
   },
   computed: {
@@ -198,7 +195,7 @@ export default {
       return val ? "on" : "off";
     },
     datetimeFormatter(row, col, val) {
-      return val.split(".")[0];
+      return val ? val.split(".")[0] : '';
     },
     goToFlag(row) {
       this.$router.push({ name: "flag", params: { flagId: row.id } });
@@ -225,7 +222,7 @@ export default {
       }, handleErr.bind(this));
     },
     restoreFlag(row) {
-      var self = this
+      var self = this;
       Axios.put(`${API_URL}/flags/${row.id}/restore`)
       .then((response) => {
         let flag = response.data;
@@ -233,7 +230,18 @@ export default {
         self.flags.push(flag);
         self.deletedFlags = self.deletedFlags .filter(function(el) { return el.id != flag.id });
       }, handleErr.bind(this));
-    }
+    },
+    fetchDeletedFlags() {
+      if(!this.deletedFlagsLoaded) {
+        var self = this;
+        Axios.get(`${API_URL}/flags?deleted=true`).then(response => {
+          let flags = response.data;
+          flags.reverse();
+          self.deletedFlags = flags;
+          self.deletedFlagsLoaded = true;
+        }, handleErr.bind(this));
+      }
+    },
   }
 };
 </script>
