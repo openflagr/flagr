@@ -110,7 +110,7 @@ func (c *crud) FindFlags(params flag.FindFlagsParams) middleware.Responder {
 			fmt.Sprintf("%%%s%%", strings.ToLower(*params.DescriptionLike)),
 		)
 	}
-	if params.Deleted != nil {
+	if params.Deleted != nil && *params.Deleted {
 		tx = tx.Where("deleted_at is not null")
 	} else {
 		tx = tx.Where("deleted_at is null")
