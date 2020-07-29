@@ -281,7 +281,7 @@ func (c *crud) SetFlagEnabledState(params flag.SetFlagEnabledParams) middleware.
 
 func (c *crud) RestoreFlag(params flag.RestoreFlagParams) middleware.Responder {
 	f := &entity.Flag{}
-	if err := getDB().Unscoped().First(f, params.FlagID).Error; err != nil {
+	if err := entity.PreloadFlagTags(getDB().Unscoped()).First(f, params.FlagID).Error; err != nil {
 		return flag.NewRestoreFlagDefault(404).WithPayload(ErrorMessage("%s", err))
 	}
 
