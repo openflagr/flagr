@@ -83,3 +83,11 @@ Error Set:
     <img src="./docs/images/demo_readme.png" width="900">
 </p>
 
+## Client Libraries
+
+| Language | Clients |
+| -------- | ------- |
+| Go | [goflagr](https://github.com/checkr/goflagr) |
+| Javascript | [jsflagr](https://github.com/checkr/jsflagr) |
+| Python | [pyflagr](https://github.com/checkr/pyflagr) |
+| Ruby | [rbflagr](https://github.com/checkr/rbflagr) |
