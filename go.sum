@@ -359,8 +359,8 @@ github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c/go.mod h1:lB8K/P019DLNhe
 github.com/xdg/stringprep v0.0.0-20180714160509-73f8eece6fdc/go.mod h1:Jhud4/sHMO4oL310DaZAKk9ZaJ08SJfe+sJh0HrGL1Y=
 github.com/yadvendar/negroni-newrelic-go-agent v0.0.0-20160803090806-3dc58758cb67 h1:BpDBAgffGUtOwUnYuFVOnl9PuDXW0X7bVw7NX/UdA4w=
 github.com/yadvendar/negroni-newrelic-go-agent v0.0.0-20160803090806-3dc58758cb67/go.mod h1:eRmB4tpcIoEUfMNyiXTbnZtzfODhBhZB3BIWGDD+vLs=
-github.com/zhouzhuojie/conditions v0.0.0-20190705160302-784df330cb87 h1:5pQTfWe/n9OvmwOamjhkePoT3dtJv0If1CXl3zkhSZg=
-github.com/zhouzhuojie/conditions v0.0.0-20190705160302-784df330cb87/go.mod h1:Izhy98HD3MkfwGPz+p9ZV2JuqrpbHjaQbUq9iZHh+ZY=
+github.com/zhouzhuojie/conditions v0.2.3 h1:TS3X6vA9CVXXteRdeXtpOw3hAar+01f0TI/dLp8qEvY=
+github.com/zhouzhuojie/conditions v0.2.3/go.mod h1:Izhy98HD3MkfwGPz+p9ZV2JuqrpbHjaQbUq9iZHh+ZY=
 github.com/zhouzhuojie/withtimeout v0.0.0-20190405051827-12b39eb2edd5 h1:YuR5otuPvpk6EPrKy9rVXiQKTqgY6OEqSlzko9kcfCI=
 github.com/zhouzhuojie/withtimeout v0.0.0-20190405051827-12b39eb2edd5/go.mod h1:nhm/3zpPm56iKoXLEeeevuI5V9qEtNhuhLbPZwcrgcs=
 go.mongodb.org/mongo-driver v1.0.3/go.mod h1:u7ryQJ+DOzQmeO7zB6MHyr8jkEQvC8vH7qLUO4lqsUM=
