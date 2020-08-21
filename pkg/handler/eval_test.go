@@ -215,19 +215,31 @@ func TestEvalFlag(t *testing.T) {
 				Operator:  models.ConstraintOperatorGT,
 				Value:     `1000`,
 			},
+			{
+				Model:     gorm.Model{ID: 503},
+				SegmentID: 200,
+				Property:  "city-name",
+				Operator:  models.ConstraintOperatorEQ,
+				Value:     `"SF"`,
+			},
 		}
 		f.PrepareEvaluation()
 		cache := &EvalCache{idCache: map[string]*entity.Flag{"100": &f}}
 		defer gostub.StubFunc(&GetEvalCache, cache).Reset()
 		result := EvalFlag(models.EvalContext{
-			EnableDebug:   true,
-			EntityContext: map[string]interface{}{"dl_state": "CA", "state": "CA", "rate": 2000},
-			EntityID:      "entityID1",
-			EntityType:    "entityType1",
-			FlagID:        int64(100),
+			EnableDebug: true,
+			EntityContext: map[string]interface{}{
+				"dl_state":  "CA",
+				"state":     "CA",
+				"rate":      2000,
+				"city-name": "SF",
+			},
+			EntityID:   "entityID1",
+			EntityType: "entityType1",
+			FlagID:     int64(100),
 		})
-		assert.NotNil(t, result)
-		assert.NotNil(t, result.VariantID)
+		assert.NotZero(t, result)
+		assert.NotZero(t, result.VariantID)
 	})
 
 	t.Run("test multiple segments with the first segment 0% rollout", func(t *testing.T) {

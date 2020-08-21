@@ -39,5 +39,12 @@ func main() {
 ```
 
 ## Credit
+Forked from [https://github.com/oleksandr/conditions](https://github.com/oleksandr/conditions)
 
-[https://github.com/oleksandr/conditions](https://github.com/oleksandr/conditions)
+The main differences are
+
+- Changed the syntax of variables from `[foo]` to `{foo}`.
+- Added `CONTAINS`.
+- Added float comparison with epsilon error torlerence.
+- Optimized long array `IN`/`CONTAINS` operator.
+- Removed redundant RWMutex for better performance.
