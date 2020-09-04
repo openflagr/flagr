@@ -71,7 +71,7 @@
               label="Updated At (UTC)"
               :formatter="datetimeFormatter"
               sortable
-              width="165"
+              width="180"
             ></el-table-column>
             <el-table-column
               prop="enabled"
@@ -90,7 +90,7 @@
             </el-table-column>
           </el-table>
 
-          <el-collapse @change="fetchDeletedFlags">
+          <el-collapse class="deleted-flags-table" @change="fetchDeletedFlags">
             <el-collapse-item title="Deleted Flags">
               <el-table
                 :data="getDeletedFlags"
@@ -117,18 +117,21 @@
                   label="Updated At (UTC)"
                   :formatter="datetimeFormatter"
                   sortable
-                  width="165"
+                  width="180"
                 ></el-table-column>
                 <el-table-column
-                  prop="enabled"
-                  label="Enabled"
-                  sortable
+                  prop="action"
+                  label="Action"
                   align="center"
                   fixed="right"
                   width="100"
                 >
                   <template slot-scope="scope">
-                    <el-button @click="restoreFlag(scope.row)" type="success" width="90px">Restore</el-button>
+                    <el-button
+                      @click="restoreFlag(scope.row)"
+                      type="warning"
+                      size="small"
+                    >Restore</el-button>
                   </template>
                 </el-table-column>
               </el-table>
@@ -234,15 +237,21 @@ export default {
       }, handleErr.bind(this));
     },
     restoreFlag(row) {
-      var self = this;
-      Axios.put(`${API_URL}/flags/${row.id}/restore`).then(response => {
-        let flag = response.data;
-        this.$message.success(`Flag updated`);
-        self.flags.push(flag);
-        self.deletedFlags = self.deletedFlags.filter(function(el) {
-          return el.id != flag.id;
-        });
-      }, handleErr.bind(this));
+      this.$confirm('This will recover the deleted flag. Continue?', 'Warning', {
+        confirmButtonText: 'OK',
+        cancelButtonText: 'Cancel',
+        type: 'warning'
+      }).then(() => {
+        Axios.put(`${API_URL}/flags/${row.id}/restore`).then(response => {
+          let flag = response.data;
+          this.$message.success(`Flag updated`);
+          this.flags.push(flag);
+          this.deletedFlags = this.deletedFlags.filter(function(el) {
+            return el.id != flag.id;
+          });
+        }, handleErr.bind(this));
+      });
+
     },
     fetchDeletedFlags() {
       if (!this.deletedFlagsLoaded) {
@@ -270,8 +279,8 @@ export default {
   .el-button-group .el-button--primary:first-child {
     border-right-color: #dcdfe6;
   }
-}
-.el-tag {
-  margin: 2.5px;
+  .deleted-flags-table {
+    margin-top: 2rem;
+  }
 }
 </style>

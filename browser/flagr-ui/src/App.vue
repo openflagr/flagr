@@ -48,7 +48,7 @@ export default {
 body {
   margin: 0;
   padding: 0;
-  font-family: "Avenir", Helvetica, Arial, sans-serif;
+  font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -197,6 +197,10 @@ ol {
     .jsoneditor-poweredBy {
       display: none;
     }
+  }
+
+  .el-tag {
+    margin: 2.5px;
   }
 }
 </style>
