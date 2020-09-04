@@ -63,16 +63,6 @@ ol {
   padding-left: 20px;
 }
 
-ul {
-  list-style-type: none;
-  margin: 0;
-  padding: 0;
-  li {
-    margin: 0;
-    padding: 0;
-  }
-}
-
 .width--full {
   width: 100%;
 }
