@@ -14,6 +14,14 @@ services:
       MYSQL_DATABASE: "flagr"
       MYSQL_USER: "root"
 
+  mysql8:
+    image: mysql:8
+    container_name: flagr-mysql8
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: "flagr"
+      MYSQL_USER: "root"
+
   postgres:
     image: postgres:9
     container_name: flagr-postgres
@@ -31,11 +39,16 @@ services:
 
   flagr_with_mysql:
     image: flagr_integration_tests
-    ports:
-      - "18002:18000"
     environment:
       FLAGR_DB_DBDRIVER: "mysql"
       FLAGR_DB_DBCONNECTIONSTR: "root:@tcp(mysql:3306)/flagr?parseTime=true"
+    command: sh -c "sleep 15 && ./flagr"
+
+  flagr_with_mysql8:
+    image: flagr_integration_tests
+    environment:
+      FLAGR_DB_DBDRIVER: "mysql"
+      FLAGR_DB_DBCONNECTIONSTR: "root:@tcp(mysql8:3306)/flagr?parseTime=true"
     command: sh -c "sleep 15 && ./flagr"
 
   flagr_with_postgres:

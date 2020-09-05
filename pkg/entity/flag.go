@@ -36,7 +36,7 @@ type FlagEvaluation struct {
 // Preloads just the tags
 func PreloadFlagTags(db *gorm.DB) *gorm.DB {
 	return db.Preload("Tags", func(db *gorm.DB) *gorm.DB {
-		return db.Order("id ASC")
+		return db.Order("id")
 	})
 }
 
@@ -45,14 +45,14 @@ func PreloadSegmentsVariantsTags(db *gorm.DB) *gorm.DB {
 	return db.
 		Preload("Segments", func(db *gorm.DB) *gorm.DB {
 			return PreloadConstraintsDistribution(db).
-				Order("rank ASC").
-				Order("id ASC")
+				Order("rank").
+				Order("id")
 		}).
 		Preload("Variants", func(db *gorm.DB) *gorm.DB {
-			return db.Order("id ASC")
+			return db.Order("id")
 		}).
 		Preload("Tags", func(db *gorm.DB) *gorm.DB {
-			return db.Order("id ASC")
+			return db.Order("id")
 		})
 }
 

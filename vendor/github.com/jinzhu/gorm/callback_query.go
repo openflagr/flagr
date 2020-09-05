@@ -18,7 +18,7 @@ func queryCallback(scope *Scope) {
 	if _, skip := scope.InstanceGet("gorm:skip_query_callback"); skip {
 		return
 	}
-	
+
 	//we are only preloading relations, dont touch base model
 	if _, skip := scope.InstanceGet("gorm:only_preload"); skip {
 		return
@@ -60,6 +60,11 @@ func queryCallback(scope *Scope) {
 
 	if !scope.HasError() {
 		scope.db.RowsAffected = 0
+
+		if str, ok := scope.Get("gorm:query_hint"); ok {
+			scope.SQL = fmt.Sprint(str) + scope.SQL
+		}
+
 		if str, ok := scope.Get("gorm:query_option"); ok {
 			scope.SQL += addExtraSpaceIfExist(fmt.Sprint(str))
 		}
