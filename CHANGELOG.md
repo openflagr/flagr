@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased](https://github.com/checkr/flagr/tree/HEAD)
+## [1.1.11](https://github.com/checkr/flagr/tree/1.1.11) (2020-09-08)
 
 [Full Changelog](https://github.com/checkr/flagr/compare/1.1.10...1.1.11)
 
@@ -183,7 +183,6 @@
 - Height fix for json-editor in variant attachment [\#269](https://github.com/checkr/flagr/pull/269) ([yosyad](https://github.com/yosyad))
 - Add search bar for filtering flags in home page [\#268](https://github.com/checkr/flagr/pull/268) ([yosyad](https://github.com/yosyad))
 - Fix assetsDir [\#266](https://github.com/checkr/flagr/pull/266) ([zhouzhuojie](https://github.com/zhouzhuojie))
-- Remove yarn and upgrade to vue-cli 3 [\#265](https://github.com/checkr/flagr/pull/265) ([zhouzhuojie](https://github.com/zhouzhuojie))
 
 ## [1.1.3](https://github.com/checkr/flagr/tree/1.1.3) (2019-05-30)
 
@@ -214,6 +213,7 @@
 
 **Merged pull requests:**
 
+- Remove yarn and upgrade to vue-cli 3 [\#265](https://github.com/checkr/flagr/pull/265) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Fix health check endpoint [\#262](https://github.com/checkr/flagr/pull/262) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Bump webpack-bundle-analyzer [\#260](https://github.com/checkr/flagr/pull/260) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Allow more capital characters and numbers in flag keys and variant keys [\#257](https://github.com/checkr/flagr/pull/257) ([raviambati](https://github.com/raviambati))
@@ -295,7 +295,6 @@
 - Bump vendors [\#217](https://github.com/checkr/flagr/pull/217) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Fix empty response when flag was deleted [\#213](https://github.com/checkr/flagr/pull/213) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Added Google Cloud Pubsub support for data records [\#209](https://github.com/checkr/flagr/pull/209) ([vic3lord](https://github.com/vic3lord))
-- Add retry for DB connection [\#208](https://github.com/checkr/flagr/pull/208) ([zhouzhuojie](https://github.com/zhouzhuojie))
 
 ## [1.0.13](https://github.com/checkr/flagr/tree/1.0.13) (2019-01-30)
 
@@ -312,6 +311,7 @@
 
 **Merged pull requests:**
 
+- Add retry for DB connection [\#208](https://github.com/checkr/flagr/pull/208) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Fix golint [\#206](https://github.com/checkr/flagr/pull/206) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Add datadog apm support [\#205](https://github.com/checkr/flagr/pull/205) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Replace '+' icon with 'Add Constraint' to make usage clearer [\#202](https://github.com/checkr/flagr/pull/202) ([erdey](https://github.com/erdey))
@@ -395,6 +395,7 @@
 - Change rebuild Makefile cmd [\#147](https://github.com/checkr/flagr/pull/147) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Add JWT auth via headers and RS256 signing option [\#146](https://github.com/checkr/flagr/pull/146) ([vayan](https://github.com/vayan))
 - Add coverage for kafka data recorder [\#145](https://github.com/checkr/flagr/pull/145) ([zhouzhuojie](https://github.com/zhouzhuojie))
+- Add test coverage for middleware [\#144](https://github.com/checkr/flagr/pull/144) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Bump UI packages [\#143](https://github.com/checkr/flagr/pull/143) ([zhouzhuojie](https://github.com/zhouzhuojie))
 
 ## [1.0.8](https://github.com/checkr/flagr/tree/1.0.8) (2018-07-06)
@@ -411,7 +412,6 @@
 
 **Merged pull requests:**
 
-- Add test coverage for middleware [\#144](https://github.com/checkr/flagr/pull/144) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Fix docs [\#141](https://github.com/checkr/flagr/pull/141) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Add health handler [\#140](https://github.com/checkr/flagr/pull/140) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Add tests for find flags parameters [\#138](https://github.com/checkr/flagr/pull/138) ([zhouzhuojie](https://github.com/zhouzhuojie))
@@ -457,7 +457,6 @@
 **Merged pull requests:**
 
 - Bump UI vendor [\#120](https://github.com/checkr/flagr/pull/120) ([zhouzhuojie](https://github.com/zhouzhuojie))
-- Bump conditions to support null json value [\#119](https://github.com/checkr/flagr/pull/119) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Use random entity id if it's nil [\#118](https://github.com/checkr/flagr/pull/118) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Use env to config eval logging [\#117](https://github.com/checkr/flagr/pull/117) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Fix test warning [\#116](https://github.com/checkr/flagr/pull/116) ([zhouzhuojie](https://github.com/zhouzhuojie))
@@ -475,6 +474,7 @@
 
 **Merged pull requests:**
 
+- Bump conditions to support null json value [\#119](https://github.com/checkr/flagr/pull/119) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Use embeded file for env docs [\#114](https://github.com/checkr/flagr/pull/114) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Fix postgres string scan bug [\#113](https://github.com/checkr/flagr/pull/113) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Push http metrics with statsd [\#112](https://github.com/checkr/flagr/pull/112) ([marceloboeira](https://github.com/marceloboeira))
@@ -491,9 +491,7 @@
 
 - Fix constraints composition bug [\#104](https://github.com/checkr/flagr/pull/104) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Add test coverage in pkg/handler [\#103](https://github.com/checkr/flagr/pull/103) ([zhouzhuojie](https://github.com/zhouzhuojie))
-- Add console logging rate limiter [\#99](https://github.com/checkr/flagr/pull/99) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Add an option for middleware verbose logging [\#98](https://github.com/checkr/flagr/pull/98) ([zhouzhuojie](https://github.com/zhouzhuojie))
-- Add cast package for safe cast [\#97](https://github.com/checkr/flagr/pull/97) ([zhouzhuojie](https://github.com/zhouzhuojie))
 
 ## [1.0.2](https://github.com/checkr/flagr/tree/1.0.2) (2018-01-16)
 
@@ -509,6 +507,8 @@
 
 **Merged pull requests:**
 
+- Add console logging rate limiter [\#99](https://github.com/checkr/flagr/pull/99) ([zhouzhuojie](https://github.com/zhouzhuojie))
+- Add cast package for safe cast [\#97](https://github.com/checkr/flagr/pull/97) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Add range in codecov.yml [\#96](https://github.com/checkr/flagr/pull/96) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Make SaveFlagSnapshot sync and increase coverage [\#95](https://github.com/checkr/flagr/pull/95) ([zhouzhuojie](https://github.com/zhouzhuojie))
 - Increase coverage [\#94](https://github.com/checkr/flagr/pull/94) ([zhouzhuojie](https://github.com/zhouzhuojie))
