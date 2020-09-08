@@ -2,14 +2,16 @@ package gorm
 
 import (
 	"crypto/sha1"
+	"database/sql"
 	"fmt"
 	"reflect"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 	"unicode/utf8"
 )
+
+var mysqlIndexRegex = regexp.MustCompile(`^(.+)\((\d+)\)$`)
 
 type mysql struct {
 	commonDialect
@@ -100,10 +102,10 @@ func (s *mysql) DataTypeOf(field *StructField) string {
 					precision = fmt.Sprintf("(%s)", p)
 				}
 
-				if _, ok := field.TagSettingsGet("NOT NULL"); ok {
-					sqlType = fmt.Sprintf("timestamp%v", precision)
+				if _, ok := field.TagSettings["NOT NULL"]; ok || field.IsPrimaryKey {
+					sqlType = fmt.Sprintf("DATETIME%v", precision)
 				} else {
-					sqlType = fmt.Sprintf("timestamp%v NULL", precision)
+					sqlType = fmt.Sprintf("DATETIME%v NULL", precision)
 				}
 			}
 		default:
@@ -118,7 +120,7 @@ func (s *mysql) DataTypeOf(field *StructField) string {
 	}
 
 	if sqlType == "" {
-		panic(fmt.Sprintf("invalid sql type %s (%s) for mysql", dataValue.Type().Name(), dataValue.Kind().String()))
+		panic(fmt.Sprintf("invalid sql type %s (%s) in field %s for mysql", dataValue.Type().Name(), dataValue.Kind().String(), field.Name))
 	}
 
 	if strings.TrimSpace(additionalType) == "" {
@@ -137,13 +139,21 @@ func (s mysql) ModifyColumn(tableName string, columnName string, typ string) err
 	return err
 }
 
-func (s mysql) LimitAndOffsetSQL(limit, offset interface{}) (sql string) {
+func (s mysql) LimitAndOffsetSQL(limit, offset interface{}) (sql string, err error) {
 	if limit != nil {
-		if parsedLimit, err := strconv.ParseInt(fmt.Sprint(limit), 0, 0); err == nil && parsedLimit >= 0 {
+		parsedLimit, err := s.parseInt(limit)
+		if err != nil {
+			return "", err
+		}
+		if parsedLimit >= 0 {
 			sql += fmt.Sprintf(" LIMIT %d", parsedLimit)
 
 			if offset != nil {
-				if parsedOffset, err := strconv.ParseInt(fmt.Sprint(offset), 0, 0); err == nil && parsedOffset >= 0 {
+				parsedOffset, err := s.parseInt(offset)
+				if err != nil {
+					return "", err
+				}
+				if parsedOffset >= 0 {
 					sql += fmt.Sprintf(" OFFSET %d", parsedOffset)
 				}
 			}
@@ -157,6 +167,40 @@ func (s mysql) HasForeignKey(tableName string, foreignKeyName string) bool {
 	currentDatabase, tableName := currentDatabaseAndTable(&s, tableName)
 	s.db.QueryRow("SELECT count(*) FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE CONSTRAINT_SCHEMA=? AND TABLE_NAME=? AND CONSTRAINT_NAME=? AND CONSTRAINT_TYPE='FOREIGN KEY'", currentDatabase, tableName, foreignKeyName).Scan(&count)
 	return count > 0
+}
+
+func (s mysql) HasTable(tableName string) bool {
+	currentDatabase, tableName := currentDatabaseAndTable(&s, tableName)
+	var name string
+	// allow mysql database name with '-' character
+	if err := s.db.QueryRow(fmt.Sprintf("SHOW TABLES FROM `%s` WHERE `Tables_in_%s` = ?", currentDatabase, currentDatabase), tableName).Scan(&name); err != nil {
+		if err == sql.ErrNoRows {
+			return false
+		}
+		panic(err)
+	} else {
+		return true
+	}
+}
+
+func (s mysql) HasIndex(tableName string, indexName string) bool {
+	currentDatabase, tableName := currentDatabaseAndTable(&s, tableName)
+	if rows, err := s.db.Query(fmt.Sprintf("SHOW INDEXES FROM `%s` FROM `%s` WHERE Key_name = ?", tableName, currentDatabase), indexName); err != nil {
+		panic(err)
+	} else {
+		defer rows.Close()
+		return rows.Next()
+	}
+}
+
+func (s mysql) HasColumn(tableName string, columnName string) bool {
+	currentDatabase, tableName := currentDatabaseAndTable(&s, tableName)
+	if rows, err := s.db.Query(fmt.Sprintf("SHOW COLUMNS FROM `%s` FROM `%s` WHERE Field = ?", tableName, currentDatabase), columnName); err != nil {
+		panic(err)
+	} else {
+		defer rows.Close()
+		return rows.Next()
+	}
 }
 
 func (s mysql) CurrentDatabase() (name string) {
@@ -178,12 +222,23 @@ func (s mysql) BuildKeyName(kind, tableName string, fields ...string) string {
 	bs := h.Sum(nil)
 
 	// sha1 is 40 characters, keep first 24 characters of destination
-	destRunes := []rune(regexp.MustCompile("[^a-zA-Z0-9]+").ReplaceAllString(fields[0], "_"))
+	destRunes := []rune(keyNameRegex.ReplaceAllString(fields[0], "_"))
 	if len(destRunes) > 24 {
 		destRunes = destRunes[:24]
 	}
 
 	return fmt.Sprintf("%s%x", string(destRunes), bs)
+}
+
+// NormalizeIndexAndColumn returns index name and column name for specify an index prefix length if needed
+func (mysql) NormalizeIndexAndColumn(indexName, columnName string) (string, string) {
+	submatch := mysqlIndexRegex.FindStringSubmatch(indexName)
+	if len(submatch) != 3 {
+		return indexName, columnName
+	}
+	indexName = submatch[1]
+	columnName = fmt.Sprintf("%s(%s)", columnName, submatch[2])
+	return indexName, columnName
 }
 
 func (mysql) DefaultValueStr() string {

@@ -17,9 +17,7 @@ require (
 	github.com/codegangsta/negroni v1.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dchest/uniuri v0.0.0-20160212164326-8902c56451e9
-	github.com/denisenkom/go-mssqldb v0.0.0-20190418034912-35416408c946 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/erikstmartin/go-testdb v0.0.0-20160219214506-8d10e4a1bae5 // indirect
 	github.com/evalphobia/logrus_sentry v0.4.6
 	github.com/getsentry/raven-go v0.0.0-20180903072508-084a9de9eb03
 	github.com/go-ini/ini v1.38.2 // indirect
@@ -30,16 +28,11 @@ require (
 	github.com/go-openapi/strfmt v0.19.5
 	github.com/go-openapi/swag v0.19.9
 	github.com/go-openapi/validate v0.19.10
-	github.com/go-sql-driver/mysql v1.4.0 // indirect
 	github.com/gohttp/pprof v0.0.0-20141119085724-c9d246cbb3ba
 	github.com/gorilla/mux v1.7.1 // indirect
 	github.com/jessevdk/go-flags v1.4.0
-	github.com/jinzhu/gorm v0.0.0-20180909231100-123d4f50ef8a
-	github.com/jinzhu/inflection v0.0.0-20180308033659-04140366298a // indirect
-	github.com/jinzhu/now v1.0.0 // indirect
+	github.com/jinzhu/gorm v1.9.16
 	github.com/jpillora/backoff v0.0.0-20170918002102-8eab2debe79d // indirect
-	github.com/lib/pq v1.0.0 // indirect
-	github.com/mattn/go-sqlite3 v1.9.0 // indirect
 	github.com/meatballhat/negroni-logrus v0.0.0-20170801195057-31067281800f
 	github.com/newrelic/go-agent v2.1.0+incompatible
 	github.com/onsi/ginkgo v1.8.0 // indirect

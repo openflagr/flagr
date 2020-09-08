@@ -84,8 +84,6 @@ github.com/davecgh/go-spew/spew
 # github.com/dchest/uniuri v0.0.0-20160212164326-8902c56451e9
 ## explicit
 github.com/dchest/uniuri
-# github.com/denisenkom/go-mssqldb v0.0.0-20190418034912-35416408c946
-## explicit
 # github.com/dgrijalva/jwt-go v3.2.0+incompatible
 ## explicit
 github.com/dgrijalva/jwt-go
@@ -97,8 +95,6 @@ github.com/eapache/go-resiliency/breaker
 github.com/eapache/go-xerial-snappy
 # github.com/eapache/queue v1.1.0
 github.com/eapache/queue
-# github.com/erikstmartin/go-testdb v0.0.0-20160219214506-8d10e4a1bae5
-## explicit
 # github.com/evalphobia/logrus_sentry v0.4.6
 ## explicit
 github.com/evalphobia/logrus_sentry
@@ -143,8 +139,7 @@ github.com/go-openapi/swag
 # github.com/go-openapi/validate v0.19.10
 ## explicit
 github.com/go-openapi/validate
-# github.com/go-sql-driver/mysql v1.4.0
-## explicit
+# github.com/go-sql-driver/mysql v1.5.0
 github.com/go-sql-driver/mysql
 # github.com/go-stack/stack v1.8.0
 github.com/go-stack/stack
@@ -176,17 +171,14 @@ github.com/hashicorp/golang-lru/simplelru
 # github.com/jessevdk/go-flags v1.4.0
 ## explicit
 github.com/jessevdk/go-flags
-# github.com/jinzhu/gorm v0.0.0-20180909231100-123d4f50ef8a
+# github.com/jinzhu/gorm v1.9.16
 ## explicit
 github.com/jinzhu/gorm
 github.com/jinzhu/gorm/dialects/mysql
 github.com/jinzhu/gorm/dialects/postgres
 github.com/jinzhu/gorm/dialects/sqlite
-# github.com/jinzhu/inflection v0.0.0-20180308033659-04140366298a
-## explicit
+# github.com/jinzhu/inflection v1.0.0
 github.com/jinzhu/inflection
-# github.com/jinzhu/now v1.0.0
-## explicit
 # github.com/jmespath/go-jmespath v0.0.0-20160202185014-0b12d6b521d8
 github.com/jmespath/go-jmespath
 # github.com/jpillora/backoff v0.0.0-20170918002102-8eab2debe79d
@@ -194,17 +186,16 @@ github.com/jmespath/go-jmespath
 github.com/jpillora/backoff
 # github.com/konsorten/go-windows-terminal-sequences v1.0.2
 github.com/konsorten/go-windows-terminal-sequences
-# github.com/lib/pq v1.0.0
-## explicit
+# github.com/lib/pq v1.1.1
 github.com/lib/pq
 github.com/lib/pq/hstore
 github.com/lib/pq/oid
+github.com/lib/pq/scram
 # github.com/mailru/easyjson v0.7.1
 github.com/mailru/easyjson/buffer
 github.com/mailru/easyjson/jlexer
 github.com/mailru/easyjson/jwriter
-# github.com/mattn/go-sqlite3 v1.9.0
-## explicit
+# github.com/mattn/go-sqlite3 v1.14.0
 github.com/mattn/go-sqlite3
 # github.com/matttproud/golang_protobuf_extensions v1.0.1
 github.com/matttproud/golang_protobuf_extensions/pbutil
@@ -321,7 +312,7 @@ go.opencensus.io/trace
 go.opencensus.io/trace/internal
 go.opencensus.io/trace/propagation
 go.opencensus.io/trace/tracestate
-# golang.org/x/crypto v0.0.0-20190617133340-57b3e21c3d56
+# golang.org/x/crypto v0.0.0-20191205180655-e7c4368fe9dd
 golang.org/x/crypto/internal/subtle
 golang.org/x/crypto/nacl/secretbox
 golang.org/x/crypto/poly1305
@@ -370,7 +361,6 @@ google.golang.org/api/transport/http
 google.golang.org/api/transport/http/internal/propagation
 # google.golang.org/appengine v1.4.0
 google.golang.org/appengine
-google.golang.org/appengine/cloudsql
 google.golang.org/appengine/internal
 google.golang.org/appengine/internal/app_identity
 google.golang.org/appengine/internal/base

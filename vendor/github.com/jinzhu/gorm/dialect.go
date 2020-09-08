@@ -37,9 +37,11 @@ type Dialect interface {
 	ModifyColumn(tableName string, columnName string, typ string) error
 
 	// LimitAndOffsetSQL return generated SQL with Limit and Offset, as mssql has special case
-	LimitAndOffsetSQL(limit, offset interface{}) string
+	LimitAndOffsetSQL(limit, offset interface{}) (string, error)
 	// SelectFromDummyTable return select values, for most dbs, `SELECT values` just works, mysql needs `SELECT value FROM DUAL`
 	SelectFromDummyTable() string
+	// LastInsertIDOutputInterstitial most dbs support LastInsertId, but mssql needs to use `OUTPUT`
+	LastInsertIDOutputInterstitial(tableName, columnName string, columns []string) string
 	// LastInsertIdReturningSuffix most dbs support LastInsertId, but postgres needs to use `RETURNING`
 	LastInsertIDReturningSuffix(tableName, columnName string) string
 	// DefaultValueStr
@@ -47,6 +49,9 @@ type Dialect interface {
 
 	// BuildKeyName returns a valid key name (foreign key, index key) for the given table, field and reference
 	BuildKeyName(kind, tableName string, fields ...string) string
+
+	// NormalizeIndexAndColumn returns valid index name and column name depending on each dialect
+	NormalizeIndexAndColumn(indexName, columnName string) (string, string)
 
 	// CurrentDatabase return current database name
 	CurrentDatabase() string
@@ -124,6 +129,10 @@ var ParseFieldStructForDialect = func(field *StructField, dialect Dialect) (fiel
 	additionalType = notNull + " " + unique
 	if value, ok := field.TagSettingsGet("DEFAULT"); ok {
 		additionalType = additionalType + " DEFAULT " + value
+	}
+
+	if value, ok := field.TagSettingsGet("COMMENT"); ok {
+		additionalType = additionalType + " COMMENT " + value
 	}
 
 	return fieldValue, dataType, size, strings.TrimSpace(additionalType)

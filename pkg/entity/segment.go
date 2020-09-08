@@ -27,10 +27,10 @@ type Segment struct {
 func PreloadConstraintsDistribution(db *gorm.DB) *gorm.DB {
 	return db.
 		Preload("Distributions", func(db *gorm.DB) *gorm.DB {
-			return db.Order("variant_id ASC")
+			return db.Order("variant_id")
 		}).
 		Preload("Constraints", func(db *gorm.DB) *gorm.DB {
-			return db.Order("created_at ASC")
+			return db.Order("created_at")
 		})
 }
 

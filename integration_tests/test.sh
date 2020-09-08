@@ -392,6 +392,7 @@ start_test()
 start(){
     start_test flagr_with_sqlite
     start_test flagr_with_mysql
+    start_test flagr_with_mysql8
     start_test flagr_with_postgres
 }
 

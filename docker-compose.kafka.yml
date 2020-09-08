@@ -1,14 +1,32 @@
 mysql:
   image: mysql:5.6
-  ports:
-    - "18100:3306"
   container_name: flagr-mysql
   environment:
     - MYSQL_ALLOW_EMPTY_PASSWORD=yes
     - MYSQL_DATABASE=flagr
     - MYSQL_USER=root
-  volumes:
-    - ./_data/mysql:/var/lib/mysql
+  ports:
+    - "18100:3306"
+
+mysql8:
+  image: mysql:8
+  container_name: flagr-mysql
+  environment:
+    - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+    - MYSQL_DATABASE=flagr
+    - MYSQL_USER=root
+  ports:
+    - "18101:3306"
+
+postgres:
+  image: postgres:9
+  container_name: flagr-postgres
+  environment:
+    POSTGRES_PASSWORD: "test"
+    POSTGRES_USER: "test"
+    POSTGRES_DB: "flagr"
+  ports:
+    - "18102:5432"
 
 zookeeper:
   image: confluentinc/cp-zookeeper
@@ -35,8 +53,6 @@ kafka:
     - "9092:9092"
   extra_hosts:
     - "moby:127.0.0.1"
-  volumes:
-    - ./_data/kafka:/var/lib/kafka
 
 kafka-manager:
   image: sheepkiller/kafka-manager
