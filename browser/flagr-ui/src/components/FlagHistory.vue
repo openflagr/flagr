@@ -87,9 +87,6 @@ export default {
 
 <style lang="less">
 .snapshot-container {
-  .compact {
-    margin: -8px 0px;
-  }
   .diff-snapshot-id-change {
     color: white;
     .el-tag {
