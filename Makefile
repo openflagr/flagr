@@ -13,6 +13,10 @@ rebuild: gen build
 test: verifiers
 	@GO111MODULE=on go test -mod=vendor -race -covermode=atomic -coverprofile=coverage.txt github.com/checkr/flagr/pkg/...
 
+.PHONY: benchmark
+benchmark:
+	@GO111MODULE=on cob --base origin/master -bench-args "test -bench EvalFlag -benchmem ./pkg/..."
+
 ci: test
 
 .PHONY: vendor
@@ -43,6 +47,7 @@ deps:
 	@GO111MODULE=off go get -u github.com/myitcv/gobin
 	@gobin github.com/go-swagger/go-swagger/cmd/swagger@v0.24.0
 	@gobin github.com/golangci/golangci-lint/cmd/golangci-lint@v1.24.0
+	@gobin github.com/knqyf263/cob@v0.0.6
 
 serve_docs:
 	@npm install -g docsify-cli@4
