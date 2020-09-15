@@ -12,6 +12,7 @@ jobs:
       - run: make deps
       - run: make verify_swagger_nochange
       - run: make ci
+      - run: make benchmark
       - run: bash <(curl -s https://codecov.io/bash)
 
   ui_lint:

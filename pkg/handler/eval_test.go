@@ -424,6 +424,7 @@ func TestRateLimitPerFlagConsoleLogging(t *testing.T) {
 
 func BenchmarkEvalFlag(b *testing.B) {
 	b.StopTimer()
+	defer gostub.StubFunc(&logEvalResult).Reset()
 	defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
@@ -438,6 +439,7 @@ func BenchmarkEvalFlag(b *testing.B) {
 
 func BenchmarkEvalFlagsByTags(b *testing.B) {
 	b.StopTimer()
+	defer gostub.StubFunc(&logEvalResult).Reset()
 	defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {

@@ -15,7 +15,7 @@ test: verifiers
 
 .PHONY: benchmark
 benchmark:
-	@GO111MODULE=on cob --base origin/master -bench-args "test -bench EvalFlag -benchmem ./pkg/..."
+	@GO111MODULE=on go test -mod=vendor -race -benchmem -run=^$$ -bench . ./pkg/...
 
 ci: test
 
@@ -47,7 +47,6 @@ deps:
 	@GO111MODULE=off go get -u github.com/myitcv/gobin
 	@gobin github.com/go-swagger/go-swagger/cmd/swagger@v0.24.0
 	@gobin github.com/golangci/golangci-lint/cmd/golangci-lint@v1.24.0
-	@gobin github.com/knqyf263/cob@v0.0.6
 
 serve_docs:
 	@npm install -g docsify-cli@4
