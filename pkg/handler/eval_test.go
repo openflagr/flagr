@@ -6,8 +6,8 @@ import (
 	"github.com/checkr/flagr/pkg/entity"
 	"github.com/checkr/flagr/swagger_gen/models"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/evaluation"
-	"github.com/jinzhu/gorm"
 
+	"github.com/jinzhu/gorm"
 	"github.com/prashantv/gostub"
 	"github.com/stretchr/testify/assert"
 )
@@ -420,4 +420,34 @@ func TestRateLimitPerFlagConsoleLogging(t *testing.T) {
 			rateLimitPerFlagConsoleLogging(r)
 		}
 	})
+}
+
+func BenchmarkEvalFlag(b *testing.B) {
+	b.StopTimer()
+	defer gostub.StubFunc(&logEvalResult).Reset()
+	defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		EvalFlag(models.EvalContext{
+			EntityContext: map[string]interface{}{"dl_state": "CA"},
+			EntityID:      "entityID1",
+			EntityType:    "entityType1",
+			FlagID:        int64(100),
+		})
+	}
+}
+
+func BenchmarkEvalFlagsByTags(b *testing.B) {
+	b.StopTimer()
+	defer gostub.StubFunc(&logEvalResult).Reset()
+	defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		EvalFlagsByTags(models.EvalContext{
+			EntityContext: map[string]interface{}{"dl_state": "CA"},
+			EntityID:      "entityID1",
+			EntityType:    "entityType1",
+			FlagTags:      []string{"tag1", "tag2"},
+		})
+	}
 }

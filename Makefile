@@ -13,6 +13,10 @@ rebuild: gen build
 test: verifiers
 	@GO111MODULE=on go test -mod=vendor -race -covermode=atomic -coverprofile=coverage.txt github.com/checkr/flagr/pkg/...
 
+.PHONY: benchmark
+benchmark:
+	@GO111MODULE=on go test -mod=vendor -race -benchmem -run=^$$ -bench . ./pkg/...
+
 ci: test
 
 .PHONY: vendor
