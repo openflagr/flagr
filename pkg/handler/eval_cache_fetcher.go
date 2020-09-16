@@ -18,19 +18,16 @@ type EvalCacheJSON struct {
 }
 
 func (ec *EvalCache) export() EvalCacheJSON {
-	fs := make([]entity.Flag, 0, len(ec.idCache))
-
-	ec.mapCacheLock.RLock()
-	defer ec.mapCacheLock.RUnlock()
-
-	for _, f := range ec.idCache {
+	idCache := ec.cache.Load().(*cacheContainer).idCache
+	fs := make([]entity.Flag, 0, len(idCache))
+	for _, f := range idCache {
 		ff := *f
 		fs = append(fs, ff)
 	}
 	return EvalCacheJSON{Flags: fs}
 }
 
-func (ec *EvalCache) fetchAllFlags() (idCache mapCache, keyCache mapCache, tagCache multiMapCache, err error) {
+func (ec *EvalCache) fetchAllFlags() (idCache map[string]*entity.Flag, keyCache map[string]*entity.Flag, tagCache map[string]map[uint]*entity.Flag, err error) {
 	fs, err := fetchAllFlags()
 	if err != nil {
 		return nil, nil, nil, err

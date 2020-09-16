@@ -2,6 +2,7 @@ package handler
 
 import (
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/checkr/flagr/pkg/config"
@@ -17,16 +18,15 @@ var (
 	singletonEvalCacheOnce sync.Once
 )
 
-type mapCache map[string]*entity.Flag
-type multiMapCache map[string]map[uint]*entity.Flag
+type cacheContainer struct {
+	idCache  map[string]*entity.Flag
+	keyCache map[string]*entity.Flag
+	tagCache map[string]map[uint]*entity.Flag
+}
 
 // EvalCache is the in-memory cache just for evaluation
 type EvalCache struct {
-	mapCacheLock sync.RWMutex
-	idCache      mapCache
-	keyCache     mapCache
-	tagCache     multiMapCache
-
+	cache           atomic.Value
 	refreshTimeout  time.Duration
 	refreshInterval time.Duration
 }
@@ -35,9 +35,6 @@ type EvalCache struct {
 var GetEvalCache = func() *EvalCache {
 	singletonEvalCacheOnce.Do(func() {
 		ec := &EvalCache{
-			idCache:         make(map[string]*entity.Flag),
-			keyCache:        make(map[string]*entity.Flag),
-			tagCache:        make(map[string]map[uint]*entity.Flag),
 			refreshTimeout:  config.Config.EvalCacheRefreshTimeout,
 			refreshInterval: config.Config.EvalCacheRefreshInterval,
 		}
@@ -63,22 +60,18 @@ func (ec *EvalCache) Start() {
 }
 
 func (ec *EvalCache) GetByTags(tags []string) []*entity.Flag {
-	ec.mapCacheLock.RLock()
-	defer ec.mapCacheLock.RUnlock()
-
 	results := map[uint]*entity.Flag{}
+	cache := ec.cache.Load().(*cacheContainer)
 	for _, t := range tags {
-		f, ok := ec.tagCache[t]
+		fSet, ok := cache.tagCache[t]
 		if ok {
-			for ia, va := range results {
-				f[ia] = va
+			for fID, f := range fSet {
+				results[fID] = f
 			}
-
-			results = f
 		}
 	}
 
-	values := []*entity.Flag{}
+	values := make([]*entity.Flag, 0, len(results))
 	for _, f := range results {
 		values = append(values, f)
 	}
@@ -88,13 +81,11 @@ func (ec *EvalCache) GetByTags(tags []string) []*entity.Flag {
 
 // GetByFlagKeyOrID gets the flag by Key or ID
 func (ec *EvalCache) GetByFlagKeyOrID(keyOrID interface{}) *entity.Flag {
-	ec.mapCacheLock.RLock()
-	defer ec.mapCacheLock.RUnlock()
-
 	s := util.SafeString(keyOrID)
-	f, ok := ec.idCache[s]
+	cache := ec.cache.Load().(*cacheContainer)
+	f, ok := cache.idCache[s]
 	if !ok {
-		f = ec.keyCache[s]
+		f = cache.keyCache[s]
 	}
 	return f
 }
@@ -110,12 +101,11 @@ func (ec *EvalCache) reloadMapCache() error {
 			return nil, err
 		}
 
-		ec.mapCacheLock.Lock()
-		defer ec.mapCacheLock.Unlock()
-
-		ec.idCache = idCache
-		ec.keyCache = keyCache
-		ec.tagCache = tagCache
+		ec.cache.Store(&cacheContainer{
+			idCache:  idCache,
+			keyCache: keyCache,
+			tagCache: tagCache,
+		})
 		return nil, err
 	})
 

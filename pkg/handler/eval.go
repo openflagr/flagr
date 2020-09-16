@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"sync"
 	"time"
 
 	"github.com/checkr/flagr/pkg/config"
@@ -312,19 +313,15 @@ func debugConstraintMsg(enableDebug bool, expr conditions.Expr, m map[string]int
 	return fmt.Sprintf("constraint not match. constraint: %s, entity_context: %+v.", expr, m)
 }
 
-var rateLimitMap = make(map[uint]*ratelimit.RateLimiter)
+var rateLimitMap = sync.Map{}
 
 var rateLimitPerFlagConsoleLogging = func(r *models.EvalResult) {
 	flagID := util.SafeUint(r.FlagID)
-	rl, ok := rateLimitMap[flagID]
-	if !ok {
-		rl = ratelimit.New(
-			config.Config.RateLimiterPerFlagPerSecondConsoleLogging,
-			time.Second,
-		)
-		rateLimitMap[flagID] = rl
-	}
-	if !rl.Limit() {
+	rl, _ := rateLimitMap.LoadOrStore(flagID, ratelimit.New(
+		config.Config.RateLimiterPerFlagPerSecondConsoleLogging,
+		time.Second,
+	))
+	if !rl.(*ratelimit.RateLimiter).Limit() {
 		jsonStr, _ := json.Marshal(struct{ FlagEvalResult *models.EvalResult }{FlagEvalResult: r})
 		fmt.Println(string(jsonStr))
 	}

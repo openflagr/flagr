@@ -14,9 +14,12 @@ func GenFixtureEvalCache() *EvalCache {
 		tagCache[tag.Value] = map[uint]*entity.Flag{f.ID: &f}
 	}
 
-	return &EvalCache{
+	ec := &EvalCache{}
+	ec.cache.Store(&cacheContainer{
 		idCache:  map[string]*entity.Flag{util.SafeString(f.ID): &f},
 		keyCache: map[string]*entity.Flag{f.Key: &f},
 		tagCache: tagCache,
-	}
+	})
+
+	return ec
 }
