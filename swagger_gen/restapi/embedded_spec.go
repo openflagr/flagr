@@ -1569,6 +1569,15 @@ func init() {
             "type": "string"
           },
           "x-omitempty": true
+        },
+        "flagTagsOperator": {
+          "description": "determine how flagTags is used to filter flags to be evaluated. OR extends the evaluation to those which contains at least one of the provided flagTags or AND limit the evaluation to those which contains all the flagTags.",
+          "type": "string",
+          "default": "ANY",
+          "enum": [
+            "ANY",
+            "ALL"
+          ]
         }
       }
     },
@@ -1668,6 +1677,15 @@ func init() {
             "type": "string",
             "minLength": 1
           }
+        },
+        "flagTagsOperator": {
+          "description": "determine how flagTags is used to filter flags to be evaluated. OR extends the evaluation to those which contains at least one of the provided flagTags or AND limit the evaluation to those which contains all the flagTags.",
+          "type": "string",
+          "default": "ANY",
+          "enum": [
+            "ANY",
+            "ALL"
+          ]
         }
       }
     },
@@ -3617,6 +3635,15 @@ func init() {
             "type": "string"
           },
           "x-omitempty": true
+        },
+        "flagTagsOperator": {
+          "description": "determine how flagTags is used to filter flags to be evaluated. OR extends the evaluation to those which contains at least one of the provided flagTags or AND limit the evaluation to those which contains all the flagTags.",
+          "type": "string",
+          "default": "ANY",
+          "enum": [
+            "ANY",
+            "ALL"
+          ]
         }
       }
     },
@@ -3716,6 +3743,15 @@ func init() {
             "type": "string",
             "minLength": 1
           }
+        },
+        "flagTagsOperator": {
+          "description": "determine how flagTags is used to filter flags to be evaluated. OR extends the evaluation to those which contains at least one of the provided flagTags or AND limit the evaluation to those which contains all the flagTags.",
+          "type": "string",
+          "default": "ANY",
+          "enum": [
+            "ANY",
+            "ALL"
+          ]
         }
       }
     },

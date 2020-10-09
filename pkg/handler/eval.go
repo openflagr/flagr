@@ -51,17 +51,19 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 	flagIDs := params.Body.FlagIDs
 	flagKeys := params.Body.FlagKeys
 	flagTags := params.Body.FlagTags
+	flagTagsOperator := params.Body.FlagTagsOperator
 	results := &models.EvaluationBatchResponse{}
 
 	// TODO make it concurrent
 	for _, entity := range entities {
 		if len(flagTags) > 0 {
 			evalContext := models.EvalContext{
-				EnableDebug:   params.Body.EnableDebug,
-				EntityContext: entity.EntityContext,
-				EntityID:      entity.EntityID,
-				EntityType:    entity.EntityType,
-				FlagTags:      flagTags,
+				EnableDebug:      params.Body.EnableDebug,
+				EntityContext:    entity.EntityContext,
+				EntityID:         entity.EntityID,
+				EntityType:       entity.EntityType,
+				FlagTags:         flagTags,
+				FlagTagsOperator: flagTagsOperator,
 			}
 			evalResults := EvalFlagsByTags(evalContext)
 			results.EvaluationResults = append(results.EvaluationResults, evalResults...)
@@ -133,8 +135,7 @@ var LookupFlag = func(evalContext models.EvalContext) *entity.Flag {
 
 var EvalFlagsByTags = func(evalContext models.EvalContext) []*models.EvalResult {
 	cache := GetEvalCache()
-
-	fs := cache.GetByTags(evalContext.FlagTags)
+	fs := cache.GetByTags(evalContext.FlagTags, evalContext.FlagTagsOperator)
 	results := []*models.EvalResult{}
 	for _, f := range fs {
 		results = append(results, EvalFlagWithContext(f, evalContext))

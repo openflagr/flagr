@@ -5,6 +5,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/checkr/flagr/swagger_gen/models"
+
 	"github.com/checkr/flagr/pkg/config"
 	"github.com/checkr/flagr/pkg/entity"
 	"github.com/checkr/flagr/pkg/util"
@@ -59,16 +61,15 @@ func (ec *EvalCache) Start() {
 	}()
 }
 
-func (ec *EvalCache) GetByTags(tags []string) []*entity.Flag {
-	results := map[uint]*entity.Flag{}
-	cache := ec.cache.Load().(*cacheContainer)
-	for _, t := range tags {
-		fSet, ok := cache.tagCache[t]
-		if ok {
-			for fID, f := range fSet {
-				results[fID] = f
-			}
-		}
+func (ec *EvalCache) GetByTags(tags []string, operator *string) []*entity.Flag {
+	var results map[uint]*entity.Flag
+
+	if operator == nil || *operator == models.EvaluationBatchRequestFlagTagsOperatorANY {
+		results = ec.getByTagsANY(tags)
+	}
+
+	if operator != nil && *operator == models.EvaluationBatchRequestFlagTagsOperatorALL {
+		results = ec.getByTagsALL(tags)
 	}
 
 	values := make([]*entity.Flag, 0, len(results))
@@ -77,6 +78,54 @@ func (ec *EvalCache) GetByTags(tags []string) []*entity.Flag {
 	}
 
 	return values
+}
+
+func (ec *EvalCache) getByTagsANY(tags []string) map[uint]*entity.Flag {
+	results := map[uint]*entity.Flag{}
+	cache := ec.cache.Load().(*cacheContainer)
+
+	for _, t := range tags {
+		fSet, ok := cache.tagCache[t]
+		if ok {
+			for fID, f := range fSet {
+				results[fID] = f
+			}
+		}
+	}
+	return results
+}
+
+func (ec *EvalCache) getByTagsALL(tags []string) map[uint]*entity.Flag {
+	results := map[uint]*entity.Flag{}
+	cache := ec.cache.Load().(*cacheContainer)
+
+	for i, t := range tags {
+		fSet, ok := cache.tagCache[t]
+		if !ok {
+			// no flags
+			return map[uint]*entity.Flag{}
+		}
+
+		if i == 0 {
+			// store all the flags
+			for fID, f := range fSet {
+				results[fID] = f
+			}
+		} else {
+			for fID := range results {
+				if _, ok := fSet[fID]; !ok {
+					delete(results, fID)
+				}
+			}
+
+			// no flags left
+			if len(results) == 0 {
+				return results
+			}
+		}
+	}
+
+	return results
 }
 
 // GetByFlagKeyOrID gets the flag by Key or ID

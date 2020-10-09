@@ -6,6 +6,7 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"encoding/json"
 	"strconv"
 
 	"github.com/go-openapi/errors"
@@ -38,6 +39,10 @@ type EvaluationBatchRequest struct {
 	// flagTags. Either flagIDs, flagKeys or flagTags works. If pass in multiples, Flagr may return duplicate results.
 	// Min Items: 1
 	FlagTags []string `json:"flagTags"`
+
+	// determine how flagTags is used to filter flags to be evaluated. OR extends the evaluation to those which contains at least one of the provided flagTags or AND limit the evaluation to those which contains all the flagTags.
+	// Enum: [ANY ALL]
+	FlagTagsOperator *string `json:"flagTagsOperator,omitempty"`
 }
 
 // Validate validates this evaluation batch request
@@ -57,6 +62,10 @@ func (m *EvaluationBatchRequest) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateFlagTags(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateFlagTagsOperator(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -161,6 +170,49 @@ func (m *EvaluationBatchRequest) validateFlagTags(formats strfmt.Registry) error
 			return err
 		}
 
+	}
+
+	return nil
+}
+
+var evaluationBatchRequestTypeFlagTagsOperatorPropEnum []interface{}
+
+func init() {
+	var res []string
+	if err := json.Unmarshal([]byte(`["ANY","ALL"]`), &res); err != nil {
+		panic(err)
+	}
+	for _, v := range res {
+		evaluationBatchRequestTypeFlagTagsOperatorPropEnum = append(evaluationBatchRequestTypeFlagTagsOperatorPropEnum, v)
+	}
+}
+
+const (
+
+	// EvaluationBatchRequestFlagTagsOperatorANY captures enum value "ANY"
+	EvaluationBatchRequestFlagTagsOperatorANY string = "ANY"
+
+	// EvaluationBatchRequestFlagTagsOperatorALL captures enum value "ALL"
+	EvaluationBatchRequestFlagTagsOperatorALL string = "ALL"
+)
+
+// prop value enum
+func (m *EvaluationBatchRequest) validateFlagTagsOperatorEnum(path, location string, value string) error {
+	if err := validate.EnumCase(path, location, value, evaluationBatchRequestTypeFlagTagsOperatorPropEnum, true); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *EvaluationBatchRequest) validateFlagTagsOperator(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.FlagTagsOperator) { // not required
+		return nil
+	}
+
+	// value enum
+	if err := m.validateFlagTagsOperatorEnum("flagTagsOperator", "body", *m.FlagTagsOperator); err != nil {
+		return err
 	}
 
 	return nil
