@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"github.com/checkr/flagr/swagger_gen/models"
 	"testing"
 
 	"github.com/checkr/flagr/pkg/entity"
@@ -35,8 +36,26 @@ func TestGetByTags(t *testing.T) {
 	for i, s := range fixtureFlag.Tags {
 		tags[i] = s.Value
 	}
-	f := ec.GetByTags(tags)
+	any := models.EvalContextFlagTagsOperatorANY
+	all := models.EvalContextFlagTagsOperatorALL
+	f := ec.GetByTags(tags, &any)
 	assert.Len(t, f, 1)
 	assert.Equal(t, f[0].ID, fixtureFlag.ID)
 	assert.Equal(t, f[0].Tags[0].Value, fixtureFlag.Tags[0].Value)
+
+	tags = make([]string, len(fixtureFlag.Tags)+1)
+	for i, s := range fixtureFlag.Tags {
+		tags[i] = s.Value
+	}
+	tags[len(tags)-1] = "tag3"
+
+	f = ec.GetByTags(tags, &any)
+	assert.Len(t, f, 1)
+
+	var operator *string
+	f = ec.GetByTags(tags, operator)
+	assert.Len(t, f, 1)
+
+	f = ec.GetByTags(tags, &all)
+	assert.Len(t, f, 0)
 }
