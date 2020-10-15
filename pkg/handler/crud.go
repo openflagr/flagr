@@ -153,17 +153,10 @@ func (c *crud) GetFlag(params flag.GetFlagParams) middleware.Responder {
 			ErrorMessage("unable to find flag %v in the database", params.FlagID))
 	}
 
-	entity.SaveFlagSnapshot(getDB(), f.ID, getSubjectFromRequest(params.HTTPRequest))
-	notify.All(getDB(), util.SafeUint(f.ID), notify.CREATED, notify.FLAG)
-	return resp
-}
-
-func (c *crud) GetFlag(params flag.GetFlagParams) middleware.Responder {
-	f := &entity.Flag{}
-	err := entity.PreloadSegmentsVariants(getDB()).First(f, params.FlagID).Error
-	if err != nil {
-		return flag.NewGetFlagDefault(404).WithPayload(
-			ErrorMessage("cannot find flag %v. %s", params.FlagID, err))
+	// Something else happened, return a 500
+	if err := result.Error; err != nil {
+		return flag.NewGetFlagDefault(500).WithPayload(
+			ErrorMessage("an unknown error occurred while looking up flag %v: %s", params.FlagID, err))
 	}
 
 	resp := flag.NewGetFlagOK()
