@@ -61,7 +61,6 @@ func SafeStringWithDefault(s interface{}, deft string) (ret string) {
 
 // SafeString safely cast to string
 func SafeString(s interface{}) (ret string) {
-	fmt.Println(cast.ToString(s))
 	return cast.ToString(s)
 }
 
