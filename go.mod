@@ -8,7 +8,7 @@ require (
 	github.com/Shopify/sarama v1.19.0
 	github.com/a8m/kinesis-producer v0.0.0-20180723062609-03228a9f79b3
 	github.com/auth0/go-jwt-middleware v0.0.0-20170425171159-5493cabe49f7
-	github.com/avast/retry-go v2.2.0+incompatible
+	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/aws/aws-sdk-go v1.15.32
 	github.com/brandur/simplebox v0.0.0-20150921201729-84e9865bb03a
 	github.com/bsm/ratelimit v2.0.0+incompatible

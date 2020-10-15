@@ -2,6 +2,7 @@ package notify
 
 import (
 	"fmt"
+	"github.com/avast/retry-go"
 	"io"
 	"io/ioutil"
 	"math"
@@ -47,7 +48,7 @@ func DefaultBackoff(min, max time.Duration, attemptNum int) time.Duration {
 var (
 	defaultRetryWaitMin = 1 * time.Second
 	defaultRetryWaitMax = 30 * time.Second
-	defaultRetryMax     = 4
+	defaultAttemptsMax  = 10
 	respReadLimit       = int64(4096)
 )
 
@@ -56,7 +57,7 @@ type Client struct {
 	HTTPClient    *http.Client
 	RetryWaitMin  time.Duration
 	RetryWaitMax  time.Duration
-	RetryMax      int
+	AttemptsMax   int
 	CheckForRetry CheckForRetry
 	Backoff       Backoff
 }
@@ -69,19 +70,19 @@ func NewClient() *Client {
 		},
 		RetryWaitMin:  defaultRetryWaitMin,
 		RetryWaitMax:  defaultRetryWaitMax,
-		RetryMax:      defaultRetryMax,
+		AttemptsMax:   defaultAttemptsMax,
 		CheckForRetry: DefaultRetryPolicy,
 		Backoff:       DefaultBackoff,
 	}
 
-	if config.Config.NotifyNumRetries != 0 {
-		client.RetryMax = config.Config.NotifyNumRetries
+	if config.Config.NotifyNumAttempts != 0 {
+		client.AttemptsMax = config.Config.NotifyNumAttempts
 	}
 	if config.Config.NotifyRetryMin != 0 {
-		client.RetryMax = config.Config.NotifyRetryMin
+		client.RetryWaitMin = time.Duration(config.Config.NotifyRetryMin) * time.Second
 	}
 	if config.Config.NotifyRetryMax != 0 {
-		client.RetryMax = config.Config.NotifyRetryMax
+		client.RetryWaitMax = time.Duration(config.Config.NotifyRetryMax) * time.Second
 	}
 
 	return client
@@ -89,61 +90,65 @@ func NewClient() *Client {
 
 // Do executes a request
 func (c *Client) Do(req *Request) (*http.Response, error) {
-	i := 0
-
-	for {
-		var code int
-
-		if req.body != nil {
-			if _, err := req.body.Seek(0, 0); err != nil {
-				return nil, fmt.Errorf("failed to seek body: %v", err)
+	i := 1
+	var resp *http.Response
+	err := retry.Do(
+		func() error {
+			if req.body != nil {
+				if _, err := req.body.Seek(0, 0); err != nil {
+					err = fmt.Errorf("failed to seek body: %v", err)
+					return retry.Unrecoverable(err)
+				}
 			}
-		}
 
-		// Attempt request
-		resp, err := c.HTTPClient.Do(req.Request)
-		checkOK, checkErr := c.CheckForRetry(resp, err)
+			// Attempt request
+			resp, err := c.HTTPClient.Do(req.Request)
 
-		if err != nil {
-			logrus.WithFields(logrus.Fields{
-				"err":       err,
-				"reqMethod": req.Method,
-				"reqURL":    req.URL,
-			}).Warn("http request failed for notifier")
-		}
-
-		if !checkOK {
-			if checkErr != nil {
-				err = checkErr
+			if err != nil {
+				logrus.WithFields(logrus.Fields{
+					"err":       err,
+					"reqMethod": req.Method,
+					"reqURL":    req.URL,
+				}).Warn("http request failed for notifier")
 			}
-			return resp, err
-		}
 
-		if err == nil {
-			c.drainBody(resp.Body)
-		}
+			if err == nil {
+				defer func() {
+					c.drainBody(resp.Body)
+				}()
+			}
 
-		remain := c.RetryMax - i
-		if remain == 0 {
-			logrus.WithFields(logrus.Fields{
-				"err":       err,
-				"reqMethod": req.Method,
-				"reqURL":    req.URL,
-			}).Error("exhausted all attempts for request")
-			break
-		}
-		wait := c.Backoff(c.RetryWaitMin, c.RetryWaitMax, i)
+			// REVIEW: integrate with library retry.RetryIf
+			checkOK, checkErr := c.CheckForRetry(resp, err)
+			if !checkOK {
+				if checkErr != nil {
+					err = checkErr
+				}
 
-		desc := fmt.Sprintf("%s %s", req.Method, req.URL)
-		if code > 0 {
-			desc = fmt.Sprintf("%s (status: %d)", desc, code)
-		}
-		fmt.Println(desc)
-		time.Sleep(wait)
-		i++
-	}
+				return err
+			}
 
-	return nil, fmt.Errorf("%s %s giving up after %d attempts", req.Method, req.URL, c.RetryMax+1)
+			// REVIEW: integrate with library retry.OnRetry
+			remain := c.AttemptsMax - i
+			if remain == 0 {
+				logrus.WithFields(logrus.Fields{
+					"err":       err,
+					"reqMethod": req.Method,
+					"reqURL":    req.URL,
+				}).Error("exhausted all attempts for request")
+
+				return retry.Unrecoverable(err)
+			}
+
+			return err
+		},
+		retry.Attempts(uint(c.AttemptsMax)),
+		retry.DelayType(func(n uint, err error, config *retry.Config) time.Duration {
+			return c.Backoff(c.RetryWaitMin, c.RetryWaitMax, int(n))
+		}),
+	)
+
+	return resp, err
 }
 
 func (c *Client) drainBody(body io.ReadCloser) {

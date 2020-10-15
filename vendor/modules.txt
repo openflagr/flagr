@@ -27,7 +27,7 @@ github.com/asaskevich/govalidator
 # github.com/auth0/go-jwt-middleware v0.0.0-20170425171159-5493cabe49f7
 ## explicit
 github.com/auth0/go-jwt-middleware
-# github.com/avast/retry-go v2.2.0+incompatible
+# github.com/avast/retry-go v3.0.0+incompatible
 ## explicit
 github.com/avast/retry-go
 # github.com/aws/aws-sdk-go v1.15.32

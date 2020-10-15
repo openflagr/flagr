@@ -212,8 +212,8 @@ var Config = struct {
 
 	// NotifyTimeout - for each notifier that uses http.Client to make requests
 	NotifyTimeout time.Duration `env:"FLAGR_NOTIFY_TIMEOUT" envDefault:"30"`
-	// NotifyNumRetries - how many attempts should be made for each notification after a failure
-	NotifyNumRetries int `env:"FLAGR_NOTIFY_NUM_RETRIES" envDefault:"0"`
+	// NotifyNumAttempts - how many attempts should be made for each notification in case of failure
+	NotifyNumAttempts int `env:"FLAGR_NOTIFY_NUM_ATTEMPTS" envDefault:"10"`
 	// NotifyRetryMin - the minimum amount of time that should pass between retry attempts
 	NotifyRetryMin int `env:"FLAGR_NOTIFY_RETRY_MIN" envDefault:"0"`
 	// NotifyRetryMax - the maximum amount of time that should pass between retry attempts

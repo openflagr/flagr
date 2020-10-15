@@ -35,7 +35,7 @@ func NewTestClient(fn roundTripFunc) *Client {
 		},
 		RetryWaitMin:  defaultRetryWaitMin,
 		RetryWaitMax:  defaultRetryWaitMax,
-		RetryMax:      0, // Retries disabled deliberately so that unhappy paths dont take 15seconds!
+		AttemptsMax:   1, // Retries disabled deliberately so that unhappy paths dont take 15seconds!
 		CheckForRetry: DefaultRetryPolicy,
 		Backoff:       DefaultBackoff,
 	}
