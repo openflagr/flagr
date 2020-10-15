@@ -63,7 +63,7 @@ func (n *Slack) Notify(f *entity.Flag, b itemAction, i itemType) error {
 		return err
 	}
 
-	_, err = n.client.Post(config.Config.SlackURL, bytes.NewReader(buf.Bytes()))
+	_, err = n.client.Post(config.Config.NotifySlackURL, bytes.NewReader(buf.Bytes()))
 
 	if err != nil {
 		return err
@@ -97,7 +97,7 @@ func buildSlackRequest(f *entity.Flag, b itemAction, i itemType) *slackReq {
 	fallbackText := fmt.Sprintf("%s was updated", header)
 
 	slackReq := &slackReq{
-		Channel:  config.Config.SlackChannel,
+		Channel:  config.Config.NotifySlackChannel,
 		Username: "Flagr",
 		Blocks:   blocks,
 		Text:     fallbackText,

@@ -13,9 +13,9 @@ import (
 
 func TestWebhookSendsRequest(t *testing.T) {
 	t.Run("happy code path", func(t *testing.T) {
-		config.Config.WebhookURL = "https://foo.com/1ASDA"
+		config.Config.NotifyWebhookURL = "https://foo.com/1ASDA"
 		client := NewTestClient(func(req *http.Request) *http.Response {
-			assert.Equal(t, config.Config.WebhookURL, req.URL.String())
+			assert.Equal(t, config.Config.NotifyWebhookURL, req.URL.String())
 
 			return &http.Response{
 				StatusCode: 200,
@@ -34,9 +34,9 @@ func TestWebhookSendsRequest(t *testing.T) {
 	})
 
 	t.Run("failing webhook", func(t *testing.T) {
-		config.Config.WebhookURL = "https://foo.com/1ASDA"
+		config.Config.NotifyWebhookURL = "https://foo.com/1ASDA"
 		client := NewTestClient(func(req *http.Request) *http.Response {
-			assert.Equal(t, config.Config.WebhookURL, req.URL.String())
+			assert.Equal(t, config.Config.NotifyWebhookURL, req.URL.String())
 			return &http.Response{
 				StatusCode: 500,
 				// Send response to be tested

@@ -77,11 +77,11 @@ func NewClient() *Client {
 	if config.Config.NotifyNumRetries != 0 {
 		client.RetryMax = config.Config.NotifyNumRetries
 	}
-	if config.Config.RetryMin != 0 {
-		client.RetryMax = config.Config.RetryMin
+	if config.Config.NotifyRetryMin != 0 {
+		client.RetryMax = config.Config.NotifyRetryMin
 	}
-	if config.Config.RetryMax != 0 {
-		client.RetryMax = config.Config.RetryMax
+	if config.Config.NotifyRetryMax != 0 {
+		client.RetryMax = config.Config.NotifyRetryMax
 	}
 
 	return client

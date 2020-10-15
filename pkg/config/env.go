@@ -214,16 +214,16 @@ var Config = struct {
 	NotifyTimeout time.Duration `env:"FLAGR_NOTIFY_TIMEOUT" envDefault:"30"`
 	// NotifyNumRetries - how many attempts should be made for each notification after a failure
 	NotifyNumRetries int `env:"FLAGR_NOTIFY_NUM_RETRIES" envDefault:"0"`
-	// RetryMin - the minimum amount of time that should pass between retry attempts
-	RetryMin int `env:"FLAGR_NOTIFY_MIN_BACKOFF" envDefault:"0"`
-	// RetryMax - the maximum amount of time that should pass between retry attempts
-	RetryMax int `env:"FLAGR_NOTIFY_MAX_BACKOFFs" envDefault:"0"`
+	// NotifyRetryMin - the minimum amount of time that should pass between retry attempts
+	NotifyRetryMin int `env:"FLAGR_NOTIFY_RETRY_MIN" envDefault:"0"`
+	// NotifyRetryMax - the maximum amount of time that should pass between retry attempts
+	NotifyRetryMax int `env:"FLAGR_NOTIFY_RETRY_MAX" envDefault:"0"`
 
-	// Webhooks
-	WebhookEnabled bool   `env:"FLAGR_WEBHOOK_ENABLED" envDefault:"false"`
-	WebhookURL     string `env:"FLAGR_WEBHOOK_URL" envDefault:""`
-	// Slack webhooks
-	SlackWebhookEnabled bool   `env:"FLAGR_SLACK_ENABLED" envDefault:"false"`
-	SlackURL            string `env:"FLAGR_SLACK_URL" envDefault:""`
-	SlackChannel        string `env:"FLAGR_SLACK_CHANNEL" envDefault:""`
+	// Notify Webhooks
+	NotifyWebhookEnabled bool   `env:"FLAGR_NOTIFY_WEBHOOK_ENABLED" envDefault:"false"`
+	NotifyWebhookURL     string `env:"FLAGR_NOTIFY_WEBHOOK_URL" envDefault:""`
+	// Notify Slack webhooks
+	NotifySlackWebhookEnabled bool   `env:"FLAGR_NOTIFY_SLACK_ENABLED" envDefault:"false"`
+	NotifySlackURL            string `env:"FLAGR_NOTIFY_SLACK_URL" envDefault:""`
+	NotifySlackChannel        string `env:"FLAGR_NOTIFY_SLACK_CHANNEL" envDefault:""`
 }{}

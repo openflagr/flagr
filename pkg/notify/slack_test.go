@@ -14,9 +14,9 @@ import (
 
 func TestSlackSendsRequest(t *testing.T) {
 	t.Run("happy code path", func(t *testing.T) {
-		config.Config.SlackURL = "https://foo.com/1ASDA"
+		config.Config.NotifySlackURL = "https://foo.com/1ASDA"
 		client := NewTestClient(func(req *http.Request) *http.Response {
-			assert.Equal(t, config.Config.SlackURL, req.URL.String())
+			assert.Equal(t, config.Config.NotifySlackURL, req.URL.String())
 			return &http.Response{
 				StatusCode: 200,
 				// Send response to be tested
@@ -33,9 +33,9 @@ func TestSlackSendsRequest(t *testing.T) {
 	})
 
 	t.Run("failing webhook", func(t *testing.T) {
-		config.Config.SlackURL = "https://foo.com/1ASDA"
+		config.Config.NotifySlackURL = "https://foo.com/1ASDA"
 		client := NewTestClient(func(req *http.Request) *http.Response {
-			assert.Equal(t, config.Config.SlackURL, req.URL.String())
+			assert.Equal(t, config.Config.NotifySlackURL, req.URL.String())
 			return &http.Response{
 				StatusCode: 500,
 				// Send response to be tested

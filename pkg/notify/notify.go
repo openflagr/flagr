@@ -24,10 +24,10 @@ var integrations []Integration
 func init() {
 	client := NewClient()
 
-	if config.Config.WebhookEnabled {
+	if config.Config.NotifyWebhookEnabled {
 		integrations = append(integrations, Integration{notifier: NewWebhook(client), name: "webhook"})
 	}
-	if config.Config.SlackWebhookEnabled {
+	if config.Config.NotifySlackWebhookEnabled {
 		integrations = append(integrations, Integration{notifier: NewSlack(client), name: "slack"})
 	}
 }

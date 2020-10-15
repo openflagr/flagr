@@ -49,7 +49,7 @@ func (w *Webhook) Notify(f *entity.Flag, b itemAction, i itemType) error {
 		return err
 	}
 
-	_, err = w.client.Post(config.Config.WebhookURL, bytes.NewReader(buf.Bytes()))
+	_, err = w.client.Post(config.Config.NotifyWebhookURL, bytes.NewReader(buf.Bytes()))
 	if err != nil {
 		return err
 	}
