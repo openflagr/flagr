@@ -28,7 +28,7 @@ func TestSlackSendsRequest(t *testing.T) {
 
 		slackHook := NewSlack(client)
 		f := entity.GenFixtureFlag()
-		err := slackHook.Notify(&f, "TOGGLED", "FLAG")
+		err := slackHook.Notify(&f, "TOGGLED", "FLAG", "author@example.com")
 		assert.NoError(t, err)
 	})
 
@@ -47,24 +47,37 @@ func TestSlackSendsRequest(t *testing.T) {
 
 		slackHook := NewSlack(client)
 		f := entity.GenFixtureFlag()
-		err := slackHook.Notify(&f, "TOGGLED", "FLAG")
+		err := slackHook.Notify(&f, "TOGGLED", "FLAG", "author@example.com")
 		assert.Error(t, err)
 	})
 
 	t.Run("slack req is built properly for toggle notifications", func(t *testing.T) {
 		f := entity.GenFixtureFlag()
-		slackReq := buildSlackRequest(&f, TOGGLED, FLAG)
+
+		slackReq := buildSlackRequest(&f, TOGGLED, FLAG, "")
 		fmt.Printf("%+v\n", slackReq)
 		assert.Equal(t, "Flag #100 () was updated", slackReq.Text)
 		assert.Contains(t, slackReq.Blocks[0].Text.Text, "Flag #100 () has been enabled at")
+		assert.Equal(t, "Flagr", slackReq.Username)
+
+		slackReq = buildSlackRequest(&f, TOGGLED, FLAG, "author@example.com")
+		fmt.Printf("%+v\n", slackReq)
+		assert.Equal(t, "Flag #100 () by author@example.com was updated", slackReq.Text)
+		assert.Contains(t, slackReq.Blocks[0].Text.Text, "Flag #100 () by author@example.com has been enabled at")
 		assert.Equal(t, "Flagr", slackReq.Username)
 	})
 
 	t.Run("slack req is built properly for crud notifications", func(t *testing.T) {
 		f := entity.GenFixtureFlag()
-		slackReq := buildSlackRequest(&f, UPDATED, SEGMENT)
+
+		slackReq := buildSlackRequest(&f, UPDATED, SEGMENT, "")
 		assert.Equal(t, "Flag #100 () was updated", slackReq.Text)
 		assert.Equal(t, "*Flag #100 ()*\n Segment was Updated", slackReq.Blocks[0].Text.Text)
+		assert.Equal(t, "Flagr", slackReq.Username)
+
+		slackReq = buildSlackRequest(&f, UPDATED, SEGMENT, "author@example.com")
+		assert.Equal(t, "Flag #100 () by author@example.com was updated", slackReq.Text)
+		assert.Equal(t, "*Flag #100 () by author@example.com*\n Segment was Updated", slackReq.Blocks[0].Text.Text)
 		assert.Equal(t, "Flagr", slackReq.Username)
 	})
 }

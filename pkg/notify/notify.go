@@ -10,7 +10,7 @@ import (
 // A Notifier notifies about flags state
 // It returns an error if unsuccessful
 type Notifier interface {
-	Notify(*entity.Flag, itemAction, itemType) error
+	Notify(*entity.Flag, itemAction, itemType, subject) error
 }
 
 // Integration holds a notifier and a string name for that notifier
@@ -53,8 +53,10 @@ const (
 	CONSTRAINT   itemType = "CONSTRAINT"
 )
 
+type subject string
+
 // All notifies all integrations, and logs an error if any fail
-func All(db *gorm.DB, flagID uint, b itemAction, i itemType) {
+func All(db *gorm.DB, flagID uint, b itemAction, i itemType, s string) {
 	f := &entity.Flag{}
 	if err := db.First(f, flagID).Error; err != nil {
 		logrus.WithFields(logrus.Fields{
@@ -73,7 +75,7 @@ func All(db *gorm.DB, flagID uint, b itemAction, i itemType) {
 	}
 
 	for _, integration := range integrations {
-		err := integration.notifier.Notify(f, b, i)
+		err := integration.notifier.Notify(f, b, i, subject(s))
 
 		if err != nil {
 			logrus.WithFields(logrus.Fields{

@@ -29,7 +29,7 @@ func TestWebhookSendsRequest(t *testing.T) {
 		webhook := NewWebhook(client)
 
 		flag := entity.GenFixtureFlag()
-		err := webhook.Notify(&flag, TOGGLED, FLAG)
+		err := webhook.Notify(&flag, TOGGLED, FLAG, "")
 		assert.NoError(t, err)
 	})
 
@@ -49,7 +49,7 @@ func TestWebhookSendsRequest(t *testing.T) {
 		webhook := NewWebhook(client)
 
 		flag := entity.GenFixtureFlag()
-		err := webhook.Notify(&flag, TOGGLED, FLAG)
+		err := webhook.Notify(&flag, TOGGLED, FLAG, "")
 		assert.Error(t, err)
 	})
 }

@@ -49,10 +49,10 @@ type field struct {
 }
 
 // Notify implements the Notifier interface for Slack Notifications
-func (n *Slack) Notify(f *entity.Flag, b itemAction, i itemType) error {
+func (n *Slack) Notify(f *entity.Flag, b itemAction, i itemType, s subject) error {
 	var err error
 
-	slackReq := buildSlackRequest(f, b, i)
+	slackReq := buildSlackRequest(f, b, i, s)
 	if err != nil {
 		return err
 	}
@@ -84,23 +84,24 @@ func titleCase(i interface{}) string {
 }
 
 // buildSlackRequest builds the correct slack req ready for sending, based on the event in question
-func buildSlackRequest(f *entity.Flag, b itemAction, i itemType) *slackReq {
+func buildSlackRequest(f *entity.Flag, b itemAction, i itemType, s subject) *slackReq {
 	var blocks []block
 	header := fmt.Sprintf("Flag #%d (%s)", f.ID, f.Description)
+	if s != "" {
+		header = fmt.Sprintf("Flag #%d (%s) by %s", f.ID, f.Description, s)
+	}
 
 	if b == TOGGLED {
-		blocks = buildToggledReq(f, header, blocks)
+		blocks = buildToggledReq(header, blocks, f)
 	} else {
 		blocks = buildSectionedReq(header, i, b, blocks, f)
 	}
-
-	fallbackText := fmt.Sprintf("%s was updated", header)
 
 	slackReq := &slackReq{
 		Channel:  config.Config.NotifySlackChannel,
 		Username: "Flagr",
 		Blocks:   blocks,
-		Text:     fallbackText,
+		Text:     fmt.Sprintf("%s was updated", header),
 	}
 	return slackReq
 }
@@ -109,11 +110,13 @@ func buildSlackRequest(f *entity.Flag, b itemAction, i itemType) *slackReq {
 func buildSectionedReq(header string, i itemType, b itemAction, blocks []block, f *entity.Flag) []block {
 	titleStr := fmt.Sprintf("*%s*\n %s was %s", header, titleCase(i), titleCase(b))
 	blocks = append(blocks, section(newField(titleStr)))
+
 	variants := variants(f)
 	if len(variants) > 0 {
 		str := fmt.Sprintf("*Current variants*\n%s", strings.Join(variants, "\n"))
 		blocks = append(blocks, section(newField(str)))
 	}
+
 	segments := segments(f)
 	if len(segments) > 0 {
 		blocks = append(blocks, section(segments))
@@ -122,7 +125,7 @@ func buildSectionedReq(header string, i itemType, b itemAction, blocks []block, 
 }
 
 // buildToggledReq builds the text block for a toggled request
-func buildToggledReq(f *entity.Flag, header string, blocks []block) []block {
+func buildToggledReq(header string, blocks []block, f *entity.Flag) []block {
 	var tmpl string
 	if f.Enabled {
 		tmpl = "%s has been enabled at %s"
@@ -130,8 +133,7 @@ func buildToggledReq(f *entity.Flag, header string, blocks []block) []block {
 		tmpl = "%s has been disabled at %s"
 	}
 	field := newField(fmt.Sprintf(tmpl, header, time.Now().Format(time.RFC850)))
-	blocks = append(blocks, block{Type: "section", Text: field})
-	return blocks
+	return append(blocks, block{Type: "section", Text: field})
 }
 
 // variants builds an array of strings containing all variants for a flag
