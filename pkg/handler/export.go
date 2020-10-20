@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"os"
+	"path"
 
 	"github.com/checkr/flagr/pkg/entity"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/export"
@@ -25,7 +26,7 @@ var exportSQLiteHandler = func(p export.GetExportSqliteParams) middleware.Respon
 }
 
 var exportSQLiteFile = func(excludeSnapshots *bool) (file io.ReadCloser, done func(), err error) {
-	fname := fmt.Sprintf("/tmp/flagr_%d.sqlite", rand.Int31())
+	fname := path.Join(os.TempDir(), fmt.Sprintf("flagr_%d.sqlite", rand.Int31()))
 	done = func() {
 		os.Remove(fname)
 		logrus.WithField("file", fname).Debugf("removing the tmp file")

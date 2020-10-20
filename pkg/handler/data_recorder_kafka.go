@@ -36,11 +36,19 @@ var NewKafkaRecorder = func() DataRecorder {
 		config.Config.RecorderKafkaKeyFile,
 		config.Config.RecorderKafkaCAFile,
 		config.Config.RecorderKafkaVerifySSL,
+		config.Config.RecorderKafkaSimpleSSL,
 	)
 	if tlscfg != nil {
 		cfg.Net.TLS.Enable = true
 		cfg.Net.TLS.Config = tlscfg
 	}
+
+	if config.Config.RecorderKafkaUsername != "" && config.Config.RecorderKafkaPassword != "" {
+		cfg.Net.SASL.Enable = true
+	}
+	cfg.Net.SASL.User = config.Config.RecorderKafkaUsername
+	cfg.Net.SASL.Password = config.Config.RecorderKafkaPassword
+
 	cfg.Producer.RequiredAcks = sarama.WaitForLocal
 	cfg.Producer.Retry.Max = config.Config.RecorderKafkaRetryMax
 	cfg.Producer.Flush.Frequency = config.Config.RecorderKafkaFlushFrequency
@@ -77,7 +85,7 @@ var NewKafkaRecorder = func() DataRecorder {
 	}
 }
 
-func createTLSConfiguration(certFile string, keyFile string, caFile string, verifySSL bool) (t *tls.Config) {
+func createTLSConfiguration(certFile string, keyFile string, caFile string, verifySSL bool, simpleSSL bool) (t *tls.Config) {
 	if certFile != "" && keyFile != "" && caFile != "" {
 		cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 		if err != nil {
@@ -95,6 +103,12 @@ func createTLSConfiguration(certFile string, keyFile string, caFile string, veri
 		t = &tls.Config{
 			Certificates:       []tls.Certificate{cert},
 			RootCAs:            caCertPool,
+			InsecureSkipVerify: !verifySSL,
+		}
+	}
+
+	if simpleSSL {
+		t = &tls.Config{
 			InsecureSkipVerify: !verifySSL,
 		}
 	}
