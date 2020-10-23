@@ -43,11 +43,11 @@ var NewKafkaRecorder = func() DataRecorder {
 		cfg.Net.TLS.Config = tlscfg
 	}
 
-	if config.Config.RecorderKafkaUsername != "" && config.Config.RecorderKafkaPassword != "" {
+	if config.Config.RecorderKafkaSASLUsername != "" && config.Config.RecorderKafkaSASLPassword != "" {
 		cfg.Net.SASL.Enable = true
+		cfg.Net.SASL.User = config.Config.RecorderKafkaSASLUsername
+		cfg.Net.SASL.Password = config.Config.RecorderKafkaSASLPassword
 	}
-	cfg.Net.SASL.User = config.Config.RecorderKafkaUsername
-	cfg.Net.SASL.Password = config.Config.RecorderKafkaPassword
 
 	cfg.Producer.RequiredAcks = sarama.WaitForLocal
 	cfg.Producer.Retry.Max = config.Config.RecorderKafkaRetryMax
