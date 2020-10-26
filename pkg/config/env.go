@@ -134,6 +134,9 @@ var Config = struct {
 	RecorderKafkaKeyFile        string        `env:"FLAGR_RECORDER_KAFKA_KEYFILE" envDefault:""`
 	RecorderKafkaCAFile         string        `env:"FLAGR_RECORDER_KAFKA_CAFILE" envDefault:""`
 	RecorderKafkaVerifySSL      bool          `env:"FLAGR_RECORDER_KAFKA_VERIFYSSL" envDefault:"false"`
+	RecorderKafkaSimpleSSL      bool          `env:"FLAGR_RECORDER_KAFKA_SIMPLE_SSL" envDefault:"false"`
+	RecorderKafkaSASLUsername   string        `env:"FLAGR_RECORDER_KAFKA_SASL_USERNAME" envDefault:""`
+	RecorderKafkaSASLPassword   string        `env:"FLAGR_RECORDER_KAFKA_SASL_PASSWORD" envDefault:""`
 	RecorderKafkaVerbose        bool          `env:"FLAGR_RECORDER_KAFKA_VERBOSE" envDefault:"true"`
 	RecorderKafkaTopic          string        `env:"FLAGR_RECORDER_KAFKA_TOPIC" envDefault:"flagr-records"`
 	RecorderKafkaRetryMax       int           `env:"FLAGR_RECORDER_KAFKA_RETRYMAX" envDefault:"5"`

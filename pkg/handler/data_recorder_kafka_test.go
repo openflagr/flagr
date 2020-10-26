@@ -42,6 +42,7 @@ func TestCreateTLSConfiguration(t *testing.T) {
 			"./testdata/certificates/alice.key",
 			"./testdata/certificates/ca.crt",
 			true,
+			false,
 		)
 		assert.NotZero(t, tlsConfig)
 
@@ -50,8 +51,18 @@ func TestCreateTLSConfiguration(t *testing.T) {
 			"",
 			"",
 			true,
+			false,
 		)
 		assert.Zero(t, tlsConfig)
+
+		tlsConfig = createTLSConfiguration(
+			"",
+			"",
+			"",
+			true,
+			true,
+		)
+		assert.NotZero(t, tlsConfig)
 	})
 
 	t.Run("cert or key file not found", func(t *testing.T) {
@@ -61,6 +72,7 @@ func TestCreateTLSConfiguration(t *testing.T) {
 				"./testdata/certificates/not_found.key",
 				"./testdata/certificates/ca.crt",
 				true,
+				false,
 			)
 		})
 	})
@@ -72,6 +84,7 @@ func TestCreateTLSConfiguration(t *testing.T) {
 				"./testdata/certificates/alice.key",
 				"./testdata/certificates/not_found.crt",
 				true,
+				false,
 			)
 		})
 	})
