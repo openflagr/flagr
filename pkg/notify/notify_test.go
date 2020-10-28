@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/checkr/flagr/pkg/entity"
 	"github.com/stretchr/testify/assert"
@@ -33,8 +34,8 @@ func NewTestClient(fn roundTripFunc) *Client {
 		HTTPClient: &http.Client{
 			Transport: roundTripFunc(fn),
 		},
-		RetryWaitMin:  defaultRetryWaitMin,
-		RetryWaitMax:  defaultRetryWaitMax,
+		RetryWaitMin:  1 * time.Second,
+		RetryWaitMax:  10 * time.Second,
 		AttemptsMax:   1, // Retries disabled deliberately so that unhappy paths dont take 15seconds!
 		CheckForRetry: DefaultRetryPolicy,
 		Backoff:       DefaultBackoff,

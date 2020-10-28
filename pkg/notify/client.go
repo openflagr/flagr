@@ -2,12 +2,13 @@ package notify
 
 import (
 	"fmt"
-	"github.com/avast/retry-go"
 	"io"
 	"io/ioutil"
 	"math"
 	"net/http"
 	"time"
+
+	"github.com/avast/retry-go"
 
 	"github.com/checkr/flagr/pkg/config"
 	"github.com/sirupsen/logrus"
@@ -45,12 +46,7 @@ func DefaultBackoff(min, max time.Duration, attemptNum int) time.Duration {
 	return sleep
 }
 
-var (
-	defaultRetryWaitMin = 1 * time.Second
-	defaultRetryWaitMax = 30 * time.Second
-	defaultAttemptsMax  = 10
-	respReadLimit       = int64(4096)
-)
+var respReadLimit = int64(4096)
 
 // Client holds a http.Client and retry configuration values
 type Client struct {
@@ -64,28 +60,16 @@ type Client struct {
 
 // NewClient spins up a Client with default retry configuration
 func NewClient() *Client {
-	client := &Client{
+	return &Client{
 		HTTPClient: &http.Client{
-			Timeout: time.Duration(config.Config.NotifyTimeout * time.Second),
+			Timeout: config.Config.NotifyTimeout,
 		},
-		RetryWaitMin:  defaultRetryWaitMin,
-		RetryWaitMax:  defaultRetryWaitMax,
-		AttemptsMax:   defaultAttemptsMax,
+		RetryWaitMin:  config.Config.NotifyRetryMin,
+		RetryWaitMax:  config.Config.NotifyRetryMax,
+		AttemptsMax:   config.Config.NotifyNumAttempts,
 		CheckForRetry: DefaultRetryPolicy,
 		Backoff:       DefaultBackoff,
 	}
-
-	if config.Config.NotifyNumAttempts != 0 {
-		client.AttemptsMax = config.Config.NotifyNumAttempts
-	}
-	if config.Config.NotifyRetryMin != 0 {
-		client.RetryWaitMin = time.Duration(config.Config.NotifyRetryMin) * time.Second
-	}
-	if config.Config.NotifyRetryMax != 0 {
-		client.RetryWaitMax = time.Duration(config.Config.NotifyRetryMax) * time.Second
-	}
-
-	return client
 }
 
 // Do executes a request

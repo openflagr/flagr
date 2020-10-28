@@ -211,13 +211,13 @@ var Config = struct {
 	WebPrefix string `env:"FLAGR_WEB_PREFIX" envDefault:""`
 
 	// NotifyTimeout - for each notifier that uses http.Client to make requests
-	NotifyTimeout time.Duration `env:"FLAGR_NOTIFY_TIMEOUT" envDefault:"30"`
+	NotifyTimeout time.Duration `env:"FLAGR_NOTIFY_TIMEOUT" envDefault:"30s"`
 	// NotifyNumAttempts - how many attempts should be made for each notification in case of failure
 	NotifyNumAttempts int `env:"FLAGR_NOTIFY_NUM_ATTEMPTS" envDefault:"10"`
 	// NotifyRetryMin - the minimum amount of time that should pass between retry attempts
-	NotifyRetryMin int `env:"FLAGR_NOTIFY_RETRY_MIN" envDefault:"0"`
+	NotifyRetryMin time.Duration `env:"FLAGR_NOTIFY_RETRY_MIN" envDefault:"1s"`
 	// NotifyRetryMax - the maximum amount of time that should pass between retry attempts
-	NotifyRetryMax int `env:"FLAGR_NOTIFY_RETRY_MAX" envDefault:"0"`
+	NotifyRetryMax time.Duration `env:"FLAGR_NOTIFY_RETRY_MAX" envDefault:"30s"`
 
 	// Notify Webhooks
 	NotifyWebhookEnabled bool   `env:"FLAGR_NOTIFY_WEBHOOK_ENABLED" envDefault:"false"`
