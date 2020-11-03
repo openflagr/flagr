@@ -98,7 +98,7 @@
                     </div>
                   </div>
                 </div>
-                <el-card shadow="hover" :class="toggleInnerConfigCard">
+                <el-card shadow="never" :class="toggleInnerConfigCard">
                   <div class="flex-row id-row">
                     <div class="flex-row-left">
                       <el-tag
@@ -250,7 +250,7 @@
                 </div>
                 <div class="variants-container-inner" v-if="flag.variants.length">
                   <div v-for="variant in flag.variants" :key="variant.id">
-                    <el-card shadow="hover">
+                    <el-card shadow="never">
                       <el-form label-position="left" label-width="100px">
                         <div class="flex-row id-row">
                           <el-tag type="primary" :disable-transitions="true">
