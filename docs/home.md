@@ -26,7 +26,7 @@ export PORT=18000
 export FLAGR_DB_DBDRIVER=mysql
 export FLAGR_DB_DBCONNECTIONSTR=root:@tcp(127.0.0.1:18100)/flagr?parseTime=true
 
-# Run the docker image. Ideally, the deploymenet will be handled by Kubernetes or Mesos.
+# Run the docker image. Ideally, the deployment will be handled by Kubernetes or Mesos.
 docker run -it -p 18000:18000 checkr/flagr
 ```
 
