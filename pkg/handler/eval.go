@@ -276,6 +276,14 @@ var evalSegment = func(
 		m["@entityID"] = evalContext.EntityID
 		m["@entityType"] = evalContext.EntityType
 
+		for propertyName, value := range config.Config.EvalServerEntityContext {
+			if _, ok := m[propertyName]; ok {
+				continue
+			}
+			propertyKey := fmt.Sprintf("@%s", propertyName)
+			m[propertyKey] = value
+		}
+
 		expr := segment.SegmentEvaluation.ConditionsExpr
 		match, err := conditions.Evaluate(expr, m)
 		if err != nil {

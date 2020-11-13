@@ -3,6 +3,7 @@ package handler
 import (
 	"testing"
 
+	"github.com/checkr/flagr/pkg/config"
 	"github.com/checkr/flagr/pkg/entity"
 	"github.com/checkr/flagr/swagger_gen/models"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/evaluation"
@@ -40,13 +41,32 @@ func TestEvalSegment(t *testing.T) {
 
 	t.Run("evalSegment attaches EvalContext members to EntityContext with '@' prefix", func(t *testing.T) {
 		entityID := "entityID1"
-		s := entity.GenFixtureSegmentWithEntityID(entityID)
+		s := entity.GenFixtureSegmentWithAdditionalProperty("@entityID", entityID)
 		s.RolloutPercent = uint(100)
 
 		vID, log, evalNextSegment := evalSegment(100, models.EvalContext{
 			EnableDebug:   true,
 			EntityContext: map[string]interface{}{"dl_state": "CA"},
 			EntityID:      entityID,
+			EntityType:    "entityType1",
+			FlagID:        int64(100),
+		}, s)
+
+		assert.NotNil(t, vID)
+		assert.NotEmpty(t, log)
+		assert.False(t, evalNextSegment)
+	})
+
+	t.Run("evalSegment attaches Config.EvalServerEntityContext to EntityContext", func(t *testing.T) {
+		serverEntityContext := map[string]string{"foo": "bar"}
+		config.Config.EvalServerEntityContext = serverEntityContext
+		s := entity.GenFixtureSegmentWithAdditionalProperty("@foo", "bar")
+		s.RolloutPercent = uint(100)
+
+		vID, log, evalNextSegment := evalSegment(100, models.EvalContext{
+			EnableDebug:   true,
+			EntityContext: map[string]interface{}{"dl_state": "CA"},
+			EntityID:      "entityID1",
 			EntityType:    "entityType1",
 			FlagID:        int64(100),
 		}, s)

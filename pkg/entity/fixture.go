@@ -83,7 +83,7 @@ func GenFixtureSegment() Segment {
 	return s
 }
 
-func GenFixtureSegmentWithEntityID(entityID string) Segment {
+func GenFixtureSegmentWithAdditionalProperty(propertyName string, entityID string) Segment {
 	s := Segment{
 		Model:          gorm.Model{ID: 200},
 		FlagID:         100,
@@ -101,7 +101,7 @@ func GenFixtureSegmentWithEntityID(entityID string) Segment {
 			{
 				Model:     gorm.Model{ID: 501},
 				SegmentID: 200,
-				Property:  "@entityID",
+				Property:  propertyName,
 				Operator:  models.ConstraintOperatorEQ,
 				Value:     fmt.Sprintf(`"%s"`, entityID),
 			},
