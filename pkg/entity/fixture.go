@@ -1,6 +1,8 @@
 package entity
 
 import (
+	"fmt"
+
 	"github.com/checkr/flagr/swagger_gen/models"
 
 	"github.com/jinzhu/gorm"
@@ -58,6 +60,50 @@ func GenFixtureSegment() Segment {
 				Property:  "dl_state",
 				Operator:  models.ConstraintOperatorEQ,
 				Value:     `"CA"`,
+			},
+		},
+		Distributions: []Distribution{
+			{
+				Model:      gorm.Model{ID: 400},
+				SegmentID:  200,
+				VariantID:  300,
+				VariantKey: "control",
+				Percent:    50,
+			},
+			{
+				Model:      gorm.Model{ID: 401},
+				SegmentID:  200,
+				VariantID:  301,
+				VariantKey: "treatment",
+				Percent:    50,
+			},
+		},
+	}
+	s.PrepareEvaluation()
+	return s
+}
+
+func GenFixtureSegmentWithEntityID(entityID string) Segment {
+	s := Segment{
+		Model:          gorm.Model{ID: 200},
+		FlagID:         100,
+		Description:    "",
+		Rank:           0,
+		RolloutPercent: 100,
+		Constraints: []Constraint{
+			{
+				Model:     gorm.Model{ID: 500},
+				SegmentID: 200,
+				Property:  "dl_state",
+				Operator:  models.ConstraintOperatorEQ,
+				Value:     `"CA"`,
+			},
+			{
+				Model:     gorm.Model{ID: 501},
+				SegmentID: 200,
+				Property:  "@entityID",
+				Operator:  models.ConstraintOperatorEQ,
+				Value:     fmt.Sprintf(`"%s"`, entityID),
 			},
 		},
 		Distributions: []Distribution{

@@ -273,6 +273,9 @@ var evalSegment = func(
 			return nil, log, true
 		}
 
+		m["@entityID"] = evalContext.EntityID
+		m["@entityType"] = evalContext.EntityType
+
 		expr := segment.SegmentEvaluation.ConditionsExpr
 		match, err := conditions.Evaluate(expr, m)
 		if err != nil {

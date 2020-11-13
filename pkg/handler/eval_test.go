@@ -38,6 +38,24 @@ func TestEvalSegment(t *testing.T) {
 		assert.False(t, evalNextSegment)
 	})
 
+	t.Run("evalSegment attaches EvalContext members to EntityContext with '@' prefix", func(t *testing.T) {
+		entityID := "entityID1"
+		s := entity.GenFixtureSegmentWithEntityID(entityID)
+		s.RolloutPercent = uint(100)
+
+		vID, log, evalNextSegment := evalSegment(100, models.EvalContext{
+			EnableDebug:   true,
+			EntityContext: map[string]interface{}{"dl_state": "CA"},
+			EntityID:      entityID,
+			EntityType:    "entityType1",
+			FlagID:        int64(100),
+		}, s)
+
+		assert.NotNil(t, vID)
+		assert.NotEmpty(t, log)
+		assert.False(t, evalNextSegment)
+	})
+
 	t.Run("test constraint evaluation error", func(t *testing.T) {
 		s := entity.GenFixtureSegment()
 		s.RolloutPercent = uint(100)
