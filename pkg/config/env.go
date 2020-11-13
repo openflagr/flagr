@@ -42,6 +42,8 @@ var Config = struct {
 	// EvalOnlyMode - will only expose the evaluation related endpoints.
 	// This field will be derived from DBDriver
 	EvalOnlyMode bool `env:"FLAGR_EVAL_ONLY_MODE" envDefault:"false"`
+	// additional values to put in EntityContext when evaluating segments
+	EvalServerEntityContext map[string]string `env:"FLAGR_EVAL_SERVER_ENTITY_CONTEXT" envDefault:"{}"`
 
 	/**
 	DBDriver and DBConnectionStr define how we can write and read flags data.
@@ -151,7 +153,7 @@ var Config = struct {
 	RecorderKinesisFlushInterval       time.Duration `env:"FLAGR_RECORDER_KINESIS_FLUSH_INTERVAL" envDefault:"5s"`
 	RecorderKinesisBatchCount          int           `env:"FLAGR_RECORDER_KINESIS_BATCH_COUNT" envDefault:"500"`
 	RecorderKinesisBatchSize           int           `env:"FLAGR_RECORDER_KINESIS_BATCH_SIZE" envDefault:"0"`
-	RecorderKinesisAggregateBatchCount int           `env:"FLAGR_RECORDER_KINESIS_AGGREGATE_BATCH_COUNT" envDefault:"4294967295"`
+	RecorderKinesisAggregateBatchCount int           `env:"FLAGR_RECORDER_KINESIS_AGGREGATE_BATCH_COUNT" envDefault:"2147483647"`
 	RecorderKinesisAggregateBatchSize  int           `env:"FLAGR_RECORDER_KINESIS_AGGREGATE_BATCH_SIZE" envDefault:"51200"`
 	RecorderKinesisVerbose             bool          `env:"FLAGR_RECORDER_KINESIS_VERBOSE" envDefault:"false"`
 
