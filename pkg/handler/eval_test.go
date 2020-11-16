@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/checkr/flagr/pkg/config"
@@ -41,8 +42,16 @@ func TestEvalSegment(t *testing.T) {
 
 	t.Run("evalSegment attaches EvalContext members to EntityContext with '@' prefix", func(t *testing.T) {
 		entityID := "entityID1"
-		s := entity.GenFixtureSegmentWithAdditionalProperty("@entityID", entityID)
+		s := entity.GenFixtureSegment()
+		s.Constraints = append(s.Constraints, entity.Constraint{
+			Model:     gorm.Model{ID: 501},
+			SegmentID: 200,
+			Property:  "@entityID",
+			Operator:  models.ConstraintOperatorEQ,
+			Value:     fmt.Sprintf(`"%s"`, entityID),
+		})
 		s.RolloutPercent = uint(100)
+		s.PrepareEvaluation()
 
 		vID, log, evalNextSegment := evalSegment(100, models.EvalContext{
 			EnableDebug:   true,
@@ -60,8 +69,16 @@ func TestEvalSegment(t *testing.T) {
 	t.Run("evalSegment attaches Config.EvalServerEntityContext to EntityContext", func(t *testing.T) {
 		serverEntityContext := map[string]string{"foo": "bar"}
 		config.Config.EvalServerEntityContext = serverEntityContext
-		s := entity.GenFixtureSegmentWithAdditionalProperty("@foo", "bar")
+		s := entity.GenFixtureSegment()
+		s.Constraints = append(s.Constraints, entity.Constraint{
+			Model:     gorm.Model{ID: 501},
+			SegmentID: 200,
+			Property:  "@foo",
+			Operator:  models.ConstraintOperatorEQ,
+			Value:     `"bar"`,
+		})
 		s.RolloutPercent = uint(100)
+		s.PrepareEvaluation()
 
 		vID, log, evalNextSegment := evalSegment(100, models.EvalContext{
 			EnableDebug:   true,
