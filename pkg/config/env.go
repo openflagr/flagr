@@ -42,8 +42,22 @@ var Config = struct {
 	// EvalOnlyMode - will only expose the evaluation related endpoints.
 	// This field will be derived from DBDriver
 	EvalOnlyMode bool `env:"FLAGR_EVAL_ONLY_MODE" envDefault:"false"`
-	// additional values to put in EntityContext when evaluating segments
-	EvalServerEntityContext map[string]string `env:"FLAGR_EVAL_SERVER_ENTITY_CONTEXT" envDefault:"{}"`
+	/**
+	FLAGR_EVAL_SERVER_ENTITY_CONTEXT is used to add additional key / value pairs to the
+	entity context when evaluating what flag segment to assign for an entity. To use this, set
+	the env var FLAGR_EVAL_SERVER_ENTITY_CONTEXT to a json reprsentation of the
+	key / value pairs you want to use, and the keys (with '@' prepended) will be made
+	available to use in segment constraints.
+	For example, if you set FLAGR_EVAL_SERVER_ENTITY_CONTEXT={"state": "NY"}, then
+	you can have a segment that checks if property '@state' in ["NY", "CA"] and it would match,
+	but a segment with '@state' in ["PA"] would not match.
+
+	This can be especially handy in the case that FLAGR_DB_DBDRIVER is json_http, where flagr fetches
+	the flag DB from a shared location and then performs evaluation locally. In this way your local
+	flagr server can add extra evaluation context with EvalServerEntityContext, and these values
+	don't have to be sent by the client.
+	*/
+	EvalServerEntityContext map[string]string `env:"EvalServerEntityContext" envDefault:"{}"`
 
 	/**
 	DBDriver and DBConnectionStr define how we can write and read flags data.

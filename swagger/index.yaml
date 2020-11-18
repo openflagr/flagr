@@ -443,6 +443,7 @@ definitions:
         type: string
       entityContext:
         type: object
+        description: Key / value pairs representing properties of the entity that can be used to evaluate segment constraints.  The Flagr evaluation engine also adds @entityID, @entityType, and any additional properties from the its EvalServerEntityContext configuration.
       enableDebug:
         type: boolean
       flagID:

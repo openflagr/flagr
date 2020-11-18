@@ -11,7 +11,7 @@ The definitions of the following concepts are in [API doc](https://checkr.github
 - **Segment** represents the segmentation, i.e. the set of audience we want to target. Segment is the smallest unit of a component we can analyze in Flagr Metrics.
 - **Constraint** represents rules that we can use to define the audience of the segment. In other words, the audience in the segment is defined by a set of constraints. Specifically, in Flagr, the constraints are connected with `AND` in a segment.
 - **Distribution** represents the distribution of variants in a segment.
-- **Entity** represents the context of what we are going to assign the variant on. Usually, Flagr expects the context coming with the entity, so that one can define constraints based on the context of the entity.
+- **Entity** represents the context of what we are going to assign the variant on, consisting of an ID, type, and additional optional properties (context).  To evaluate constraints, Flagr uses the incoming entity context and adds properties for @entityID, @entityType, and any additional properties defined by the server configuration.
 - **Rollout** and deterministic random logic. The goal here is to ensure deterministic and persistent evaluation result for entities. Steps to evaluating a flag given an entity context:
     - Take the unique ID from the entity, hash it using a hash function that has a uniform distribution (e.g. CRC32, MD5).
     - Take the hash value (base 10) and mod 1000. 1000 is the total number of buckets used in Flagr.
