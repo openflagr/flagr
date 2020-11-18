@@ -57,7 +57,7 @@ var Config = struct {
 	flagr server can add extra evaluation context with EvalServerEntityContext, and these values
 	don't have to be sent by the client.
 	*/
-	EvalServerEntityContext map[string]string `env:"EvalServerEntityContext" envDefault:"{}"`
+	EvalServerEntityContext map[string]string `env:"FLAGR_EVAL_SERVER_ENTITY_CONTEXT" envDefault:"{}"`
 
 	/**
 	DBDriver and DBConnectionStr define how we can write and read flags data.
