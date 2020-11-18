@@ -67,8 +67,6 @@ func TestEvalSegment(t *testing.T) {
 	})
 
 	t.Run("evalSegment attaches Config.EvalServerEntityContext to EntityContext", func(t *testing.T) {
-		serverEntityContext := map[string]string{"foo": "bar"}
-		config.Config.EvalServerEntityContext = serverEntityContext
 		s := entity.GenFixtureSegment()
 		s.Constraints = append(s.Constraints, entity.Constraint{
 			Model:     gorm.Model{ID: 501},
@@ -80,6 +78,10 @@ func TestEvalSegment(t *testing.T) {
 		s.RolloutPercent = uint(100)
 		s.PrepareEvaluation()
 
+		origEvalServerEntityContext := config.Config.EvalServerEntityContext
+		serverEntityContext := map[string]string{"foo": "bar"}
+		config.Config.EvalServerEntityContext = serverEntityContext
+
 		vID, log, evalNextSegment := evalSegment(100, models.EvalContext{
 			EnableDebug:   true,
 			EntityContext: map[string]interface{}{"dl_state": "CA"},
@@ -87,6 +89,8 @@ func TestEvalSegment(t *testing.T) {
 			EntityType:    "entityType1",
 			FlagID:        int64(100),
 		}, s)
+
+		config.Config.EvalServerEntityContext = origEvalServerEntityContext
 
 		assert.NotNil(t, vID)
 		assert.NotEmpty(t, log)
