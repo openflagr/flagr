@@ -81,6 +81,7 @@ func TestEvalSegment(t *testing.T) {
 		origEvalServerEntityContext := config.Config.EvalServerEntityContext
 		serverEntityContext := map[string]string{"foo": "bar"}
 		config.Config.EvalServerEntityContext = serverEntityContext
+		defer (func() { config.Config.EvalServerEntityContext = origEvalServerEntityContext })()
 
 		vID, log, evalNextSegment := evalSegment(100, models.EvalContext{
 			EnableDebug:   true,
@@ -89,8 +90,6 @@ func TestEvalSegment(t *testing.T) {
 			EntityType:    "entityType1",
 			FlagID:        int64(100),
 		}, s)
-
-		config.Config.EvalServerEntityContext = origEvalServerEntityContext
 
 		assert.NotNil(t, vID)
 		assert.NotEmpty(t, log)
