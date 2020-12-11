@@ -54,6 +54,7 @@
             style="width: 100%"
           >
             <el-table-column prop="id" align="center" label="Flag ID" sortable fixed width="95"></el-table-column>
+            <el-table-column prop="key" label="Key" min-width="300"></el-table-column>
             <el-table-column prop="description" label="Description" min-width="300"></el-table-column>
             <el-table-column prop="tags" label="Tags" min-width="200">
               <template slot-scope="scope">
@@ -100,6 +101,7 @@
                 style="width: 100%"
               >
                 <el-table-column prop="id" align="center" label="Flag ID" sortable fixed width="95"></el-table-column>
+                <el-table-column prop="key" label="Key" min-width="300"></el-table-column>
                 <el-table-column prop="description" label="Description" min-width="300"></el-table-column>
                 <el-table-column prop="tags" label="Tags" min-width="200">
                   <template slot-scope="scope">
