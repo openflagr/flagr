@@ -1,0 +1,21 @@
+name: Preview environment
+
+on:
+  pull_request:
+    branches: [master]
+
+jobs:
+  create_preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+      - name: Architect Create Preview
+        uses: architect-team/create-preview@v1.0.1
+        with:
+          email: ${{ secrets.ARCHITECT_EMAIL }}
+          password: ${{ secrets.ARCHITECT_TOKEN }}
+          account: architect
+          environment: preview-flagr-${{ github.event.number }}
+          platform: architect
+          component_name: flagr

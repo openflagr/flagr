@@ -1,0 +1,17 @@
+name: Publish Architect.io
+
+on:
+  release:
+    types: [published]
+    branches: [master]
+    tags: [v*.*.*]
+
+jobs:
+  architect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: login
+        run: architect login -e ${{ secrets.ARCHITECT_EMAIL }} -p ${{ secrets.ARCHITECT_TOKEN }}
+      - name: Register Architect tag
+        run: architect register --tag ${{ github.event.release.tag_name }} ./architect.yml

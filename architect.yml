@@ -1,0 +1,41 @@
+name: architect/flagr
+description: A port of Checkr's open-source feature-flagging and experimentation service, Flagr, to an Architect component
+keywords:
+  - flagr
+  - checkr
+  - feature-flags
+  - experimentation
+
+parameters:
+  DB_USER: flagr
+  DB_PASS: secretpassword
+  DB_NAME: flagr
+  LOG_LEVEL: info
+  LOG_FORMAT: text
+
+services:
+  database:
+    image: postgres:13
+    interfaces:
+      main:
+        protocol: postgres
+        port: 5432
+    environment:
+      POSTGRES_USER: ${{ parameters.DB_USER }}
+      POSTGRES_PASSWORD: ${{ parameters.DB_PASS }}
+      POSTGRES_DATABASE: ${{ parameters.DB_NAME }}
+
+  flagr:
+    build:
+      context: .
+    interfaces:
+      api: 18000
+    environment:
+      HOST: 0.0.0.0
+      FLAGR_LOGRUS_LEVEL: ${{ parameters.LOG_LEVEL }}
+      FLAGR_LOGRUS_FORMAT: ${{ parameters.LOG_FORMAT }}
+      FLAGR_DB_DBDRIVER: ${{ services.database.interfaces.main.protocol }}
+      FLAGR_DB_DBCONNECTIONSTR: ${{ services.database.interfaces.main.protocol }}://${{ parameters.DB_USER }}:${{ parameters.DB_PASS }}@${{ services.database.interfaces.main.host }}:${{ services.database.interfaces.main.port }}/${{ parameters.DB_NAME }}?sslmode=disable
+
+interfaces:
+  flagr: ${{ services.flagr.interfaces.api.url }}
