@@ -1,8 +1,10 @@
 package config
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
+	"reflect"
 
 	"github.com/DataDog/datadog-go/statsd"
 	"github.com/caarlos0/env"
@@ -28,8 +30,8 @@ var Global = struct {
 }{}
 
 func init() {
-	env.Parse(&Config)
-
+	// env.Parse(&Config)
+	setupConfig()
 	setupEvalOnlyMode()
 	setupSentry()
 	setupLogrus()
@@ -38,6 +40,22 @@ func init() {
 	setupPrometheus()
 }
 
+func setupConfig() {
+	err := env.ParseWithFuncs(&Config, map[reflect.Type]env.ParserFunc{
+		reflect.TypeOf(map[string]string{}): func(v string) (interface{}, error) {
+			out := map[string]string{}
+			err := json.Unmarshal([]byte(v), &out)
+			if err != nil {
+				return map[string]string{}, err
+			}
+
+			return out, nil
+		},
+	})
+	if err != nil {
+		panic(fmt.Sprintf("Error parsing config from environment! %s", err))
+	}
+}
 func setupEvalOnlyMode() {
 	if _, ok := EvalOnlyModeDBDrivers[Config.DBDriver]; ok {
 		Config.EvalOnlyMode = true

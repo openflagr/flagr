@@ -91,3 +91,33 @@ Error Set:
 | Javascript | [jsflagr](https://github.com/checkr/jsflagr) |
 | Python | [pyflagr](https://github.com/checkr/pyflagr) |
 | Ruby | [rbflagr](https://github.com/checkr/rbflagr) |
+
+
+# put flag templates
+1. set env FLAGR_NEW_FLAG_TEMPLATES
+2. create a flag by POST at /api/v1/flags where the description is a JSON body representing parameters for the template in FLAGR_NEW_FLAG_TEMPLATES, and `template` is the name of the template.
+3. Observe that tags are created on the flag if the template included tags.
+example:
+```
+FLAGR_NEW_FLAG_TEMPLATES='{"banana": "{\"dataRecordsEnabled\": false,    \"description\": \"This is my bestest flag\",    \"enabled\": false,    \"id\": 4,    \"key\": \"kxibnoxp4qqcwj3e7\",    \"segments\": [],    \"tags\": [ {            \"id\": 1,            \"value\": \"{{.TagVal}}\"        }],    \"updatedAt\": \"2020-12-23T15:19:17.909-07:00\",    \"variants\": []}"}' FLAGR_NEW_FLAG_TEMPLATE= PORT=18000 ./flagr
+curl --location --request POST "http://localhost:18000/api/v1/flags" \
+    --header "Connection: keep-alive" \
+    --header "Accept: application/json, text/plain, */*" \
+    --header "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36" \
+    --header "Content-Type: application/json;charset=UTF-8" \
+    --header "Origin: https://flagr.checkrhq.net" \
+    --header "Sec-Fetch-Site: same-origin" \
+    --header "Sec-Fetch-Mode: cors" \
+    --header "Sec-Fetch-Dest: empty" \
+    --header "Referer: https://flagr.checkrhq.net/" \
+    --header "Accept-Language: en-US,en;q=0.9" \
+    --data "{
+    \"description\": \"{\\\"TagVal\\\": \\\"jkz\\\"}\",
+    \"template\": \"banana\"
+}"
+# observe tag is created
+curl http://localhost:18000/api/v1/flags/4
+# observe tag is still there
+```
+
+TODO: need to templatize / autofill IDs somehow.  Also tag uniqueness?

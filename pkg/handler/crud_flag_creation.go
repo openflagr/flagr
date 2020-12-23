@@ -1,6 +1,11 @@
 package handler
 
 import (
+	"bytes"
+	"encoding/json"
+	"text/template"
+
+	"github.com/checkr/flagr/pkg/config"
 	"github.com/checkr/flagr/pkg/entity"
 	"github.com/checkr/flagr/pkg/util"
 	"github.com/checkr/flagr/swagger_gen/restapi/operations/flag"
@@ -30,15 +35,53 @@ func (c *crud) CreateFlag(params flag.CreateFlagParams) middleware.Responder {
 			ErrorMessage("cannot create flag. %s", err))
 	}
 
-	if params.Body.Template == "simple_boolean_flag" {
-		if err := LoadSimpleBooleanFlagTemplate(f, tx); err != nil {
-			tx.Rollback()
-			return flag.NewCreateFlagDefault(500).WithPayload(
-				ErrorMessage("cannot create flag. %s", err))
+	// if params.Body.Template == "simple_boolean_flag" {
+	// 	if err := LoadSimpleBooleanFlagTemplate(f, tx); err != nil {
+	// 		tx.Rollback()
+	// 		return flag.NewCreateFlagDefault(500).WithPayload(
+	// 			ErrorMessage("cannot create flag. %s", err))
+	// 	}
+	// } else
+	if params.Body.Template != "" {
+		found := false
+		for name, templateStr := range config.Config.CustomNewFlagTemplates {
+			found = name == params.Body.Template
+			if found {
+				tmpl, err := template.New("test").Parse(templateStr)
+				if err != nil {
+					panic(err)
+				}
+
+				descriptionJsonParams := map[string]interface{}{}
+				if err := json.Unmarshal([]byte(*params.Body.Description), &descriptionJsonParams); err != nil {
+					panic(err)
+				}
+
+				var tpl bytes.Buffer
+				err = tmpl.Execute(&tpl, descriptionJsonParams)
+				if err != nil {
+					panic(err)
+				}
+
+				flagJsonFromTemplate := tpl.String()
+				// fmt.Printf("++++++++++++Before %v\n++++++++++\n", f)
+				if err := json.Unmarshal([]byte(flagJsonFromTemplate), &f); err != nil {
+					panic(err)
+				}
+				// fmt.Printf("++++++++++++After %v\n++++++++++\n", f)
+
+				if err := LoadDependentObjectsFromFlag(f, tx); err != nil {
+					tx.Rollback()
+					panic(err)
+				}
+
+				break
+			}
 		}
-	} else if params.Body.Template != "" {
-		return flag.NewCreateFlagDefault(400).WithPayload(
-			ErrorMessage("unknown value for template: %s", params.Body.Template))
+		if !found {
+			return flag.NewCreateFlagDefault(400).WithPayload(
+				ErrorMessage("unknown value for template: %s", params.Body.Template))
+		}
 	}
 
 	err := tx.Commit().Error
@@ -58,6 +101,21 @@ func (c *crud) CreateFlag(params flag.CreateFlagParams) middleware.Responder {
 	entity.SaveFlagSnapshot(getDB(), f.ID, getSubjectFromRequest(params.HTTPRequest))
 
 	return resp
+}
+
+func LoadDependentObjectsFromFlag(flag *entity.Flag, tx *gorm.DB) error {
+	for _, tag := range flag.Tags {
+		t := &entity.Tag{}
+		t.Flags = []*entity.Flag{&entity.Flag{Model: gorm.Model{ID: flag.ID}}}
+		// fmt.Printf("We're creating! \n %v +++++%v++++++\n", flag, tag.Value)
+		t.Value = tag.Value
+
+		// fmt.Printf("-----------%v---------\n", t)
+		if err := tx.Create(t).Error; err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // LoadSimpleBooleanFlagTemplate loads the simple boolean flag template into
