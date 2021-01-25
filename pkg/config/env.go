@@ -217,7 +217,7 @@ var Config = struct {
 	// (putFlag or setFlagEnabled), the flag is evaluated against these
 	// optional rules. The operator indicates if all the rules must pass ('AND' value)
 	// or if at least one rule must pass ('OR' value)
-	EnabledFlagValidationRules     []string `env:"FLAGR_ENABLED_FLAG_VALIDATION_RULES" envSeparator:","`
+	EnabledFlagValidationRules     []string `env:"FLAGR_ENABLED_FLAG_VALIDATION_RULES" envSeparator:":::"`
 	EnabledFlagValidationOperation string   `env:"FLAGR_ENABLED_FLAG_VALIDATION_OPERATOR" envDefault:"AND"`
 }{}
 

@@ -113,6 +113,7 @@ func Any(args ...interface{}) (interface{}, error) {
 		if !ok {
 			return false, fmt.Errorf("item is not a map %v", item)
 		}
+
 		result, err := expression.Evaluate(params)
 		if err != nil {
 			return false, err
@@ -160,6 +161,7 @@ func validateEnabledFlag(f *entity.Flag) (valid bool, err error) {
 
 	for _, validationRule := range evaluationRules {
 		params := structs.Map(f)
+
 		result, err := validationRule.Evaluate(params)
 		if err != nil {
 			return false, err

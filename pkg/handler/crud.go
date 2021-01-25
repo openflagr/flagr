@@ -208,7 +208,7 @@ func (c *crud) PutFlag(params flag.PutFlagParams) middleware.Responder {
 	f := &entity.Flag{}
 	tx := getDB()
 
-	if err := tx.First(f, params.FlagID).Error; err != nil {
+	if err := entity.PreloadSegmentsVariantsTags(tx).First(f, params.FlagID).Error; err != nil {
 		return flag.NewPutFlagDefault(404).WithPayload(ErrorMessage("%s", err))
 	}
 
@@ -268,7 +268,7 @@ func (c *crud) PutFlag(params flag.PutFlagParams) middleware.Responder {
 
 func (c *crud) SetFlagEnabledState(params flag.SetFlagEnabledParams) middleware.Responder {
 	f := &entity.Flag{}
-	if err := getDB().First(f, params.FlagID).Error; err != nil {
+	if err := entity.PreloadSegmentsVariantsTags(getDB()).First(f, params.FlagID).Error; err != nil {
 		return flag.NewSetFlagEnabledDefault(404).WithPayload(ErrorMessage("%s", err))
 	}
 

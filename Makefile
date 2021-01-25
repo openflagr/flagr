@@ -36,7 +36,7 @@ build_ui:
 run_ui:
 	@cd ./browser/flagr-ui/; npm run serve
 
-run:
+run: build
 	@$(PWD)/flagr --port 18000
 
 start:
