@@ -29,7 +29,7 @@ func NewGetExportSqlite(ctx *middleware.Context, handler GetExportSqliteHandler)
 	return &GetExportSqlite{Context: ctx, Handler: handler}
 }
 
-/*GetExportSqlite swagger:route GET /export/sqlite export getExportSqlite
+/* GetExportSqlite swagger:route GET /export/sqlite export getExportSqlite
 
 Export sqlite3 format of the db dump, which is converted from the main database.
 
@@ -45,14 +45,12 @@ func (o *GetExportSqlite) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		r = rCtx
 	}
 	var Params = NewGetExportSqliteParams()
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
 	res := o.Handler.Handle(Params) // actually handle the request
-
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

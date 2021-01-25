@@ -29,7 +29,7 @@ func NewGetHealth(ctx *middleware.Context, handler GetHealthHandler) *GetHealth 
 	return &GetHealth{Context: ctx, Handler: handler}
 }
 
-/*GetHealth swagger:route GET /health health getHealth
+/* GetHealth swagger:route GET /health health getHealth
 
 Check if Flagr is healthy
 
@@ -45,14 +45,12 @@ func (o *GetHealth) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		r = rCtx
 	}
 	var Params = NewGetHealthParams()
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
 	res := o.Handler.Handle(Params) // actually handle the request
-
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

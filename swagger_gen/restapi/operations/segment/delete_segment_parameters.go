@@ -16,7 +16,8 @@ import (
 )
 
 // NewDeleteSegmentParams creates a new DeleteSegmentParams object
-// no default values defined in spec.
+//
+// There are no default values defined in the spec.
 func NewDeleteSegmentParams() DeleteSegmentParams {
 
 	return DeleteSegmentParams{}
@@ -63,7 +64,6 @@ func (o *DeleteSegmentParams) BindRequest(r *http.Request, route *middleware.Mat
 	if err := o.bindSegmentID(rSegmentID, rhkSegmentID, route.Formats); err != nil {
 		res = append(res, err)
 	}
-
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
@@ -96,7 +96,7 @@ func (o *DeleteSegmentParams) bindFlagID(rawData []string, hasKey bool, formats 
 // validateFlagID carries on validations for parameter FlagID
 func (o *DeleteSegmentParams) validateFlagID(formats strfmt.Registry) error {
 
-	if err := validate.MinimumInt("flagID", "path", int64(o.FlagID), 1, false); err != nil {
+	if err := validate.MinimumInt("flagID", "path", o.FlagID, 1, false); err != nil {
 		return err
 	}
 
@@ -129,7 +129,7 @@ func (o *DeleteSegmentParams) bindSegmentID(rawData []string, hasKey bool, forma
 // validateSegmentID carries on validations for parameter SegmentID
 func (o *DeleteSegmentParams) validateSegmentID(formats strfmt.Registry) error {
 
-	if err := validate.MinimumInt("segmentID", "path", int64(o.SegmentID), 1, false); err != nil {
+	if err := validate.MinimumInt("segmentID", "path", o.SegmentID, 1, false); err != nil {
 		return err
 	}
 

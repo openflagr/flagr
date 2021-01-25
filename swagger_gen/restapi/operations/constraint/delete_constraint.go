@@ -29,7 +29,7 @@ func NewDeleteConstraint(ctx *middleware.Context, handler DeleteConstraintHandle
 	return &DeleteConstraint{Context: ctx, Handler: handler}
 }
 
-/*DeleteConstraint swagger:route DELETE /flags/{flagID}/segments/{segmentID}/constraints/{constraintID} constraint deleteConstraint
+/* DeleteConstraint swagger:route DELETE /flags/{flagID}/segments/{segmentID}/constraints/{constraintID} constraint deleteConstraint
 
 DeleteConstraint delete constraint API
 
@@ -45,14 +45,12 @@ func (o *DeleteConstraint) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		r = rCtx
 	}
 	var Params = NewDeleteConstraintParams()
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
 	res := o.Handler.Handle(Params) // actually handle the request
-
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

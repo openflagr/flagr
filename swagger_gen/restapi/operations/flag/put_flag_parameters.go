@@ -6,6 +6,7 @@ package flag
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
 	"io"
 	"net/http"
 
@@ -20,7 +21,8 @@ import (
 )
 
 // NewPutFlagParams creates a new PutFlagParams object
-// no default values defined in spec.
+//
+// There are no default values defined in the spec.
 func NewPutFlagParams() PutFlagParams {
 
 	return PutFlagParams{}
@@ -72,6 +74,11 @@ func (o *PutFlagParams) BindRequest(r *http.Request, route *middleware.MatchedRo
 				res = append(res, err)
 			}
 
+			ctx := validate.WithOperationRequest(context.Background())
+			if err := body.ContextValidate(ctx, route.Formats); err != nil {
+				res = append(res, err)
+			}
+
 			if len(res) == 0 {
 				o.Body = &body
 			}
@@ -79,11 +86,11 @@ func (o *PutFlagParams) BindRequest(r *http.Request, route *middleware.MatchedRo
 	} else {
 		res = append(res, errors.Required("body", "body", ""))
 	}
+
 	rFlagID, rhkFlagID, _ := route.Params.GetOK("flagID")
 	if err := o.bindFlagID(rFlagID, rhkFlagID, route.Formats); err != nil {
 		res = append(res, err)
 	}
-
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
@@ -116,7 +123,7 @@ func (o *PutFlagParams) bindFlagID(rawData []string, hasKey bool, formats strfmt
 // validateFlagID carries on validations for parameter FlagID
 func (o *PutFlagParams) validateFlagID(formats strfmt.Registry) error {
 
-	if err := validate.MinimumInt("flagID", "path", int64(o.FlagID), 1, false); err != nil {
+	if err := validate.MinimumInt("flagID", "path", o.FlagID, 1, false); err != nil {
 		return err
 	}
 

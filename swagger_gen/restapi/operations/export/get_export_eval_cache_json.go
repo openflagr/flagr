@@ -29,7 +29,7 @@ func NewGetExportEvalCacheJSON(ctx *middleware.Context, handler GetExportEvalCac
 	return &GetExportEvalCacheJSON{Context: ctx, Handler: handler}
 }
 
-/*GetExportEvalCacheJSON swagger:route GET /export/eval_cache/json export getExportEvalCacheJson
+/* GetExportEvalCacheJSON swagger:route GET /export/eval_cache/json export getExportEvalCacheJson
 
 Export JSON format of the eval cache dump
 
@@ -45,14 +45,12 @@ func (o *GetExportEvalCacheJSON) ServeHTTP(rw http.ResponseWriter, r *http.Reque
 		r = rCtx
 	}
 	var Params = NewGetExportEvalCacheJSONParams()
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
 	res := o.Handler.Handle(Params) // actually handle the request
-
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

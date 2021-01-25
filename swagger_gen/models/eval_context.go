@@ -6,6 +6,7 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/go-openapi/errors"
@@ -65,12 +66,11 @@ func (m *EvalContext) Validate(formats strfmt.Registry) error {
 }
 
 func (m *EvalContext) validateFlagID(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.FlagID) { // not required
 		return nil
 	}
 
-	if err := validate.MinimumInt("flagID", "body", int64(m.FlagID), 1, false); err != nil {
+	if err := validate.MinimumInt("flagID", "body", m.FlagID, 1, false); err != nil {
 		return err
 	}
 
@@ -107,7 +107,6 @@ func (m *EvalContext) validateFlagTagsOperatorEnum(path, location string, value 
 }
 
 func (m *EvalContext) validateFlagTagsOperator(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.FlagTagsOperator) { // not required
 		return nil
 	}
@@ -117,6 +116,11 @@ func (m *EvalContext) validateFlagTagsOperator(formats strfmt.Registry) error {
 		return err
 	}
 
+	return nil
+}
+
+// ContextValidate validates this eval context based on context it is used
+func (m *EvalContext) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 

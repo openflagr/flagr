@@ -29,7 +29,7 @@ func NewFindTags(ctx *middleware.Context, handler FindTagsHandler) *FindTags {
 	return &FindTags{Context: ctx, Handler: handler}
 }
 
-/*FindTags swagger:route GET /flags/{flagID}/tags tag findTags
+/* FindTags swagger:route GET /flags/{flagID}/tags tag findTags
 
 FindTags find tags API
 
@@ -45,14 +45,12 @@ func (o *FindTags) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		r = rCtx
 	}
 	var Params = NewFindTagsParams()
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
 	res := o.Handler.Handle(Params) // actually handle the request
-
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

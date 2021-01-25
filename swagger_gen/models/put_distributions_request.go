@@ -6,6 +6,7 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/go-openapi/errors"
@@ -51,6 +52,38 @@ func (m *PutDistributionsRequest) validateDistributions(formats strfmt.Registry)
 
 		if m.Distributions[i] != nil {
 			if err := m.Distributions[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("distributions" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ContextValidate validate this put distributions request based on the context it is used
+func (m *PutDistributionsRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateDistributions(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *PutDistributionsRequest) contextValidateDistributions(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.Distributions); i++ {
+
+		if m.Distributions[i] != nil {
+			if err := m.Distributions[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("distributions" + "." + strconv.Itoa(i))
 				}

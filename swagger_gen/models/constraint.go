@@ -6,6 +6,7 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/go-openapi/errors"
@@ -68,12 +69,11 @@ func (m *Constraint) Validate(formats strfmt.Registry) error {
 }
 
 func (m *Constraint) validateID(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.ID) { // not required
 		return nil
 	}
 
-	if err := validate.MinimumInt("id", "body", int64(m.ID), 1, false); err != nil {
+	if err := validate.MinimumInt("id", "body", m.ID, 1, false); err != nil {
 		return err
 	}
 
@@ -145,7 +145,7 @@ func (m *Constraint) validateOperator(formats strfmt.Registry) error {
 		return err
 	}
 
-	if err := validate.MinLength("operator", "body", string(*m.Operator), 1); err != nil {
+	if err := validate.MinLength("operator", "body", *m.Operator, 1); err != nil {
 		return err
 	}
 
@@ -163,7 +163,7 @@ func (m *Constraint) validateProperty(formats strfmt.Registry) error {
 		return err
 	}
 
-	if err := validate.MinLength("property", "body", string(*m.Property), 1); err != nil {
+	if err := validate.MinLength("property", "body", *m.Property, 1); err != nil {
 		return err
 	}
 
@@ -176,7 +176,30 @@ func (m *Constraint) validateValue(formats strfmt.Registry) error {
 		return err
 	}
 
-	if err := validate.MinLength("value", "body", string(*m.Value), 1); err != nil {
+	if err := validate.MinLength("value", "body", *m.Value, 1); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ContextValidate validate this constraint based on the context it is used
+func (m *Constraint) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateID(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *Constraint) contextValidateID(ctx context.Context, formats strfmt.Registry) error {
+
+	if err := validate.ReadOnly(ctx, "id", "body", int64(m.ID)); err != nil {
 		return err
 	}
 
