@@ -9,7 +9,9 @@ import (
 	"github.com/Knetic/govaluate"
 	"github.com/checkr/flagr/pkg/config"
 	"github.com/checkr/flagr/pkg/entity"
+	"github.com/checkr/flagr/swagger_gen/restapi/operations/flag"
 	"github.com/fatih/structs"
+	"github.com/go-openapi/runtime/middleware"
 	"github.com/matryer/resync"
 )
 
@@ -185,4 +187,22 @@ func validateEnabledFlag(f *entity.Flag) (valid bool, err error) {
 	}
 
 	return valid, nil
+}
+
+func validateFlagIfEnabled(f *entity.Flag) middleware.Responder {
+	if f.Enabled {
+		valid, err := validateEnabledFlag(f)
+		if err != nil {
+			return flag.NewPutFlagDefault(500).WithPayload(ErrorMessage("%s", err))
+		}
+		if !valid {
+			opMsg := "all"
+			if config.Config.EnabledFlagValidationOperation == config.FlagValidationOperationOR {
+				opMsg = "one"
+			}
+
+			return flag.NewPutFlagDefault(400).WithPayload(ErrorMessage("Flag failed %s of these validation rules: %s", opMsg, config.Config.EnabledFlagValidationRules))
+		}
+	}
+	return nil
 }
