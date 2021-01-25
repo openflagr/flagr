@@ -88,6 +88,8 @@ github.com/caarlos0/env
 # github.com/certifi/gocertifi v0.0.0-20180118203423-deb3ae2ef261
 ## explicit
 github.com/certifi/gocertifi
+# github.com/cheekybits/is v0.0.0-20150225183255-68e9c0620927
+## explicit
 # github.com/codegangsta/negroni v1.0.0
 ## explicit
 # github.com/davecgh/go-spew v1.1.1
@@ -209,6 +211,9 @@ github.com/lib/pq/scram
 github.com/mailru/easyjson/buffer
 github.com/mailru/easyjson/jlexer
 github.com/mailru/easyjson/jwriter
+# github.com/matryer/resync v0.0.0-20161211202428-d39c09a11215
+## explicit
+github.com/matryer/resync
 # github.com/mattn/go-sqlite3 v1.14.0
 github.com/mattn/go-sqlite3
 # github.com/matttproud/golang_protobuf_extensions v1.0.1

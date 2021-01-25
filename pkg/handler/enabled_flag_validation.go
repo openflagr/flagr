@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
-	"sync"
 
 	"github.com/Knetic/govaluate"
 	"github.com/checkr/flagr/pkg/config"
 	"github.com/checkr/flagr/pkg/entity"
 	"github.com/fatih/structs"
+	"github.com/matryer/resync"
 )
 
 // rules for validating flags on enable - when a flag is updated or enabled
@@ -22,7 +22,7 @@ import (
 
 var (
 	evaluationRules           []*govaluate.EvaluableExpression
-	createEvaluationRule      sync.Once
+	createEvaluationRule      resync.Once
 	evaluationRulesSetupError error
 )
 
@@ -96,7 +96,7 @@ func Any(args ...interface{}) (interface{}, error) {
 
 	arr, ok := args[1].([]interface{})
 	if !ok {
-		return false, fmt.Errorf("arg 1 is not a slice! ***%v*** %v", args, reflect.TypeOf(args[0]))
+		return false, fmt.Errorf("arg 1 is not a slice! ***%v*** %v", args, reflect.TypeOf(args[1]))
 	}
 
 	functions := map[string]govaluate.ExpressionFunction{
@@ -104,7 +104,7 @@ func Any(args ...interface{}) (interface{}, error) {
 	}
 	expression, err := govaluate.NewEvaluableExpressionWithFunctions(function, functions)
 	if err != nil {
-		panic(err)
+		return false, err
 	}
 
 	found := false
@@ -115,7 +115,7 @@ func Any(args ...interface{}) (interface{}, error) {
 		}
 		result, err := expression.Evaluate(params)
 		if err != nil {
-			panic(err)
+			return false, err
 		}
 
 		if boolResult, ok := result.(bool); ok {
