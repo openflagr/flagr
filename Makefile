@@ -12,7 +12,7 @@ rebuild: gen build
 
 # test: verifiers
 test:
-	@GO111MODULE=on go test -mod=vendor -race -covermode=atomic -coverprofile=coverage.txt github.com/checkr/flagr/pkg/handler
+	@GO111MODULE=on go test -mod=vendor -race -covermode=atomic -coverprofile=coverage.txt github.com/checkr/flagr/pkg/...
 
 .PHONY: benchmark
 benchmark:
@@ -36,7 +36,7 @@ build_ui:
 run_ui:
 	@cd ./browser/flagr-ui/; npm run serve
 
-run: build
+run:
 	@$(PWD)/flagr --port 18000
 
 start:
