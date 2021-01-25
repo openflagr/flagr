@@ -6,6 +6,8 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
+
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
@@ -40,15 +42,19 @@ func (m *SegmentDebugLog) Validate(formats strfmt.Registry) error {
 }
 
 func (m *SegmentDebugLog) validateSegmentID(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.SegmentID) { // not required
 		return nil
 	}
 
-	if err := validate.MinimumInt("segmentID", "body", int64(m.SegmentID), 1, false); err != nil {
+	if err := validate.MinimumInt("segmentID", "body", m.SegmentID, 1, false); err != nil {
 		return err
 	}
 
+	return nil
+}
+
+// ContextValidate validates this segment debug log based on context it is used
+func (m *SegmentDebugLog) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 

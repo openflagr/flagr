@@ -6,6 +6,7 @@ package distribution
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
 	"io"
 	"net/http"
 
@@ -20,7 +21,8 @@ import (
 )
 
 // NewPutDistributionsParams creates a new PutDistributionsParams object
-// no default values defined in spec.
+//
+// There are no default values defined in the spec.
 func NewPutDistributionsParams() PutDistributionsParams {
 
 	return PutDistributionsParams{}
@@ -78,6 +80,11 @@ func (o *PutDistributionsParams) BindRequest(r *http.Request, route *middleware.
 				res = append(res, err)
 			}
 
+			ctx := validate.WithOperationRequest(context.Background())
+			if err := body.ContextValidate(ctx, route.Formats); err != nil {
+				res = append(res, err)
+			}
+
 			if len(res) == 0 {
 				o.Body = &body
 			}
@@ -85,6 +92,7 @@ func (o *PutDistributionsParams) BindRequest(r *http.Request, route *middleware.
 	} else {
 		res = append(res, errors.Required("body", "body", ""))
 	}
+
 	rFlagID, rhkFlagID, _ := route.Params.GetOK("flagID")
 	if err := o.bindFlagID(rFlagID, rhkFlagID, route.Formats); err != nil {
 		res = append(res, err)
@@ -94,7 +102,6 @@ func (o *PutDistributionsParams) BindRequest(r *http.Request, route *middleware.
 	if err := o.bindSegmentID(rSegmentID, rhkSegmentID, route.Formats); err != nil {
 		res = append(res, err)
 	}
-
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
@@ -127,7 +134,7 @@ func (o *PutDistributionsParams) bindFlagID(rawData []string, hasKey bool, forma
 // validateFlagID carries on validations for parameter FlagID
 func (o *PutDistributionsParams) validateFlagID(formats strfmt.Registry) error {
 
-	if err := validate.MinimumInt("flagID", "path", int64(o.FlagID), 1, false); err != nil {
+	if err := validate.MinimumInt("flagID", "path", o.FlagID, 1, false); err != nil {
 		return err
 	}
 
@@ -160,7 +167,7 @@ func (o *PutDistributionsParams) bindSegmentID(rawData []string, hasKey bool, fo
 // validateSegmentID carries on validations for parameter SegmentID
 func (o *PutDistributionsParams) validateSegmentID(formats strfmt.Registry) error {
 
-	if err := validate.MinimumInt("segmentID", "path", int64(o.SegmentID), 1, false); err != nil {
+	if err := validate.MinimumInt("segmentID", "path", o.SegmentID, 1, false); err != nil {
 		return err
 	}
 

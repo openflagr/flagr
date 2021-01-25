@@ -16,7 +16,8 @@ import (
 )
 
 // NewFindAllTagsParams creates a new FindAllTagsParams object
-// no default values defined in spec.
+//
+// There are no default values defined in the spec.
 func NewFindAllTagsParams() FindAllTagsParams {
 
 	return FindAllTagsParams{}
@@ -70,7 +71,6 @@ func (o *FindAllTagsParams) BindRequest(r *http.Request, route *middleware.Match
 	if err := o.bindValueLike(qValueLike, qhkValueLike, route.Formats); err != nil {
 		res = append(res, err)
 	}
-
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
@@ -86,6 +86,7 @@ func (o *FindAllTagsParams) bindLimit(rawData []string, hasKey bool, formats str
 
 	// Required: false
 	// AllowEmptyValue: false
+
 	if raw == "" { // empty values pass all other validations
 		return nil
 	}
@@ -108,6 +109,7 @@ func (o *FindAllTagsParams) bindOffset(rawData []string, hasKey bool, formats st
 
 	// Required: false
 	// AllowEmptyValue: false
+
 	if raw == "" { // empty values pass all other validations
 		return nil
 	}
@@ -130,10 +132,10 @@ func (o *FindAllTagsParams) bindValueLike(rawData []string, hasKey bool, formats
 
 	// Required: false
 	// AllowEmptyValue: false
+
 	if raw == "" { // empty values pass all other validations
 		return nil
 	}
-
 	o.ValueLike = &raw
 
 	return nil

@@ -16,7 +16,8 @@ import (
 )
 
 // NewDeleteFlagParams creates a new DeleteFlagParams object
-// no default values defined in spec.
+//
+// There are no default values defined in the spec.
 func NewDeleteFlagParams() DeleteFlagParams {
 
 	return DeleteFlagParams{}
@@ -52,7 +53,6 @@ func (o *DeleteFlagParams) BindRequest(r *http.Request, route *middleware.Matche
 	if err := o.bindFlagID(rFlagID, rhkFlagID, route.Formats); err != nil {
 		res = append(res, err)
 	}
-
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
@@ -85,7 +85,7 @@ func (o *DeleteFlagParams) bindFlagID(rawData []string, hasKey bool, formats str
 // validateFlagID carries on validations for parameter FlagID
 func (o *DeleteFlagParams) validateFlagID(formats strfmt.Registry) error {
 
-	if err := validate.MinimumInt("flagID", "path", int64(o.FlagID), 1, false); err != nil {
+	if err := validate.MinimumInt("flagID", "path", o.FlagID, 1, false); err != nil {
 		return err
 	}
 

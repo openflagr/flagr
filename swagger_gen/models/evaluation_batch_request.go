@@ -6,6 +6,7 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
 	"encoding/json"
 	"strconv"
 
@@ -107,7 +108,6 @@ func (m *EvaluationBatchRequest) validateEntities(formats strfmt.Registry) error
 }
 
 func (m *EvaluationBatchRequest) validateFlagIDs(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.FlagIDs) { // not required
 		return nil
 	}
@@ -120,7 +120,7 @@ func (m *EvaluationBatchRequest) validateFlagIDs(formats strfmt.Registry) error 
 
 	for i := 0; i < len(m.FlagIDs); i++ {
 
-		if err := validate.MinimumInt("flagIDs"+"."+strconv.Itoa(i), "body", int64(m.FlagIDs[i]), 1, false); err != nil {
+		if err := validate.MinimumInt("flagIDs"+"."+strconv.Itoa(i), "body", m.FlagIDs[i], 1, false); err != nil {
 			return err
 		}
 
@@ -130,7 +130,6 @@ func (m *EvaluationBatchRequest) validateFlagIDs(formats strfmt.Registry) error 
 }
 
 func (m *EvaluationBatchRequest) validateFlagKeys(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.FlagKeys) { // not required
 		return nil
 	}
@@ -143,7 +142,7 @@ func (m *EvaluationBatchRequest) validateFlagKeys(formats strfmt.Registry) error
 
 	for i := 0; i < len(m.FlagKeys); i++ {
 
-		if err := validate.MinLength("flagKeys"+"."+strconv.Itoa(i), "body", string(m.FlagKeys[i]), 1); err != nil {
+		if err := validate.MinLength("flagKeys"+"."+strconv.Itoa(i), "body", m.FlagKeys[i], 1); err != nil {
 			return err
 		}
 
@@ -153,7 +152,6 @@ func (m *EvaluationBatchRequest) validateFlagKeys(formats strfmt.Registry) error
 }
 
 func (m *EvaluationBatchRequest) validateFlagTags(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.FlagTags) { // not required
 		return nil
 	}
@@ -166,7 +164,7 @@ func (m *EvaluationBatchRequest) validateFlagTags(formats strfmt.Registry) error
 
 	for i := 0; i < len(m.FlagTags); i++ {
 
-		if err := validate.MinLength("flagTags"+"."+strconv.Itoa(i), "body", string(m.FlagTags[i]), 1); err != nil {
+		if err := validate.MinLength("flagTags"+"."+strconv.Itoa(i), "body", m.FlagTags[i], 1); err != nil {
 			return err
 		}
 
@@ -205,7 +203,6 @@ func (m *EvaluationBatchRequest) validateFlagTagsOperatorEnum(path, location str
 }
 
 func (m *EvaluationBatchRequest) validateFlagTagsOperator(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.FlagTagsOperator) { // not required
 		return nil
 	}
@@ -213,6 +210,38 @@ func (m *EvaluationBatchRequest) validateFlagTagsOperator(formats strfmt.Registr
 	// value enum
 	if err := m.validateFlagTagsOperatorEnum("flagTagsOperator", "body", *m.FlagTagsOperator); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// ContextValidate validate this evaluation batch request based on the context it is used
+func (m *EvaluationBatchRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateEntities(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *EvaluationBatchRequest) contextValidateEntities(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.Entities); i++ {
+
+		if m.Entities[i] != nil {
+			if err := m.Entities[i].ContextValidate(ctx, formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("entities" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
 	}
 
 	return nil

@@ -16,7 +16,8 @@ import (
 )
 
 // NewFindFlagsParams creates a new FindFlagsParams object
-// no default values defined in spec.
+//
+// There are no default values defined in the spec.
 func NewFindFlagsParams() FindFlagsParams {
 
 	return FindFlagsParams{}
@@ -124,7 +125,6 @@ func (o *FindFlagsParams) BindRequest(r *http.Request, route *middleware.Matched
 	if err := o.bindTags(qTags, qhkTags, route.Formats); err != nil {
 		res = append(res, err)
 	}
-
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
@@ -140,6 +140,7 @@ func (o *FindFlagsParams) bindDeleted(rawData []string, hasKey bool, formats str
 
 	// Required: false
 	// AllowEmptyValue: false
+
 	if raw == "" { // empty values pass all other validations
 		return nil
 	}
@@ -162,10 +163,10 @@ func (o *FindFlagsParams) bindDescription(rawData []string, hasKey bool, formats
 
 	// Required: false
 	// AllowEmptyValue: false
+
 	if raw == "" { // empty values pass all other validations
 		return nil
 	}
-
 	o.Description = &raw
 
 	return nil
@@ -180,10 +181,10 @@ func (o *FindFlagsParams) bindDescriptionLike(rawData []string, hasKey bool, for
 
 	// Required: false
 	// AllowEmptyValue: false
+
 	if raw == "" { // empty values pass all other validations
 		return nil
 	}
-
 	o.DescriptionLike = &raw
 
 	return nil
@@ -198,6 +199,7 @@ func (o *FindFlagsParams) bindEnabled(rawData []string, hasKey bool, formats str
 
 	// Required: false
 	// AllowEmptyValue: false
+
 	if raw == "" { // empty values pass all other validations
 		return nil
 	}
@@ -220,10 +222,10 @@ func (o *FindFlagsParams) bindKey(rawData []string, hasKey bool, formats strfmt.
 
 	// Required: false
 	// AllowEmptyValue: false
+
 	if raw == "" { // empty values pass all other validations
 		return nil
 	}
-
 	o.Key = &raw
 
 	return nil
@@ -238,6 +240,7 @@ func (o *FindFlagsParams) bindLimit(rawData []string, hasKey bool, formats strfm
 
 	// Required: false
 	// AllowEmptyValue: false
+
 	if raw == "" { // empty values pass all other validations
 		return nil
 	}
@@ -260,6 +263,7 @@ func (o *FindFlagsParams) bindOffset(rawData []string, hasKey bool, formats strf
 
 	// Required: false
 	// AllowEmptyValue: false
+
 	if raw == "" { // empty values pass all other validations
 		return nil
 	}
@@ -282,6 +286,7 @@ func (o *FindFlagsParams) bindPreload(rawData []string, hasKey bool, formats str
 
 	// Required: false
 	// AllowEmptyValue: false
+
 	if raw == "" { // empty values pass all other validations
 		return nil
 	}
@@ -304,10 +309,10 @@ func (o *FindFlagsParams) bindTags(rawData []string, hasKey bool, formats strfmt
 
 	// Required: false
 	// AllowEmptyValue: false
+
 	if raw == "" { // empty values pass all other validations
 		return nil
 	}
-
 	o.Tags = &raw
 
 	return nil

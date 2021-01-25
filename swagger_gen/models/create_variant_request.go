@@ -6,6 +6,8 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
+
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
@@ -46,10 +48,15 @@ func (m *CreateVariantRequest) validateKey(formats strfmt.Registry) error {
 		return err
 	}
 
-	if err := validate.MinLength("key", "body", string(*m.Key), 1); err != nil {
+	if err := validate.MinLength("key", "body", *m.Key, 1); err != nil {
 		return err
 	}
 
+	return nil
+}
+
+// ContextValidate validates this create variant request based on context it is used
+func (m *CreateVariantRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 

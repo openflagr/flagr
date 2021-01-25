@@ -6,6 +6,7 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/go-openapi/errors"
@@ -128,7 +129,7 @@ func (m *Flag) validateDescription(formats strfmt.Registry) error {
 		return err
 	}
 
-	if err := validate.MinLength("description", "body", string(*m.Description), 1); err != nil {
+	if err := validate.MinLength("description", "body", *m.Description, 1); err != nil {
 		return err
 	}
 
@@ -145,12 +146,11 @@ func (m *Flag) validateEnabled(formats strfmt.Registry) error {
 }
 
 func (m *Flag) validateID(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.ID) { // not required
 		return nil
 	}
 
-	if err := validate.MinimumInt("id", "body", int64(m.ID), 1, false); err != nil {
+	if err := validate.MinimumInt("id", "body", m.ID, 1, false); err != nil {
 		return err
 	}
 
@@ -158,12 +158,11 @@ func (m *Flag) validateID(formats strfmt.Registry) error {
 }
 
 func (m *Flag) validateKey(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.Key) { // not required
 		return nil
 	}
 
-	if err := validate.MinLength("key", "body", string(m.Key), 1); err != nil {
+	if err := validate.MinLength("key", "body", m.Key, 1); err != nil {
 		return err
 	}
 
@@ -171,7 +170,6 @@ func (m *Flag) validateKey(formats strfmt.Registry) error {
 }
 
 func (m *Flag) validateSegments(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.Segments) { // not required
 		return nil
 	}
@@ -196,7 +194,6 @@ func (m *Flag) validateSegments(formats strfmt.Registry) error {
 }
 
 func (m *Flag) validateTags(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.Tags) { // not required
 		return nil
 	}
@@ -221,7 +218,6 @@ func (m *Flag) validateTags(formats strfmt.Registry) error {
 }
 
 func (m *Flag) validateUpdatedAt(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.UpdatedAt) { // not required
 		return nil
 	}
@@ -234,7 +230,6 @@ func (m *Flag) validateUpdatedAt(formats strfmt.Registry) error {
 }
 
 func (m *Flag) validateVariants(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.Variants) { // not required
 		return nil
 	}
@@ -246,6 +241,95 @@ func (m *Flag) validateVariants(formats strfmt.Registry) error {
 
 		if m.Variants[i] != nil {
 			if err := m.Variants[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("variants" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ContextValidate validate this flag based on the context it is used
+func (m *Flag) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateID(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateSegments(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateTags(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateVariants(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *Flag) contextValidateID(ctx context.Context, formats strfmt.Registry) error {
+
+	if err := validate.ReadOnly(ctx, "id", "body", int64(m.ID)); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *Flag) contextValidateSegments(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.Segments); i++ {
+
+		if m.Segments[i] != nil {
+			if err := m.Segments[i].ContextValidate(ctx, formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("segments" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *Flag) contextValidateTags(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.Tags); i++ {
+
+		if m.Tags[i] != nil {
+			if err := m.Tags[i].ContextValidate(ctx, formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("tags" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *Flag) contextValidateVariants(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.Variants); i++ {
+
+		if m.Variants[i] != nil {
+			if err := m.Variants[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("variants" + "." + strconv.Itoa(i))
 				}

@@ -29,7 +29,7 @@ func NewPostEvaluation(ctx *middleware.Context, handler PostEvaluationHandler) *
 	return &PostEvaluation{Context: ctx, Handler: handler}
 }
 
-/*PostEvaluation swagger:route POST /evaluation evaluation postEvaluation
+/* PostEvaluation swagger:route POST /evaluation evaluation postEvaluation
 
 PostEvaluation post evaluation API
 
@@ -45,14 +45,12 @@ func (o *PostEvaluation) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		r = rCtx
 	}
 	var Params = NewPostEvaluationParams()
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
 	res := o.Handler.Handle(Params) // actually handle the request
-
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

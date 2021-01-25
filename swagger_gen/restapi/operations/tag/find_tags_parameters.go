@@ -16,7 +16,8 @@ import (
 )
 
 // NewFindTagsParams creates a new FindTagsParams object
-// no default values defined in spec.
+//
+// There are no default values defined in the spec.
 func NewFindTagsParams() FindTagsParams {
 
 	return FindTagsParams{}
@@ -52,7 +53,6 @@ func (o *FindTagsParams) BindRequest(r *http.Request, route *middleware.MatchedR
 	if err := o.bindFlagID(rFlagID, rhkFlagID, route.Formats); err != nil {
 		res = append(res, err)
 	}
-
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
@@ -85,7 +85,7 @@ func (o *FindTagsParams) bindFlagID(rawData []string, hasKey bool, formats strfm
 // validateFlagID carries on validations for parameter FlagID
 func (o *FindTagsParams) validateFlagID(formats strfmt.Registry) error {
 
-	if err := validate.MinimumInt("flagID", "path", int64(o.FlagID), 1, false); err != nil {
+	if err := validate.MinimumInt("flagID", "path", o.FlagID, 1, false); err != nil {
 		return err
 	}
 

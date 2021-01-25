@@ -29,7 +29,7 @@ func NewCreateFlag(ctx *middleware.Context, handler CreateFlagHandler) *CreateFl
 	return &CreateFlag{Context: ctx, Handler: handler}
 }
 
-/*CreateFlag swagger:route POST /flags flag createFlag
+/* CreateFlag swagger:route POST /flags flag createFlag
 
 CreateFlag create flag API
 
@@ -45,14 +45,12 @@ func (o *CreateFlag) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		r = rCtx
 	}
 	var Params = NewCreateFlagParams()
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
 	res := o.Handler.Handle(Params) // actually handle the request
-
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

@@ -16,7 +16,8 @@ import (
 )
 
 // NewDeleteTagParams creates a new DeleteTagParams object
-// no default values defined in spec.
+//
+// There are no default values defined in the spec.
 func NewDeleteTagParams() DeleteTagParams {
 
 	return DeleteTagParams{}
@@ -63,7 +64,6 @@ func (o *DeleteTagParams) BindRequest(r *http.Request, route *middleware.Matched
 	if err := o.bindTagID(rTagID, rhkTagID, route.Formats); err != nil {
 		res = append(res, err)
 	}
-
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
@@ -96,7 +96,7 @@ func (o *DeleteTagParams) bindFlagID(rawData []string, hasKey bool, formats strf
 // validateFlagID carries on validations for parameter FlagID
 func (o *DeleteTagParams) validateFlagID(formats strfmt.Registry) error {
 
-	if err := validate.MinimumInt("flagID", "path", int64(o.FlagID), 1, false); err != nil {
+	if err := validate.MinimumInt("flagID", "path", o.FlagID, 1, false); err != nil {
 		return err
 	}
 
@@ -129,7 +129,7 @@ func (o *DeleteTagParams) bindTagID(rawData []string, hasKey bool, formats strfm
 // validateTagID carries on validations for parameter TagID
 func (o *DeleteTagParams) validateTagID(formats strfmt.Registry) error {
 
-	if err := validate.MinimumInt("tagID", "path", int64(o.TagID), 1, false); err != nil {
+	if err := validate.MinimumInt("tagID", "path", o.TagID, 1, false); err != nil {
 		return err
 	}
 

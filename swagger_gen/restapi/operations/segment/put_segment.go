@@ -29,7 +29,7 @@ func NewPutSegment(ctx *middleware.Context, handler PutSegmentHandler) *PutSegme
 	return &PutSegment{Context: ctx, Handler: handler}
 }
 
-/*PutSegment swagger:route PUT /flags/{flagID}/segments/{segmentID} segment putSegment
+/* PutSegment swagger:route PUT /flags/{flagID}/segments/{segmentID} segment putSegment
 
 PutSegment put segment API
 
@@ -45,14 +45,12 @@ func (o *PutSegment) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		r = rCtx
 	}
 	var Params = NewPutSegmentParams()
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
 	res := o.Handler.Handle(Params) // actually handle the request
-
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

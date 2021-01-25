@@ -29,7 +29,7 @@ func NewGetFlagSnapshots(ctx *middleware.Context, handler GetFlagSnapshotsHandle
 	return &GetFlagSnapshots{Context: ctx, Handler: handler}
 }
 
-/*GetFlagSnapshots swagger:route GET /flags/{flagID}/snapshots flag getFlagSnapshots
+/* GetFlagSnapshots swagger:route GET /flags/{flagID}/snapshots flag getFlagSnapshots
 
 GetFlagSnapshots get flag snapshots API
 
@@ -45,14 +45,12 @@ func (o *GetFlagSnapshots) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		r = rCtx
 	}
 	var Params = NewGetFlagSnapshotsParams()
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
 	res := o.Handler.Handle(Params) // actually handle the request
-
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

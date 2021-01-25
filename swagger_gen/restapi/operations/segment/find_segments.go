@@ -29,7 +29,7 @@ func NewFindSegments(ctx *middleware.Context, handler FindSegmentsHandler) *Find
 	return &FindSegments{Context: ctx, Handler: handler}
 }
 
-/*FindSegments swagger:route GET /flags/{flagID}/segments segment findSegments
+/* FindSegments swagger:route GET /flags/{flagID}/segments segment findSegments
 
 FindSegments find segments API
 
@@ -45,14 +45,12 @@ func (o *FindSegments) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		r = rCtx
 	}
 	var Params = NewFindSegmentsParams()
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
 	res := o.Handler.Handle(Params) // actually handle the request
-
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

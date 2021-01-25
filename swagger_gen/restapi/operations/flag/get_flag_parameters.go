@@ -16,7 +16,8 @@ import (
 )
 
 // NewGetFlagParams creates a new GetFlagParams object
-// no default values defined in spec.
+//
+// There are no default values defined in the spec.
 func NewGetFlagParams() GetFlagParams {
 
 	return GetFlagParams{}
@@ -52,7 +53,6 @@ func (o *GetFlagParams) BindRequest(r *http.Request, route *middleware.MatchedRo
 	if err := o.bindFlagID(rFlagID, rhkFlagID, route.Formats); err != nil {
 		res = append(res, err)
 	}
-
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
@@ -85,7 +85,7 @@ func (o *GetFlagParams) bindFlagID(rawData []string, hasKey bool, formats strfmt
 // validateFlagID carries on validations for parameter FlagID
 func (o *GetFlagParams) validateFlagID(formats strfmt.Registry) error {
 
-	if err := validate.MinimumInt("flagID", "path", int64(o.FlagID), 1, false); err != nil {
+	if err := validate.MinimumInt("flagID", "path", o.FlagID, 1, false); err != nil {
 		return err
 	}
 

@@ -29,7 +29,7 @@ func NewFindDistributions(ctx *middleware.Context, handler FindDistributionsHand
 	return &FindDistributions{Context: ctx, Handler: handler}
 }
 
-/*FindDistributions swagger:route GET /flags/{flagID}/segments/{segmentID}/distributions distribution findDistributions
+/* FindDistributions swagger:route GET /flags/{flagID}/segments/{segmentID}/distributions distribution findDistributions
 
 FindDistributions find distributions API
 
@@ -45,14 +45,12 @@ func (o *FindDistributions) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		r = rCtx
 	}
 	var Params = NewFindDistributionsParams()
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
 	res := o.Handler.Handle(Params) // actually handle the request
-
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

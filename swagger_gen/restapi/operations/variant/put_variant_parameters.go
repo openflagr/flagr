@@ -6,6 +6,7 @@ package variant
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
 	"io"
 	"net/http"
 
@@ -20,7 +21,8 @@ import (
 )
 
 // NewPutVariantParams creates a new PutVariantParams object
-// no default values defined in spec.
+//
+// There are no default values defined in the spec.
 func NewPutVariantParams() PutVariantParams {
 
 	return PutVariantParams{}
@@ -78,6 +80,11 @@ func (o *PutVariantParams) BindRequest(r *http.Request, route *middleware.Matche
 				res = append(res, err)
 			}
 
+			ctx := validate.WithOperationRequest(context.Background())
+			if err := body.ContextValidate(ctx, route.Formats); err != nil {
+				res = append(res, err)
+			}
+
 			if len(res) == 0 {
 				o.Body = &body
 			}
@@ -85,6 +92,7 @@ func (o *PutVariantParams) BindRequest(r *http.Request, route *middleware.Matche
 	} else {
 		res = append(res, errors.Required("body", "body", ""))
 	}
+
 	rFlagID, rhkFlagID, _ := route.Params.GetOK("flagID")
 	if err := o.bindFlagID(rFlagID, rhkFlagID, route.Formats); err != nil {
 		res = append(res, err)
@@ -94,7 +102,6 @@ func (o *PutVariantParams) BindRequest(r *http.Request, route *middleware.Matche
 	if err := o.bindVariantID(rVariantID, rhkVariantID, route.Formats); err != nil {
 		res = append(res, err)
 	}
-
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
@@ -127,7 +134,7 @@ func (o *PutVariantParams) bindFlagID(rawData []string, hasKey bool, formats str
 // validateFlagID carries on validations for parameter FlagID
 func (o *PutVariantParams) validateFlagID(formats strfmt.Registry) error {
 
-	if err := validate.MinimumInt("flagID", "path", int64(o.FlagID), 1, false); err != nil {
+	if err := validate.MinimumInt("flagID", "path", o.FlagID, 1, false); err != nil {
 		return err
 	}
 
@@ -160,7 +167,7 @@ func (o *PutVariantParams) bindVariantID(rawData []string, hasKey bool, formats 
 // validateVariantID carries on validations for parameter VariantID
 func (o *PutVariantParams) validateVariantID(formats strfmt.Registry) error {
 
-	if err := validate.MinimumInt("variantID", "path", int64(o.VariantID), 1, false); err != nil {
+	if err := validate.MinimumInt("variantID", "path", o.VariantID, 1, false); err != nil {
 		return err
 	}
 

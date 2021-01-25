@@ -29,7 +29,7 @@ func NewDeleteTag(ctx *middleware.Context, handler DeleteTagHandler) *DeleteTag 
 	return &DeleteTag{Context: ctx, Handler: handler}
 }
 
-/*DeleteTag swagger:route DELETE /flags/{flagID}/tags/{tagID} tag deleteTag
+/* DeleteTag swagger:route DELETE /flags/{flagID}/tags/{tagID} tag deleteTag
 
 DeleteTag delete tag API
 
@@ -45,14 +45,12 @@ func (o *DeleteTag) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		r = rCtx
 	}
 	var Params = NewDeleteTagParams()
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
 	res := o.Handler.Handle(Params) // actually handle the request
-
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

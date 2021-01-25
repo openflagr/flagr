@@ -6,6 +6,7 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/go-openapi/errors"
@@ -53,12 +54,17 @@ func (m *PutSegmentReorderRequest) validateSegmentIDs(formats strfmt.Registry) e
 
 	for i := 0; i < len(m.SegmentIDs); i++ {
 
-		if err := validate.MinimumInt("segmentIDs"+"."+strconv.Itoa(i), "body", int64(m.SegmentIDs[i]), 1, false); err != nil {
+		if err := validate.MinimumInt("segmentIDs"+"."+strconv.Itoa(i), "body", m.SegmentIDs[i], 1, false); err != nil {
 			return err
 		}
 
 	}
 
+	return nil
+}
+
+// ContextValidate validates this put segment reorder request based on context it is used
+func (m *PutSegmentReorderRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 

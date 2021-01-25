@@ -6,6 +6,8 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
+
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
@@ -81,7 +83,7 @@ func (m *FlagSnapshot) validateID(formats strfmt.Registry) error {
 		return err
 	}
 
-	if err := validate.MinimumInt("id", "body", int64(*m.ID), 1, false); err != nil {
+	if err := validate.MinimumInt("id", "body", *m.ID, 1, false); err != nil {
 		return err
 	}
 
@@ -94,8 +96,36 @@ func (m *FlagSnapshot) validateUpdatedAt(formats strfmt.Registry) error {
 		return err
 	}
 
-	if err := validate.MinLength("updatedAt", "body", string(*m.UpdatedAt), 1); err != nil {
+	if err := validate.MinLength("updatedAt", "body", *m.UpdatedAt, 1); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// ContextValidate validate this flag snapshot based on the context it is used
+func (m *FlagSnapshot) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateFlag(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *FlagSnapshot) contextValidateFlag(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.Flag != nil {
+		if err := m.Flag.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("flag")
+			}
+			return err
+		}
 	}
 
 	return nil

@@ -16,7 +16,8 @@ import (
 )
 
 // NewRestoreFlagParams creates a new RestoreFlagParams object
-// no default values defined in spec.
+//
+// There are no default values defined in the spec.
 func NewRestoreFlagParams() RestoreFlagParams {
 
 	return RestoreFlagParams{}
@@ -52,7 +53,6 @@ func (o *RestoreFlagParams) BindRequest(r *http.Request, route *middleware.Match
 	if err := o.bindFlagID(rFlagID, rhkFlagID, route.Formats); err != nil {
 		res = append(res, err)
 	}
-
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
@@ -85,7 +85,7 @@ func (o *RestoreFlagParams) bindFlagID(rawData []string, hasKey bool, formats st
 // validateFlagID carries on validations for parameter FlagID
 func (o *RestoreFlagParams) validateFlagID(formats strfmt.Registry) error {
 
-	if err := validate.MinimumInt("flagID", "path", int64(o.FlagID), 1, false); err != nil {
+	if err := validate.MinimumInt("flagID", "path", o.FlagID, 1, false); err != nil {
 		return err
 	}
 

@@ -16,7 +16,8 @@ import (
 )
 
 // NewFindVariantsParams creates a new FindVariantsParams object
-// no default values defined in spec.
+//
+// There are no default values defined in the spec.
 func NewFindVariantsParams() FindVariantsParams {
 
 	return FindVariantsParams{}
@@ -52,7 +53,6 @@ func (o *FindVariantsParams) BindRequest(r *http.Request, route *middleware.Matc
 	if err := o.bindFlagID(rFlagID, rhkFlagID, route.Formats); err != nil {
 		res = append(res, err)
 	}
-
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
@@ -85,7 +85,7 @@ func (o *FindVariantsParams) bindFlagID(rawData []string, hasKey bool, formats s
 // validateFlagID carries on validations for parameter FlagID
 func (o *FindVariantsParams) validateFlagID(formats strfmt.Registry) error {
 
-	if err := validate.MinimumInt("flagID", "path", int64(o.FlagID), 1, false); err != nil {
+	if err := validate.MinimumInt("flagID", "path", o.FlagID, 1, false); err != nil {
 		return err
 	}
 

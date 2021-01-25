@@ -9,7 +9,7 @@ require (
 	github.com/a8m/kinesis-producer v0.0.0-20180723062609-03228a9f79b3
 	github.com/auth0/go-jwt-middleware v0.0.0-20170425171159-5493cabe49f7
 	github.com/avast/retry-go v2.2.0+incompatible
-	github.com/aws/aws-sdk-go v1.15.32
+	github.com/aws/aws-sdk-go v1.34.28
 	github.com/brandur/simplebox v0.0.0-20150921201729-84e9865bb03a
 	github.com/bsm/ratelimit v2.0.0+incompatible
 	github.com/caarlos0/env v3.3.0+incompatible
@@ -20,14 +20,13 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/evalphobia/logrus_sentry v0.4.6
 	github.com/getsentry/raven-go v0.0.0-20180903072508-084a9de9eb03
-	github.com/go-ini/ini v1.38.2 // indirect
-	github.com/go-openapi/errors v0.19.6
-	github.com/go-openapi/loads v0.19.5
-	github.com/go-openapi/runtime v0.19.19
-	github.com/go-openapi/spec v0.19.8
-	github.com/go-openapi/strfmt v0.19.5
-	github.com/go-openapi/swag v0.19.9
-	github.com/go-openapi/validate v0.19.10
+	github.com/go-openapi/errors v0.19.9
+	github.com/go-openapi/loads v0.20.1
+	github.com/go-openapi/runtime v0.19.26
+	github.com/go-openapi/spec v0.20.2
+	github.com/go-openapi/strfmt v0.20.0
+	github.com/go-openapi/swag v0.19.13
+	github.com/go-openapi/validate v0.20.1
 	github.com/gohttp/pprof v0.0.0-20141119085724-c9d246cbb3ba
 	github.com/gorilla/mux v1.7.1 // indirect
 	github.com/jessevdk/go-flags v1.4.0
@@ -37,7 +36,6 @@ require (
 	github.com/newrelic/go-agent v2.1.0+incompatible
 	github.com/onsi/ginkgo v1.8.0 // indirect
 	github.com/onsi/gomega v1.5.0 // indirect
-	github.com/opentracing/opentracing-go v1.1.0 // indirect
 	github.com/philhofer/fwd v1.0.0 // indirect
 	github.com/phyber/negroni-gzip v0.0.0-20180113114010-ef6356a5d029
 	github.com/prashantv/gostub v0.0.0-20170112001514-5c68b99bb088
@@ -54,10 +52,8 @@ require (
 	github.com/yadvendar/negroni-newrelic-go-agent v0.0.0-20160803090806-3dc58758cb67
 	github.com/zhouzhuojie/conditions v0.2.3
 	github.com/zhouzhuojie/withtimeout v0.0.0-20190405051827-12b39eb2edd5
-	golang.org/x/net v0.0.0-20200602114024-627f9648deb9
-	golang.org/x/text v0.3.3 // indirect
+	golang.org/x/net v0.0.0-20210119194325-5f4716e94777
 	google.golang.org/api v0.3.1
 	google.golang.org/grpc v1.19.0
 	gopkg.in/DataDog/dd-trace-go.v1 v1.9.0
-	gopkg.in/ini.v1 v1.42.0 // indirect
 )

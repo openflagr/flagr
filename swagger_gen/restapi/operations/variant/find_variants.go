@@ -29,7 +29,7 @@ func NewFindVariants(ctx *middleware.Context, handler FindVariantsHandler) *Find
 	return &FindVariants{Context: ctx, Handler: handler}
 }
 
-/*FindVariants swagger:route GET /flags/{flagID}/variants variant findVariants
+/* FindVariants swagger:route GET /flags/{flagID}/variants variant findVariants
 
 FindVariants find variants API
 
@@ -45,14 +45,12 @@ func (o *FindVariants) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		r = rCtx
 	}
 	var Params = NewFindVariantsParams()
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
 	res := o.Handler.Handle(Params) // actually handle the request
-
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

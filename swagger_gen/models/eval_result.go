@@ -6,6 +6,8 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
+
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
@@ -66,7 +68,6 @@ func (m *EvalResult) Validate(formats strfmt.Registry) error {
 }
 
 func (m *EvalResult) validateEvalContext(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.EvalContext) { // not required
 		return nil
 	}
@@ -84,13 +85,58 @@ func (m *EvalResult) validateEvalContext(formats strfmt.Registry) error {
 }
 
 func (m *EvalResult) validateEvalDebugLog(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.EvalDebugLog) { // not required
 		return nil
 	}
 
 	if m.EvalDebugLog != nil {
 		if err := m.EvalDebugLog.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("evalDebugLog")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
+// ContextValidate validate this eval result based on the context it is used
+func (m *EvalResult) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateEvalContext(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateEvalDebugLog(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *EvalResult) contextValidateEvalContext(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.EvalContext != nil {
+		if err := m.EvalContext.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("evalContext")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *EvalResult) contextValidateEvalDebugLog(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.EvalDebugLog != nil {
+		if err := m.EvalDebugLog.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("evalDebugLog")
 			}

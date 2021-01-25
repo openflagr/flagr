@@ -13,7 +13,8 @@ import (
 )
 
 // NewGetFlagEntityTypesParams creates a new GetFlagEntityTypesParams object
-// no default values defined in spec.
+//
+// There are no default values defined in the spec.
 func NewGetFlagEntityTypesParams() GetFlagEntityTypesParams {
 
 	return GetFlagEntityTypesParams{}

@@ -29,7 +29,7 @@ func NewPutVariant(ctx *middleware.Context, handler PutVariantHandler) *PutVaria
 	return &PutVariant{Context: ctx, Handler: handler}
 }
 
-/*PutVariant swagger:route PUT /flags/{flagID}/variants/{variantID} variant putVariant
+/* PutVariant swagger:route PUT /flags/{flagID}/variants/{variantID} variant putVariant
 
 PutVariant put variant API
 
@@ -45,14 +45,12 @@ func (o *PutVariant) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		r = rCtx
 	}
 	var Params = NewPutVariantParams()
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
 	res := o.Handler.Handle(Params) // actually handle the request
-
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

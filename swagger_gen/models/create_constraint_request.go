@@ -6,6 +6,8 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
+
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
@@ -61,7 +63,7 @@ func (m *CreateConstraintRequest) validateOperator(formats strfmt.Registry) erro
 		return err
 	}
 
-	if err := validate.MinLength("operator", "body", string(*m.Operator), 1); err != nil {
+	if err := validate.MinLength("operator", "body", *m.Operator, 1); err != nil {
 		return err
 	}
 
@@ -74,7 +76,7 @@ func (m *CreateConstraintRequest) validateProperty(formats strfmt.Registry) erro
 		return err
 	}
 
-	if err := validate.MinLength("property", "body", string(*m.Property), 1); err != nil {
+	if err := validate.MinLength("property", "body", *m.Property, 1); err != nil {
 		return err
 	}
 
@@ -87,10 +89,15 @@ func (m *CreateConstraintRequest) validateValue(formats strfmt.Registry) error {
 		return err
 	}
 
-	if err := validate.MinLength("value", "body", string(*m.Value), 1); err != nil {
+	if err := validate.MinLength("value", "body", *m.Value, 1); err != nil {
 		return err
 	}
 
+	return nil
+}
+
+// ContextValidate validates this create constraint request based on context it is used
+func (m *CreateConstraintRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 

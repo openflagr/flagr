@@ -29,7 +29,7 @@ func NewDeleteFlag(ctx *middleware.Context, handler DeleteFlagHandler) *DeleteFl
 	return &DeleteFlag{Context: ctx, Handler: handler}
 }
 
-/*DeleteFlag swagger:route DELETE /flags/{flagID} flag deleteFlag
+/* DeleteFlag swagger:route DELETE /flags/{flagID} flag deleteFlag
 
 DeleteFlag delete flag API
 
@@ -45,14 +45,12 @@ func (o *DeleteFlag) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		r = rCtx
 	}
 	var Params = NewDeleteFlagParams()
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
 	res := o.Handler.Handle(Params) // actually handle the request
-
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }
