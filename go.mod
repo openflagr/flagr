@@ -5,6 +5,7 @@ go 1.15
 require (
 	cloud.google.com/go v0.37.4
 	github.com/DataDog/datadog-go v0.0.0-20180330214955-e67964b4021a
+	github.com/Knetic/govaluate v3.0.0+incompatible
 	github.com/Shopify/sarama v1.19.0
 	github.com/a8m/kinesis-producer v0.0.0-20180723062609-03228a9f79b3
 	github.com/auth0/go-jwt-middleware v0.0.0-20170425171159-5493cabe49f7
@@ -19,6 +20,7 @@ require (
 	github.com/dchest/uniuri v0.0.0-20160212164326-8902c56451e9
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/evalphobia/logrus_sentry v0.4.6
+	github.com/fatih/structs v1.1.0
 	github.com/getsentry/raven-go v0.0.0-20180903072508-084a9de9eb03
 	github.com/go-openapi/errors v0.19.9
 	github.com/go-openapi/loads v0.20.1

@@ -212,4 +212,14 @@ var Config = struct {
 	// UI path  => localhost:18000/foo"
 	// API path => localhost:18000/foo/api/v1"
 	WebPrefix string `env:"FLAGR_WEB_PREFIX" envDefault:""`
+
+	// rules for validating flags on enable - when a flag is updated or enabled
+	// (putFlag or setFlagEnabled), the flag is evaluated against these
+	// optional rules. The operator indicates if all the rules must pass ('AND' value)
+	// or if at least one rule must pass ('OR' value)
+	EnabledFlagValidationRules     []string `env:"FLAGR_ENABLED_FLAG_VALIDATION_RULES" envSeparator:","`
+	EnabledFlagValidationOperation string   `env:"FLAGR_ENABLED_FLAG_VALIDATION_OPERATOR" envDefault:"AND"`
 }{}
+
+const FlagValidationOperationOR = "OR"
+const FlagValidationOperationAND = "AND"

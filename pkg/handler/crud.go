@@ -237,6 +237,16 @@ func (c *crud) PutFlag(params flag.PutFlagParams) middleware.Responder {
 		f.Notes = *params.Body.Notes
 	}
 
+	if f.Enabled {
+		valid, err := validateEnabledFlag(f)
+		if err != nil {
+			return flag.NewPutFlagDefault(500).WithPayload(ErrorMessage("%s", err))
+		}
+		if !valid {
+			return flag.NewPutFlagDefault(400).WithPayload(ErrorMessage("Flag failed enabled flag validation rules"))
+		}
+	}
+
 	if err := tx.Save(f).Error; err != nil {
 		return flag.NewPutFlagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
@@ -263,6 +273,16 @@ func (c *crud) SetFlagEnabledState(params flag.SetFlagEnabledParams) middleware.
 	}
 
 	f.Enabled = *params.Body.Enabled
+
+	if f.Enabled {
+		valid, err := validateEnabledFlag(f)
+		if err != nil {
+			return flag.NewPutFlagDefault(500).WithPayload(ErrorMessage("%s", err))
+		}
+		if !valid {
+			return flag.NewPutFlagDefault(400).WithPayload(ErrorMessage("Flag failed enabled flag validation rules"))
+		}
+	}
 
 	if err := getDB().Save(f).Error; err != nil {
 		return flag.NewSetFlagEnabledDefault(500).WithPayload(ErrorMessage("%s", err))

@@ -12,6 +12,9 @@ cloud.google.com/go/pubsub/pstest
 # github.com/DataDog/datadog-go v0.0.0-20180330214955-e67964b4021a
 ## explicit
 github.com/DataDog/datadog-go/statsd
+# github.com/Knetic/govaluate v3.0.0+incompatible
+## explicit
+github.com/Knetic/govaluate
 # github.com/PuerkitoBio/purell v1.1.1
 github.com/PuerkitoBio/purell
 # github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578
@@ -107,6 +110,9 @@ github.com/eapache/queue
 # github.com/evalphobia/logrus_sentry v0.4.6
 ## explicit
 github.com/evalphobia/logrus_sentry
+# github.com/fatih/structs v1.1.0
+## explicit
+github.com/fatih/structs
 # github.com/getsentry/raven-go v0.0.0-20180903072508-084a9de9eb03
 ## explicit
 github.com/getsentry/raven-go
