@@ -217,6 +217,14 @@ var Config = struct {
 	// (putFlag or setFlagEnabled), the flag is evaluated against these
 	// optional rules. The operator indicates if all the rules must pass ('AND' value)
 	// or if at least one rule must pass ('OR' value)
+	//
+	// Example rule:
+	// FLAGR_ENABLED_FLAG_VALIDATION_RULES='any("regexMatch(Value, \"^JIRA:[a-zA-Z]{3}[a-zA-Z]*$\")", Tags)'
+	// this requires that the flag have at least one tag that matches a regex starting with 'JIRA:' and ending with a
+	// project name consisting of a-z characters, like 'EPLT'
+	//
+	// to use multiple rules, separate each rule with ':::'.
+	//
 	EnabledFlagValidationRules     []string `env:"FLAGR_ENABLED_FLAG_VALIDATION_RULES" envSeparator:":::"`
 	EnabledFlagValidationOperation string   `env:"FLAGR_ENABLED_FLAG_VALIDATION_OPERATOR" envDefault:"AND"`
 }{}
