@@ -37,26 +37,12 @@
           </el-row>
 
           <el-row>
-            <el-col :span="19">
-              <el-input
-                placeholder="Search a flag"
-                prefix-icon="el-icon-search"
-                v-model="searchTerm"
-                v-focus
-              ></el-input>
-            </el-col>
-            <el-col :span="4" :offset="1">
-              <template>
-                <el-select v-model="statusValue" placeholder="Filter by state">
-                  <el-option
-                    v-for="item in statusFilter"
-                    :key="item.value"
-                    :label="item.label"
-                    :value="item.value">
-                  </el-option>
-                </el-select>
-              </template>
-            </el-col>
+            <el-input
+              placeholder="Search a flag"
+              prefix-icon="el-icon-search"
+              v-model="searchTerm"
+              v-focus
+            ></el-input>
           </el-row>
 
           <el-table
@@ -93,7 +79,9 @@
               sortable
               align="center"
               fixed="right"
-              width="100"
+              width="140"
+              :filters="[{ text: 'Enabled', value: true }, { text: 'Disabled', value: false }]"
+              :filter-method="filterTag"
             >
               <template slot-scope="scope">
                 <el-tag
@@ -182,18 +170,7 @@ export default {
       searchTerm: "",
       newFlag: {
         description: ""
-      },
-      statusFilter: [{
-        value: 'all',
-        label: 'All the flags'
-      }, {
-        value: 'enabled',
-        label: 'Enabled flags'
-      }, {
-        value: 'disabled',
-        label: 'Disabled flags'
-      }],
-      statusValue: 'all'
+      }
     };
   },
   created() {
@@ -206,13 +183,8 @@ export default {
   },
   computed: {
     filteredFlags: function() {
-      if (this.searchTerm || this.statusValue != "all") {
-        return this.flags.filter(({ enabled }) =>
-          this.statusValue === "all" ||
-          (this.statusValue === "enabled" && enabled) ||
-          (this.statusValue === "disabled" && !enabled)
-        )
-        .filter(({ id, description, tags }) =>
+      if (this.searchTerm) {
+        return this.flags.filter(({ id, description, tags }) =>
           this.searchTerm
             .split(",")
             .map(term => {
@@ -293,6 +265,9 @@ export default {
           self.deletedFlagsLoaded = true;
         }, handleErr.bind(this));
       }
+    },
+    filterTag(value, row) {
+      return row.enabled === value;
     }
   }
 };
