@@ -81,7 +81,7 @@
               fixed="right"
               width="140"
               :filters="[{ text: 'Enabled', value: true }, { text: 'Disabled', value: false }]"
-              :filter-method="filterTag"
+              :filter-method="filterStatus"
             >
               <template slot-scope="scope">
                 <el-tag
@@ -266,7 +266,7 @@ export default {
         }, handleErr.bind(this));
       }
     },
-    filterTag(value, row) {
+    filterStatus(value, row) {
       return row.enabled === value;
     }
   }
