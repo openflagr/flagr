@@ -79,7 +79,9 @@
               sortable
               align="center"
               fixed="right"
-              width="100"
+              width="140"
+              :filters="[{ text: 'Enabled', value: true }, { text: 'Disabled', value: false }]"
+              :filter-method="filterStatus"
             >
               <template slot-scope="scope">
                 <el-tag
@@ -263,6 +265,9 @@ export default {
           self.deletedFlagsLoaded = true;
         }, handleErr.bind(this));
       }
+    },
+    filterStatus(value, row) {
+      return row.enabled === value;
     }
   }
 };
