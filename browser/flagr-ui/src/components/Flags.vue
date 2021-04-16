@@ -11,7 +11,10 @@
         <div v-if="loaded">
           <el-row>
             <el-col>
-              <el-input placeholder="Specific new flag description" v-model="newFlag.description">
+              <el-input
+                placeholder="Specific new flag description"
+                v-model="newFlag.description"
+              >
                 <template slot="prepend">
                   <span class="el-icon-plus" />
                 </template>
@@ -28,7 +31,8 @@
                       <el-dropdown-item
                         command="simple_boolean_flag"
                         :disabled="!newFlag.description"
-                      >Create Simple Boolean Flag</el-dropdown-item>
+                        >Create Simple Boolean Flag</el-dropdown-item
+                      >
                     </el-dropdown-menu>
                   </el-dropdown>
                 </template>
@@ -53,8 +57,19 @@
             v-on:row-click="goToFlag"
             style="width: 100%"
           >
-            <el-table-column prop="id" align="center" label="Flag ID" sortable fixed width="95"></el-table-column>
-            <el-table-column prop="description" label="Description" min-width="300"></el-table-column>
+            <el-table-column
+              prop="id"
+              align="center"
+              label="Flag ID"
+              sortable
+              fixed
+              width="95"
+            ></el-table-column>
+            <el-table-column
+              prop="description"
+              label="Description"
+              min-width="300"
+            ></el-table-column>
             <el-table-column prop="tags" label="Tags" min-width="200">
               <template slot-scope="scope">
                 <el-tag
@@ -62,10 +77,16 @@
                   :key="tag.id"
                   :type="warning"
                   disable-transitions
-                >{{ tag.value }}</el-tag>
+                  >{{ tag.value }}</el-tag
+                >
               </template>
             </el-table-column>
-            <el-table-column prop="updatedBy" label="Last Updated By" sortable width="200"></el-table-column>
+            <el-table-column
+              prop="updatedBy"
+              label="Last Updated By"
+              sortable
+              width="200"
+            ></el-table-column>
             <el-table-column
               prop="updatedAt"
               label="Updated At (UTC)"
@@ -80,14 +101,18 @@
               align="center"
               fixed="right"
               width="140"
-              :filters="[{ text: 'Enabled', value: true }, { text: 'Disabled', value: false }]"
+              :filters="[
+                { text: 'Enabled', value: true },
+                { text: 'Disabled', value: false }
+              ]"
               :filter-method="filterStatus"
             >
               <template slot-scope="scope">
                 <el-tag
                   :type="scope.row.enabled ? 'primary' : 'danger'"
                   disable-transitions
-                >{{ scope.row.enabled ? "on" : "off" }}</el-tag>
+                  >{{ scope.row.enabled ? "on" : "off" }}</el-tag
+                >
               </template>
             </el-table-column>
           </el-table>
@@ -101,8 +126,19 @@
                 :default-sort="{ prop: 'id', order: 'descending' }"
                 style="width: 100%"
               >
-                <el-table-column prop="id" align="center" label="Flag ID" sortable fixed width="95"></el-table-column>
-                <el-table-column prop="description" label="Description" min-width="300"></el-table-column>
+                <el-table-column
+                  prop="id"
+                  align="center"
+                  label="Flag ID"
+                  sortable
+                  fixed
+                  width="95"
+                ></el-table-column>
+                <el-table-column
+                  prop="description"
+                  label="Description"
+                  min-width="300"
+                ></el-table-column>
                 <el-table-column prop="tags" label="Tags" min-width="200">
                   <template slot-scope="scope">
                     <el-tag
@@ -110,10 +146,16 @@
                       :key="tag.id"
                       :type="warning"
                       disable-transitions
-                    >{{ tag.value }}</el-tag>
+                      >{{ tag.value }}</el-tag
+                    >
                   </template>
                 </el-table-column>
-                <el-table-column prop="updatedBy" label="Last Updated By" sortable width="200"></el-table-column>
+                <el-table-column
+                  prop="updatedBy"
+                  label="Last Updated By"
+                  sortable
+                  width="200"
+                ></el-table-column>
                 <el-table-column
                   prop="updatedAt"
                   label="Updated At (UTC)"
@@ -133,7 +175,8 @@
                       @click="restoreFlag(scope.row)"
                       type="warning"
                       size="small"
-                    >Restore</el-button>
+                      >Restore</el-button
+                    >
                   </template>
                 </el-table-column>
               </el-table>
@@ -239,11 +282,15 @@ export default {
       }, handleErr.bind(this));
     },
     restoreFlag(row) {
-      this.$confirm('This will recover the deleted flag. Continue?', 'Warning', {
-        confirmButtonText: 'OK',
-        cancelButtonText: 'Cancel',
-        type: 'warning'
-      }).then(() => {
+      this.$confirm(
+        "This will recover the deleted flag. Continue?",
+        "Warning",
+        {
+          confirmButtonText: "OK",
+          cancelButtonText: "Cancel",
+          type: "warning"
+        }
+      ).then(() => {
         Axios.put(`${API_URL}/flags/${row.id}/restore`).then(response => {
           let flag = response.data;
           this.$message.success(`Flag updated`);
@@ -253,7 +300,6 @@ export default {
           });
         }, handleErr.bind(this));
       });
-
     },
     fetchDeletedFlags() {
       if (!this.deletedFlagsLoaded) {
