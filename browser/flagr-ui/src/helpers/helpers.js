@@ -50,10 +50,10 @@ function getHue(str) {
   return hash % 360;
 }
 
-function stringToColour(str, lightness = 70) {
+function stringToColour(str, lightness = 90) {
   let hue = getHue(str);
 
-  return `hsla(${hue}, 70%, ${lightness}%, 0.8)`;
+  return `hsla(${hue}, 100%, ${lightness}%, 1)`;
 }
 
 export default {

@@ -940,8 +940,8 @@ export default {
     tagColor(value) {
       return {
         backgroundColor: stringToColour(value, 90),
-        color: stringToColour(value, 35),
-        borderColor: stringToColour(value, 35)
+        color: stringToColour(value, 25),
+        borderColor: stringToColour(value, 25)
       };
     },
     cancelCreateTag() {
