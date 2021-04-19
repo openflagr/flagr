@@ -40,17 +40,20 @@ function handleErr(err) {
   }
 }
 
-function getHSLAColour(hash) {
-  return `hsla(${~~(360 * hash)}, 70%, 70%, 0.8)`;
-}
-
-function stringToColour(str) {
-  let hash = 0;
+function getHue(str) {
+  var hash = 0;
+  if (str.length === 0) return hash;
   for (var i = 0; i < str.length; i++) {
     hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    hash = hash & hash;
   }
+  return hash % 360;
+}
 
-  return getHSLAColour(hash);
+function stringToColour(str, lightness = 70) {
+  let hue = getHue(str);
+
+  return `hsla(${hue}, 70%, ${lightness}%, 0.8)`;
 }
 
 export default {

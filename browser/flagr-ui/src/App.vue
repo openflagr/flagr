@@ -39,8 +39,8 @@ const version = require("../package.json").version || "1.0.0";
 export default {
   name: "app",
   data: () => ({
-    version,
-  }),
+    version
+  })
 };
 </script>
 
@@ -48,7 +48,8 @@ export default {
 body {
   margin: 0;
   padding: 0;
-  font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji;
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial,
+    sans-serif, Apple Color Emoji, Segoe UI Emoji;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -201,6 +202,10 @@ ol {
 
   .el-tag {
     margin: 2.5px;
+    .el-icon-close {
+      background-color: inherit;
+      color: inherit;
+    }
   }
 }
 </style>
