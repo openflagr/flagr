@@ -2,38 +2,23 @@
   <el-row>
     <el-col :span="20" :offset="2">
       <div class="container flag-container">
-        <el-dialog
-          title="Delete feature flag"
-          :visible.sync="dialogDeleteFlagVisible"
-        >
+        <el-dialog title="Delete feature flag" :visible.sync="dialogDeleteFlagVisible">
           <span>Are you sure you want to delete this feature flag?</span>
           <span slot="footer" class="dialog-footer">
-            <el-button @click="dialogDeleteFlagVisible = false"
-              >Cancel</el-button
-            >
-            <el-button type="primary" @click.prevent="deleteFlag"
-              >Confirm</el-button
-            >
+            <el-button @click="dialogDeleteFlagVisible = false">Cancel</el-button>
+            <el-button type="primary" @click.prevent="deleteFlag">Confirm</el-button>
           </span>
         </el-dialog>
 
-        <el-dialog
-          title="Edit distribution"
-          :visible.sync="dialogEditDistributionOpen"
-        >
+        <el-dialog title="Edit distribution" :visible.sync="dialogEditDistributionOpen">
           <div v-if="loaded && flag">
-            <div
-              v-for="variant in flag.variants"
-              :key="'distribution-variant-' + variant.id"
-            >
+            <div v-for="variant in flag.variants" :key="'distribution-variant-' + variant.id">
               <div>
                 <el-checkbox
                   @change="e => selectVariant(e, variant)"
                   :checked="!!newDistributions[variant.id]"
-                ></el-checkbox>
-                <el-tag type="danger" :disable-transitions="true">{{
-                  variant.key
-                }}</el-tag>
+                />
+                <el-tag type="danger" :disable-transitions="true">{{variant.key}}</el-tag>
               </div>
               <el-slider
                 v-if="!newDistributions[variant.id]"
@@ -54,8 +39,7 @@
             class="width--full"
             :disabled="!newDistributionIsValid"
             @click.prevent="() => saveDistribution(selectedSegment)"
-            >Save</el-button
-          >
+          >Save</el-button>
 
           <el-alert
             class="edit-distribution-alert"
@@ -67,7 +51,7 @@
             "
             type="error"
             show-icon
-          ></el-alert>
+          />
         </el-dialog>
 
         <el-dialog
@@ -79,30 +63,25 @@
               <el-input
                 placeholder="Segment description"
                 v-model="newSegment.description"
-              ></el-input>
+              />
             </p>
             <p>
               <el-slider
                 v-model="newSegment.rolloutPercent"
                 show-input
-              ></el-slider>
+              />
             </p>
             <el-button
               class="width--full"
               :disabled="!newSegment.description"
               @click.prevent="createSegment"
-              >Create Segment</el-button
-            >
+            >Create Segment</el-button>
           </div>
         </el-dialog>
 
         <el-breadcrumb separator="/">
-          <el-breadcrumb-item :to="{ name: 'home' }"
-            >Home page</el-breadcrumb-item
-          >
-          <el-breadcrumb-item
-            >Flag ID: {{ $route.params.flagId }}</el-breadcrumb-item
-          >
+          <el-breadcrumb-item :to="{ name: 'home' }">Home page</el-breadcrumb-item>
+          <el-breadcrumb-item>Flag ID: {{ $route.params.flagId }}</el-breadcrumb-item>
         </el-breadcrumb>
 
         <div v-if="loaded && flag">
@@ -115,11 +94,7 @@
                       <h2>Flag</h2>
                     </div>
                     <div class="flex-row-right" v-if="flag">
-                      <el-tooltip
-                        content="Enable/Disable Flag"
-                        placement="top"
-                        effect="light"
-                      >
+                      <el-tooltip content="Enable/Disable Flag" placement="top" effect="light">
                         <el-switch
                           v-model="flag.enabled"
                           active-color="#13ce66"
@@ -127,7 +102,7 @@
                           @change="setFlagEnabled"
                           :active-value="true"
                           :inactive-value="false"
-                        ></el-switch>
+                        />
                       </el-tooltip>
                     </div>
                   </div>
@@ -135,14 +110,12 @@
                 <el-card shadow="hover" :class="toggleInnerConfigCard">
                   <div class="flex-row id-row">
                     <div class="flex-row-left">
-                      <el-tag type="primary" :disable-transitions="true"
-                        >Flag ID: {{ $route.params.flagId }}</el-tag
-                      >
+                        <el-tag type="primary" :disable-transitions="true">
+                            Flag ID: {{ $route.params.flagId }}
+                        </el-tag >
                     </div>
                     <div class="flex-row-right">
-                      <el-button size="small" @click="putFlag(flag)"
-                        >Save Flag</el-button
-                      >
+                      <el-button size="small" @click="putFlag(flag)">Save Flag</el-button>
                     </div>
                   </div>
                   <el-row class="flag-content" type="flex" align="middle">
@@ -167,7 +140,7 @@
                           active-color="#74E5E0"
                           :active-value="true"
                           :inactive-value="false"
-                        ></el-switch>
+                        />
                       </div>
                     </el-col>
                     <el-col :span="2">
@@ -263,8 +236,7 @@
                         :type="warning"
                         :style="tagColor(tag.value)"
                         @close="deleteTag(tag)"
-                        >{{ tag.value }}</el-tag
-                      >
+                      >{{ tag.value }}</el-tag >
                       <el-autocomplete
                         class="tag-key-input"
                         v-if="tagInputVisible"
@@ -276,14 +248,13 @@
                         @select="createTag"
                         @keyup.enter.native="createTag"
                         @keyup.esc.native="cancelCreateTag"
-                      ></el-autocomplete>
+                      />
                       <el-button
                         v-else
                         class="button-new-tag"
                         size="small"
                         @click="showTagInput"
-                        >+ New Tag</el-button
-                      >
+                      >+ New Tag</el-button>
                     </div>
                   </el-row>
                 </el-card>
