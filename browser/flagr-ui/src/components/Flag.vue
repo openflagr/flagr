@@ -110,9 +110,10 @@
                 <el-card shadow="hover" :class="toggleInnerConfigCard">
                   <div class="flex-row id-row">
                     <div class="flex-row-left">
-                        <el-tag type="primary" :disable-transitions="true">
-                            Flag ID: {{ $route.params.flagId }}
-                        </el-tag >
+                        <el-tag
+                            type="primary"
+                            :disable-transitions="true"
+                        >Flag ID: {{ $route.params.flagId }}</el-tag >
                     </div>
                     <div class="flex-row-right">
                       <el-button size="small" @click="putFlag(flag)">Save Flag</el-button>
@@ -122,17 +123,13 @@
                     <el-col :span="17">
                       <el-row>
                         <el-col :span="24">
-                          <el-input
-                            size="small"
-                            placeholder="Key"
-                            v-model="flag.key"
-                          >
+                          <el-input size="small" placeholder="Key" v-model="flag.key">
                             <template slot="prepend">Flag Key</template>
                           </el-input>
                         </el-col>
                       </el-row>
                     </el-col>
-                    <el-col style="text-align: right" :span="5">
+                    <el-col style="text-align: right;" :span="5">
                       <div>
                         <el-switch
                           size="small"
@@ -170,7 +167,7 @@
                         </el-col>
                       </el-row>
                     </el-col>
-                    <el-col style="text-align: right" :span="5">
+                    <el-col style="text-align: right;" :span="5">
                       <div>
                         <el-select
                           v-show="!!flag.dataRecordsEnabled"
@@ -191,10 +188,7 @@
                       </div>
                     </el-col>
                     <el-col :span="2">
-                      <div
-                        v-show="!!flag.dataRecordsEnabled"
-                        class="data-records-label"
-                      >
+                      <div v-show="!!flag.dataRecordsEnabled" class="data-records-label">
                         Entity Type
                         <el-tooltip
                           content="Overrides the entityType in data records logging"
@@ -206,9 +200,9 @@
                       </div>
                     </el-col>
                   </el-row>
-                  <el-row style="margin: 10px">
+                  <el-row style="margin: 10px;">
                     <h5>
-                      <span style="margin-right: 10px">Flag Notes</span>
+                      <span style="margin-right: 10px;">Flag Notes</span>
                       <el-button round size="mini" @click="toggleShowMdEditor">
                         <span :class="editViewIcon"></span>
                         {{ !this.showMdEditor ? "edit" : "view" }}
@@ -222,9 +216,9 @@
                       @save="putFlag(flag)"
                     ></markdown-editor>
                   </el-row>
-                  <el-row style="margin: 10px">
+                  <el-row style="margin: 10px;">
                     <h5>
-                      <span style="margin-right: 10px">Tags</span>
+                      <span style="margin-right: 10px;">Tags</span>
                     </h5>
                   </el-row>
                   <el-row>
@@ -236,7 +230,7 @@
                         :type="warning"
                         :style="tagColor(tag.value)"
                         @close="deleteTag(tag)"
-                      >{{ tag.value }}</el-tag >
+                      >{{tag.value}}</el-tag >
                       <el-autocomplete
                         class="tag-key-input"
                         v-if="tagInputVisible"
@@ -264,10 +258,7 @@
                 <div slot="header" class="clearfix">
                   <h2>Variants</h2>
                 </div>
-                <div
-                  class="variants-container-inner"
-                  v-if="flag.variants.length"
-                >
+                <div class="variants-container-inner" v-if="flag.variants.length">
                   <div v-for="variant in flag.variants" :key="variant.id">
                     <el-card shadow="hover">
                       <el-form label-position="left" label-width="100px">
@@ -289,12 +280,8 @@
                               slot="append"
                               size="small"
                               @click="putVariant(variant)"
-                              >Save Variant</el-button
-                            >
-                            <el-button
-                              @click="deleteVariant(variant)"
-                              size="small"
-                            >
+                            >Save Variant</el-button>
+                            <el-button @click="deleteVariant(variant)" size="small">
                               <span class="el-icon-delete" />
                             </el-button>
                           </div>
@@ -321,26 +308,18 @@
                     </el-card>
                   </div>
                 </div>
-                <div class="card--error" v-else>
-                  No variants created for this feature flag yet
-                </div>
+                <div class="card--error" v-else>No variants created for this feature flag yet</div>
                 <div class="variants-input">
-                  <div
-                    class="flex-row equal-width constraints-inputs-container"
-                  >
+                  <div class="flex-row equal-width constraints-inputs-container">
                     <div>
-                      <el-input
-                        placeholder="Variant Key"
-                        v-model="newVariant.key"
-                      ></el-input>
+                      <el-input placeholder="Variant Key" v-model="newVariant.key"></el-input>
                     </div>
                   </div>
                   <el-button
                     class="width--full"
                     :disabled="!newVariant.key"
                     @click.prevent="createVariant"
-                    >Create Variant</el-button
-                  >
+                  >Create Variant</el-button>
                 </div>
               </el-card>
 
@@ -356,25 +335,14 @@
                         placement="top"
                         effect="light"
                       >
-                        <el-button @click="putSegmentsReorder(flag.segments)"
-                          >Reorder</el-button
-                        >
+                        <el-button @click="putSegmentsReorder(flag.segments)">Reorder</el-button>
                       </el-tooltip>
-                      <el-button @click="dialogCreateSegmentOpen = true"
-                        >New Segment</el-button
-                      >
+                      <el-button @click="dialogCreateSegmentOpen = true">New Segment</el-button>
                     </div>
                   </div>
                 </div>
-                <div
-                  class="segments-container-inner"
-                  v-if="flag.segments.length"
-                >
-                  <draggable
-                    v-model="flag.segments"
-                    @start="drag = true"
-                    @end="drag = false"
-                  >
+                <div class="segments-container-inner" v-if="flag.segments.length">
+                  <draggable v-model="flag.segments" @start="drag = true" @end="drag = false">
                     <transition-group>
                       <el-card
                         shadow="hover"
@@ -394,12 +362,8 @@
                               slot="append"
                               size="small"
                               @click="putSegment(segment)"
-                              >Save Segment Setting</el-button
-                            >
-                            <el-button
-                              @click="deleteSegment(segment)"
-                              size="small"
-                            >
+                            >Save Segment Setting</el-button>
+                            <el-button @click="deleteSegment(segment)" size="small">
                               <span class="el-icon-delete" />
                             </el-button>
                           </div>
@@ -432,27 +396,16 @@
                           <el-col :span="24">
                             <h5>Constraints (match ALL of them)</h5>
                             <div class="constraints">
-                              <div
-                                class="constraints-inner"
-                                v-if="segment.constraints.length"
-                              >
-                                <div
-                                  v-for="constraint in segment.constraints"
-                                  :key="constraint.id"
-                                >
-                                  <el-row
-                                    :gutter="3"
-                                    class="segment-constraint"
-                                  >
+                              <div class="constraints-inner" v-if="segment.constraints.length">
+                                <div v-for="constraint in segment.constraints" :key="constraint.id">
+                                  <el-row :gutter="3" class="segment-constraint">
                                     <el-col :span="20">
                                       <el-input
                                         size="small"
                                         placeholder="Property"
                                         v-model="constraint.property"
                                       >
-                                        <template slot="prepend"
-                                          >Property</template
-                                        >
+                                        <template slot="prepend">Property</template>
                                       </el-input>
                                     </el-col>
                                     <el-col :span="4">
@@ -489,8 +442,7 @@
                                           putConstraint(segment, constraint)
                                         "
                                         size="small"
-                                        >Save</el-button
-                                      >
+                                      >Save</el-button>
                                     </el-col>
                                     <el-col :span="2">
                                       <el-button
@@ -514,11 +466,7 @@
                               <div>
                                 <el-row :gutter="3">
                                   <el-col :span="5">
-                                    <el-input
-                                      size="small"
-                                      placeholder="Property"
-                                      v-model="segment.newConstraint.property"
-                                    ></el-input>
+                                    <el-input size="small" placeholder="Property" v-model="segment.newConstraint.property" />
                                   </el-col>
                                   <el-col :span="4">
                                     <el-select
@@ -553,8 +501,7 @@
                                       @click.prevent="
                                         () => createConstraint(segment)
                                       "
-                                      >Add Constraint</el-button
-                                    >
+                                    >Add Constraint</el-button>
                                   </el-col>
                                 </el-row>
                               </div>
@@ -563,28 +510,17 @@
                           <el-col :span="24" class="segment-distributions">
                             <h5>
                               <span>Distribution</span>
-                              <el-button
-                                round
-                                size="mini"
-                                @click="editDistribution(segment)"
-                              >
+                              <el-button round size="mini" @click="editDistribution(segment)">
                                 <span class="el-icon-edit"></span> edit
                               </el-button>
                             </h5>
-                            <el-row
-                              type="flex"
-                              v-if="segment.distributions.length"
-                              :gutter="20"
-                            >
+                            <el-row type="flex" v-if="segment.distributions.length" :gutter="20">
                               <el-col
                                 v-for="distribution in segment.distributions"
                                 :key="distribution.id"
                                 :span="6"
                               >
-                                <el-card
-                                  shadow="never"
-                                  class="distribution-card"
-                                >
+                                <el-card shadow="never" class="distribution-card">
                                   <div>
                                     <span size="small">
                                       {{ distribution.variantKey }}
@@ -618,11 +554,7 @@
                 <div slot="header" class="el-card-header">
                   <h2>Flag Settings</h2>
                 </div>
-                <el-button
-                  @click="dialogDeleteFlagVisible = true"
-                  type="danger"
-                  plain
-                >
+                <el-button @click="dialogDeleteFlagVisible = true" type="danger" plain>
                   <span class="el-icon-delete"></span>
                   Delete Flag
                 </el-button>
@@ -631,9 +563,7 @@
             </el-tab-pane>
 
             <el-tab-pane label="History">
-              <flag-history
-                :flag-id="parseInt($route.params.flagId, 10)"
-              ></flag-history>
+              <flag-history :flag-id="parseInt($route.params.flagId, 10)" />
             </el-tab-pane>
           </el-tabs>
         </div>
