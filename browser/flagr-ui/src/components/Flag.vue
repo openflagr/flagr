@@ -54,10 +54,7 @@
           />
         </el-dialog>
 
-        <el-dialog
-          title="Create segment"
-          :visible.sync="dialogCreateSegmentOpen"
-        >
+        <el-dialog title="Create segment" :visible.sync="dialogCreateSegmentOpen">
           <div>
             <p>
               <el-input
@@ -424,13 +421,8 @@
                                       </el-select>
                                     </el-col>
                                     <el-col :span="20">
-                                      <el-input
-                                        size="small"
-                                        v-model="constraint.value"
-                                      >
-                                        <template slot="prepend"
-                                          >Value&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</template
-                                        >
+                                      <el-input size="small" v-model="constraint.value">
+                                        <template slot="prepend">Value&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</template>
                                       </el-input>
                                     </el-col>
                                     <el-col :span="2">
@@ -483,10 +475,7 @@
                                     </el-select>
                                   </el-col>
                                   <el-col :span="11">
-                                    <el-input
-                                      size="small"
-                                      v-model="segment.newConstraint.value"
-                                    ></el-input>
+                                    <el-input size="small" v-model="segment.newConstraint.value" />
                                   </el-col>
                                   <el-col :span="4">
                                     <el-button
@@ -496,7 +485,7 @@
                                       plain
                                       :disabled="
                                         !segment.newConstraint.property ||
-                                          !segment.newConstraint.value
+                                        !segment.newConstraint.value
                                       "
                                       @click.prevent="
                                         () => createConstraint(segment)
