@@ -59,7 +59,6 @@
               <template slot-scope="scope">
                 <el-tag
                   v-for="tag in scope.row.tags"
-                  :style="tagColor(tag.value)"
                   :key="tag.id"
                   :type="warning"
                   disable-transitions
@@ -108,7 +107,6 @@
                   <template slot-scope="scope">
                     <el-tag
                       v-for="tag in scope.row.tags"
-                      :style="tagColor(tag.value)"
                       :key="tag.id"
                       :type="warning"
                       disable-transitions
@@ -154,7 +152,7 @@ import constants from "@/constants";
 import Spinner from "@/components/Spinner";
 import helpers from "@/helpers/helpers";
 
-const { handleErr, stringToColour } = helpers;
+const { handleErr } = helpers;
 
 const { API_URL } = constants;
 
@@ -240,23 +238,12 @@ export default {
         this.flags.unshift(flag);
       }, handleErr.bind(this));
     },
-    tagColor(value) {
-      return {
-        backgroundColor: stringToColour(value, 90),
-        color: stringToColour(value, 25),
-        borderColor: stringToColour(value, 25)
-      };
-    },
     restoreFlag(row) {
-      this.$confirm(
-        "This will recover the deleted flag. Continue?",
-        "Warning",
-        {
-          confirmButtonText: "OK",
-          cancelButtonText: "Cancel",
-          type: "warning"
-        }
-      ).then(() => {
+      this.$confirm('This will recover the deleted flag. Continue?', 'Warning', {
+        confirmButtonText: 'OK',
+        cancelButtonText: 'Cancel',
+        type: 'warning'
+      }).then(() => {
         Axios.put(`${API_URL}/flags/${row.id}/restore`).then(response => {
           let flag = response.data;
           this.$message.success(`Flag updated`);
@@ -266,6 +253,7 @@ export default {
           });
         }, handleErr.bind(this));
       });
+
     },
     fetchDeletedFlags() {
       if (!this.deletedFlagsLoaded) {

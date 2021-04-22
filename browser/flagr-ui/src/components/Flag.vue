@@ -15,10 +15,10 @@
             <div v-for="variant in flag.variants" :key="'distribution-variant-' + variant.id">
               <div>
                 <el-checkbox
-                  @change="e => selectVariant(e, variant)"
+                  @change="(e) => selectVariant(e, variant)"
                   :checked="!!newDistributions[variant.id]"
-                />
-                <el-tag type="danger" :disable-transitions="true">{{variant.key}}</el-tag>
+                ></el-checkbox>
+                <el-tag type="danger" :disable-transitions="true">{{ variant.key }}</el-tag>
               </div>
               <el-slider
                 v-if="!newDistributions[variant.id]"
@@ -46,27 +46,21 @@
             v-if="!newDistributionIsValid"
             :title="
               'Percentages must add up to 100% (currently at ' +
-                newDistributionPercentageSum +
-                '%)'
+              newDistributionPercentageSum +
+              '%)'
             "
             type="error"
             show-icon
-          />
+          ></el-alert>
         </el-dialog>
 
         <el-dialog title="Create segment" :visible.sync="dialogCreateSegmentOpen">
           <div>
             <p>
-              <el-input
-                placeholder="Segment description"
-                v-model="newSegment.description"
-              />
+              <el-input placeholder="Segment description" v-model="newSegment.description"></el-input>
             </p>
             <p>
-              <el-slider
-                v-model="newSegment.rolloutPercent"
-                show-input
-              />
+              <el-slider v-model="newSegment.rolloutPercent" show-input></el-slider>
             </p>
             <el-button
               class="width--full"
@@ -99,7 +93,7 @@
                           @change="setFlagEnabled"
                           :active-value="true"
                           :inactive-value="false"
-                        />
+                        ></el-switch>
                       </el-tooltip>
                     </div>
                   </div>
@@ -107,10 +101,10 @@
                 <el-card shadow="hover" :class="toggleInnerConfigCard">
                   <div class="flex-row id-row">
                     <div class="flex-row-left">
-                        <el-tag
-                            type="primary"
-                            :disable-transitions="true"
-                        >Flag ID: {{ $route.params.flagId }}</el-tag >
+                      <el-tag
+                        type="primary"
+                        :disable-transitions="true"
+                      >Flag ID: {{ $route.params.flagId }}</el-tag>
                     </div>
                     <div class="flex-row-right">
                       <el-button size="small" @click="putFlag(flag)">Save Flag</el-button>
@@ -134,7 +128,7 @@
                           active-color="#74E5E0"
                           :active-value="true"
                           :inactive-value="false"
-                        />
+                        ></el-switch>
                       </div>
                     </el-col>
                     <el-col :span="2">
@@ -225,9 +219,8 @@
                         :key="tag.id"
                         closable
                         :type="warning"
-                        :style="tagColor(tag.value)"
                         @close="deleteTag(tag)"
-                      >{{tag.value}}</el-tag >
+                      >{{tag.value}}</el-tag>
                       <el-autocomplete
                         class="tag-key-input"
                         v-if="tagInputVisible"
@@ -239,7 +232,7 @@
                         @select="createTag"
                         @keyup.enter.native="createTag"
                         @keyup.esc.native="cancelCreateTag"
-                      />
+                      ></el-autocomplete>
                       <el-button
                         v-else
                         class="button-new-tag"
@@ -288,9 +281,9 @@
                             title="Variant attachment"
                             class="variant-attachment-collapsable-title"
                           >
-                            <p class="variant-attachment-title">
-                              You can add JSON in key/value pairs format.
-                            </p>
+                            <p
+                              class="variant-attachment-title"
+                            >You can add JSON in key/value pairs format.</p>
                             <vue-json-editor
                               v-model="variant.attachment"
                               :showBtns="false"
@@ -458,7 +451,11 @@
                               <div>
                                 <el-row :gutter="3">
                                   <el-col :span="5">
-                                    <el-input size="small" placeholder="Property" v-model="segment.newConstraint.property" />
+                                    <el-input
+                                      size="small"
+                                      placeholder="Property"
+                                      v-model="segment.newConstraint.property"
+                                    ></el-input>
                                   </el-col>
                                   <el-col :span="4">
                                     <el-select
@@ -475,7 +472,7 @@
                                     </el-select>
                                   </el-col>
                                   <el-col :span="11">
-                                    <el-input size="small" v-model="segment.newConstraint.value" />
+                                    <el-input size="small" v-model="segment.newConstraint.value"></el-input>
                                   </el-col>
                                   <el-col :span="4">
                                     <el-button
@@ -512,7 +509,9 @@
                                 <el-card shadow="never" class="distribution-card">
                                   <div>
                                     <span size="small">
-                                      {{ distribution.variantKey }}
+                                      {{
+                                      distribution.variantKey
+                                      }}
                                     </span>
                                   </div>
                                   <el-progress
@@ -525,18 +524,14 @@
                               </el-col>
                             </el-row>
 
-                            <div class="card--error" v-else>
-                              No distribution yet
-                            </div>
+                            <div class="card--error" v-else>No distribution yet</div>
                           </el-col>
                         </el-row>
                       </el-card>
                     </transition-group>
                   </draggable>
                 </div>
-                <div class="card--error" v-else>
-                  No segments created for this feature flag yet
-                </div>
+                <div class="card--error" v-else>No segments created for this feature flag yet</div>
               </el-card>
               <debug-console :flag="this.flag"></debug-console>
               <el-card>
@@ -552,7 +547,7 @@
             </el-tab-pane>
 
             <el-tab-pane label="History">
-              <flag-history :flag-id="parseInt($route.params.flagId, 10)" />
+              <flag-history :flag-id="parseInt($route.params.flagId, 10)"></flag-history>
             </el-tab-pane>
           </el-tabs>
         </div>
@@ -580,7 +575,7 @@ const OPERATOR_VALUE_TO_LABEL_MAP = operators.reduce((acc, el) => {
   return acc;
 }, {});
 
-const { sum, pluck, handleErr, stringToColour } = helpers;
+const { sum, pluck, handleErr } = helpers;
 
 const { API_URL, FLAGR_UI_POSSIBLE_ENTITY_TYPES } = constants;
 
@@ -826,13 +821,6 @@ export default {
         },
         handleErr.bind(this)
       );
-    },
-    tagColor(value) {
-      return {
-        backgroundColor: stringToColour(value, 90),
-        color: stringToColour(value, 25),
-        borderColor: stringToColour(value, 25)
-      };
     },
     cancelCreateTag() {
       this.newTag = clone(DEFAULT_TAG);
