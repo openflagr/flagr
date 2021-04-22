@@ -40,10 +40,27 @@ function handleErr (err) {
   }
 }
 
+function getHue(str) {
+  var hash = 0;
+  if (str.length === 0) return hash;
+  for (var i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    hash = hash & hash;
+  }
+  return hash % 360;
+}
+
+function stringToColour(str, lightness = 90) {
+  let hue = getHue(str);
+
+  return `hsla(${hue}, 100%, ${lightness}%, 1)`;
+}
+
 export default {
   indexBy,
   pluck,
   sum,
   get,
-  handleErr
-}
+  handleErr,
+  stringToColour
+};
