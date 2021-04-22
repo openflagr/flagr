@@ -221,7 +221,7 @@
                         :type="warning"
                         :style="tagColor(tag.value)"
                         @close="deleteTag(tag)"
-                      >{{tag.value}}</el-tag >
+                      >{{tag.value}}</el-tag>
                       <el-autocomplete
                         class="tag-key-input"
                         v-if="tagInputVisible"
