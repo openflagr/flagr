@@ -59,6 +59,7 @@
               <template slot-scope="scope">
                 <el-tag
                   v-for="tag in scope.row.tags"
+                  :style="tagColor(tag.value)"
                   :key="tag.id"
                   :type="warning"
                   disable-transitions
@@ -107,6 +108,7 @@
                   <template slot-scope="scope">
                     <el-tag
                       v-for="tag in scope.row.tags"
+                      :style="tagColor(tag.value)"
                       :key="tag.id"
                       :type="warning"
                       disable-transitions
@@ -152,7 +154,7 @@ import constants from "@/constants";
 import Spinner from "@/components/Spinner";
 import helpers from "@/helpers/helpers";
 
-const { handleErr } = helpers;
+const { handleErr, stringToColour } = helpers;
 
 const { API_URL } = constants;
 
@@ -237,6 +239,13 @@ export default {
         flag._new = true;
         this.flags.unshift(flag);
       }, handleErr.bind(this));
+    },
+    tagColor(value) {
+      return {
+        backgroundColor: stringToColour(value, 90),
+        color: stringToColour(value, 25),
+        borderColor: stringToColour(value, 25)
+      };
     },
     restoreFlag(row) {
       this.$confirm('This will recover the deleted flag. Continue?', 'Warning', {

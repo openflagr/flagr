@@ -219,8 +219,9 @@
                         :key="tag.id"
                         closable
                         :type="warning"
+                        :style="tagColor(tag.value)"
                         @close="deleteTag(tag)"
-                      >{{tag.value}}</el-tag>
+                      >{{tag.value}}</el-tag >
                       <el-autocomplete
                         class="tag-key-input"
                         v-if="tagInputVisible"
@@ -575,7 +576,7 @@ const OPERATOR_VALUE_TO_LABEL_MAP = operators.reduce((acc, el) => {
   return acc;
 }, {});
 
-const { sum, pluck, handleErr } = helpers;
+const { sum, pluck, handleErr, stringToColour } = helpers;
 
 const { API_URL, FLAGR_UI_POSSIBLE_ENTITY_TYPES } = constants;
 
@@ -821,6 +822,13 @@ export default {
         },
         handleErr.bind(this)
       );
+    },
+    tagColor(value) {
+      return {
+        backgroundColor: stringToColour(value, 90),
+        color: stringToColour(value, 25),
+        borderColor: stringToColour(value, 25)
+      };
     },
     cancelCreateTag() {
       this.newTag = clone(DEFAULT_TAG);
