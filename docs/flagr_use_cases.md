@@ -35,7 +35,7 @@ Segment
 ```
 
 UI setting example (frontend looks may iterate quickly):
-![feature flagging setting demo](/images/demo_ff.png)
+![feature flagging setting demo](images/demo_ff.png)
 
 
 ## Experimenting - A/B testing
@@ -88,8 +88,8 @@ Segment
 ```
 
 UI setting example (frontend looks may iterate quickly):
-![ab testing setting demo 1](/images/demo_exp1.png)
-![ab testing setting demo 2](/images/demo_exp2.png)
+![ab testing setting demo 1](images/demo_exp1.png)
+![ab testing setting demo 2](images/demo_exp2.png)
 
 
 ## Dynamic Configuration
@@ -120,4 +120,4 @@ Segment
     - red: 0%
 ```
 
-![dynamic configuration demo](/images/demo_dynamic_configuration.png)
+![dynamic configuration demo](images/demo_dynamic_configuration.png)
