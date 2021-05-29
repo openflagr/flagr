@@ -51,9 +51,7 @@ function getHue(str) {
 }
 
 function stringToColour(str, lightness = 90) {
-  let hue = getHue(str);
-
-  return `hsla(${hue}, 100%, ${lightness}%, 1)`;
+  return `hsla(${getHue(str)}, 100%, ${lightness}%, 1)`;
 }
 
 export default {
@@ -62,5 +60,5 @@ export default {
   sum,
   get,
   handleErr,
-  stringToColour
+  stringToColour,
 };
