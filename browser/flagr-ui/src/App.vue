@@ -39,8 +39,8 @@ const version = require("../package.json").version || "1.0.0";
 export default {
   name: "app",
   data: () => ({
-    version
-  })
+    version,
+  }),
 };
 </script>
 
