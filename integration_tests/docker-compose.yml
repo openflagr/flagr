@@ -12,7 +12,6 @@ services:
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
       MYSQL_DATABASE: "flagr"
-      MYSQL_USER: "root"
 
   mysql8:
     image: mysql:8
@@ -20,7 +19,6 @@ services:
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
       MYSQL_DATABASE: "flagr"
-      MYSQL_USER: "root"
 
   postgres:
     image: postgres:9
