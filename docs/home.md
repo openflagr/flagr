@@ -34,7 +34,7 @@ docker run -it -p 18000:18000 checkr/flagr
 
 Install Dependencies.
 
-- Go
+- Go (1.16+)
 - Make (for Makefile)
 - NPM (for building UI)
 

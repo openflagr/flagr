@@ -44,9 +44,8 @@ start:
 gen: api_docs swagger
 
 deps:
-	@GO111MODULE=off go get -u github.com/myitcv/gobin
-	@gobin github.com/go-swagger/go-swagger/cmd/swagger@v0.26.0
-	@gobin github.com/golangci/golangci-lint/cmd/golangci-lint@v1.35.2
+	@go install github.com/go-swagger/go-swagger/cmd/swagger@v0.26.0
+	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.35.2
 
 serve_docs:
 	@npm install -g docsify-cli@4

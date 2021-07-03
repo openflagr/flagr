@@ -5,7 +5,7 @@ version: 2
 jobs:
   unit_test:
     docker:
-      - image: golang:1.15
+      - image: golang:1.16
     working_directory: /go/src/github.com/checkr/flagr
     steps:
       - checkout
