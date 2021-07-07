@@ -71,7 +71,6 @@ github.com/erikstmartin/go-testdb v0.0.0-20160219214506-8d10e4a1bae5 h1:Yzb9+7DP
 github.com/erikstmartin/go-testdb v0.0.0-20160219214506-8d10e4a1bae5/go.mod h1:a2zkGnVExMxdzMo3M0Hi/3sEU+cWnZpSni0O6/Yb/P0=
 github.com/evalphobia/logrus_sentry v0.4.6 h1:825MLGu+SW5H8hMXGeBI7TwX7vgJLd9hz0Eth1Mnp3o=
 github.com/evalphobia/logrus_sentry v0.4.6/go.mod h1:pKcp+vriitUqu9KiWj/VRFbRfFNUwz95/UkgG8a6MNc=
-github.com/fsnotify/fsnotify v1.4.7 h1:IXs+QLmnXW2CcXuY+8Mzv/fWEsPGWxqefPtCP5CnV9I=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
 github.com/getsentry/raven-go v0.0.0-20180903072508-084a9de9eb03 h1:G/9fPivTr5EiyqE9OlW65iMRUxFXMGRHgZFGo50uG8Q=
 github.com/getsentry/raven-go v0.0.0-20180903072508-084a9de9eb03/go.mod h1:KungGk8q33+aIAZUIVWZDr2OfAEBsO49PX4NzFV5kcQ=
