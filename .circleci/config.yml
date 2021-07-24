@@ -23,6 +23,7 @@ jobs:
       - checkout
       - run: cd browser/flagr-ui && npm install
       - run: cd browser/flagr-ui && npm run lint
+      - run: cd browser/flagr-ui && npm run test:unit
 
   integration_test:
     docker:
