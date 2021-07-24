@@ -47,7 +47,7 @@ function getHue(str) {
     hash = str.charCodeAt(i) + ((hash << 5) - hash);
     hash = hash & hash;
   }
-  return hash % 360;
+  return Math.abs(hash % 360);
 }
 
 function stringToColour(str, lightness = 90) {
