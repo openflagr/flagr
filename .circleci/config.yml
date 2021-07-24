@@ -15,7 +15,7 @@ jobs:
       - run: make benchmark
       - run: bash <(curl -s https://codecov.io/bash)
 
-  ui_lint:
+  ui_lint_and_test:
     docker:
       - image: node:10
     working_directory: /go/src/github.com/checkr/flagr
