@@ -1,6 +1,6 @@
 module github.com/checkr/flagr
 
-go 1.15
+go 1.16
 
 require (
 	cloud.google.com/go v0.37.4
@@ -32,6 +32,7 @@ require (
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/jinzhu/gorm v1.9.16
 	github.com/jpillora/backoff v0.0.0-20170918002102-8eab2debe79d // indirect
+	github.com/mattn/go-sqlite3 v1.14.7 // indirect
 	github.com/meatballhat/negroni-logrus v0.0.0-20170801195057-31067281800f
 	github.com/newrelic/go-agent v2.1.0+incompatible
 	github.com/onsi/ginkgo v1.8.0 // indirect

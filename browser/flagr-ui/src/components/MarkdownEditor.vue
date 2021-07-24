@@ -4,7 +4,10 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/4.0.0/github-markdown.min.css"
     />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css"
+    />
 
     <el-row :gutter="10">
       <el-col :span="12" v-if="showEditor">
@@ -26,6 +29,7 @@
 <script>
 import MarkdownIt from "markdown-it";
 import mk from "@iktakahiro/markdown-it-katex";
+import xss from "xss";
 
 let md = MarkdownIt("commonmark");
 md.use(mk);
@@ -36,26 +40,26 @@ export default {
     showEditor: Boolean,
     markdown: {
       type: String,
-      default: ""
-    }
+      default: "",
+    },
   },
   data() {
     return {
-      input: this.markdown
+      input: this.markdown,
     };
   },
   computed: {
     compiledMarkdown() {
-      return md.render(this.input);
-    }
+      return md.render(xss(this.input));
+    },
   },
   methods: {
     syncMarkdown(md) {
       this.$emit("update:markdown", md);
-    }
+    },
   },
   watch: {},
-  mounted() {}
+  mounted() {},
 };
 </script>
 
