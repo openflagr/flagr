@@ -19,7 +19,7 @@
 Flagr is an open source Go service that delivers the right experience to the right entity and monitors the impact. It provides feature flags, experimentation (A/B testing), and dynamic configuration. It has clear swagger REST APIs for flags management and flag evaluation.
 
 ## Documentation
-- TODO
+- https://openflagr.github.io/flagr
 
 ## Quick demo
 
@@ -35,11 +35,11 @@ open localhost:18000
 ```
 
 <!-- TODO: change a new demo flagr website -->
-Or try it on [https://try-flagr.herokuapp.com](https://try-flagr.herokuapp.com), it may take a while for a cold start.
+Or try it on [https://try-openflagr.herokuapp.com](https://try-openflagr.herokuapp.com), it may take a while for a cold start.
 
 ```
 curl --request POST \
-     --url https://try-flagr.herokuapp.com/api/v1/evaluation \
+     --url https://try-openflagr.herokuapp.com/api/v1/evaluation \
      --header 'content-type: application/json' \
      --data '{
        "entityID": "127",
