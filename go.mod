@@ -16,7 +16,6 @@ require (
 	github.com/certifi/gocertifi v0.0.0-20180118203423-deb3ae2ef261 // indirect
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dchest/uniuri v0.0.0-20160212164326-8902c56451e9
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/evalphobia/logrus_sentry v0.4.6
 	github.com/form3tech-oss/jwt-go v3.2.3+incompatible
 	github.com/getsentry/raven-go v0.0.0-20180903072508-084a9de9eb03
