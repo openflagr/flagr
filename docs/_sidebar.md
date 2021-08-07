@@ -1,6 +1,6 @@
 - What's Flagr
     - [Get started](home.md)
-    - <a href="https://openflagr.github.io/flagr/api_docs" target="_blank">API</a>
+    - [API 🔗](https://openflagr.github.io/flagr/api_docs)
 - Introduction
     - [Overview](flagr_overview.md)
     - [Use Cases](flagr_use_cases.md)
@@ -8,7 +8,7 @@
 - Server Configuration
     - [Env](flagr_env.md)
 - Client SDKs
-    - [Ruby SDK](https://github.com/openflagr/rbflagr)
-    - [Go SDK](https://github.com/openflagr/goflagr)
-    - [JavaScript SDK](https://github.com/openflagr/jsflagr)
-    - [Python SDK](https://github.com/openflagr/pyflagr)
+    - [Ruby SDK 🔗](https://github.com/openflagr/rbflagr)
+    - [Go SDK 🔗](https://github.com/openflagr/goflagr)
+    - [JavaScript SDK 🔗](https://github.com/openflagr/jsflagr)
+    - [Python SDK 🔗](https://github.com/openflagr/pyflagr)
