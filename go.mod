@@ -7,18 +7,18 @@ require (
 	github.com/DataDog/datadog-go v0.0.0-20180330214955-e67964b4021a
 	github.com/Shopify/sarama v1.19.0
 	github.com/a8m/kinesis-producer v0.0.0-20180723062609-03228a9f79b3
-	github.com/auth0/go-jwt-middleware v0.0.0-20170425171159-5493cabe49f7
+	github.com/auth0/go-jwt-middleware v1.0.2-0.20210804140707-b4090e955b98
 	github.com/avast/retry-go v2.2.0+incompatible
 	github.com/aws/aws-sdk-go v1.34.28
 	github.com/brandur/simplebox v0.0.0-20150921201729-84e9865bb03a
 	github.com/bsm/ratelimit v2.0.0+incompatible
 	github.com/caarlos0/env v3.3.0+incompatible
 	github.com/certifi/gocertifi v0.0.0-20180118203423-deb3ae2ef261 // indirect
-	github.com/codegangsta/negroni v1.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dchest/uniuri v0.0.0-20160212164326-8902c56451e9
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/evalphobia/logrus_sentry v0.4.6
+	github.com/form3tech-oss/jwt-go v3.2.3+incompatible
 	github.com/getsentry/raven-go v0.0.0-20180903072508-084a9de9eb03
 	github.com/go-openapi/errors v0.19.9
 	github.com/go-openapi/loads v0.20.1
@@ -28,7 +28,6 @@ require (
 	github.com/go-openapi/swag v0.19.13
 	github.com/go-openapi/validate v0.20.1
 	github.com/gohttp/pprof v0.0.0-20141119085724-c9d246cbb3ba
-	github.com/gorilla/mux v1.7.1 // indirect
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/jinzhu/gorm v1.9.16
 	github.com/jpillora/backoff v0.0.0-20170918002102-8eab2debe79d // indirect
@@ -45,11 +44,10 @@ require (
 	github.com/prometheus/procfs v0.0.0-20190219184716-e4d4a2206da0 // indirect
 	github.com/rs/cors v1.5.0
 	github.com/sirupsen/logrus v1.4.2
-	github.com/smartystreets/goconvey v0.0.0-20190330032615-68dc04aab96a // indirect
 	github.com/spf13/cast v1.3.0
 	github.com/stretchr/testify v1.6.1
 	github.com/tinylib/msgp v1.1.0 // indirect
-	github.com/urfave/negroni v0.3.0
+	github.com/urfave/negroni v1.0.0
 	github.com/yadvendar/negroni-newrelic-go-agent v0.0.0-20160803090806-3dc58758cb67
 	github.com/zhouzhuojie/conditions v0.2.3
 	github.com/zhouzhuojie/withtimeout v0.0.0-20190405051827-12b39eb2edd5
