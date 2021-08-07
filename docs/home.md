@@ -4,12 +4,12 @@ Flagr is an open source Go service that delivers the right experience to the rig
 
 ## Run
 
-Run directly with docker. https://hub.docker.com/r/openflagr/flagr/
+Run directly with docker.
 
 ```bash
 # Start the docker container
-docker pull openflagr/flagr
-docker run -it -p 18000:18000 openflagr/flagr
+docker pull ghcr.io/openflagr/flagr
+docker run -it -p 18000:18000 ghcr.io/openflagr/flagr
 
 # Open the Flagr UI
 open localhost:18000
@@ -27,7 +27,7 @@ export FLAGR_DB_DBDRIVER=mysql
 export FLAGR_DB_DBCONNECTIONSTR=root:@tcp(127.0.0.1:18100)/flagr?parseTime=true
 
 # Run the docker image. Ideally, the deployment will be handled by Kubernetes or Mesos.
-docker run -it -p 18000:18000 openflagr/flagr
+docker run -it -p 18000:18000 ghcr.io/openflagr/flagr
 ```
 
 ## Development
