@@ -10,6 +10,6 @@ up:
 
 test:
 	docker cp ./test.sh flagr-shakedown:/app/test.sh
-	docker-compose exec shakedown bash ./test.sh
+	docker-compose exec -T shakedown bash ./test.sh
 
 retest: down up test
