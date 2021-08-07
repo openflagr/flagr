@@ -9,8 +9,8 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/sqlite"   // sqlite driver
 
 	retry "github.com/avast/retry-go"
-	"github.com/checkr/flagr/pkg/config"
 	"github.com/jinzhu/gorm"
+	"github.com/openflagr/flagr/pkg/config"
 	"github.com/sirupsen/logrus"
 )
 

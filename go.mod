@@ -1,4 +1,4 @@
-module github.com/checkr/flagr
+module github.com/openflagr/flagr
 
 go 1.16
 

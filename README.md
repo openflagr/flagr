@@ -85,4 +85,4 @@ Error Set:
 
 ## License and Credits
 - `openflagr/flagr` Apache 2.0
-- `checkr/flagr` Apache 2.0
+- `openflagr/flagr` Apache 2.0

@@ -96,7 +96,7 @@ UI setting example (frontend looks may iterate quickly):
 
 One can also leverage the **Variant Attachment** to run dynamic configuration, by supplying a valid JSON object attachment.
 
-!> Before [v1.1.3](https://github.com/checkr/flagr/releases/tag/1.1.3), only **string:string** key:value pairs were supported inside the JSON object attachment.
+!> Before [v1.1.3](https://github.com/openflagr/flagr/releases/tag/1.1.3), only **string:string** key:value pairs were supported inside the JSON object attachment.
 
 For example, the color_hex of green variant can be dynamically configured:
 

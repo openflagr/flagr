@@ -4,12 +4,12 @@ Flagr is an open source Go service that delivers the right experience to the rig
 
 ## Run
 
-Run directly with docker. https://hub.docker.com/r/checkr/flagr/
+Run directly with docker. https://hub.docker.com/r/openflagr/flagr/
 
 ```bash
 # Start the docker container
-docker pull checkr/flagr
-docker run -it -p 18000:18000 checkr/flagr
+docker pull openflagr/flagr
+docker run -it -p 18000:18000 openflagr/flagr
 
 # Open the Flagr UI
 open localhost:18000
@@ -17,7 +17,7 @@ open localhost:18000
 
 ## Deploy
 
-We recommend directly use the checkr/flagr image, and configure everything in the env variables. See more in [Server Configuration](flagr_env).
+We recommend directly use the openflagr/flagr image, and configure everything in the env variables. See more in [Server Configuration](flagr_env).
 
 ```bash
 # Set env variables. For example,
@@ -27,7 +27,7 @@ export FLAGR_DB_DBDRIVER=mysql
 export FLAGR_DB_DBCONNECTIONSTR=root:@tcp(127.0.0.1:18100)/flagr?parseTime=true
 
 # Run the docker image. Ideally, the deployment will be handled by Kubernetes or Mesos.
-docker run -it -p 18000:18000 checkr/flagr
+docker run -it -p 18000:18000 openflagr/flagr
 ```
 
 ## Development
@@ -42,11 +42,11 @@ Build from source.
 
 ```bash
 # get the source
-go get -u github.com/checkr/flagr
+go get -u github.com/openflagr/flagr
 
 # install dependencies, generated code, and start the service in
 # development mode
-cd $GOPATH/src/github.com/checkr/flagr
+cd $GOPATH/src/github.com/openflagr/flagr
 make build start
 ```
 

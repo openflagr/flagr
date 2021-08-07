@@ -3,8 +3,8 @@ package handler
 import (
 	"net/http"
 
-	"github.com/checkr/flagr/pkg/config"
-	"github.com/checkr/flagr/pkg/util"
+	"github.com/openflagr/flagr/pkg/config"
+	"github.com/openflagr/flagr/pkg/util"
 
 	jwt "github.com/dgrijalva/jwt-go"
 )

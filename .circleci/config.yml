@@ -6,7 +6,7 @@ jobs:
   unit_test:
     docker:
       - image: golang:1.16
-    working_directory: /go/src/github.com/checkr/flagr
+    working_directory: /go/src/github.com/openflagr/flagr
     steps:
       - checkout
       - run: make deps
@@ -18,7 +18,7 @@ jobs:
   ui_lint:
     docker:
       - image: node:10
-    working_directory: /go/src/github.com/checkr/flagr
+    working_directory: /go/src/github.com/openflagr/flagr
     steps:
       - checkout
       - run: cd browser/flagr-ui && npm install
@@ -26,7 +26,7 @@ jobs:
 
   integration_test:
     docker:
-      - image: checkr/docker-docker-compose
+      - image: openflagr/docker-docker-compose
     steps:
       - checkout
       - setup_remote_docker:

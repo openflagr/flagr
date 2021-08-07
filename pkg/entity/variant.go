@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/checkr/flagr/pkg/util"
 	"github.com/jinzhu/gorm"
+	"github.com/openflagr/flagr/pkg/util"
 	"github.com/spf13/cast"
 )
 

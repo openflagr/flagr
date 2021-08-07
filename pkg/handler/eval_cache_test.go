@@ -1,10 +1,10 @@
 package handler
 
 import (
-	"github.com/checkr/flagr/swagger_gen/models"
+	"github.com/openflagr/flagr/swagger_gen/models"
 	"testing"
 
-	"github.com/checkr/flagr/pkg/entity"
+	"github.com/openflagr/flagr/pkg/entity"
 
 	"github.com/prashantv/gostub"
 	"github.com/stretchr/testify/assert"

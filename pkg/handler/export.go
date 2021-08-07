@@ -9,10 +9,10 @@ import (
 	"os"
 	"path"
 
-	"github.com/checkr/flagr/pkg/entity"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/export"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/jinzhu/gorm"
+	"github.com/openflagr/flagr/pkg/entity"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/export"
 	"github.com/sirupsen/logrus"
 )
 

@@ -11,7 +11,7 @@ all: deps gen build build_ui run
 rebuild: gen build
 
 test: verifiers
-	@GO111MODULE=on go test -mod=vendor -race -covermode=atomic -coverprofile=coverage.txt github.com/checkr/flagr/pkg/...
+	@GO111MODULE=on go test -mod=vendor -race -covermode=atomic -coverprofile=coverage.txt github.com/openflagr/flagr/pkg/...
 
 .PHONY: benchmark
 benchmark:
@@ -26,7 +26,7 @@ vendor:
 
 build:
 	@echo "Building Flagr Server to $(PWD)/flagr ..."
-	@CGO_ENABLED=1 GO111MODULE=on go build -mod=vendor -o $(PWD)/flagr github.com/checkr/flagr/swagger_gen/cmd/flagr-server
+	@CGO_ENABLED=1 GO111MODULE=on go build -mod=vendor -o $(PWD)/flagr github.com/openflagr/flagr/swagger_gen/cmd/flagr-server
 
 build_ui:
 	@echo "Building Flagr UI ..."

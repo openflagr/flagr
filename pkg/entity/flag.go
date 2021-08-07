@@ -3,8 +3,8 @@ package entity
 import (
 	"fmt"
 
-	"github.com/checkr/flagr/pkg/util"
 	"github.com/jinzhu/gorm"
+	"github.com/openflagr/flagr/pkg/util"
 )
 
 // Flag is the unit of flags

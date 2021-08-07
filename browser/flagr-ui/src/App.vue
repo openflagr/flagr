@@ -15,12 +15,12 @@
               </router-link>
             </el-col>
             <el-col :span="1" :offset="15">
-              <a href="https://checkr.github.io/flagr/api_docs" target="_blank"
+              <a href="https://openflagr.github.io/flagr/api_docs" target="_blank"
                 ><h3>API</h3></a
               >
             </el-col>
             <el-col :span="1" :offset="1">
-              <a href="https://checkr.github.io/flagr" target="_blank"
+              <a href="https://openflagr.github.io/flagr" target="_blank"
                 ><h3>Docs</h3></a
               >
             </el-col>
