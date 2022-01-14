@@ -28,7 +28,7 @@
 Flagr is an open source Go service that delivers the right experience to the right entity and monitors the impact. It provides feature flags, experimentation (A/B testing), and dynamic configuration. It has clear swagger REST APIs for flags management and flag evaluation.
 
 ## Documentation
-- [Introducing Flagr Blog](https://engineering.checkr.com/introducing-flagr-a-robust-high-performance-service-for-feature-flagging-and-a-b-testing-f037c219b7d5)
+- [Introducing Flagr Blog](https://medium.com/checkr/introducing-flagr-a-robust-high-performance-service-for-feature-flagging-and-a-b-testing-f037c219b7d5)
 - [Documentation](https://checkr.github.io/flagr/)
 
 ## Quick demo
