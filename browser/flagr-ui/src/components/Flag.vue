@@ -545,10 +545,6 @@
               </el-card>
               <spinner v-if="!loaded"></spinner>
             </el-tab-pane>
-
-            <el-tab-pane label="History">
-              <flag-history :flag-id="parseInt($route.params.flagId, 10)"></flag-history>
-            </el-tab-pane>
           </el-tabs>
         </div>
       </div>
@@ -565,7 +561,6 @@ import constants from "@/constants";
 import helpers from "@/helpers/helpers";
 import Spinner from "@/components/Spinner";
 import DebugConsole from "@/components/DebugConsole";
-import FlagHistory from "@/components/FlagHistory";
 import MarkdownEditor from "@/components/MarkdownEditor.vue";
 import vueJsonEditor from "vue-json-editor";
 import { operators } from "@/operators.json";
@@ -620,7 +615,6 @@ export default {
   components: {
     spinner: Spinner,
     debugConsole: DebugConsole,
-    flagHistory: FlagHistory,
     draggable: draggable,
     MarkdownEditor,
     vueJsonEditor
