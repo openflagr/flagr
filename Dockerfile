@@ -19,7 +19,7 @@ RUN make build
 ######################################
 # Copy from builder to alpine image
 ######################################
-FROM frolvlad/alpine-glibc:alpine-3.10
+FROM frolvlad/alpine-glibc:alpine-3.15.0
 RUN apk add --no-cache curl
 WORKDIR /go/src/github.com/checkr/flagr
 VOLUME ["/data"]
