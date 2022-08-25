@@ -41,6 +41,7 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 
 	if Config.MiddlewareVerboseLoggerEnabled {
 		middleware := negronilogrus.NewMiddlewareFromLogger(logrus.StandardLogger(), "flagr")
+    middleware.SetLogStarting(Config.MiddlewareVerboseLoggerStartLoggingEnabled)
 
 		for _, u := range Config.MiddlewareVerboseLoggerExcludeURLs {
 			middleware.ExcludeURL(u)

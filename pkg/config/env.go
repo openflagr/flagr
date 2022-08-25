@@ -17,6 +17,7 @@ var Config = struct {
 	// PProfEnabled - to enable the standard pprof of golang's http server
 	PProfEnabled bool `env:"FLAGR_PPROF_ENABLED" envDefault:"true"`
 
+  MiddlewareVerboseLoggerStartLoggingEnabled bool `env:"FLAGR_MIDDLEWARE_VERBOSE_LOGGER_START_LOGGING_ENABLED" envDefault:"true"`
 	// MiddlewareVerboseLoggerEnabled - to enable the negroni-logrus logger for all the endpoints useful for debugging
 	MiddlewareVerboseLoggerEnabled bool `env:"FLAGR_MIDDLEWARE_VERBOSE_LOGGER_ENABLED" envDefault:"true"`
 	// MiddlewareVerboseLoggerExcludeURLs - to exclude urls from the verbose logger via comma separated list
