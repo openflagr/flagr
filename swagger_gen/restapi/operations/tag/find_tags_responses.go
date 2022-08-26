@@ -10,13 +10,14 @@ import (
 
 	"github.com/go-openapi/runtime"
 
-	"github.com/checkr/flagr/swagger_gen/models"
+	"github.com/openflagr/flagr/swagger_gen/models"
 )
 
 // FindTagsOKCode is the HTTP code returned for type FindTagsOK
 const FindTagsOKCode int = 200
 
-/*FindTagsOK tag ordered by tagID
+/*
+FindTagsOK tag ordered by tagID
 
 swagger:response findTagsOK
 */
@@ -60,7 +61,8 @@ func (o *FindTagsOK) WriteResponse(rw http.ResponseWriter, producer runtime.Prod
 	}
 }
 
-/*FindTagsDefault generic error response
+/*
+FindTagsDefault generic error response
 
 swagger:response findTagsDefault
 */

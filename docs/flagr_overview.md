@@ -2,7 +2,7 @@
 
 ## Flagr Concepts
 
-The definitions of the following concepts are in [API doc](https://checkr.github.io/flagr/api_docs).
+The definitions of the following concepts are in [API doc](https://openflagr.github.io/flagr/api_docs).
 
 - **Flag**. It can be a feature flag, an experiment, or a configuration.
 - **Tag**. This is a descriptive label attached to a flag for easy lookup and evaluation.

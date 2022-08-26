@@ -1,6 +1,6 @@
 {
   "name": "flagr-ui",
-  "version": "1.1.12",
+  "version": "1.1.13",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
@@ -15,7 +15,7 @@
     "diff": "^3.4.0",
     "element-ui": "^2.4.6",
     "lodash.clone": "^4.5.0",
-    "markdown-it": "^12.0.6",
+    "markdown-it": "^12.3.2",
     "vue": "^2.6.10",
     "vue-json-editor": "^1.2.0",
     "vue-router": "^2.7.0",
@@ -24,8 +24,8 @@
     "xss": "^1.0.9"
   },
   "devDependencies": {
-    "@vue/cli-plugin-babel": "~4.5.11",
-    "@vue/cli-plugin-eslint": "~4.5.11",
+    "@vue/cli-plugin-babel": "^4.5.13",
+    "@vue/cli-plugin-eslint": "^4.5.13",
     "@vue/cli-service": "~4.5.11",
     "babel-eslint": "^10.0.3",
     "eslint": "^6.0.0",

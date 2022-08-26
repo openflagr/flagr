@@ -10,13 +10,14 @@ import (
 
 	"github.com/go-openapi/runtime"
 
-	"github.com/checkr/flagr/swagger_gen/models"
+	"github.com/openflagr/flagr/swagger_gen/models"
 )
 
 // GetFlagOKCode is the HTTP code returned for type GetFlagOK
 const GetFlagOKCode int = 200
 
-/*GetFlagOK returns the flag
+/*
+GetFlagOK returns the flag
 
 swagger:response getFlagOK
 */
@@ -57,7 +58,8 @@ func (o *GetFlagOK) WriteResponse(rw http.ResponseWriter, producer runtime.Produ
 	}
 }
 
-/*GetFlagDefault generic error response
+/*
+GetFlagDefault generic error response
 
 swagger:response getFlagDefault
 */

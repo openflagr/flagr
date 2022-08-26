@@ -10,13 +10,14 @@ import (
 
 	"github.com/go-openapi/runtime"
 
-	"github.com/checkr/flagr/swagger_gen/models"
+	"github.com/openflagr/flagr/swagger_gen/models"
 )
 
 // GetFlagSnapshotsOKCode is the HTTP code returned for type GetFlagSnapshotsOK
 const GetFlagSnapshotsOKCode int = 200
 
-/*GetFlagSnapshotsOK returns the flag snapshots
+/*
+GetFlagSnapshotsOK returns the flag snapshots
 
 swagger:response getFlagSnapshotsOK
 */
@@ -60,7 +61,8 @@ func (o *GetFlagSnapshotsOK) WriteResponse(rw http.ResponseWriter, producer runt
 	}
 }
 
-/*GetFlagSnapshotsDefault generic error response
+/*
+GetFlagSnapshotsDefault generic error response
 
 swagger:response getFlagSnapshotsDefault
 */

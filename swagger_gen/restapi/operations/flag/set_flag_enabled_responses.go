@@ -10,13 +10,14 @@ import (
 
 	"github.com/go-openapi/runtime"
 
-	"github.com/checkr/flagr/swagger_gen/models"
+	"github.com/openflagr/flagr/swagger_gen/models"
 )
 
 // SetFlagEnabledOKCode is the HTTP code returned for type SetFlagEnabledOK
 const SetFlagEnabledOKCode int = 200
 
-/*SetFlagEnabledOK returns the flag
+/*
+SetFlagEnabledOK returns the flag
 
 swagger:response setFlagEnabledOK
 */
@@ -57,7 +58,8 @@ func (o *SetFlagEnabledOK) WriteResponse(rw http.ResponseWriter, producer runtim
 	}
 }
 
-/*SetFlagEnabledDefault generic error response
+/*
+SetFlagEnabledDefault generic error response
 
 swagger:response setFlagEnabledDefault
 */

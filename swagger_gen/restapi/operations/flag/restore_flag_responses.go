@@ -10,13 +10,14 @@ import (
 
 	"github.com/go-openapi/runtime"
 
-	"github.com/checkr/flagr/swagger_gen/models"
+	"github.com/openflagr/flagr/swagger_gen/models"
 )
 
 // RestoreFlagOKCode is the HTTP code returned for type RestoreFlagOK
 const RestoreFlagOKCode int = 200
 
-/*RestoreFlagOK returns the flag
+/*
+RestoreFlagOK returns the flag
 
 swagger:response restoreFlagOK
 */
@@ -57,7 +58,8 @@ func (o *RestoreFlagOK) WriteResponse(rw http.ResponseWriter, producer runtime.P
 	}
 }
 
-/*RestoreFlagDefault generic error response
+/*
+RestoreFlagDefault generic error response
 
 swagger:response restoreFlagDefault
 */

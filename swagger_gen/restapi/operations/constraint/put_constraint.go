@@ -29,10 +29,10 @@ func NewPutConstraint(ctx *middleware.Context, handler PutConstraintHandler) *Pu
 	return &PutConstraint{Context: ctx, Handler: handler}
 }
 
-/* PutConstraint swagger:route PUT /flags/{flagID}/segments/{segmentID}/constraints/{constraintID} constraint putConstraint
+/*
+	PutConstraint swagger:route PUT /flags/{flagID}/segments/{segmentID}/constraints/{constraintID} constraint putConstraint
 
 PutConstraint put constraint API
-
 */
 type PutConstraint struct {
 	Context *middleware.Context
@@ -42,7 +42,7 @@ type PutConstraint struct {
 func (o *PutConstraint) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, rCtx, _ := o.Context.RouteInfo(r)
 	if rCtx != nil {
-		r = rCtx
+		*r = *rCtx
 	}
 	var Params = NewPutConstraintParams()
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

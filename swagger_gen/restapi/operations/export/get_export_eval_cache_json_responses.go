@@ -10,13 +10,14 @@ import (
 
 	"github.com/go-openapi/runtime"
 
-	"github.com/checkr/flagr/swagger_gen/models"
+	"github.com/openflagr/flagr/swagger_gen/models"
 )
 
 // GetExportEvalCacheJSONOKCode is the HTTP code returned for type GetExportEvalCacheJSONOK
 const GetExportEvalCacheJSONOKCode int = 200
 
-/*GetExportEvalCacheJSONOK OK
+/*
+GetExportEvalCacheJSONOK OK
 
 swagger:response getExportEvalCacheJsonOK
 */
@@ -55,7 +56,8 @@ func (o *GetExportEvalCacheJSONOK) WriteResponse(rw http.ResponseWriter, produce
 	}
 }
 
-/*GetExportEvalCacheJSONDefault generic error response
+/*
+GetExportEvalCacheJSONDefault generic error response
 
 swagger:response getExportEvalCacheJsonDefault
 */

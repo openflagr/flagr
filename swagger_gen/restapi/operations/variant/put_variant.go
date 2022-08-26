@@ -29,10 +29,10 @@ func NewPutVariant(ctx *middleware.Context, handler PutVariantHandler) *PutVaria
 	return &PutVariant{Context: ctx, Handler: handler}
 }
 
-/* PutVariant swagger:route PUT /flags/{flagID}/variants/{variantID} variant putVariant
+/*
+	PutVariant swagger:route PUT /flags/{flagID}/variants/{variantID} variant putVariant
 
 PutVariant put variant API
-
 */
 type PutVariant struct {
 	Context *middleware.Context
@@ -42,7 +42,7 @@ type PutVariant struct {
 func (o *PutVariant) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, rCtx, _ := o.Context.RouteInfo(r)
 	if rCtx != nil {
-		r = rCtx
+		*r = *rCtx
 	}
 	var Params = NewPutVariantParams()
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

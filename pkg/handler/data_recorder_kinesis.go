@@ -5,8 +5,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kinesis"
-	"github.com/checkr/flagr/pkg/config"
-	"github.com/checkr/flagr/swagger_gen/models"
+	"github.com/openflagr/flagr/pkg/config"
+	"github.com/openflagr/flagr/swagger_gen/models"
 	"github.com/sirupsen/logrus"
 )
 

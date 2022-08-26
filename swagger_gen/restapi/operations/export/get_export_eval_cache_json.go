@@ -29,10 +29,10 @@ func NewGetExportEvalCacheJSON(ctx *middleware.Context, handler GetExportEvalCac
 	return &GetExportEvalCacheJSON{Context: ctx, Handler: handler}
 }
 
-/* GetExportEvalCacheJSON swagger:route GET /export/eval_cache/json export getExportEvalCacheJson
+/*
+	GetExportEvalCacheJSON swagger:route GET /export/eval_cache/json export getExportEvalCacheJson
 
 Export JSON format of the eval cache dump
-
 */
 type GetExportEvalCacheJSON struct {
 	Context *middleware.Context
@@ -42,7 +42,7 @@ type GetExportEvalCacheJSON struct {
 func (o *GetExportEvalCacheJSON) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, rCtx, _ := o.Context.RouteInfo(r)
 	if rCtx != nil {
-		r = rCtx
+		*r = *rCtx
 	}
 	var Params = NewGetExportEvalCacheJSONParams()
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

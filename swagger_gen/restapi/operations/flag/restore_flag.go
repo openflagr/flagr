@@ -29,10 +29,10 @@ func NewRestoreFlag(ctx *middleware.Context, handler RestoreFlagHandler) *Restor
 	return &RestoreFlag{Context: ctx, Handler: handler}
 }
 
-/* RestoreFlag swagger:route PUT /flags/{flagID}/restore flag restoreFlag
+/*
+	RestoreFlag swagger:route PUT /flags/{flagID}/restore flag restoreFlag
 
 RestoreFlag restore flag API
-
 */
 type RestoreFlag struct {
 	Context *middleware.Context
@@ -42,7 +42,7 @@ type RestoreFlag struct {
 func (o *RestoreFlag) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, rCtx, _ := o.Context.RouteInfo(r)
 	if rCtx != nil {
-		r = rCtx
+		*r = *rCtx
 	}
 	var Params = NewRestoreFlagParams()
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

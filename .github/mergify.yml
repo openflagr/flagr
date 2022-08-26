@@ -1,0 +1,13 @@
+pull_request_rules:
+  - name: Automatic merge on approval
+    conditions:
+      - "#approved-reviews-by>=2"
+      - check-success=ui_lint
+      - check-success=unit_test
+      - check-success=integration_test
+      - base=main
+      - label!=wip
+      - -title~=(?i)wip
+    actions:
+      merge:
+        method: merge

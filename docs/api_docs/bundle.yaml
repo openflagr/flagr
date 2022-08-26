@@ -4,12 +4,12 @@ info:
     Flagr is a feature flagging, A/B testing and dynamic configuration
     microservice. The base path for all the APIs is "/api/v1".
   title: Flagr
-  version: 1.1.12
+  version: 1.1.13
 tags:
   - name: flag
     description: Everything about the flag
   - name: segment
-    description: 'Segment defines the audience of the flag, it''s the user segmentation'
+    description: Segment defines the audience of the flag, it's the user segmentation
   - name: constraint
     description: Constraint is the unit of defining a small subset of users
   - name: distribution
@@ -123,7 +123,7 @@ paths:
           description: generic error response
           schema:
             $ref: '#/definitions/error'
-  '/flags/{flagID}':
+  /flags/{flagID}:
     get:
       tags:
         - flag
@@ -191,7 +191,7 @@ paths:
           description: generic error response
           schema:
             $ref: '#/definitions/error'
-  '/flags/{flagID}/restore':
+  /flags/{flagID}/restore:
     put:
       tags:
         - flag
@@ -213,7 +213,7 @@ paths:
           description: generic error response
           schema:
             $ref: '#/definitions/error'
-  '/flags/{flagID}/enabled':
+  /flags/{flagID}/enabled:
     put:
       tags:
         - flag
@@ -241,7 +241,7 @@ paths:
           description: generic error response
           schema:
             $ref: '#/definitions/error'
-  '/flags/{flagID}/tags':
+  /flags/{flagID}/tags:
     get:
       tags:
         - tag
@@ -292,7 +292,7 @@ paths:
           description: generic error response
           schema:
             $ref: '#/definitions/error'
-  '/flags/{flagID}/tags/{tagID}':
+  /flags/{flagID}/tags/{tagID}:
     delete:
       tags:
         - tag
@@ -319,7 +319,7 @@ paths:
           description: generic error response
           schema:
             $ref: '#/definitions/error'
-  '/flags/{flagID}/variants':
+  /flags/{flagID}/variants:
     get:
       tags:
         - variant
@@ -370,7 +370,7 @@ paths:
           description: generic error response
           schema:
             $ref: '#/definitions/error'
-  '/flags/{flagID}/variants/{variantID}':
+  /flags/{flagID}/variants/{variantID}:
     put:
       tags:
         - variant
@@ -431,7 +431,7 @@ paths:
           description: generic error response
           schema:
             $ref: '#/definitions/error'
-  '/flags/{flagID}/segments':
+  /flags/{flagID}/segments:
     get:
       tags:
         - segment
@@ -482,7 +482,7 @@ paths:
           description: generic error response
           schema:
             $ref: '#/definitions/error'
-  '/flags/{flagID}/segments/reorder':
+  /flags/{flagID}/segments/reorder:
     put:
       tags:
         - segment
@@ -508,7 +508,7 @@ paths:
           description: generic error response
           schema:
             $ref: '#/definitions/error'
-  '/flags/{flagID}/segments/{segmentID}':
+  /flags/{flagID}/segments/{segmentID}:
     put:
       tags:
         - segment
@@ -569,7 +569,7 @@ paths:
           description: generic error response
           schema:
             $ref: '#/definitions/error'
-  '/flags/{flagID}/segments/{segmentID}/constraints':
+  /flags/{flagID}/segments/{segmentID}/constraints:
     get:
       tags:
         - constraint
@@ -634,7 +634,7 @@ paths:
           description: generic error response
           schema:
             $ref: '#/definitions/error'
-  '/flags/{flagID}/segments/{segmentID}/constraints/{constraintID}':
+  /flags/{flagID}/segments/{segmentID}/constraints/{constraintID}:
     put:
       tags:
         - constraint
@@ -709,7 +709,7 @@ paths:
           description: generic error response
           schema:
             $ref: '#/definitions/error'
-  '/flags/{flagID}/segments/{segmentID}/distributions':
+  /flags/{flagID}/segments/{segmentID}/distributions:
     get:
       tags:
         - distribution
@@ -777,7 +777,7 @@ paths:
           description: generic error response
           schema:
             $ref: '#/definitions/error'
-  '/flags/{flagID}/snapshots':
+  /flags/{flagID}/snapshots:
     get:
       tags:
         - flag

@@ -29,10 +29,10 @@ func NewCreateTag(ctx *middleware.Context, handler CreateTagHandler) *CreateTag 
 	return &CreateTag{Context: ctx, Handler: handler}
 }
 
-/* CreateTag swagger:route POST /flags/{flagID}/tags tag createTag
+/*
+	CreateTag swagger:route POST /flags/{flagID}/tags tag createTag
 
 CreateTag create tag API
-
 */
 type CreateTag struct {
 	Context *middleware.Context
@@ -42,7 +42,7 @@ type CreateTag struct {
 func (o *CreateTag) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, rCtx, _ := o.Context.RouteInfo(r)
 	if rCtx != nil {
-		r = rCtx
+		*r = *rCtx
 	}
 	var Params = NewCreateTagParams()
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

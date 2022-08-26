@@ -20,13 +20,28 @@ services:
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
       MYSQL_DATABASE: "flagr"
 
-  postgres:
-    image: postgres:9
-    container_name: flagr-postgres
+  postgres13:
+    image: postgres:13
+    container_name: flagr-postgres13
     environment:
       POSTGRES_PASSWORD: "test"
       POSTGRES_USER: "test"
       POSTGRES_DB: "flagr"
+
+  postgres9:
+    image: postgres:9
+    container_name: flagr-postgres9
+    environment:
+      POSTGRES_PASSWORD: "test"
+      POSTGRES_USER: "test"
+      POSTGRES_DB: "flagr"
+
+  checkr_flagr_with_sqlite:
+    image: checkr/flagr:1.1.12
+    environment:
+      FLAGR_DB_DBDRIVER: "sqlite3"
+      FLAGR_DB_DBCONNECTIONSTR: "/tmp/flagr.sqlite3"
+    command: sh -c "sleep 15 && ./flagr"
 
   flagr_with_sqlite:
     image: flagr_integration_tests
@@ -49,11 +64,18 @@ services:
       FLAGR_DB_DBCONNECTIONSTR: "root:@tcp(mysql8:3306)/flagr?parseTime=true"
     command: sh -c "sleep 15 && ./flagr"
 
-  flagr_with_postgres:
+  flagr_with_postgres9:
     image: flagr_integration_tests
     environment:
       FLAGR_DB_DBDRIVER: "postgres"
-      FLAGR_DB_DBCONNECTIONSTR: "sslmode=disable host=postgres user=test password=test dbname=flagr"
+      FLAGR_DB_DBCONNECTIONSTR: "sslmode=disable host=postgres9 user=test password=test dbname=flagr"
+    command: sh -c "sleep 15 && ./flagr"
+
+  flagr_with_postgres13:
+    image: flagr_integration_tests
+    environment:
+      FLAGR_DB_DBDRIVER: "postgres"
+      FLAGR_DB_DBCONNECTIONSTR: "sslmode=disable host=postgres13 user=test password=test dbname=flagr"
     command: sh -c "sleep 15 && ./flagr"
 
   shakedown:

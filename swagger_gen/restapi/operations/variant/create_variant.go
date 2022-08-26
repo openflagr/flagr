@@ -29,10 +29,10 @@ func NewCreateVariant(ctx *middleware.Context, handler CreateVariantHandler) *Cr
 	return &CreateVariant{Context: ctx, Handler: handler}
 }
 
-/* CreateVariant swagger:route POST /flags/{flagID}/variants variant createVariant
+/*
+	CreateVariant swagger:route POST /flags/{flagID}/variants variant createVariant
 
 CreateVariant create variant API
-
 */
 type CreateVariant struct {
 	Context *middleware.Context
@@ -42,7 +42,7 @@ type CreateVariant struct {
 func (o *CreateVariant) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, rCtx, _ := o.Context.RouteInfo(r)
 	if rCtx != nil {
-		r = rCtx
+		*r = *rCtx
 	}
 	var Params = NewCreateVariantParams()
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

@@ -29,10 +29,10 @@ func NewCreateConstraint(ctx *middleware.Context, handler CreateConstraintHandle
 	return &CreateConstraint{Context: ctx, Handler: handler}
 }
 
-/* CreateConstraint swagger:route POST /flags/{flagID}/segments/{segmentID}/constraints constraint createConstraint
+/*
+	CreateConstraint swagger:route POST /flags/{flagID}/segments/{segmentID}/constraints constraint createConstraint
 
 CreateConstraint create constraint API
-
 */
 type CreateConstraint struct {
 	Context *middleware.Context
@@ -42,7 +42,7 @@ type CreateConstraint struct {
 func (o *CreateConstraint) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, rCtx, _ := o.Context.RouteInfo(r)
 	if rCtx != nil {
-		r = rCtx
+		*r = *rCtx
 	}
 	var Params = NewCreateConstraintParams()
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

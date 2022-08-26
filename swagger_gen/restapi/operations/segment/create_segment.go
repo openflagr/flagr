@@ -29,10 +29,10 @@ func NewCreateSegment(ctx *middleware.Context, handler CreateSegmentHandler) *Cr
 	return &CreateSegment{Context: ctx, Handler: handler}
 }
 
-/* CreateSegment swagger:route POST /flags/{flagID}/segments segment createSegment
+/*
+	CreateSegment swagger:route POST /flags/{flagID}/segments segment createSegment
 
 CreateSegment create segment API
-
 */
 type CreateSegment struct {
 	Context *middleware.Context
@@ -42,7 +42,7 @@ type CreateSegment struct {
 func (o *CreateSegment) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, rCtx, _ := o.Context.RouteInfo(r)
 	if rCtx != nil {
-		r = rCtx
+		*r = *rCtx
 	}
 	var Params = NewCreateSegmentParams()
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

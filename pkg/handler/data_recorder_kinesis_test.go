@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	producer "github.com/a8m/kinesis-producer"
-	"github.com/checkr/flagr/swagger_gen/models"
+	"github.com/openflagr/flagr/swagger_gen/models"
 	"github.com/stretchr/testify/assert"
 )
 

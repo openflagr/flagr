@@ -19,7 +19,13 @@ func TestFlagPreload(t *testing.T) {
 	t.Run("happy code path", func(t *testing.T) {
 		f := GenFixtureFlag()
 		db := PopulateTestDB(f)
-		defer db.Close()
+
+		tmpDB, dbErr := db.DB()
+		if dbErr != nil {
+			t.Errorf("Failed to get database")
+		}
+
+		defer tmpDB.Close()
 
 		err := f.Preload(db)
 		assert.NoError(t, err)
@@ -30,7 +36,13 @@ func TestFlagPreloadTags(t *testing.T) {
 	t.Run("happy code path", func(t *testing.T) {
 		f := GenFixtureFlag()
 		db := PopulateTestDB(f)
-		defer db.Close()
+
+		tmpDB, dbErr := db.DB()
+		if dbErr != nil {
+			t.Errorf("Failed to get database")
+		}
+
+		defer tmpDB.Close()
 
 		err := f.PreloadTags(db)
 		assert.NoError(t, err)

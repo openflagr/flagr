@@ -3,13 +3,14 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
+	"os"
 
-	"github.com/checkr/flagr/pkg/config"
-	"github.com/checkr/flagr/pkg/entity"
-	"github.com/checkr/flagr/pkg/util"
-	"github.com/jinzhu/gorm"
+	"github.com/openflagr/flagr/pkg/config"
+	"github.com/openflagr/flagr/pkg/entity"
+	"github.com/openflagr/flagr/pkg/util"
+	"gorm.io/gorm"
 )
 
 // EvalCacheJSON is the JSON serialization format of EvalCache's flags
@@ -96,7 +97,7 @@ type jsonFileFetcher struct {
 }
 
 func (ff *jsonFileFetcher) fetch() ([]entity.Flag, error) {
-	b, err := ioutil.ReadFile(ff.filePath)
+	b, err := os.ReadFile(ff.filePath)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +121,7 @@ func (hf *jsonHTTPFetcher) fetch() ([]entity.Flag, error) {
 	}
 	defer res.Body.Close()
 
-	b, err := ioutil.ReadAll(res.Body)
+	b, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
 	}

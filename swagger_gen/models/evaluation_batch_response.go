@@ -54,6 +54,8 @@ func (m *EvaluationBatchResponse) validateEvaluationResults(formats strfmt.Regis
 			if err := m.EvaluationResults[i].Validate(formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("evaluationResults" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("evaluationResults" + "." + strconv.Itoa(i))
 				}
 				return err
 			}
@@ -86,6 +88,8 @@ func (m *EvaluationBatchResponse) contextValidateEvaluationResults(ctx context.C
 			if err := m.EvaluationResults[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("evaluationResults" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("evaluationResults" + "." + strconv.Itoa(i))
 				}
 				return err
 			}

@@ -4,13 +4,13 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 	"time"
 
-	"github.com/checkr/flagr/pkg/config"
-	"github.com/checkr/flagr/pkg/util"
-	"github.com/checkr/flagr/swagger_gen/models"
+	"github.com/openflagr/flagr/pkg/config"
+	"github.com/openflagr/flagr/pkg/util"
+	"github.com/openflagr/flagr/swagger_gen/models"
 
 	"github.com/Shopify/sarama"
 	"github.com/sirupsen/logrus"
@@ -31,6 +31,7 @@ func mustParseKafkaVersion(version string) sarama.KafkaVersion {
 // NewKafkaRecorder creates a new Kafka recorder
 var NewKafkaRecorder = func() DataRecorder {
 	cfg := sarama.NewConfig()
+
 	tlscfg := createTLSConfiguration(
 		config.Config.RecorderKafkaCertFile,
 		config.Config.RecorderKafkaKeyFile,
@@ -49,7 +50,11 @@ var NewKafkaRecorder = func() DataRecorder {
 		cfg.Net.SASL.Password = config.Config.RecorderKafkaSASLPassword
 	}
 
-	cfg.Producer.RequiredAcks = sarama.WaitForLocal
+	cfg.Net.MaxOpenRequests = config.Config.RecorderKafkaMaxOpenReqs
+
+	cfg.Producer.Compression = sarama.CompressionCodec(config.Config.RecorderKafkaCompressionCodec)
+	cfg.Producer.RequiredAcks = sarama.RequiredAcks(config.Config.RecorderKafkaRequiredAcks)
+	cfg.Producer.Idempotent = config.Config.RecorderKafkaIdempotent
 	cfg.Producer.Retry.Max = config.Config.RecorderKafkaRetryMax
 	cfg.Producer.Flush.Frequency = config.Config.RecorderKafkaFlushFrequency
 	cfg.Version = mustParseKafkaVersion(config.Config.RecorderKafkaVersion)
@@ -92,7 +97,7 @@ func createTLSConfiguration(certFile string, keyFile string, caFile string, veri
 			logrus.WithField("TLSConfigurationError", err).Panic(err)
 		}
 
-		caCert, err := ioutil.ReadFile(caFile)
+		caCert, err := os.ReadFile(caFile)
 		if err != nil {
 			logrus.WithField("TLSConfigurationError", err).Panic(err)
 		}

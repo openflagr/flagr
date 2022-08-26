@@ -29,10 +29,10 @@ func NewDeleteVariant(ctx *middleware.Context, handler DeleteVariantHandler) *De
 	return &DeleteVariant{Context: ctx, Handler: handler}
 }
 
-/* DeleteVariant swagger:route DELETE /flags/{flagID}/variants/{variantID} variant deleteVariant
+/*
+	DeleteVariant swagger:route DELETE /flags/{flagID}/variants/{variantID} variant deleteVariant
 
 DeleteVariant delete variant API
-
 */
 type DeleteVariant struct {
 	Context *middleware.Context
@@ -42,7 +42,7 @@ type DeleteVariant struct {
 func (o *DeleteVariant) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, rCtx, _ := o.Context.RouteInfo(r)
 	if rCtx != nil {
-		r = rCtx
+		*r = *rCtx
 	}
 	var Params = NewDeleteVariantParams()
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

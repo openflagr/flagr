@@ -6,7 +6,7 @@ import (
 
 	"cloud.google.com/go/pubsub"
 	"cloud.google.com/go/pubsub/pstest"
-	"github.com/checkr/flagr/swagger_gen/models"
+	"github.com/openflagr/flagr/swagger_gen/models"
 	"github.com/prashantv/gostub"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/api/option"

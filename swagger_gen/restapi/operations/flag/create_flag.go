@@ -29,10 +29,10 @@ func NewCreateFlag(ctx *middleware.Context, handler CreateFlagHandler) *CreateFl
 	return &CreateFlag{Context: ctx, Handler: handler}
 }
 
-/* CreateFlag swagger:route POST /flags flag createFlag
+/*
+	CreateFlag swagger:route POST /flags flag createFlag
 
 CreateFlag create flag API
-
 */
 type CreateFlag struct {
 	Context *middleware.Context
@@ -42,7 +42,7 @@ type CreateFlag struct {
 func (o *CreateFlag) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, rCtx, _ := o.Context.RouteInfo(r)
 	if rCtx != nil {
-		r = rCtx
+		*r = *rCtx
 	}
 	var Params = NewCreateFlagParams()
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

@@ -29,10 +29,10 @@ func NewFindConstraints(ctx *middleware.Context, handler FindConstraintsHandler)
 	return &FindConstraints{Context: ctx, Handler: handler}
 }
 
-/* FindConstraints swagger:route GET /flags/{flagID}/segments/{segmentID}/constraints constraint findConstraints
+/*
+	FindConstraints swagger:route GET /flags/{flagID}/segments/{segmentID}/constraints constraint findConstraints
 
 FindConstraints find constraints API
-
 */
 type FindConstraints struct {
 	Context *middleware.Context
@@ -42,7 +42,7 @@ type FindConstraints struct {
 func (o *FindConstraints) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, rCtx, _ := o.Context.RouteInfo(r)
 	if rCtx != nil {
-		r = rCtx
+		*r = *rCtx
 	}
 	var Params = NewFindConstraintsParams()
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

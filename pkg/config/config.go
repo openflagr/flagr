@@ -120,7 +120,7 @@ func setupPrometheus() {
 		Global.Prometheus.EvalCounter = promauto.NewCounterVec(prometheus.CounterOpts{
 			Name: "flagr_eval_results",
 			Help: "A counter of eval results",
-		}, []string{"EntityType", "FlagID", "VariantID", "VariantKey"})
+		}, []string{"EntityType", "FlagID", "FlagKey", "VariantID", "VariantKey"})
 		Global.Prometheus.RequestCounter = promauto.NewCounterVec(prometheus.CounterOpts{
 			Name: "flagr_requests_total",
 			Help: "The total http requests received",

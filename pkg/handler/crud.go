@@ -1,21 +1,23 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
-	"github.com/checkr/flagr/pkg/entity"
-	"github.com/checkr/flagr/pkg/mapper/entity_restapi/e2r"
-	"github.com/checkr/flagr/pkg/mapper/entity_restapi/r2e"
-	"github.com/checkr/flagr/pkg/util"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/constraint"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/distribution"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/flag"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/segment"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/tag"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/variant"
+	"github.com/openflagr/flagr/pkg/entity"
+	"github.com/openflagr/flagr/pkg/mapper/entity_restapi/e2r"
+	"github.com/openflagr/flagr/pkg/mapper/entity_restapi/r2e"
+	"github.com/openflagr/flagr/pkg/util"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/constraint"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/distribution"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/flag"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/segment"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/tag"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/variant"
 
 	"github.com/go-openapi/runtime/middleware"
+	"gorm.io/gorm"
 )
 
 // CRUD is the CRUD interface
@@ -121,7 +123,7 @@ func (c *crud) FindFlags(params flag.FindFlagsParams) middleware.Responder {
 	if params.Tags != nil {
 		t := []entity.Tag{}
 		getDB().Where("value in (?)", strings.Split(*params.Tags, ",")).Find(&t)
-		err = tx.Model(&t).Group("flags.id").Related(&fs, "Flags").Error
+		err = tx.Model(&t).Group("flags.id").Association("Flags").Find(&fs)
 	} else {
 		err = tx.Find(&fs).Error
 	}
@@ -143,18 +145,18 @@ func (c *crud) FindFlags(params flag.FindFlagsParams) middleware.Responder {
 
 func (c *crud) GetFlag(params flag.GetFlagParams) middleware.Responder {
 	f := &entity.Flag{}
-	result := entity.PreloadSegmentsVariantsTags(getDB()).First(f, params.FlagID)
+	result := entity.PreloadSegmentsVariantsTags(getDB()).First(f, params.FlagID).Error
 
 	// Flag with given ID doesn't exist, so we 404
-	if result.RecordNotFound() {
+	if errors.Is(result, gorm.ErrRecordNotFound) {
 		return flag.NewGetFlagDefault(404).WithPayload(
 			ErrorMessage("unable to find flag %v in the database", params.FlagID))
 	}
 
 	// Something else happened, return a 500
-	if err := result.Error; err != nil {
+	if result != nil {
 		return flag.NewGetFlagDefault(500).WithPayload(
-			ErrorMessage("an unknown error occurred while looking up flag %v: %s", params.FlagID, err))
+			ErrorMessage("an unknown error occurred while looking up flag %v: %s", params.FlagID, result))
 	}
 
 	resp := flag.NewGetFlagOK()
@@ -189,7 +191,7 @@ func (c *crud) GetFlagSnapshots(params flag.GetFlagSnapshotsParams) middleware.R
 
 func (c *crud) GetFlagEntityTypes(params flag.GetFlagEntityTypesParams) middleware.Responder {
 	entityTypes := []entity.FlagEntityType{}
-	if err := getDB().Order("key").Find(&entityTypes).Error; err != nil {
+	if err := getDB().Order("flag_entity_types.key").Find(&entityTypes).Error; err != nil {
 		return flag.NewGetFlagEntityTypesDefault(500).WithPayload(
 			ErrorMessage("cannot find flag entity types. err:%s", err))
 
@@ -285,7 +287,7 @@ func (c *crud) RestoreFlag(params flag.RestoreFlagParams) middleware.Responder {
 		return flag.NewRestoreFlagDefault(404).WithPayload(ErrorMessage("%s", err))
 	}
 
-	f.DeletedAt = nil
+	f.DeletedAt = gorm.DeletedAt{}
 
 	if err := getDB().Unscoped().Save(f).Error; err != nil {
 		return flag.NewRestoreFlagDefault(500).WithPayload(ErrorMessage("%s", err))
@@ -316,7 +318,7 @@ func (c *crud) DeleteTag(params tag.DeleteTagParams) middleware.Responder {
 	s := &entity.Flag{}
 	s.ID = uint(params.FlagID)
 
-	if err := getDB().Find(s).Association("Tags").Delete(t).Error; err != nil {
+	if err := getDB().Model(s).Association("Tags").Delete(t); err != nil {
 		return tag.NewDeleteTagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
@@ -325,7 +327,11 @@ func (c *crud) DeleteTag(params tag.DeleteTagParams) middleware.Responder {
 
 func (c *crud) FindTags(params tag.FindTagsParams) middleware.Responder {
 	ds := []entity.Tag{}
-	if err := getDB().First(&entity.Flag{}, params.FlagID).Related(&ds, "Tags").Error; err != nil {
+
+	s := &entity.Flag{}
+	s.ID = uint(params.FlagID)
+
+	if err := getDB().Model(s).Association("Tags").Find(&ds); err != nil {
 		return tag.NewFindTagsDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
@@ -370,7 +376,7 @@ func (c *crud) CreateTag(params tag.CreateTagParams) middleware.Responder {
 	}
 
 	getDB().Where("value = ?", util.SafeString(params.Body.Value)).Find(t) // Find the existing tag to associate if it exists
-	if err := getDB().Model(s).Association("Tags").Append(t).Error; err != nil {
+	if err := getDB().Model(s).Association("Tags").Append(t); err != nil {
 		return tag.NewCreateTagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
@@ -404,8 +410,8 @@ func (c *crud) FindSegments(params segment.FindSegmentsParams) middleware.Respon
 	ss := []entity.Segment{}
 	err := entity.
 		PreloadConstraintsDistribution(getDB()).
-		Order("rank").
-		Order("id").
+		Order("segments.rank").
+		Order("segments.id").
 		Where(entity.Segment{FlagID: uint(params.FlagID)}).
 		Find(&ss).
 		Error
@@ -538,7 +544,7 @@ func (c *crud) PutConstraint(params constraint.PutConstraintParams) middleware.R
 }
 
 func (c *crud) DeleteConstraint(params constraint.DeleteConstraintParams) middleware.Responder {
-	if err := getDB().Delete(entity.Constraint{}, params.ConstraintID).Error; err != nil {
+	if err := getDB().Delete(&entity.Constraint{}, params.ConstraintID).Error; err != nil {
 		return constraint.NewDeleteConstraintDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
@@ -557,7 +563,7 @@ func (c *crud) PutDistributions(params distribution.PutDistributionsParams) midd
 	segmentID := uint(params.SegmentID)
 
 	tx := getDB().Begin()
-	err := tx.Delete(entity.Distribution{}, "segment_id = ?", segmentID).Error
+	err := tx.Where("segment_id = ?", segmentID).Delete(&entity.Distribution{}).Error
 	if err != nil {
 		tx.Rollback()
 		return distribution.NewPutDistributionsDefault(500).WithPayload(ErrorMessage("%s", err))
@@ -682,7 +688,7 @@ func (c *crud) DeleteVariant(params variant.DeleteVariantParams) middleware.Resp
 		return variant.NewDeleteVariantDefault(err.StatusCode).WithPayload(ErrorMessage("%s", err))
 	}
 
-	if err := getDB().Delete(entity.Variant{}, params.VariantID).Error; err != nil {
+	if err := getDB().Delete(&entity.Variant{}, params.VariantID).Error; err != nil {
 		return variant.NewDeleteVariantDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 

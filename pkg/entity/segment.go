@@ -1,8 +1,8 @@
 package entity
 
 import (
-	"github.com/jinzhu/gorm"
 	"github.com/zhouzhuojie/conditions"
+	"gorm.io/gorm"
 )
 
 // SegmentDefaultRank is the default rank when we create the segment
@@ -12,7 +12,7 @@ const SegmentDefaultRank = uint(999)
 type Segment struct {
 	gorm.Model
 	FlagID         uint   `gorm:"index:idx_segment_flagid"`
-	Description    string `sql:"type:text"`
+	Description    string `gorm:"type:text"`
 	Rank           uint
 	RolloutPercent uint
 	Constraints    ConstraintArray

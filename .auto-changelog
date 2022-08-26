@@ -1,0 +1,6 @@
+{
+  "template": "keepachangelog",
+  "unreleased": true,
+  "startingDate": "2021-08-08",
+  "tagPattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+}

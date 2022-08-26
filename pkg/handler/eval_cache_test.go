@@ -1,10 +1,10 @@
 package handler
 
 import (
-	"github.com/checkr/flagr/swagger_gen/models"
+	"github.com/openflagr/flagr/swagger_gen/models"
 	"testing"
 
-	"github.com/checkr/flagr/pkg/entity"
+	"github.com/openflagr/flagr/pkg/entity"
 
 	"github.com/prashantv/gostub"
 	"github.com/stretchr/testify/assert"
@@ -13,7 +13,13 @@ import (
 func TestGetByFlagKeyOrID(t *testing.T) {
 	fixtureFlag := entity.GenFixtureFlag()
 	db := entity.PopulateTestDB(fixtureFlag)
-	defer db.Close()
+
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB.Close()
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	ec := GetEvalCache()
@@ -26,7 +32,13 @@ func TestGetByFlagKeyOrID(t *testing.T) {
 func TestGetByTags(t *testing.T) {
 	fixtureFlag := entity.GenFixtureFlag()
 	db := entity.PopulateTestDB(fixtureFlag)
-	defer db.Close()
+
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB.Close()
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	ec := GetEvalCache()

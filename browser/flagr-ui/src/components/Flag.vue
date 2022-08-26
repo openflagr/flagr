@@ -743,7 +743,11 @@ export default {
     saveDistribution(segment) {
       const distributions = Object.values(this.newDistributions).filter(
         distribution => distribution.percent !== 0
-      );
+      ).map(distribution => {
+        let dist = clone(distribution)
+        delete dist.id;
+        return dist
+      });
 
       Axios.put(
         `${API_URL}/flags/${this.flagId}/segments/${segment.id}/distributions`,
