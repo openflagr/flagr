@@ -3,8 +3,9 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
+	"os"
 
 	"github.com/openflagr/flagr/pkg/config"
 	"github.com/openflagr/flagr/pkg/entity"
@@ -96,7 +97,7 @@ type jsonFileFetcher struct {
 }
 
 func (ff *jsonFileFetcher) fetch() ([]entity.Flag, error) {
-	b, err := ioutil.ReadFile(ff.filePath)
+	b, err := os.ReadFile(ff.filePath)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +121,7 @@ func (hf *jsonHTTPFetcher) fetch() ([]entity.Flag, error) {
 	}
 	defer res.Body.Close()
 
-	b, err := ioutil.ReadAll(res.Body)
+	b, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
 	}

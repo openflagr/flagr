@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math/rand"
 	"os"
 	"path"
@@ -51,11 +50,11 @@ var exportSQLiteFile = func(excludeSnapshots *bool) (file io.ReadCloser, done fu
 		return nil, done, err
 	}
 
-	content, err := ioutil.ReadFile(fname)
+	content, err := os.ReadFile(fname)
 	if err != nil {
 		return nil, done, err
 	}
-	file = ioutil.NopCloser(bytes.NewReader(content))
+	file = io.NopCloser(bytes.NewReader(content))
 	return file, done, nil
 }
 

@@ -4,7 +4,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 	"time"
 
@@ -97,7 +97,7 @@ func createTLSConfiguration(certFile string, keyFile string, caFile string, veri
 			logrus.WithField("TLSConfigurationError", err).Panic(err)
 		}
 
-		caCert, err := ioutil.ReadFile(caFile)
+		caCert, err := os.ReadFile(caFile)
 		if err != nil {
 			logrus.WithField("TLSConfigurationError", err).Panic(err)
 		}

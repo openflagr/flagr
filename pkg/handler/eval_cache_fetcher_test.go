@@ -2,9 +2,9 @@ package handler
 
 import (
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/openflagr/flagr/pkg/config"
@@ -30,7 +30,7 @@ func TestJSONFileFetcher(t *testing.T) {
 func TestJSONHTTPFetcher(t *testing.T) {
 	t.Run("happy code path", func(t *testing.T) {
 		h := func(w http.ResponseWriter, r *http.Request) {
-			b, _ := ioutil.ReadFile("./testdata/sample_eval_cache.json")
+			b, _ := os.ReadFile("./testdata/sample_eval_cache.json")
 			io.WriteString(w, string(b))
 		}
 
