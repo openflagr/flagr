@@ -1,0 +1,42 @@
+name: ci
+
+on:
+  push:
+    branches: ['main']
+  pull_request:
+
+jobs:
+  unit_test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.17
+      - name: Check out source code
+        uses: actions/checkout@v1
+      - run: echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+      - run: make deps
+      - run: make verify_swagger_nochange
+      - run: make ci
+      - run: make benchmark
+      - uses: codecov/codecov-action@v2
+  ui_lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+      - name: Check out source code
+        uses: actions/checkout@v1
+      - run: cd browser/flagr-ui && npm install
+      - run: cd browser/flagr-ui && npm run lint
+  integration_test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@v1
+      - run: cd integration_tests && make build-image
+      - run: cd integration_tests && make down
+      - run: cd integration_tests && make up
+      - run: cd integration_tests && make test

@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/checkr/flagr/pkg/config"
-	jwt "github.com/dgrijalva/jwt-go"
+	jwt "github.com/form3tech-oss/jwt-go"
+	"github.com/openflagr/flagr/pkg/config"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -1,15 +1,19 @@
 package handler
 
 import (
+	"fmt"
+	"math"
 	"testing"
 
-	"github.com/checkr/flagr/pkg/entity"
-	"github.com/checkr/flagr/swagger_gen/models"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/evaluation"
+	"github.com/dchest/uniuri"
+	"github.com/openflagr/flagr/pkg/entity"
+	"github.com/openflagr/flagr/pkg/util"
+	"github.com/openflagr/flagr/swagger_gen/models"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/evaluation"
 
-	"github.com/jinzhu/gorm"
 	"github.com/prashantv/gostub"
 	"github.com/stretchr/testify/assert"
+	"gorm.io/gorm"
 )
 
 func TestEvalSegment(t *testing.T) {
@@ -351,6 +355,97 @@ func TestEvalFlag(t *testing.T) {
 			assert.NotEqual(t, "entityType1", result.EvalContext.EntityType)
 			assert.Equal(t, "some_entity_type", result.EvalContext.EntityType)
 		})
+	})
+}
+
+func TestEvalFlagDistribution(t *testing.T) {
+	defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
+
+	// vID1 and vID2 are the variants generated from GenFixtureEvalCache
+	vID1, vID2 := int64(300), int64(301)
+
+	// we are testing the `num` cases with the relative distribution differences between the two variants
+	// in this case, we set it to be 0.5% of 1e6 samples
+	num, threshold := int(1e6), 0.005
+
+	t.Run("test distribution on integers", func(t *testing.T) {
+		cnt := make(map[int64]int)
+		for i := 0; i < num; i++ {
+			result := EvalFlag(models.EvalContext{
+				EnableDebug:   false,
+				EntityContext: map[string]interface{}{"dl_state": "CA"},
+				EntityID:      fmt.Sprintf("%d", i),
+				EntityType:    "entityType1",
+				FlagID:        int64(100),
+			})
+			cnt[result.VariantID]++
+		}
+		assert.Len(t, cnt, 2)
+		assert.Less(t,
+			math.Abs(float64(cnt[vID1]-cnt[vID2])/float64(cnt[vID1]+cnt[vID2])),
+			threshold,
+			"Expected distribution to be uniform",
+		)
+	})
+
+	t.Run("test distribution on secure random key generator", func(t *testing.T) {
+		cnt := make(map[int64]int)
+		for i := 0; i < num; i++ {
+			result := EvalFlag(models.EvalContext{
+				EnableDebug:   false,
+				EntityContext: map[string]interface{}{"dl_state": "CA"},
+				EntityID:      util.NewSecureRandomKey(),
+				EntityType:    "entityType1",
+				FlagID:        int64(100),
+			})
+			cnt[result.VariantID]++
+		}
+		assert.Len(t, cnt, 2)
+		assert.Less(t,
+			math.Abs(float64(cnt[vID1]-cnt[vID2])/float64(cnt[vID1]+cnt[vID2])),
+			threshold,
+			"Expected distribution to be uniform",
+		)
+	})
+
+	t.Run("test distribution on uuid", func(t *testing.T) {
+		cnt := make(map[int64]int)
+		for i := 0; i < num; i++ {
+			result := EvalFlag(models.EvalContext{
+				EnableDebug:   false,
+				EntityContext: map[string]interface{}{"dl_state": "CA"},
+				EntityID:      uniuri.NewLen(uniuri.UUIDLen),
+				EntityType:    "entityType1",
+				FlagID:        int64(100),
+			})
+			cnt[result.VariantID]++
+		}
+		assert.Len(t, cnt, 2)
+		assert.Less(t,
+			math.Abs(float64(cnt[vID1]-cnt[vID2])/float64(cnt[vID1]+cnt[vID2])),
+			threshold,
+			"Expected distribution to be uniform",
+		)
+	})
+
+	t.Run("test distribution on random string + int", func(t *testing.T) {
+		cnt := make(map[int64]int)
+		for i := 0; i < num; i++ {
+			result := EvalFlag(models.EvalContext{
+				EnableDebug:   false,
+				EntityContext: map[string]interface{}{"dl_state": "CA"},
+				EntityID:      fmt.Sprintf("random_int%d%s", i, util.NewSecureRandomKey()),
+				EntityType:    "entityType1",
+				FlagID:        int64(100),
+			})
+			cnt[result.VariantID]++
+		}
+		assert.Len(t, cnt, 2)
+		assert.Less(t,
+			math.Abs(float64(cnt[vID1]-cnt[vID2])/float64(cnt[vID1]+cnt[vID2])),
+			threshold,
+			"Expected distribution to be uniform",
+		)
 	})
 }
 

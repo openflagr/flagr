@@ -30,7 +30,13 @@ func TestSegmentPreload(t *testing.T) {
 		s := GenFixtureSegment()
 		f := GenFixtureFlag()
 		db := PopulateTestDB(f)
-		defer db.Close()
+
+		tmpDB, dbErr := db.DB()
+		if dbErr != nil {
+			t.Errorf("Failed to get database")
+		}
+
+		defer tmpDB.Close()
 
 		err := s.Preload(db)
 		assert.NoError(t, err)

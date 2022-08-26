@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/checkr/flagr/pkg/entity"
-	"github.com/checkr/flagr/pkg/util"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/export"
+	"github.com/openflagr/flagr/pkg/entity"
+	"github.com/openflagr/flagr/pkg/util"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/export"
 	"github.com/prashantv/gostub"
 	"github.com/stretchr/testify/assert"
 )
@@ -14,12 +14,23 @@ import (
 func TestExportFlags(t *testing.T) {
 	f := entity.GenFixtureFlag()
 	db := entity.PopulateTestDB(f)
-	defer db.Close()
+
+	tmpDB1, dbErr1 := db.DB()
+	if dbErr1 != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB1.Close()
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	t.Run("happy code path", func(t *testing.T) {
 		tmpDB := entity.NewTestDB()
-		defer tmpDB.Close()
+		tmpDB2, dbErr2 := tmpDB.DB()
+		if dbErr2 != nil {
+			t.Errorf("Failed to get database")
+		}
+
+		defer tmpDB2.Close()
 
 		exportFlags(tmpDB)
 		tmpFlag := entity.Flag{}
@@ -30,7 +41,12 @@ func TestExportFlags(t *testing.T) {
 	t.Run("fetchAllFlags error code path", func(t *testing.T) {
 		defer gostub.StubFunc(&fetchAllFlags, nil, fmt.Errorf("error")).Reset()
 		tmpDB := entity.NewTestDB()
-		defer tmpDB.Close()
+		tmpDB2, dbErr2 := tmpDB.DB()
+		if dbErr2 != nil {
+			t.Errorf("Failed to get database")
+		}
+
+		defer tmpDB2.Close()
 
 		err := exportFlags(tmpDB)
 		assert.Error(t, err)
@@ -42,12 +58,22 @@ func TestExportFlagSnapshots(t *testing.T) {
 	db := entity.PopulateTestDB(f)
 	entity.SaveFlagSnapshot(db, f.ID, "flagr-test@example.com")
 
-	defer db.Close()
+	tmpDB1, dbErr1 := db.DB()
+	if dbErr1 != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB1.Close()
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	t.Run("happy code path", func(t *testing.T) {
 		tmpDB := entity.NewTestDB()
-		defer tmpDB.Close()
+		tmpDB2, dbErr2 := tmpDB.DB()
+		if dbErr2 != nil {
+			t.Errorf("Failed to get database")
+		}
+
+		defer tmpDB2.Close()
 
 		exportFlagSnapshots(tmpDB)
 		fs := entity.FlagSnapshot{}
@@ -61,7 +87,12 @@ func TestExportSQLiteFile(t *testing.T) {
 	db := entity.PopulateTestDB(f)
 	entity.SaveFlagSnapshot(db, f.ID, "flagr-test@example.com")
 
-	defer db.Close()
+	tmpDB1, dbErr1 := db.DB()
+	if dbErr1 != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB1.Close()
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	t.Run("happy code path and export everything in db", func(t *testing.T) {
@@ -86,7 +117,12 @@ func TestExportSQLiteHandler(t *testing.T) {
 	db := entity.PopulateTestDB(f)
 	entity.SaveFlagSnapshot(db, f.ID, "flagr-test@example.com")
 
-	defer db.Close()
+	tmpDB1, dbErr1 := db.DB()
+	if dbErr1 != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB1.Close()
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	t.Run("happy code path", func(t *testing.T) {
@@ -105,7 +141,12 @@ func TestExportSQLiteHandler(t *testing.T) {
 func TestExportEvalCacheJSONHandler(t *testing.T) {
 	fixtureFlag := entity.GenFixtureFlag()
 	db := entity.PopulateTestDB(fixtureFlag)
-	defer db.Close()
+	tmpDB1, dbErr1 := db.DB()
+	if dbErr1 != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB1.Close()
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	ec := GetEvalCache()

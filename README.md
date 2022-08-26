@@ -1,35 +1,28 @@
 <p align="center">
-    <img src="./docs/images/logo.png" width="150">
-</p>
-
-<p align="center">
-    <a href="https://goreportcard.com/report/github.com/checkr/flagr" target="_blank">
-        <img src="https://goreportcard.com/badge/github.com/checkr/flagr">
+    <a href="https://github.com/openflagr/flagr/actions/workflows/ci.yml?query=branch%3Amain+" target="_blank">
+        <img src="https://github.com/openflagr/flagr/actions/workflows/ci.yml/badge.svg?branch=main">
     </a>
-    <a href="https://circleci.com/gh/checkr/flagr" target="_blank">
-        <img src="https://circleci.com/gh/checkr/flagr.svg?style=shield">
+    <a href="https://goreportcard.com/report/github.com/openflagr/flagr" target="_blank">
+        <img src="https://goreportcard.com/badge/github.com/openflagr/flagr">
     </a>
-    <a href="https://godoc.org/github.com/checkr/flagr" target="_blank">
+    <a href="https://godoc.org/github.com/openflagr/flagr" target="_blank">
         <img src="https://img.shields.io/badge/godoc-reference-green.svg">
     </a>
-    <a href="https://github.com/checkr/flagr/releases" target="_blank">
-        <img src="https://img.shields.io/github/release/checkr/flagr.svg?style=flat&color=green">
+    <a href="https://github.com/openflagr/flagr/releases" target="_blank">
+        <img src="https://img.shields.io/github/release/openflagr/flagr.svg?style=flat&color=green">
     </a>
-    <a href="https://codecov.io/gh/checkr/flagr" target="_blank">
-        <img src="https://codecov.io/gh/checkr/flagr/branch/master/graph/badge.svg">
-    </a>
-    <a href="https://hub.docker.com/r/checkr/flagr" target="_blank">
-        <img src="https://github.com/checkr/flagr/workflows/Publish%20DockerHub/badge.svg?branch=master&event=release">
+    <a href="https://codecov.io/gh/openflagr/flagr">
+        <img src="https://codecov.io/gh/openflagr/flagr/branch/main/graph/badge.svg?token=iwjv26grrN">
     </a>
 </p>
 
 ## Introduction
+`openflagr/flagr` is a community-driven OSS effort of advancing the development of Flagr.
 
 Flagr is an open source Go service that delivers the right experience to the right entity and monitors the impact. It provides feature flags, experimentation (A/B testing), and dynamic configuration. It has clear swagger REST APIs for flags management and flag evaluation.
 
 ## Documentation
-- [Introducing Flagr Blog](https://medium.com/checkr/introducing-flagr-a-robust-high-performance-service-for-feature-flagging-and-a-b-testing-f037c219b7d5)
-- [Documentation](https://checkr.github.io/flagr/)
+- https://openflagr.github.io/flagr
 
 ## Quick demo
 
@@ -37,18 +30,19 @@ Try it with Docker.
 
 ```sh
 # Start the docker container
-docker pull checkr/flagr
-docker run -it -p 18000:18000 checkr/flagr
+docker pull ghcr.io/openflagr/flagr
+docker run -it -p 18000:18000 ghcr.io/openflagr/flagr
 
 # Open the Flagr UI
 open localhost:18000
 ```
 
-Or try it on [https://try-flagr.herokuapp.com](https://try-flagr.herokuapp.com), it may take a while for a cold start.
+<!-- TODO: change a new demo flagr website -->
+Or try it on [https://try-openflagr.herokuapp.com](https://try-openflagr.herokuapp.com), it may take a while for a cold start.
 
 ```
 curl --request POST \
-     --url https://try-flagr.herokuapp.com/api/v1/evaluation \
+     --url https://try-openflagr.herokuapp.com/api/v1/evaluation \
      --header 'content-type: application/json' \
      --data '{
        "entityID": "127",
@@ -87,7 +81,11 @@ Error Set:
 
 | Language | Clients |
 | -------- | ------- |
-| Go | [goflagr](https://github.com/checkr/goflagr) |
-| Javascript | [jsflagr](https://github.com/checkr/jsflagr) |
-| Python | [pyflagr](https://github.com/checkr/pyflagr) |
-| Ruby | [rbflagr](https://github.com/checkr/rbflagr) |
+| Go | [goflagr](https://github.com/openflagr/goflagr) |
+| Javascript | [jsflagr](https://github.com/openflagr/jsflagr) |
+| Python | [pyflagr](https://github.com/openflagr/pyflagr) |
+| Ruby | [rbflagr](https://github.com/openflagr/rbflagr) |
+
+## License and Credit
+- [`openflagr/flagr`](https://github.com/openflagr/flagr) Apache 2.0
+- [`checkr/flagr`](https://github.com/checkr/flagr) Apache 2.0

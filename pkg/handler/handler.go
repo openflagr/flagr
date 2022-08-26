@@ -1,20 +1,20 @@
 package handler
 
 import (
-	"github.com/checkr/flagr/pkg/config"
-	"github.com/checkr/flagr/pkg/entity"
-	"github.com/checkr/flagr/swagger_gen/models"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/constraint"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/distribution"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/evaluation"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/export"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/flag"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/health"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/segment"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/tag"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/variant"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/openflagr/flagr/pkg/config"
+	"github.com/openflagr/flagr/pkg/entity"
+	"github.com/openflagr/flagr/swagger_gen/models"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/constraint"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/distribution"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/evaluation"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/export"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/flag"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/health"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/segment"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/tag"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/variant"
 )
 
 var getDB = entity.GetDB

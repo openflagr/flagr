@@ -1,0 +1,20 @@
+name: publish_docker
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - run: echo "RELEASE_VERSION=$(echo ${GITHUB_REF:10})" >> $GITHUB_ENV
+    - name: Publish Docker SemVer Tag
+      uses: elgohr/Publish-Docker-Github-Action@3.04
+      with:
+        name: openflagr/flagr
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+        registry: ghcr.io
+        tags: "latest,${{ env.RELEASE_VERSION }}"

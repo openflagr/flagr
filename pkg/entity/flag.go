@@ -3,16 +3,16 @@ package entity
 import (
 	"fmt"
 
-	"github.com/checkr/flagr/pkg/util"
-	"github.com/jinzhu/gorm"
+	"github.com/openflagr/flagr/pkg/util"
+	"gorm.io/gorm"
 )
 
 // Flag is the unit of flags
 type Flag struct {
 	gorm.Model
 
-	Key         string `gorm:"type:varchar(64);unique_index:idx_flag_key"`
-	Description string `sql:"type:text"`
+	Key         string `gorm:"type:varchar(64);uniqueIndex:idx_flag_key"`
+	Description string `gorm:"type:text"`
 	CreatedBy   string
 	UpdatedBy   string
 	Enabled     bool
@@ -20,7 +20,7 @@ type Flag struct {
 	Variants    []Variant
 	Tags        []Tag `gorm:"many2many:flags_tags;"`
 	SnapshotID  uint
-	Notes       string `sql:"type:text"`
+	Notes       string `gorm:"type:text"`
 
 	DataRecordsEnabled bool
 	EntityType         string
@@ -45,8 +45,8 @@ func PreloadSegmentsVariantsTags(db *gorm.DB) *gorm.DB {
 	return db.
 		Preload("Segments", func(db *gorm.DB) *gorm.DB {
 			return PreloadConstraintsDistribution(db).
-				Order("rank").
-				Order("id")
+				Order("segments.rank").
+				Order("segments.id")
 		}).
 		Preload("Variants", func(db *gorm.DB) *gorm.DB {
 			return db.Order("id")

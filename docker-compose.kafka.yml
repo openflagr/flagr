@@ -19,7 +19,7 @@ mysql8:
     - "18101:3306"
 
 postgres:
-  image: postgres:9
+  image: postgres:13
   container_name: flagr-postgres
   environment:
     POSTGRES_PASSWORD: "test"

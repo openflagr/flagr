@@ -9,11 +9,11 @@ import (
 	"os"
 	"path"
 
-	"github.com/checkr/flagr/pkg/entity"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/export"
 	"github.com/go-openapi/runtime/middleware"
-	"github.com/jinzhu/gorm"
+	"github.com/openflagr/flagr/pkg/entity"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/export"
 	"github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 )
 
 var exportSQLiteHandler = func(p export.GetExportSqliteParams) middleware.Responder {
@@ -33,7 +33,11 @@ var exportSQLiteFile = func(excludeSnapshots *bool) (file io.ReadCloser, done fu
 	}
 
 	tmpDB := entity.NewSQLiteDB(fname)
-	defer tmpDB.Close()
+	sqlDB, dbErr := tmpDB.DB()
+	if dbErr != nil {
+		return nil, done, dbErr
+	}
+	defer sqlDB.Close()
 
 	if err := exportFlags(tmpDB); err != nil {
 		return nil, done, err
@@ -61,7 +65,7 @@ var exportFlags = func(tmpDB *gorm.DB) error {
 		return err
 	}
 	for _, f := range flags {
-		if err := tmpDB.Create(f).Error; err != nil {
+		if err := tmpDB.Create(&f).Error; err != nil {
 			return err
 		}
 	}
@@ -75,7 +79,7 @@ var exportFlagSnapshots = func(tmpDB *gorm.DB) error {
 		return err
 	}
 	for _, s := range snapshots {
-		if err := tmpDB.Create(s).Error; err != nil {
+		if err := tmpDB.Create(&s).Error; err != nil {
 			return err
 		}
 	}
@@ -89,7 +93,7 @@ var exportFlagEntityTypes = func(tmpDB *gorm.DB) error {
 		return err
 	}
 	for _, s := range ts {
-		if err := tmpDB.Create(s).Error; err != nil {
+		if err := tmpDB.Create(&s).Error; err != nil {
 			return err
 		}
 	}

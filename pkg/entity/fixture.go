@@ -1,10 +1,10 @@
 package entity
 
 import (
-	"github.com/checkr/flagr/swagger_gen/models"
+	"github.com/openflagr/flagr/swagger_gen/models"
 
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/sqlite" // sqlite driver
+	_ "gorm.io/driver/sqlite" // sqlite driver
+	"gorm.io/gorm"
 )
 
 // GenFixtureFlag is a fixture

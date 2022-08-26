@@ -7,7 +7,13 @@ import (
 func TestSaveFlagSnapshot(t *testing.T) {
 	f := GenFixtureFlag()
 	db := PopulateTestDB(f)
-	defer db.Close()
+
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB.Close()
 
 	t.Run("happy code path", func(t *testing.T) {
 		SaveFlagSnapshot(db, f.ID, "flagr-test@example.com")

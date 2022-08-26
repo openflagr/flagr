@@ -6,10 +6,10 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/checkr/flagr/pkg/config"
-	"github.com/checkr/flagr/pkg/entity"
-	"github.com/checkr/flagr/pkg/util"
-	"github.com/jinzhu/gorm"
+	"github.com/openflagr/flagr/pkg/config"
+	"github.com/openflagr/flagr/pkg/entity"
+	"github.com/openflagr/flagr/pkg/util"
+	"gorm.io/gorm"
 )
 
 // EvalCacheJSON is the JSON serialization format of EvalCache's flags

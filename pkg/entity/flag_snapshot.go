@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/checkr/flagr/pkg/config"
-	"github.com/checkr/flagr/pkg/util"
-	"github.com/jinzhu/gorm"
+	"github.com/openflagr/flagr/pkg/config"
+	"github.com/openflagr/flagr/pkg/util"
 	"github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 )
 
 // FlagSnapshot is the snapshot of a flag
@@ -16,7 +16,7 @@ type FlagSnapshot struct {
 	gorm.Model
 	FlagID    uint `gorm:"index:idx_flagsnapshot_flagid"`
 	UpdatedBy string
-	Flag      []byte `sql:"type:text"`
+	Flag      []byte `gorm:"type:text"`
 }
 
 // SaveFlagSnapshot saves the Flag Snapshot

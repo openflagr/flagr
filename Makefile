@@ -11,22 +11,22 @@ all: deps gen build build_ui run
 rebuild: gen build
 
 test: verifiers
-	@GO111MODULE=on go test -mod=vendor -race -covermode=atomic -coverprofile=coverage.txt github.com/checkr/flagr/pkg/...
+	@go test -race -covermode=atomic -coverprofile=coverage.txt github.com/openflagr/flagr/pkg/...
 
 .PHONY: benchmark
 benchmark:
-	@GO111MODULE=on go test -mod=vendor -race -benchmem -run=^$$ -bench . ./pkg/...
+	@go test -race -benchmem -run=^$$ -bench . ./pkg/...
 
 ci: test
 
 .PHONY: vendor
 vendor:
-	@GO111MODULE=on go mod tidy
-	@GO111MODULE=on go mod vendor
+	@go mod tidy
+	@go mod vendor
 
 build:
 	@echo "Building Flagr Server to $(PWD)/flagr ..."
-	@CGO_ENABLED=1 GO111MODULE=on go build -mod=vendor -o $(PWD)/flagr github.com/checkr/flagr/swagger_gen/cmd/flagr-server
+	@CGO_ENABLED=1 go build -o $(PWD)/flagr github.com/openflagr/flagr/swagger_gen/cmd/flagr-server
 
 build_ui:
 	@echo "Building Flagr UI ..."
@@ -45,7 +45,7 @@ gen: api_docs swagger
 
 deps:
 	@go install github.com/go-swagger/go-swagger/cmd/swagger@v0.26.0
-	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.35.2
+	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.41.1
 
 serve_docs:
 	@npm install -g docsify-cli@4
@@ -63,7 +63,7 @@ verifiers: verify_lint verify_swagger
 
 verify_lint:
 	@echo "Running $@"
-	@golangci-lint run -D errcheck ./pkg/...
+	@golangci-lint run --timeout 5m -D errcheck ./pkg/...
 
 verify_swagger:
 	@echo "Running $@"

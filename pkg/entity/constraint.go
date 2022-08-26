@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/checkr/flagr/swagger_gen/models"
-	"github.com/jinzhu/gorm"
+	"github.com/openflagr/flagr/swagger_gen/models"
 	"github.com/zhouzhuojie/conditions"
+	"gorm.io/gorm"
 )
 
 // Constraint is the unit of constraints
@@ -16,7 +16,7 @@ type Constraint struct {
 	SegmentID uint `gorm:"index:idx_constraint_segmentid"`
 	Property  string
 	Operator  string
-	Value     string `sql:"type:text"`
+	Value     string `gorm:"type:text"`
 }
 
 // ConstraintArray is an array of Constraint

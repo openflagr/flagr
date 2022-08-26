@@ -3,15 +3,17 @@ package entity
 import (
 	"os"
 	"sync"
+	"time"
 
-	_ "github.com/jinzhu/gorm/dialects/mysql"    // mysql driver
-	_ "github.com/jinzhu/gorm/dialects/postgres" // postgres driver
-	_ "github.com/jinzhu/gorm/dialects/sqlite"   // sqlite driver
+	mysql "gorm.io/driver/mysql"       // mysql driver
+	postgres "gorm.io/driver/postgres" // postgres driver
+	sqlite "gorm.io/driver/sqlite"     // sqlite driver
 
 	retry "github.com/avast/retry-go"
-	"github.com/checkr/flagr/pkg/config"
-	"github.com/jinzhu/gorm"
+	"github.com/openflagr/flagr/pkg/config"
 	"github.com/sirupsen/logrus"
+	"gorm.io/gorm"
+	gorm_logger "gorm.io/gorm/logger"
 )
 
 var (
@@ -21,10 +23,10 @@ var (
 
 // AutoMigrateTables stores the entity tables that we can auto migrate in gorm
 var AutoMigrateTables = []interface{}{
+	Flag{},
 	Constraint{},
 	Distribution{},
 	FlagSnapshot{},
-	Flag{},
 	Segment{},
 	User{},
 	Variant{},
@@ -33,9 +35,28 @@ var AutoMigrateTables = []interface{}{
 }
 
 func connectDB() (db *gorm.DB, err error) {
+	logger := &Logger{
+		LogLevel:                  gorm_logger.Info,
+		SlowThreshold:             time.Millisecond,
+		IgnoreRecordNotFoundError: false,
+	}
+
 	err = retry.Do(
 		func() error {
-			db, err = gorm.Open(config.Config.DBDriver, config.Config.DBConnectionStr)
+			switch config.Config.DBDriver {
+				case "postgres":
+					db, err = gorm.Open(postgres.Open(config.Config.DBConnectionStr), &gorm.Config{
+						Logger: logger,
+					})
+				case "sqlite3":
+					db, err = gorm.Open(sqlite.Open(config.Config.DBConnectionStr), &gorm.Config{
+						Logger: logger,
+					})
+				case "mysql":
+					db, err = gorm.Open(mysql.Open(config.Config.DBConnectionStr), &gorm.Config{
+						Logger: logger,
+					})
+			}
 			return err
 		},
 		retry.Attempts(config.Config.DBConnectionRetryAttempts),
@@ -55,8 +76,7 @@ func GetDB() *gorm.DB {
 				logrus.Fatal("failed to connect to db")
 			}
 		}
-		db.SetLogger(logrus.StandardLogger())
-		db.Debug().AutoMigrate(AutoMigrateTables...)
+		db.AutoMigrate(AutoMigrateTables...)
 		singletonDB = db
 	})
 
@@ -67,13 +87,14 @@ func GetDB() *gorm.DB {
 // useful for backup exports and unit tests
 func NewSQLiteDB(filePath string) *gorm.DB {
 	os.Remove(filePath)
-	db, err := gorm.Open("sqlite3", filePath)
+
+	db, err := gorm.Open(sqlite.Open(filePath), &gorm.Config{})
 	if err != nil {
 		logrus.WithField("err", err).Errorf("failed to connect to db:%s", filePath)
 		panic(err)
 	}
-	db.SetLogger(logrus.StandardLogger())
 	db.AutoMigrate(AutoMigrateTables...)
+
 	return db
 }
 

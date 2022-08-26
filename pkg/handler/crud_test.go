@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/checkr/flagr/pkg/entity"
-	"github.com/checkr/flagr/pkg/util"
-	"github.com/checkr/flagr/swagger_gen/models"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/constraint"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/distribution"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/flag"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/segment"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/tag"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/variant"
+	"github.com/openflagr/flagr/pkg/entity"
+	"github.com/openflagr/flagr/pkg/util"
+	"github.com/openflagr/flagr/swagger_gen/models"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/constraint"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/distribution"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/flag"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/segment"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/tag"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/variant"
 
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/prashantv/gostub"
@@ -24,7 +24,13 @@ func TestCrudFlags(t *testing.T) {
 	db := entity.NewTestDB()
 	c := &crud{}
 
-	defer db.Close()
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB.Close()
+
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	t.Run("it should get 0 flags when db is empty", func(t *testing.T) {
@@ -166,7 +172,12 @@ func TestCrudFlagsWithFailures(t *testing.T) {
 	db := entity.NewTestDB()
 	c := &crud{}
 
-	defer db.Close()
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB.Close()
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	t.Run("GetFlag - can't find non-exist flag", func(t *testing.T) {
@@ -307,7 +318,12 @@ func TestFindFlags(t *testing.T) {
 	c := &crud{}
 	numOfFlags := 20
 
-	defer db.Close()
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB.Close()
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	for i := 0; i < numOfFlags; i++ {
@@ -451,7 +467,13 @@ func TestCrudSegments(t *testing.T) {
 	db := entity.NewTestDB()
 	c := &crud{}
 
-	defer db.Close()
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB.Close()
+
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	c.CreateFlag(flag.CreateFlagParams{
@@ -519,7 +541,12 @@ func TestCrudSegmentsWithFailures(t *testing.T) {
 	db := entity.NewTestDB()
 	c := &crud{}
 
-	defer db.Close()
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB.Close()
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	c.CreateFlag(flag.CreateFlagParams{
@@ -588,7 +615,12 @@ func TestCrudConstraints(t *testing.T) {
 	db := entity.NewTestDB()
 	c := &crud{}
 
-	defer db.Close()
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB.Close()
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	c.CreateFlag(flag.CreateFlagParams{
@@ -673,7 +705,12 @@ func TestCrudConstraintsFailures(t *testing.T) {
 	db := entity.NewTestDB()
 	c := &crud{}
 
-	defer db.Close()
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB.Close()
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	c.CreateFlag(flag.CreateFlagParams{
@@ -781,7 +818,12 @@ func TestCrudVariants(t *testing.T) {
 	db := entity.NewTestDB()
 	c := &crud{}
 
-	defer db.Close()
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB.Close()
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	c.CreateFlag(flag.CreateFlagParams{
@@ -864,7 +906,12 @@ func TestCrudVariantsWithFailures(t *testing.T) {
 	db := entity.NewTestDB()
 	c := &crud{}
 
-	defer db.Close()
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB.Close()
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	c.CreateFlag(flag.CreateFlagParams{
@@ -980,7 +1027,12 @@ func TestCrudTags(t *testing.T) {
 	db := entity.NewTestDB()
 	c := &crud{}
 
-	defer db.Close()
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB.Close()
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	c.CreateFlag(flag.CreateFlagParams{
@@ -1027,7 +1079,12 @@ func TestCrudTagsWithFailures(t *testing.T) {
 	db := entity.NewTestDB()
 	c := &crud{}
 
-	defer db.Close()
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB.Close()
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	c.CreateFlag(flag.CreateFlagParams{
@@ -1080,7 +1137,12 @@ func TestFindAllTags(t *testing.T) {
 	c := &crud{}
 	numOfTags := 20
 
-	defer db.Close()
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB.Close()
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	c.CreateFlag(flag.CreateFlagParams{
@@ -1130,7 +1192,12 @@ func TestCrudDistributions(t *testing.T) {
 	db := entity.NewTestDB()
 	c := &crud{}
 
-	defer db.Close()
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB.Close()
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	c.CreateFlag(flag.CreateFlagParams{
@@ -1188,7 +1255,12 @@ func TestCrudDistributionsWithFailures(t *testing.T) {
 	db := entity.NewTestDB()
 	c := &crud{}
 
-	defer db.Close()
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB.Close()
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	c.CreateFlag(flag.CreateFlagParams{

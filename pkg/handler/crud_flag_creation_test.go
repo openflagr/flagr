@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/checkr/flagr/pkg/entity"
-	"github.com/checkr/flagr/pkg/util"
-	"github.com/checkr/flagr/swagger_gen/models"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/flag"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/openflagr/flagr/pkg/entity"
+	"github.com/openflagr/flagr/pkg/util"
+	"github.com/openflagr/flagr/swagger_gen/models"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/flag"
 	"github.com/prashantv/gostub"
 	"github.com/stretchr/testify/assert"
 )
@@ -18,7 +18,12 @@ func TestCrudCreateFlag(t *testing.T) {
 	db := entity.NewTestDB()
 	c := &crud{}
 
-	defer db.Close()
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB.Close()
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	t.Run("it should be able to create one flag", func(t *testing.T) {
@@ -76,7 +81,12 @@ func TestCrudCreateFlagWithFailures(t *testing.T) {
 	db := entity.NewTestDB()
 	c := &crud{}
 
-	defer db.Close()
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB.Close()
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	t.Run("CreateFlag - got e2r MapFlag error", func(t *testing.T) {
