@@ -29,10 +29,10 @@ func NewPutSegment(ctx *middleware.Context, handler PutSegmentHandler) *PutSegme
 	return &PutSegment{Context: ctx, Handler: handler}
 }
 
-/* PutSegment swagger:route PUT /flags/{flagID}/segments/{segmentID} segment putSegment
+/*
+	PutSegment swagger:route PUT /flags/{flagID}/segments/{segmentID} segment putSegment
 
 PutSegment put segment API
-
 */
 type PutSegment struct {
 	Context *middleware.Context
@@ -42,7 +42,7 @@ type PutSegment struct {
 func (o *PutSegment) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, rCtx, _ := o.Context.RouteInfo(r)
 	if rCtx != nil {
-		r = rCtx
+		*r = *rCtx
 	}
 	var Params = NewPutSegmentParams()
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

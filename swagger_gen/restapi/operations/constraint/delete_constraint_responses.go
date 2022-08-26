@@ -16,7 +16,8 @@ import (
 // DeleteConstraintOKCode is the HTTP code returned for type DeleteConstraintOK
 const DeleteConstraintOKCode int = 200
 
-/*DeleteConstraintOK deleted
+/*
+DeleteConstraintOK deleted
 
 swagger:response deleteConstraintOK
 */
@@ -37,7 +38,8 @@ func (o *DeleteConstraintOK) WriteResponse(rw http.ResponseWriter, producer runt
 	rw.WriteHeader(200)
 }
 
-/*DeleteConstraintDefault generic error response
+/*
+DeleteConstraintDefault generic error response
 
 swagger:response deleteConstraintDefault
 */

@@ -16,7 +16,8 @@ import (
 // GetFlagEntityTypesOKCode is the HTTP code returned for type GetFlagEntityTypesOK
 const GetFlagEntityTypesOKCode int = 200
 
-/*GetFlagEntityTypesOK returns all the FlagEntityTypes
+/*
+GetFlagEntityTypesOK returns all the FlagEntityTypes
 
 swagger:response getFlagEntityTypesOK
 */
@@ -60,7 +61,8 @@ func (o *GetFlagEntityTypesOK) WriteResponse(rw http.ResponseWriter, producer ru
 	}
 }
 
-/*GetFlagEntityTypesDefault generic error response
+/*
+GetFlagEntityTypesDefault generic error response
 
 swagger:response getFlagEntityTypesDefault
 */

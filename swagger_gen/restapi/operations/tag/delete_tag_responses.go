@@ -16,7 +16,8 @@ import (
 // DeleteTagOKCode is the HTTP code returned for type DeleteTagOK
 const DeleteTagOKCode int = 200
 
-/*DeleteTagOK deleted
+/*
+DeleteTagOK deleted
 
 swagger:response deleteTagOK
 */
@@ -37,7 +38,8 @@ func (o *DeleteTagOK) WriteResponse(rw http.ResponseWriter, producer runtime.Pro
 	rw.WriteHeader(200)
 }
 
-/*DeleteTagDefault generic error response
+/*
+DeleteTagDefault generic error response
 
 swagger:response deleteTagDefault
 */

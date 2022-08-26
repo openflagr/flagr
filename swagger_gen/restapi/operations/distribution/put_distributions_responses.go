@@ -16,7 +16,8 @@ import (
 // PutDistributionsOKCode is the HTTP code returned for type PutDistributionsOK
 const PutDistributionsOKCode int = 200
 
-/*PutDistributionsOK distribution under the segment
+/*
+PutDistributionsOK distribution under the segment
 
 swagger:response putDistributionsOK
 */
@@ -60,7 +61,8 @@ func (o *PutDistributionsOK) WriteResponse(rw http.ResponseWriter, producer runt
 	}
 }
 
-/*PutDistributionsDefault generic error response
+/*
+PutDistributionsDefault generic error response
 
 swagger:response putDistributionsDefault
 */

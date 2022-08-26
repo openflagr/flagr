@@ -16,7 +16,8 @@ import (
 // FindTagsOKCode is the HTTP code returned for type FindTagsOK
 const FindTagsOKCode int = 200
 
-/*FindTagsOK tag ordered by tagID
+/*
+FindTagsOK tag ordered by tagID
 
 swagger:response findTagsOK
 */
@@ -60,7 +61,8 @@ func (o *FindTagsOK) WriteResponse(rw http.ResponseWriter, producer runtime.Prod
 	}
 }
 
-/*FindTagsDefault generic error response
+/*
+FindTagsDefault generic error response
 
 swagger:response findTagsDefault
 */

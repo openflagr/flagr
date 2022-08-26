@@ -29,10 +29,10 @@ func NewPutFlag(ctx *middleware.Context, handler PutFlagHandler) *PutFlag {
 	return &PutFlag{Context: ctx, Handler: handler}
 }
 
-/* PutFlag swagger:route PUT /flags/{flagID} flag putFlag
+/*
+	PutFlag swagger:route PUT /flags/{flagID} flag putFlag
 
 PutFlag put flag API
-
 */
 type PutFlag struct {
 	Context *middleware.Context
@@ -42,7 +42,7 @@ type PutFlag struct {
 func (o *PutFlag) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, rCtx, _ := o.Context.RouteInfo(r)
 	if rCtx != nil {
-		r = rCtx
+		*r = *rCtx
 	}
 	var Params = NewPutFlagParams()
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

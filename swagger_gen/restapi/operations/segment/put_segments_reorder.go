@@ -29,10 +29,10 @@ func NewPutSegmentsReorder(ctx *middleware.Context, handler PutSegmentsReorderHa
 	return &PutSegmentsReorder{Context: ctx, Handler: handler}
 }
 
-/* PutSegmentsReorder swagger:route PUT /flags/{flagID}/segments/reorder segment putSegmentsReorder
+/*
+	PutSegmentsReorder swagger:route PUT /flags/{flagID}/segments/reorder segment putSegmentsReorder
 
 PutSegmentsReorder put segments reorder API
-
 */
 type PutSegmentsReorder struct {
 	Context *middleware.Context
@@ -42,7 +42,7 @@ type PutSegmentsReorder struct {
 func (o *PutSegmentsReorder) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, rCtx, _ := o.Context.RouteInfo(r)
 	if rCtx != nil {
-		r = rCtx
+		*r = *rCtx
 	}
 	var Params = NewPutSegmentsReorderParams()
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

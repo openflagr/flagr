@@ -16,7 +16,8 @@ import (
 // CreateVariantOKCode is the HTTP code returned for type CreateVariantOK
 const CreateVariantOKCode int = 200
 
-/*CreateVariantOK variant just created
+/*
+CreateVariantOK variant just created
 
 swagger:response createVariantOK
 */
@@ -57,7 +58,8 @@ func (o *CreateVariantOK) WriteResponse(rw http.ResponseWriter, producer runtime
 	}
 }
 
-/*CreateVariantDefault generic error response
+/*
+CreateVariantDefault generic error response
 
 swagger:response createVariantDefault
 */

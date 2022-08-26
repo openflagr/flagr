@@ -76,6 +76,8 @@ func (m *EvalResult) validateEvalContext(formats strfmt.Registry) error {
 		if err := m.EvalContext.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("evalContext")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("evalContext")
 			}
 			return err
 		}
@@ -93,6 +95,8 @@ func (m *EvalResult) validateEvalDebugLog(formats strfmt.Registry) error {
 		if err := m.EvalDebugLog.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("evalDebugLog")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("evalDebugLog")
 			}
 			return err
 		}
@@ -125,6 +129,8 @@ func (m *EvalResult) contextValidateEvalContext(ctx context.Context, formats str
 		if err := m.EvalContext.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("evalContext")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("evalContext")
 			}
 			return err
 		}
@@ -139,6 +145,8 @@ func (m *EvalResult) contextValidateEvalDebugLog(ctx context.Context, formats st
 		if err := m.EvalDebugLog.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("evalDebugLog")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("evalDebugLog")
 			}
 			return err
 		}

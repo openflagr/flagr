@@ -16,7 +16,8 @@ import (
 // DeleteSegmentOKCode is the HTTP code returned for type DeleteSegmentOK
 const DeleteSegmentOKCode int = 200
 
-/*DeleteSegmentOK deleted
+/*
+DeleteSegmentOK deleted
 
 swagger:response deleteSegmentOK
 */
@@ -37,7 +38,8 @@ func (o *DeleteSegmentOK) WriteResponse(rw http.ResponseWriter, producer runtime
 	rw.WriteHeader(200)
 }
 
-/*DeleteSegmentDefault generic error response
+/*
+DeleteSegmentDefault generic error response
 
 swagger:response deleteSegmentDefault
 */

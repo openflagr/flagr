@@ -16,7 +16,8 @@ import (
 // FindSegmentsOKCode is the HTTP code returned for type FindSegmentsOK
 const FindSegmentsOKCode int = 200
 
-/*FindSegmentsOK segments ordered by rank of the flag
+/*
+FindSegmentsOK segments ordered by rank of the flag
 
 swagger:response findSegmentsOK
 */
@@ -60,7 +61,8 @@ func (o *FindSegmentsOK) WriteResponse(rw http.ResponseWriter, producer runtime.
 	}
 }
 
-/*FindSegmentsDefault generic error response
+/*
+FindSegmentsDefault generic error response
 
 swagger:response findSegmentsDefault
 */

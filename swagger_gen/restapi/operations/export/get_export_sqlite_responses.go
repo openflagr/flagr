@@ -17,7 +17,8 @@ import (
 // GetExportSqliteOKCode is the HTTP code returned for type GetExportSqliteOK
 const GetExportSqliteOKCode int = 200
 
-/*GetExportSqliteOK OK
+/*
+GetExportSqliteOK OK
 
 swagger:response getExportSqliteOK
 */
@@ -56,7 +57,8 @@ func (o *GetExportSqliteOK) WriteResponse(rw http.ResponseWriter, producer runti
 	}
 }
 
-/*GetExportSqliteDefault generic error response
+/*
+GetExportSqliteDefault generic error response
 
 swagger:response getExportSqliteDefault
 */

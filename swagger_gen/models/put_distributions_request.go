@@ -54,6 +54,8 @@ func (m *PutDistributionsRequest) validateDistributions(formats strfmt.Registry)
 			if err := m.Distributions[i].Validate(formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("distributions" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("distributions" + "." + strconv.Itoa(i))
 				}
 				return err
 			}
@@ -86,6 +88,8 @@ func (m *PutDistributionsRequest) contextValidateDistributions(ctx context.Conte
 			if err := m.Distributions[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("distributions" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("distributions" + "." + strconv.Itoa(i))
 				}
 				return err
 			}

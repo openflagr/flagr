@@ -16,7 +16,8 @@ import (
 // PostEvaluationBatchOKCode is the HTTP code returned for type PostEvaluationBatchOK
 const PostEvaluationBatchOKCode int = 200
 
-/*PostEvaluationBatchOK evaluation batch result
+/*
+PostEvaluationBatchOK evaluation batch result
 
 swagger:response postEvaluationBatchOK
 */
@@ -57,7 +58,8 @@ func (o *PostEvaluationBatchOK) WriteResponse(rw http.ResponseWriter, producer r
 	}
 }
 
-/*PostEvaluationBatchDefault generic error response
+/*
+PostEvaluationBatchDefault generic error response
 
 swagger:response postEvaluationBatchDefault
 */

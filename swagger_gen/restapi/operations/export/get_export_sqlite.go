@@ -29,10 +29,10 @@ func NewGetExportSqlite(ctx *middleware.Context, handler GetExportSqliteHandler)
 	return &GetExportSqlite{Context: ctx, Handler: handler}
 }
 
-/* GetExportSqlite swagger:route GET /export/sqlite export getExportSqlite
+/*
+	GetExportSqlite swagger:route GET /export/sqlite export getExportSqlite
 
 Export sqlite3 format of the db dump, which is converted from the main database.
-
 */
 type GetExportSqlite struct {
 	Context *middleware.Context
@@ -42,7 +42,7 @@ type GetExportSqlite struct {
 func (o *GetExportSqlite) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, rCtx, _ := o.Context.RouteInfo(r)
 	if rCtx != nil {
-		r = rCtx
+		*r = *rCtx
 	}
 	var Params = NewGetExportSqliteParams()
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

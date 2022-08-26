@@ -16,7 +16,8 @@ import (
 // PutVariantOKCode is the HTTP code returned for type PutVariantOK
 const PutVariantOKCode int = 200
 
-/*PutVariantOK variant just updated
+/*
+PutVariantOK variant just updated
 
 swagger:response putVariantOK
 */
@@ -57,7 +58,8 @@ func (o *PutVariantOK) WriteResponse(rw http.ResponseWriter, producer runtime.Pr
 	}
 }
 
-/*PutVariantDefault generic error response
+/*
+PutVariantDefault generic error response
 
 swagger:response putVariantDefault
 */

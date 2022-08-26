@@ -16,7 +16,8 @@ import (
 // GetHealthOKCode is the HTTP code returned for type GetHealthOK
 const GetHealthOKCode int = 200
 
-/*GetHealthOK status of health check
+/*
+GetHealthOK status of health check
 
 swagger:response getHealthOK
 */
@@ -57,7 +58,8 @@ func (o *GetHealthOK) WriteResponse(rw http.ResponseWriter, producer runtime.Pro
 	}
 }
 
-/*GetHealthDefault generic error response
+/*
+GetHealthDefault generic error response
 
 swagger:response getHealthDefault
 */

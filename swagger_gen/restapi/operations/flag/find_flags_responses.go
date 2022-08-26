@@ -16,7 +16,8 @@ import (
 // FindFlagsOKCode is the HTTP code returned for type FindFlagsOK
 const FindFlagsOKCode int = 200
 
-/*FindFlagsOK list all the flags
+/*
+FindFlagsOK list all the flags
 
 swagger:response findFlagsOK
 */
@@ -60,7 +61,8 @@ func (o *FindFlagsOK) WriteResponse(rw http.ResponseWriter, producer runtime.Pro
 	}
 }
 
-/*FindFlagsDefault generic error response
+/*
+FindFlagsDefault generic error response
 
 swagger:response findFlagsDefault
 */

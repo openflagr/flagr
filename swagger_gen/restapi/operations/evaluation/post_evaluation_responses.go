@@ -16,7 +16,8 @@ import (
 // PostEvaluationOKCode is the HTTP code returned for type PostEvaluationOK
 const PostEvaluationOKCode int = 200
 
-/*PostEvaluationOK evaluation result
+/*
+PostEvaluationOK evaluation result
 
 swagger:response postEvaluationOK
 */
@@ -57,7 +58,8 @@ func (o *PostEvaluationOK) WriteResponse(rw http.ResponseWriter, producer runtim
 	}
 }
 
-/*PostEvaluationDefault generic error response
+/*
+PostEvaluationDefault generic error response
 
 swagger:response postEvaluationDefault
 */

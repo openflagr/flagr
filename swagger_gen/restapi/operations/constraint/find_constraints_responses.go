@@ -16,7 +16,8 @@ import (
 // FindConstraintsOKCode is the HTTP code returned for type FindConstraintsOK
 const FindConstraintsOKCode int = 200
 
-/*FindConstraintsOK constraints under the segment
+/*
+FindConstraintsOK constraints under the segment
 
 swagger:response findConstraintsOK
 */
@@ -60,7 +61,8 @@ func (o *FindConstraintsOK) WriteResponse(rw http.ResponseWriter, producer runti
 	}
 }
 
-/*FindConstraintsDefault generic error response
+/*
+FindConstraintsDefault generic error response
 
 swagger:response findConstraintsDefault
 */

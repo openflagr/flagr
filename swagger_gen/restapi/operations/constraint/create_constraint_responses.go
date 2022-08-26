@@ -16,7 +16,8 @@ import (
 // CreateConstraintOKCode is the HTTP code returned for type CreateConstraintOK
 const CreateConstraintOKCode int = 200
 
-/*CreateConstraintOK the constraint created
+/*
+CreateConstraintOK the constraint created
 
 swagger:response createConstraintOK
 */
@@ -57,7 +58,8 @@ func (o *CreateConstraintOK) WriteResponse(rw http.ResponseWriter, producer runt
 	}
 }
 
-/*CreateConstraintDefault generic error response
+/*
+CreateConstraintDefault generic error response
 
 swagger:response createConstraintDefault
 */

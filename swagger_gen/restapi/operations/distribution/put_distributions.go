@@ -29,10 +29,10 @@ func NewPutDistributions(ctx *middleware.Context, handler PutDistributionsHandle
 	return &PutDistributions{Context: ctx, Handler: handler}
 }
 
-/* PutDistributions swagger:route PUT /flags/{flagID}/segments/{segmentID}/distributions distribution putDistributions
+/*
+	PutDistributions swagger:route PUT /flags/{flagID}/segments/{segmentID}/distributions distribution putDistributions
 
 replace the distribution with the new setting
-
 */
 type PutDistributions struct {
 	Context *middleware.Context
@@ -42,7 +42,7 @@ type PutDistributions struct {
 func (o *PutDistributions) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, rCtx, _ := o.Context.RouteInfo(r)
 	if rCtx != nil {
-		r = rCtx
+		*r = *rCtx
 	}
 	var Params = NewPutDistributionsParams()
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

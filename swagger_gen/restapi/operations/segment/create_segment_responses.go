@@ -16,7 +16,8 @@ import (
 // CreateSegmentOKCode is the HTTP code returned for type CreateSegmentOK
 const CreateSegmentOKCode int = 200
 
-/*CreateSegmentOK segment created
+/*
+CreateSegmentOK segment created
 
 swagger:response createSegmentOK
 */
@@ -57,7 +58,8 @@ func (o *CreateSegmentOK) WriteResponse(rw http.ResponseWriter, producer runtime
 	}
 }
 
-/*CreateSegmentDefault generic error response
+/*
+CreateSegmentDefault generic error response
 
 swagger:response createSegmentDefault
 */

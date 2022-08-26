@@ -16,7 +16,8 @@ import (
 // PutSegmentsReorderOKCode is the HTTP code returned for type PutSegmentsReorderOK
 const PutSegmentsReorderOKCode int = 200
 
-/*PutSegmentsReorderOK segments reordered
+/*
+PutSegmentsReorderOK segments reordered
 
 swagger:response putSegmentsReorderOK
 */
@@ -37,7 +38,8 @@ func (o *PutSegmentsReorderOK) WriteResponse(rw http.ResponseWriter, producer ru
 	rw.WriteHeader(200)
 }
 
-/*PutSegmentsReorderDefault generic error response
+/*
+PutSegmentsReorderDefault generic error response
 
 swagger:response putSegmentsReorderDefault
 */

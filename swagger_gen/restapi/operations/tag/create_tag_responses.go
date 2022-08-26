@@ -16,7 +16,8 @@ import (
 // CreateTagOKCode is the HTTP code returned for type CreateTagOK
 const CreateTagOKCode int = 200
 
-/*CreateTagOK tag just created
+/*
+CreateTagOK tag just created
 
 swagger:response createTagOK
 */
@@ -57,7 +58,8 @@ func (o *CreateTagOK) WriteResponse(rw http.ResponseWriter, producer runtime.Pro
 	}
 }
 
-/*CreateTagDefault generic error response
+/*
+CreateTagDefault generic error response
 
 swagger:response createTagDefault
 */

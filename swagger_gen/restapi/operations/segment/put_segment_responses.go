@@ -16,7 +16,8 @@ import (
 // PutSegmentOKCode is the HTTP code returned for type PutSegmentOK
 const PutSegmentOKCode int = 200
 
-/*PutSegmentOK segment updated
+/*
+PutSegmentOK segment updated
 
 swagger:response putSegmentOK
 */
@@ -57,7 +58,8 @@ func (o *PutSegmentOK) WriteResponse(rw http.ResponseWriter, producer runtime.Pr
 	}
 }
 
-/*PutSegmentDefault generic error response
+/*
+PutSegmentDefault generic error response
 
 swagger:response putSegmentDefault
 */

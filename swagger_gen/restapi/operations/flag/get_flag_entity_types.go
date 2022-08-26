@@ -29,10 +29,10 @@ func NewGetFlagEntityTypes(ctx *middleware.Context, handler GetFlagEntityTypesHa
 	return &GetFlagEntityTypes{Context: ctx, Handler: handler}
 }
 
-/* GetFlagEntityTypes swagger:route GET /flags/entity_types flag getFlagEntityTypes
+/*
+	GetFlagEntityTypes swagger:route GET /flags/entity_types flag getFlagEntityTypes
 
 GetFlagEntityTypes get flag entity types API
-
 */
 type GetFlagEntityTypes struct {
 	Context *middleware.Context
@@ -42,7 +42,7 @@ type GetFlagEntityTypes struct {
 func (o *GetFlagEntityTypes) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, rCtx, _ := o.Context.RouteInfo(r)
 	if rCtx != nil {
-		r = rCtx
+		*r = *rCtx
 	}
 	var Params = NewGetFlagEntityTypesParams()
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
