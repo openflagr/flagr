@@ -26,3 +26,4 @@ _data/
 flagr.sqlite
 ./browser/flagr-ui/node_modules
 Dockerfile
+integration_tests/

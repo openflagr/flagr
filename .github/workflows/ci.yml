@@ -12,7 +12,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v1
         with:
-          go-version: 1.17
+          go-version: 1.19
       - name: Check out source code
         uses: actions/checkout@v1
       - run: echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
@@ -26,7 +26,7 @@ jobs:
     steps:
       - uses: actions/setup-node@v2
         with:
-          node-version: '14'
+          node-version: '16'
       - name: Check out source code
         uses: actions/checkout@v1
       - run: cd browser/flagr-ui && npm install

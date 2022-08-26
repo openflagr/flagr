@@ -1,18 +1,9 @@
-######################################
-# Prepare go_builder
-######################################
-FROM golang:1.17 as go_builder
+FROM golang:1.19.0-alpine3.16 as go_builder
 WORKDIR /go/src/github.com/openflagr/flagr
+RUN apk add --no-cache git make build-base
 ADD . .
 RUN make build
 
-######################################
-# Copy from builder to alpine image
-######################################
-FROM frolvlad/alpine-glibc:alpine-3.15
-RUN apk add --no-cache curl
-WORKDIR /go/src/github.com/openflagr/flagr
-COPY --from=go_builder /go/src/github.com/openflagr/flagr/flagr ./flagr
 VOLUME ["/data"]
 ENV HOST=0.0.0.0
 ENV PORT=18000

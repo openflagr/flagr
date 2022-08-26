@@ -34,7 +34,7 @@ docker run -it -p 18000:18000 ghcr.io/openflagr/flagr
 
 Install Dependencies.
 
-- Go (1.17+)
+- Go (1.19+)
 - Make (for Makefile)
 - NPM (for building UI)
 
