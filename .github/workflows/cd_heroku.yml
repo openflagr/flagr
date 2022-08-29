@@ -1,4 +1,7 @@
-name: deploy_demo_heroku
+# ******** NOTE ********
+# Deploy the https://try-openflagr.herokuapp.com demo service on main branch merges
+#
+name: cd_heroku
 
 on:
   push:
@@ -8,6 +11,7 @@ on:
 
 jobs:
   build:
+    environment: heroku
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
