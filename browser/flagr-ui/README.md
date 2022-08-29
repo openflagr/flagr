@@ -25,5 +25,12 @@ npm run test
 npm run lint
 ```
 
+### Upgrade vue-cli
+```
+npm install -g @vue/cli
+vue --version
+vue upgrade
+```
+
 ### Customize configuration
 See [Configuration Reference](https://cli.vuejs.org/config/).
