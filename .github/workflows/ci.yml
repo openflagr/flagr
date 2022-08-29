@@ -15,7 +15,7 @@ jobs:
           go-version: 1.19
       - name: Check out source code
         uses: actions/checkout@v1
-      - run: echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+      - run: echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
       - run: make deps
       - run: make verify_swagger_nochange
       - run: make ci
@@ -40,3 +40,14 @@ jobs:
       - run: cd integration_tests && make down
       - run: cd integration_tests && make up
       - run: cd integration_tests && make test
+  actionlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Download actionlint
+        id: get_actionlint
+        run: bash <(curl https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+        shell: bash
+      - name: Check workflow files
+        run: ${{ steps.get_actionlint.outputs.executable }} -color
+        shell: bash
