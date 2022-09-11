@@ -73,11 +73,12 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 
 	if Config.CORSEnabled {
 		n.Use(cors.New(cors.Options{
-			AllowedOrigins:   Config.CORSAllowedOrigins,
-			AllowedHeaders:   Config.CORSAllowedHeaders,
-			ExposedHeaders:   Config.CORSExposedHeaders,
-			AllowedMethods:   Config.CORSAllowedMethods,
-			AllowCredentials: Config.CORSAllowCredentials,
+			AllowedOrigins:     Config.CORSAllowedOrigins,
+			AllowedHeaders:     Config.CORSAllowedHeaders,
+			ExposedHeaders:     Config.CORSExposedHeaders,
+			AllowedMethods:     Config.CORSAllowedMethods,
+			AllowCredentials:   Config.CORSAllowCredentials,
+			OptionsPassthrough: true,
 		}))
 	}
 
@@ -126,7 +127,8 @@ func setupRecoveryMiddleware() *negroni.Recovery {
 	return r
 }
 
-/**
+/*
+*
 setupJWTAuthMiddleware setup an JWTMiddleware from the ENV config
 */
 func setupJWTAuthMiddleware() *jwtAuth {
@@ -220,7 +222,8 @@ func (a *jwtAuth) ServeHTTP(w http.ResponseWriter, req *http.Request, next http.
 	a.JWTMiddleware.HandlerWithNext(w, req, next)
 }
 
-/**
+/*
+*
 setupBasicAuthMiddleware setup an BasicMiddleware from the ENV config
 */
 func setupBasicAuthMiddleware() *basicAuth {
