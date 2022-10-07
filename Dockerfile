@@ -26,10 +26,11 @@ ENV FLAGR_DB_DBCONNECTIONSTR=/data/demo_sqlite3.db
 ENV FLAGR_RECORDER_ENABLED=false
 
 COPY --from=npm_builder /go/src/github.com/openflagr/flagr/browser/flagr-ui/dist ./browser/flagr-ui/dist
-ADD ./buildscripts/demo_sqlite3.db /data/demo_sqlite3.db
 
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
+
+ADD --chown=appuser:appgroup ./buildscripts/demo_sqlite3.db /data/demo_sqlite3.db
 
 EXPOSE 18000
 CMD ./flagr
