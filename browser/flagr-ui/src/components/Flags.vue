@@ -151,8 +151,10 @@ import Axios from "axios";
 import constants from "@/constants";
 import Spinner from "@/components/Spinner";
 import helpers from "@/helpers/helpers";
+import search from "@/helpers/search";
 
 const { handleErr } = helpers;
+const { filterFlags } = search;
 
 const { API_URL } = constants;
 
@@ -183,25 +185,10 @@ export default {
   },
   computed: {
     filteredFlags: function() {
-      if (this.searchTerm) {
-        return this.flags.filter(({ id, description, tags }) =>
-          this.searchTerm
-            .split(",")
-            .map(term => {
-              return (
-                id.toString().includes(term) ||
-                description.toLowerCase().includes(term.toLowerCase()) ||
-                tags
-                  .map(tag =>
-                    tag.value.toLowerCase().includes(term.toLowerCase())
-                  )
-                  .includes(true)
-              );
-            })
-            .every(e => e)
-        );
+      if (!this.searchTerm) {
+        return this.flags
       }
-      return this.flags;
+      return filterFlags(this.flags, this.searchTerm)
     },
     getDeletedFlags: function() {
       return this.deletedFlags;
