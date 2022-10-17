@@ -71,7 +71,7 @@ describe("filterFlags", () => {
     expect(result.length).toEqual(1);
     expect(result[0].id).toEqual(2);
   });
-  it("should have no results if no match found", () => {
+  it("should have no results if non matching input given", () => {
     const result = filterFlags(mockFlags, "garbage input");
 
     expect(result.length).toEqual(0);
