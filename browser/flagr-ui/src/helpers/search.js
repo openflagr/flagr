@@ -15,9 +15,11 @@ const curry = (func) => {
   return curried;
 };
 
-// util for point free variants (composable)
+// util for point free variants (this allows composition in pipe)
 const splitOnComma = (str) => str.split(",");
 const toString = (int) => int.toString();
+const onDuplicate = (s, i, a) => a.indexOf(s) === i;
+const dedupe = (a) => a.filter(onDuplicate);
 
 // String Transformers. Expects `string` returns `string`
 const toLowerCase = (str) => str.toLowerCase();
@@ -31,10 +33,8 @@ const normaliseString = pipe(
   normaliseDiacritics
 );
 
-// Array Utils
-const normaliseArray = (a) => a.map(normaliseString); // standises UTF8 codes
-const onDuplicate = (s, i, a) => a.indexOf(s) === i;
-const dedupe = (a) => a.filter(onDuplicate);
+// String[] -> Stirng[]
+const normaliseArray = (a) => a.map(normaliseString);
 
 // Object mappers
 const normaliseTag = (tag) => normaliseString(tag.value);
@@ -45,14 +45,14 @@ const normaliseFlag = (flag) => ({
 });
 
 // Flag matchers
-const propertyValueMatcher = curry((property, value, flag) => {
+const matchPropertyValue = curry((property, value, flag) => {
   if (!flag[property]) {
     return false;
   }
   return flag[property].includes(value);
 });
 
-const defaultMatcher = curry((term, flag) => {
+const matchDefault = curry((term, flag) => {
   return (
     flag.id.includes(term) ||
     flag.description.includes(term) ||
@@ -60,28 +60,35 @@ const defaultMatcher = curry((term, flag) => {
   );
 });
 
-const applyMatchers = curry((matcherFns, flag) =>
+// transform term into patially applied match function, waiting of the flag object
+const termToMatchFn = (term) => {
+  if (term.includes(":")) {
+    const [property, value] = term.split(":");
+    return matchPropertyValue(property, value);
+  }
+
+  return matchDefault(term);
+};
+
+const termsToMatchFns = (terms) => {
+  return terms.map(termToMatchFn);
+};
+
+const applyMatchersToFlag = curry((matcherFns, flag) =>
   matcherFns.map((matcher) => matcher(flag)).includes(true)
 );
 
 // Tokeniser, basic comma seperated lists. Expects `string` returns `string[]`
 const tokenise = pipe(splitOnComma, normaliseArray, dedupe);
+// Transform string input into a function expecting a Flag object to match on
+// string -> Flag -> boolean
+const makeMatcherFrom = pipe(tokenise, termsToMatchFns, applyMatchersToFlag);
 
 const filterFlags = (haystack, input) => {
-  const terms = tokenise(input);
-  // build terms into array of patially applied matchers
-  const matcherFns = terms.map((term) => {
-    if (term.includes(":")) {
-      const [property, value] = term.split(":");
-      return propertyValueMatcher(property, value);
-    }
-
-    return defaultMatcher(term);
-  });
-
+  const onMatch = makeMatcherFrom(input);
   const results = haystack
     .map(normaliseFlag)
-    .filter(applyMatchers(matcherFns))
+    .filter(onMatch)
     .map((flag) => parseInt(flag.id, 10)); // collect matched IDs
   return haystack.filter((flag) => results.includes(flag.id));
 };

@@ -76,7 +76,7 @@ describe("filterFlags", () => {
 
     expect(result.length).toEqual(0);
   });
-  it("should ignore input if not terms entered", () => {
+  it("should ignore input if no terms found", () => {
     const result = filterFlags(mockFlags, "    ");
 
     expect(result.length).toEqual(3);
