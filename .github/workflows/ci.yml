@@ -29,7 +29,7 @@ jobs:
           node-version: '16'
       - name: Check out source code
         uses: actions/checkout@v1
-      - run: cd browser/flagr-ui npm install
+      - run: cd browser/flagr-ui
       - run: npm ci
       - run: npm run lint
       - run: npm run test
