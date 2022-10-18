@@ -2,7 +2,7 @@ pull_request_rules:
   - name: Automatic merge on approval
     conditions:
       - "#approved-reviews-by>=2"
-      - check-success=ui_lint
+      - check-success=ui_test
       - check-success=unit_test
       - check-success=integration_test
       - base=main

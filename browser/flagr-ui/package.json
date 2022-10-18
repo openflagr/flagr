@@ -47,6 +47,9 @@
       "plugin:vue/essential",
       "eslint:recommended"
     ],
+    "ignorePatterns": [
+      "**/*.spec.js"
+    ],
     "rules": {},
     "parserOptions": {
       "parser": "babel-eslint"
