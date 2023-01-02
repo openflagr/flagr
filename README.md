@@ -37,12 +37,13 @@ docker run -it -p 18000:18000 ghcr.io/openflagr/flagr
 open localhost:18000
 ```
 
-<!-- TODO: change a new demo flagr website -->
-Or try it on [https://try-openflagr.herokuapp.com](https://try-openflagr.herokuapp.com), it may take a while for a cold start.
+Or try it on [https://try-openflagr.up.railway.app](https://try-openflagr.up.railway.app),
+it may take a while for a cold start, and every commit to the `main` branch will trigger
+a redeployment of the demo website.
 
 ```
 curl --request POST \
-     --url https://try-openflagr.herokuapp.com/api/v1/evaluation \
+     --url https://try-openflagr.up.railway.app/api/v1/evaluation \
      --header 'content-type: application/json' \
      --data '{
        "entityID": "127",
