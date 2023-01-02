@@ -1,10 +1,9 @@
-FROM golang:1.19.0-alpine3.16 as go_builder
+FROM golang:1.19-alpine3.17 as go_builder
 WORKDIR /go/src/github.com/openflagr/flagr
 RUN apk add --no-cache git make build-base
 ADD . .
 RUN make build
 
-VOLUME ["/data"]
 ENV HOST=0.0.0.0
 ENV PORT=18000
 ENV FLAGR_DB_DBDRIVER=sqlite3
