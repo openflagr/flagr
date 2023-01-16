@@ -20,6 +20,19 @@ func (m *mockAsyncProducer) Close() error                              { return 
 func (m *mockAsyncProducer) Input() chan<- *sarama.ProducerMessage     { return m.inputCh }
 func (m *mockAsyncProducer) Successes() <-chan *sarama.ProducerMessage { return m.successCh }
 func (m *mockAsyncProducer) Errors() <-chan *sarama.ProducerError      { return m.errorCh }
+func (m *mockAsyncProducer) IsTransactional() bool                     { return false }
+func (m *mockAsyncProducer) TxnStatus() sarama.ProducerTxnStatusFlag   { return 0 }
+func (m *mockAsyncProducer) BeginTxn() error                           { return nil }
+func (m *mockAsyncProducer) CommitTxn() error                          { return nil }
+func (m *mockAsyncProducer) AbortTxn() error                           { return nil }
+func (m *mockAsyncProducer) AddOffsetsToTxn(offsets map[string][]*sarama.PartitionOffsetMetadata, groupId string) error {
+	return nil
+}
+func (m *mockAsyncProducer) AddMessageToTxn(msg *sarama.ConsumerMessage, groupId string, metadata *string) error {
+	return nil
+}
+
+var _ sarama.AsyncProducer = (*mockAsyncProducer)(nil)
 
 func TestNewKafkaRecorder(t *testing.T) {
 	t.Run("no panics", func(t *testing.T) {
