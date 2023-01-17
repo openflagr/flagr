@@ -17,6 +17,7 @@ import (
 	"github.com/bsm/ratelimit"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/go-openapi/runtime/middleware"
+	lop "github.com/samber/lo/parallel"
 	"github.com/zhouzhuojie/conditions"
 )
 
@@ -54,44 +55,26 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 	flagTagsOperator := params.Body.FlagTagsOperator
 	results := &models.EvaluationBatchResponse{}
 
-	// TODO make it concurrent
 	for _, entity := range entities {
 		if len(flagTags) > 0 {
-			evalContext := models.EvalContext{
+			evalResults := EvalFlagsByTags(models.EvalContext{
 				EnableDebug:      params.Body.EnableDebug,
 				EntityContext:    entity.EntityContext,
 				EntityID:         entity.EntityID,
 				EntityType:       entity.EntityType,
 				FlagTags:         flagTags,
 				FlagTagsOperator: flagTagsOperator,
-			}
-			evalResults := EvalFlagsByTags(evalContext)
+			})
 			results.EvaluationResults = append(results.EvaluationResults, evalResults...)
 		}
-		for _, flagID := range flagIDs {
-			evalContext := models.EvalContext{
-				EnableDebug:   params.Body.EnableDebug,
-				EntityContext: entity.EntityContext,
-				EntityID:      entity.EntityID,
-				EntityType:    entity.EntityType,
-				FlagID:        flagID,
-			}
 
-			evalResult := EvalFlag(evalContext)
-			results.EvaluationResults = append(results.EvaluationResults, evalResult)
-		}
-		for _, flagKey := range flagKeys {
-			evalContext := models.EvalContext{
-				EnableDebug:   params.Body.EnableDebug,
-				EntityContext: entity.EntityContext,
-				EntityID:      entity.EntityID,
-				EntityType:    entity.EntityType,
-				FlagKey:       flagKey,
-			}
-
-			evalResult := EvalFlag(evalContext)
-			results.EvaluationResults = append(results.EvaluationResults, evalResult)
-		}
+		evalResults := EvalMultiFlags(models.EvalContext{
+			EnableDebug:   params.Body.EnableDebug,
+			EntityContext: entity.EntityContext,
+			EntityID:      entity.EntityID,
+			EntityType:    entity.EntityType,
+		}, flagIDs, flagKeys)
+		results.EvaluationResults = append(results.EvaluationResults, evalResults...)
 	}
 
 	resp := evaluation.NewPostEvaluationBatchOK()
@@ -136,16 +119,28 @@ var LookupFlag = func(evalContext models.EvalContext) *entity.Flag {
 var EvalFlagsByTags = func(evalContext models.EvalContext) []*models.EvalResult {
 	cache := GetEvalCache()
 	fs := cache.GetByTags(evalContext.FlagTags, evalContext.FlagTagsOperator)
-	results := []*models.EvalResult{}
-	for _, f := range fs {
-		results = append(results, EvalFlagWithContext(f, evalContext))
-	}
-	return results
+	return lop.Map(fs, func(f *entity.Flag, index int) *models.EvalResult {
+		return EvalFlagWithContext(f, evalContext)
+	})
 }
 
 var EvalFlag = func(evalContext models.EvalContext) *models.EvalResult {
 	flag := LookupFlag(evalContext)
 	return EvalFlagWithContext(flag, evalContext)
+}
+
+var EvalMultiFlags = func(evalContext models.EvalContext, flagIDs []int64, flagKeys []string) []*models.EvalResult {
+	a1 := lop.Map(flagIDs, func(flagID int64, index int) *models.EvalResult {
+		e := evalContext
+		e.FlagID = flagID
+		return EvalFlag(e)
+	})
+	a2 := lop.Map(flagKeys, func(flagKey string, index int) *models.EvalResult {
+		e := evalContext
+		e.FlagKey = flagKey
+		return EvalFlag(e)
+	})
+	return append(a1, a2...)
 }
 
 var EvalFlagWithContext = func(flag *entity.Flag, evalContext models.EvalContext) *models.EvalResult {
