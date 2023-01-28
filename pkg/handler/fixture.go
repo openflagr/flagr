@@ -7,18 +7,27 @@ import (
 
 // GenFixtureEvalCache generates a fixture
 func GenFixtureEvalCache() *EvalCache {
-	f := entity.GenFixtureFlag()
+	f1 := entity.GenFixtureFlag()
 
-	tagCache := make(map[string]map[uint]*entity.Flag)
-	for _, tag := range f.Tags {
-		tagCache[tag.Value] = map[uint]*entity.Flag{f.ID: &f}
-	}
+	f2 := entity.GenFixtureFlag()
+	f2.Key = "flag_key_101"
+	f2.ID = 101
+	f2.Tags = []entity.Tag{{Value: "tag2"}}
 
 	ec := &EvalCache{}
 	ec.cache.Store(&cacheContainer{
-		idCache:  map[string]*entity.Flag{util.SafeString(f.ID): &f},
-		keyCache: map[string]*entity.Flag{f.Key: &f},
-		tagCache: tagCache,
+		idCache: map[string]*entity.Flag{
+			util.SafeString(f1.ID): &f1,
+			util.SafeString(f2.ID): &f2,
+		},
+		keyCache: map[string]*entity.Flag{
+			f1.Key: &f1,
+			f2.Key: &f2,
+		},
+		tagCache: map[string]map[uint]*entity.Flag{
+			"tag1": {f1.ID: &f1},
+			"tag2": {f1.ID: &f1, f2.ID: &f2},
+		},
 	})
 
 	return ec

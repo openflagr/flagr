@@ -358,6 +358,65 @@ func TestEvalFlag(t *testing.T) {
 	})
 }
 
+func TestEvalMultiFlags(t *testing.T) {
+	defer gostub.StubFunc(&logEvalResult).Reset()
+
+	t.Run("test happy code path for multiple flag ids", func(t *testing.T) {
+		defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
+		results := EvalMultiFlags(
+			models.EvalContext{
+				EnableDebug:   true,
+				EntityContext: map[string]interface{}{"dl_state": "CA"},
+				EntityID:      "entityID1",
+				EntityType:    "entityType1",
+			}, []int64{100, 101}, []string{},
+		)
+		assert.Len(t, results, 2)
+		assert.NotZero(t, results[0].FlagID)
+		assert.NotZero(t, results[0].VariantID)
+		assert.NotZero(t, results[1].FlagID)
+		assert.NotZero(t, results[1].VariantID)
+		assert.NotEqual(t, results[0].FlagID, results[1].FlagID)
+	})
+
+	t.Run("test happy code path for multiple flag keys", func(t *testing.T) {
+		defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
+		results := EvalMultiFlags(
+			models.EvalContext{
+				EnableDebug:   true,
+				EntityContext: map[string]interface{}{"dl_state": "CA"},
+				EntityID:      "entityID1",
+				EntityType:    "entityType1",
+			}, []int64{}, []string{"flag_key_100", "flag_key_101"},
+		)
+		assert.Len(t, results, 2)
+		assert.NotZero(t, results[0].FlagID)
+		assert.NotZero(t, results[0].VariantID)
+		assert.NotZero(t, results[1].FlagID)
+		assert.NotZero(t, results[1].VariantID)
+		assert.NotEqual(t, results[0].FlagID, results[1].FlagID)
+	})
+
+	t.Run("test happy code path for multiple flag tags", func(t *testing.T) {
+		defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
+		results := EvalFlagsByTags(
+			models.EvalContext{
+				EnableDebug:   true,
+				EntityContext: map[string]interface{}{"dl_state": "CA"},
+				EntityID:      "entityID1",
+				EntityType:    "entityType1",
+				FlagTags:      []string{"tag2"},
+			},
+		)
+		assert.Len(t, results, 2)
+		assert.NotZero(t, results[0].FlagID)
+		assert.NotZero(t, results[0].VariantID)
+		assert.NotZero(t, results[1].FlagID)
+		assert.NotZero(t, results[1].VariantID)
+		assert.NotEqual(t, results[0].FlagID, results[1].FlagID)
+	})
+}
+
 func TestEvalFlagDistribution(t *testing.T) {
 	defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
 
@@ -566,5 +625,20 @@ func BenchmarkEvalFlagsByTags(b *testing.B) {
 			EntityType:    "entityType1",
 			FlagTags:      []string{"tag1", "tag2"},
 		})
+	}
+}
+
+func BenchmarkEvalMultiFlags(b *testing.B) {
+	b.StopTimer()
+	defer gostub.StubFunc(&logEvalResult).Reset()
+	defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		EvalMultiFlags(models.EvalContext{
+			EntityContext: map[string]interface{}{"dl_state": "CA"},
+			EntityID:      "entityID1",
+			EntityType:    "entityType1",
+			FlagID:        int64(100),
+		}, []int64{100, 200}, []string{})
 	}
 }
