@@ -85,6 +85,11 @@ func (m *EvaluationBatchResponse) contextValidateEvaluationResults(ctx context.C
 	for i := 0; i < len(m.EvaluationResults); i++ {
 
 		if m.EvaluationResults[i] != nil {
+
+			if swag.IsZero(m.EvaluationResults[i]) { // not required
+				return nil
+			}
+
 			if err := m.EvaluationResults[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("evaluationResults" + "." + strconv.Itoa(i))

@@ -122,6 +122,7 @@ func (m *FlagSnapshot) ContextValidate(ctx context.Context, formats strfmt.Regis
 func (m *FlagSnapshot) contextValidateFlag(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.Flag != nil {
+
 		if err := m.Flag.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("flag")

@@ -299,6 +299,11 @@ func (m *Flag) contextValidateSegments(ctx context.Context, formats strfmt.Regis
 	for i := 0; i < len(m.Segments); i++ {
 
 		if m.Segments[i] != nil {
+
+			if swag.IsZero(m.Segments[i]) { // not required
+				return nil
+			}
+
 			if err := m.Segments[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("segments" + "." + strconv.Itoa(i))
@@ -319,6 +324,11 @@ func (m *Flag) contextValidateTags(ctx context.Context, formats strfmt.Registry)
 	for i := 0; i < len(m.Tags); i++ {
 
 		if m.Tags[i] != nil {
+
+			if swag.IsZero(m.Tags[i]) { // not required
+				return nil
+			}
+
 			if err := m.Tags[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("tags" + "." + strconv.Itoa(i))
@@ -339,6 +349,11 @@ func (m *Flag) contextValidateVariants(ctx context.Context, formats strfmt.Regis
 	for i := 0; i < len(m.Variants); i++ {
 
 		if m.Variants[i] != nil {
+
+			if swag.IsZero(m.Variants[i]) { // not required
+				return nil
+			}
+
 			if err := m.Variants[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("variants" + "." + strconv.Itoa(i))

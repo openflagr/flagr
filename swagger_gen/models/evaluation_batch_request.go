@@ -236,6 +236,11 @@ func (m *EvaluationBatchRequest) contextValidateEntities(ctx context.Context, fo
 	for i := 0; i < len(m.Entities); i++ {
 
 		if m.Entities[i] != nil {
+
+			if swag.IsZero(m.Entities[i]) { // not required
+				return nil
+			}
+
 			if err := m.Entities[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("entities" + "." + strconv.Itoa(i))

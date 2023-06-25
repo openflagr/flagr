@@ -216,6 +216,11 @@ func (m *Segment) contextValidateConstraints(ctx context.Context, formats strfmt
 	for i := 0; i < len(m.Constraints); i++ {
 
 		if m.Constraints[i] != nil {
+
+			if swag.IsZero(m.Constraints[i]) { // not required
+				return nil
+			}
+
 			if err := m.Constraints[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("constraints" + "." + strconv.Itoa(i))
@@ -236,6 +241,11 @@ func (m *Segment) contextValidateDistributions(ctx context.Context, formats strf
 	for i := 0; i < len(m.Distributions); i++ {
 
 		if m.Distributions[i] != nil {
+
+			if swag.IsZero(m.Distributions[i]) { // not required
+				return nil
+			}
+
 			if err := m.Distributions[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("distributions" + "." + strconv.Itoa(i))

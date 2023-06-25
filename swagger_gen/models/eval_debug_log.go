@@ -85,6 +85,11 @@ func (m *EvalDebugLog) contextValidateSegmentDebugLogs(ctx context.Context, form
 	for i := 0; i < len(m.SegmentDebugLogs); i++ {
 
 		if m.SegmentDebugLogs[i] != nil {
+
+			if swag.IsZero(m.SegmentDebugLogs[i]) { // not required
+				return nil
+			}
+
 			if err := m.SegmentDebugLogs[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("segmentDebugLogs" + "." + strconv.Itoa(i))
