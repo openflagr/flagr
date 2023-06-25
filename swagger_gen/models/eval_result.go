@@ -126,6 +126,11 @@ func (m *EvalResult) ContextValidate(ctx context.Context, formats strfmt.Registr
 func (m *EvalResult) contextValidateEvalContext(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.EvalContext != nil {
+
+		if swag.IsZero(m.EvalContext) { // not required
+			return nil
+		}
+
 		if err := m.EvalContext.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("evalContext")
@@ -142,6 +147,11 @@ func (m *EvalResult) contextValidateEvalContext(ctx context.Context, formats str
 func (m *EvalResult) contextValidateEvalDebugLog(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.EvalDebugLog != nil {
+
+		if swag.IsZero(m.EvalDebugLog) { // not required
+			return nil
+		}
+
 		if err := m.EvalDebugLog.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("evalDebugLog")

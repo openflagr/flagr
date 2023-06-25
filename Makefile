@@ -44,8 +44,8 @@ start:
 gen: api_docs swagger
 
 deps:
-	@go install github.com/go-swagger/go-swagger/cmd/swagger@v0.30.4
-	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.50.1
+	@go install github.com/go-swagger/go-swagger/cmd/swagger@v0.30.5
+	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.53.3
 
 serve_docs:
 	@npm install -g docsify-cli@4
