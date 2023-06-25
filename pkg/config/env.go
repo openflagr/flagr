@@ -204,6 +204,12 @@ var Config = struct {
 	HeaderAuthEnabled   bool   `env:"FLAGR_HEADER_AUTH_ENABLED" envDefault:"false"`
 	HeaderAuthUserField string `env:"FLAGR_HEADER_AUTH_USER_FIELD" envDefault:"X-Email"`
 
+	// Identify users through cookies
+	// E.g. via cloudflare zero trust, we derive the user email from the JWT token stored in the cookie of CF_Authorization
+	CookieAuthEnabled           bool   `env:"FLAGR_COOKIE_AUTH_ENABLED" envDefault:"false"`
+	CookieAuthUserField         string `env:"FLAGR_COOKIE_AUTH_USER_FIELD" envDefault:"CF_Authorization"`
+	CookieAuthUserFieldJWTClaim string `env:"FLAGR_COOKIE_AUTH_USER_FIELD_JWT_CLAIM" envDefault:"email"`
+
 	// Authenticate with basic auth
 	BasicAuthEnabled              bool     `env:"FLAGR_BASIC_AUTH_ENABLED" envDefault:"false"`
 	BasicAuthUsername             string   `env:"FLAGR_BASIC_AUTH_USERNAME" envDefault:""`
