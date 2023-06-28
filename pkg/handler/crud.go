@@ -574,7 +574,7 @@ func (c *crud) PutDistributions(params distribution.PutDistributionsParams) midd
 		err1 := tx.Create(&d).Error
 		if err1 != nil {
 			tx.Rollback()
-			return distribution.NewPutDistributionsDefault(500).WithPayload(ErrorMessage("%s", err))
+			return distribution.NewPutDistributionsDefault(500).WithPayload(ErrorMessage("%s", err1))
 		}
 	}
 	err = tx.Commit().Error
