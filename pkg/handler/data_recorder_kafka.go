@@ -92,23 +92,14 @@ var NewKafkaRecorder = func() DataRecorder {
 }
 
 func createTLSConfiguration(certFile string, keyFile string, caFile string, verifySSL bool, simpleSSL bool) (t *tls.Config) {
-	if certFile != "" && keyFile != "" && caFile != "" {
+	if certFile != "" && keyFile != "" {
 		cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 		if err != nil {
 			logrus.WithField("TLSConfigurationError", err).Panic(err)
 		}
 
-		caCert, err := os.ReadFile(caFile)
-		if err != nil {
-			logrus.WithField("TLSConfigurationError", err).Panic(err)
-		}
-
-		caCertPool := x509.NewCertPool()
-		caCertPool.AppendCertsFromPEM(caCert)
-
 		t = &tls.Config{
 			Certificates:       []tls.Certificate{cert},
-			RootCAs:            caCertPool,
 			InsecureSkipVerify: !verifySSL,
 		}
 	}
@@ -117,6 +108,17 @@ func createTLSConfiguration(certFile string, keyFile string, caFile string, veri
 		t = &tls.Config{
 			InsecureSkipVerify: !verifySSL,
 		}
+	}
+
+	if caFile != "" && t != nil {
+		caCert, err := os.ReadFile(caFile)
+		if err != nil {
+			logrus.WithField("TLSConfigurationError", err).Panic(err)
+		}
+
+		caCertPool := x509.NewCertPool()
+		caCertPool.AppendCertsFromPEM(caCert)
+		t.RootCAs = caCertPool
 	}
 	// will be nil by default if nothing is provided
 	return t
