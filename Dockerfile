@@ -11,7 +11,7 @@ RUN make build_ui
 ######################################
 # Prepare go_builder
 ######################################
-FROM golang:1.20-alpine as go_builder
+FROM golang:1.21-alpine as go_builder
 WORKDIR /go/src/github.com/openflagr/flagr
 
 RUN apk add --no-cache git make build-base
