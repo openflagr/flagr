@@ -1,6 +1,6 @@
 module github.com/openflagr/flagr
 
-go 1.20
+go 1.21
 
 require (
 	cloud.google.com/go v0.108.0 // indirect
