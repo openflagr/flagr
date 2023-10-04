@@ -25,8 +25,9 @@ type FlagSnapshot struct {
 
 	// id
 	// Required: true
+	// Read Only: true
 	// Minimum: 1
-	ID *int64 `json:"id"`
+	ID int64 `json:"id"`
 
 	// updated at
 	// Required: true
@@ -81,11 +82,11 @@ func (m *FlagSnapshot) validateFlag(formats strfmt.Registry) error {
 
 func (m *FlagSnapshot) validateID(formats strfmt.Registry) error {
 
-	if err := validate.Required("id", "body", m.ID); err != nil {
+	if err := validate.Required("id", "body", int64(m.ID)); err != nil {
 		return err
 	}
 
-	if err := validate.MinimumInt("id", "body", *m.ID, 1, false); err != nil {
+	if err := validate.MinimumInt("id", "body", m.ID, 1, false); err != nil {
 		return err
 	}
 
@@ -113,6 +114,10 @@ func (m *FlagSnapshot) ContextValidate(ctx context.Context, formats strfmt.Regis
 		res = append(res, err)
 	}
 
+	if err := m.contextValidateID(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
@@ -131,6 +136,15 @@ func (m *FlagSnapshot) contextValidateFlag(ctx context.Context, formats strfmt.R
 			}
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (m *FlagSnapshot) contextValidateID(ctx context.Context, formats strfmt.Registry) error {
+
+	if err := validate.ReadOnly(ctx, "id", "body", int64(m.ID)); err != nil {
+		return err
 	}
 
 	return nil

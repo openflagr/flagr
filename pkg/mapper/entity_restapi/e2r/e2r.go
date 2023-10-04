@@ -56,7 +56,7 @@ func MapFlagSnapshot(e *entity.FlagSnapshot) (*models.FlagSnapshot, error) {
 	}
 	r := &models.FlagSnapshot{
 		Flag:      f,
-		ID:        util.Int64Ptr(int64(e.ID)),
+		ID:        int64(e.ID),
 		UpdatedBy: e.UpdatedBy,
 		UpdatedAt: util.StringPtr(e.UpdatedAt.UTC().Format(time.RFC3339)),
 	}
