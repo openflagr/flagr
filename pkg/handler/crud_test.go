@@ -462,6 +462,53 @@ func TestFindFlags(t *testing.T) {
 	})
 }
 
+func TestGetFlagSnapshots(t *testing.T) {
+	var res middleware.Responder
+	db := entity.NewTestDB()
+	c := &crud{}
+	numOfSnapshots := 10
+
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB.Close()
+	defer gostub.StubFunc(&getDB, db).Reset()
+
+	c.CreateFlag(flag.CreateFlagParams{
+		Body: &models.CreateFlagRequest{
+			Description: util.StringPtr("funny flag"),
+		},
+	})
+
+	for i := 0; i < numOfSnapshots; i++ {
+		entity.SaveFlagSnapshot(db, 1, "flagr-test@example.com")
+	}
+
+	t.Run("GetFlagSnapshots - got all the results", func(t *testing.T) {
+		res = c.GetFlagSnapshots(flag.GetFlagSnapshotsParams{})
+		assert.Len(t, res.(*flag.GetFlagSnapshotsOK).Payload, numOfSnapshots+1)
+	})
+
+	t.Run("GetFlagSnapshots (with limit)", func(t *testing.T) {
+		res = c.GetFlagSnapshots(flag.GetFlagSnapshotsParams{
+			Limit: util.Int64Ptr(int64(2)),
+		})
+		assert.Len(t, res.(*flag.GetFlagSnapshotsOK).Payload, 2)
+	})
+
+	t.Run("GetFlagSnapshots (with limit and offset)", func(t *testing.T) {
+		res = c.GetFlagSnapshots(flag.GetFlagSnapshotsParams{
+			Limit:  util.Int64Ptr(int64(2)),
+			Offset: util.Int64Ptr(int64(2)),
+		})
+		assert.Len(t, res.(*flag.GetFlagSnapshotsOK).Payload, 2)
+		assert.Equal(t, int64(9), res.(*flag.GetFlagSnapshotsOK).Payload[0].ID)
+		assert.Equal(t, int64(8), res.(*flag.GetFlagSnapshotsOK).Payload[1].ID)
+	})
+}
+
 func TestCrudSegments(t *testing.T) {
 	var res middleware.Responder
 	db := entity.NewTestDB()

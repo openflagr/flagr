@@ -993,6 +993,20 @@ func init() {
             "name": "flagID",
             "in": "path",
             "required": true
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "the number of snapshots to return",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "return snapshots given the offset, it should usually set together with limit",
+            "name": "offset",
+            "in": "query"
           }
         ],
         "responses": {
@@ -1799,7 +1813,8 @@ func init() {
         "id": {
           "type": "integer",
           "format": "int64",
-          "minimum": 1
+          "minimum": 1,
+          "readOnly": true
         },
         "updatedAt": {
           "type": "string",
@@ -3057,6 +3072,20 @@ func init() {
             "name": "flagID",
             "in": "path",
             "required": true
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "the number of snapshots to return",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "return snapshots given the offset, it should usually set together with limit",
+            "name": "offset",
+            "in": "query"
           }
         ],
         "responses": {
@@ -3865,7 +3894,8 @@ func init() {
         "id": {
           "type": "integer",
           "format": "int64",
-          "minimum": 1
+          "minimum": 1,
+          "readOnly": true
         },
         "updatedAt": {
           "type": "string",

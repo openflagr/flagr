@@ -170,12 +170,20 @@ func (c *crud) GetFlag(params flag.GetFlagParams) middleware.Responder {
 }
 
 func (c *crud) GetFlagSnapshots(params flag.GetFlagSnapshotsParams) middleware.Responder {
+	tx := getDB()
 	fs := []entity.FlagSnapshot{}
-	err := getDB().
+
+	if params.Limit != nil {
+		tx = tx.Limit(int(*params.Limit))
+	}
+	if params.Offset != nil {
+		tx = tx.Offset(int(*params.Offset))
+	}
+
+	if err := tx.
 		Order("created_at desc").
 		Where(entity.FlagSnapshot{FlagID: util.SafeUint(params.FlagID)}).
-		Find(&fs).Error
-	if err != nil {
+		Find(&fs).Error; err != nil {
 		return flag.NewGetFlagSnapshotsDefault(500).WithPayload(
 			ErrorMessage("cannot find flag snapshots for %v. %s", params.FlagID, err))
 	}

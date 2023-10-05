@@ -790,6 +790,16 @@ paths:
           type: integer
           format: int64
           minimum: 1
+        - in: query
+          name: limit
+          type: integer
+          format: int64
+          description: the number of snapshots to return
+        - in: query
+          name: offset
+          type: integer
+          format: int64
+          description: return snapshots given the offset, it should usually set together with limit
       responses:
         '200':
           description: returns the flag snapshots
@@ -1063,6 +1073,7 @@ definitions:
         type: integer
         format: int64
         minimum: 1
+        readOnly: true
       updatedBy:
         type: string
       flag:
