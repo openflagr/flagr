@@ -18,6 +18,7 @@ import (
 
 	"github.com/go-openapi/runtime/middleware"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // CRUD is the CRUD interface
@@ -180,8 +181,18 @@ func (c *crud) GetFlagSnapshots(params flag.GetFlagSnapshotsParams) middleware.R
 		tx = tx.Offset(int(*params.Offset))
 	}
 
+	descending := true
+	if params.Sort != nil && *params.Sort == "ASC" {
+		descending = false
+	}
+
 	if err := tx.
-		Order("created_at desc").
+		Order(clause.OrderByColumn{
+			Column: clause.Column{
+				Name: "created_at",
+			},
+			Desc: descending,
+		}).
 		Where(entity.FlagSnapshot{FlagID: util.SafeUint(params.FlagID)}).
 		Find(&fs).Error; err != nil {
 		return flag.NewGetFlagSnapshotsDefault(500).WithPayload(

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 
@@ -476,19 +477,25 @@ func TestGetFlagSnapshots(t *testing.T) {
 	defer tmpDB.Close()
 	defer gostub.StubFunc(&getDB, db).Reset()
 
-	c.CreateFlag(flag.CreateFlagParams{
-		Body: &models.CreateFlagRequest{
-			Description: util.StringPtr("funny flag"),
-		},
-	})
+	f := entity.Flag{}
+	err := db.Create(&f).Error
+	assert.NoError(t, err)
+
+	fb, err := json.Marshal(f)
+	assert.NoError(t, err)
 
 	for i := 0; i < numOfSnapshots; i++ {
-		entity.SaveFlagSnapshot(db, 1, "flagr-test@example.com")
+		snapshot := entity.FlagSnapshot{
+			FlagID: 1,
+			Flag:   fb,
+		}
+		err := db.Create(&snapshot).Error
+		assert.NoError(t, err)
 	}
 
 	t.Run("GetFlagSnapshots - got all the results", func(t *testing.T) {
 		res = c.GetFlagSnapshots(flag.GetFlagSnapshotsParams{})
-		assert.Len(t, res.(*flag.GetFlagSnapshotsOK).Payload, numOfSnapshots+1)
+		assert.Len(t, res.(*flag.GetFlagSnapshotsOK).Payload, numOfSnapshots)
 	})
 
 	t.Run("GetFlagSnapshots (with limit)", func(t *testing.T) {
@@ -504,8 +511,28 @@ func TestGetFlagSnapshots(t *testing.T) {
 			Offset: util.Int64Ptr(int64(2)),
 		})
 		assert.Len(t, res.(*flag.GetFlagSnapshotsOK).Payload, 2)
-		assert.Equal(t, int64(9), res.(*flag.GetFlagSnapshotsOK).Payload[0].ID)
-		assert.Equal(t, int64(8), res.(*flag.GetFlagSnapshotsOK).Payload[1].ID)
+		assert.Equal(t, int64(8), res.(*flag.GetFlagSnapshotsOK).Payload[0].ID)
+		assert.Equal(t, int64(7), res.(*flag.GetFlagSnapshotsOK).Payload[1].ID)
+	})
+
+	t.Run("GetFlagSnapshots (sort ascending)", func(t *testing.T) {
+		res = c.GetFlagSnapshots(flag.GetFlagSnapshotsParams{
+			Limit: util.Int64Ptr(int64(2)),
+			Sort:  util.StringPtr("ASC"),
+		})
+		assert.Len(t, res.(*flag.GetFlagSnapshotsOK).Payload, 2)
+		assert.Equal(t, int64(1), res.(*flag.GetFlagSnapshotsOK).Payload[0].ID)
+		assert.Equal(t, int64(2), res.(*flag.GetFlagSnapshotsOK).Payload[1].ID)
+	})
+
+	t.Run("GetFlagSnapshots (sort descending)", func(t *testing.T) {
+		res = c.GetFlagSnapshots(flag.GetFlagSnapshotsParams{
+			Limit: util.Int64Ptr(int64(2)),
+			Sort:  util.StringPtr("DESC"),
+		})
+		assert.Len(t, res.(*flag.GetFlagSnapshotsOK).Payload, 2)
+		assert.Equal(t, int64(10), res.(*flag.GetFlagSnapshotsOK).Payload[0].ID)
+		assert.Equal(t, int64(9), res.(*flag.GetFlagSnapshotsOK).Payload[1].ID)
 	})
 }
 
