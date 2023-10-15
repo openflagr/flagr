@@ -1007,6 +1007,16 @@ func init() {
             "description": "return snapshots given the offset, it should usually set together with limit",
             "name": "offset",
             "in": "query"
+          },
+          {
+            "enum": [
+              "ASC",
+              "DESC"
+            ],
+            "type": "string",
+            "description": "sort order",
+            "name": "sort",
+            "in": "query"
           }
         ],
         "responses": {
@@ -3085,6 +3095,16 @@ func init() {
             "format": "int64",
             "description": "return snapshots given the offset, it should usually set together with limit",
             "name": "offset",
+            "in": "query"
+          },
+          {
+            "enum": [
+              "ASC",
+              "DESC"
+            ],
+            "type": "string",
+            "description": "sort order",
+            "name": "sort",
             "in": "query"
           }
         ],

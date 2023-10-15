@@ -47,6 +47,10 @@ type GetFlagSnapshotsParams struct {
 	  In: query
 	*/
 	Offset *int64
+	/*sort order
+	  In: query
+	*/
+	Sort *string
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -72,6 +76,11 @@ func (o *GetFlagSnapshotsParams) BindRequest(r *http.Request, route *middleware.
 
 	qOffset, qhkOffset, _ := qs.GetOK("offset")
 	if err := o.bindOffset(qOffset, qhkOffset, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
+	qSort, qhkSort, _ := qs.GetOK("sort")
+	if err := o.bindSort(qSort, qhkSort, route.Formats); err != nil {
 		res = append(res, err)
 	}
 	if len(res) > 0 {
@@ -155,6 +164,38 @@ func (o *GetFlagSnapshotsParams) bindOffset(rawData []string, hasKey bool, forma
 		return errors.InvalidType("offset", "query", "int64", raw)
 	}
 	o.Offset = &value
+
+	return nil
+}
+
+// bindSort binds and validates parameter Sort from query.
+func (o *GetFlagSnapshotsParams) bindSort(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+
+	// Required: false
+	// AllowEmptyValue: false
+
+	if raw == "" { // empty values pass all other validations
+		return nil
+	}
+	o.Sort = &raw
+
+	if err := o.validateSort(formats); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// validateSort carries on validations for parameter Sort
+func (o *GetFlagSnapshotsParams) validateSort(formats strfmt.Registry) error {
+
+	if err := validate.EnumCase("sort", "query", *o.Sort, []interface{}{"ASC", "DESC"}, true); err != nil {
+		return err
+	}
 
 	return nil
 }

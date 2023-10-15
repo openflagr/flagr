@@ -800,6 +800,13 @@ paths:
           type: integer
           format: int64
           description: return snapshots given the offset, it should usually set together with limit
+        - in: query
+          name: sort
+          type: string
+          enum:
+            - ASC
+            - DESC
+          description: sort order
       responses:
         '200':
           description: returns the flag snapshots

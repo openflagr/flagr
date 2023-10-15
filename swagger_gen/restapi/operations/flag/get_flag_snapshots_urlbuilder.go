@@ -20,6 +20,7 @@ type GetFlagSnapshotsURL struct {
 
 	Limit  *int64
 	Offset *int64
+	Sort   *string
 
 	_basePath string
 	// avoid unkeyed usage
@@ -76,6 +77,14 @@ func (o *GetFlagSnapshotsURL) Build() (*url.URL, error) {
 	}
 	if offsetQ != "" {
 		qs.Set("offset", offsetQ)
+	}
+
+	var sortQ string
+	if o.Sort != nil {
+		sortQ = *o.Sort
+	}
+	if sortQ != "" {
+		qs.Set("sort", sortQ)
 	}
 
 	_result.RawQuery = qs.Encode()
