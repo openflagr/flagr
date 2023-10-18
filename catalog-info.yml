@@ -1,0 +1,12 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: flagr
+  description: |
+    Fork of openflagr
+  annotations:
+    github.com/project-slug: Tradeshift/flagr
+spec:
+  type: service
+  owner: platform-ops
+  lifecycle: production

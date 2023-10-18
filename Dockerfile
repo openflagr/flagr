@@ -26,6 +26,7 @@ ENV FLAGR_RECORDER_ENABLED=false
 
 COPY --from=npm_builder /go/src/github.com/openflagr/flagr/browser/flagr-ui/dist ./browser/flagr-ui/dist
 
+RUN apk add --no-cache gcompat || echo "Ignoring overwrite error"
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
 

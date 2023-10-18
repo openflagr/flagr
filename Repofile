@@ -1,0 +1,10 @@
+{
+  "description": "Flagr is an open source service that provides feature flags, experimentation (A/B testing), and dynamic configuration",
+  "maintainers": [
+      "platform-ops"
+  ],
+  "checks": [
+    "docker",
+    "integration_test"
+  ]
+}

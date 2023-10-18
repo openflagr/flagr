@@ -8,6 +8,8 @@ ENV HOST=0.0.0.0
 ENV PORT=18000
 ENV FLAGR_DB_DBDRIVER=sqlite3
 ENV FLAGR_RECORDER_ENABLED=false
+
+RUN apk add --no-cache gcompat || echo "Ignoring overwrite error"
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
 EXPOSE 18000

@@ -1,7 +1,11 @@
 package handler
 
 import (
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/openflagr/flagr/pkg/config"
 	"github.com/openflagr/flagr/pkg/util"
@@ -25,7 +29,27 @@ func getSubjectFromRequest(r *http.Request) string {
 		}
 
 	} else if config.Config.HeaderAuthEnabled {
-		return r.Header.Get(config.Config.HeaderAuthUserField)
+		// https://docs.aws.amazon.com/elasticloadbalancing/latest/application/listener-authenticate-users.html
+		if config.Config.HeaderAuthUserFieldAwsAlb {
+			encodedJwt := r.Header.Get("x-amzn-oidc-data")
+			jwtPayload := strings.Split(encodedJwt, ".")[1]
+			rawData, err := base64.StdEncoding.DecodeString(jwtPayload)
+			if err != nil {
+				fmt.Println("Error decoding base64 x-amzn-oidc-data header:", err)
+				return ""
+			}
+
+			var jsonMap map[string]interface{}
+			err = json.Unmarshal(rawData, &jsonMap)
+			if err != nil {
+				fmt.Println("Error unmarshaling JSON:", err)
+				return ""
+			}
+
+			return jsonMap["email"].(string)
+		} else {
+			return r.Header.Get(config.Config.HeaderAuthUserField)
+		}
 	} else if config.Config.CookieAuthEnabled {
 		c, err := r.Cookie(config.Config.CookieAuthUserField)
 		if err != nil {

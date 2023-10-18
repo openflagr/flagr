@@ -204,6 +204,8 @@ var Config = struct {
 	// Identify users through headers
 	HeaderAuthEnabled   bool   `env:"FLAGR_HEADER_AUTH_ENABLED" envDefault:"false"`
 	HeaderAuthUserField string `env:"FLAGR_HEADER_AUTH_USER_FIELD" envDefault:"X-Email"`
+	// For those situations where ALB is in front of Flagr. Enabling this will parse x-amzn-oidc-data header.
+	HeaderAuthUserFieldAwsAlb bool `env:"FLAGR_HEADER_AUTH_USER_FIELD_AWS_ALB" envDefault:"false"`
 
 	// Identify users through cookies
 	// E.g. via cloudflare zero trust, we derive the user email from the JWT token stored in the cookie of CF_Authorization
@@ -223,4 +225,19 @@ var Config = struct {
 	// UI path  => localhost:18000/foo"
 	// API path => localhost:18000/foo/api/v1"
 	WebPrefix string `env:"FLAGR_WEB_PREFIX" envDefault:""`
+
+	// NotifyTimeout - for each notifier that uses http.Client to make requests
+	NotifyTimeout time.Duration `env:"FLAGR_NOTIFY_TIMEOUT" envDefault:"30s"`
+	// NotifyNumAttempts - how many attempts should be made for each notification in case of failure
+	NotifyNumAttempts int `env:"FLAGR_NOTIFY_NUM_ATTEMPTS" envDefault:"10"`
+	// NotifyRetryMin - the minimum amount of time that should pass between retry attempts
+	NotifyRetryMin time.Duration `env:"FLAGR_NOTIFY_RETRY_MIN" envDefault:"1s"`
+	// NotifyRetryMax - the maximum amount of time that should pass between retry attempts
+	NotifyRetryMax time.Duration `env:"FLAGR_NOTIFY_RETRY_MAX" envDefault:"30s"`
+
+	// Notify Webhooks
+	NotifyWebhookEnabled bool   `env:"FLAGR_NOTIFY_WEBHOOK_ENABLED" envDefault:"false"`
+	NotifyWebhookURL     string `env:"FLAGR_NOTIFY_WEBHOOK_URL" envDefault:""`
+	// Format key=value,key1=value1
+	NotifyWebhookHeaders string `env:"FLAGR_NOTIFY_WEBHOOK_HEADERS" envDefault:""`
 }{}
