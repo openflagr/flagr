@@ -2,8 +2,8 @@ version: "3.6"
 
 networks:
   default:
-    external:
-      name: flagr_integration_tests
+    external: true
+    name: flagr_integration_tests
 
 services:
   mysql:

@@ -6,7 +6,7 @@ RUN make build
 
 FROM alpine
 
-COPY --from=go_builder /go/src/github.com/openflagr/flagr/flagr /bin/flagr
+COPY --from=go_builder /go/src/github.com/openflagr/flagr/flagr .
 
 ENV HOST=0.0.0.0
 ENV PORT=18000
@@ -16,4 +16,4 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
 EXPOSE 18000
 
-ENTRYPOINT [ "/bin/flagr" ]
+CMD "./flagr"
