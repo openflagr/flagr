@@ -18,6 +18,10 @@ RUN apk add --no-cache git make build-base
 ADD . .
 RUN make build
 
+FROM alpine
+
+COPY --from=go_builder /go/src/github.com/openflagr/flagr/flagr .
+
 ENV HOST=0.0.0.0
 ENV PORT=18000
 ENV FLAGR_DB_DBDRIVER=sqlite3
@@ -32,4 +36,5 @@ USER appuser
 ADD --chown=appuser:appgroup ./buildscripts/demo_sqlite3.db /data/demo_sqlite3.db
 
 EXPOSE 18000
-CMD ./flagr
+
+CMD "./flagr"
