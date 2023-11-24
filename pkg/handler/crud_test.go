@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"encoding/json"
 	"fmt"
+	jsoniter "github.com/json-iterator/go"
 	"testing"
 
 	"github.com/openflagr/flagr/pkg/entity"
@@ -464,6 +464,8 @@ func TestFindFlags(t *testing.T) {
 }
 
 func TestGetFlagSnapshots(t *testing.T) {
+	var json = jsoniter.ConfigFastest
+
 	var res middleware.Responder
 	db := entity.NewTestDB()
 	c := &crud{}

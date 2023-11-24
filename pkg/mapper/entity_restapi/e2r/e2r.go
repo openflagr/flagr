@@ -1,7 +1,7 @@
 package e2r
 
 import (
-	"encoding/json"
+	jsoniter "github.com/json-iterator/go"
 	"time"
 
 	"github.com/go-openapi/strfmt"
@@ -46,6 +46,7 @@ func MapFlags(e []entity.Flag) ([]*models.Flag, error) {
 
 // MapFlagSnapshot maps flag snapshot
 func MapFlagSnapshot(e *entity.FlagSnapshot) (*models.FlagSnapshot, error) {
+	var json = jsoniter.ConfigFastest
 	ef := &entity.Flag{}
 	if err := json.Unmarshal(e.Flag, ef); err != nil {
 		return nil, err

@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"encoding/json"
 	"fmt"
+	jsoniter "github.com/json-iterator/go"
 	"math/rand"
 	"sync"
 	"time"
@@ -318,6 +318,7 @@ func debugConstraintMsg(enableDebug bool, expr conditions.Expr, m map[string]int
 var rateLimitMap = sync.Map{}
 
 var rateLimitPerFlagConsoleLogging = func(r *models.EvalResult) {
+	var json = jsoniter.ConfigFastest
 	flagID := util.SafeUint(r.FlagID)
 	rl, _ := rateLimitMap.LoadOrStore(flagID, ratelimit.New(
 		config.Config.RateLimiterPerFlagPerSecondConsoleLogging,

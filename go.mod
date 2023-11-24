@@ -56,6 +56,8 @@ require (
 
 require (
 	cloud.google.com/go/pubsub v1.30.0
+	github.com/goccy/go-json v0.10.2
+	github.com/json-iterator/go v1.1.12
 	github.com/newrelic/go-agent v2.1.0+incompatible
 	gorm.io/driver/mysql v1.4.5
 	gorm.io/driver/postgres v1.4.6
@@ -111,6 +113,8 @@ require (
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
+	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
+	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/pierrec/lz4/v4 v4.1.17 // indirect
 	github.com/pkg/errors v0.9.1 // indirect

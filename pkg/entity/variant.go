@@ -2,8 +2,8 @@ package entity
 
 import (
 	"database/sql/driver"
-	"encoding/json"
 	"fmt"
+	jsoniter "github.com/json-iterator/go"
 
 	"github.com/openflagr/flagr/pkg/util"
 	"github.com/spf13/cast"
@@ -32,6 +32,8 @@ type Attachment map[string]interface{}
 
 // Scan implements scanner interface
 func (a *Attachment) Scan(value interface{}) error {
+	var json = jsoniter.ConfigFastest
+
 	if value == nil {
 		return nil
 	}
@@ -44,6 +46,8 @@ func (a *Attachment) Scan(value interface{}) error {
 
 // Value implements valuer interface
 func (a Attachment) Value() (driver.Value, error) {
+	var json = jsoniter.ConfigFastest
+
 	bytes, err := json.Marshal(a)
 	if err != nil {
 		return nil, err
