@@ -1,17 +1,19 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 
-	"github.com/checkr/flagr/pkg/entity"
-	"github.com/checkr/flagr/pkg/util"
-	"github.com/checkr/flagr/swagger_gen/models"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/constraint"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/distribution"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/flag"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/segment"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/variant"
+	"github.com/openflagr/flagr/pkg/entity"
+	"github.com/openflagr/flagr/pkg/util"
+	"github.com/openflagr/flagr/swagger_gen/models"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/constraint"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/distribution"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/flag"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/segment"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/tag"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/variant"
 
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/prashantv/gostub"
@@ -23,7 +25,13 @@ func TestCrudFlags(t *testing.T) {
 	db := entity.NewTestDB()
 	c := &crud{}
 
-	defer db.Close()
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB.Close()
+
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	t.Run("it should get 0 flags when db is empty", func(t *testing.T) {
@@ -72,7 +80,7 @@ func TestCrudFlags(t *testing.T) {
 		assert.NotZero(t, res.(*flag.GetFlagDefault))
 	})
 
-	t.Run("it should be able to get preloaded segments and variants", func(t *testing.T) {
+	t.Run("it should be able to get preloaded segments and variants and tags", func(t *testing.T) {
 		c.CreateSegment(segment.CreateSegmentParams{
 			FlagID: int64(1),
 			Body: &models.CreateSegmentRequest{
@@ -86,9 +94,16 @@ func TestCrudFlags(t *testing.T) {
 				Key: util.StringPtr("variant1"),
 			},
 		})
+		c.CreateTag(tag.CreateTagParams{
+			FlagID: int64(1),
+			Body: &models.CreateTagRequest{
+				Value: util.StringPtr("Tag1"),
+			},
+		})
 		res = c.GetFlag(flag.GetFlagParams{FlagID: int64(1)})
 		assert.NotZero(t, len(res.(*flag.GetFlagOK).Payload.Segments))
 		assert.NotZero(t, len(res.(*flag.GetFlagOK).Payload.Variants))
+		assert.NotZero(t, len(res.(*flag.GetFlagOK).Payload.Tags))
 	})
 
 	t.Run("it should be able to put the flag", func(t *testing.T) {
@@ -146,6 +161,11 @@ func TestCrudFlags(t *testing.T) {
 		res = c.DeleteFlag(flag.DeleteFlagParams{FlagID: int64(1)})
 		assert.NotZero(t, res.(*flag.DeleteFlagOK))
 	})
+
+	t.Run("it should be able to restore the flag", func(t *testing.T) {
+		res = c.RestoreFlag(flag.RestoreFlagParams{FlagID: int64(1)})
+		assert.NotZero(t, res.(*flag.RestoreFlagOK))
+	})
 }
 
 func TestCrudFlagsWithFailures(t *testing.T) {
@@ -153,7 +173,12 @@ func TestCrudFlagsWithFailures(t *testing.T) {
 	db := entity.NewTestDB()
 	c := &crud{}
 
-	defer db.Close()
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB.Close()
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	t.Run("GetFlag - can't find non-exist flag", func(t *testing.T) {
@@ -294,7 +319,12 @@ func TestFindFlags(t *testing.T) {
 	c := &crud{}
 	numOfFlags := 20
 
-	defer db.Close()
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB.Close()
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	for i := 0; i < numOfFlags; i++ {
@@ -325,10 +355,17 @@ func TestFindFlags(t *testing.T) {
 				Key: util.StringPtr("variant1"),
 			},
 		})
+		c.CreateTag(tag.CreateTagParams{
+			FlagID: int64(1),
+			Body: &models.CreateTagRequest{
+				Value: util.StringPtr("tag1"),
+			},
+		})
 		res = c.FindFlags(flag.FindFlagsParams{})
 		assert.Len(t, res.(*flag.FindFlagsOK).Payload, numOfFlags)
 		assert.Zero(t, len(res.(*flag.FindFlagsOK).Payload[0].Segments))
 		assert.Zero(t, len(res.(*flag.FindFlagsOK).Payload[0].Variants))
+		assert.NotZero(t, len(res.(*flag.FindFlagsOK).Payload[0].Tags))
 	})
 
 	t.Run("FindFlags - got all the results with preloaded segments and variants", func(t *testing.T) {
@@ -345,12 +382,18 @@ func TestFindFlags(t *testing.T) {
 				Key: util.StringPtr("variant2"),
 			},
 		})
+		c.CreateTag(tag.CreateTagParams{
+			FlagID: int64(1),
+			Body: &models.CreateTagRequest{
+				Value: util.StringPtr("tag2"),
+			},
+		})
 		res = c.FindFlags(flag.FindFlagsParams{
 			Preload: util.BoolPtr(true),
 		})
 		assert.Len(t, res.(*flag.FindFlagsOK).Payload, numOfFlags)
 		assert.NotZero(t, len(res.(*flag.FindFlagsOK).Payload[0].Segments))
-		assert.NotZero(t, len(res.(*flag.FindFlagsOK).Payload[0].Variants))
+		assert.NotZero(t, len(res.(*flag.FindFlagsOK).Payload[0].Tags))
 	})
 
 	t.Run("FindFlags (with enabled only) - got all the enabled results", func(t *testing.T) {
@@ -392,6 +435,105 @@ func TestFindFlags(t *testing.T) {
 		assert.Equal(t, res.(*flag.FindFlagsOK).Payload[0].ID, int64(3))
 		assert.Equal(t, res.(*flag.FindFlagsOK).Payload[1].ID, int64(4))
 	})
+	t.Run("FindFlags (with tags)", func(t *testing.T) {
+		c.CreateTag(tag.CreateTagParams{
+			FlagID: int64(1),
+			Body: &models.CreateTagRequest{
+				Value: util.StringPtr("tag1"),
+			},
+		})
+
+		res = c.FindFlags(flag.FindFlagsParams{
+			Tags: util.StringPtr("tag1"),
+		})
+		assert.Len(t, res.(*flag.FindFlagsOK).Payload, 1)
+		assert.Equal(t, res.(*flag.FindFlagsOK).Payload[0].ID, int64(1))
+	})
+	t.Run("FindFlags (deleted Flag)", func(t *testing.T) {
+		res = c.DeleteFlag(flag.DeleteFlagParams{FlagID: int64(1)})
+		res = c.FindFlags(flag.FindFlagsParams{
+			Deleted: util.BoolPtr(true),
+		})
+		assert.Len(t, res.(*flag.FindFlagsOK).Payload, 1)
+	})
+	t.Run("FindFlags (deleted flags not in FindFlags)", func(t *testing.T) {
+		res = c.DeleteFlag(flag.DeleteFlagParams{FlagID: int64(1)})
+		res = c.FindFlags(flag.FindFlagsParams{})
+		assert.Len(t, res.(*flag.FindFlagsOK).Payload, numOfFlags-1)
+	})
+}
+
+func TestGetFlagSnapshots(t *testing.T) {
+	var res middleware.Responder
+	db := entity.NewTestDB()
+	c := &crud{}
+	numOfSnapshots := 10
+
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB.Close()
+	defer gostub.StubFunc(&getDB, db).Reset()
+
+	f := entity.Flag{}
+	err := db.Create(&f).Error
+	assert.NoError(t, err)
+
+	fb, err := json.Marshal(f)
+	assert.NoError(t, err)
+
+	for i := 0; i < numOfSnapshots; i++ {
+		snapshot := entity.FlagSnapshot{
+			FlagID: 1,
+			Flag:   fb,
+		}
+		err := db.Create(&snapshot).Error
+		assert.NoError(t, err)
+	}
+
+	t.Run("GetFlagSnapshots - got all the results", func(t *testing.T) {
+		res = c.GetFlagSnapshots(flag.GetFlagSnapshotsParams{})
+		assert.Len(t, res.(*flag.GetFlagSnapshotsOK).Payload, numOfSnapshots)
+	})
+
+	t.Run("GetFlagSnapshots (with limit)", func(t *testing.T) {
+		res = c.GetFlagSnapshots(flag.GetFlagSnapshotsParams{
+			Limit: util.Int64Ptr(int64(2)),
+		})
+		assert.Len(t, res.(*flag.GetFlagSnapshotsOK).Payload, 2)
+	})
+
+	t.Run("GetFlagSnapshots (with limit and offset)", func(t *testing.T) {
+		res = c.GetFlagSnapshots(flag.GetFlagSnapshotsParams{
+			Limit:  util.Int64Ptr(int64(2)),
+			Offset: util.Int64Ptr(int64(2)),
+		})
+		assert.Len(t, res.(*flag.GetFlagSnapshotsOK).Payload, 2)
+		assert.Equal(t, int64(8), res.(*flag.GetFlagSnapshotsOK).Payload[0].ID)
+		assert.Equal(t, int64(7), res.(*flag.GetFlagSnapshotsOK).Payload[1].ID)
+	})
+
+	t.Run("GetFlagSnapshots (sort ascending)", func(t *testing.T) {
+		res = c.GetFlagSnapshots(flag.GetFlagSnapshotsParams{
+			Limit: util.Int64Ptr(int64(2)),
+			Sort:  util.StringPtr("ASC"),
+		})
+		assert.Len(t, res.(*flag.GetFlagSnapshotsOK).Payload, 2)
+		assert.Equal(t, int64(1), res.(*flag.GetFlagSnapshotsOK).Payload[0].ID)
+		assert.Equal(t, int64(2), res.(*flag.GetFlagSnapshotsOK).Payload[1].ID)
+	})
+
+	t.Run("GetFlagSnapshots (sort descending)", func(t *testing.T) {
+		res = c.GetFlagSnapshots(flag.GetFlagSnapshotsParams{
+			Limit: util.Int64Ptr(int64(2)),
+			Sort:  util.StringPtr("DESC"),
+		})
+		assert.Len(t, res.(*flag.GetFlagSnapshotsOK).Payload, 2)
+		assert.Equal(t, int64(10), res.(*flag.GetFlagSnapshotsOK).Payload[0].ID)
+		assert.Equal(t, int64(9), res.(*flag.GetFlagSnapshotsOK).Payload[1].ID)
+	})
 }
 
 func TestCrudSegments(t *testing.T) {
@@ -399,7 +541,13 @@ func TestCrudSegments(t *testing.T) {
 	db := entity.NewTestDB()
 	c := &crud{}
 
-	defer db.Close()
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB.Close()
+
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	c.CreateFlag(flag.CreateFlagParams{
@@ -467,7 +615,12 @@ func TestCrudSegmentsWithFailures(t *testing.T) {
 	db := entity.NewTestDB()
 	c := &crud{}
 
-	defer db.Close()
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB.Close()
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	c.CreateFlag(flag.CreateFlagParams{
@@ -536,7 +689,12 @@ func TestCrudConstraints(t *testing.T) {
 	db := entity.NewTestDB()
 	c := &crud{}
 
-	defer db.Close()
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB.Close()
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	c.CreateFlag(flag.CreateFlagParams{
@@ -591,7 +749,23 @@ func TestCrudConstraints(t *testing.T) {
 	})
 	assert.NotZero(t, res.(*constraint.PutConstraintOK).Payload.ID)
 
-	// step 5. it should be able to delete a constraint
+	// step 5. it should be able to update the constraint
+	variousPropertyNames := []string{"test", "test-dash", "test_underscore", "@test", "@@test"}
+	for _, propertyName := range variousPropertyNames {
+		res = c.PutConstraint(constraint.PutConstraintParams{
+			FlagID:       int64(1),
+			SegmentID:    int64(1),
+			ConstraintID: int64(1),
+			Body: &models.CreateConstraintRequest{
+				Operator: util.StringPtr("EQ"),
+				Property: util.StringPtr(propertyName),
+				Value:    util.StringPtr(`"CA"`),
+			},
+		})
+		assert.NotZero(t, res.(*constraint.PutConstraintOK).Payload.ID)
+	}
+
+	// step 6. it should be able to delete a constraint
 	res = c.DeleteConstraint(constraint.DeleteConstraintParams{
 		FlagID:       int64(1),
 		SegmentID:    int64(1),
@@ -605,7 +779,12 @@ func TestCrudConstraintsFailures(t *testing.T) {
 	db := entity.NewTestDB()
 	c := &crud{}
 
-	defer db.Close()
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB.Close()
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	c.CreateFlag(flag.CreateFlagParams{
@@ -713,7 +892,12 @@ func TestCrudVariants(t *testing.T) {
 	db := entity.NewTestDB()
 	c := &crud{}
 
-	defer db.Close()
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB.Close()
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	c.CreateFlag(flag.CreateFlagParams{
@@ -796,7 +980,12 @@ func TestCrudVariantsWithFailures(t *testing.T) {
 	db := entity.NewTestDB()
 	c := &crud{}
 
-	defer db.Close()
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB.Close()
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	c.CreateFlag(flag.CreateFlagParams{
@@ -907,12 +1096,182 @@ func TestCrudVariantsWithFailures(t *testing.T) {
 	})
 }
 
+func TestCrudTags(t *testing.T) {
+	var res middleware.Responder
+	db := entity.NewTestDB()
+	c := &crud{}
+
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB.Close()
+	defer gostub.StubFunc(&getDB, db).Reset()
+
+	c.CreateFlag(flag.CreateFlagParams{
+		Body: &models.CreateFlagRequest{
+			Description: util.StringPtr("funny flag"),
+		},
+	})
+
+	// step 0. it should return 0 tags before creaetion
+	res = c.FindTags(tag.FindTagsParams{
+		FlagID: int64(1),
+	})
+	assert.Zero(t, len(res.(*tag.FindTagsOK).Payload))
+
+	// step 1. it should be able to create tag
+	res = c.CreateTag(tag.CreateTagParams{
+		FlagID: int64(1),
+		Body: &models.CreateTagRequest{
+			Value: util.StringPtr("tag1"),
+		},
+	})
+	assert.NotZero(t, res.(*tag.CreateTagOK).Payload.ID)
+
+	// step 2. it should return some tags after creaetion
+	res = c.FindTags(tag.FindTagsParams{
+		FlagID: int64(1),
+	})
+	assert.NotZero(t, len(res.(*tag.FindTagsOK).Payload))
+
+	// step 3. it should be able to find all tags
+	res = c.FindAllTags(tag.FindAllTagsParams{})
+	assert.NotZero(t, len(res.(*tag.FindAllTagsOK).Payload))
+
+	// step 4. it should be able to delete the tag
+	res = c.DeleteTag(tag.DeleteTagParams{
+		FlagID: int64(1),
+		TagID:  int64(1),
+	})
+	assert.NotZero(t, res.(*tag.DeleteTagOK))
+}
+
+func TestCrudTagsWithFailures(t *testing.T) {
+	var res middleware.Responder
+	db := entity.NewTestDB()
+	c := &crud{}
+
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB.Close()
+	defer gostub.StubFunc(&getDB, db).Reset()
+
+	c.CreateFlag(flag.CreateFlagParams{
+		Body: &models.CreateFlagRequest{
+			Description: util.StringPtr("funny flag"),
+		},
+	})
+	c.CreateTag(tag.CreateTagParams{
+		FlagID: int64(1),
+		Body: &models.CreateTagRequest{
+			Value: util.StringPtr("tag1"),
+		},
+	})
+
+	t.Run("CreateTag - db generic error", func(t *testing.T) {
+		db.Error = fmt.Errorf("db generic error")
+		res = c.CreateTag(tag.CreateTagParams{
+			FlagID: int64(1),
+			Body: &models.CreateTagRequest{
+				Value: util.StringPtr("tag1"),
+			},
+		})
+		assert.NotZero(t, res.(*tag.CreateTagDefault).Payload)
+		db.Error = nil
+	})
+
+	t.Run("FindTags - db generic error", func(t *testing.T) {
+		db.Error = fmt.Errorf("db generic error")
+		res = c.FindTags(tag.FindTagsParams{
+			FlagID: int64(1),
+		})
+		assert.NotZero(t, res.(*tag.FindTagsDefault).Payload)
+		db.Error = nil
+	})
+
+	t.Run("DeleteTag - db generic error", func(t *testing.T) {
+		db.Error = fmt.Errorf("db generic error")
+		res = c.DeleteTag(tag.DeleteTagParams{
+			FlagID: int64(1),
+			TagID:  int64(1),
+		})
+		assert.NotZero(t, res.(*tag.DeleteTagDefault).Payload)
+		db.Error = nil
+	})
+}
+
+func TestFindAllTags(t *testing.T) {
+	var res middleware.Responder
+	db := entity.NewTestDB()
+	c := &crud{}
+	numOfTags := 20
+
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB.Close()
+	defer gostub.StubFunc(&getDB, db).Reset()
+
+	c.CreateFlag(flag.CreateFlagParams{
+		Body: &models.CreateFlagRequest{
+			Description: util.StringPtr("funny flag"),
+		},
+	})
+
+	for i := 0; i < numOfTags; i++ {
+		c.CreateTag(tag.CreateTagParams{
+			FlagID: 1,
+			Body: &models.CreateTagRequest{
+				Value: util.StringPtr(fmt.Sprintf("tag_%d", i)),
+			},
+		})
+	}
+
+	t.Run("FindAllTags - got all the results", func(t *testing.T) {
+		res = c.FindAllTags(tag.FindAllTagsParams{})
+		assert.Len(t, res.(*tag.FindAllTagsOK).Payload, numOfTags)
+	})
+
+	t.Run("FindAllTags (with matching value_like)", func(t *testing.T) {
+		res = c.FindAllTags(tag.FindAllTagsParams{
+			ValueLike: util.StringPtr("tag_"),
+		})
+		assert.Len(t, res.(*tag.FindAllTagsOK).Payload, numOfTags)
+	})
+	t.Run("FindAllTags (with limit)", func(t *testing.T) {
+		res = c.FindAllTags(tag.FindAllTagsParams{
+			Limit: util.Int64Ptr(int64(2)),
+		})
+		assert.Len(t, res.(*tag.FindAllTagsOK).Payload, 2)
+	})
+	t.Run("FindAllTags (with limit and offset)", func(t *testing.T) {
+		res = c.FindAllTags(tag.FindAllTagsParams{
+			Limit:  util.Int64Ptr(int64(2)),
+			Offset: util.Int64Ptr(int64(2)),
+		})
+		assert.Len(t, res.(*tag.FindAllTagsOK).Payload, 2)
+		assert.Equal(t, res.(*tag.FindAllTagsOK).Payload[0].ID, int64(3))
+		assert.Equal(t, res.(*tag.FindAllTagsOK).Payload[1].ID, int64(4))
+	})
+}
 func TestCrudDistributions(t *testing.T) {
 	var res middleware.Responder
 	db := entity.NewTestDB()
 	c := &crud{}
 
-	defer db.Close()
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB.Close()
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	c.CreateFlag(flag.CreateFlagParams{
@@ -970,7 +1329,12 @@ func TestCrudDistributionsWithFailures(t *testing.T) {
 	db := entity.NewTestDB()
 	c := &crud{}
 
-	defer db.Close()
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB.Close()
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	c.CreateFlag(flag.CreateFlagParams{

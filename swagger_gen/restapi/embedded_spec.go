@@ -31,7 +31,7 @@ func init() {
   "info": {
     "description": "Flagr is a feature flagging, A/B testing and dynamic configuration microservice. The base path for all the APIs is \"/api/v1\".\n",
     "title": "Flagr",
-    "version": "1.1.8"
+    "version": "1.1.16"
   },
   "basePath": "/api/v1",
   "paths": {
@@ -137,6 +137,14 @@ func init() {
           "export"
         ],
         "operationId": "getExportSqlite",
+        "parameters": [
+          {
+            "type": "boolean",
+            "description": "export without snapshots data - useful for smaller db without snapshots\n",
+            "name": "exclude_snapshots",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -181,6 +189,12 @@ func init() {
           },
           {
             "type": "string",
+            "description": "return flags with the given tags (comma separated)",
+            "name": "tags",
+            "in": "query"
+          },
+          {
+            "type": "string",
             "description": "return flags partially matching given description",
             "name": "description_like",
             "in": "query"
@@ -202,6 +216,12 @@ func init() {
             "type": "boolean",
             "description": "return flags with preloaded segments and variants",
             "name": "preload",
+            "in": "query"
+          },
+          {
+            "type": "boolean",
+            "description": "return all deleted flags",
+            "name": "deleted",
             "in": "query"
           }
         ],
@@ -406,6 +426,39 @@ func init() {
             "schema": {
               "$ref": "#/definitions/setFlagEnabledRequest"
             }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "returns the flag",
+            "schema": {
+              "$ref": "#/definitions/flag"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
+    "/flags/{flagID}/restore": {
+      "put": {
+        "tags": [
+          "flag"
+        ],
+        "operationId": "restoreFlag",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the flag to get",
+            "name": "flagID",
+            "in": "path",
+            "required": true
           }
         ],
         "responses": {
@@ -940,6 +993,30 @@ func init() {
             "name": "flagID",
             "in": "path",
             "required": true
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "the number of snapshots to return",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "return snapshots given the offset, it should usually set together with limit",
+            "name": "offset",
+            "in": "query"
+          },
+          {
+            "enum": [
+              "ASC",
+              "DESC"
+            ],
+            "type": "string",
+            "description": "sort order",
+            "name": "sort",
+            "in": "query"
           }
         ],
         "responses": {
@@ -951,6 +1028,121 @@ func init() {
                 "$ref": "#/definitions/flagSnapshot"
               }
             }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
+    "/flags/{flagID}/tags": {
+      "get": {
+        "tags": [
+          "tag"
+        ],
+        "operationId": "findTags",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the flag",
+            "name": "flagID",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "tag ordered by tagID",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/tag"
+              }
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "tag"
+        ],
+        "operationId": "createTag",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the flag",
+            "name": "flagID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "create a tag",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/createTagRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "tag just created",
+            "schema": {
+              "$ref": "#/definitions/tag"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
+    "/flags/{flagID}/tags/{tagID}": {
+      "delete": {
+        "tags": [
+          "tag"
+        ],
+        "operationId": "deleteTag",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the flag",
+            "name": "flagID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the tag",
+            "name": "tagID",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "deleted"
           },
           "default": {
             "description": "generic error response",
@@ -1147,6 +1339,53 @@ func init() {
           }
         }
       }
+    },
+    "/tags": {
+      "get": {
+        "tags": [
+          "tag"
+        ],
+        "operationId": "findAllTags",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "the numbers of tags to return",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "return tags given the offset, it should usually set together with limit",
+            "name": "offset",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "return tags partially matching given value",
+            "name": "value_like",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "list all the tags",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/tag"
+              }
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -1252,6 +1491,18 @@ func init() {
         }
       }
     },
+    "createTagRequest": {
+      "type": "object",
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
     "createVariantRequest": {
       "type": "object",
       "required": [
@@ -1334,6 +1585,23 @@ func init() {
         "flagKey": {
           "description": "flagKey. flagID or flagKey will resolve to the same flag. Either works.",
           "type": "string"
+        },
+        "flagTags": {
+          "description": "flagTags. flagTags looks up flags by tag. Either works.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-omitempty": true
+        },
+        "flagTagsOperator": {
+          "description": "determine how flagTags is used to filter flags to be evaluated. OR extends the evaluation to those which contains at least one of the provided flagTags or AND limit the evaluation to those which contains all the flagTags.",
+          "type": "string",
+          "default": "ANY",
+          "enum": [
+            "ANY",
+            "ALL"
+          ]
         }
       }
     },
@@ -1417,7 +1685,7 @@ func init() {
           }
         },
         "flagKeys": {
-          "description": "flagKeys. Either flagIDs or flagKeys works. If pass in both, Flagr may return duplicate results.",
+          "description": "flagKeys. Either flagIDs, flagKeys or flagTags works. If pass in multiples, Flagr may return duplicate results.",
           "type": "array",
           "minItems": 1,
           "items": {
@@ -1428,6 +1696,24 @@ func init() {
         "stripEvalContext": {
           "type": "boolean",
           "default": false
+        },
+        "flagTags": {
+          "description": "flagTags. Either flagIDs, flagKeys or flagTags works. If pass in multiples, Flagr may return duplicate results.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "flagTagsOperator": {
+          "description": "determine how flagTags is used to filter flags to be evaluated. OR extends the evaluation to those which contains at least one of the provided flagTags or AND limit the evaluation to those which contains all the flagTags.",
+          "type": "string",
+          "default": "ANY",
+          "enum": [
+            "ANY",
+            "ALL"
+          ]
         }
       }
     },
@@ -1506,6 +1792,12 @@ func init() {
             "$ref": "#/definitions/segment"
           }
         },
+        "tags": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/tag"
+          }
+        },
         "updatedAt": {
           "type": "string",
           "format": "date-time"
@@ -1535,7 +1827,8 @@ func init() {
         "id": {
           "type": "integer",
           "format": "int64",
-          "minimum": 1
+          "minimum": 1,
+          "readOnly": true
         },
         "updatedAt": {
           "type": "string",
@@ -1715,6 +2008,24 @@ func init() {
         }
       }
     },
+    "tag": {
+      "type": "object",
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": 1,
+          "readOnly": true
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
     "variant": {
       "type": "object",
       "required": [
@@ -1775,7 +2086,8 @@ func init() {
         "segment",
         "constraint",
         "distribution",
-        "variant"
+        "variant",
+        "tag"
       ]
     },
     {
@@ -1812,7 +2124,7 @@ func init() {
   "info": {
     "description": "Flagr is a feature flagging, A/B testing and dynamic configuration microservice. The base path for all the APIs is \"/api/v1\".\n",
     "title": "Flagr",
-    "version": "1.1.8"
+    "version": "1.1.16"
   },
   "basePath": "/api/v1",
   "paths": {
@@ -1918,6 +2230,14 @@ func init() {
           "export"
         ],
         "operationId": "getExportSqlite",
+        "parameters": [
+          {
+            "type": "boolean",
+            "description": "export without snapshots data - useful for smaller db without snapshots\n",
+            "name": "exclude_snapshots",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -1962,6 +2282,12 @@ func init() {
           },
           {
             "type": "string",
+            "description": "return flags with the given tags (comma separated)",
+            "name": "tags",
+            "in": "query"
+          },
+          {
+            "type": "string",
             "description": "return flags partially matching given description",
             "name": "description_like",
             "in": "query"
@@ -1983,6 +2309,12 @@ func init() {
             "type": "boolean",
             "description": "return flags with preloaded segments and variants",
             "name": "preload",
+            "in": "query"
+          },
+          {
+            "type": "boolean",
+            "description": "return all deleted flags",
+            "name": "deleted",
             "in": "query"
           }
         ],
@@ -2187,6 +2519,39 @@ func init() {
             "schema": {
               "$ref": "#/definitions/setFlagEnabledRequest"
             }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "returns the flag",
+            "schema": {
+              "$ref": "#/definitions/flag"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
+    "/flags/{flagID}/restore": {
+      "put": {
+        "tags": [
+          "flag"
+        ],
+        "operationId": "restoreFlag",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the flag to get",
+            "name": "flagID",
+            "in": "path",
+            "required": true
           }
         ],
         "responses": {
@@ -2721,6 +3086,30 @@ func init() {
             "name": "flagID",
             "in": "path",
             "required": true
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "the number of snapshots to return",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "return snapshots given the offset, it should usually set together with limit",
+            "name": "offset",
+            "in": "query"
+          },
+          {
+            "enum": [
+              "ASC",
+              "DESC"
+            ],
+            "type": "string",
+            "description": "sort order",
+            "name": "sort",
+            "in": "query"
           }
         ],
         "responses": {
@@ -2732,6 +3121,121 @@ func init() {
                 "$ref": "#/definitions/flagSnapshot"
               }
             }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
+    "/flags/{flagID}/tags": {
+      "get": {
+        "tags": [
+          "tag"
+        ],
+        "operationId": "findTags",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the flag",
+            "name": "flagID",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "tag ordered by tagID",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/tag"
+              }
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "tag"
+        ],
+        "operationId": "createTag",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the flag",
+            "name": "flagID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "create a tag",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/createTagRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "tag just created",
+            "schema": {
+              "$ref": "#/definitions/tag"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
+    "/flags/{flagID}/tags/{tagID}": {
+      "delete": {
+        "tags": [
+          "tag"
+        ],
+        "operationId": "deleteTag",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the flag",
+            "name": "flagID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the tag",
+            "name": "tagID",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "deleted"
           },
           "default": {
             "description": "generic error response",
@@ -2928,6 +3432,53 @@ func init() {
           }
         }
       }
+    },
+    "/tags": {
+      "get": {
+        "tags": [
+          "tag"
+        ],
+        "operationId": "findAllTags",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "the numbers of tags to return",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "return tags given the offset, it should usually set together with limit",
+            "name": "offset",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "return tags partially matching given value",
+            "name": "value_like",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "list all the tags",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/tag"
+              }
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -3034,6 +3585,18 @@ func init() {
         }
       }
     },
+    "createTagRequest": {
+      "type": "object",
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
     "createVariantRequest": {
       "type": "object",
       "required": [
@@ -3117,6 +3680,23 @@ func init() {
         "flagKey": {
           "description": "flagKey. flagID or flagKey will resolve to the same flag. Either works.",
           "type": "string"
+        },
+        "flagTags": {
+          "description": "flagTags. flagTags looks up flags by tag. Either works.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-omitempty": true
+        },
+        "flagTagsOperator": {
+          "description": "determine how flagTags is used to filter flags to be evaluated. OR extends the evaluation to those which contains at least one of the provided flagTags or AND limit the evaluation to those which contains all the flagTags.",
+          "type": "string",
+          "default": "ANY",
+          "enum": [
+            "ANY",
+            "ALL"
+          ]
         }
       }
     },
@@ -3200,7 +3780,7 @@ func init() {
           }
         },
         "flagKeys": {
-          "description": "flagKeys. Either flagIDs or flagKeys works. If pass in both, Flagr may return duplicate results.",
+          "description": "flagKeys. Either flagIDs, flagKeys or flagTags works. If pass in multiples, Flagr may return duplicate results.",
           "type": "array",
           "minItems": 1,
           "items": {
@@ -3211,6 +3791,24 @@ func init() {
         "stripEvalContext": {
           "type": "boolean",
           "default": false
+        },
+        "flagTags": {
+          "description": "flagTags. Either flagIDs, flagKeys or flagTags works. If pass in multiples, Flagr may return duplicate results.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "flagTagsOperator": {
+          "description": "determine how flagTags is used to filter flags to be evaluated. OR extends the evaluation to those which contains at least one of the provided flagTags or AND limit the evaluation to those which contains all the flagTags.",
+          "type": "string",
+          "default": "ANY",
+          "enum": [
+            "ANY",
+            "ALL"
+          ]
         }
       }
     },
@@ -3289,6 +3887,12 @@ func init() {
             "$ref": "#/definitions/segment"
           }
         },
+        "tags": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/tag"
+          }
+        },
         "updatedAt": {
           "type": "string",
           "format": "date-time"
@@ -3318,7 +3922,8 @@ func init() {
         "id": {
           "type": "integer",
           "format": "int64",
-          "minimum": 1
+          "minimum": 1,
+          "readOnly": true
         },
         "updatedAt": {
           "type": "string",
@@ -3501,6 +4106,24 @@ func init() {
         }
       }
     },
+    "tag": {
+      "type": "object",
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": 1,
+          "readOnly": true
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
     "variant": {
       "type": "object",
       "required": [
@@ -3561,7 +4184,8 @@ func init() {
         "segment",
         "constraint",
         "distribution",
-        "variant"
+        "variant",
+        "tag"
       ]
     },
     {

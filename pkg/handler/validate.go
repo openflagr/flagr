@@ -1,10 +1,10 @@
 package handler
 
 import (
-	"github.com/checkr/flagr/pkg/entity"
-	"github.com/checkr/flagr/pkg/util"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/distribution"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/variant"
+	"github.com/openflagr/flagr/pkg/entity"
+	"github.com/openflagr/flagr/pkg/util"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/distribution"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/variant"
 )
 
 var validatePutDistributions = func(params distribution.PutDistributionsParams) *Error {
@@ -59,7 +59,7 @@ var validateDeleteVariant = func(params variant.DeleteVariantParams) *Error {
 				if d.Percent != uint(0) {
 					return NewError(400, "error deleting variant %v. distribution %v still has non-zero distribution %v", params.VariantID, d.ID, d.Percent)
 				}
-				if err := getDB().Delete(entity.Distribution{}, d.ID).Error; err != nil {
+				if err := getDB().Delete(&entity.Distribution{}, d.ID).Error; err != nil {
 					return NewError(500, "error deleting distribution %v. reason: %s", d.ID, err)
 				}
 			}

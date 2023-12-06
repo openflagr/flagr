@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/Shopify/sarama"
-	"github.com/checkr/flagr/swagger_gen/models"
+	"github.com/openflagr/flagr/swagger_gen/models"
 	"github.com/prashantv/gostub"
 	"github.com/stretchr/testify/assert"
 )
@@ -20,6 +20,19 @@ func (m *mockAsyncProducer) Close() error                              { return 
 func (m *mockAsyncProducer) Input() chan<- *sarama.ProducerMessage     { return m.inputCh }
 func (m *mockAsyncProducer) Successes() <-chan *sarama.ProducerMessage { return m.successCh }
 func (m *mockAsyncProducer) Errors() <-chan *sarama.ProducerError      { return m.errorCh }
+func (m *mockAsyncProducer) IsTransactional() bool                     { return false }
+func (m *mockAsyncProducer) TxnStatus() sarama.ProducerTxnStatusFlag   { return 0 }
+func (m *mockAsyncProducer) BeginTxn() error                           { return nil }
+func (m *mockAsyncProducer) CommitTxn() error                          { return nil }
+func (m *mockAsyncProducer) AbortTxn() error                           { return nil }
+func (m *mockAsyncProducer) AddOffsetsToTxn(offsets map[string][]*sarama.PartitionOffsetMetadata, groupId string) error {
+	return nil
+}
+func (m *mockAsyncProducer) AddMessageToTxn(msg *sarama.ConsumerMessage, groupId string, metadata *string) error {
+	return nil
+}
+
+var _ sarama.AsyncProducer = (*mockAsyncProducer)(nil)
 
 func TestNewKafkaRecorder(t *testing.T) {
 	t.Run("no panics", func(t *testing.T) {
@@ -42,6 +55,7 @@ func TestCreateTLSConfiguration(t *testing.T) {
 			"./testdata/certificates/alice.key",
 			"./testdata/certificates/ca.crt",
 			true,
+			false,
 		)
 		assert.NotZero(t, tlsConfig)
 
@@ -50,8 +64,18 @@ func TestCreateTLSConfiguration(t *testing.T) {
 			"",
 			"",
 			true,
+			false,
 		)
 		assert.Zero(t, tlsConfig)
+
+		tlsConfig = createTLSConfiguration(
+			"",
+			"",
+			"",
+			true,
+			true,
+		)
+		assert.NotZero(t, tlsConfig)
 	})
 
 	t.Run("cert or key file not found", func(t *testing.T) {
@@ -61,6 +85,7 @@ func TestCreateTLSConfiguration(t *testing.T) {
 				"./testdata/certificates/not_found.key",
 				"./testdata/certificates/ca.crt",
 				true,
+				false,
 			)
 		})
 	})
@@ -72,6 +97,7 @@ func TestCreateTLSConfiguration(t *testing.T) {
 				"./testdata/certificates/alice.key",
 				"./testdata/certificates/not_found.crt",
 				true,
+				false,
 			)
 		})
 	})

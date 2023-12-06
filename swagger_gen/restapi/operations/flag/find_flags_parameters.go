@@ -16,7 +16,8 @@ import (
 )
 
 // NewFindFlagsParams creates a new FindFlagsParams object
-// no default values defined in spec.
+//
+// There are no default values defined in the spec.
 func NewFindFlagsParams() FindFlagsParams {
 
 	return FindFlagsParams{}
@@ -31,6 +32,10 @@ type FindFlagsParams struct {
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
+	/*return all deleted flags
+	  In: query
+	*/
+	Deleted *bool
 	/*return flags exactly matching given description
 	  In: query
 	*/
@@ -59,6 +64,10 @@ type FindFlagsParams struct {
 	  In: query
 	*/
 	Preload *bool
+	/*return flags with the given tags (comma separated)
+	  In: query
+	*/
+	Tags *string
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -71,6 +80,11 @@ func (o *FindFlagsParams) BindRequest(r *http.Request, route *middleware.Matched
 	o.HTTPRequest = r
 
 	qs := runtime.Values(r.URL.Query())
+
+	qDeleted, qhkDeleted, _ := qs.GetOK("deleted")
+	if err := o.bindDeleted(qDeleted, qhkDeleted, route.Formats); err != nil {
+		res = append(res, err)
+	}
 
 	qDescription, qhkDescription, _ := qs.GetOK("description")
 	if err := o.bindDescription(qDescription, qhkDescription, route.Formats); err != nil {
@@ -107,9 +121,36 @@ func (o *FindFlagsParams) BindRequest(r *http.Request, route *middleware.Matched
 		res = append(res, err)
 	}
 
+	qTags, qhkTags, _ := qs.GetOK("tags")
+	if err := o.bindTags(qTags, qhkTags, route.Formats); err != nil {
+		res = append(res, err)
+	}
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+// bindDeleted binds and validates parameter Deleted from query.
+func (o *FindFlagsParams) bindDeleted(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+
+	// Required: false
+	// AllowEmptyValue: false
+
+	if raw == "" { // empty values pass all other validations
+		return nil
+	}
+
+	value, err := swag.ConvertBool(raw)
+	if err != nil {
+		return errors.InvalidType("deleted", "query", "bool", raw)
+	}
+	o.Deleted = &value
+
 	return nil
 }
 
@@ -122,10 +163,10 @@ func (o *FindFlagsParams) bindDescription(rawData []string, hasKey bool, formats
 
 	// Required: false
 	// AllowEmptyValue: false
+
 	if raw == "" { // empty values pass all other validations
 		return nil
 	}
-
 	o.Description = &raw
 
 	return nil
@@ -140,10 +181,10 @@ func (o *FindFlagsParams) bindDescriptionLike(rawData []string, hasKey bool, for
 
 	// Required: false
 	// AllowEmptyValue: false
+
 	if raw == "" { // empty values pass all other validations
 		return nil
 	}
-
 	o.DescriptionLike = &raw
 
 	return nil
@@ -158,6 +199,7 @@ func (o *FindFlagsParams) bindEnabled(rawData []string, hasKey bool, formats str
 
 	// Required: false
 	// AllowEmptyValue: false
+
 	if raw == "" { // empty values pass all other validations
 		return nil
 	}
@@ -180,10 +222,10 @@ func (o *FindFlagsParams) bindKey(rawData []string, hasKey bool, formats strfmt.
 
 	// Required: false
 	// AllowEmptyValue: false
+
 	if raw == "" { // empty values pass all other validations
 		return nil
 	}
-
 	o.Key = &raw
 
 	return nil
@@ -198,6 +240,7 @@ func (o *FindFlagsParams) bindLimit(rawData []string, hasKey bool, formats strfm
 
 	// Required: false
 	// AllowEmptyValue: false
+
 	if raw == "" { // empty values pass all other validations
 		return nil
 	}
@@ -220,6 +263,7 @@ func (o *FindFlagsParams) bindOffset(rawData []string, hasKey bool, formats strf
 
 	// Required: false
 	// AllowEmptyValue: false
+
 	if raw == "" { // empty values pass all other validations
 		return nil
 	}
@@ -242,6 +286,7 @@ func (o *FindFlagsParams) bindPreload(rawData []string, hasKey bool, formats str
 
 	// Required: false
 	// AllowEmptyValue: false
+
 	if raw == "" { // empty values pass all other validations
 		return nil
 	}
@@ -251,6 +296,24 @@ func (o *FindFlagsParams) bindPreload(rawData []string, hasKey bool, formats str
 		return errors.InvalidType("preload", "query", "bool", raw)
 	}
 	o.Preload = &value
+
+	return nil
+}
+
+// bindTags binds and validates parameter Tags from query.
+func (o *FindFlagsParams) bindTags(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+
+	// Required: false
+	// AllowEmptyValue: false
+
+	if raw == "" { // empty values pass all other validations
+		return nil
+	}
+	o.Tags = &raw
 
 	return nil
 }

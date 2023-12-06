@@ -16,7 +16,8 @@ import (
 )
 
 // NewDeleteVariantParams creates a new DeleteVariantParams object
-// no default values defined in spec.
+//
+// There are no default values defined in the spec.
 func NewDeleteVariantParams() DeleteVariantParams {
 
 	return DeleteVariantParams{}
@@ -63,7 +64,6 @@ func (o *DeleteVariantParams) BindRequest(r *http.Request, route *middleware.Mat
 	if err := o.bindVariantID(rVariantID, rhkVariantID, route.Formats); err != nil {
 		res = append(res, err)
 	}
-
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
@@ -96,7 +96,7 @@ func (o *DeleteVariantParams) bindFlagID(rawData []string, hasKey bool, formats 
 // validateFlagID carries on validations for parameter FlagID
 func (o *DeleteVariantParams) validateFlagID(formats strfmt.Registry) error {
 
-	if err := validate.MinimumInt("flagID", "path", int64(o.FlagID), 1, false); err != nil {
+	if err := validate.MinimumInt("flagID", "path", o.FlagID, 1, false); err != nil {
 		return err
 	}
 
@@ -129,7 +129,7 @@ func (o *DeleteVariantParams) bindVariantID(rawData []string, hasKey bool, forma
 // validateVariantID carries on validations for parameter VariantID
 func (o *DeleteVariantParams) validateVariantID(formats strfmt.Registry) error {
 
-	if err := validate.MinimumInt("variantID", "path", int64(o.VariantID), 1, false); err != nil {
+	if err := validate.MinimumInt("variantID", "path", o.VariantID, 1, false); err != nil {
 		return err
 	}
 

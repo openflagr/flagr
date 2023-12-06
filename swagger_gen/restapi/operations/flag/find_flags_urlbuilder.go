@@ -15,6 +15,7 @@ import (
 
 // FindFlagsURL generates an URL for the find flags operation
 type FindFlagsURL struct {
+	Deleted         *bool
 	Description     *string
 	DescriptionLike *string
 	Enabled         *bool
@@ -22,6 +23,7 @@ type FindFlagsURL struct {
 	Limit           *int64
 	Offset          *int64
 	Preload         *bool
+	Tags            *string
 
 	_basePath string
 	// avoid unkeyed usage
@@ -56,6 +58,14 @@ func (o *FindFlagsURL) Build() (*url.URL, error) {
 	_result.Path = golangswaggerpaths.Join(_basePath, _path)
 
 	qs := make(url.Values)
+
+	var deletedQ string
+	if o.Deleted != nil {
+		deletedQ = swag.FormatBool(*o.Deleted)
+	}
+	if deletedQ != "" {
+		qs.Set("deleted", deletedQ)
+	}
 
 	var descriptionQ string
 	if o.Description != nil {
@@ -111,6 +121,14 @@ func (o *FindFlagsURL) Build() (*url.URL, error) {
 	}
 	if preloadQ != "" {
 		qs.Set("preload", preloadQ)
+	}
+
+	var tagsQ string
+	if o.Tags != nil {
+		tagsQ = *o.Tags
+	}
+	if tagsQ != "" {
+		qs.Set("tags", tagsQ)
 	}
 
 	_result.RawQuery = qs.Encode()

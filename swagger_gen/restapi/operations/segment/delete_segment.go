@@ -29,10 +29,10 @@ func NewDeleteSegment(ctx *middleware.Context, handler DeleteSegmentHandler) *De
 	return &DeleteSegment{Context: ctx, Handler: handler}
 }
 
-/*DeleteSegment swagger:route DELETE /flags/{flagID}/segments/{segmentID} segment deleteSegment
+/*
+	DeleteSegment swagger:route DELETE /flags/{flagID}/segments/{segmentID} segment deleteSegment
 
 DeleteSegment delete segment API
-
 */
 type DeleteSegment struct {
 	Context *middleware.Context
@@ -42,17 +42,15 @@ type DeleteSegment struct {
 func (o *DeleteSegment) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, rCtx, _ := o.Context.RouteInfo(r)
 	if rCtx != nil {
-		r = rCtx
+		*r = *rCtx
 	}
 	var Params = NewDeleteSegmentParams()
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
 	res := o.Handler.Handle(Params) // actually handle the request
-
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

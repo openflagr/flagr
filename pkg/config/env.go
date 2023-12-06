@@ -19,6 +19,8 @@ var Config = struct {
 
 	// MiddlewareVerboseLoggerEnabled - to enable the negroni-logrus logger for all the endpoints useful for debugging
 	MiddlewareVerboseLoggerEnabled bool `env:"FLAGR_MIDDLEWARE_VERBOSE_LOGGER_ENABLED" envDefault:"true"`
+	// MiddlewareVerboseLoggerExcludeURLs - to exclude urls from the verbose logger via comma separated list
+	MiddlewareVerboseLoggerExcludeURLs []string `env:"FLAGR_MIDDLEWARE_VERBOSE_LOGGER_EXCLUDE_URLS" envDefault:"" envSeparator:","`
 	// MiddlewareGzipEnabled - to enable gzip middleware
 	MiddlewareGzipEnabled bool `env:"FLAGR_MIDDLEWARE_GZIP_ENABLED" envDefault:"true"`
 
@@ -69,11 +71,17 @@ var Config = struct {
 	DBConnectionRetryDelay    time.Duration `env:"FLAGR_DB_DBCONNECTION_RETRY_DELAY" envDefault:"100ms"`
 
 	// CORSEnabled - enable CORS
-	CORSEnabled bool `env:"FLAGR_CORS_ENABLED" envDefault:"true"`
+	CORSEnabled          bool     `env:"FLAGR_CORS_ENABLED" envDefault:"true"`
+	CORSAllowCredentials bool     `env:"FLAGR_CORS_ALLOW_CREDENTIALS" envDefault:"true"`
+	CORSAllowedHeaders   []string `env:"FLAGR_CORS_ALLOWED_HEADERS" envDefault:"Origin,Accept,Content-Type,X-Requested-With,Authorization,Time_Zone" envSeparator:","`
+	CORSAllowedMethods   []string `env:"FLAGR_CORS_ALLOWED_METHODS" envDefault:"GET,POST,PUT,DELETE,PATCH" envSeparator:","`
+	CORSAllowedOrigins   []string `env:"FLAGR_CORS_ALLOWED_ORIGINS" envDefault:"*" envSeparator:","`
+	CORSExposedHeaders   []string `env:"FLAGR_CORS_EXPOSED_HEADERS" envDefault:"WWW-Authenticate" envSeparator:","`
 
 	// SentryEnabled - enable Sentry and Sentry DSN
-	SentryEnabled bool   `env:"FLAGR_SENTRY_ENABLED" envDefault:"false"`
-	SentryDSN     string `env:"FLAGR_SENTRY_DSN" envDefault:""`
+	SentryEnabled     bool   `env:"FLAGR_SENTRY_ENABLED" envDefault:"false"`
+	SentryDSN         string `env:"FLAGR_SENTRY_DSN" envDefault:""`
+	SentryEnvironment string `env:"FLAGR_SENTRY_ENVIRONMENT" envDefault:""`
 
 	// NewRelicEnabled - enable the NewRelic monitoring for all the endpoints and DB operations
 	NewRelicEnabled                   bool   `env:"FLAGR_NEWRELIC_ENABLED" envDefault:"false"`
@@ -122,18 +130,26 @@ var Config = struct {
 	RecorderFrameOutputMode string `env:"FLAGR_RECORDER_FRAME_OUTPUT_MODE" envDefault:"payload_string"`
 
 	// Kafka related configurations for data records logging (Flagr Metrics)
-	RecorderKafkaVersion        string        `env:"FLAGR_RECORDER_KAFKA_VERSION" envDefault:"0.8.2.0"`
-	RecorderKafkaBrokers        string        `env:"FLAGR_RECORDER_KAFKA_BROKERS" envDefault:":9092"`
-	RecorderKafkaCertFile       string        `env:"FLAGR_RECORDER_KAFKA_CERTFILE" envDefault:""`
-	RecorderKafkaKeyFile        string        `env:"FLAGR_RECORDER_KAFKA_KEYFILE" envDefault:""`
-	RecorderKafkaCAFile         string        `env:"FLAGR_RECORDER_KAFKA_CAFILE" envDefault:""`
-	RecorderKafkaVerifySSL      bool          `env:"FLAGR_RECORDER_KAFKA_VERIFYSSL" envDefault:"false"`
-	RecorderKafkaVerbose        bool          `env:"FLAGR_RECORDER_KAFKA_VERBOSE" envDefault:"true"`
-	RecorderKafkaTopic          string        `env:"FLAGR_RECORDER_KAFKA_TOPIC" envDefault:"flagr-records"`
-	RecorderKafkaRetryMax       int           `env:"FLAGR_RECORDER_KAFKA_RETRYMAX" envDefault:"5"`
-	RecorderKafkaFlushFrequency time.Duration `env:"FLAGR_RECORDER_KAFKA_FLUSHFREQUENCY" envDefault:"500ms"`
-	RecorderKafkaEncrypted      bool          `env:"FLAGR_RECORDER_KAFKA_ENCRYPTED" envDefault:"false"`
-	RecorderKafkaEncryptionKey  string        `env:"FLAGR_RECORDER_KAFKA_ENCRYPTION_KEY" envDefault:""`
+	RecorderKafkaVersion             string        `env:"FLAGR_RECORDER_KAFKA_VERSION" envDefault:"0.8.2.0"`
+	RecorderKafkaBrokers             string        `env:"FLAGR_RECORDER_KAFKA_BROKERS" envDefault:":9092"`
+	RecorderKafkaCompressionCodec    int8          `env:"FLAGR_RECORDER_KAFKA_COMPRESSION_CODEC" envDefault:"0"`
+	RecorderKafkaCertFile            string        `env:"FLAGR_RECORDER_KAFKA_CERTFILE" envDefault:""`
+	RecorderKafkaKeyFile             string        `env:"FLAGR_RECORDER_KAFKA_KEYFILE" envDefault:""`
+	RecorderKafkaCAFile              string        `env:"FLAGR_RECORDER_KAFKA_CAFILE" envDefault:""`
+	RecorderKafkaVerifySSL           bool          `env:"FLAGR_RECORDER_KAFKA_VERIFYSSL" envDefault:"false"`
+	RecorderKafkaSimpleSSL           bool          `env:"FLAGR_RECORDER_KAFKA_SIMPLE_SSL" envDefault:"false"`
+	RecorderKafkaSASLUsername        string        `env:"FLAGR_RECORDER_KAFKA_SASL_USERNAME" envDefault:""`
+	RecorderKafkaSASLPassword        string        `env:"FLAGR_RECORDER_KAFKA_SASL_PASSWORD" envDefault:""`
+	RecorderKafkaVerbose             bool          `env:"FLAGR_RECORDER_KAFKA_VERBOSE" envDefault:"true"`
+	RecorderKafkaTopic               string        `env:"FLAGR_RECORDER_KAFKA_TOPIC" envDefault:"flagr-records"`
+	RecorderKafkaPartitionKeyEnabled bool          `env:"FLAGR_RECORDER_KAFKA_PARTITION_KEY_ENABLED" envDefault:"true"`
+	RecorderKafkaRetryMax            int           `env:"FLAGR_RECORDER_KAFKA_RETRYMAX" envDefault:"5"`
+	RecorderKafkaMaxOpenReqs         int           `env:"FLAGR_RECORDER_KAFKA_MAXOPENREQUESTS" envDefault:"5"`
+	RecorderKafkaRequiredAcks        int           `env:"FLAGR_RECORDER_KAFKA_REQUIRED_ACKS" envDefault:"1"` // 0: no response, 1: wait for local, -1: wait for all
+	RecorderKafkaIdempotent          bool          `env:"FLAGR_RECORDER_KAFKA_IDEMPOTENT" envDefault:"false"`
+	RecorderKafkaFlushFrequency      time.Duration `env:"FLAGR_RECORDER_KAFKA_FLUSHFREQUENCY" envDefault:"500ms"`
+	RecorderKafkaEncrypted           bool          `env:"FLAGR_RECORDER_KAFKA_ENCRYPTED" envDefault:"false"`
+	RecorderKafkaEncryptionKey       string        `env:"FLAGR_RECORDER_KAFKA_ENCRYPTION_KEY" envDefault:""`
 
 	// Kinesis related configurations for data records logging (Flagr Metrics)
 	RecorderKinesisStreamName          string        `env:"FLAGR_RECORDER_KINESIS_STREAM_NAME" envDefault:"flagr-records"`
@@ -173,7 +189,7 @@ var Config = struct {
 	*/
 	JWTAuthEnabled              bool     `env:"FLAGR_JWT_AUTH_ENABLED" envDefault:"false"`
 	JWTAuthDebug                bool     `env:"FLAGR_JWT_AUTH_DEBUG" envDefault:"false"`
-	JWTAuthPrefixWhitelistPaths []string `env:"FLAGR_JWT_AUTH_WHITELIST_PATHS" envDefault:"/api/v1/evaluation,/static" envSeparator:","`
+	JWTAuthPrefixWhitelistPaths []string `env:"FLAGR_JWT_AUTH_WHITELIST_PATHS" envDefault:"/api/v1/health,/api/v1/evaluation,/static" envSeparator:","`
 	JWTAuthExactWhitelistPaths  []string `env:"FLAGR_JWT_AUTH_EXACT_WHITELIST_PATHS" envDefault:",/" envSeparator:","`
 	JWTAuthCookieTokenName      string   `env:"FLAGR_JWT_AUTH_COOKIE_TOKEN_NAME" envDefault:"access_token"`
 	JWTAuthSecret               string   `env:"FLAGR_JWT_AUTH_SECRET" envDefault:""`
@@ -194,11 +210,17 @@ var Config = struct {
 	HeaderAuthEnabled   bool   `env:"FLAGR_HEADER_AUTH_ENABLED" envDefault:"false"`
 	HeaderAuthUserField string `env:"FLAGR_HEADER_AUTH_USER_FIELD" envDefault:"X-Email"`
 
+	// Identify users through cookies
+	// E.g. via cloudflare zero trust, we derive the user email from the JWT token stored in the cookie of CF_Authorization
+	CookieAuthEnabled           bool   `env:"FLAGR_COOKIE_AUTH_ENABLED" envDefault:"false"`
+	CookieAuthUserField         string `env:"FLAGR_COOKIE_AUTH_USER_FIELD" envDefault:"CF_Authorization"`
+	CookieAuthUserFieldJWTClaim string `env:"FLAGR_COOKIE_AUTH_USER_FIELD_JWT_CLAIM" envDefault:"email"`
+
 	// Authenticate with basic auth
 	BasicAuthEnabled              bool     `env:"FLAGR_BASIC_AUTH_ENABLED" envDefault:"false"`
 	BasicAuthUsername             string   `env:"FLAGR_BASIC_AUTH_USERNAME" envDefault:""`
 	BasicAuthPassword             string   `env:"FLAGR_BASIC_AUTH_PASSWORD" envDefault:""`
-	BasicAuthPrefixWhitelistPaths []string `env:"FLAGR_BASIC_AUTH_WHITELIST_PATHS" envDefault:"/api/v1/flags,/api/v1/evaluation" envSeparator:","`
+	BasicAuthPrefixWhitelistPaths []string `env:"FLAGR_BASIC_AUTH_WHITELIST_PATHS" envDefault:"/api/v1/health,/api/v1/flags,/api/v1/evaluation" envSeparator:","`
 	BasicAuthExactWhitelistPaths  []string `env:"FLAGR_BASIC_AUTH_EXACT_WHITELIST_PATHS" envDefault:"" envSeparator:","`
 
 	// WebPrefix - base path for web and API

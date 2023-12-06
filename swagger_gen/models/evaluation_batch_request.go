@@ -6,6 +6,8 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
+	"encoding/json"
 	"strconv"
 
 	"github.com/go-openapi/errors"
@@ -31,12 +33,19 @@ type EvaluationBatchRequest struct {
 	// Min Items: 1
 	FlagIDs []int64 `json:"flagIDs"`
 
-	// flagKeys. Either flagIDs or flagKeys works. If pass in both, Flagr may return duplicate results.
+	// flagKeys. Either flagIDs, flagKeys or flagTags works. If pass in multiples, Flagr may return duplicate results.
 	// Min Items: 1
 	FlagKeys []string `json:"flagKeys"`
 
 	// strip eval context
 	StripEvalContext *bool `json:"stripEvalContext,omitempty"`
+	// flagTags. Either flagIDs, flagKeys or flagTags works. If pass in multiples, Flagr may return duplicate results.
+	// Min Items: 1
+	FlagTags []string `json:"flagTags"`
+
+	// determine how flagTags is used to filter flags to be evaluated. OR extends the evaluation to those which contains at least one of the provided flagTags or AND limit the evaluation to those which contains all the flagTags.
+	// Enum: [ANY ALL]
+	FlagTagsOperator *string `json:"flagTagsOperator,omitempty"`
 }
 
 // Validate validates this evaluation batch request
@@ -52,6 +61,14 @@ func (m *EvaluationBatchRequest) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateFlagKeys(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateFlagTags(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateFlagTagsOperator(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -82,6 +99,8 @@ func (m *EvaluationBatchRequest) validateEntities(formats strfmt.Registry) error
 			if err := m.Entities[i].Validate(formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("entities" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("entities" + "." + strconv.Itoa(i))
 				}
 				return err
 			}
@@ -93,7 +112,6 @@ func (m *EvaluationBatchRequest) validateEntities(formats strfmt.Registry) error
 }
 
 func (m *EvaluationBatchRequest) validateFlagIDs(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.FlagIDs) { // not required
 		return nil
 	}
@@ -106,7 +124,7 @@ func (m *EvaluationBatchRequest) validateFlagIDs(formats strfmt.Registry) error 
 
 	for i := 0; i < len(m.FlagIDs); i++ {
 
-		if err := validate.MinimumInt("flagIDs"+"."+strconv.Itoa(i), "body", int64(m.FlagIDs[i]), 1, false); err != nil {
+		if err := validate.MinimumInt("flagIDs"+"."+strconv.Itoa(i), "body", m.FlagIDs[i], 1, false); err != nil {
 			return err
 		}
 
@@ -116,7 +134,6 @@ func (m *EvaluationBatchRequest) validateFlagIDs(formats strfmt.Registry) error 
 }
 
 func (m *EvaluationBatchRequest) validateFlagKeys(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.FlagKeys) { // not required
 		return nil
 	}
@@ -129,8 +146,111 @@ func (m *EvaluationBatchRequest) validateFlagKeys(formats strfmt.Registry) error
 
 	for i := 0; i < len(m.FlagKeys); i++ {
 
-		if err := validate.MinLength("flagKeys"+"."+strconv.Itoa(i), "body", string(m.FlagKeys[i]), 1); err != nil {
+		if err := validate.MinLength("flagKeys"+"."+strconv.Itoa(i), "body", m.FlagKeys[i], 1); err != nil {
 			return err
+		}
+
+	}
+
+	return nil
+}
+
+func (m *EvaluationBatchRequest) validateFlagTags(formats strfmt.Registry) error {
+	if swag.IsZero(m.FlagTags) { // not required
+		return nil
+	}
+
+	iFlagTagsSize := int64(len(m.FlagTags))
+
+	if err := validate.MinItems("flagTags", "body", iFlagTagsSize, 1); err != nil {
+		return err
+	}
+
+	for i := 0; i < len(m.FlagTags); i++ {
+
+		if err := validate.MinLength("flagTags"+"."+strconv.Itoa(i), "body", m.FlagTags[i], 1); err != nil {
+			return err
+		}
+
+	}
+
+	return nil
+}
+
+var evaluationBatchRequestTypeFlagTagsOperatorPropEnum []interface{}
+
+func init() {
+	var res []string
+	if err := json.Unmarshal([]byte(`["ANY","ALL"]`), &res); err != nil {
+		panic(err)
+	}
+	for _, v := range res {
+		evaluationBatchRequestTypeFlagTagsOperatorPropEnum = append(evaluationBatchRequestTypeFlagTagsOperatorPropEnum, v)
+	}
+}
+
+const (
+
+	// EvaluationBatchRequestFlagTagsOperatorANY captures enum value "ANY"
+	EvaluationBatchRequestFlagTagsOperatorANY string = "ANY"
+
+	// EvaluationBatchRequestFlagTagsOperatorALL captures enum value "ALL"
+	EvaluationBatchRequestFlagTagsOperatorALL string = "ALL"
+)
+
+// prop value enum
+func (m *EvaluationBatchRequest) validateFlagTagsOperatorEnum(path, location string, value string) error {
+	if err := validate.EnumCase(path, location, value, evaluationBatchRequestTypeFlagTagsOperatorPropEnum, true); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *EvaluationBatchRequest) validateFlagTagsOperator(formats strfmt.Registry) error {
+	if swag.IsZero(m.FlagTagsOperator) { // not required
+		return nil
+	}
+
+	// value enum
+	if err := m.validateFlagTagsOperatorEnum("flagTagsOperator", "body", *m.FlagTagsOperator); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ContextValidate validate this evaluation batch request based on the context it is used
+func (m *EvaluationBatchRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateEntities(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *EvaluationBatchRequest) contextValidateEntities(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.Entities); i++ {
+
+		if m.Entities[i] != nil {
+
+			if swag.IsZero(m.Entities[i]) { // not required
+				return nil
+			}
+
+			if err := m.Entities[i].ContextValidate(ctx, formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("entities" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("entities" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
 		}
 
 	}

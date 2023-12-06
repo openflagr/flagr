@@ -16,11 +16,12 @@ import (
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 
-	"github.com/checkr/flagr/swagger_gen/models"
+	"github.com/openflagr/flagr/swagger_gen/models"
 )
 
 // NewPutConstraintParams creates a new PutConstraintParams object
-// no default values defined in spec.
+//
+// There are no default values defined in the spec.
 func NewPutConstraintParams() PutConstraintParams {
 
 	return PutConstraintParams{}
@@ -74,7 +75,7 @@ func (o *PutConstraintParams) BindRequest(r *http.Request, route *middleware.Mat
 		var body models.CreateConstraintRequest
 		if err := route.Consumer.Consume(r.Body, &body); err != nil {
 			if err == io.EOF {
-				res = append(res, errors.Required("body", "body"))
+				res = append(res, errors.Required("body", "body", ""))
 			} else {
 				res = append(res, errors.NewParseError("body", "body", "", err))
 			}
@@ -84,13 +85,19 @@ func (o *PutConstraintParams) BindRequest(r *http.Request, route *middleware.Mat
 				res = append(res, err)
 			}
 
+			ctx := validate.WithOperationRequest(r.Context())
+			if err := body.ContextValidate(ctx, route.Formats); err != nil {
+				res = append(res, err)
+			}
+
 			if len(res) == 0 {
 				o.Body = &body
 			}
 		}
 	} else {
-		res = append(res, errors.Required("body", "body"))
+		res = append(res, errors.Required("body", "body", ""))
 	}
+
 	rConstraintID, rhkConstraintID, _ := route.Params.GetOK("constraintID")
 	if err := o.bindConstraintID(rConstraintID, rhkConstraintID, route.Formats); err != nil {
 		res = append(res, err)
@@ -105,7 +112,6 @@ func (o *PutConstraintParams) BindRequest(r *http.Request, route *middleware.Mat
 	if err := o.bindSegmentID(rSegmentID, rhkSegmentID, route.Formats); err != nil {
 		res = append(res, err)
 	}
-
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
@@ -138,7 +144,7 @@ func (o *PutConstraintParams) bindConstraintID(rawData []string, hasKey bool, fo
 // validateConstraintID carries on validations for parameter ConstraintID
 func (o *PutConstraintParams) validateConstraintID(formats strfmt.Registry) error {
 
-	if err := validate.MinimumInt("constraintID", "path", int64(o.ConstraintID), 1, false); err != nil {
+	if err := validate.MinimumInt("constraintID", "path", o.ConstraintID, 1, false); err != nil {
 		return err
 	}
 
@@ -171,7 +177,7 @@ func (o *PutConstraintParams) bindFlagID(rawData []string, hasKey bool, formats 
 // validateFlagID carries on validations for parameter FlagID
 func (o *PutConstraintParams) validateFlagID(formats strfmt.Registry) error {
 
-	if err := validate.MinimumInt("flagID", "path", int64(o.FlagID), 1, false); err != nil {
+	if err := validate.MinimumInt("flagID", "path", o.FlagID, 1, false); err != nil {
 		return err
 	}
 
@@ -204,7 +210,7 @@ func (o *PutConstraintParams) bindSegmentID(rawData []string, hasKey bool, forma
 // validateSegmentID carries on validations for parameter SegmentID
 func (o *PutConstraintParams) validateSegmentID(formats strfmt.Registry) error {
 
-	if err := validate.MinimumInt("segmentID", "path", int64(o.SegmentID), 1, false); err != nil {
+	if err := validate.MinimumInt("segmentID", "path", o.SegmentID, 1, false); err != nil {
 		return err
 	}
 

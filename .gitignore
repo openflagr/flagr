@@ -26,3 +26,5 @@ stage/
 _tools/
 _data
 coverage.txt
+/vendor
+.history

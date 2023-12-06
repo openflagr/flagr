@@ -6,6 +6,8 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
+
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
@@ -66,12 +68,11 @@ func (m *Distribution) Validate(formats strfmt.Registry) error {
 }
 
 func (m *Distribution) validateID(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.ID) { // not required
 		return nil
 	}
 
-	if err := validate.MinimumInt("id", "body", int64(m.ID), 1, false); err != nil {
+	if err := validate.MinimumInt("id", "body", m.ID, 1, false); err != nil {
 		return err
 	}
 
@@ -84,11 +85,11 @@ func (m *Distribution) validatePercent(formats strfmt.Registry) error {
 		return err
 	}
 
-	if err := validate.MinimumInt("percent", "body", int64(*m.Percent), 0, false); err != nil {
+	if err := validate.MinimumInt("percent", "body", *m.Percent, 0, false); err != nil {
 		return err
 	}
 
-	if err := validate.MaximumInt("percent", "body", int64(*m.Percent), 100, false); err != nil {
+	if err := validate.MaximumInt("percent", "body", *m.Percent, 100, false); err != nil {
 		return err
 	}
 
@@ -101,7 +102,7 @@ func (m *Distribution) validateVariantID(formats strfmt.Registry) error {
 		return err
 	}
 
-	if err := validate.MinimumInt("variantID", "body", int64(*m.VariantID), 1, false); err != nil {
+	if err := validate.MinimumInt("variantID", "body", *m.VariantID, 1, false); err != nil {
 		return err
 	}
 
@@ -114,7 +115,30 @@ func (m *Distribution) validateVariantKey(formats strfmt.Registry) error {
 		return err
 	}
 
-	if err := validate.MinLength("variantKey", "body", string(*m.VariantKey), 1); err != nil {
+	if err := validate.MinLength("variantKey", "body", *m.VariantKey, 1); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ContextValidate validate this distribution based on the context it is used
+func (m *Distribution) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateID(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *Distribution) contextValidateID(ctx context.Context, formats strfmt.Registry) error {
+
+	if err := validate.ReadOnly(ctx, "id", "body", int64(m.ID)); err != nil {
 		return err
 	}
 

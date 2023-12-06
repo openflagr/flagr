@@ -10,13 +10,14 @@ import (
 
 	"github.com/go-openapi/runtime"
 
-	"github.com/checkr/flagr/swagger_gen/models"
+	"github.com/openflagr/flagr/swagger_gen/models"
 )
 
 // DeleteVariantOKCode is the HTTP code returned for type DeleteVariantOK
 const DeleteVariantOKCode int = 200
 
-/*DeleteVariantOK deleted
+/*
+DeleteVariantOK deleted
 
 swagger:response deleteVariantOK
 */
@@ -37,7 +38,8 @@ func (o *DeleteVariantOK) WriteResponse(rw http.ResponseWriter, producer runtime
 	rw.WriteHeader(200)
 }
 
-/*DeleteVariantDefault generic error response
+/*
+DeleteVariantDefault generic error response
 
 swagger:response deleteVariantDefault
 */

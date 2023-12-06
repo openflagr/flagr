@@ -3,23 +3,24 @@ package entity
 import (
 	"fmt"
 
-	"github.com/checkr/flagr/pkg/util"
-	"github.com/jinzhu/gorm"
+	"github.com/openflagr/flagr/pkg/util"
+	"gorm.io/gorm"
 )
 
 // Flag is the unit of flags
 type Flag struct {
 	gorm.Model
 
-	Key         string `gorm:"type:varchar(64);unique_index:idx_flag_key"`
-	Description string `sql:"type:text"`
+	Key         string `gorm:"type:varchar(64);uniqueIndex:idx_flag_key"`
+	Description string `gorm:"type:text"`
 	CreatedBy   string
 	UpdatedBy   string
 	Enabled     bool
 	Segments    []Segment
 	Variants    []Variant
+	Tags        []Tag `gorm:"many2many:flags_tags;"`
 	SnapshotID  uint
-	Notes       string `sql:"type:text"`
+	Notes       string `gorm:"type:text"`
 
 	DataRecordsEnabled bool
 	EntityType         string
@@ -32,22 +33,37 @@ type FlagEvaluation struct {
 	VariantsMap map[uint]*Variant
 }
 
-// PreloadSegmentsVariants preloads segments and variants for flag
-func PreloadSegmentsVariants(db *gorm.DB) *gorm.DB {
+// Preloads just the tags
+func PreloadFlagTags(db *gorm.DB) *gorm.DB {
+	return db.Preload("Tags", func(db *gorm.DB) *gorm.DB {
+		return db.Order("id")
+	})
+}
+
+// PreloadSegmentsVariantsTags preloads segments, variants and tags for flag
+func PreloadSegmentsVariantsTags(db *gorm.DB) *gorm.DB {
 	return db.
 		Preload("Segments", func(db *gorm.DB) *gorm.DB {
 			return PreloadConstraintsDistribution(db).
-				Order("rank ASC").
-				Order("id ASC")
+				Order("segments.rank").
+				Order("segments.id")
 		}).
 		Preload("Variants", func(db *gorm.DB) *gorm.DB {
-			return db.Order("id ASC")
+			return db.Order("id")
+		}).
+		Preload("Tags", func(db *gorm.DB) *gorm.DB {
+			return db.Order("id")
 		})
 }
 
-// Preload preloads the segments and variants into flags
+// Preload preloads the segments, variants and tags into flags
 func (f *Flag) Preload(db *gorm.DB) error {
-	return PreloadSegmentsVariants(db).First(f, f.ID).Error
+	return PreloadSegmentsVariantsTags(db).First(f, f.ID).Error
+}
+
+// PreloadTags preloads the tags into flags
+func (f *Flag) PreloadTags(db *gorm.DB) error {
+	return PreloadFlagTags(db).First(f, f.ID).Error
 }
 
 // PrepareEvaluation prepares the information for evaluation

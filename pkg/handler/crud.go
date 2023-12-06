@@ -1,20 +1,24 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
-	"github.com/checkr/flagr/pkg/entity"
-	"github.com/checkr/flagr/pkg/mapper/entity_restapi/e2r"
-	"github.com/checkr/flagr/pkg/mapper/entity_restapi/r2e"
-	"github.com/checkr/flagr/pkg/util"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/constraint"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/distribution"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/flag"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/segment"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/variant"
+	"github.com/openflagr/flagr/pkg/entity"
+	"github.com/openflagr/flagr/pkg/mapper/entity_restapi/e2r"
+	"github.com/openflagr/flagr/pkg/mapper/entity_restapi/r2e"
+	"github.com/openflagr/flagr/pkg/util"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/constraint"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/distribution"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/flag"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/segment"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/tag"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/variant"
 
 	"github.com/go-openapi/runtime/middleware"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // CRUD is the CRUD interface
@@ -25,9 +29,16 @@ type CRUD interface {
 	GetFlag(flag.GetFlagParams) middleware.Responder
 	PutFlag(flag.PutFlagParams) middleware.Responder
 	DeleteFlag(flag.DeleteFlagParams) middleware.Responder
+	RestoreFlag(flag.RestoreFlagParams) middleware.Responder
 	SetFlagEnabledState(flag.SetFlagEnabledParams) middleware.Responder
 	GetFlagSnapshots(params flag.GetFlagSnapshotsParams) middleware.Responder
 	GetFlagEntityTypes(params flag.GetFlagEntityTypesParams) middleware.Responder
+
+	//Tags
+	CreateTag(tag.CreateTagParams) middleware.Responder
+	DeleteTag(tag.DeleteTagParams) middleware.Responder
+	FindTags(tag.FindTagsParams) middleware.Responder
+	FindAllTags(params tag.FindAllTagsParams) middleware.Responder
 
 	// Segments
 	CreateSegment(segment.CreateSegmentParams) middleware.Responder
@@ -70,7 +81,8 @@ var (
 )
 
 func (c *crud) FindFlags(params flag.FindFlagsParams) middleware.Responder {
-	tx := getDB()
+	// Add Unscoped so GORM doesn't automatically override `deleted_at`
+	tx := getDB().Unscoped()
 	fs := []entity.Flag{}
 	q := entity.Flag{}
 
@@ -90,7 +102,10 @@ func (c *crud) FindFlags(params flag.FindFlagsParams) middleware.Responder {
 		tx = tx.Limit(int(*params.Limit))
 	}
 	if params.Preload != nil && *params.Preload {
-		tx = entity.PreloadSegmentsVariants(tx)
+		tx = entity.PreloadSegmentsVariantsTags(tx)
+	} else {
+		// Always preload tags for searchability
+		tx = entity.PreloadFlagTags(tx)
 	}
 	if params.DescriptionLike != nil {
 		tx = tx.Where(
@@ -98,12 +113,27 @@ func (c *crud) FindFlags(params flag.FindFlagsParams) middleware.Responder {
 			fmt.Sprintf("%%%s%%", strings.ToLower(*params.DescriptionLike)),
 		)
 	}
+	if params.Deleted != nil && *params.Deleted {
+		tx = tx.Where("deleted_at is not null")
+	} else {
+		tx = tx.Where("deleted_at is null")
+	}
 
-	err := tx.Order("id").Where(q).Find(&fs).Error
+	var err error
+	tx = tx.Order("id").Where(q)
+	if params.Tags != nil {
+		t := []entity.Tag{}
+		getDB().Where("value in (?)", strings.Split(*params.Tags, ",")).Find(&t)
+		err = tx.Model(&t).Group("flags.id").Association("Flags").Find(&fs)
+	} else {
+		err = tx.Find(&fs).Error
+	}
+
 	if err != nil {
 		return flag.NewFindFlagsDefault(500).WithPayload(
 			ErrorMessage("cannot query all flags. %s", err))
 	}
+
 	resp := flag.NewFindFlagsOK()
 	payload, err := e2rMapFlags(fs)
 	if err != nil {
@@ -116,18 +146,18 @@ func (c *crud) FindFlags(params flag.FindFlagsParams) middleware.Responder {
 
 func (c *crud) GetFlag(params flag.GetFlagParams) middleware.Responder {
 	f := &entity.Flag{}
-	result := entity.PreloadSegmentsVariants(getDB()).First(f, params.FlagID)
+	result := entity.PreloadSegmentsVariantsTags(getDB()).First(f, params.FlagID).Error
 
 	// Flag with given ID doesn't exist, so we 404
-	if result.RecordNotFound() {
+	if errors.Is(result, gorm.ErrRecordNotFound) {
 		return flag.NewGetFlagDefault(404).WithPayload(
 			ErrorMessage("unable to find flag %v in the database", params.FlagID))
 	}
 
 	// Something else happened, return a 500
-	if err := result.Error; err != nil {
+	if result != nil {
 		return flag.NewGetFlagDefault(500).WithPayload(
-			ErrorMessage("an unknown error occurred while looking up flag %v: %s", params.FlagID, err))
+			ErrorMessage("an unknown error occurred while looking up flag %v: %s", params.FlagID, result))
 	}
 
 	resp := flag.NewGetFlagOK()
@@ -141,12 +171,30 @@ func (c *crud) GetFlag(params flag.GetFlagParams) middleware.Responder {
 }
 
 func (c *crud) GetFlagSnapshots(params flag.GetFlagSnapshotsParams) middleware.Responder {
+	tx := getDB()
 	fs := []entity.FlagSnapshot{}
-	err := getDB().
-		Order("created_at desc").
+
+	if params.Limit != nil {
+		tx = tx.Limit(int(*params.Limit))
+	}
+	if params.Offset != nil {
+		tx = tx.Offset(int(*params.Offset))
+	}
+
+	descending := true
+	if params.Sort != nil && *params.Sort == "ASC" {
+		descending = false
+	}
+
+	if err := tx.
+		Order(clause.OrderByColumn{
+			Column: clause.Column{
+				Name: "created_at",
+			},
+			Desc: descending,
+		}).
 		Where(entity.FlagSnapshot{FlagID: util.SafeUint(params.FlagID)}).
-		Find(&fs).Error
-	if err != nil {
+		Find(&fs).Error; err != nil {
 		return flag.NewGetFlagSnapshotsDefault(500).WithPayload(
 			ErrorMessage("cannot find flag snapshots for %v. %s", params.FlagID, err))
 	}
@@ -162,7 +210,7 @@ func (c *crud) GetFlagSnapshots(params flag.GetFlagSnapshotsParams) middleware.R
 
 func (c *crud) GetFlagEntityTypes(params flag.GetFlagEntityTypesParams) middleware.Responder {
 	entityTypes := []entity.FlagEntityType{}
-	if err := getDB().Order("key").Find(&entityTypes).Error; err != nil {
+	if err := getDB().Order("flag_entity_types.key").Find(&entityTypes).Error; err != nil {
 		return flag.NewGetFlagEntityTypesDefault(500).WithPayload(
 			ErrorMessage("cannot find flag entity types. err:%s", err))
 
@@ -214,7 +262,7 @@ func (c *crud) PutFlag(params flag.PutFlagParams) middleware.Responder {
 		return flag.NewPutFlagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
-	if err := entity.PreloadSegmentsVariants(tx).First(f, params.FlagID).Error; err != nil {
+	if err := entity.PreloadSegmentsVariantsTags(tx).First(f, params.FlagID).Error; err != nil {
 		return flag.NewPutFlagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
@@ -252,11 +300,110 @@ func (c *crud) SetFlagEnabledState(params flag.SetFlagEnabledParams) middleware.
 	return resp
 }
 
+func (c *crud) RestoreFlag(params flag.RestoreFlagParams) middleware.Responder {
+	f := &entity.Flag{}
+	if err := entity.PreloadFlagTags(getDB().Unscoped()).First(f, params.FlagID).Error; err != nil {
+		return flag.NewRestoreFlagDefault(404).WithPayload(ErrorMessage("%s", err))
+	}
+
+	f.DeletedAt = gorm.DeletedAt{}
+
+	if err := getDB().Unscoped().Save(f).Error; err != nil {
+		return flag.NewRestoreFlagDefault(500).WithPayload(ErrorMessage("%s", err))
+	}
+
+	resp := flag.NewRestoreFlagOK()
+	payload, err := e2rMapFlag(f)
+	if err != nil {
+		return flag.NewRestoreFlagDefault(500).WithPayload(ErrorMessage("%s", err))
+	}
+	resp.SetPayload(payload)
+
+	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
+	return resp
+}
+
 func (c *crud) DeleteFlag(params flag.DeleteFlagParams) middleware.Responder {
 	if err := getDB().Delete(&entity.Flag{}, params.FlagID).Error; err != nil {
 		return flag.NewDeleteFlagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 	return flag.NewDeleteFlagOK()
+}
+
+func (c *crud) DeleteTag(params tag.DeleteTagParams) middleware.Responder {
+	t := &entity.Tag{}
+	t.ID = uint(params.TagID)
+
+	s := &entity.Flag{}
+	s.ID = uint(params.FlagID)
+
+	if err := getDB().Model(s).Association("Tags").Delete(t); err != nil {
+		return tag.NewDeleteTagDefault(500).WithPayload(ErrorMessage("%s", err))
+	}
+	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
+	return tag.NewDeleteTagOK()
+}
+
+func (c *crud) FindTags(params tag.FindTagsParams) middleware.Responder {
+	ds := []entity.Tag{}
+
+	s := &entity.Flag{}
+	s.ID = uint(params.FlagID)
+
+	if err := getDB().Model(s).Association("Tags").Find(&ds); err != nil {
+		return tag.NewFindTagsDefault(500).WithPayload(ErrorMessage("%s", err))
+	}
+
+	resp := tag.NewFindTagsOK()
+	resp.SetPayload(e2r.MapTags(ds))
+	return resp
+}
+
+func (c *crud) FindAllTags(params tag.FindAllTagsParams) middleware.Responder {
+	tx := getDB()
+	ds := []entity.Tag{}
+
+	if params.Limit != nil {
+		tx = tx.Limit(int(*params.Limit))
+	}
+	if params.Offset != nil {
+		tx = tx.Offset(int(*params.Offset))
+	}
+	if params.ValueLike != nil {
+		tx = tx.Where(
+			"lower(value) like ?",
+			fmt.Sprintf("%%%s%%", strings.ToLower(*params.ValueLike)),
+		)
+	}
+
+	if err := tx.Find(&ds).Error; err != nil {
+		return tag.NewFindAllTagsDefault(500).WithPayload(ErrorMessage("%s", err))
+	}
+
+	resp := tag.NewFindAllTagsOK()
+	resp.SetPayload(e2r.MapTags(ds))
+	return resp
+}
+
+func (c *crud) CreateTag(params tag.CreateTagParams) middleware.Responder {
+	s := &entity.Flag{}
+	s.ID = uint(params.FlagID)
+	t := &entity.Tag{}
+	t.Value = util.SafeString(params.Body.Value)
+	if ok, reason := util.IsSafeValue(t.Value); !ok {
+		return tag.NewCreateTagDefault(400).WithPayload(ErrorMessage("%s", reason))
+	}
+
+	getDB().Where("value = ?", util.SafeString(params.Body.Value)).Find(t) // Find the existing tag to associate if it exists
+	if err := getDB().Model(s).Association("Tags").Append(t); err != nil {
+		return tag.NewCreateTagDefault(500).WithPayload(ErrorMessage("%s", err))
+	}
+
+	resp := tag.NewCreateTagOK()
+	resp.SetPayload(e2r.MapTag(t))
+
+	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
+	return resp
 }
 
 func (c *crud) CreateSegment(params segment.CreateSegmentParams) middleware.Responder {
@@ -282,8 +429,8 @@ func (c *crud) FindSegments(params segment.FindSegmentsParams) middleware.Respon
 	ss := []entity.Segment{}
 	err := entity.
 		PreloadConstraintsDistribution(getDB()).
-		Order("rank").
-		Order("id").
+		Order("segments.rank").
+		Order("segments.id").
 		Where(entity.Segment{FlagID: uint(params.FlagID)}).
 		Find(&ss).
 		Error
@@ -416,7 +563,7 @@ func (c *crud) PutConstraint(params constraint.PutConstraintParams) middleware.R
 }
 
 func (c *crud) DeleteConstraint(params constraint.DeleteConstraintParams) middleware.Responder {
-	if err := getDB().Delete(entity.Constraint{}, params.ConstraintID).Error; err != nil {
+	if err := getDB().Delete(&entity.Constraint{}, params.ConstraintID).Error; err != nil {
 		return constraint.NewDeleteConstraintDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
@@ -435,7 +582,7 @@ func (c *crud) PutDistributions(params distribution.PutDistributionsParams) midd
 	segmentID := uint(params.SegmentID)
 
 	tx := getDB().Begin()
-	err := tx.Delete(entity.Distribution{}, "segment_id = ?", segmentID).Error
+	err := tx.Where("segment_id = ?", segmentID).Delete(&entity.Distribution{}).Error
 	if err != nil {
 		tx.Rollback()
 		return distribution.NewPutDistributionsDefault(500).WithPayload(ErrorMessage("%s", err))
@@ -446,7 +593,7 @@ func (c *crud) PutDistributions(params distribution.PutDistributionsParams) midd
 		err1 := tx.Create(&d).Error
 		if err1 != nil {
 			tx.Rollback()
-			return distribution.NewPutDistributionsDefault(500).WithPayload(ErrorMessage("%s", err))
+			return distribution.NewPutDistributionsDefault(500).WithPayload(ErrorMessage("%s", err1))
 		}
 	}
 	err = tx.Commit().Error
@@ -560,7 +707,7 @@ func (c *crud) DeleteVariant(params variant.DeleteVariantParams) middleware.Resp
 		return variant.NewDeleteVariantDefault(err.StatusCode).WithPayload(ErrorMessage("%s", err))
 	}
 
-	if err := getDB().Delete(entity.Variant{}, params.VariantID).Error; err != nil {
+	if err := getDB().Delete(&entity.Variant{}, params.VariantID).Error; err != nil {
 		return variant.NewDeleteVariantDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 

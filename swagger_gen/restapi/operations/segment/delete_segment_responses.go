@@ -10,13 +10,14 @@ import (
 
 	"github.com/go-openapi/runtime"
 
-	"github.com/checkr/flagr/swagger_gen/models"
+	"github.com/openflagr/flagr/swagger_gen/models"
 )
 
 // DeleteSegmentOKCode is the HTTP code returned for type DeleteSegmentOK
 const DeleteSegmentOKCode int = 200
 
-/*DeleteSegmentOK deleted
+/*
+DeleteSegmentOK deleted
 
 swagger:response deleteSegmentOK
 */
@@ -37,7 +38,8 @@ func (o *DeleteSegmentOK) WriteResponse(rw http.ResponseWriter, producer runtime
 	rw.WriteHeader(200)
 }
 
-/*DeleteSegmentDefault generic error response
+/*
+DeleteSegmentDefault generic error response
 
 swagger:response deleteSegmentDefault
 */

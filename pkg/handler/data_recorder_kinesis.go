@@ -2,11 +2,12 @@ package handler
 
 import (
 	producer "github.com/a8m/kinesis-producer"
+	"github.com/a8m/kinesis-producer/loggers/kplogrus"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kinesis"
-	"github.com/checkr/flagr/pkg/config"
-	"github.com/checkr/flagr/swagger_gen/models"
+	"github.com/openflagr/flagr/pkg/config"
+	"github.com/openflagr/flagr/swagger_gen/models"
 	"github.com/sirupsen/logrus"
 )
 
@@ -39,7 +40,7 @@ var NewKinesisRecorder = func() DataRecorder {
 		AggregateBatchCount: config.Config.RecorderKinesisAggregateBatchCount,
 		AggregateBatchSize:  config.Config.RecorderKinesisAggregateBatchSize,
 		Verbose:             config.Config.RecorderKinesisVerbose,
-		Logger:              logrus.WithField("producer", "kinesis"),
+		Logger:              &kplogrus.Logger{Logger: logrus.StandardLogger()},
 	})
 
 	p.Start()

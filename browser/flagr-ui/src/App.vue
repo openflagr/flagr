@@ -15,12 +15,12 @@
               </router-link>
             </el-col>
             <el-col :span="1" :offset="15">
-              <a href="https://checkr.github.io/flagr/api_docs" target="_blank"
+              <a href="https://openflagr.github.io/flagr/api_docs" target="_blank"
                 ><h3>API</h3></a
               >
             </el-col>
             <el-col :span="1" :offset="1">
-              <a href="https://checkr.github.io/flagr" target="_blank"
+              <a href="https://openflagr.github.io/flagr" target="_blank"
                 ><h3>Docs</h3></a
               >
             </el-col>
@@ -48,7 +48,7 @@ export default {
 body {
   margin: 0;
   padding: 0;
-  font-family: "Avenir", Helvetica, Arial, sans-serif;
+  font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -61,16 +61,6 @@ h2 {
 ol {
   margin: 0;
   padding-left: 20px;
-}
-
-ul {
-  list-style-type: none;
-  margin: 0;
-  padding: 0;
-  li {
-    margin: 0;
-    padding: 0;
-  }
 }
 
 .width--full {
@@ -207,6 +197,10 @@ ul {
     .jsoneditor-poweredBy {
       display: none;
     }
+  }
+
+  .el-tag {
+    margin: 2.5px;
   }
 }
 </style>

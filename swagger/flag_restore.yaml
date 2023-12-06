@@ -1,0 +1,21 @@
+put:
+  tags:
+    - flag
+  operationId: restoreFlag
+  parameters:
+    - in: path
+      name: flagID
+      description: numeric ID of the flag to get
+      required: true
+      type: integer
+      format: int64
+      minimum: 1
+  responses:
+    200:
+      description: returns the flag
+      schema:
+        $ref: "#/definitions/flag"
+    default:
+      description: generic error response
+      schema:
+        $ref: "#/definitions/error"

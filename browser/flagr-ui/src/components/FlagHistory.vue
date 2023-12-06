@@ -1,21 +1,13 @@
 <template>
   <div>
-    <el-card
-      v-for="diff in diffs"
-      :key="diff.timestamp"
-      class="snapshot-container"
-    >
+    <el-card v-for="diff in diffs" :key="diff.timestamp" class="snapshot-container">
       <div slot="header" class="el-card-header">
         <el-row>
           <el-col :span="14">
             <div class="diff-snapshot-id-change">
-              <el-tag :disable-transitions="true"
-                >Snapshot ID: {{ diff.oldId }}</el-tag
-              >
+              <el-tag :disable-transitions="true">Snapshot ID: {{ diff.oldId }}</el-tag>
               <span class="el-icon-d-arrow-right" />
-              <el-tag :disable-transitions="true"
-                >Snapshot ID: {{ diff.newId }}</el-tag
-              >
+              <el-tag :disable-transitions="true">Snapshot ID: {{ diff.newId }}</el-tag>
             </div>
           </el-col>
           <el-col :span="10" style="text-align: right; color: #2e4960">
@@ -46,7 +38,7 @@ export default {
   props: ["flagId"],
   data() {
     return {
-      flagSnapshots: [],
+      flagSnapshots: []
     };
   },
   computed: {
@@ -60,16 +52,16 @@ export default {
           updatedBy: snapshots[i].updatedBy,
           newId: snapshots[i].id,
           oldId: snapshots[i + 1].id || "NULL",
-          flagDiff: this.getDiff(snapshots[i].flag, snapshots[i + 1].flag),
+          flagDiff: this.getDiff(snapshots[i].flag, snapshots[i + 1].flag)
         });
       }
       return ret;
-    },
+    }
   },
   methods: {
     getFlagSnapshots() {
       Axios.get(`${API_URL}/flags/${this.$props.flagId}/snapshots`).then(
-        (response) => {
+        response => {
           this.flagSnapshots = response.data;
         },
         () => {
@@ -85,19 +77,16 @@ export default {
         return "No changes";
       }
       return convertChangesToXML(d);
-    },
+    }
   },
   mounted() {
     this.getFlagSnapshots();
-  },
+  }
 };
 </script>
 
 <style lang="less">
 .snapshot-container {
-  .compact {
-    margin: -8px 0px;
-  }
   .diff-snapshot-id-change {
     color: white;
     .el-tag {

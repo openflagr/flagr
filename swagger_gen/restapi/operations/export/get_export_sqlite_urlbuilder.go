@@ -9,11 +9,17 @@ import (
 	"errors"
 	"net/url"
 	golangswaggerpaths "path"
+
+	"github.com/go-openapi/swag"
 )
 
 // GetExportSqliteURL generates an URL for the get export sqlite operation
 type GetExportSqliteURL struct {
+	ExcludeSnapshots *bool
+
 	_basePath string
+	// avoid unkeyed usage
+	_ struct{}
 }
 
 // WithBasePath sets the base path for this url builder, only required when it's different from the
@@ -42,6 +48,18 @@ func (o *GetExportSqliteURL) Build() (*url.URL, error) {
 		_basePath = "/api/v1"
 	}
 	_result.Path = golangswaggerpaths.Join(_basePath, _path)
+
+	qs := make(url.Values)
+
+	var excludeSnapshotsQ string
+	if o.ExcludeSnapshots != nil {
+		excludeSnapshotsQ = swag.FormatBool(*o.ExcludeSnapshots)
+	}
+	if excludeSnapshotsQ != "" {
+		qs.Set("exclude_snapshots", excludeSnapshotsQ)
+	}
+
+	_result.RawQuery = qs.Encode()
 
 	return &_result, nil
 }

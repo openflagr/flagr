@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/checkr/flagr/pkg/entity"
-	"github.com/checkr/flagr/pkg/util"
 	"github.com/go-openapi/strfmt"
+	"github.com/openflagr/flagr/pkg/entity"
+	"github.com/openflagr/flagr/pkg/util"
 
-	"github.com/checkr/flagr/swagger_gen/models"
+	"github.com/openflagr/flagr/swagger_gen/models"
 )
 
 // MapFlag maps flag
@@ -26,6 +26,7 @@ func MapFlag(e *entity.Flag) (*models.Flag, error) {
 	r.UpdatedBy = e.UpdatedBy
 	r.Segments = MapSegments(e.Segments)
 	r.Variants = MapVariants(e.Variants)
+	r.Tags = MapTags(e.Tags)
 
 	return r, nil
 }
@@ -55,7 +56,7 @@ func MapFlagSnapshot(e *entity.FlagSnapshot) (*models.FlagSnapshot, error) {
 	}
 	r := &models.FlagSnapshot{
 		Flag:      f,
-		ID:        util.Int64Ptr(int64(e.ID)),
+		ID:        int64(e.ID),
 		UpdatedBy: e.UpdatedBy,
 		UpdatedAt: util.StringPtr(e.UpdatedAt.UTC().Format(time.RFC3339)),
 	}
@@ -92,6 +93,23 @@ func MapSegments(e []entity.Segment) []*models.Segment {
 	ret := make([]*models.Segment, len(e))
 	for i, s := range e {
 		ret[i] = MapSegment(&s)
+	}
+	return ret
+}
+
+// MapTagEntity maps tag entity
+func MapTag(e *entity.Tag) *models.Tag {
+	r := &models.Tag{}
+	r.ID = int64(e.ID)
+	r.Value = util.StringPtr(e.Value)
+	return r
+}
+
+// MapTags maps tags
+func MapTags(e []entity.Tag) []*models.Tag {
+	ret := make([]*models.Tag, len(e))
+	for i, s := range e {
+		ret[i] = MapTag(&s)
 	}
 	return ret
 }

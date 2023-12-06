@@ -9,48 +9,57 @@ import (
 
 func TestSetupSentry(t *testing.T) {
 	Config.SentryEnabled = true
-	assert.NotPanics(t, func() {
-		setupSentry()
-	})
-	Config.SentryEnabled = false
+	Config.SentryEnvironment = "test"
+	defer func() {
+		Config.SentryEnabled = false
+		Config.SentryEnvironment = ""
+	}()
+
+	assert.NotPanics(t, func() { setupSentry() })
 }
 
 func TestSetupNewRelic(t *testing.T) {
 	Config.NewRelicEnabled = true
-	assert.Panics(t, func() {
-		setupNewrelic()
-	})
-	Config.NewRelicEnabled = false
+	defer func() {
+		Config.NewRelicEnabled = false
+	}()
+
+	assert.Panics(t, func() { setupNewrelic() })
 }
 
 func TestSetupStatsd(t *testing.T) {
 	Config.StatsdEnabled = true
-	assert.NotPanics(t, func() {
-		setupStatsd()
-	})
-	Config.StatsdEnabled = false
+	defer func() {
+		Config.StatsdEnabled = false
+	}()
+
+	assert.NotPanics(t, func() { setupStatsd() })
 }
 
 func TestSetupPrometheus(t *testing.T) {
 	prometheus.DefaultRegisterer = prometheus.NewRegistry()
-	Config.PrometheusEnabled = false
 	setupPrometheus()
 	assert.Nil(t, Global.Prometheus.EvalCounter)
+
 	Config.PrometheusEnabled = true
+	defer func() { Config.PrometheusEnabled = false }()
 	setupPrometheus()
 	assert.NotNil(t, Global.Prometheus.EvalCounter)
 	assert.NotNil(t, Global.Prometheus.RequestCounter)
 	assert.Nil(t, Global.Prometheus.RequestHistogram)
-	Config.PrometheusEnabled = false
 }
 
 func TestSetupPrometheusWithLatencies(t *testing.T) {
 	prometheus.DefaultRegisterer = prometheus.NewRegistry()
 	Config.PrometheusEnabled = true
 	Config.PrometheusIncludeLatencyHistogram = true
+	defer func() {
+		Config.PrometheusEnabled = false
+		Config.PrometheusIncludeLatencyHistogram = false
+	}()
+
 	setupPrometheus()
 	assert.NotNil(t, Global.Prometheus.EvalCounter)
 	assert.NotNil(t, Global.Prometheus.RequestCounter)
 	assert.NotNil(t, Global.Prometheus.RequestHistogram)
-	Config.PrometheusEnabled = false
 }

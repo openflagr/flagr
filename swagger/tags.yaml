@@ -1,0 +1,30 @@
+get:
+  tags:
+    - tag
+  operationId: findAllTags
+  parameters:
+    - in: query
+      name: limit
+      type: integer
+      format: int64
+      description: the numbers of tags to return
+    - in: query
+      name: offset
+      type: integer
+      format: int64
+      description: return tags given the offset, it should usually set together with limit
+    - in: query
+      name: value_like
+      type: string
+      description: return tags partially matching given value
+  responses:
+    200:
+      description: list all the tags
+      schema:
+        type: array
+        items:
+          $ref: "#/definitions/tag"
+    default:
+      description: generic error response
+      schema:
+        $ref: "#/definitions/error"

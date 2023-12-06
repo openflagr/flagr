@@ -6,6 +6,7 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/go-openapi/errors"
@@ -82,7 +83,6 @@ func (m *Segment) Validate(formats strfmt.Registry) error {
 }
 
 func (m *Segment) validateConstraints(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.Constraints) { // not required
 		return nil
 	}
@@ -96,6 +96,8 @@ func (m *Segment) validateConstraints(formats strfmt.Registry) error {
 			if err := m.Constraints[i].Validate(formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("constraints" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("constraints" + "." + strconv.Itoa(i))
 				}
 				return err
 			}
@@ -112,7 +114,7 @@ func (m *Segment) validateDescription(formats strfmt.Registry) error {
 		return err
 	}
 
-	if err := validate.MinLength("description", "body", string(*m.Description), 1); err != nil {
+	if err := validate.MinLength("description", "body", *m.Description, 1); err != nil {
 		return err
 	}
 
@@ -120,7 +122,6 @@ func (m *Segment) validateDescription(formats strfmt.Registry) error {
 }
 
 func (m *Segment) validateDistributions(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.Distributions) { // not required
 		return nil
 	}
@@ -134,6 +135,8 @@ func (m *Segment) validateDistributions(formats strfmt.Registry) error {
 			if err := m.Distributions[i].Validate(formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("distributions" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("distributions" + "." + strconv.Itoa(i))
 				}
 				return err
 			}
@@ -145,12 +148,11 @@ func (m *Segment) validateDistributions(formats strfmt.Registry) error {
 }
 
 func (m *Segment) validateID(formats strfmt.Registry) error {
-
 	if swag.IsZero(m.ID) { // not required
 		return nil
 	}
 
-	if err := validate.MinimumInt("id", "body", int64(m.ID), 1, false); err != nil {
+	if err := validate.MinimumInt("id", "body", m.ID, 1, false); err != nil {
 		return err
 	}
 
@@ -163,7 +165,7 @@ func (m *Segment) validateRank(formats strfmt.Registry) error {
 		return err
 	}
 
-	if err := validate.MinimumInt("rank", "body", int64(*m.Rank), 0, false); err != nil {
+	if err := validate.MinimumInt("rank", "body", *m.Rank, 0, false); err != nil {
 		return err
 	}
 
@@ -176,11 +178,92 @@ func (m *Segment) validateRolloutPercent(formats strfmt.Registry) error {
 		return err
 	}
 
-	if err := validate.MinimumInt("rolloutPercent", "body", int64(*m.RolloutPercent), 0, false); err != nil {
+	if err := validate.MinimumInt("rolloutPercent", "body", *m.RolloutPercent, 0, false); err != nil {
 		return err
 	}
 
-	if err := validate.MaximumInt("rolloutPercent", "body", int64(*m.RolloutPercent), 100, false); err != nil {
+	if err := validate.MaximumInt("rolloutPercent", "body", *m.RolloutPercent, 100, false); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ContextValidate validate this segment based on the context it is used
+func (m *Segment) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateConstraints(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateDistributions(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateID(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *Segment) contextValidateConstraints(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.Constraints); i++ {
+
+		if m.Constraints[i] != nil {
+
+			if swag.IsZero(m.Constraints[i]) { // not required
+				return nil
+			}
+
+			if err := m.Constraints[i].ContextValidate(ctx, formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("constraints" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("constraints" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *Segment) contextValidateDistributions(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.Distributions); i++ {
+
+		if m.Distributions[i] != nil {
+
+			if swag.IsZero(m.Distributions[i]) { // not required
+				return nil
+			}
+
+			if err := m.Distributions[i].ContextValidate(ctx, formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("distributions" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("distributions" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *Segment) contextValidateID(ctx context.Context, formats strfmt.Registry) error {
+
+	if err := validate.ReadOnly(ctx, "id", "body", int64(m.ID)); err != nil {
 		return err
 	}
 

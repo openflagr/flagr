@@ -2,11 +2,14 @@ package handler
 
 import (
 	"sync"
+	"sync/atomic"
 	"time"
 
-	"github.com/checkr/flagr/pkg/config"
-	"github.com/checkr/flagr/pkg/entity"
-	"github.com/checkr/flagr/pkg/util"
+	"github.com/openflagr/flagr/swagger_gen/models"
+
+	"github.com/openflagr/flagr/pkg/config"
+	"github.com/openflagr/flagr/pkg/entity"
+	"github.com/openflagr/flagr/pkg/util"
 
 	"github.com/sirupsen/logrus"
 	"github.com/zhouzhuojie/withtimeout"
@@ -17,14 +20,15 @@ var (
 	singletonEvalCacheOnce sync.Once
 )
 
-type mapCache map[string]*entity.Flag
+type cacheContainer struct {
+	idCache  map[string]*entity.Flag
+	keyCache map[string]*entity.Flag
+	tagCache map[string]map[uint]*entity.Flag
+}
 
 // EvalCache is the in-memory cache just for evaluation
 type EvalCache struct {
-	mapCacheLock sync.RWMutex
-	idCache      mapCache
-	keyCache     mapCache
-
+	cache           atomic.Value
 	refreshTimeout  time.Duration
 	refreshInterval time.Duration
 }
@@ -33,8 +37,6 @@ type EvalCache struct {
 var GetEvalCache = func() *EvalCache {
 	singletonEvalCacheOnce.Do(func() {
 		ec := &EvalCache{
-			idCache:         make(map[string]*entity.Flag),
-			keyCache:        make(map[string]*entity.Flag),
 			refreshTimeout:  config.Config.EvalCacheRefreshTimeout,
 			refreshInterval: config.Config.EvalCacheRefreshInterval,
 		}
@@ -59,15 +61,80 @@ func (ec *EvalCache) Start() {
 	}()
 }
 
+func (ec *EvalCache) GetByTags(tags []string, operator *string) []*entity.Flag {
+	var results map[uint]*entity.Flag
+
+	if operator == nil || *operator == models.EvaluationBatchRequestFlagTagsOperatorANY {
+		results = ec.getByTagsANY(tags)
+	}
+
+	if operator != nil && *operator == models.EvaluationBatchRequestFlagTagsOperatorALL {
+		results = ec.getByTagsALL(tags)
+	}
+
+	values := make([]*entity.Flag, 0, len(results))
+	for _, f := range results {
+		values = append(values, f)
+	}
+
+	return values
+}
+
+func (ec *EvalCache) getByTagsANY(tags []string) map[uint]*entity.Flag {
+	results := map[uint]*entity.Flag{}
+	cache := ec.cache.Load().(*cacheContainer)
+
+	for _, t := range tags {
+		fSet, ok := cache.tagCache[t]
+		if ok {
+			for fID, f := range fSet {
+				results[fID] = f
+			}
+		}
+	}
+	return results
+}
+
+func (ec *EvalCache) getByTagsALL(tags []string) map[uint]*entity.Flag {
+	results := map[uint]*entity.Flag{}
+	cache := ec.cache.Load().(*cacheContainer)
+
+	for i, t := range tags {
+		fSet, ok := cache.tagCache[t]
+		if !ok {
+			// no flags
+			return map[uint]*entity.Flag{}
+		}
+
+		if i == 0 {
+			// store all the flags
+			for fID, f := range fSet {
+				results[fID] = f
+			}
+		} else {
+			for fID := range results {
+				if _, ok := fSet[fID]; !ok {
+					delete(results, fID)
+				}
+			}
+
+			// no flags left
+			if len(results) == 0 {
+				return results
+			}
+		}
+	}
+
+	return results
+}
+
 // GetByFlagKeyOrID gets the flag by Key or ID
 func (ec *EvalCache) GetByFlagKeyOrID(keyOrID interface{}) *entity.Flag {
-	ec.mapCacheLock.RLock()
-	defer ec.mapCacheLock.RUnlock()
-
 	s := util.SafeString(keyOrID)
-	f, ok := ec.idCache[s]
+	cache := ec.cache.Load().(*cacheContainer)
+	f, ok := cache.idCache[s]
 	if !ok {
-		f = ec.keyCache[s]
+		f = cache.keyCache[s]
 	}
 	return f
 }
@@ -78,16 +145,16 @@ func (ec *EvalCache) reloadMapCache() error {
 	}
 
 	_, _, err := withtimeout.Do(ec.refreshTimeout, func() (interface{}, error) {
-		idCache, keyCache, err := ec.fetchAllFlags()
+		idCache, keyCache, tagCache, err := ec.fetchAllFlags()
 		if err != nil {
 			return nil, err
 		}
 
-		ec.mapCacheLock.Lock()
-		defer ec.mapCacheLock.Unlock()
-
-		ec.idCache = idCache
-		ec.keyCache = keyCache
+		ec.cache.Store(&cacheContainer{
+			idCache:  idCache,
+			keyCache: keyCache,
+			tagCache: tagCache,
+		})
 		return nil, err
 	})
 

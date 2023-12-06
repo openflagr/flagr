@@ -29,10 +29,10 @@ func NewPostEvaluationBatch(ctx *middleware.Context, handler PostEvaluationBatch
 	return &PostEvaluationBatch{Context: ctx, Handler: handler}
 }
 
-/*PostEvaluationBatch swagger:route POST /evaluation/batch evaluation postEvaluationBatch
+/*
+	PostEvaluationBatch swagger:route POST /evaluation/batch evaluation postEvaluationBatch
 
 PostEvaluationBatch post evaluation batch API
-
 */
 type PostEvaluationBatch struct {
 	Context *middleware.Context
@@ -42,17 +42,15 @@ type PostEvaluationBatch struct {
 func (o *PostEvaluationBatch) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, rCtx, _ := o.Context.RouteInfo(r)
 	if rCtx != nil {
-		r = rCtx
+		*r = *rCtx
 	}
 	var Params = NewPostEvaluationBatchParams()
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
 	res := o.Handler.Handle(Params) // actually handle the request
-
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

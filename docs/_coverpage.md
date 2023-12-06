@@ -7,7 +7,7 @@ and dynamic configuration microservice in Go.
 <br>
 </p>
 
-[GitHub](https://github.com/checkr/flagr)
+[GitHub](https://github.com/openflagr/flagr)
 [Get Started](home)
 
 ![color](#74e5e0)

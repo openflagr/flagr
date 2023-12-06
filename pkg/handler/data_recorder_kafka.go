@@ -4,13 +4,13 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 	"time"
 
-	"github.com/checkr/flagr/pkg/config"
-	"github.com/checkr/flagr/pkg/util"
-	"github.com/checkr/flagr/swagger_gen/models"
+	"github.com/openflagr/flagr/pkg/config"
+	"github.com/openflagr/flagr/pkg/util"
+	"github.com/openflagr/flagr/swagger_gen/models"
 
 	"github.com/Shopify/sarama"
 	"github.com/sirupsen/logrus"
@@ -31,17 +31,30 @@ func mustParseKafkaVersion(version string) sarama.KafkaVersion {
 // NewKafkaRecorder creates a new Kafka recorder
 var NewKafkaRecorder = func() DataRecorder {
 	cfg := sarama.NewConfig()
+
 	tlscfg := createTLSConfiguration(
 		config.Config.RecorderKafkaCertFile,
 		config.Config.RecorderKafkaKeyFile,
 		config.Config.RecorderKafkaCAFile,
 		config.Config.RecorderKafkaVerifySSL,
+		config.Config.RecorderKafkaSimpleSSL,
 	)
 	if tlscfg != nil {
 		cfg.Net.TLS.Enable = true
 		cfg.Net.TLS.Config = tlscfg
 	}
-	cfg.Producer.RequiredAcks = sarama.WaitForLocal
+
+	if config.Config.RecorderKafkaSASLUsername != "" && config.Config.RecorderKafkaSASLPassword != "" {
+		cfg.Net.SASL.Enable = true
+		cfg.Net.SASL.User = config.Config.RecorderKafkaSASLUsername
+		cfg.Net.SASL.Password = config.Config.RecorderKafkaSASLPassword
+	}
+
+	cfg.Net.MaxOpenRequests = config.Config.RecorderKafkaMaxOpenReqs
+
+	cfg.Producer.Compression = sarama.CompressionCodec(config.Config.RecorderKafkaCompressionCodec)
+	cfg.Producer.RequiredAcks = sarama.RequiredAcks(config.Config.RecorderKafkaRequiredAcks)
+	cfg.Producer.Idempotent = config.Config.RecorderKafkaIdempotent
 	cfg.Producer.Retry.Max = config.Config.RecorderKafkaRetryMax
 	cfg.Producer.Flush.Frequency = config.Config.RecorderKafkaFlushFrequency
 	cfg.Version = mustParseKafkaVersion(config.Config.RecorderKafkaVersion)
@@ -67,8 +80,9 @@ var NewKafkaRecorder = func() DataRecorder {
 	}
 
 	return &kafkaRecorder{
-		topic:    config.Config.RecorderKafkaTopic,
-		producer: producer,
+		topic:               config.Config.RecorderKafkaTopic,
+		partitionKeyEnabled: config.Config.RecorderKafkaPartitionKeyEnabled,
+		producer:            producer,
 		options: DataRecordFrameOptions{
 			Encrypted:       config.Config.RecorderKafkaEncrypted,
 			Encryptor:       encryptor,
@@ -77,35 +91,44 @@ var NewKafkaRecorder = func() DataRecorder {
 	}
 }
 
-func createTLSConfiguration(certFile string, keyFile string, caFile string, verifySSL bool) (t *tls.Config) {
-	if certFile != "" && keyFile != "" && caFile != "" {
+func createTLSConfiguration(certFile string, keyFile string, caFile string, verifySSL bool, simpleSSL bool) (t *tls.Config) {
+	if certFile != "" && keyFile != "" {
 		cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 		if err != nil {
 			logrus.WithField("TLSConfigurationError", err).Panic(err)
 		}
 
-		caCert, err := ioutil.ReadFile(caFile)
+		t = &tls.Config{
+			Certificates:       []tls.Certificate{cert},
+			InsecureSkipVerify: !verifySSL,
+		}
+	}
+
+	if simpleSSL {
+		t = &tls.Config{
+			InsecureSkipVerify: !verifySSL,
+		}
+	}
+
+	if caFile != "" && t != nil {
+		caCert, err := os.ReadFile(caFile)
 		if err != nil {
 			logrus.WithField("TLSConfigurationError", err).Panic(err)
 		}
 
 		caCertPool := x509.NewCertPool()
 		caCertPool.AppendCertsFromPEM(caCert)
-
-		t = &tls.Config{
-			Certificates:       []tls.Certificate{cert},
-			RootCAs:            caCertPool,
-			InsecureSkipVerify: !verifySSL,
-		}
+		t.RootCAs = caCertPool
 	}
 	// will be nil by default if nothing is provided
 	return t
 }
 
 type kafkaRecorder struct {
-	producer sarama.AsyncProducer
-	topic    string
-	options  DataRecordFrameOptions
+	producer            sarama.AsyncProducer
+	topic               string
+	options             DataRecordFrameOptions
+	partitionKeyEnabled bool
 }
 
 func (k *kafkaRecorder) NewDataRecordFrame(r models.EvalResult) DataRecordFrame {
@@ -122,9 +145,13 @@ func (k *kafkaRecorder) AsyncRecord(r models.EvalResult) {
 		logrus.WithField("err", err).Error("failed to generate data record frame for kafka recorder")
 		return
 	}
+	var partitionKey sarama.Encoder = nil
+	if k.partitionKeyEnabled {
+		partitionKey = sarama.StringEncoder(frame.GetPartitionKey())
+	}
 	k.producer.Input() <- &sarama.ProducerMessage{
 		Topic:     k.topic,
-		Key:       sarama.StringEncoder(frame.GetPartitionKey()),
+		Key:       partitionKey,
 		Value:     sarama.ByteEncoder(output),
 		Timestamp: time.Now().UTC(),
 	}

@@ -5,7 +5,7 @@ import (
 	"hash/crc32"
 	"sort"
 
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 const (
@@ -25,7 +25,7 @@ type Distribution struct {
 	VariantKey string
 
 	Percent uint   // Percent is an uint from 0 to 100, percent is always derived from Bitmap
-	Bitmap  string `sql:"type:text" json:"-"`
+	Bitmap  string `gorm:"type:text" json:"-"`
 }
 
 // DistributionArray is useful for faster evalution

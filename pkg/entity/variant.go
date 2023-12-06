@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/checkr/flagr/pkg/util"
-	"github.com/jinzhu/gorm"
+	"github.com/openflagr/flagr/pkg/util"
 	"github.com/spf13/cast"
+	"gorm.io/gorm"
 )
 
 // Variant is the struct that represent the experience/variant of the evaluation entity
@@ -15,7 +15,7 @@ type Variant struct {
 	gorm.Model
 	FlagID     uint `gorm:"index:idx_variant_flagid"`
 	Key        string
-	Attachment Attachment `sql:"type:text"`
+	Attachment Attachment `gorm:"type:text"`
 }
 
 // Validate validates the Variant

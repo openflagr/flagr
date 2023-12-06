@@ -4,14 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"sync"
 	"time"
 
-	"github.com/checkr/flagr/pkg/config"
-	"github.com/checkr/flagr/pkg/entity"
-	"github.com/checkr/flagr/pkg/util"
-	"github.com/checkr/flagr/swagger_gen/models"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/evaluation"
-	"github.com/jinzhu/gorm"
+	"github.com/openflagr/flagr/pkg/config"
+	"github.com/openflagr/flagr/pkg/entity"
+	"github.com/openflagr/flagr/pkg/util"
+	"github.com/openflagr/flagr/swagger_gen/models"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/evaluation"
+	"gorm.io/gorm"
 
 	"github.com/bsm/ratelimit"
 	"github.com/davecgh/go-spew/spew"
@@ -49,6 +50,8 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 	entities := params.Body.Entities
 	flagIDs := params.Body.FlagIDs
 	flagKeys := params.Body.FlagKeys
+	flagTags := params.Body.FlagTags
+	flagTagsOperator := params.Body.FlagTagsOperator
 	results := &models.EvaluationBatchResponse{}
 
 	stripEvalContextFromResults := false
@@ -58,6 +61,18 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 
 	// TODO make it concurrent
 	for _, entity := range entities {
+		if len(flagTags) > 0 {
+			evalContext := models.EvalContext{
+				EnableDebug:      params.Body.EnableDebug,
+				EntityContext:    entity.EntityContext,
+				EntityID:         entity.EntityID,
+				EntityType:       entity.EntityType,
+				FlagTags:         flagTags,
+				FlagTagsOperator: flagTagsOperator,
+			}
+			evalResults := EvalFlagsByTags(evalContext)
+			results.EvaluationResults = append(results.EvaluationResults, evalResults...)
+		}
 		for _, flagID := range flagIDs {
 
 			var evalContext models.EvalContext
@@ -116,7 +131,7 @@ func BlankResult(f *entity.Flag, evalContext *models.EvalContext, msg string) *m
 }
 
 // Evaluates a flag for a given context and determines what segment, if any, that applies.
-var EvalFlag = func(evalContext models.EvalContext, stripEvalContextFromResults bool) *models.EvalResult {
+var LookupFlag = func(evalContext models.EvalContext) *entity.Flag {
 	cache := GetEvalCache()
 	flagID := util.SafeUint(evalContext.FlagID)
 	flagKey := util.SafeString(evalContext.FlagKey)
@@ -130,35 +145,56 @@ var EvalFlag = func(evalContext models.EvalContext, stripEvalContextFromResults 
 	if f == nil {
 		f = cache.GetByFlagKeyOrID(flagKey)
 	}
+	return f
+}
 
-	if f == nil {
+var EvalFlagsByTags = func(evalContext models.EvalContext) []*models.EvalResult {
+	cache := GetEvalCache()
+	fs := cache.GetByTags(evalContext.FlagTags, evalContext.FlagTagsOperator)
+	results := []*models.EvalResult{}
+	for _, f := range fs {
+		results = append(results, EvalFlagWithContext(f, evalContext))
+	}
+	return results
+}
+
+var EvalFlag = func(evalContext models.EvalContext) *models.EvalResult {
+	flag := LookupFlag(evalContext)
+	return EvalFlagWithContext(flag, evalContext)
+}
+
+var EvalFlagWithContext = func(flag *entity.Flag, evalContext models.EvalContext) *models.EvalResult {
+	flagID := util.SafeUint(evalContext.FlagID)
+	flagKey := util.SafeString(evalContext.FlagKey)
+
+	if flag == nil {
 		emptyFlag := &entity.Flag{Model: gorm.Model{ID: flagID}, Key: flagKey}
 		return BlankResult(emptyFlag, outputEvalContext, fmt.Sprintf("flagID %v not found or deleted", flagID))
 	}
 
-	if !f.Enabled {
-		return BlankResult(f, outputEvalContext, fmt.Sprintf("flagID %v is not enabled", f.ID))
+	if !flag.Enabled {
+		return BlankResult(flag, evalContext, fmt.Sprintf("flagID %v is not enabled", flag.ID))
 	}
 
-	if len(f.Segments) == 0 {
-		return BlankResult(f, outputEvalContext, fmt.Sprintf("flagID %v has no segments", f.ID))
+	if len(flag.Segments) == 0 {
+		return BlankResult(flag, evalContext, fmt.Sprintf("flagID %v has no segments", flag.ID))
 	}
 
 	if evalContext.EntityID == "" {
 		evalContext.EntityID = fmt.Sprintf("randomly_generated_%d", rand.Int31())
 	}
 
-	if f.EntityType != "" {
-		evalContext.EntityType = f.EntityType
+	if flag.EntityType != "" {
+		evalContext.EntityType = flag.EntityType
 	}
 
 	logs := []*models.SegmentDebugLog{}
 	var vID int64
 	var sID int64
 
-	for _, segment := range f.Segments {
+	for _, segment := range flag.Segments {
 		sID = int64(segment.ID)
-		variantID, log, evalNextSegment := evalSegment(f.ID, evalContext, segment)
+		variantID, log, evalNextSegment := evalSegment(flag.ID, evalContext, segment)
 		if config.Config.EvalDebugEnabled && evalContext.EnableDebug {
 			logs = append(logs, log)
 		}
@@ -169,17 +205,17 @@ var EvalFlag = func(evalContext models.EvalContext, stripEvalContextFromResults 
 			break
 		}
 	}
-	evalResult := BlankResult(f, outputEvalContext, "")
+	evalResult := BlankResult(flag, evalContext, "")
 	evalResult.EvalDebugLog.SegmentDebugLogs = logs
 	evalResult.SegmentID = sID
 	evalResult.VariantID = vID
-	v := f.FlagEvaluation.VariantsMap[util.SafeUint(vID)]
+	v := flag.FlagEvaluation.VariantsMap[util.SafeUint(vID)]
 	if v != nil {
 		evalResult.VariantAttachment = v.Attachment
 		evalResult.VariantKey = v.Key
 	}
 
-	logEvalResult(evalResult, f.DataRecordsEnabled)
+	logEvalResult(evalResult, flag.DataRecordsEnabled)
 	return evalResult
 }
 
@@ -224,6 +260,13 @@ var logEvalResultToPrometheus = func(r *models.EvalResult) {
 	if config.Global.Prometheus.EvalCounter == nil {
 		return
 	}
+	config.Global.Prometheus.EvalCounter.WithLabelValues(
+		util.SafeStringWithDefault(r.EvalContext.EntityType, "null"),
+		util.SafeStringWithDefault(r.FlagID, "null"),
+		util.SafeStringWithDefault(r.FlagKey, "null"),
+		util.SafeStringWithDefault(r.VariantID, "null"),
+		util.SafeStringWithDefault(r.VariantKey, "null"),
+	).Inc()
 
 	if r.EvalContext == nil {
 		config.Global.Prometheus.EvalCounter.WithLabelValues(
@@ -302,19 +345,15 @@ func debugConstraintMsg(enableDebug bool, expr conditions.Expr, m map[string]int
 	return fmt.Sprintf("constraint not match. constraint: %s, entity_context: %+v.", expr, m)
 }
 
-var rateLimitMap = make(map[uint]*ratelimit.RateLimiter)
+var rateLimitMap = sync.Map{}
 
 var rateLimitPerFlagConsoleLogging = func(r *models.EvalResult) {
 	flagID := util.SafeUint(r.FlagID)
-	rl, ok := rateLimitMap[flagID]
-	if !ok {
-		rl = ratelimit.New(
-			config.Config.RateLimiterPerFlagPerSecondConsoleLogging,
-			time.Second,
-		)
-		rateLimitMap[flagID] = rl
-	}
-	if !rl.Limit() {
+	rl, _ := rateLimitMap.LoadOrStore(flagID, ratelimit.New(
+		config.Config.RateLimiterPerFlagPerSecondConsoleLogging,
+		time.Second,
+	))
+	if !rl.(*ratelimit.RateLimiter).Limit() {
 		jsonStr, _ := json.Marshal(struct{ FlagEvalResult *models.EvalResult }{FlagEvalResult: r})
 		fmt.Println(string(jsonStr))
 	}

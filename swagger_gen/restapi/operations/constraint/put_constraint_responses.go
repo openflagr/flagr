@@ -10,13 +10,14 @@ import (
 
 	"github.com/go-openapi/runtime"
 
-	"github.com/checkr/flagr/swagger_gen/models"
+	"github.com/openflagr/flagr/swagger_gen/models"
 )
 
 // PutConstraintOKCode is the HTTP code returned for type PutConstraintOK
 const PutConstraintOKCode int = 200
 
-/*PutConstraintOK constraint just updated
+/*
+PutConstraintOK constraint just updated
 
 swagger:response putConstraintOK
 */
@@ -57,7 +58,8 @@ func (o *PutConstraintOK) WriteResponse(rw http.ResponseWriter, producer runtime
 	}
 }
 
-/*PutConstraintDefault generic error response
+/*
+PutConstraintDefault generic error response
 
 swagger:response putConstraintDefault
 */

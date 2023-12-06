@@ -16,11 +16,12 @@ import (
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 
-	"github.com/checkr/flagr/swagger_gen/models"
+	"github.com/openflagr/flagr/swagger_gen/models"
 )
 
 // NewPutSegmentsReorderParams creates a new PutSegmentsReorderParams object
-// no default values defined in spec.
+//
+// There are no default values defined in the spec.
 func NewPutSegmentsReorderParams() PutSegmentsReorderParams {
 
 	return PutSegmentsReorderParams{}
@@ -62,7 +63,7 @@ func (o *PutSegmentsReorderParams) BindRequest(r *http.Request, route *middlewar
 		var body models.PutSegmentReorderRequest
 		if err := route.Consumer.Consume(r.Body, &body); err != nil {
 			if err == io.EOF {
-				res = append(res, errors.Required("body", "body"))
+				res = append(res, errors.Required("body", "body", ""))
 			} else {
 				res = append(res, errors.NewParseError("body", "body", "", err))
 			}
@@ -72,18 +73,23 @@ func (o *PutSegmentsReorderParams) BindRequest(r *http.Request, route *middlewar
 				res = append(res, err)
 			}
 
+			ctx := validate.WithOperationRequest(r.Context())
+			if err := body.ContextValidate(ctx, route.Formats); err != nil {
+				res = append(res, err)
+			}
+
 			if len(res) == 0 {
 				o.Body = &body
 			}
 		}
 	} else {
-		res = append(res, errors.Required("body", "body"))
+		res = append(res, errors.Required("body", "body", ""))
 	}
+
 	rFlagID, rhkFlagID, _ := route.Params.GetOK("flagID")
 	if err := o.bindFlagID(rFlagID, rhkFlagID, route.Formats); err != nil {
 		res = append(res, err)
 	}
-
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
@@ -116,7 +122,7 @@ func (o *PutSegmentsReorderParams) bindFlagID(rawData []string, hasKey bool, for
 // validateFlagID carries on validations for parameter FlagID
 func (o *PutSegmentsReorderParams) validateFlagID(formats strfmt.Registry) error {
 
-	if err := validate.MinimumInt("flagID", "path", int64(o.FlagID), 1, false); err != nil {
+	if err := validate.MinimumInt("flagID", "path", o.FlagID, 1, false); err != nil {
 		return err
 	}
 

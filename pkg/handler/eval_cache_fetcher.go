@@ -3,13 +3,14 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
+	"os"
 
-	"github.com/checkr/flagr/pkg/config"
-	"github.com/checkr/flagr/pkg/entity"
-	"github.com/checkr/flagr/pkg/util"
-	"github.com/jinzhu/gorm"
+	"github.com/openflagr/flagr/pkg/config"
+	"github.com/openflagr/flagr/pkg/entity"
+	"github.com/openflagr/flagr/pkg/util"
+	"gorm.io/gorm"
 )
 
 // EvalCacheJSON is the JSON serialization format of EvalCache's flags
@@ -18,31 +19,29 @@ type EvalCacheJSON struct {
 }
 
 func (ec *EvalCache) export() EvalCacheJSON {
-	fs := make([]entity.Flag, 0, len(ec.idCache))
-
-	ec.mapCacheLock.RLock()
-	defer ec.mapCacheLock.RUnlock()
-
-	for _, f := range ec.idCache {
+	idCache := ec.cache.Load().(*cacheContainer).idCache
+	fs := make([]entity.Flag, 0, len(idCache))
+	for _, f := range idCache {
 		ff := *f
 		fs = append(fs, ff)
 	}
 	return EvalCacheJSON{Flags: fs}
 }
 
-func (ec *EvalCache) fetchAllFlags() (idCache mapCache, keyCache mapCache, err error) {
+func (ec *EvalCache) fetchAllFlags() (idCache map[string]*entity.Flag, keyCache map[string]*entity.Flag, tagCache map[string]map[uint]*entity.Flag, err error) {
 	fs, err := fetchAllFlags()
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	idCache = make(map[string]*entity.Flag)
 	keyCache = make(map[string]*entity.Flag)
+	tagCache = make(map[string]map[uint]*entity.Flag)
 
 	for i := range fs {
 		f := &fs[i]
 		if err := f.PrepareEvaluation(); err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 
 		if f.ID != 0 {
@@ -51,8 +50,16 @@ func (ec *EvalCache) fetchAllFlags() (idCache mapCache, keyCache mapCache, err e
 		if f.Key != "" {
 			keyCache[f.Key] = f
 		}
+		if f.Tags != nil {
+			for _, s := range f.Tags {
+				if tagCache[s.Value] == nil {
+					tagCache[s.Value] = make(map[uint]*entity.Flag)
+				}
+				tagCache[s.Value][f.ID] = f
+			}
+		}
 	}
-	return idCache, keyCache, nil
+	return idCache, keyCache, tagCache, nil
 }
 
 type evalCacheFetcher interface {
@@ -90,7 +97,7 @@ type jsonFileFetcher struct {
 }
 
 func (ff *jsonFileFetcher) fetch() ([]entity.Flag, error) {
-	b, err := ioutil.ReadFile(ff.filePath)
+	b, err := os.ReadFile(ff.filePath)
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +121,7 @@ func (hf *jsonHTTPFetcher) fetch() ([]entity.Flag, error) {
 	}
 	defer res.Body.Close()
 
-	b, err := ioutil.ReadAll(res.Body)
+	b, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -135,6 +142,6 @@ func (df *dbFetcher) fetch() ([]entity.Flag, error) {
 	// Use eager loading to avoid N+1 problem
 	// doc: http://jinzhu.me/gorm/crud.html#preloading-eager-loading
 	fs := []entity.Flag{}
-	err := entity.PreloadSegmentsVariants(df.db).Find(&fs).Error
+	err := entity.PreloadSegmentsVariantsTags(df.db).Find(&fs).Error
 	return fs, err
 }

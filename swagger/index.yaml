@@ -5,7 +5,7 @@ info:
     Flagr is a feature flagging, A/B testing and dynamic configuration microservice.
     The base path for all the APIs is "/api/v1".
   title: Flagr
-  version: 1.1.8
+  version: 1.1.16
 tags:
   - name: flag
     description: Everything about the flag
@@ -29,6 +29,7 @@ x-tagGroups:
       - constraint
       - distribution
       - variant
+      - tag
   - name: Flag Evaluation
     tags:
       - evaluation
@@ -50,8 +51,14 @@ paths:
     $ref: ./flags.yaml
   /flags/{flagID}:
     $ref: ./flag.yaml
+  /flags/{flagID}/restore:
+    $ref: ./flag_restore.yaml
   /flags/{flagID}/enabled:
     $ref: ./flag_enabled.yaml
+  /flags/{flagID}/tags:
+    $ref: ./flag_tags.yaml
+  /flags/{flagID}/tags/{tagID}:
+    $ref: ./flag_tag.yaml
   /flags/{flagID}/variants:
     $ref: ./flag_variants.yaml
   /flags/{flagID}/variants/{variantID}:
@@ -72,6 +79,8 @@ paths:
     $ref: ./flag_snapshots.yaml
   /flags/entity_types:
     $ref: ./flag_entity_types.yaml
+  /tags:
+    $ref: ./tags.yaml
   /evaluation:
     $ref: ./evaluation.yaml
   /evaluation/batch:
@@ -108,6 +117,10 @@ definitions:
         minLength: 1
       enabled:
         type: boolean
+      tags:
+        type: array
+        items:
+          $ref: "#/definitions/tag"
       segments:
         type: array
         items:
@@ -190,11 +203,35 @@ definitions:
         type: integer
         format: int64
         minimum: 1
+        readOnly: true
       updatedBy:
         type: string
       flag:
         $ref: "#/definitions/flag"
       updatedAt:
+        type: string
+        minLength: 1
+
+  # Tag
+  tag:
+    type: object
+    required:
+      - value
+    properties:
+      id:
+        type: integer
+        format: int64
+        minimum: 1
+        readOnly: true
+      value:
+        type: string
+        minLength: 1
+  createTagRequest:
+    type: object
+    required:
+      - value
+    properties:
+      value:
         type: string
         minLength: 1
 
@@ -417,6 +454,22 @@ definitions:
       flagKey:
         description: flagKey. flagID or flagKey will resolve to the same flag. Either works.
         type: string
+      flagTags:
+        description: flagTags. flagTags looks up flags by tag. Either works.
+        type: array
+        x-omitempty: true
+        items:
+          type: string
+      flagTagsOperator:
+        description: >-
+          determine how flagTags is used to filter flags to be evaluated. OR extends the evaluation to those which
+          contains at least one of the provided flagTags or AND limit the evaluation to those which contains all the
+          flagTags.
+        type: string
+        enum:
+          - "ANY"
+          - "ALL"
+        default: "ANY"
   evalResult:
     type: object
     properties:
@@ -497,12 +550,29 @@ definitions:
           minimum: 1
         minItems: 1
       flagKeys:
-        description: flagKeys. Either flagIDs or flagKeys works. If pass in both, Flagr may return duplicate results.
+        description: flagKeys. Either flagIDs, flagKeys or flagTags works. If pass in multiples, Flagr may return duplicate results.
         type: array
         items:
           type: string
           minLength: 1
         minItems: 1
+      flagTags:
+        description: flagTags. Either flagIDs, flagKeys or flagTags works. If pass in multiples, Flagr may return duplicate results.
+        type: array
+        items:
+          type: string
+          minLength: 1
+        minItems: 1
+      flagTagsOperator:
+        description: >-
+          determine how flagTags is used to filter flags to be evaluated. OR extends the evaluation to those which
+          contains at least one of the provided flagTags or AND limit the evaluation to those which contains all the
+          flagTags.
+        type: string
+        enum:
+          - "ANY"
+          - "ALL"
+        default: "ANY"
   evaluationBatchResponse:
     type: object
     required:

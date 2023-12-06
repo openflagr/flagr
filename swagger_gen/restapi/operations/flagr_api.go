@@ -19,14 +19,15 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/constraint"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/distribution"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/evaluation"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/export"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/flag"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/health"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/segment"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/variant"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/constraint"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/distribution"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/evaluation"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/export"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/flag"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/health"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/segment"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/tag"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/variant"
 )
 
 // NewFlagrAPI creates a new Flagr instance
@@ -41,6 +42,7 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		PreServerShutdown:   func() {},
 		ServerShutdown:      func() {},
 		spec:                spec,
+		useSwaggerUI:        false,
 		ServeError:          errors.ServeError,
 		BasicAuthenticator:  security.BasicAuth,
 		APIKeyAuthenticator: security.APIKeyAuth,
@@ -60,6 +62,9 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		SegmentCreateSegmentHandler: segment.CreateSegmentHandlerFunc(func(params segment.CreateSegmentParams) middleware.Responder {
 			return middleware.NotImplemented("operation segment.CreateSegment has not yet been implemented")
 		}),
+		TagCreateTagHandler: tag.CreateTagHandlerFunc(func(params tag.CreateTagParams) middleware.Responder {
+			return middleware.NotImplemented("operation tag.CreateTag has not yet been implemented")
+		}),
 		VariantCreateVariantHandler: variant.CreateVariantHandlerFunc(func(params variant.CreateVariantParams) middleware.Responder {
 			return middleware.NotImplemented("operation variant.CreateVariant has not yet been implemented")
 		}),
@@ -72,8 +77,14 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		SegmentDeleteSegmentHandler: segment.DeleteSegmentHandlerFunc(func(params segment.DeleteSegmentParams) middleware.Responder {
 			return middleware.NotImplemented("operation segment.DeleteSegment has not yet been implemented")
 		}),
+		TagDeleteTagHandler: tag.DeleteTagHandlerFunc(func(params tag.DeleteTagParams) middleware.Responder {
+			return middleware.NotImplemented("operation tag.DeleteTag has not yet been implemented")
+		}),
 		VariantDeleteVariantHandler: variant.DeleteVariantHandlerFunc(func(params variant.DeleteVariantParams) middleware.Responder {
 			return middleware.NotImplemented("operation variant.DeleteVariant has not yet been implemented")
+		}),
+		TagFindAllTagsHandler: tag.FindAllTagsHandlerFunc(func(params tag.FindAllTagsParams) middleware.Responder {
+			return middleware.NotImplemented("operation tag.FindAllTags has not yet been implemented")
 		}),
 		ConstraintFindConstraintsHandler: constraint.FindConstraintsHandlerFunc(func(params constraint.FindConstraintsParams) middleware.Responder {
 			return middleware.NotImplemented("operation constraint.FindConstraints has not yet been implemented")
@@ -86,6 +97,9 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		}),
 		SegmentFindSegmentsHandler: segment.FindSegmentsHandlerFunc(func(params segment.FindSegmentsParams) middleware.Responder {
 			return middleware.NotImplemented("operation segment.FindSegments has not yet been implemented")
+		}),
+		TagFindTagsHandler: tag.FindTagsHandlerFunc(func(params tag.FindTagsParams) middleware.Responder {
+			return middleware.NotImplemented("operation tag.FindTags has not yet been implemented")
 		}),
 		VariantFindVariantsHandler: variant.FindVariantsHandlerFunc(func(params variant.FindVariantsParams) middleware.Responder {
 			return middleware.NotImplemented("operation variant.FindVariants has not yet been implemented")
@@ -132,6 +146,9 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		VariantPutVariantHandler: variant.PutVariantHandlerFunc(func(params variant.PutVariantParams) middleware.Responder {
 			return middleware.NotImplemented("operation variant.PutVariant has not yet been implemented")
 		}),
+		FlagRestoreFlagHandler: flag.RestoreFlagHandlerFunc(func(params flag.RestoreFlagParams) middleware.Responder {
+			return middleware.NotImplemented("operation flag.RestoreFlag has not yet been implemented")
+		}),
 		FlagSetFlagEnabledHandler: flag.SetFlagEnabledHandlerFunc(func(params flag.SetFlagEnabledParams) middleware.Responder {
 			return middleware.NotImplemented("operation flag.SetFlagEnabled has not yet been implemented")
 		}),
@@ -150,13 +167,16 @@ type FlagrAPI struct {
 	defaultConsumes string
 	defaultProduces string
 	Middleware      func(middleware.Builder) http.Handler
+	useSwaggerUI    bool
 
 	// BasicAuthenticator generates a runtime.Authenticator from the supplied basic auth function.
 	// It has a default implementation in the security package, however you can replace it for your particular usage.
 	BasicAuthenticator func(security.UserPassAuthentication) runtime.Authenticator
+
 	// APIKeyAuthenticator generates a runtime.Authenticator from the supplied token auth function.
 	// It has a default implementation in the security package, however you can replace it for your particular usage.
 	APIKeyAuthenticator func(string, string, security.TokenAuthentication) runtime.Authenticator
+
 	// BearerAuthenticator generates a runtime.Authenticator from the supplied bearer token auth function.
 	// It has a default implementation in the security package, however you can replace it for your particular usage.
 	BearerAuthenticator func(string, security.ScopedTokenAuthentication) runtime.Authenticator
@@ -178,6 +198,8 @@ type FlagrAPI struct {
 	FlagCreateFlagHandler flag.CreateFlagHandler
 	// SegmentCreateSegmentHandler sets the operation handler for the create segment operation
 	SegmentCreateSegmentHandler segment.CreateSegmentHandler
+	// TagCreateTagHandler sets the operation handler for the create tag operation
+	TagCreateTagHandler tag.CreateTagHandler
 	// VariantCreateVariantHandler sets the operation handler for the create variant operation
 	VariantCreateVariantHandler variant.CreateVariantHandler
 	// ConstraintDeleteConstraintHandler sets the operation handler for the delete constraint operation
@@ -186,8 +208,12 @@ type FlagrAPI struct {
 	FlagDeleteFlagHandler flag.DeleteFlagHandler
 	// SegmentDeleteSegmentHandler sets the operation handler for the delete segment operation
 	SegmentDeleteSegmentHandler segment.DeleteSegmentHandler
+	// TagDeleteTagHandler sets the operation handler for the delete tag operation
+	TagDeleteTagHandler tag.DeleteTagHandler
 	// VariantDeleteVariantHandler sets the operation handler for the delete variant operation
 	VariantDeleteVariantHandler variant.DeleteVariantHandler
+	// TagFindAllTagsHandler sets the operation handler for the find all tags operation
+	TagFindAllTagsHandler tag.FindAllTagsHandler
 	// ConstraintFindConstraintsHandler sets the operation handler for the find constraints operation
 	ConstraintFindConstraintsHandler constraint.FindConstraintsHandler
 	// DistributionFindDistributionsHandler sets the operation handler for the find distributions operation
@@ -196,6 +222,8 @@ type FlagrAPI struct {
 	FlagFindFlagsHandler flag.FindFlagsHandler
 	// SegmentFindSegmentsHandler sets the operation handler for the find segments operation
 	SegmentFindSegmentsHandler segment.FindSegmentsHandler
+	// TagFindTagsHandler sets the operation handler for the find tags operation
+	TagFindTagsHandler tag.FindTagsHandler
 	// VariantFindVariantsHandler sets the operation handler for the find variants operation
 	VariantFindVariantsHandler variant.FindVariantsHandler
 	// ExportGetExportEvalCacheJSONHandler sets the operation handler for the get export eval cache JSON operation
@@ -226,8 +254,11 @@ type FlagrAPI struct {
 	SegmentPutSegmentsReorderHandler segment.PutSegmentsReorderHandler
 	// VariantPutVariantHandler sets the operation handler for the put variant operation
 	VariantPutVariantHandler variant.PutVariantHandler
+	// FlagRestoreFlagHandler sets the operation handler for the restore flag operation
+	FlagRestoreFlagHandler flag.RestoreFlagHandler
 	// FlagSetFlagEnabledHandler sets the operation handler for the set flag enabled operation
 	FlagSetFlagEnabledHandler flag.SetFlagEnabledHandler
+
 	// ServeError is called when an error is received, there is a default handler
 	// but you can set your own with this
 	ServeError func(http.ResponseWriter, *http.Request, error)
@@ -245,6 +276,16 @@ type FlagrAPI struct {
 
 	// User defined logger function.
 	Logger func(string, ...interface{})
+}
+
+// UseRedoc for documentation at /docs
+func (o *FlagrAPI) UseRedoc() {
+	o.useSwaggerUI = false
+}
+
+// UseSwaggerUI for documentation at /docs
+func (o *FlagrAPI) UseSwaggerUI() {
+	o.useSwaggerUI = true
 }
 
 // SetDefaultProduces sets the default produces media type
@@ -306,6 +347,9 @@ func (o *FlagrAPI) Validate() error {
 	if o.SegmentCreateSegmentHandler == nil {
 		unregistered = append(unregistered, "segment.CreateSegmentHandler")
 	}
+	if o.TagCreateTagHandler == nil {
+		unregistered = append(unregistered, "tag.CreateTagHandler")
+	}
 	if o.VariantCreateVariantHandler == nil {
 		unregistered = append(unregistered, "variant.CreateVariantHandler")
 	}
@@ -318,8 +362,14 @@ func (o *FlagrAPI) Validate() error {
 	if o.SegmentDeleteSegmentHandler == nil {
 		unregistered = append(unregistered, "segment.DeleteSegmentHandler")
 	}
+	if o.TagDeleteTagHandler == nil {
+		unregistered = append(unregistered, "tag.DeleteTagHandler")
+	}
 	if o.VariantDeleteVariantHandler == nil {
 		unregistered = append(unregistered, "variant.DeleteVariantHandler")
+	}
+	if o.TagFindAllTagsHandler == nil {
+		unregistered = append(unregistered, "tag.FindAllTagsHandler")
 	}
 	if o.ConstraintFindConstraintsHandler == nil {
 		unregistered = append(unregistered, "constraint.FindConstraintsHandler")
@@ -332,6 +382,9 @@ func (o *FlagrAPI) Validate() error {
 	}
 	if o.SegmentFindSegmentsHandler == nil {
 		unregistered = append(unregistered, "segment.FindSegmentsHandler")
+	}
+	if o.TagFindTagsHandler == nil {
+		unregistered = append(unregistered, "tag.FindTagsHandler")
 	}
 	if o.VariantFindVariantsHandler == nil {
 		unregistered = append(unregistered, "variant.FindVariantsHandler")
@@ -377,6 +430,9 @@ func (o *FlagrAPI) Validate() error {
 	}
 	if o.VariantPutVariantHandler == nil {
 		unregistered = append(unregistered, "variant.PutVariantHandler")
+	}
+	if o.FlagRestoreFlagHandler == nil {
+		unregistered = append(unregistered, "flag.RestoreFlagHandler")
 	}
 	if o.FlagSetFlagEnabledHandler == nil {
 		unregistered = append(unregistered, "flag.SetFlagEnabledHandler")
@@ -486,6 +542,10 @@ func (o *FlagrAPI) initHandlerCache() {
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
+	o.handlers["POST"]["/flags/{flagID}/tags"] = tag.NewCreateTag(o.context, o.TagCreateTagHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
 	o.handlers["POST"]["/flags/{flagID}/variants"] = variant.NewCreateVariant(o.context, o.VariantCreateVariantHandler)
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
@@ -502,7 +562,15 @@ func (o *FlagrAPI) initHandlerCache() {
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
+	o.handlers["DELETE"]["/flags/{flagID}/tags/{tagID}"] = tag.NewDeleteTag(o.context, o.TagDeleteTagHandler)
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
 	o.handlers["DELETE"]["/flags/{flagID}/variants/{variantID}"] = variant.NewDeleteVariant(o.context, o.VariantDeleteVariantHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/tags"] = tag.NewFindAllTags(o.context, o.TagFindAllTagsHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
@@ -519,6 +587,10 @@ func (o *FlagrAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/flags/{flagID}/segments"] = segment.NewFindSegments(o.context, o.SegmentFindSegmentsHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/flags/{flagID}/tags"] = tag.NewFindTags(o.context, o.TagFindTagsHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
@@ -582,6 +654,10 @@ func (o *FlagrAPI) initHandlerCache() {
 	if o.handlers["PUT"] == nil {
 		o.handlers["PUT"] = make(map[string]http.Handler)
 	}
+	o.handlers["PUT"]["/flags/{flagID}/restore"] = flag.NewRestoreFlag(o.context, o.FlagRestoreFlagHandler)
+	if o.handlers["PUT"] == nil {
+		o.handlers["PUT"] = make(map[string]http.Handler)
+	}
 	o.handlers["PUT"]["/flags/{flagID}/enabled"] = flag.NewSetFlagEnabled(o.context, o.FlagSetFlagEnabledHandler)
 }
 
@@ -592,6 +668,9 @@ func (o *FlagrAPI) Serve(builder middleware.Builder) http.Handler {
 
 	if o.Middleware != nil {
 		return o.Middleware(builder)
+	}
+	if o.useSwaggerUI {
+		return o.context.APIHandlerSwaggerUI(builder)
 	}
 	return o.context.APIHandler(builder)
 }
@@ -621,6 +700,6 @@ func (o *FlagrAPI) AddMiddlewareFor(method, path string, builder middleware.Buil
 	}
 	o.Init()
 	if h, ok := o.handlers[um][path]; ok {
-		o.handlers[method][path] = builder(h)
+		o.handlers[um][path] = builder(h)
 	}
 }

@@ -29,10 +29,10 @@ func NewGetFlag(ctx *middleware.Context, handler GetFlagHandler) *GetFlag {
 	return &GetFlag{Context: ctx, Handler: handler}
 }
 
-/*GetFlag swagger:route GET /flags/{flagID} flag getFlag
+/*
+	GetFlag swagger:route GET /flags/{flagID} flag getFlag
 
 GetFlag get flag API
-
 */
 type GetFlag struct {
 	Context *middleware.Context
@@ -42,17 +42,15 @@ type GetFlag struct {
 func (o *GetFlag) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, rCtx, _ := o.Context.RouteInfo(r)
 	if rCtx != nil {
-		r = rCtx
+		*r = *rCtx
 	}
 	var Params = NewGetFlagParams()
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
 	res := o.Handler.Handle(Params) // actually handle the request
-
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

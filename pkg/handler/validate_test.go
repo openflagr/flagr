@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/checkr/flagr/pkg/entity"
-	"github.com/checkr/flagr/pkg/util"
-	"github.com/checkr/flagr/swagger_gen/models"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/distribution"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/flag"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/segment"
-	"github.com/checkr/flagr/swagger_gen/restapi/operations/variant"
-	"github.com/jinzhu/gorm"
+	"github.com/openflagr/flagr/pkg/entity"
+	"github.com/openflagr/flagr/pkg/util"
+	"github.com/openflagr/flagr/swagger_gen/models"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/distribution"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/flag"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/segment"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/variant"
+	"gorm.io/gorm"
 
 	"github.com/prashantv/gostub"
 	"github.com/stretchr/testify/assert"
@@ -21,7 +21,12 @@ func TestValidatePutDistributions(t *testing.T) {
 	db := entity.NewTestDB()
 	c := &crud{}
 
-	defer db.Close()
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB.Close()
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	c.CreateFlag(flag.CreateFlagParams{
@@ -138,7 +143,12 @@ func TestValidateDeleteVariant(t *testing.T) {
 	db := entity.NewTestDB()
 	c := &crud{}
 
-	defer db.Close()
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB.Close()
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	c.CreateFlag(flag.CreateFlagParams{
@@ -207,7 +217,12 @@ func TestValidatePutVariantForDistributions(t *testing.T) {
 	db := entity.NewTestDB()
 	c := &crud{}
 
-	defer db.Close()
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB.Close()
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	c.CreateFlag(flag.CreateFlagParams{

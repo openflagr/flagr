@@ -6,6 +6,8 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
+
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
@@ -53,7 +55,7 @@ func (m *CreateSegmentRequest) validateDescription(formats strfmt.Registry) erro
 		return err
 	}
 
-	if err := validate.MinLength("description", "body", string(*m.Description), 1); err != nil {
+	if err := validate.MinLength("description", "body", *m.Description, 1); err != nil {
 		return err
 	}
 
@@ -66,14 +68,19 @@ func (m *CreateSegmentRequest) validateRolloutPercent(formats strfmt.Registry) e
 		return err
 	}
 
-	if err := validate.MinimumInt("rolloutPercent", "body", int64(*m.RolloutPercent), 0, false); err != nil {
+	if err := validate.MinimumInt("rolloutPercent", "body", *m.RolloutPercent, 0, false); err != nil {
 		return err
 	}
 
-	if err := validate.MaximumInt("rolloutPercent", "body", int64(*m.RolloutPercent), 100, false); err != nil {
+	if err := validate.MaximumInt("rolloutPercent", "body", *m.RolloutPercent, 100, false); err != nil {
 		return err
 	}
 
+	return nil
+}
+
+// ContextValidate validates this create segment request based on context it is used
+func (m *CreateSegmentRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 

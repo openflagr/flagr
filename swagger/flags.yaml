@@ -17,6 +17,10 @@ get:
       type: string
       description: return flags exactly matching given description
     - in: query
+      name: tags
+      type: string
+      description: return flags with the given tags (comma separated)
+    - in: query
       name: description_like
       type: string
       description: return flags partially matching given description
@@ -33,6 +37,10 @@ get:
       name: preload
       type: boolean
       description: return flags with preloaded segments and variants
+    - in: query
+      name: deleted
+      type: boolean
+      description: return all deleted flags
   responses:
     200:
       description: list all the flags

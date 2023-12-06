@@ -10,13 +10,14 @@ import (
 
 	"github.com/go-openapi/runtime"
 
-	"github.com/checkr/flagr/swagger_gen/models"
+	"github.com/openflagr/flagr/swagger_gen/models"
 )
 
 // FindDistributionsOKCode is the HTTP code returned for type FindDistributionsOK
 const FindDistributionsOKCode int = 200
 
-/*FindDistributionsOK distribution under the segment
+/*
+FindDistributionsOK distribution under the segment
 
 swagger:response findDistributionsOK
 */
@@ -60,7 +61,8 @@ func (o *FindDistributionsOK) WriteResponse(rw http.ResponseWriter, producer run
 	}
 }
 
-/*FindDistributionsDefault generic error response
+/*
+FindDistributionsDefault generic error response
 
 swagger:response findDistributionsDefault
 */
