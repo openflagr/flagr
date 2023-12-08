@@ -40,7 +40,7 @@ func (e *eval) PostEvaluation(params evaluation.PostEvaluationParams) middleware
 			ErrorMessage("empty body"))
 	}
 
-	evalResult := EvalFlag(*evalContext, false)
+	evalResult := EvalFlag(*evalContext)
 	resp := evaluation.NewPostEvaluationOK()
 	resp.SetPayload(evalResult)
 	return resp
@@ -53,11 +53,6 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 	flagTags := params.Body.FlagTags
 	flagTagsOperator := params.Body.FlagTagsOperator
 	results := &models.EvaluationBatchResponse{}
-
-	stripEvalContextFromResults := false
-	if params.Body.StripEvalContext != nil && *params.Body.StripEvalContext {
-		stripEvalContextFromResults = *params.Body.StripEvalContext
-	}
 
 	// TODO make it concurrent
 	for _, entity := range entities {
@@ -74,9 +69,7 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 			results.EvaluationResults = append(results.EvaluationResults, evalResults...)
 		}
 		for _, flagID := range flagIDs {
-
-			var evalContext models.EvalContext
-			evalContext = models.EvalContext{
+			evalContext := models.EvalContext{
 				EnableDebug:   params.Body.EnableDebug,
 				EntityContext: entity.EntityContext,
 				EntityID:      entity.EntityID,
@@ -84,12 +77,11 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 				FlagID:        flagID,
 			}
 
-			evalResult := EvalFlag(evalContext, stripEvalContextFromResults)
+			evalResult := EvalFlag(evalContext)
 			results.EvaluationResults = append(results.EvaluationResults, evalResult)
 		}
 		for _, flagKey := range flagKeys {
-			var evalContext models.EvalContext
-			evalContext = models.EvalContext{
+			evalContext := models.EvalContext{
 				EnableDebug:   params.Body.EnableDebug,
 				EntityContext: entity.EntityContext,
 				EntityID:      entity.EntityID,
@@ -97,7 +89,7 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 				FlagKey:       flagKey,
 			}
 
-			evalResult := EvalFlag(evalContext, stripEvalContextFromResults)
+			evalResult := EvalFlag(evalContext)
 			results.EvaluationResults = append(results.EvaluationResults, evalResult)
 		}
 	}
@@ -108,7 +100,7 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 }
 
 // BlankResult creates a blank result
-func BlankResult(f *entity.Flag, evalContext *models.EvalContext, msg string) *models.EvalResult {
+func BlankResult(f *entity.Flag, evalContext models.EvalContext, msg string) *models.EvalResult {
 	flagID := uint(0)
 	flagKey := ""
 	flagSnapshotID := uint(0)
@@ -118,7 +110,7 @@ func BlankResult(f *entity.Flag, evalContext *models.EvalContext, msg string) *m
 		flagKey = f.Key
 	}
 	return &models.EvalResult{
-		EvalContext: evalContext,
+		EvalContext: &evalContext,
 		EvalDebugLog: &models.EvalDebugLog{
 			Msg:              msg,
 			SegmentDebugLogs: nil,
@@ -130,17 +122,11 @@ func BlankResult(f *entity.Flag, evalContext *models.EvalContext, msg string) *m
 	}
 }
 
-// Evaluates a flag for a given context and determines what segment, if any, that applies.
 var LookupFlag = func(evalContext models.EvalContext) *entity.Flag {
 	cache := GetEvalCache()
 	flagID := util.SafeUint(evalContext.FlagID)
 	flagKey := util.SafeString(evalContext.FlagKey)
 	f := cache.GetByFlagKeyOrID(flagID)
-
-	outputEvalContext := &evalContext
-	if stripEvalContextFromResults {
-		outputEvalContext = nil
-	}
 
 	if f == nil {
 		f = cache.GetByFlagKeyOrID(flagKey)
@@ -169,7 +155,7 @@ var EvalFlagWithContext = func(flag *entity.Flag, evalContext models.EvalContext
 
 	if flag == nil {
 		emptyFlag := &entity.Flag{Model: gorm.Model{ID: flagID}, Key: flagKey}
-		return BlankResult(emptyFlag, outputEvalContext, fmt.Sprintf("flagID %v not found or deleted", flagID))
+		return BlankResult(emptyFlag, evalContext, fmt.Sprintf("flagID %v not found or deleted", flagID))
 	}
 
 	if !flag.Enabled {
