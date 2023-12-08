@@ -43,6 +43,8 @@ func ServerShutdown() {
 func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 	n := negroni.New()
 
+	n.Use(&headerCheckMiddleware{})
+
 	if Config.MiddlewareGzipEnabled {
 		n.Use(gzip.Gzip(gzip.DefaultCompression))
 	}
@@ -132,6 +134,25 @@ func setupRecoveryMiddleware() *negroni.Recovery {
 	r := negroni.NewRecovery()
 	r.Logger = &recoveryLogger{}
 	return r
+}
+
+type headerCheckMiddleware struct{}
+
+func (hcm *headerCheckMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	// LOG A STATEMENT HERE
+	for key, values := range r.Header {
+		logrus.Infof("Header %s: %s", key, strings.Join(values, ", "))
+	}
+	logrus.Infof("headers::")
+	logrus.Infof("headers: %#v\n", r.Header)
+	// logrus.Infof("requestttt")
+	// logrus.Infof(r)
+
+	if r.Header.Get("Content-Length") != "" && r.Header.Get("Transfer-Encoding") != "" {
+		http.Error(w, "Invalid request with both Content-Length and Transfer-Encoding headers", http.StatusBadRequest)
+		return
+	}
+	next(w, r)
 }
 
 type OidcConfiguation struct {
@@ -290,7 +311,8 @@ func calculateJWTSigningKey(jwk *OidcJwk) (interface{}, error) {
 	return pKey, nil
 }
 
-/**
+/*
+*
 setupJWTAuthMiddleware setup an JWTMiddleware from the ENV config
 */
 func setupJWTAuthMiddleware() *jwtAuth {
@@ -410,7 +432,8 @@ func (a *jwtAuth) ServeHTTP(w http.ResponseWriter, req *http.Request, next http.
 	a.JWTMiddleware.HandlerWithNext(w, req, next)
 }
 
-/**
+/*
+*
 setupBasicAuthMiddleware setup an BasicMiddleware from the ENV config
 */
 func setupBasicAuthMiddleware() *basicAuth {
