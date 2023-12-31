@@ -77,6 +77,7 @@ var Config = struct {
 	CORSAllowedMethods   []string `env:"FLAGR_CORS_ALLOWED_METHODS" envDefault:"GET,POST,PUT,DELETE,PATCH" envSeparator:","`
 	CORSAllowedOrigins   []string `env:"FLAGR_CORS_ALLOWED_ORIGINS" envDefault:"*" envSeparator:","`
 	CORSExposedHeaders   []string `env:"FLAGR_CORS_EXPOSED_HEADERS" envDefault:"WWW-Authenticate" envSeparator:","`
+	CORSMaxAge           int      `env:"FLAGR_CORS_MAX_AGE" envDefault:"600"`
 
 	// SentryEnabled - enable Sentry and Sentry DSN
 	SentryEnabled     bool   `env:"FLAGR_SENTRY_ENABLED" envDefault:"false"`
