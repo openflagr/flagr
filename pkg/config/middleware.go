@@ -128,7 +128,6 @@ func setupRecoveryMiddleware() *negroni.Recovery {
 }
 
 /*
-*
 setupJWTAuthMiddleware setup an JWTMiddleware from the ENV config
 */
 func setupJWTAuthMiddleware() *jwtAuth {
@@ -223,7 +222,6 @@ func (a *jwtAuth) ServeHTTP(w http.ResponseWriter, req *http.Request, next http.
 }
 
 /*
-*
 setupBasicAuthMiddleware setup an BasicMiddleware from the ENV config
 */
 func setupBasicAuthMiddleware() *basicAuth {
