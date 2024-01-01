@@ -184,16 +184,18 @@ export default {
   computed: {
     filteredFlags: function() {
       if (this.searchTerm) {
-        return this.flags.filter(({ id, description, tags }) =>
+        return this.flags.filter(({ id, key, description, tags }) =>
           this.searchTerm
             .split(",")
             .map(term => {
+              const termLowerCase = term.toLowerCase();
               return (
                 id.toString().includes(term) ||
-                description.toLowerCase().includes(term.toLowerCase()) ||
+                key.includes(term) ||
+                description.toLowerCase().includes(termLowerCase) ||
                 tags
                   .map(tag =>
-                    tag.value.toLowerCase().includes(term.toLowerCase())
+                    tag.value.toLowerCase().includes(termLowerCase)
                   )
                   .includes(true)
               );
