@@ -26,7 +26,7 @@ vendor:
 
 build:
 	@echo "Building Flagr Server to $(PWD)/flagr ..."
-	@CGO_ENABLED=1 go build -o $(PWD)/flagr github.com/openflagr/flagr/swagger_gen/cmd/flagr-server
+	@go build -o $(PWD)/flagr github.com/openflagr/flagr/swagger_gen/cmd/flagr-server
 
 build_ui:
 	@echo "Building Flagr UI ..."

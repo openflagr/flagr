@@ -5,9 +5,9 @@ import (
 	"sync"
 	"time"
 
-	mysql "gorm.io/driver/mysql"       // mysql driver
-	postgres "gorm.io/driver/postgres" // postgres driver
-	sqlite "gorm.io/driver/sqlite"     // sqlite driver
+	sqlite "github.com/glebarez/sqlite" // sqlite driver with pure go
+	mysql "gorm.io/driver/mysql"        // mysql driver
+	postgres "gorm.io/driver/postgres"  // postgres driver
 
 	retry "github.com/avast/retry-go"
 	"github.com/openflagr/flagr/pkg/config"
@@ -44,18 +44,18 @@ func connectDB() (db *gorm.DB, err error) {
 	err = retry.Do(
 		func() error {
 			switch config.Config.DBDriver {
-				case "postgres":
-					db, err = gorm.Open(postgres.Open(config.Config.DBConnectionStr), &gorm.Config{
-						Logger: logger,
-					})
-				case "sqlite3":
-					db, err = gorm.Open(sqlite.Open(config.Config.DBConnectionStr), &gorm.Config{
-						Logger: logger,
-					})
-				case "mysql":
-					db, err = gorm.Open(mysql.Open(config.Config.DBConnectionStr), &gorm.Config{
-						Logger: logger,
-					})
+			case "postgres":
+				db, err = gorm.Open(postgres.Open(config.Config.DBConnectionStr), &gorm.Config{
+					Logger: logger,
+				})
+			case "sqlite3":
+				db, err = gorm.Open(sqlite.Open(config.Config.DBConnectionStr), &gorm.Config{
+					Logger: logger,
+				})
+			case "mysql":
+				db, err = gorm.Open(mysql.Open(config.Config.DBConnectionStr), &gorm.Config{
+					Logger: logger,
+				})
 			}
 			return err
 		},
