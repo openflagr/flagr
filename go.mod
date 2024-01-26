@@ -55,12 +55,12 @@ require (
 
 require (
 	cloud.google.com/go/pubsub v1.30.0
-	github.com/glebarez/sqlite v1.10.0
+	github.com/glebarez/sqlite v1.6.0
 	github.com/json-iterator/go v1.1.12
 	github.com/newrelic/go-agent v2.1.0+incompatible
 	gorm.io/driver/mysql v1.4.5
 	gorm.io/driver/postgres v1.4.6
-	gorm.io/gorm v1.25.5
+	gorm.io/gorm v1.24.3 // we will need to fix unscoped preload before upgrading gorm
 )
 
 require (
