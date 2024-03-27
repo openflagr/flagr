@@ -12,6 +12,7 @@ import (
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/export"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/flag"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/health"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/migration"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/segment"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/tag"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/variant"
@@ -31,6 +32,7 @@ func Setup(api *operations.FlagrAPI) {
 	setupEvaluation(api)
 	setupCRUD(api)
 	setupExport(api)
+	setupMigration(api)
 }
 
 func setupCRUD(api *operations.FlagrAPI) {
@@ -101,4 +103,8 @@ func setupHealth(api *operations.FlagrAPI) {
 func setupExport(api *operations.FlagrAPI) {
 	api.ExportGetExportSqliteHandler = export.GetExportSqliteHandlerFunc(exportSQLiteHandler)
 	api.ExportGetExportEvalCacheJSONHandler = export.GetExportEvalCacheJSONHandlerFunc(exportEvalCacheJSONHandler)
+}
+
+func setupMigration(api *operations.FlagrAPI) {
+	api.MigrationRunMigrationsHandler = migration.RunMigrationsHandlerFunc(runMigrationsHandler)
 }

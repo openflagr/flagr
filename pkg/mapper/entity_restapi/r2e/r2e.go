@@ -29,6 +29,25 @@ func MapDistribution(r *models.Distribution, segmentID uint) entity.Distribution
 	return e
 }
 
+func MapConstraints(r []*models.Constraint, segmentID uint) []entity.Constraint {
+	e := make([]entity.Constraint, len(r))
+	for i, d := range r {
+		e[i] = MapConstraint(d, segmentID)
+	}
+	return e
+}
+
+// MapDistribution maps distribution
+func MapConstraint(r *models.Constraint, segmentID uint) entity.Constraint {
+	e := entity.Constraint{
+		SegmentID: segmentID,
+		Property:  util.SafeString(r.Property),
+		Operator:  util.SafeString(r.Operator),
+		Value:     util.SafeString(r.Value),
+	}
+	return e
+}
+
 // MapAttachment maps attachment
 func MapAttachment(a interface{}) (entity.Attachment, error) {
 	e := entity.Attachment{}

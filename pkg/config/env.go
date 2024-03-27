@@ -70,6 +70,9 @@ var Config = struct {
 	DBConnectionRetryAttempts uint          `env:"FLAGR_DB_DBCONNECTION_RETRY_ATTEMPTS" envDefault:"9"`
 	DBConnectionRetryDelay    time.Duration `env:"FLAGR_DB_DBCONNECTION_RETRY_DELAY" envDefault:"100ms"`
 
+	// path where migrations are loaded from
+	MigrationPath string `env:"FLAGR_MIGRATION_PATH" envDefault:"migrations"`
+
 	// CORSEnabled - enable CORS
 	CORSEnabled          bool     `env:"FLAGR_CORS_ENABLED" envDefault:"true"`
 	CORSAllowCredentials bool     `env:"FLAGR_CORS_ALLOW_CREDENTIALS" envDefault:"true"`

@@ -1,0 +1,7 @@
+---
+# this is a broken yaml since enabled should be a boolean
+- key: FLAG-111
+  description: basic flag
+  entityType: User
+  dataRecordsEnabled: false
+  enabled: 9

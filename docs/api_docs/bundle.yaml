@@ -927,6 +927,21 @@ paths:
           description: generic error response
           schema:
             $ref: '#/definitions/error'
+  /migrations:
+    get:
+      tags:
+        - migration
+      operationId: runMigrations
+      description: Run migrations
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/migrationStatus'
+        default:
+          description: migration status with error code
+          schema:
+            $ref: '#/definitions/migrationStatus'
   /export/sqlite:
     get:
       tags:
@@ -1458,6 +1473,18 @@ definitions:
     type: object
     properties:
       status:
+        type: string
+  migrationStatus:
+    type: object
+    properties:
+      code:
+        type: integer
+      migrations:
+        type: array
+        x-omitempty: true
+        items:
+          type: string
+      message:
         type: string
   error:
     type: object

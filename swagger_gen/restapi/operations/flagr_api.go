@@ -25,6 +25,7 @@ import (
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/export"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/flag"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/health"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/migration"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/segment"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/tag"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/variant"
@@ -149,6 +150,9 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		FlagRestoreFlagHandler: flag.RestoreFlagHandlerFunc(func(params flag.RestoreFlagParams) middleware.Responder {
 			return middleware.NotImplemented("operation flag.RestoreFlag has not yet been implemented")
 		}),
+		MigrationRunMigrationsHandler: migration.RunMigrationsHandlerFunc(func(params migration.RunMigrationsParams) middleware.Responder {
+			return middleware.NotImplemented("operation migration.RunMigrations has not yet been implemented")
+		}),
 		FlagSetFlagEnabledHandler: flag.SetFlagEnabledHandlerFunc(func(params flag.SetFlagEnabledParams) middleware.Responder {
 			return middleware.NotImplemented("operation flag.SetFlagEnabled has not yet been implemented")
 		}),
@@ -256,6 +260,8 @@ type FlagrAPI struct {
 	VariantPutVariantHandler variant.PutVariantHandler
 	// FlagRestoreFlagHandler sets the operation handler for the restore flag operation
 	FlagRestoreFlagHandler flag.RestoreFlagHandler
+	// MigrationRunMigrationsHandler sets the operation handler for the run migrations operation
+	MigrationRunMigrationsHandler migration.RunMigrationsHandler
 	// FlagSetFlagEnabledHandler sets the operation handler for the set flag enabled operation
 	FlagSetFlagEnabledHandler flag.SetFlagEnabledHandler
 
@@ -433,6 +439,9 @@ func (o *FlagrAPI) Validate() error {
 	}
 	if o.FlagRestoreFlagHandler == nil {
 		unregistered = append(unregistered, "flag.RestoreFlagHandler")
+	}
+	if o.MigrationRunMigrationsHandler == nil {
+		unregistered = append(unregistered, "migration.RunMigrationsHandler")
 	}
 	if o.FlagSetFlagEnabledHandler == nil {
 		unregistered = append(unregistered, "flag.SetFlagEnabledHandler")
@@ -655,6 +664,10 @@ func (o *FlagrAPI) initHandlerCache() {
 		o.handlers["PUT"] = make(map[string]http.Handler)
 	}
 	o.handlers["PUT"]["/flags/{flagID}/restore"] = flag.NewRestoreFlag(o.context, o.FlagRestoreFlagHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/migrations"] = migration.NewRunMigrations(o.context, o.MigrationRunMigrationsHandler)
 	if o.handlers["PUT"] == nil {
 		o.handlers["PUT"] = make(map[string]http.Handler)
 	}

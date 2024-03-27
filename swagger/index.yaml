@@ -87,6 +87,8 @@ paths:
     $ref: ./evaluation_batch.yaml
   /health:
     $ref: ./health.yaml
+  /migrations:
+    $ref: ./migrations.yaml
   /export/sqlite:
     $ref: ./export_sqlite.yaml
   /export/eval_cache/json:
@@ -586,6 +588,20 @@ definitions:
     properties:
       status:
         type: string
+
+  migrationStatus:
+    type: object
+    properties:
+      code:
+        type: integer
+      migrations:
+        type: array
+        x-omitempty: true
+        items:
+          type: string
+      message:
+        type: string
+
 
   # Default Error
   error:

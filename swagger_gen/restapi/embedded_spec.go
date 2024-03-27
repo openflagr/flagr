@@ -1340,6 +1340,29 @@ func init() {
         }
       }
     },
+    "/migrations": {
+      "get": {
+        "description": "Run migrations",
+        "tags": [
+          "migration"
+        ],
+        "operationId": "runMigrations",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/migrationStatus"
+            }
+          },
+          "default": {
+            "description": "migration status with error code",
+            "schema": {
+              "$ref": "#/definitions/migrationStatus"
+            }
+          }
+        }
+      }
+    },
     "/tags": {
       "get": {
         "tags": [
@@ -1840,6 +1863,24 @@ func init() {
       "properties": {
         "status": {
           "type": "string"
+        }
+      }
+    },
+    "migrationStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer"
+        },
+        "message": {
+          "type": "string"
+        },
+        "migrations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-omitempty": true
         }
       }
     },
@@ -3429,6 +3470,29 @@ func init() {
         }
       }
     },
+    "/migrations": {
+      "get": {
+        "description": "Run migrations",
+        "tags": [
+          "migration"
+        ],
+        "operationId": "runMigrations",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/migrationStatus"
+            }
+          },
+          "default": {
+            "description": "migration status with error code",
+            "schema": {
+              "$ref": "#/definitions/migrationStatus"
+            }
+          }
+        }
+      }
+    },
     "/tags": {
       "get": {
         "tags": [
@@ -3931,6 +3995,24 @@ func init() {
       "properties": {
         "status": {
           "type": "string"
+        }
+      }
+    },
+    "migrationStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer"
+        },
+        "message": {
+          "type": "string"
+        },
+        "migrations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-omitempty": true
         }
       }
     },
