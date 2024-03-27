@@ -1,0 +1,125 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "key": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "enabled": {
+        "type": "boolean"
+      },
+      "segments": {
+        "type": "array",
+        "items": {
+            "type": "object",
+            "properties": {
+              "description": {
+                "type": "string"
+              },
+              "rank": {
+                "type": "integer"
+              },
+              "rolloutPercent": {
+                "type": "integer"
+              },
+              "constraints": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                      "property": {
+                        "type": "string"
+                      },
+                      "operator": {
+                        "type": "string"
+                      },
+                      "value": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "property",
+                      "operator",
+                      "value"
+                    ]
+                  }
+              },
+              "distributions": {
+                "type": "array",
+                "items": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "variantKey": {
+                        "type": "string"
+                      },
+                      "percent": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "variantKey",
+                      "percent"
+                    ]
+                  }
+                ]
+              }
+            },
+            "required": [
+              "rank",
+              "rolloutPercent",
+              "distributions"
+            ]
+          }
+      },
+      "variants": {
+        "type": "array",
+        "items": {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "attachment": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "key"
+            ]
+          }
+      },
+      "entityType": {
+        "type": "string"
+      },
+      "dataRecordsEnabled": {
+        "type": "boolean"
+      },
+      "tags": {
+        "type": "array",
+        "items":
+          {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "value"
+            ]
+          }
+      }
+    },
+    "required": [
+      "key",
+      "description",
+      "enabled"
+    ]
+  }
+}

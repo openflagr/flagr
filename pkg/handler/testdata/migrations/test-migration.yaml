@@ -1,0 +1,43 @@
+---
+# this is a basic
+- key: FLAGS-123
+  description: a flag added by migration
+  segments:
+    - description: just email
+      rank: 0
+      rolloutPercent: 100
+      constraints:
+        - property: email
+          operator: EQ
+          value: '"me@me.com"'
+      distributions:
+        - variantKey: "on"
+          percent: 100
+    - rank: 1
+      rolloutPercent: 100
+      distributions:
+        - variantKey: "off"
+          percent: 100
+  variants:
+    - key: "off"
+    - key: "on"
+  entityType: User
+  dataRecordsEnabled: true
+  enabled: false
+  tags:
+    - value: "better tags"
+- key: FLAGS-123
+  description: updated second time
+  segments:
+    - rank: 1
+      rolloutPercent: 100
+      distributions:
+        - variantKey: "off"
+          percent: 100
+  variants:
+    - key: "off"
+  entityType: User
+  dataRecordsEnabled: false
+  enabled: true
+  tags:
+    - value: "best tag"

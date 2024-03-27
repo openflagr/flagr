@@ -4,9 +4,11 @@ package restapi
 
 import (
 	"crypto/tls"
+	"github.com/go-openapi/swag"
 	jsoniter "github.com/json-iterator/go"
-	"net/http"
 	"io"
+	"net/http"
+	"os"
 
 	"github.com/openflagr/flagr/pkg/config"
 	"github.com/openflagr/flagr/pkg/handler"
@@ -21,8 +23,19 @@ import (
 
 //go:generate swagger generate server --target ../../swagger_gen --name Flagr --spec ../../docs/api_docs/bundle.yaml
 
+var flagMigrationOptions = handler.FlagMigrationOptions{
+	Run: false,
+	Path: "./migrations",
+}
+
 func configureFlags(api *operations.FlagrAPI) {
-	// api.CommandLineOptionsGroups = []swag.CommandLineOptionsGroup{ ... }
+	api.CommandLineOptionsGroups = []swag.CommandLineOptionsGroup{
+		swag.CommandLineOptionsGroup{
+			ShortDescription: "Startup",
+			Options: &flagMigrationOptions,
+		},
+	}
+
 }
 
 func configureAPI(api *operations.FlagrAPI) http.Handler {
@@ -60,6 +73,13 @@ func configureTLS(tlsConfig *tls.Config) {
 // This function can be called multiple times, depending on the number of serving schemes.
 // scheme value will be set accordingly: "http", "https" or "unix"
 func configureServer(s *http.Server, scheme, addr string) {
+	if flagMigrationOptions.Run {
+		if err:= handler.FlagMigrations(flagMigrationOptions.Path); err != nil {
+			os.Exit(1)
+		} else {
+			os.Exit(0)
+		}
+	}
 }
 
 // The middleware configuration is for the handler executors. These do not apply to the swagger.json document.
