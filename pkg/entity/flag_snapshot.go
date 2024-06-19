@@ -2,7 +2,9 @@ package entity
 
 import (
 	"fmt"
-	jsoniter "github.com/json-iterator/go"
+
+	"encoding/json"
+
 	"github.com/openflagr/flagr/pkg/config"
 	"github.com/openflagr/flagr/pkg/util"
 	"github.com/sirupsen/logrus"
@@ -20,8 +22,6 @@ type FlagSnapshot struct {
 
 // SaveFlagSnapshot saves the Flag Snapshot
 func SaveFlagSnapshot(db *gorm.DB, flagID uint, updatedBy string) {
-	var json = jsoniter.ConfigFastest
-
 	tx := db.Begin()
 	f := &Flag{}
 	if err := tx.First(f, flagID).Error; err != nil {
