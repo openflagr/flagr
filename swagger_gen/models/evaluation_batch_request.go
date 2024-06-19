@@ -42,7 +42,7 @@ type EvaluationBatchRequest struct {
 	FlagTags []string `json:"flagTags"`
 
 	// determine how flagTags is used to filter flags to be evaluated. OR extends the evaluation to those which contains at least one of the provided flagTags or AND limit the evaluation to those which contains all the flagTags.
-	// Enum: [ANY ALL]
+	// Enum: ["ANY","ALL"]
 	FlagTagsOperator *string `json:"flagTagsOperator,omitempty"`
 }
 

@@ -2,10 +2,11 @@ package handler
 
 import (
 	"fmt"
-	jsoniter "github.com/json-iterator/go"
 	"math/rand"
 	"sync"
 	"time"
+
+	"encoding/json"
 
 	"github.com/openflagr/flagr/pkg/config"
 	"github.com/openflagr/flagr/pkg/entity"
@@ -318,7 +319,6 @@ func debugConstraintMsg(enableDebug bool, expr conditions.Expr, m map[string]int
 var rateLimitMap = sync.Map{}
 
 var rateLimitPerFlagConsoleLogging = func(r *models.EvalResult) {
-	var json = jsoniter.ConfigFastest
 	flagID := util.SafeUint(r.FlagID)
 	rl, _ := rateLimitMap.LoadOrStore(flagID, ratelimit.New(
 		config.Config.RateLimiterPerFlagPerSecondConsoleLogging,

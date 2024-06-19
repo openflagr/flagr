@@ -28,7 +28,7 @@ type Constraint struct {
 	// operator
 	// Required: true
 	// Min Length: 1
-	// Enum: [EQ NEQ LT LTE GT GTE EREG NEREG IN NOTIN CONTAINS NOTCONTAINS]
+	// Enum: ["EQ","NEQ","LT","LTE","GT","GTE","EREG","NEREG","IN","NOTIN","CONTAINS","NOTCONTAINS"]
 	Operator *string `json:"operator"`
 
 	// property

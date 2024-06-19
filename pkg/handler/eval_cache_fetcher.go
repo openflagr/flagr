@@ -2,10 +2,11 @@ package handler
 
 import (
 	"fmt"
-	jsoniter "github.com/json-iterator/go"
 	"io"
 	"net/http"
 	"os"
+
+	"encoding/json"
 
 	"github.com/openflagr/flagr/pkg/config"
 	"github.com/openflagr/flagr/pkg/entity"
@@ -97,8 +98,6 @@ type jsonFileFetcher struct {
 }
 
 func (ff *jsonFileFetcher) fetch() ([]entity.Flag, error) {
-	var json = jsoniter.ConfigFastest
-
 	b, err := os.ReadFile(ff.filePath)
 	if err != nil {
 		return nil, err
@@ -116,8 +115,6 @@ type jsonHTTPFetcher struct {
 }
 
 func (hf *jsonHTTPFetcher) fetch() ([]entity.Flag, error) {
-	var json = jsoniter.ConfigFastest
-
 	client := http.Client{Timeout: config.Config.EvalCacheRefreshTimeout}
 	res, err := client.Get(hf.url)
 	if err != nil {
