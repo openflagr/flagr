@@ -1,6 +1,8 @@
 package config
 
-import "time"
+import (
+	"time"
+)
 
 // Config is the whole configuration of the app
 var Config = struct {
@@ -66,6 +68,20 @@ var Config = struct {
 	// DBConnectionDebug controls whether to show the database connection debugging logs
 	// warning: it may log the credentials to the stdout
 	DBConnectionDebug bool `env:"FLAGR_DB_DBCONNECTION_DEBUG" envDefault:"true"`
+
+	AzureDBAuth           bool   `env:"AZURE_AUTH" envDefault:"false"`
+	AzureAuthType         string `env:"AZURE_AUTH_TYPE" envDefault:"system"`
+
+	AzurePostgresDBConnectionString string `env:"AZURE_POSTGRESQL_CONNECTIONSTRING" envDefault:""`
+	AzurePostgresDBAuthTenant       string `env:"AZURE_POSTGRESQL_TENANTID" envDefault:""`
+	AzurePostgresDBAuthClientId     string `env:"AZURE_POSTGRESQL_CLIENTID" envDefault:""`
+	AzurePostgresDBAuthClientSecret string `env:"AZURE_POSTGRESQL_CLIENTSECRET" envDefault:""`
+
+	AzureMySQLDBConnectionString string `env:"AZURE_MYSQL_CONNECTIONSTRING" envDefault:""`
+	AzureMySQLDBAuthTenant       string `env:"AZURE_MYSQL_TENANTID" envDefault:""`
+	AzureMySQLDBAuthClientId     string `env:"AZURE_MYSQL_CLIENTID" envDefault:""`
+	AzureMySQLDBAuthClientSecret string `env:"AZURE_MYSQL_CLIENTSECRET" envDefault:""`
+
 	// DBConnectionRetryAttempts controls how we are going to retry on db connection when start the flagr server
 	DBConnectionRetryAttempts uint          `env:"FLAGR_DB_DBCONNECTION_RETRY_ATTEMPTS" envDefault:"9"`
 	DBConnectionRetryDelay    time.Duration `env:"FLAGR_DB_DBCONNECTION_RETRY_DELAY" envDefault:"100ms"`
