@@ -87,3 +87,7 @@ swagger: verify_swagger
 	@mkdir $(PWD)/swagger_gen
 	@swagger generate server -t ./swagger_gen -f $(PWD)/docs/api_docs/bundle.yaml
 	@cp /tmp/configure_flagr.go $(PWD)/swagger_gen/restapi/configure_flagr.go 2>/dev/null || :
+
+lint:
+	find . -name "*.go" ! -name "*.pb.go" | xargs goimports -w
+	golangci-lint run --timeout 2m0s

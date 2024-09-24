@@ -1,8 +1,9 @@
 package e2r
 
 import (
-	jsoniter "github.com/json-iterator/go"
 	"time"
+
+	jsoniter "github.com/json-iterator/go"
 
 	"github.com/go-openapi/strfmt"
 	"github.com/openflagr/flagr/pkg/entity"

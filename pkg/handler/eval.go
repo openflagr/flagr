@@ -1,11 +1,13 @@
+// nolint: errcheck
 package handler
 
 import (
 	"fmt"
-	jsoniter "github.com/json-iterator/go"
 	"math/rand"
 	"sync"
 	"time"
+
+	jsoniter "github.com/json-iterator/go"
 
 	"github.com/openflagr/flagr/pkg/config"
 	"github.com/openflagr/flagr/pkg/entity"
@@ -222,6 +224,7 @@ var logEvalResult = func(r *models.EvalResult, dataRecordsEnabled bool) {
 		return
 	}
 	rec := GetDataRecorder()
+
 	rec.AsyncRecord(*r)
 }
 

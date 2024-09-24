@@ -1,8 +1,10 @@
+// nolint: errcheck
 package handler
 
 import (
-	"github.com/openflagr/flagr/swagger_gen/models"
 	"testing"
+
+	"github.com/openflagr/flagr/swagger_gen/models"
 
 	"github.com/openflagr/flagr/pkg/entity"
 

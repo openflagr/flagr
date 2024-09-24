@@ -4,9 +4,10 @@ package restapi
 
 import (
 	"crypto/tls"
-	jsoniter "github.com/json-iterator/go"
-	"net/http"
 	"io"
+	"net/http"
+
+	jsoniter "github.com/json-iterator/go"
 
 	"github.com/openflagr/flagr/pkg/config"
 	"github.com/openflagr/flagr/pkg/handler"

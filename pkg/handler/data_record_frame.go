@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/base64"
 	"encoding/json"
+
 	"github.com/brandur/simplebox"
 
 	jsoniter "github.com/json-iterator/go"
