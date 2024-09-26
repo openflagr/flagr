@@ -143,7 +143,9 @@
                           placement="top-end"
                           effect="light"
                         >
-                          <span class="el-icon-info" />
+                          <ElIcon>
+                            <InfoFilled />
+                          </ElIcon>
                         </el-tooltip>
                       </div>
                     </el-col>
@@ -592,7 +594,7 @@ import MarkdownEditor from "@/components/MarkdownEditor.vue";
 import { Vue3JsonEditor } from 'vue3-json-editor'
 import { operators } from "@/operators.json";
 import { ElIcon } from 'element-plus';
-import { Edit, View, Delete } from '@element-plus/icons';
+import { Edit, View, Delete, InfoFilled } from '@element-plus/icons';
 import { mapState } from 'vuex';
 import { getAxiosFlagrInstance } from "../utils/apiUtil";
 
@@ -651,6 +653,7 @@ export default {
     MarkdownEditor,
     Vue3JsonEditor,
     ElIcon,
+    InfoFilled,
     Edit,
     Delete,
     View
