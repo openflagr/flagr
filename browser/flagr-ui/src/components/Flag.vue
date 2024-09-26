@@ -278,12 +278,13 @@
                           </el-input>
                           <div class="flex-row-right save-remove-variant-row">
                             <el-button
-                              #append
                               size="small"
                               @click="putVariant(variant)"
                             >Save Variant</el-button>
                             <el-button @click="deleteVariant(variant)" size="small">
-                              <span class="el-icon-delete" />
+                              <ElIcon>
+                                <Delete />
+                              </ElIcon>
                             </el-button>
                           </div>
                         </div>
@@ -362,12 +363,13 @@
                           </div>
                           <div class="flex-row-right">
                             <el-button
-                              #append
                               size="small"
                               @click="putSegment(segment)"
                             >Save Segment Setting</el-button>
                             <el-button @click="deleteSegment(segment)" size="small">
-                              <span class="el-icon-delete" />
+                              <ElIcon>
+                                <Delete />
+                              </ElIcon>
                             </el-button>
                           </div>
                         </div>
@@ -452,7 +454,9 @@
                                         "
                                         size="small"
                                       >
-                                        <i class="el-icon-delete"></i>
+                                      <ElIcon>
+                                        <Delete />
+                                      </ElIcon>
                                       </el-button>
                                     </el-col>
                                   </el-row>
@@ -557,7 +561,9 @@
                   </div>
                 </template>
                 <el-button @click="dialogDeleteFlagVisible = true" type="danger" plain>
-                  <span class="el-icon-delete"></span>
+                  <ElIcon>
+                    <Delete />
+                  </ElIcon>
                   Delete Flag
                 </el-button>
               </el-card>
@@ -586,7 +592,7 @@ import MarkdownEditor from "@/components/MarkdownEditor.vue";
 import { Vue3JsonEditor } from 'vue3-json-editor'
 import { operators } from "@/operators.json";
 import { ElIcon } from 'element-plus';
-import { Edit, View } from '@element-plus/icons';
+import { Edit, View, Delete } from '@element-plus/icons';
 import { mapState } from 'vuex';
 import { getAxiosFlagrInstance } from "../utils/apiUtil";
 
@@ -646,6 +652,7 @@ export default {
     Vue3JsonEditor,
     ElIcon,
     Edit,
+    Delete,
     View
   },
   data() {
