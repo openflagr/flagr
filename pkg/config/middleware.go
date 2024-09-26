@@ -4,6 +4,7 @@ package config
 import (
 	"crypto/subtle"
 	"fmt"
+
 	"github.com/openflagr/flagr/pkg/config/jwtmiddleware"
 
 	"net/http"
@@ -111,11 +112,13 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 		filePath := "./browser/flagr-ui/dist" + r.URL.Path
 
 		// If the requested file is not found, serve index.html
-		if _, err := os.Stat(filePath); os.IsNotExist(err) && filepath.Ext(r.URL.Path) == "" {
-			http.ServeFile(w, r, "./browser/flagr-ui/dist/index.html")
-		} else {
+		if _, err := os.Stat(filePath); err == nil && filepath.Ext(r.URL.Path) != "" {
 			next(w, r) // Serve the static file if it exists
+			return
 		}
+
+		// Otherwise, serve index.html for Vue.js routing
+		http.ServeFile(w, r, "./browser/flagr-ui/dist/index.html")
 	})
 
 	n.Use(setupRecoveryMiddleware())
@@ -219,9 +222,11 @@ func (a *jwtAuth) whitelist(req *http.Request) bool {
 	path := req.URL.Path
 
 	// If we set to 401 unauthorized, let the client handles the 401 itself
-	if Config.JWTAuthNoTokenStatusCode == http.StatusUnauthorized {
+	if Config.JWTAuthNoTokenStatusCode == http.StatusUnauthorized || Config.JWTAuthNoTokenStatusCode == http.StatusTemporaryRedirect {
 		for _, p := range a.ExactWhitelistPaths {
+			fmt.Println("ssss path: ", p)
 			if p == path {
+				fmt.Println("whitelisted path: ", p)
 				return true
 			}
 		}
