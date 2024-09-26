@@ -11,7 +11,7 @@
           </el-col>
           <el-col :span="7" class="evaluation-button-col">
             <el-button
-              size="mini"
+              size="small"
               @click="postEvaluation(evalContext)"
               type="primary"
               plain
@@ -23,20 +23,20 @@
         </el-row>
         <el-row :gutter="10">
           <el-col :span="12">
-            <vue-json-editor
+            <Vue3JsonEditor
               v-model="evalContext"
-              :showBtns="false"
+              :show-btns="false"
               ref="evalContextEditor"
               class="json-editor"
-            ></vue-json-editor>
+            ></Vue3JsonEditor>
           </el-col>
           <el-col :span="12">
-            <vue-json-editor
+            <Vue3JsonEditor
               v-model="evalResult"
-              :showBtns="false"
+              :show-btns="false"
               ref="evalResultEditor"
               class="json-editor"
-            ></vue-json-editor>
+            ></Vue3JsonEditor>
           </el-col>
         </el-row>
       </el-collapse-item>
@@ -48,7 +48,7 @@
           </el-col>
           <el-col :span="7" class="evaluation-button-col">
             <el-button
-              size="mini"
+              size="small"
               @click="postEvaluationBatch(batchEvalContext)"
               type="primary"
               plain
@@ -60,20 +60,20 @@
         </el-row>
         <el-row :gutter="10">
           <el-col :span="12">
-            <vue-json-editor
+            <Vue3JsonEditor
               v-model="batchEvalContext"
-              :showBtns="false"
+              :show-btns="false"
               ref="batchEvalContextEditor"
               class="json-editor"
-            ></vue-json-editor>
+            ></Vue3JsonEditor>
           </el-col>
           <el-col :span="12">
-            <vue-json-editor
+            <Vue3JsonEditor
               v-model="batchEvalResult"
-              :showBtns="false"
+              :show-btns="false"
               ref="batchEvalResultEditor"
               class="json-editor"
-            ></vue-json-editor>
+            ></Vue3JsonEditor>
           </el-col>
         </el-row>
       </el-collapse-item>
@@ -82,12 +82,8 @@
 </template>
 
 <script>
-import Axios from "axios";
-import vueJsonEditor from "vue-json-editor";
-
-import constants from "@/constants";
-
-const { API_URL } = constants;
+import { Vue3JsonEditor } from 'vue3-json-editor'
+import { getAxiosFlagrInstance } from '../utils/apiUtil';
 
 export default {
   name: "debug-console",
@@ -130,7 +126,7 @@ export default {
   },
   methods: {
     postEvaluation(evalContext) {
-      Axios.post(`${API_URL}/evaluation`, evalContext).then(
+      getAxiosFlagrInstance().post(`/evaluation`, evalContext).then(
         response => {
           this.$message.success(`evaluation success`);
           this.evalResult = response.data;
@@ -141,7 +137,7 @@ export default {
       );
     },
     postEvaluationBatch(batchEvalContext) {
-      Axios.post(`${API_URL}/evaluation/batch`, batchEvalContext).then(
+      getAxiosFlagrInstance().post(`/evaluation/batch`, batchEvalContext).then(
         response => {
           this.$message.success(`evaluation success`);
           this.batchEvalResult = response.data;
@@ -153,13 +149,14 @@ export default {
     }
   },
   components: {
-    vueJsonEditor
+    Vue3JsonEditor
   },
   mounted() {
-    this.$refs.evalContextEditor.editor.setMode("code");
-    this.$refs.evalResultEditor.editor.setMode("code");
-    this.$refs.batchEvalContextEditor.editor.setMode("code");
-    this.$refs.batchEvalResultEditor.editor.setMode("code");
+    // console.log("testtt", this.$refs.smapp.innerText);
+    this.$refs.evalContextEditor?.targeteditor?.setMode("code");
+    this.$refs.evalResultEditor?.editor?.setMode("code");
+    this.$refs.batchEvalContextEditor?.editor?.setMode("code");
+    this.$refs.batchEvalResultEditor?.editor?.setMode("code");
   }
 };
 </script>

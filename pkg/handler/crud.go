@@ -273,6 +273,7 @@ func (c *crud) PutFlag(params flag.PutFlagParams) middleware.Responder {
 	}
 	resp.SetPayload(payload)
 
+	fmt.Printf("Subject: %s\n", getSubjectFromRequest(params.HTTPRequest))
 	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
 	return resp
 }

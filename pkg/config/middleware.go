@@ -4,15 +4,18 @@ package config
 import (
 	"crypto/subtle"
 	"fmt"
+	"github.com/openflagr/flagr/pkg/config/jwtmiddleware"
+
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/DataDog/datadog-go/statsd"
-	jwtmiddleware "github.com/auth0/go-jwt-middleware"
-	jwt "github.com/form3tech-oss/jwt-go"
 	"github.com/gohttp/pprof"
+	"github.com/golang-jwt/jwt/v5"
 	negronilogrus "github.com/meatballhat/negroni-logrus"
 	"github.com/phyber/negroni-gzip/gzip"
 	"github.com/prometheus/client_golang/prometheus"
@@ -95,6 +98,24 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 		Dir:       http.Dir("./browser/flagr-ui/dist/"),
 		Prefix:    Config.WebPrefix,
 		IndexFile: "index.html",
+	})
+
+	n.UseFunc(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		// Skip handling if it's an API request
+		if strings.Contains(r.URL.Path, "/api/") {
+			next(w, r)
+			return
+		}
+
+		// Otherwise, check for static files or serve index.html for Vue.js routing
+		filePath := "./browser/flagr-ui/dist" + r.URL.Path
+
+		// If the requested file is not found, serve index.html
+		if _, err := os.Stat(filePath); os.IsNotExist(err) && filepath.Ext(r.URL.Path) == "" {
+			http.ServeFile(w, r, "./browser/flagr-ui/dist/index.html")
+		} else {
+			next(w, r) // Serve the static file if it exists
+		}
 	})
 
 	n.Use(setupRecoveryMiddleware())

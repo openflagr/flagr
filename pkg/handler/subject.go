@@ -1,12 +1,13 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/openflagr/flagr/pkg/config"
 	"github.com/openflagr/flagr/pkg/util"
 
-	jwt "github.com/form3tech-oss/jwt-go"
+	jwt "github.com/golang-jwt/jwt/v5"
 )
 
 func getSubjectFromRequest(r *http.Request) string {
@@ -15,12 +16,17 @@ func getSubjectFromRequest(r *http.Request) string {
 	}
 
 	if config.Config.JWTAuthEnabled {
+		fmt.Printf("hhiiiii\n")
 		token, ok := r.Context().Value(config.Config.JWTAuthUserProperty).(*jwt.Token)
 		if !ok {
 			return ""
 		}
 
-		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		fmt.Printf("Token: %+v\n", token)
+		claims, ok := token.Claims.(jwt.MapClaims)
+
+		fmt.Printf("Claims: %+v\n", claims)
+		if ok && token.Valid {
 			return util.SafeString(claims[config.Config.JWTAuthUserClaim])
 		}
 

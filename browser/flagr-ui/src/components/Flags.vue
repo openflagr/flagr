@@ -3,7 +3,7 @@
     <el-col :span="20" :offset="2">
       <div class="flags-container container">
         <el-breadcrumb separator="/" v-if="loaded">
-          <el-breadcrumb-item>Home page</el-breadcrumb-item>
+          <el-breadcrumb-item>Home444 page</el-breadcrumb-item>
         </el-breadcrumb>
 
         <spinner v-if="!loaded" />
@@ -11,35 +11,41 @@
         <div v-if="loaded">
           <el-row>
             <el-col>
-              <el-input placeholder="Specific new flag description" v-model="newFlag.description">
-                <template slot="prepend">
-                  <span class="el-icon-plus" />
-                </template>
-                <template slot="append">
-                  <el-dropdown
-                    split-button
-                    type="primary"
-                    :disabled="!newFlag.description"
-                    @command="onCommandDropdown"
-                    @click.prevent="createFlag"
-                  >
-                    Create New Flag
-                    <el-dropdown-menu slot="dropdown">
-                      <el-dropdown-item
-                        command="simple_boolean_flag"
-                        :disabled="!newFlag.description"
-                      >Create Simple Boolean Flag</el-dropdown-item>
-                    </el-dropdown-menu>
-                  </el-dropdown>
-                </template>
-              </el-input>
+              <el-row>
+                <el-input placeholder="Specific new flag description" v-model="newFlag.description">
+                  <template #prepend>
+                    <ElIcon>
+                      <Plus />
+                    </ElIcon>
+                  </template>
+                  <template #append>
+                    <el-dropdown
+                      split-button
+                      type="primary"
+                      :disabled="!newFlag.description"
+                      @command="onCommandDropdown"
+                      @click.prevent="createFlag"
+                    >
+                      Create New Flag
+                      <template #dropdown>
+                        <el-dropdown-menu>
+                          <el-dropdown-item
+                            command="simple_boolean_flag"
+                            :disabled="!newFlag.description"
+                          >Create Simple Boolean Flag</el-dropdown-item>
+                        </el-dropdown-menu>
+                      </template>
+                      </el-dropdown>
+                  </template>
+                </el-input>
+              </el-row>
             </el-col>
           </el-row>
 
           <el-row>
             <el-input
               placeholder="Search a flag"
-              prefix-icon="el-icon-search"
+              :prefix-icon="ElIconSearch"
               v-model="searchTerm"
               v-focus
             ></el-input>
@@ -56,7 +62,7 @@
             <el-table-column prop="id" align="center" label="Flag ID" sortable fixed width="95"></el-table-column>
             <el-table-column prop="description" label="Description" min-width="300"></el-table-column>
             <el-table-column prop="tags" label="Tags" min-width="200">
-              <template slot-scope="scope">
+              <template v-slot="scope">
                 <el-tag
                   v-for="tag in scope.row.tags"
                   :key="tag.id"
@@ -83,7 +89,7 @@
               :filters="[{ text: 'Enabled', value: true }, { text: 'Disabled', value: false }]"
               :filter-method="filterStatus"
             >
-              <template slot-scope="scope">
+              <template v-slot="scope">
                 <el-tag
                   :type="scope.row.enabled ? 'primary' : 'danger'"
                   disable-transitions
@@ -104,7 +110,7 @@
                 <el-table-column prop="id" align="center" label="Flag ID" sortable fixed width="95"></el-table-column>
                 <el-table-column prop="description" label="Description" min-width="300"></el-table-column>
                 <el-table-column prop="tags" label="Tags" min-width="200">
-                  <template slot-scope="scope">
+                  <template v-slot="scope">
                     <el-tag
                       v-for="tag in scope.row.tags"
                       :key="tag.id"
@@ -128,7 +134,7 @@
                   fixed="right"
                   width="100"
                 >
-                  <template slot-scope="scope">
+                  <template v-slot="scope">
                     <el-button
                       @click="restoreFlag(scope.row)"
                       type="warning"
@@ -146,20 +152,21 @@
 </template>
 
 <script>
-import Axios from "axios";
-
-import constants from "@/constants";
+import { Search as ElIconSearch } from '@element-plus/icons'
 import Spinner from "@/components/Spinner";
 import helpers from "@/helpers/helpers";
+import { ElIcon } from 'element-plus';
+import { Plus } from '@element-plus/icons';
+import { getAxiosFlagrInstance } from '../utils/apiUtil';
 
 const { handleErr } = helpers;
-
-const { API_URL } = constants;
 
 export default {
   name: "flags",
   components: {
-    spinner: Spinner
+    spinner: Spinner,
+    Plus,
+    ElIcon
   },
   data() {
     return {
@@ -170,11 +177,12 @@ export default {
       searchTerm: "",
       newFlag: {
         description: ""
-      }
+      },
+      ElIconSearch
     };
   },
   created() {
-    Axios.get(`${API_URL}/flags`).then(response => {
+    getAxiosFlagrInstance().get(`/flags`).then(response => {
       let flags = response.data;
       this.loaded = true;
       flags.reverse();
@@ -228,7 +236,7 @@ export default {
       if (!this.newFlag.description) {
         return;
       }
-      Axios.post(`${API_URL}/flags`, {
+      getAxiosFlagrInstance().post(`/flags`, {
         ...this.newFlag,
         ...(params || {})
       }).then(response => {
@@ -246,7 +254,7 @@ export default {
         cancelButtonText: 'Cancel',
         type: 'warning'
       }).then(() => {
-        Axios.put(`${API_URL}/flags/${row.id}/restore`).then(response => {
+        getAxiosFlagrInstance().put(`/flags/${row.id}/restore`).then(response => {
           let flag = response.data;
           this.$message.success(`Flag updated`);
           this.flags.push(flag);
@@ -260,7 +268,7 @@ export default {
     fetchDeletedFlags() {
       if (!this.deletedFlagsLoaded) {
         var self = this;
-        Axios.get(`${API_URL}/flags?deleted=true`).then(response => {
+        getAxiosFlagrInstance().get(`/flags?deleted=true`).then(response => {
           let flags = response.data;
           flags.reverse();
           self.deletedFlags = flags;
