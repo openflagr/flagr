@@ -7,6 +7,7 @@ let axiosInstance ;
 let flagrAxiosInstance;
 
 const API_URLS = constants.API_URLS
+const API_URL = constants.API_URL
 export const setupAxiosInstance = (baseUrl) => {
 	axiosInstance = axios.create({
 		baseURL: baseUrl,
@@ -19,9 +20,8 @@ export const setupAxiosInstance = (baseUrl) => {
 
 export const setupflagrAxiosInstance = () => {
 	flagrAxiosInstance = axios.create({
-		baseURL: window.location.origin+'/api/v1',
-		timeout: 300000,
-		headers: headerParams(),
+		baseURL: API_URL,
+		timeout: 300000
 	})
 	//setupAxiosInstanceInterceptors()
 	return flagrAxiosInstance
@@ -114,7 +114,7 @@ export const getAxiosFlagrInstance = () => {
 		try {
 			const authToken = token ? JSON.parse(token) : null;
 			if (authToken && authToken["x-access-token"]) {
-				flagrAxiosInstance.defaults.headers["Authorization"] = "Bearer " + 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJhVVNzVzhHSTAzZHlRMEFJRlZuOTIiLCJkX3R5cGUiOiJ3ZWIiLCJkaWQiOiJmOTMxNTU1MS01NTZlLTQ5ZmUtOTAyZS05YmUxYzE2MzYzYzIiLCJlX2lkIjoiNTQzNjIyODYzIiwiZXhwIjoxNzI3NDIyOTg0LCJpYXQiOiIyMDI0LTA5LTI2VDA3OjQzOjA0LjM4NDE4ODMzNVoiLCJpc3MiOiJhdXRoZW50aWNhdGlvbi5hbGxlbi1zYW5kYm94IiwiaXN1IjoiIiwicHQiOiJJTlRFUk5BTF9VU0VSIiwic2lkIjoiYzUzNjFhM2ItOWZhMy00OGZlLTkyOWUtMDBhY2M3YjUzYjMxIiwidGlkIjoiYVVTc1c4R0kwM2R5UTBBSUZWbjkyIiwidHlwZSI6ImFjY2VzcyIsInVpZCI6ImhaSkx1andPVmZIM3cybEFQVE1YTCJ9._37wBjStkn1GxlEcRrepGT03j6DmNp8jKBmBB_HAFDE';
+				flagrAxiosInstance.defaults.headers["Authorization"] = "Bearer " + authToken["x-access-token"];
 			}
 		} catch (error) {
 			console.error("Failed to parse token from localStorage", error);

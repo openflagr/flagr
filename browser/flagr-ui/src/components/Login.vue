@@ -1,7 +1,11 @@
 <template>
-    <div class="login-page">
-      <h1>Login</h1>
-      <button @click="loginWithGoogle">Login with Google</button>
+    <div class="login-page flex flex-col items-center justify-center">
+      <h1>Allen Flagger</h1>
+      
+      <div @click="loginWithGoogle" class="flex justify-center items-center btn-goggle">
+        <img src="../../assets/images/google.svg" width="20" height="20" alt="My SVG Image" />
+        <span>Login</span>
+      </div>
     </div>
 </template>
   
@@ -54,6 +58,20 @@ import { getGoogleRedirectionLink } from '../utils/apiUtil';
     }
 </script>
 
-<style scoped>
+<style lang="less" scoped>
+
+.btn-goggle {
+    padding: 2px;
+    gap: 10px;
+    width: 200px;
+    background-color: rgb(226, 225, 225);
+    color: black;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s;
+    &:hover {
+        background-color: rgb(159, 157, 157);
+    }
+}
 /* Add some styling if needed */
 </style>

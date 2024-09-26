@@ -119,6 +119,21 @@ ol {
 #app {
   color: #2c3e50;
 
+  .flex {
+    display: flex;
+  }
+
+  .flex-col {
+    flex-direction: column;
+  }
+
+  .justify-center {
+    justify-content: center;
+  }
+
+  .items-center {
+    align-items: center;
+  }
   span[size="small"] {
     font-size: 0.85em;
   }
