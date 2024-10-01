@@ -16,7 +16,6 @@ func getSubjectFromRequest(r *http.Request) string {
 	}
 
 	if config.Config.JWTAuthEnabled {
-		fmt.Printf("hhiiiii\n")
 		token, ok := r.Context().Value(config.Config.JWTAuthUserProperty).(*jwt.Token)
 		if !ok {
 			return ""
@@ -25,7 +24,6 @@ func getSubjectFromRequest(r *http.Request) string {
 		fmt.Printf("Token: %+v\n", token)
 		claims, ok := token.Claims.(jwt.MapClaims)
 
-		fmt.Printf("Claims: %+v\n", claims)
 		if ok && token.Valid {
 			return util.SafeString(claims[config.Config.JWTAuthUserClaim])
 		}

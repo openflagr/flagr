@@ -31,7 +31,7 @@ ENV FLAGR_RECORDER_ENABLED=false
 # JWT Environment Variables
 ENV FLAGR_JWT_AUTH_ENABLED=true
 ENV FLAGR_JWT_AUTH_DEBUG=true
-ENV FLAGR_JWT_AUTH_WHITELIST_PATHS="/api/v1/health,/api/v1/evaluation,/api/v1/flags,/login,/callback,/static,/favicon.ico,/flags"
+ENV FLAGR_JWT_AUTH_WHITELIST_PATHS="/api/v1/health,/api/v1/evaluation,/login,/callback,/static,/favicon.ico,/flags"
 ENV FLAGR_JWT_AUTH_EXACT_WHITELIST_PATHS=",/,/login,/callback"
 ENV FLAGR_JWT_AUTH_COOKIE_TOKEN_NAME="access_token"
 ENV FLAGR_JWT_AUTH_SECRET="01d3024af90f4100c22d20eb294eee46e8fa286b53a4b08aa16cadf7d4b70b0935778af1228caf115caeb62873f789b7af6f2e6591272cec784d6fc68a91e9f8538a223b8aa622b594cfac2a01ef15fb583d5adadea3174be6cc91d0db638574997334df095427b3319a3937d10c07adc2e4a95669bd1fd75807dd02bca06432"
