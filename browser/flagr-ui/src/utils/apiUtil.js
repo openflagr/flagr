@@ -8,9 +8,10 @@ let flagrAxiosInstance;
 
 const API_URLS = constants.API_URLS
 const API_URL = constants.API_URL
-export const setupAxiosInstance = (baseUrl) => {
+const SSO_URL = constants.SSO_URL
+export const setupAxiosInstance = () => {
 	axiosInstance = axios.create({
-		baseURL: baseUrl,
+		baseURL: SSO_URL,
 		timeout: 300000,
 		headers: headerParams(),
 	})
@@ -153,7 +154,6 @@ export const googleAuthenticate = async (postData) => {
 		console.error(error)
 		if (typeof window !== "undefined") {
 			localStorage.removeItem("tokens")
-			localStorage.removeItem("chat-font-size")
 		}
 		throw error
 	}

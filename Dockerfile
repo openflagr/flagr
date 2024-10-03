@@ -3,6 +3,8 @@
 ######################################
 FROM node:18 as npm_builder
 WORKDIR /go/src/github.com/openflagr/flagr
+ARG ENVIRONMENT=production
+ENV ENVIRONMENT=${ENVIRONMENT}
 ADD . .
 ARG FLAGR_UI_POSSIBLE_ENTITY_TYPES=null
 ENV VUE_APP_FLAGR_UI_POSSIBLE_ENTITY_TYPES ${FLAGR_UI_POSSIBLE_ENTITY_TYPES}

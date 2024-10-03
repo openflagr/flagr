@@ -25,7 +25,7 @@ app.use(store);
 
 function initializeApp() {
   console.log("App is initialized!");
-  setupAxiosInstance('https://bff.allen-stage.in/');
+  setupAxiosInstance();
   setupflagrAxiosInstance();
   // You can do other things here like fetching initial data, setting up listeners, etc.
   // e.g., check if the user is authenticated, load initial data, etc.
