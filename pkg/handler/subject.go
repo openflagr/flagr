@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/openflagr/flagr/pkg/config"
@@ -21,10 +20,7 @@ func getSubjectFromRequest(r *http.Request) string {
 			return ""
 		}
 
-		fmt.Printf("Token: %+v\n", token)
-		claims, ok := token.Claims.(jwt.MapClaims)
-
-		if ok && token.Valid {
+		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 			return util.SafeString(claims[config.Config.JWTAuthUserClaim])
 		}
 

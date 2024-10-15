@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/golang-jwt/jwt/v5"
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 // A function called whenever an error is encountered
@@ -19,6 +20,9 @@ type errorHandler func(w http.ResponseWriter, r *http.Request, err string)
 // formed.  In the case where a token is simply not present, this should not
 // be treated as an error.  An empty string should be returned in that case.
 type TokenExtractor func(r *http.Request) (string, error)
+
+// Define a custom type for the key
+type contextKey string
 
 // Options is a struct for specifying configuration options for the middleware.
 type Options struct {
@@ -229,7 +233,7 @@ func (m *JWTMiddleware) CheckJWT(w http.ResponseWriter, r *http.Request) error {
 
 	// If we get here, everything worked and we can set the
 	// user property in context.
-	newRequest := r.WithContext(context.WithValue(r.Context(), m.Options.UserProperty, parsedToken))
+	newRequest := r.WithContext(context.WithValue(r.Context(), contextKey(m.Options.UserProperty), parsedToken))
 	// Update the current request with the new context information.
 	*r = *newRequest
 	return nil

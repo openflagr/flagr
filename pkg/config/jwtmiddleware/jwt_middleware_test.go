@@ -3,7 +3,7 @@ package jwtmiddleware
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -20,7 +20,7 @@ import (
 const defaultAuthorizationHeaderName = "Authorization"
 
 // userPropertyName is the property name that will be set in the request context
-const userPropertyName = "custom-user-property"
+const userPropertyName = "user"
 
 // the bytes read from the keys/sample-key file
 // private key generated with http://kjur.github.io/jsjws/tool_jwt.html
@@ -56,7 +56,7 @@ func TestAuthenticatedRequest(t *testing.T) {
 			var expectedAlgorithm jwt.SigningMethod = nil
 			w := makeAuthenticatedRequest("GET", "/protected", jwt.MapClaims{"foo": "bar"}, expectedAlgorithm)
 			So(w.Code, ShouldEqual, http.StatusOK)
-			responseBytes, err := ioutil.ReadAll(w.Body)
+			responseBytes, err := io.ReadAll(w.Body)
 			if err != nil {
 				panic(err)
 			}
@@ -68,7 +68,7 @@ func TestAuthenticatedRequest(t *testing.T) {
 			expectedAlgorithm := jwt.SigningMethodHS256
 			w := makeAuthenticatedRequest("GET", "/protected", jwt.MapClaims{"foo": "bar"}, expectedAlgorithm)
 			So(w.Code, ShouldEqual, http.StatusOK)
-			responseBytes, err := ioutil.ReadAll(w.Body)
+			responseBytes, err := io.ReadAll(w.Body)
 			if err != nil {
 				panic(err)
 			}
@@ -80,7 +80,7 @@ func TestAuthenticatedRequest(t *testing.T) {
 			expectedAlgorithm := jwt.SigningMethodRS256
 			w := makeAuthenticatedRequest("GET", "/protected", jwt.MapClaims{"foo": "bar"}, expectedAlgorithm)
 			So(w.Code, ShouldEqual, http.StatusUnauthorized)
-			responseBytes, err := ioutil.ReadAll(w.Body)
+			responseBytes, err := io.ReadAll(w.Body)
 			if err != nil {
 				panic(err)
 			}
@@ -167,7 +167,7 @@ func JWT(expectedSignatureAlgorithm jwt.SigningMethod) *JWTMiddleware {
 				var err error
 				privateKey, err = readPrivateKey()
 				if err != nil {
-					panic(err)
+					return nil, err
 				}
 			}
 			return privateKey, nil
@@ -193,9 +193,25 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 // in the token as json -> {"text":"bar"}
 func protectedHandler(w http.ResponseWriter, r *http.Request) {
 	// retrieve the token from the context
-	u := r.Context().Value(userPropertyName)
-	user := u.(*jwt.Token)
-	respondJSON(user.Claims.(jwt.MapClaims)["foo"].(string), w)
+	u := r.Context().Value(contextKey(userPropertyName))
+	if u == nil {
+		http.Error(w, "Unauthorized: no token present", http.StatusUnauthorized)
+		return
+	}
+
+	user, ok := u.(*jwt.Token)
+	if !ok {
+		http.Error(w, "Unauthorized: invalid token type", http.StatusUnauthorized)
+		return
+	}
+
+	claims, ok := user.Claims.(jwt.MapClaims)
+	if !ok {
+		http.Error(w, "Unauthorized: invalid claims type", http.StatusUnauthorized)
+		return
+	}
+
+	respondJSON(claims["foo"].(string), w)
 }
 
 // Response quick n' dirty Response struct to be encoded as json
@@ -214,4 +230,105 @@ func respondJSON(text string, w http.ResponseWriter) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	_, _ = w.Write(jsonResponse)
+}
+
+func TestJWTMiddleware_Handler(t *testing.T) {
+	// Define a mock handler to be wrapped
+	mockHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
+	type fields struct {
+		Options Options
+	}
+	type args struct {
+		h http.Handler
+	}
+	tests := []struct {
+		name          string
+		fields        fields
+		args          args
+		setupJWTCheck func(w *httptest.ResponseRecorder, r *http.Request) error
+		wantStatus    int
+	}{
+		{
+			name: "Valid JWT",
+			fields: fields{
+				Options: Options{
+					ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
+						// Return a valid key for testing
+						return []byte("valid-signing-key"), nil
+					},
+					SigningMethod: jwt.SigningMethodHS256,
+					UserProperty:  "user",
+					Extractor:     FromAuthHeader,
+				},
+			},
+			args: args{
+				h: mockHandler,
+			},
+			setupJWTCheck: func(w *httptest.ResponseRecorder, r *http.Request) error {
+				// Create a valid JWT token
+				token := jwt.New(jwt.SigningMethodHS256)
+				tokenString, err := token.SignedString([]byte("valid-signing-key"))
+				if err != nil {
+					return err
+				}
+				// Add the JWT token to the request's Authorization header
+				r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", tokenString))
+				return nil
+			},
+			wantStatus: http.StatusOK,
+		},
+		{
+			name: "Invalid JWT",
+			fields: fields{
+				Options: Options{
+					ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
+						// Return a valid key for testing
+						return []byte("valid-signing-key"), nil
+					},
+					Extractor:     FromAuthHeader,
+					SigningMethod: jwt.SigningMethodHS256,
+					UserProperty:  "user",
+					ErrorHandler:  OnError,
+				},
+			},
+			args: args{
+				h: mockHandler,
+			},
+			setupJWTCheck: func(w *httptest.ResponseRecorder, r *http.Request) error {
+				// Add an invalid JWT token to the request's Authorization header
+				r.Header.Set("Authorization", "Bearer invalidtoken")
+				return nil
+			},
+			wantStatus: http.StatusUnauthorized,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create a new JWTMiddleware instance
+			m := &JWTMiddleware{
+				Options: tt.fields.Options,
+			}
+
+			// Create a new HTTP test recorder and request
+			recorder := httptest.NewRecorder()
+			request, _ := http.NewRequest("GET", "/", nil)
+
+			// Apply the JWT setup (valid/invalid token)
+			if err := tt.setupJWTCheck(recorder, request); err != nil {
+				t.Fatalf("failed to set up JWT check: %v", err)
+			}
+
+			// Invoke the middleware handler
+			m.Handler(tt.args.h).ServeHTTP(recorder, request)
+
+			// Check the status code
+			if recorder.Code != tt.wantStatus {
+				t.Errorf("Handler() status = %v, want %v", recorder.Code, tt.wantStatus)
+			}
+		})
+	}
 }

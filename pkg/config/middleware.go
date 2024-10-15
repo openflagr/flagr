@@ -4,12 +4,12 @@ package config
 import (
 	"crypto/subtle"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/openflagr/flagr/pkg/config/jwtmiddleware"
 
 	"net/http"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -118,7 +118,7 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 		}
 
 		// Otherwise, serve index.html for Vue.js routing
-		http.ServeFile(w, r, "./browser/flagr-ui/dist/index.html")
+		http.ServeFile(w, r, "../../browser/flagr-ui/dist/index.html")
 	})
 
 	n.Use(setupRecoveryMiddleware())
