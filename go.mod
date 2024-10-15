@@ -16,7 +16,6 @@ require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dchest/uniuri v1.2.0
 	github.com/evalphobia/logrus_sentry v0.8.2
-	github.com/form3tech-oss/jwt-go v3.2.5+incompatible
 	github.com/getsentry/raven-go v0.2.0
 	github.com/go-openapi/analysis v0.21.4 // indirect
 	github.com/go-openapi/errors v0.20.3

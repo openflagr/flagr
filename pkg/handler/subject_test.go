@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"testing"
 
-	jwt "github.com/form3tech-oss/jwt-go"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/openflagr/flagr/pkg/config"
 	"github.com/stretchr/testify/assert"
 )
