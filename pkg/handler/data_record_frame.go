@@ -6,9 +6,9 @@ import (
 
 	"github.com/brandur/simplebox"
 
+	"github.com/Allen-Career-Institute/flagr/pkg/util"
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/models"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/openflagr/flagr/pkg/util"
-	"github.com/openflagr/flagr/swagger_gen/models"
 )
 
 type dataRecordEncryptor interface {

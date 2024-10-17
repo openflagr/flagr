@@ -1,20 +1,20 @@
 package handler
 
 import (
+	"github.com/Allen-Career-Institute/flagr/pkg/config"
+	"github.com/Allen-Career-Institute/flagr/pkg/entity"
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/models"
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations"
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations/constraint"
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations/distribution"
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations/evaluation"
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations/export"
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations/flag"
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations/health"
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations/segment"
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations/tag"
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations/variant"
 	"github.com/go-openapi/runtime/middleware"
-	"github.com/openflagr/flagr/pkg/config"
-	"github.com/openflagr/flagr/pkg/entity"
-	"github.com/openflagr/flagr/swagger_gen/models"
-	"github.com/openflagr/flagr/swagger_gen/restapi/operations"
-	"github.com/openflagr/flagr/swagger_gen/restapi/operations/constraint"
-	"github.com/openflagr/flagr/swagger_gen/restapi/operations/distribution"
-	"github.com/openflagr/flagr/swagger_gen/restapi/operations/evaluation"
-	"github.com/openflagr/flagr/swagger_gen/restapi/operations/export"
-	"github.com/openflagr/flagr/swagger_gen/restapi/operations/flag"
-	"github.com/openflagr/flagr/swagger_gen/restapi/operations/health"
-	"github.com/openflagr/flagr/swagger_gen/restapi/operations/segment"
-	"github.com/openflagr/flagr/swagger_gen/restapi/operations/tag"
-	"github.com/openflagr/flagr/swagger_gen/restapi/operations/variant"
 )
 
 var getDB = entity.GetDB

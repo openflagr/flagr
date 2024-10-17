@@ -3,8 +3,8 @@ package handler
 import (
 	"testing"
 
-	"github.com/openflagr/flagr/pkg/entity"
-	"github.com/openflagr/flagr/swagger_gen/restapi/operations"
+	"github.com/Allen-Career-Institute/flagr/pkg/entity"
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations"
 
 	"github.com/prashantv/gostub"
 	"github.com/stretchr/testify/assert"

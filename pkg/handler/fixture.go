@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"github.com/openflagr/flagr/pkg/entity"
-	"github.com/openflagr/flagr/pkg/util"
+	"github.com/Allen-Career-Institute/flagr/pkg/entity"
+	"github.com/Allen-Career-Institute/flagr/pkg/util"
 )
 
 // GenFixtureEvalCache generates a fixture

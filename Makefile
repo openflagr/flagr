@@ -18,7 +18,7 @@ all: deps gen build build_ui run
 rebuild: gen build
 
 test: verifiers
-	@go test -race -covermode=atomic -coverprofile=coverage.txt github.com/openflagr/flagr/pkg/...
+	@go test -race -covermode=atomic -coverprofile=coverage.txt github.com/Allen-Career-Institute/flagr/pkg/...
 
 .PHONY: benchmark
 benchmark:
@@ -33,7 +33,7 @@ vendor:
 
 build:
 	@echo "Building Flagr Server to $(PWD)/flagr ..."
-	@go build -o $(PWD)/flagr github.com/openflagr/flagr/swagger_gen/cmd/flagr-server
+	@go build -o $(PWD)/flagr github.com/Allen-Career-Institute/flagr/swagger_gen/cmd/flagr-server
 
 build_ui:
 	@echo "Building Flagr UI ... $(ENVIRONMENT)"

@@ -1,3 +1,3 @@
 # Changelog
 
-https://github.com/openflagr/flagr/releases
+https://github.com/Allen-Career-Institute/flagr/releases

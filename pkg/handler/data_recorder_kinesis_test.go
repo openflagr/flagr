@@ -3,8 +3,8 @@ package handler
 import (
 	"testing"
 
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/models"
 	producer "github.com/a8m/kinesis-producer"
-	"github.com/openflagr/flagr/swagger_gen/models"
 	"github.com/stretchr/testify/assert"
 )
 

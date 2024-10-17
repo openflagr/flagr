@@ -3,7 +3,7 @@ package entity
 import (
 	"testing"
 
-	"github.com/openflagr/flagr/pkg/config"
+	"github.com/Allen-Career-Institute/flagr/pkg/config"
 	"github.com/stretchr/testify/assert"
 )
 

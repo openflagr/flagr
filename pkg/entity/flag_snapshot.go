@@ -4,9 +4,9 @@ package entity
 import (
 	"fmt"
 
+	"github.com/Allen-Career-Institute/flagr/pkg/config"
+	"github.com/Allen-Career-Institute/flagr/pkg/util"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/openflagr/flagr/pkg/config"
-	"github.com/openflagr/flagr/pkg/util"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )

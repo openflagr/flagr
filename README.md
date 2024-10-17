@@ -1,23 +1,23 @@
 <p align="center">
-    <a href="https://github.com/openflagr/flagr/actions/workflows/ci.yml?query=branch%3Amain+" target="_blank">
-        <img src="https://github.com/openflagr/flagr/actions/workflows/ci.yml/badge.svg?branch=main">
+    <a href="https://github.com/Allen-Career-Institute/flagr/actions/workflows/ci.yml?query=branch%3Amain+" target="_blank">
+        <img src="https://github.com/Allen-Career-Institute/flagr/actions/workflows/ci.yml/badge.svg?branch=main">
     </a>
-    <a href="https://goreportcard.com/report/github.com/openflagr/flagr" target="_blank">
-        <img src="https://goreportcard.com/badge/github.com/openflagr/flagr">
+    <a href="https://goreportcard.com/report/github.com/Allen-Career-Institute/flagr" target="_blank">
+        <img src="https://goreportcard.com/badge/github.com/Allen-Career-Institute/flagr">
     </a>
-    <a href="https://godoc.org/github.com/openflagr/flagr" target="_blank">
+    <a href="https://godoc.org/github.com/Allen-Career-Institute/flagr" target="_blank">
         <img src="https://img.shields.io/badge/godoc-reference-green.svg">
     </a>
-    <a href="https://github.com/openflagr/flagr/releases" target="_blank">
-        <img src="https://img.shields.io/github/release/openflagr/flagr.svg?style=flat&color=green">
+    <a href="https://github.com/Allen-Career-Institute/flagr/releases" target="_blank">
+        <img src="https://img.shields.io/github/release/Allen-Career-Institute/flagr.svg?style=flat&color=green">
     </a>
-    <a href="https://codecov.io/gh/openflagr/flagr">
-        <img src="https://codecov.io/gh/openflagr/flagr/branch/main/graph/badge.svg?token=iwjv26grrN">
+    <a href="https://codecov.io/gh/Allen-Career-Institute/flagr">
+        <img src="https://codecov.io/gh/Allen-Career-Institute/flagr/branch/main/graph/badge.svg?token=iwjv26grrN">
     </a>
 </p>
 
 ## Introduction
-`openflagr/flagr` is a community-driven OSS effort of advancing the development of Flagr.
+`Openflagr/flagr` is a community-driven OSS effort of advancing the development of Flagr.
 
 Flagr is an open source Go service that delivers the right experience to the right entity and monitors the impact. It provides feature flags, experimentation (A/B testing), and dynamic configuration. It has clear swagger REST APIs for flags management and flag evaluation.
 
@@ -30,8 +30,8 @@ Try it with Docker.
 
 ```sh
 # Start the docker container
-docker pull ghcr.io/openflagr/flagr
-docker run -it -p 18000:18000 ghcr.io/openflagr/flagr
+docker pull ghcr.io/Allen-Career-Institute/flagr
+docker run -it -p 18000:18000 ghcr.io/Allen-Career-Institute/flagr
 
 # Open the Flagr UI
 open localhost:18000
@@ -88,6 +88,6 @@ Error Set:
 | Ruby | [rbflagr](https://github.com/openflagr/rbflagr) |
 
 ## License and Credit
-- [`openflagr/flagr`](https://github.com/openflagr/flagr) Apache 2.0
+- [`Allen-Career-Institute/flagr`](https://github.com/Allen-Career-Institute/flagr) Apache 2.0
 - [`checkr/flagr`](https://github.com/checkr/flagr) Apache 2.0
 

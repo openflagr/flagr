@@ -6,11 +6,11 @@ import (
 	"math"
 	"testing"
 
+	"github.com/Allen-Career-Institute/flagr/pkg/entity"
+	"github.com/Allen-Career-Institute/flagr/pkg/util"
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/models"
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations/evaluation"
 	"github.com/dchest/uniuri"
-	"github.com/openflagr/flagr/pkg/entity"
-	"github.com/openflagr/flagr/pkg/util"
-	"github.com/openflagr/flagr/swagger_gen/models"
-	"github.com/openflagr/flagr/swagger_gen/restapi/operations/evaluation"
 
 	"github.com/prashantv/gostub"
 	"github.com/stretchr/testify/assert"

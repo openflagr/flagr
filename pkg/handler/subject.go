@@ -3,8 +3,8 @@ package handler
 import (
 	"net/http"
 
-	"github.com/openflagr/flagr/pkg/config"
-	"github.com/openflagr/flagr/pkg/util"
+	"github.com/Allen-Career-Institute/flagr/pkg/config"
+	"github.com/Allen-Career-Institute/flagr/pkg/util"
 
 	jwt "github.com/golang-jwt/jwt/v5"
 )

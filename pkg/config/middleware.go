@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/openflagr/flagr/pkg/config/jwtmiddleware"
+	"github.com/Allen-Career-Institute/flagr/pkg/config/jwtmiddleware"
 
 	"net/http"
 	"strconv"
@@ -95,12 +95,7 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 		n.Use(setupBasicAuthMiddleware())
 	}
 
-	n.Use(&negroni.Static{
-		Dir:       http.Dir("./browser/flagr-ui/dist/"),
-		Prefix:    Config.WebPrefix,
-		IndexFile: "index.html",
-	})
-
+	// middleware to handle static files and Vue.js routing for unknown paths by serving index.html
 	n.UseFunc(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		// Skip handling if it's an API request
 		if strings.Contains(r.URL.Path, "/api/") {
@@ -109,7 +104,7 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 		}
 
 		// Otherwise, check for static files or serve index.html for Vue.js routing
-		filePath := "./browser/flagr-ui/dist" + r.URL.Path
+		filePath := "./browser/flagr-ui/dist/" + r.URL.Path
 
 		// If the requested file is not found, serve index.html
 		if _, err := os.Stat(filePath); err == nil && filepath.Ext(r.URL.Path) != "" {
@@ -118,7 +113,7 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 		}
 
 		// Otherwise, serve index.html for Vue.js routing
-		http.ServeFile(w, r, "../../browser/flagr-ui/dist/index.html")
+		http.ServeFile(w, r, "./browser/flagr-ui/dist/index.html")
 	})
 
 	n.Use(setupRecoveryMiddleware())

@@ -1,13 +1,13 @@
 package handler
 
 import (
+	"github.com/Allen-Career-Institute/flagr/pkg/config"
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/models"
 	producer "github.com/a8m/kinesis-producer"
 	"github.com/a8m/kinesis-producer/loggers/kplogrus"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kinesis"
-	"github.com/openflagr/flagr/pkg/config"
-	"github.com/openflagr/flagr/swagger_gen/models"
 	"github.com/sirupsen/logrus"
 )
 

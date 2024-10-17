@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/Allen-Career-Institute/flagr/pkg/config"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/openflagr/flagr/pkg/config"
 	"github.com/stretchr/testify/assert"
 )
 

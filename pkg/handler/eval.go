@@ -9,11 +9,11 @@ import (
 
 	jsoniter "github.com/json-iterator/go"
 
-	"github.com/openflagr/flagr/pkg/config"
-	"github.com/openflagr/flagr/pkg/entity"
-	"github.com/openflagr/flagr/pkg/util"
-	"github.com/openflagr/flagr/swagger_gen/models"
-	"github.com/openflagr/flagr/swagger_gen/restapi/operations/evaluation"
+	"github.com/Allen-Career-Institute/flagr/pkg/config"
+	"github.com/Allen-Career-Institute/flagr/pkg/entity"
+	"github.com/Allen-Career-Institute/flagr/pkg/util"
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/models"
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations/evaluation"
 	"gorm.io/gorm"
 
 	"github.com/bsm/ratelimit"

@@ -3,8 +3,8 @@ package handler
 import (
 	"testing"
 
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/models"
 	"github.com/Shopify/sarama"
-	"github.com/openflagr/flagr/swagger_gen/models"
 	"github.com/prashantv/gostub"
 	"github.com/stretchr/testify/assert"
 )

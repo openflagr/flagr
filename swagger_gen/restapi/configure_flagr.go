@@ -9,9 +9,9 @@ import (
 
 	jsoniter "github.com/json-iterator/go"
 
-	"github.com/openflagr/flagr/pkg/config"
-	"github.com/openflagr/flagr/pkg/handler"
-	"github.com/openflagr/flagr/swagger_gen/restapi/operations"
+	"github.com/Allen-Career-Institute/flagr/pkg/config"
+	"github.com/Allen-Career-Institute/flagr/pkg/handler"
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations"
 	"github.com/sirupsen/logrus"
 
 	"github.com/go-openapi/errors"

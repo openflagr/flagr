@@ -2,7 +2,7 @@
 # Prepare npm_builder
 ######################################
 FROM node:18 as npm_builder
-WORKDIR /go/src/github.com/openflagr/flagr
+WORKDIR /go/src/github.com/Allen-Career-Institute/flagr
 ARG ENVIRONMENT=production
 ENV ENVIRONMENT=${ENVIRONMENT}
 ADD . .
@@ -14,7 +14,7 @@ RUN make build_ui
 # Prepare go_builder
 ######################################
 FROM golang:1.21-alpine as go_builder
-WORKDIR /go/src/github.com/openflagr/flagr
+WORKDIR /go/src/github.com/Allen-Career-Institute/flagr
 
 RUN apk add --no-cache git make build-base
 ADD . .
@@ -22,7 +22,7 @@ RUN make build
 
 FROM alpine
 
-COPY --from=go_builder /go/src/github.com/openflagr/flagr/flagr .
+COPY --from=go_builder /go/src/github.com/Allen-Career-Institute/flagr/flagr .
 
 ENV HOST=0.0.0.0
 ENV PORT=3000
@@ -43,7 +43,7 @@ ENV FLAGR_JWT_AUTH_USER_PROPERTY=flagr_user
 ENV FLAGR_JWT_AUTH_USER_CLAIM=uid
 ENV FLAGR_JWT_AUTH_SIGNING_METHOD=HS256
 
-COPY --from=npm_builder /go/src/github.com/openflagr/flagr/browser/flagr-ui/dist ./browser/flagr-ui/dist
+COPY --from=npm_builder /go/src/github.com/Allen-Career-Institute/flagr/browser/flagr-ui/dist ./browser/flagr-ui/dist
 
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
