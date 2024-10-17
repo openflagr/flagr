@@ -13,7 +13,7 @@ RUN make build_ui
 ######################################
 # Prepare go_builder
 ######################################
-FROM 537984406465.dkr.ecr.ap-south-1.amazonaws.com/golang:1.22.7 as go_builder
+FROM 537984406465.dkr.ecr.ap-south-1.amazonaws.com/golang:1.21 as go_builder
 WORKDIR /go/src/github.com/Allen-Career-Institute/flagr
 
 RUN apk add --no-cache git make build-base
