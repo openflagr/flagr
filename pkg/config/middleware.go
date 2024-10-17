@@ -40,28 +40,27 @@ func ServerShutdown() {
 func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 	n := negroni.New()
 
+	applyOptionalMiddlewares(n)
+	applyStaticFileMiddleware(n)
+	applyFinalHandler(n, handler)
+
+	return n
+}
+
+// applyOptionalMiddlewares applies all optional middlewares based on configuration
+func applyOptionalMiddlewares(n *negroni.Negroni) {
 	if Config.MiddlewareGzipEnabled {
 		n.Use(gzip.Gzip(gzip.DefaultCompression))
 	}
 
 	if Config.MiddlewareVerboseLoggerEnabled {
-		middleware := negronilogrus.NewMiddlewareFromLogger(logrus.StandardLogger(), "flagr")
-
-		for _, u := range Config.MiddlewareVerboseLoggerExcludeURLs {
-			middleware.ExcludeURL(u)
-		}
-
-		n.Use(middleware)
+		n.Use(createVerboseLoggerMiddleware())
 	}
 
 	if Config.StatsdEnabled {
 		n.Use(&statsdMiddleware{StatsdClient: Global.StatsdClient})
-
 		if Config.StatsdAPMEnabled {
-			tracer.Start(
-				tracer.WithAgentAddr(fmt.Sprintf("%s:%s", Config.StatsdHost, Config.StatsdAPMPort)),
-				tracer.WithServiceName(Config.StatsdAPMServiceName),
-			)
+			startAPMTracer()
 		}
 	}
 
@@ -77,14 +76,7 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 	}
 
 	if Config.CORSEnabled {
-		n.Use(cors.New(cors.Options{
-			AllowedOrigins:   Config.CORSAllowedOrigins,
-			AllowedHeaders:   Config.CORSAllowedHeaders,
-			ExposedHeaders:   Config.CORSExposedHeaders,
-			AllowedMethods:   Config.CORSAllowedMethods,
-			AllowCredentials: Config.CORSAllowCredentials,
-			MaxAge:           Config.CORSMaxAge,
-		}))
+		n.Use(createCORSMiddleware())
 	}
 
 	if Config.JWTAuthEnabled {
@@ -94,28 +86,58 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 	if Config.BasicAuthEnabled {
 		n.Use(setupBasicAuthMiddleware())
 	}
+}
 
-	// middleware to handle static files and Vue.js routing for unknown paths by serving index.html
+// createVerboseLoggerMiddleware creates the verbose logger middleware
+func createVerboseLoggerMiddleware() negroni.Handler {
+	middleware := negronilogrus.NewMiddlewareFromLogger(logrus.StandardLogger(), "flagr")
+	for _, u := range Config.MiddlewareVerboseLoggerExcludeURLs {
+		middleware.ExcludeURL(u)
+	}
+	return middleware
+}
+
+// startAPMTracer starts the APM tracer for Statsd
+func startAPMTracer() {
+	tracer.Start(
+		tracer.WithAgentAddr(fmt.Sprintf("%s:%s", Config.StatsdHost, Config.StatsdAPMPort)),
+		tracer.WithServiceName(Config.StatsdAPMServiceName),
+	)
+}
+
+// createCORSMiddleware creates the CORS middleware based on the configuration
+func createCORSMiddleware() negroni.Handler {
+	return cors.New(cors.Options{
+		AllowedOrigins:   Config.CORSAllowedOrigins,
+		AllowedHeaders:   Config.CORSAllowedHeaders,
+		ExposedHeaders:   Config.CORSExposedHeaders,
+		AllowedMethods:   Config.CORSAllowedMethods,
+		AllowCredentials: Config.CORSAllowCredentials,
+		MaxAge:           Config.CORSMaxAge,
+	})
+}
+
+// applyStaticFileMiddleware handles static files and Vue.js routing
+func applyStaticFileMiddleware(n *negroni.Negroni) {
 	n.UseFunc(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		// Skip handling if it's an API request
 		if strings.Contains(r.URL.Path, "/api/") {
 			next(w, r)
 			return
 		}
 
-		// Otherwise, check for static files or serve index.html for Vue.js routing
 		filePath := "./browser/flagr-ui/dist/" + r.URL.Path
-
-		// If the requested file is not found, serve index.html
 		if _, err := os.Stat(filePath); err == nil && filepath.Ext(r.URL.Path) != "" {
 			next(w, r) // Serve the static file if it exists
 			return
 		}
 
-		// Otherwise, serve index.html for Vue.js routing
+		// Serve index.html for Vue.js routing
 		http.ServeFile(w, r, "./browser/flagr-ui/dist/index.html")
 	})
+}
 
+// applyFinalHandler applies the final handler and sets up the recovery middleware
+func applyFinalHandler(n *negroni.Negroni, handler http.Handler) {
 	n.Use(setupRecoveryMiddleware())
 
 	if Config.WebPrefix != "" {
@@ -127,8 +149,6 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 	} else {
 		n.UseHandler(handler)
 	}
-
-	return n
 }
 
 type recoveryLogger struct{}
