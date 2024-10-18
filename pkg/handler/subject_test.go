@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/Allen-Career-Institute/flagr/pkg/config/jwtmiddleware"
+
 	"github.com/Allen-Career-Institute/flagr/pkg/config"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
@@ -23,11 +25,11 @@ func TestGetSubjectFromJWT(t *testing.T) {
 	assert.Equal(t, getSubjectFromRequest(r.WithContext(ctx)), "")
 
 	//nolint:staticcheck // jwt-middleware is using the string type of context key
-	ctx = context.WithValue(ctx, config.Config.JWTAuthUserProperty, &jwt.Token{})
+	ctx = context.WithValue(ctx, jwtmiddleware.ContextKey(config.Config.JWTAuthUserProperty), nil) //nolint:staticcheck // jwt-middleware is using the string type of context keyconfig.Config.JWTAuthUserProperty, &jwt.Token{})
 	assert.Equal(t, getSubjectFromRequest(r.WithContext(ctx)), "")
 
 	//nolint:staticcheck // jwt-middleware is using the string type of context key
-	ctx = context.WithValue(ctx, config.Config.JWTAuthUserProperty, &jwt.Token{
+	ctx = context.WithValue(ctx, jwtmiddleware.ContextKey(config.Config.JWTAuthUserProperty), &jwt.Token{
 		Claims: jwt.MapClaims{
 			"sub": "foo@example.com",
 		},
