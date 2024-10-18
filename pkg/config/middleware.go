@@ -119,6 +119,12 @@ func createCORSMiddleware() negroni.Handler {
 
 // applyStaticFileMiddleware handles static files and Vue.js routing
 func applyStaticFileMiddleware(n *negroni.Negroni) {
+	n.Use(&negroni.Static{
+		Dir:       http.Dir("./browser/flagr-ui/dist/"),
+		Prefix:    Config.WebPrefix,
+		IndexFile: "index.html",
+	})
+
 	n.UseFunc(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		if strings.Contains(r.URL.Path, "/api/") {
 			next(w, r)

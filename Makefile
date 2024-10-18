@@ -6,6 +6,8 @@ ifeq ($(ENVIRONMENT),dev)
 	BUILD_CMD = build:dev
 else ifeq ($(ENVIRONMENT),stage)
 	BUILD_CMD = build:stage
+else ifeq ($(ENVIRONMENT),local)
+	BUILD_CMD = build:local
 else
 	BUILD_CMD = build
 endif

@@ -194,7 +194,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 // in the token as json -> {"text":"bar"}
 func protectedHandler(w http.ResponseWriter, r *http.Request) {
 	// retrieve the token from the context
-	u := r.Context().Value(contextKey(userPropertyName))
+	u := r.Context().Value(ContextKey(userPropertyName))
 	if u == nil {
 		http.Error(w, "Unauthorized: no token present", http.StatusUnauthorized)
 		return

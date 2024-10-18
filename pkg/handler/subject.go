@@ -3,6 +3,8 @@ package handler
 import (
 	"net/http"
 
+	"github.com/Allen-Career-Institute/flagr/pkg/config/jwtmiddleware"
+
 	"github.com/Allen-Career-Institute/flagr/pkg/config"
 	"github.com/Allen-Career-Institute/flagr/pkg/util"
 
@@ -15,7 +17,7 @@ func getSubjectFromRequest(r *http.Request) string {
 	}
 
 	if config.Config.JWTAuthEnabled {
-		token, ok := r.Context().Value(config.Config.JWTAuthUserProperty).(*jwt.Token)
+		token, ok := r.Context().Value(jwtmiddleware.ContextKey(config.Config.JWTAuthUserProperty)).(*jwt.Token)
 		if !ok {
 			return ""
 		}

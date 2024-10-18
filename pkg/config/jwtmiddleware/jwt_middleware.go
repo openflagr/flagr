@@ -21,8 +21,8 @@ type errorHandler func(w http.ResponseWriter, r *http.Request, err string)
 // be treated as an error.  An empty string should be returned in that case.
 type TokenExtractor func(r *http.Request) (string, error)
 
-// Define a custom type for the key
-type contextKey string
+// ContextKey Define a custom type for the key
+type ContextKey string
 
 // Options is a struct for specifying configuration options for the middleware.
 type Options struct {
@@ -233,7 +233,7 @@ func (m *JWTMiddleware) CheckJWT(w http.ResponseWriter, r *http.Request) error {
 
 	// If we get here, everything worked and we can set the
 	// user property in context.
-	newRequest := r.WithContext(context.WithValue(r.Context(), contextKey(m.Options.UserProperty), parsedToken))
+	newRequest := r.WithContext(context.WithValue(r.Context(), ContextKey(m.Options.UserProperty), parsedToken))
 	// Update the current request with the new context information.
 	*r = *newRequest
 	return nil
