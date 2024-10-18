@@ -179,9 +179,15 @@ var EvalFlagWithContext = func(flag *entity.Flag, evalContext models.EvalContext
 	var vID int64
 	var sID int64
 
+	var evalNextSegment bool
+
 	for _, segment := range flag.Segments {
 		sID = int64(segment.ID)
-		variantID, log, evalNextSegment := evalSegment(flag.ID, evalContext, segment)
+		var (
+			variantID *uint
+			log       *models.SegmentDebugLog
+		)
+		variantID, log, evalNextSegment = evalSegment(flag.ID, evalContext, segment)
 		if config.Config.EvalDebugEnabled && evalContext.EnableDebug {
 			logs = append(logs, log)
 		}
@@ -194,7 +200,9 @@ var EvalFlagWithContext = func(flag *entity.Flag, evalContext models.EvalContext
 	}
 	evalResult := BlankResult(flag, evalContext, "")
 	evalResult.EvalDebugLog.SegmentDebugLogs = logs
-	evalResult.SegmentID = sID
+	if !evalNextSegment {
+		evalResult.SegmentID = sID
+	}
 	evalResult.VariantID = vID
 	v := flag.FlagEvaluation.VariantsMap[util.SafeUint(vID)]
 	if v != nil {

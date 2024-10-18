@@ -245,6 +245,7 @@ func TestEvalFlag(t *testing.T) {
 			FlagID:     int64(100),
 		})
 		assert.NotNil(t, result)
+		assert.Equal(t, result.SegmentID, int64(200))
 		assert.NotZero(t, result.VariantID)
 	})
 
@@ -300,6 +301,7 @@ func TestEvalFlag(t *testing.T) {
 			FlagID:        int64(100),
 		})
 		assert.NotNil(t, result)
+		assert.Equal(t, result.SegmentID, int64(0))
 		assert.Zero(t, result.VariantID)
 	})
 
