@@ -59,7 +59,9 @@ export default {
     },
   },
   watch: {},
-  mounted() {},
+  mounted() {
+    this.input = this.markdown;
+  },
 };
 </script>
 

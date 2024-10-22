@@ -3,7 +3,7 @@
     <el-col :span="20" :offset="2">
       <div class="flags-container container">
         <el-breadcrumb separator="/" v-if="loaded">
-          <el-breadcrumb-item>Home444 page</el-breadcrumb-item>
+          <el-breadcrumb-item>Home page</el-breadcrumb-item>
         </el-breadcrumb>
 
         <spinner v-if="!loaded" />
@@ -184,9 +184,13 @@ export default {
   created() {
     getAxiosFlagrInstance().get(`/flags`).then(response => {
       let flags = response.data;
-      this.loaded = true;
-      flags.reverse();
-      this.flags = flags;
+      if(typeof flags === 'string'){
+        logout();
+      } else {
+        this.loaded = true;
+        flags.reverse();
+        this.flags = flags;
+      }
     }, handleErr.bind(this));
   },
   computed: {

@@ -33,7 +33,6 @@
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^4",
-    "@vue/cli-plugin-eslint": "^4",
     "@vue/cli-service": "^4",
     "eslint": "^6",
     "eslint-plugin-vue": "^6",

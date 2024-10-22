@@ -73,10 +73,9 @@
         </el-dialog>
 
         <el-breadcrumb separator="/">
-          <el-breadcrumb-item :to="{ name: 'home' }">Home22 page</el-breadcrumb-item>
+          <el-breadcrumb-item :to="{ name: 'home' }">Home page</el-breadcrumb-item>
           <el-breadcrumb-item>Flag ID: {{ $route.params.flagId }}</el-breadcrumb-item>
         </el-breadcrumb>
-        {{  loaded  }}
         <div v-if="flag">
           <el-tabs>
             <el-tab-pane label="Config">
@@ -211,10 +210,10 @@
                       </el-button>
                     </h5>
                   </el-row>
-                  <el-row>
+                  <el-row v-if="loaded">
                     <MarkdownEditor
-                      :showEditor="this.showMdEditor"
-                      :markdown.sync="flag.notes"
+                      :showEditor="showMdEditor"
+                      v-model:markdown="flag.notes"
                       @save="putFlag(flag)"
                     />
                   </el-row>
@@ -255,7 +254,7 @@
                 </el-card>
               </el-card>
 
-              <el-card class="variants-container">
+              <el-card class="variants-container" v-if="loaded">
                 <template v-slot:header>
                   <div class="clearfix">
                     <h2>Variants</h2>
@@ -301,7 +300,9 @@
                             <Vue3JsonEditor
                               v-model="variant.attachment"
                               :showBtns="false"
-                              :mode="'code'"
+                              mode="code"
+                              :expandedOnStart="true"
+                              @json-change="onJsonChange(variant.id, $event)"
                               v-on:has-error="variant.attachmentValid = false"
                               v-on:input="variant.attachmentValid = true"
                               class="variant-attachment-content"
@@ -555,7 +556,7 @@
                 <div class="card--error" v-else>No segments created for this feature flag yet</div>
               </el-card>
               <!-- sdd -->
-              <debug-console :flag="this.flag"></debug-console>
+              <debug-console v-if="loaded" :flag="flag"></debug-console>
               <el-card>
                 <template v-slot:header>
                   <div class="el-card-header">
@@ -723,6 +724,10 @@ export default {
     }
   },
   methods: {
+    onJsonChange(variantKey, value) {
+      const variant = this.flag.variants.find(v => v.id === variantKey);
+      variant.attachment = value;
+    },
     deleteFlag() {
       const flagId = this.flagId;
       getAxiosFlagrInstance().delete(`/flags/${this.flagId}`).then(() => {

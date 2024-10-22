@@ -1,5 +1,6 @@
 <template>
   <div>
+    <el-button size="small" @click="getFlagSnapshots" class="mb-4">Refresh</el-button>
     <el-card v-for="diff in diffs" :key="diff.timestamp" class="snapshot-container">
       <template v-slot:header>
         <div class="el-card-header">

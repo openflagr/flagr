@@ -168,7 +168,7 @@ export async function logout() {
 	try {
 		await getAxiosInstance().post(`api/v1/auth/logout`)
 	} catch (error) {
-		alert('Couldnot logout');
+		alert('logging you out');
 	} finally {
 		store.dispatch("reset")
 		if (typeof window !== "undefined") {

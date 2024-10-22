@@ -26,16 +26,20 @@
             <Vue3JsonEditor
               v-model="evalContext"
               :show-btns="false"
-              ref="evalContextEditor"
+              mode="code"
+              :expandedOnStart="true"
               class="json-editor"
+              @json-change="onJsonChange('evalContext', $event)"
             ></Vue3JsonEditor>
           </el-col>
           <el-col :span="12">
             <Vue3JsonEditor
               v-model="evalResult"
               :show-btns="false"
-              ref="evalResultEditor"
+              mode="code"
+              :expandedOnStart="true"
               class="json-editor"
+              @json-change="onJsonChange('evalResult', $event)"
             ></Vue3JsonEditor>
           </el-col>
         </el-row>
@@ -63,16 +67,20 @@
             <Vue3JsonEditor
               v-model="batchEvalContext"
               :show-btns="false"
-              ref="batchEvalContextEditor"
+              mode="code"
+              :expandedOnStart="true"
               class="json-editor"
+              @json-change="onJsonChange('batchEvalContext', $event)"
             ></Vue3JsonEditor>
           </el-col>
           <el-col :span="12">
             <Vue3JsonEditor
               v-model="batchEvalResult"
               :show-btns="false"
-              ref="batchEvalResultEditor"
+              mode="code"
+              :expandedOnStart="true"
               class="json-editor"
+              @json-change="onJsonChange('batchEvalResult', $event)"
             ></Vue3JsonEditor>
           </el-col>
         </el-row>
@@ -125,6 +133,17 @@ export default {
     };
   },
   methods: {
+    onJsonChange(editorType, value) {
+      if(editorType === 'evalContext'){
+        this.evalContext = value;
+      } else if(editorType === 'evalResult'){
+        this.evalResult = value;
+      } else if(editorType === 'batchEvalContext'){
+        this.batchEvalContext = value;
+      } else if(editorType === 'batchEvalResult'){
+        this.batchEvalResult = value;
+      }
+    },
     postEvaluation(evalContext) {
       getAxiosFlagrInstance().post(`/evaluation`, evalContext).then(
         response => {
@@ -152,7 +171,6 @@ export default {
     Vue3JsonEditor
   },
   mounted() {
-    // console.log("testtt", this.$refs.smapp.innerText);
     this.$refs.evalContextEditor?.targeteditor?.setMode("code");
     this.$refs.evalResultEditor?.editor?.setMode("code");
     this.$refs.batchEvalContextEditor?.editor?.setMode("code");
