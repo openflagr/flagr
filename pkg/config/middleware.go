@@ -28,6 +28,12 @@ import (
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
 
+const (
+	IndexFilePath            = "./browser/flagr-ui/dist/index.html"
+	StaticFilesDirectoryPath = "./browser/flagr-ui/dist/"
+	APIURLPath               = "/api/"
+)
+
 // ServerShutdown is a callback function that will be called when
 // we tear down the flagr server
 func ServerShutdown() {
@@ -120,19 +126,19 @@ func createCORSMiddleware() negroni.Handler {
 // applyStaticFileMiddleware handles static files and Vue.js routing
 func applyStaticFileMiddleware(n *negroni.Negroni) {
 	n.UseFunc(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		if strings.Contains(r.URL.Path, "/api/") {
+		if strings.Contains(r.URL.Path, APIURLPath) {
 			next(w, r)
 			return
 		}
 
-		filePath := "./browser/flagr-ui/dist/" + r.URL.Path
+		filePath := StaticFilesDirectoryPath + r.URL.Path
 		if _, err := os.Stat(filePath); err == nil && filepath.Ext(r.URL.Path) != "" {
 			http.ServeFile(w, r, filePath) // Serve the static file directly
 			return
 		}
 
 		// Serve index.html for Vue.js routing
-		http.ServeFile(w, r, "./browser/flagr-ui/dist/index.html")
+		http.ServeFile(w, r, IndexFilePath)
 	})
 }
 
@@ -239,9 +245,7 @@ func (a *jwtAuth) whitelist(req *http.Request) bool {
 	// If we set to 401 unauthorized, let the client handles the 401 itself
 	if Config.JWTAuthNoTokenStatusCode == http.StatusUnauthorized || Config.JWTAuthNoTokenStatusCode == http.StatusTemporaryRedirect {
 		for _, p := range a.ExactWhitelistPaths {
-			fmt.Println("ssss path: ", p)
 			if p == path {
-				fmt.Println("whitelisted path: ", p)
 				return true
 			}
 		}
