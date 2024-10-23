@@ -202,6 +202,7 @@ var EvalFlagWithContext = func(flag *entity.Flag, evalContext models.EvalContext
 	evalResult := BlankResult(flag, evalContext, "")
 	evalResult.EvalDebugLog.SegmentDebugLogs = logs
 
+	// evalNextSegment is false means that one of the segment constraints are satisfied
 	if !evalNextSegment {
 		evalResult.SegmentID = sID
 	}
