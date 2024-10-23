@@ -19,15 +19,15 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 
-	"github.com/openflagr/flagr/swagger_gen/restapi/operations/constraint"
-	"github.com/openflagr/flagr/swagger_gen/restapi/operations/distribution"
-	"github.com/openflagr/flagr/swagger_gen/restapi/operations/evaluation"
-	"github.com/openflagr/flagr/swagger_gen/restapi/operations/export"
-	"github.com/openflagr/flagr/swagger_gen/restapi/operations/flag"
-	"github.com/openflagr/flagr/swagger_gen/restapi/operations/health"
-	"github.com/openflagr/flagr/swagger_gen/restapi/operations/segment"
-	"github.com/openflagr/flagr/swagger_gen/restapi/operations/tag"
-	"github.com/openflagr/flagr/swagger_gen/restapi/operations/variant"
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations/constraint"
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations/distribution"
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations/evaluation"
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations/export"
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations/flag"
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations/health"
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations/segment"
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations/tag"
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations/variant"
 )
 
 // NewFlagrAPI creates a new Flagr instance

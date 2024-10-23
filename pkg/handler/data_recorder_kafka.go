@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/openflagr/flagr/pkg/config"
-	"github.com/openflagr/flagr/pkg/util"
-	"github.com/openflagr/flagr/swagger_gen/models"
+	"github.com/Allen-Career-Institute/flagr/pkg/config"
+	"github.com/Allen-Career-Institute/flagr/pkg/util"
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/models"
 
 	"github.com/Shopify/sarama"
 	"github.com/sirupsen/logrus"

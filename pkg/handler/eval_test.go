@@ -6,11 +6,11 @@ import (
 	"math"
 	"testing"
 
+	"github.com/Allen-Career-Institute/flagr/pkg/entity"
+	"github.com/Allen-Career-Institute/flagr/pkg/util"
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/models"
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations/evaluation"
 	"github.com/dchest/uniuri"
-	"github.com/openflagr/flagr/pkg/entity"
-	"github.com/openflagr/flagr/pkg/util"
-	"github.com/openflagr/flagr/swagger_gen/models"
-	"github.com/openflagr/flagr/swagger_gen/restapi/operations/evaluation"
 
 	"github.com/prashantv/gostub"
 	"github.com/stretchr/testify/assert"
@@ -245,6 +245,7 @@ func TestEvalFlag(t *testing.T) {
 			FlagID:     int64(100),
 		})
 		assert.NotNil(t, result)
+		assert.Equal(t, result.SegmentID, int64(200))
 		assert.NotZero(t, result.VariantID)
 	})
 
@@ -300,6 +301,7 @@ func TestEvalFlag(t *testing.T) {
 			FlagID:        int64(100),
 		})
 		assert.NotNil(t, result)
+		assert.Equal(t, result.SegmentID, int64(0))
 		assert.Zero(t, result.VariantID)
 	})
 

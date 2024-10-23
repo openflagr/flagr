@@ -16,7 +16,7 @@ import (
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 
-	"github.com/openflagr/flagr/swagger_gen/models"
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/models"
 )
 
 // NewPutDistributionsParams creates a new PutDistributionsParams object

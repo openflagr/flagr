@@ -1,5 +1,5 @@
 <template>
-  <div id="editor" v-if="showEditor || markdown">
+  <div id="editor" class="full" v-if="showEditor || markdown">
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/4.0.0/github-markdown.min.css"
@@ -59,11 +59,16 @@ export default {
     },
   },
   watch: {},
-  mounted() {},
+  mounted() {
+    this.input = this.markdown;
+  },
 };
 </script>
 
 <style lang="less" scoped>
+.full {
+  width: 100%;
+}
 .markdown-body {
   background-color: #f6f8fa;
   padding: 0.5rem;

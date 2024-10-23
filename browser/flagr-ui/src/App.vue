@@ -1,20 +1,20 @@
 <template>
   <div id="app">
-    <el-menu mode="horizontal" class="navbar">
+    <el-menu class="navbar" v-if="showHeader">
       <el-row>
         <el-col :span="20" :offset="2">
           <el-row>
             <el-col :span="6">
-              <router-link :to="{ name: 'home' }">
+              <RouterLink :to="{ name: 'home' }">
                 <div class="logo-container">
                   <h3 class="logo">Flagr</h3>
                   <div>
                     <span class="version">v{{ version }}</span>
                   </div>
                 </div>
-              </router-link>
+              </RouterLink>
             </el-col>
-            <el-col :span="1" :offset="15">
+            <el-col :span="2" :offset="12">
               <a href="https://openflagr.github.io/flagr/api_docs" target="_blank"
                 ><h3>API</h3></a
               >
@@ -24,23 +24,72 @@
                 ><h3>Docs</h3></a
               >
             </el-col>
+            <el-col :span="1" :offset="1" v-if="authenticated">
+              <span href="https://openflagr.github.io/flagr" target="_blank"
+              @click="logoutUser"
+              ><h3>Logout</h3></span>
+            </el-col>
           </el-row>
         </el-col>
       </el-row>
     </el-menu>
     <div class="router-view-container">
-      <router-view></router-view>
+      <RouterView/>
     </div>
   </div>
 </template>
 
 <script>
+import { RouterLink, RouterView } from "vue-router";
+import {logout} from './utils/apiUtil';
+import { mapState } from "vuex";
 const version = require("../package.json").version || "1.0.0";
 export default {
   name: "app",
   data: () => ({
     version,
+    showHeader: false,
+    authenticated: false
   }),
+  components: {
+    RouterView,
+    RouterLink
+  },
+  computed: {
+      ...mapState({
+          isAuth: (state) => state.isAuth, // Map userDetails from Vuex state
+      }),
+    },
+  mounted(){
+    this.checkAuthentication();
+  },
+  methods: {
+    checkAuthentication() {
+      const isAuthenticated = !!localStorage.getItem('tokens');
+      console.log('isAuthenticated', isAuthenticated)
+      if (!isAuthenticated || !this.isAuth) {
+        this.showHeader = false;
+      } else {
+        this.showHeader = true;
+        this.authenticated = true;
+      }
+    },
+    logoutUser() {
+      console.log('logging out')
+      logout();
+      this.$router.push('/login');
+    }
+  },
+  watch: {
+    // Watch for route changes to recheck authentication on navigation
+    isAuth() {
+      console.log("isauth changed")
+      this.checkAuthentication();
+    },
+    $route() {
+      this.checkAuthentication();
+    }
+  }
 };
 </script>
 
@@ -70,6 +119,21 @@ ol {
 #app {
   color: #2c3e50;
 
+  .flex {
+    display: flex;
+  }
+
+  .flex-col {
+    flex-direction: column;
+  }
+
+  .justify-center {
+    justify-content: center;
+  }
+
+  .items-center {
+    align-items: center;
+  }
   span[size="small"] {
     font-size: 0.85em;
   }
@@ -168,7 +232,9 @@ ol {
   .el-input {
     margin-bottom: 2px;
   }
-
+  .el-dropdown .el-button-group {
+    display: block;
+  }
   .segment-rollout-percent input {
     text-align: right;
   }

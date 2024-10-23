@@ -8,9 +8,9 @@ import (
 
 	jsoniter "github.com/json-iterator/go"
 
-	"github.com/openflagr/flagr/pkg/config"
-	"github.com/openflagr/flagr/pkg/entity"
-	"github.com/openflagr/flagr/pkg/util"
+	"github.com/Allen-Career-Institute/flagr/pkg/config"
+	"github.com/Allen-Career-Institute/flagr/pkg/entity"
+	"github.com/Allen-Career-Institute/flagr/pkg/util"
 	"gorm.io/gorm"
 )
 

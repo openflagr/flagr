@@ -4,15 +4,19 @@ package config
 import (
 	"crypto/subtle"
 	"fmt"
+	"os"
+	"path/filepath"
+
+	"github.com/Allen-Career-Institute/flagr/pkg/config/jwtmiddleware"
+
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/DataDog/datadog-go/statsd"
-	jwtmiddleware "github.com/auth0/go-jwt-middleware"
-	jwt "github.com/form3tech-oss/jwt-go"
 	"github.com/gohttp/pprof"
+	"github.com/golang-jwt/jwt/v5"
 	negronilogrus "github.com/meatballhat/negroni-logrus"
 	"github.com/phyber/negroni-gzip/gzip"
 	"github.com/prometheus/client_golang/prometheus"
@@ -22,6 +26,12 @@ import (
 	"github.com/urfave/negroni"
 	negroninewrelic "github.com/yadvendar/negroni-newrelic-go-agent"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
+)
+
+const (
+	IndexFilePath            = "./browser/flagr-ui/dist/index.html"
+	StaticFilesDirectoryPath = "./browser/flagr-ui/dist/"
+	APIURLPath               = "/api/"
 )
 
 // ServerShutdown is a callback function that will be called when
@@ -36,28 +46,27 @@ func ServerShutdown() {
 func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 	n := negroni.New()
 
+	applyOptionalMiddlewares(n)
+	applyStaticFileMiddleware(n)
+	applyFinalHandler(n, handler)
+
+	return n
+}
+
+// applyOptionalMiddlewares applies all optional middlewares based on configuration
+func applyOptionalMiddlewares(n *negroni.Negroni) {
 	if Config.MiddlewareGzipEnabled {
 		n.Use(gzip.Gzip(gzip.DefaultCompression))
 	}
 
 	if Config.MiddlewareVerboseLoggerEnabled {
-		middleware := negronilogrus.NewMiddlewareFromLogger(logrus.StandardLogger(), "flagr")
-
-		for _, u := range Config.MiddlewareVerboseLoggerExcludeURLs {
-			middleware.ExcludeURL(u)
-		}
-
-		n.Use(middleware)
+		n.Use(createVerboseLoggerMiddleware())
 	}
 
 	if Config.StatsdEnabled {
 		n.Use(&statsdMiddleware{StatsdClient: Global.StatsdClient})
-
 		if Config.StatsdAPMEnabled {
-			tracer.Start(
-				tracer.WithAgentAddr(fmt.Sprintf("%s:%s", Config.StatsdHost, Config.StatsdAPMPort)),
-				tracer.WithServiceName(Config.StatsdAPMServiceName),
-			)
+			startAPMTracer()
 		}
 	}
 
@@ -73,14 +82,7 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 	}
 
 	if Config.CORSEnabled {
-		n.Use(cors.New(cors.Options{
-			AllowedOrigins:   Config.CORSAllowedOrigins,
-			AllowedHeaders:   Config.CORSAllowedHeaders,
-			ExposedHeaders:   Config.CORSExposedHeaders,
-			AllowedMethods:   Config.CORSAllowedMethods,
-			AllowCredentials: Config.CORSAllowCredentials,
-			MaxAge:           Config.CORSMaxAge,
-		}))
+		n.Use(createCORSMiddleware())
 	}
 
 	if Config.JWTAuthEnabled {
@@ -90,13 +92,58 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 	if Config.BasicAuthEnabled {
 		n.Use(setupBasicAuthMiddleware())
 	}
+}
 
-	n.Use(&negroni.Static{
-		Dir:       http.Dir("./browser/flagr-ui/dist/"),
-		Prefix:    Config.WebPrefix,
-		IndexFile: "index.html",
+// createVerboseLoggerMiddleware creates the verbose logger middleware
+func createVerboseLoggerMiddleware() negroni.Handler {
+	middleware := negronilogrus.NewMiddlewareFromLogger(logrus.StandardLogger(), "flagr")
+	for _, u := range Config.MiddlewareVerboseLoggerExcludeURLs {
+		middleware.ExcludeURL(u)
+	}
+	return middleware
+}
+
+// startAPMTracer starts the APM tracer for Statsd
+func startAPMTracer() {
+	tracer.Start(
+		tracer.WithAgentAddr(fmt.Sprintf("%s:%s", Config.StatsdHost, Config.StatsdAPMPort)),
+		tracer.WithServiceName(Config.StatsdAPMServiceName),
+	)
+}
+
+// createCORSMiddleware creates the CORS middleware based on the configuration
+func createCORSMiddleware() negroni.Handler {
+	return cors.New(cors.Options{
+		AllowedOrigins:   Config.CORSAllowedOrigins,
+		AllowedHeaders:   Config.CORSAllowedHeaders,
+		ExposedHeaders:   Config.CORSExposedHeaders,
+		AllowedMethods:   Config.CORSAllowedMethods,
+		AllowCredentials: Config.CORSAllowCredentials,
+		MaxAge:           Config.CORSMaxAge,
 	})
+}
 
+// applyStaticFileMiddleware handles static files and Vue.js routing
+func applyStaticFileMiddleware(n *negroni.Negroni) {
+	n.UseFunc(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		if strings.Contains(r.URL.Path, APIURLPath) {
+			next(w, r)
+			return
+		}
+
+		filePath := StaticFilesDirectoryPath + r.URL.Path
+		if _, err := os.Stat(filePath); err == nil && filepath.Ext(r.URL.Path) != "" {
+			http.ServeFile(w, r, filePath) // Serve the static file directly
+			return
+		}
+
+		// Serve index.html for Vue.js routing
+		http.ServeFile(w, r, IndexFilePath)
+	})
+}
+
+// applyFinalHandler applies the final handler and sets up the recovery middleware
+func applyFinalHandler(n *negroni.Negroni, handler http.Handler) {
 	n.Use(setupRecoveryMiddleware())
 
 	if Config.WebPrefix != "" {
@@ -108,8 +155,6 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 	} else {
 		n.UseHandler(handler)
 	}
-
-	return n
 }
 
 type recoveryLogger struct{}
@@ -198,7 +243,7 @@ func (a *jwtAuth) whitelist(req *http.Request) bool {
 	path := req.URL.Path
 
 	// If we set to 401 unauthorized, let the client handles the 401 itself
-	if Config.JWTAuthNoTokenStatusCode == http.StatusUnauthorized {
+	if Config.JWTAuthNoTokenStatusCode == http.StatusUnauthorized || Config.JWTAuthNoTokenStatusCode == http.StatusTemporaryRedirect {
 		for _, p := range a.ExactWhitelistPaths {
 			if p == path {
 				return true

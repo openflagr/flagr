@@ -3,10 +3,12 @@ package handler
 import (
 	"net/http"
 
-	"github.com/openflagr/flagr/pkg/config"
-	"github.com/openflagr/flagr/pkg/util"
+	"github.com/Allen-Career-Institute/flagr/pkg/config/jwtmiddleware"
 
-	jwt "github.com/form3tech-oss/jwt-go"
+	"github.com/Allen-Career-Institute/flagr/pkg/config"
+	"github.com/Allen-Career-Institute/flagr/pkg/util"
+
+	jwt "github.com/golang-jwt/jwt/v5"
 )
 
 func getSubjectFromRequest(r *http.Request) string {
@@ -15,7 +17,7 @@ func getSubjectFromRequest(r *http.Request) string {
 	}
 
 	if config.Config.JWTAuthEnabled {
-		token, ok := r.Context().Value(config.Config.JWTAuthUserProperty).(*jwt.Token)
+		token, ok := r.Context().Value(jwtmiddleware.ContextKey(config.Config.JWTAuthUserProperty)).(*jwt.Token)
 		if !ok {
 			return ""
 		}

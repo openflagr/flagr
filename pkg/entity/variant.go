@@ -3,9 +3,10 @@ package entity
 import (
 	"database/sql/driver"
 	"fmt"
+
 	jsoniter "github.com/json-iterator/go"
 
-	"github.com/openflagr/flagr/pkg/util"
+	"github.com/Allen-Career-Institute/flagr/pkg/util"
 	"github.com/spf13/cast"
 	"gorm.io/gorm"
 )

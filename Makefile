@@ -1,7 +1,16 @@
+ENVIRONMENT ?= production
 PWD := $(shell pwd)
 GOPATH := $(shell go env GOPATH)
 UIPATH := $(PWD)/browser/flagr-ui
-
+ifeq ($(ENVIRONMENT),dev)
+	BUILD_CMD = build:dev
+else ifeq ($(ENVIRONMENT),stage)
+	BUILD_CMD = build:stage
+else ifeq ($(ENVIRONMENT),local)
+	BUILD_CMD = build:local
+else
+	BUILD_CMD = build
+endif
 ################################
 ### Public
 ################################
@@ -11,7 +20,7 @@ all: deps gen build build_ui run
 rebuild: gen build
 
 test: verifiers
-	@go test -race -covermode=atomic -coverprofile=coverage.txt github.com/openflagr/flagr/pkg/...
+	@go test -race -covermode=atomic -coverprofile=coverage.txt github.com/Allen-Career-Institute/flagr/pkg/...
 
 .PHONY: benchmark
 benchmark:
@@ -26,11 +35,11 @@ vendor:
 
 build:
 	@echo "Building Flagr Server to $(PWD)/flagr ..."
-	@go build -o $(PWD)/flagr github.com/openflagr/flagr/swagger_gen/cmd/flagr-server
+	@go build -o $(PWD)/flagr github.com/Allen-Career-Institute/flagr/swagger_gen/cmd/flagr-server
 
 build_ui:
-	@echo "Building Flagr UI ..."
-	@cd ./browser/flagr-ui/; npm install && npm run build
+	@echo "Building Flagr UI ... $(ENVIRONMENT)"
+	@cd ./browser/flagr-ui/; npm install && npm run $(BUILD_CMD)
 
 run_ui:
 	@cd ./browser/flagr-ui/; npm run serve

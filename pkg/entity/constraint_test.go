@@ -3,7 +3,7 @@ package entity
 import (
 	"testing"
 
-	"github.com/openflagr/flagr/swagger_gen/models"
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/models"
 	"github.com/stretchr/testify/assert"
 )
 

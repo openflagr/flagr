@@ -4,7 +4,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/openflagr/flagr/pkg/config"
+	"github.com/Allen-Career-Institute/flagr/pkg/config"
 
 	"github.com/prashantv/gostub"
 	"github.com/stretchr/testify/assert"

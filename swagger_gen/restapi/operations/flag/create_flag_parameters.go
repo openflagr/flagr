@@ -14,7 +14,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/validate"
 
-	"github.com/openflagr/flagr/swagger_gen/models"
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/models"
 )
 
 // NewCreateFlagParams creates a new CreateFlagParams object

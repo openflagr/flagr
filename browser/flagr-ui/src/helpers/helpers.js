@@ -31,6 +31,7 @@ function get (obj, path, def) {
 }
 
 function handleErr (err) {
+  console.log("testtterrr", err)
   let msg = get(err, 'response.data.message', 'request error')
   this.$message.error(msg)
   if (get(err, 'response.status') === 401) {

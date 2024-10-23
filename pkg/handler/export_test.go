@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/openflagr/flagr/pkg/entity"
-	"github.com/openflagr/flagr/pkg/util"
-	"github.com/openflagr/flagr/swagger_gen/restapi/operations/export"
+	"github.com/Allen-Career-Institute/flagr/pkg/entity"
+	"github.com/Allen-Career-Institute/flagr/pkg/util"
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations/export"
 	"github.com/prashantv/gostub"
 	"github.com/stretchr/testify/assert"
 )

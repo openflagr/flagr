@@ -4,9 +4,9 @@ package handler
 import (
 	"testing"
 
-	"github.com/openflagr/flagr/swagger_gen/models"
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/models"
 
-	"github.com/openflagr/flagr/pkg/entity"
+	"github.com/Allen-Career-Institute/flagr/pkg/entity"
 
 	"github.com/prashantv/gostub"
 	"github.com/stretchr/testify/assert"

@@ -10,8 +10,8 @@ import (
 	mysql "gorm.io/driver/mysql"        // mysql driver
 	postgres "gorm.io/driver/postgres"  // postgres driver
 
+	"github.com/Allen-Career-Institute/flagr/pkg/config"
 	retry "github.com/avast/retry-go"
-	"github.com/openflagr/flagr/pkg/config"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	gorm_logger "gorm.io/gorm/logger"
