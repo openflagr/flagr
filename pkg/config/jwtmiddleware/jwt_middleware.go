@@ -24,6 +24,11 @@ type TokenExtractor func(r *http.Request) (string, error)
 // ContextKey Define a custom type for the key
 type ContextKey string
 
+const (
+	Authorization = "Authorization"
+	OptionsMethod = "OPTIONS"
+)
+
 // Options is a struct for specifying configuration options for the middleware.
 type Options struct {
 	// The function that will return the Key to validate the JWT.
@@ -125,7 +130,7 @@ func (m *JWTMiddleware) Handler(h http.Handler) http.Handler {
 // FromAuthHeader is a "TokenExtractor" that takes a give request and extracts
 // the JWT token from the Authorization header.
 func FromAuthHeader(r *http.Request) (string, error) {
-	authHeader := r.Header.Get("Authorization")
+	authHeader := r.Header.Get(Authorization)
 	if authHeader == "" {
 		return "", nil // No error, just no token
 	}
@@ -143,6 +148,9 @@ func FromAuthHeader(r *http.Request) (string, error) {
 // query string parameter
 func FromParameter(param string) TokenExtractor {
 	return func(r *http.Request) (string, error) {
+		if r.URL == nil {
+			return "", nil // or return an error if that makes sense in your use case
+		}
 		return r.URL.Query().Get(param), nil
 	}
 }
@@ -166,7 +174,7 @@ func FromFirst(extractors ...TokenExtractor) TokenExtractor {
 
 func (m *JWTMiddleware) CheckJWT(w http.ResponseWriter, r *http.Request) error {
 	if !m.Options.EnableAuthOnOptions {
-		if r.Method == "OPTIONS" {
+		if r.Method == OptionsMethod {
 			return nil
 		}
 	}
