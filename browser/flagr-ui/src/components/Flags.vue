@@ -6,13 +6,20 @@
           <el-breadcrumb-item>Home page</el-breadcrumb-item>
         </el-breadcrumb>
 
+        <el-tabs v-model="activeTab" @tab-click="setMode">
+          <el-tab-pane :name="MODES.ABMode" label="A/B Exp">
+          </el-tab-pane>
+          <el-tab-pane :name="MODES.LatchMode" label="Latches">
+          </el-tab-pane>
+        </el-tabs>
+
         <spinner v-if="!loaded" />
 
         <div v-if="loaded">
           <el-row>
             <el-col>
               <el-row>
-                <el-input placeholder="Specific new flag description" v-model="newFlag.description">
+                <el-input :placeholder="'Specific new ' + currentTerms.flag + ' description'" v-model="newFlag.description">
                   <template #prepend>
                     <ElIcon>
                       <Plus />
@@ -26,13 +33,13 @@
                       @command="onCommandDropdown"
                       @click.prevent="createFlag"
                     >
-                      Create New Flag
-                      <template #dropdown>
+                      Create New {{ currentTerms.flag }}
+                      <template #dropdown v-if="isModeAB">
                         <el-dropdown-menu>
                           <el-dropdown-item
                             command="simple_boolean_flag"
                             :disabled="!newFlag.description"
-                          >Create Simple Boolean Flag</el-dropdown-item>
+                          >Create Simple Boolean {{ currentTerms.flag }}</el-dropdown-item>
                         </el-dropdown-menu>
                       </template>
                       </el-dropdown>
@@ -44,7 +51,7 @@
 
           <el-row>
             <el-input
-              placeholder="Search a flag"
+             :placeholder="'Search a '+ currentTerms.flag"
               :prefix-icon="ElIconSearch"
               v-model="searchTerm"
               v-focus
@@ -59,7 +66,7 @@
             v-on:row-click="goToFlag"
             style="width: 100%"
           >
-            <el-table-column prop="id" align="center" label="Flag ID" sortable fixed width="95"></el-table-column>
+            <el-table-column prop="id" :label="currentTerms.flag +' ID'" sortable fixed width="120"></el-table-column>
             <el-table-column prop="description" label="Description" min-width="300"></el-table-column>
             <el-table-column prop="tags" label="Tags" min-width="200">
               <template v-slot="scope">
@@ -107,7 +114,7 @@
                 :default-sort="{ prop: 'id', order: 'descending' }"
                 style="width: 100%"
               >
-                <el-table-column prop="id" align="center" label="Flag ID" sortable fixed width="95"></el-table-column>
+                <el-table-column prop="id" align="center" :label="currentTerms.flag + ' ID'" sortable fixed width="95"></el-table-column>
                 <el-table-column prop="description" label="Description" min-width="300"></el-table-column>
                 <el-table-column prop="tags" label="Tags" min-width="200">
                   <template v-slot="scope">
@@ -157,7 +164,8 @@ import Spinner from "@/components/Spinner";
 import helpers from "@/helpers/helpers";
 import { ElIcon } from 'element-plus';
 import { Plus } from '@element-plus/icons';
-import { getAxiosFlagrInstance } from '../utils/apiUtil';
+import { getAxiosFlagrInstance, logout } from '../utils/apiUtil';
+import { ABModeConstants, MODES } from '../constants';
 
 const { handleErr } = helpers;
 
@@ -170,6 +178,7 @@ export default {
   },
   data() {
     return {
+      activeTab: this.$store.state.mode || MODES.ABMode,
       loaded: false,
       deletedFlagsLoaded: false,
       flags: [],
@@ -178,22 +187,23 @@ export default {
       newFlag: {
         description: ""
       },
+      MODES,
       ElIconSearch
     };
   },
   created() {
-    getAxiosFlagrInstance().get(`/flags`).then(response => {
-      let flags = response.data;
-      if(typeof flags === 'string'){
-        logout();
-      } else {
-        this.loaded = true;
-        flags.reverse();
-        this.flags = flags;
-      }
-    }, handleErr.bind(this));
+    this.getFlags()
   },
   computed: {
+    isModeAB() {
+      return this.$store.state.mode === MODES.ABMode;
+    },
+    currentMode() {
+      return this.$store.state.mode;
+    },
+    currentTerms(){
+      return this.$store.state.terms;
+    },
     filteredFlags: function() {
       if (this.searchTerm) {
         return this.flags.filter(({ id, key, description, tags }) =>
@@ -228,6 +238,10 @@ export default {
     datetimeFormatter(row, col, val) {
       return val ? val.split(".")[0] : "";
     },
+    setMode(val) {
+      this.$store.dispatch("updateMode", val.props.name);
+      this.getFlags()
+    },
     goToFlag(row) {
       this.$router.push({ name: "flag", params: { flagId: row.id } });
     },
@@ -235,6 +249,22 @@ export default {
       if (command === "simple_boolean_flag") {
         this.createFlag({ template: command });
       }
+    },
+    getFlags() {
+      let tagsUrl = '';
+      if(!this.isModeAB){
+        tagsUrl = '?tags=latch';
+      }
+      getAxiosFlagrInstance().get(`/flags${tagsUrl}`).then(response => {
+        let flags = response.data;
+        if(typeof flags === 'string'){
+          logout();
+        } else {
+          this.loaded = true;
+          flags.reverse();
+          this.flags = flags;
+        }
+      }, handleErr.bind(this));
     },
     createFlag(params) {
       if (!this.newFlag.description) {

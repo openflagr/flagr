@@ -48,9 +48,7 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  console.log("to from", to, from, to.meta.requiresAuth, isAuthenticated())
   if (to.meta.requiresAuth && !isAuthenticated()) {
-    console.log("sdss")
     next({ path: '/login', replace: true });
   } else {
     next();

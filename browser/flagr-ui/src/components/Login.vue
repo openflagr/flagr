@@ -25,12 +25,9 @@ import { mapState } from 'vuex';
                     }
                     getGoogleRedirectionLink(data)
                     .then((res) => {
-                        console.log(res)
-                        // console.log("test goo", res)
                         window.location.href = res.url
                     })
                     .catch((err) => {
-                        console.log(err)
                         logout();
                     })
                 } catch (error) {
@@ -44,13 +41,8 @@ import { mapState } from 'vuex';
             }),
         },
         watch: {
-            isAuth(newValue, oldValue) {
-                console.log('isAuth changed:', oldValue, '->', newValue);
-                // Add your logic here, e.g., redirect, update UI, etc.
-            }
         },
         mounted() {
-            console.log('isAuth:', this.isAuth);
             if(this.isAuth){
                 this.$router.push('/');
             }

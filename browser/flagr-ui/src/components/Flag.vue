@@ -56,25 +56,25 @@
           ></el-alert>
         </el-dialog>
 
-        <el-dialog title="Create segment" v-model="dialogCreateSegmentOpen">
+        <el-dialog :title="'Create ' + currentTerms.segment" v-model="dialogCreateSegmentOpen">
           <div>
             <p>
-              <el-input placeholder="Segment description" v-model="newSegment.description"></el-input>
+              <el-input :placeholder="currentTerms.segment + ' description'" v-model="newSegment.description"></el-input>
             </p>
             <p>
-              <el-slider v-model="newSegment.rolloutPercent" show-input></el-slider>
+              <el-slider v-model="newSegment.rolloutPercent" :disabled="!isModeAB" show-input></el-slider>
             </p>
             <el-button
               class="width--full"
               :disabled="!newSegment.description"
               @click.prevent="createSegment"
-            >Create Segment</el-button>
+            >Create {{ currentTerms.segment }}</el-button>
           </div>
         </el-dialog>
 
         <el-breadcrumb separator="/">
           <el-breadcrumb-item :to="{ name: 'home' }">Home page</el-breadcrumb-item>
-          <el-breadcrumb-item>Flag ID: {{ $route.params.flagId }}</el-breadcrumb-item>
+          <el-breadcrumb-item>{{currentTerms.flag}} ID: {{ $route.params.flagId }}</el-breadcrumb-item>
         </el-breadcrumb>
         <div v-if="flag">
           <el-tabs>
@@ -84,10 +84,10 @@
                   <div class="el-card-header">
                     <div class="flex-row">
                       <div class="flex-row-left">
-                        <h2>Flag</h2>
+                        <h2>{{currentTerms.flag}}</h2>
                       </div>
                       <div class="flex-row-right" v-if="flag">
-                        <el-tooltip content="Enable/Disable Flag" placement="top" effect="light">
+                        <el-tooltip :content="'Enable/Disable ' + currentTerms.flag" placement="top" effect="light">
                           <el-switch
                             v-model="flag.enabled"
                             active-color="#13ce66"
@@ -107,10 +107,10 @@
                       <el-tag
                         type="primary"
                         :disable-transitions="true"
-                      >Flag ID: {{ $route.params.flagId }}</el-tag>
+                      >{{currentTerms.flag}} ID: {{ $route.params.flagId }}</el-tag>
                     </div>
                     <div class="flex-row-right">
-                      <el-button size="small" @click="putFlag(flag)">Save Flag</el-button>
+                      <el-button size="small" @click="putFlag(flag)">Save {{currentTerms.flag}}</el-button>
                     </div>
                   </div>
                   <el-row class="flag-content" type="flex" align="middle">
@@ -118,7 +118,7 @@
                       <el-row>
                         <el-col :span="24">
                           <el-input size="small" placeholder="Key" v-model="flag.key">
-                            <template #prepend>Flag Key</template>
+                            <template #prepend>{{currentTerms.flag}} Key</template>
                           </el-input>
                         </el-col>
                       </el-row>
@@ -158,7 +158,7 @@
                             placeholder="Description"
                             v-model="flag.description"
                           >
-                            <template #prepend>Flag Description</template>
+                            <template #prepend>{{currentTerms.flag}} Description</template>
                           </el-input>
                         </el-col>
                       </el-row>
@@ -198,7 +198,7 @@
                   </el-row>
                   <el-row style="margin: 10px;">
                     <h5>
-                      <span style="margin-right: 10px;">Flag Notes</span>
+                      <span style="margin-right: 10px;">{{currentTerms.flag}} Notes</span>
                       <el-button round size="small" @click="toggleShowMdEditor">
                        <ElIcon v-if="!this.showMdEditor">
                          <Edit />
@@ -254,7 +254,7 @@
                 </el-card>
               </el-card>
 
-              <el-card class="variants-container" v-if="loaded">
+              <el-card class="variants-container" v-if="isModeAB">
                 <template v-slot:header>
                   <div class="clearfix">
                     <h2>Variants</h2>
@@ -300,9 +300,7 @@
                             <Vue3JsonEditor
                               v-model="variant.attachment"
                               :showBtns="false"
-                              mode="code"
-                              :expandedOnStart="true"
-                              @json-change="onJsonChange(variant.id, $event)"
+                              :mode="'code'"
                               v-on:has-error="variant.attachmentValid = false"
                               v-on:input="variant.attachmentValid = true"
                               class="variant-attachment-content"
@@ -333,7 +331,7 @@
                   <div class="el-card-header">
                     <div class="flex-row">
                       <div class="flex-row-left">
-                        <h2>Segments</h2>
+                        <h2>{{ plural(currentTerms.segment) }}</h2>
                       </div>
                       <div class="flex-row-right">
                         <el-tooltip
@@ -343,7 +341,7 @@
                         >
                           <el-button @click="putSegmentsReorder(flag.segments)">Reorder</el-button>
                         </el-tooltip>
-                        <el-button @click="dialogCreateSegmentOpen = true">New Segment</el-button>
+                        <el-button @click="dialogCreateSegmentOpen = true">New {{ currentTerms.segment }}</el-button>
                       </div>
                     </div>
                   </div>
@@ -360,7 +358,7 @@
                         <div class="flex-row id-row">
                           <div class="flex-row-left">
                             <el-tag type="primary" :disable-transitions="true">
-                              Segment ID:
+                              {{ currentTerms.segment }} ID:
                               <b>{{ segment.id }}</b>
                             </el-tag>
                           </div>
@@ -368,7 +366,7 @@
                             <el-button
                               size="small"
                               @click="putSegment(segment)"
-                            >Save Segment Setting</el-button>
+                            >Save {{ currentTerms.segment }} Setting</el-button>
                             <el-button @click="deleteSegment(segment)" size="small">
                               <ElIcon>
                                 <Delete />
@@ -392,6 +390,7 @@
                               size="small"
                               placeholder="0"
                               v-model="segment.rolloutPercent"
+                              :disabled="!isModeAB"
                               :min="0"
                               :max="100"
                             >
@@ -402,7 +401,7 @@
                         </el-row>
                         <el-row>
                           <el-col :span="24">
-                            <h5>Constraints (match ALL of them)</h5>
+                            <h5>{{plural(currentTerms.constraint)}} (match ALL of them)</h5>
                             <div class="constraints">
                               <div class="constraints-inner" v-if="segment.constraints.length">
                                 <div v-for="constraint in segment.constraints" :key="constraint.id">
@@ -415,6 +414,19 @@
                                       >
                                         <template v-slot:prepend>Property</template>
                                       </el-input>
+                                      <!-- <el-select
+                                        size="small"
+                                        v-model="constraint.property"
+                                        placeholder="Property"
+                                        v-if="!isModeAB"
+                                      >
+                                        <el-option
+                                          v-for="item in latchOptions"
+                                          :key="item.value"
+                                          :label="item.label"
+                                          :value="item.value"
+                                        ></el-option>
+                                      </el-select> -->
                                     </el-col>
                                     <el-col :span="4">
                                       <el-select
@@ -507,13 +519,13 @@
                                       @click.prevent="
                                         () => createConstraint(segment)
                                       "
-                                    >Add Constraint</el-button>
+                                    >Add {{ currentTerms.constraint }}</el-button>
                                   </el-col>
                                 </el-row>
                               </div>
                             </div>
                           </el-col>
-                          <el-col :span="24" class="segment-distributions">
+                          <el-col :span="24" class="segment-distributions" v-if="isModeAB">
                             <h5>
                               <span>Distribution</span>
                               <el-button round size="small" @click="editDistribution(segment)">
@@ -560,14 +572,14 @@
               <el-card>
                 <template v-slot:header>
                   <div class="el-card-header">
-                    <h2>Flag Settings</h2>
+                    <h2>{{currentTerms.flag}} Settings</h2>
                   </div>
                 </template>
                 <el-button @click="dialogDeleteFlagVisible = true" type="danger" plain>
                   <ElIcon>
                     <Delete />
                   </ElIcon>
-                  Delete Flag
+                  Delete {{currentTerms.flag}}
                 </el-button>
               </el-card>
               <spinner v-if="!loaded"></spinner>
@@ -593,16 +605,13 @@ import DebugConsole from "@/components/DebugConsole";
 import FlagHistory from "@/components/FlagHistory";
 import MarkdownEditor from "@/components/MarkdownEditor.vue";
 import { Vue3JsonEditor } from 'vue3-json-editor'
-import { operators } from "@/operators.json";
+import { operators, operators_latch, latch_options } from "@/operators.json";
 import { ElIcon } from 'element-plus';
 import { Edit, View, Delete, InfoFilled } from '@element-plus/icons';
 import { mapState } from 'vuex';
 import { getAxiosFlagrInstance } from "../utils/apiUtil";
-
-const OPERATOR_VALUE_TO_LABEL_MAP = operators.reduce((acc, el) => {
-  acc[el.value] = el.label;
-  return acc;
-}, {});
+import { MODES } from "../constants";
+import { plural, reduceOperatorsToLabel } from '../utils/util'
 
 const { sum, pluck, handleErr } = helpers;
 
@@ -611,6 +620,11 @@ const { FLAGR_UI_POSSIBLE_ENTITY_TYPES } = constants;
 const DEFAULT_SEGMENT = {
   description: "",
   rolloutPercent: 50
+};
+
+const DEFAULT_SEGMENT_LATCH = {
+  description: "",
+  rolloutPercent: 100
 };
 
 const DEFAULT_CONSTRAINT = {
@@ -689,7 +703,8 @@ export default {
       selectedSegment: null,
       newDistributions: {},
       operatorOptions: operators,
-      operatorValueToLabelMap: OPERATOR_VALUE_TO_LABEL_MAP,
+      latchOptions: latch_options,
+      operatorValueToLabelMap: reduceOperatorsToLabel(operators),
       showMdEditor: false
     };
   },
@@ -697,6 +712,15 @@ export default {
     ...mapState({
       userDetails: (state) => state.userDetails, // Map userDetails from Vuex state
     }),
+    isModeAB() {
+      return this.$store.state.mode === MODES.ABMode;
+    },
+    currentMode() {
+      return this.$store.state.mode;
+    },
+    currentTerms(){
+      return this.$store.state.terms;
+    },
     newDistributionPercentageSum() {
       return sum(pluck(Object.values(this.newDistributions), "percent"));
     },
@@ -724,10 +748,6 @@ export default {
     }
   },
   methods: {
-    onJsonChange(variantKey, value) {
-      const variant = this.flag.variants.find(v => v.id === variantKey);
-      variant.attachment = value;
-    },
     deleteFlag() {
       const flagId = this.flagId;
       getAxiosFlagrInstance().delete(`/flags/${this.flagId}`).then(() => {
@@ -743,7 +763,7 @@ export default {
         entityType: flag.entityType || "",
         notes: flag.notes || ""
       }).then(() => {
-        this.$message.success(`Flag updated`);
+        this.$message.success(this.currentTerms.flag + ` updated`);
       }, handleErr.bind(this));
     },
     setFlagEnabled(checked) {
@@ -874,6 +894,10 @@ export default {
       );
       cb(results);
     },
+    plural(text) {
+      // Use the utility function
+      return plural(text);
+    },
     loadAllTags() {
       getAxiosFlagrInstance().get(`/tags`).then(response => {
         let result = response.data;
@@ -977,16 +1001,12 @@ export default {
       }, handleErr.bind(this));
     },
     fetchFlag() {
-      console.log("testteteddd", this.loaded);
-      console.log("testteteddd", this.flag);
       getAxiosFlagrInstance().get(`/flags/${this.flagId}`).then(response => {
         let flag = response.data;
         flag.segments.forEach(segment => processSegment(segment));
         flag.variants.forEach(variant => processVariant(variant));
         this.flag = flag;
         this.loaded = true;
-        console.log("testtete", this.loaded);
-        console.log("testtete", this.flag);
       }, handleErr.bind(this));
       this.fetchEntityTypes();
     },
@@ -1021,14 +1041,15 @@ export default {
     }
   },
   mounted() {
-    console.log("test ddd", this.userDetails);
+    this.newSegment = clone((() => {
+      return this.isModeAB ? DEFAULT_SEGMENT : DEFAULT_SEGMENT_LATCH
+    })());
+    this.operatorOptions = this.isModeAB ? operators : operators_latch,
+    this.operatorValueToLabelMap = reduceOperatorsToLabel(this.isModeAB ? operators : operators_latch),
     this.fetchFlag();
     this.loadAllTags();
   },
   watch: {
-    userDetails(old, from) {
-      console.log("test dd333d",old,  from);
-    }
   }
 };
 </script>

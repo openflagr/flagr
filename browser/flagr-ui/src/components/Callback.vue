@@ -50,34 +50,27 @@
         if (state) {
             // base64 decode the state
             const parsedState = atob(state)
-            console.log("test", parsedState)
 
             // parse query string from state into an object
             const parsedStateQueryParams = Object.fromEntries(new URLSearchParams(parsedState))
             const redirectOrigin = parsedStateQueryParams.redirectOrigin
-            console.log("redirectOrigin", redirectOrigin)
             // redirect to redirectOrigin if it is a vercel origin with code and state
             
         }
         googleAuthenticate(data).then((res) => {
             if (res.error) {
-                console.log(res.error)
                 userVerified.value = false
                 text.value = 'Something went wrong, please try again later, go to login'
                 loginBtn.value = true
             } else {
                 userVerified.value = true
                 getUserDetails().then((res) => {
-                    console.log("userdetails", res)
                     updateValue(res)
                     store.dispatch('updateAuth', true);
                 }).catch((err) => {
-                    console.log('logging out ssssssssss')
-                    console.log("errrrrr", err)
                     store.dispatch('updateAuth', false);
                     logout()
                 })
-                console.log("redirect success")
                 router.push('/')
             }
         }).catch(() => {

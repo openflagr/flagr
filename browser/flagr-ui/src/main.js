@@ -29,11 +29,6 @@ function initializeApp() {
   setupflagrAxiosInstance();
   // You can do other things here like fetching initial data, setting up listeners, etc.
   // e.g., check if the user is authenticated, load initial data, etc.
-  if (localStorage.getItem('tokens')) {
-    console.log("User is already authenticated.");
-  } else {
-    console.log("User is not authenticated.");
-  }
 }
 
 // Call the function once during app initialization

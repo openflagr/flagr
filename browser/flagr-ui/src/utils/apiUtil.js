@@ -173,7 +173,6 @@ export async function logout() {
 		store.dispatch("reset")
 		if (typeof window !== "undefined") {
 			localStorage.removeItem("tokens")
-			console.log('logging out in logout')
 			router.replace({ name: 'Login' })
 		}
 	}
@@ -181,6 +180,5 @@ export async function logout() {
 
 export async function getUserDetails() {
 	const response = await getAxiosInstance().get(`${API_URLS.USER_DETAILS}`)
-	console.log(response.data.data)
 	return response.data.data
 }
