@@ -3,8 +3,6 @@
 ######################################
 FROM node:18 as npm_builder
 WORKDIR /go/src/github.com/Allen-Career-Institute/flagr
-ARG ENVIRONMENT=local
-ENV ENVIRONMENT=${ENVIRONMENT}
 COPY . .
 ARG FLAGR_UI_POSSIBLE_ENTITY_TYPES=null
 ENV VUE_APP_FLAGR_UI_POSSIBLE_ENTITY_TYPES ${FLAGR_UI_POSSIBLE_ENTITY_TYPES}

@@ -9,9 +9,49 @@ let flagrAxiosInstance;
 const API_URLS = constants.API_URLS
 const API_URL = constants.API_URL
 const SSO_URL = constants.SSO_URL
+
+const ENVS = constants.ENVS
+const ENVURLS = constants.ENVURLS
+
+
+export function isLocalNetwork(hostname) {
+	return (
+		hostname.startsWith("localhost") ||
+		hostname.startsWith("127.0.0.1") ||
+		hostname.startsWith("192.168.") ||
+		hostname.startsWith("10.0.") ||
+		hostname.startsWith("0.0.0.0") ||
+		hostname.endsWith(".local")
+	)
+}
+  
+export function determineEnv(hostname) {
+	if (!hostname) {
+	  console.warn("Couldn't determine host. Using production environment.")
+	  return ENVS.DEV
+	}
+  
+	if (isLocalNetwork(hostname) || hostname.includes("dev") || hostname.includes("demo")) {
+	  return ENVS.DEV
+	}
+  
+	if (hostname.includes("stage")) {
+	  return ENVS.STAGE
+	}
+
+	if(hostname.includes("live")) {
+		return ENVS.PROD
+	}
+  
+	return ENVS.DEV
+}
+
 export const setupAxiosInstance = () => {
+	let ssoURL = SSO_URL
+	const env = determineEnv(window.location.host)
+	ssoURL = ENVURLS[env].VUE_APP_SSO_API_URL 
 	axiosInstance = axios.create({
-		baseURL: SSO_URL,
+		baseURL: ssoURL,
 		timeout: 300000,
 		headers: headerParams(),
 	})
@@ -20,8 +60,11 @@ export const setupAxiosInstance = () => {
 }
 
 export const setupflagrAxiosInstance = () => {
+	let apiurl = API_URL
+	const env = determineEnv(window.location.host)
+	apiurl = ENVURLS[env].VUE_APP_API_URL
 	flagrAxiosInstance = axios.create({
-		baseURL: API_URL,
+		baseURL: apiurl,
 		timeout: 300000
 	})
 	//setupAxiosInstanceInterceptors()
