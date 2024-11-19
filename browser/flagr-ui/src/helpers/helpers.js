@@ -34,11 +34,6 @@ function handleErr (err) {
   console.log("testtterrr", err)
   let msg = get(err, 'response.data.message', 'request error')
   this.$message.error(msg)
-  if (get(err, 'response.status') === 401) {
-    let redirectURL = err.response.headers['www-authenticate'].split(`"`)[1]
-    window.location = redirectURL
-    return
-  }
 }
 
 export default {

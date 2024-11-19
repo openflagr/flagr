@@ -33,11 +33,11 @@ ENV FLAGR_RECORDER_ENABLED=true
 # JWT Environment Variables
 ENV FLAGR_JWT_AUTH_ENABLED=true
 ENV FLAGR_JWT_AUTH_DEBUG=true
-ENV FLAGR_JWT_AUTH_WHITELIST_PATHS="/api/v1/health,/api/v1/evaluation,/login,/callback,/static,/favicon.ico"
+ENV FLAGR_JWT_AUTH_WHITELIST_PATHS="/api/v1/health,/api/v1/evaluation,/login,/callback,/static,/favicon.ico,/flags"
 ENV FLAGR_JWT_AUTH_EXACT_WHITELIST_PATHS=",/,/login,/callback"
 ENV FLAGR_JWT_AUTH_COOKIE_TOKEN_NAME="access_token"
 # ENV FLAGR_JWT_AUTH_SECRET="secret"
-ENV FLAGR_JWT_AUTH_NO_TOKEN_STATUS_CODE=307
+ENV FLAGR_JWT_AUTH_NO_TOKEN_STATUS_CODE=401
 # ENV FLAGR_JWT_AUTH_NO_TOKEN_REDIRECT_URL="http://localhost:3000/login" (for local testing)
 # ENV FLAGR_JWT_AUTH_NO_TOKEN_REDIRECT_URL="http://localhost:18000/login" (to be overriden in k8 yaml file as per env)
 ENV FLAGR_JWT_AUTH_USER_CLAIM=uid

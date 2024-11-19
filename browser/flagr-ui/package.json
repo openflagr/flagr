@@ -11,7 +11,8 @@
   "dependencies": {
     "@element-plus/icons": "^0.0.11",
     "@iktakahiro/markdown-it-katex": "^4.0.0",
-    "axios": "^1.6.0",
+    "await-lock": "^2.2.2",
+    "axios": "^1.7.7",
     "babel-eslint": "^10.1.0",
     "cache-loader": "^4.1.0",
     "core-js": "^3.38.1",

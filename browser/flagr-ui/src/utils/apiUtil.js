@@ -1,8 +1,9 @@
 import axios from "axios"
+import AwaitLock from "await-lock"
 import constants from '@/constants'
 import store from '../store';  // Adjust the path to your store
 import router from "../router";
-
+const tokenRefreshLock = new AwaitLock()
 let axiosInstance ;
 let flagrAxiosInstance;
 
@@ -55,7 +56,7 @@ export const setupAxiosInstance = () => {
 		timeout: 300000,
 		headers: headerParams(),
 	})
-	//setupAxiosInstanceInterceptors()
+	setupAxiosInstanceInterceptors(axiosInstance)
 	return axiosInstance
 }
 
@@ -67,8 +68,81 @@ export const setupflagrAxiosInstance = () => {
 		baseURL: apiurl,
 		timeout: 300000
 	})
-	//setupAxiosInstanceInterceptors()
+	setupFlagrAxiosInstanceInterceptors(flagrAxiosInstance)
 	return flagrAxiosInstance
+}
+
+export function setupAxiosInstanceInterceptors(axios){
+	axios.interceptors.request.use((config) => {
+		return config
+	})
+	axios.interceptors.response.use(
+		(response) => {
+			if (response.headers["x-access-token"] && response.headers["x-refresh-token"]) {
+				const token = {
+					"x-access-token": response.headers["x-access-token"] ,
+					"x-refresh-token": response.headers["x-refresh-token"] ,
+				}
+				localStorage.setItem("tokens", JSON.stringify(token))
+			}
+			return response
+		},
+		async (error) => {
+			if (error?.response?.status === 403) {
+				logout()
+			}
+			return Promise.reject(error)
+		},
+	)
+}
+
+export function setupFlagrAxiosInstanceInterceptors(axios){
+	axios.interceptors.request.use((config) => {
+		return config
+	})
+	axios.interceptors.response.use(
+		(response) => {
+			if (response.headers["x-access-token"] && response.headers["x-refresh-token"]) {
+				const token = {
+					"x-access-token": response.headers["x-access-token"] ,
+					"x-refresh-token": response.headers["x-refresh-token"] ,
+				}
+				localStorage.setItem("tokens", JSON.stringify(token))
+			}
+			return response
+		},
+		async (error) => {
+			const originalRequest = error?.config
+			if (error?.response?.status === 403) {
+			  logout()
+			}
+			if (error?.response?.status === 401 && originalRequest?.["_retry"] !== true) {
+			  const tokens = getToken()
+			  if (tokens && originalRequest) {
+				const originalRequestAccessToken = (originalRequest.headers["Authorization"])
+				  ?.toString()
+				  .split(" ")[1]
+				await tokenRefreshLock.acquireAsync()
+				try {
+				  const newTokens = getToken()
+				  originalRequest["_retry"] = true
+				  if (newTokens && newTokens["x-access-token"] !== originalRequestAccessToken) {
+					return axios(originalRequest)
+				  }
+				  // default workflow
+				  await refreshToken({'x-refresh-token': tokens["x-refresh-token"]})
+				  const latestToken = getToken()
+				  originalRequest.headers["Authorization"] = "Bearer " + latestToken["x-access-token"];
+				  const response = await axios(originalRequest)
+				  return response
+				} finally {
+				  tokenRefreshLock.release()
+				}
+			  }
+			}
+			return Promise.reject(error)
+		},
+	)
 }
 
 const deviceType = ["web", "mweb", "ios-webview", "android-webview"]
@@ -146,6 +220,12 @@ export const getAxiosInstance = () => {
 	return axiosInstance;
 }
 
+const getToken = () => {
+	const token = localStorage.getItem('tokens');
+	const authToken = token ? JSON.parse(token) : null;
+	return authToken
+}
+
 
 export const getAxiosFlagrInstance = () => {
 	if (!flagrAxiosInstance) {
@@ -181,6 +261,18 @@ export const getGoogleRedirectionLink = async (postData) => {
 	return redirectUrlResponse
 }
 
+
+export async function refreshToken(configHeader = {}) {
+	const ssoInstance =  getAxiosInstance();
+	const API_URL = `${API_URLS.REFRESH_TOKEN}`
+	const response = await ssoInstance.get(API_URL, {
+		headers: configHeader
+	})
+	if (response.status > 299) {
+		throw response
+	}
+	return response?.data
+}
 
 export const googleAuthenticate = async (postData) => {	
 	const reqPayload = JSON.stringify(postData)
@@ -224,6 +316,5 @@ export async function logout() {
 
 export async function getUserDetails() {
 	const response = await getAxiosInstance().get(`${API_URLS.USER_DETAILS}`)
-	console.log(response.data.data)
 	return response.data.data
 }
