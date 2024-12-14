@@ -1,0 +1,15 @@
+// Wiki: https://acikota.atlassian.net/wiki/spaces/Platform/pages/311787592/Centralising+stages+of+the+pipeline+for+golang+backend+services
+@Library('Allen_Shared_Libraries') _
+commonPipelineForDevToStagePromotion(
+    environment: [
+        Service_Name : "flagr",
+        Target_Environment : "stage",
+        DEPLOY_GITOPS_REPO : "central-gitops-repo",
+        SERVICE_REPO : "flagr",
+        SOURCE_FILE : "app-charts-live/flagr/values-dev.yaml",
+        TARGET_FILE : "app-charts-live/flagr/values-stage.yaml",
+        DEPLOY_TARGET_BRANCH : "main",
+        Slack_Channel : "#central-function-events",
+        StageSlack_Channel :"#stage-release"
+    ]
+)
