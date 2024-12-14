@@ -3,6 +3,7 @@ package entity
 import (
 	"github.com/openflagr/flagr/swagger_gen/models"
 
+	_ "gorm.io/driver/sqlite" // sqlite driver
 	"gorm.io/gorm"
 )
 
