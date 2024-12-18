@@ -25,6 +25,7 @@ import (
 	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations/export"
 	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations/flag"
 	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations/health"
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations/latch"
 	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations/segment"
 	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations/tag"
 	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations/variant"
@@ -58,6 +59,9 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		}),
 		FlagCreateFlagHandler: flag.CreateFlagHandlerFunc(func(params flag.CreateFlagParams) middleware.Responder {
 			return middleware.NotImplemented("operation flag.CreateFlag has not yet been implemented")
+		}),
+		LatchCreateLatchHandler: latch.CreateLatchHandlerFunc(func(params latch.CreateLatchParams) middleware.Responder {
+			return middleware.NotImplemented("operation latch.CreateLatch has not yet been implemented")
 		}),
 		SegmentCreateSegmentHandler: segment.CreateSegmentHandlerFunc(func(params segment.CreateSegmentParams) middleware.Responder {
 			return middleware.NotImplemented("operation segment.CreateSegment has not yet been implemented")
@@ -196,6 +200,8 @@ type FlagrAPI struct {
 	ConstraintCreateConstraintHandler constraint.CreateConstraintHandler
 	// FlagCreateFlagHandler sets the operation handler for the create flag operation
 	FlagCreateFlagHandler flag.CreateFlagHandler
+	// LatchCreateLatchHandler sets the operation handler for the create latch operation
+	LatchCreateLatchHandler latch.CreateLatchHandler
 	// SegmentCreateSegmentHandler sets the operation handler for the create segment operation
 	SegmentCreateSegmentHandler segment.CreateSegmentHandler
 	// TagCreateTagHandler sets the operation handler for the create tag operation
@@ -343,6 +349,9 @@ func (o *FlagrAPI) Validate() error {
 	}
 	if o.FlagCreateFlagHandler == nil {
 		unregistered = append(unregistered, "flag.CreateFlagHandler")
+	}
+	if o.LatchCreateLatchHandler == nil {
+		unregistered = append(unregistered, "latch.CreateLatchHandler")
 	}
 	if o.SegmentCreateSegmentHandler == nil {
 		unregistered = append(unregistered, "segment.CreateSegmentHandler")
@@ -535,6 +544,10 @@ func (o *FlagrAPI) initHandlerCache() {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
 	o.handlers["POST"]["/flags"] = flag.NewCreateFlag(o.context, o.FlagCreateFlagHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/latches"] = latch.NewCreateLatch(o.context, o.LatchCreateLatchHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}

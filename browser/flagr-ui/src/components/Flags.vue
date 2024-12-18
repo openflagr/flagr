@@ -6,36 +6,45 @@
           <el-breadcrumb-item>Home page</el-breadcrumb-item>
         </el-breadcrumb>
 
-        <spinner v-if="!loaded" />
+        <el-tabs v-model="activeTab" @tab-click="setMode">
+          <el-tab-pane :name="MODES.ABMode" label="A/B Exp">
+          </el-tab-pane>
+          <el-tab-pane :name="MODES.LatchMode" label="Latches">
+          </el-tab-pane>
+        </el-tabs>
+
+        <spinner v-if="!loaded"/>
 
         <div v-if="loaded">
           <el-row>
             <el-col>
               <el-row>
-                <el-input placeholder="Specific new flag description" v-model="newFlag.description">
+                <el-input :placeholder="'Specific new ' + currentTerms.flag + ' description'"
+                          v-model="newFlag.description">
                   <template #prepend>
                     <ElIcon>
-                      <Plus />
+                      <Plus/>
                     </ElIcon>
                   </template>
                   <template #append>
                     <el-dropdown
-                      split-button
-                      type="primary"
-                      :disabled="!newFlag.description"
-                      @command="onCommandDropdown"
-                      @click.prevent="createFlag"
+                        split-button
+                        type="primary"
+                        :disabled="!newFlag.description"
+                        @command="onCommandDropdown"
+                        @click.prevent="createFlag"
                     >
-                      Create New Flag
-                      <template #dropdown>
+                      Create New {{ currentTerms.flag }}
+                      <template #dropdown v-if="isModeAB">
                         <el-dropdown-menu>
                           <el-dropdown-item
-                            command="simple_boolean_flag"
-                            :disabled="!newFlag.description"
-                          >Create Simple Boolean Flag</el-dropdown-item>
+                              command="simple_boolean_flag"
+                              :disabled="!newFlag.description"
+                          >Create Simple Boolean {{ currentTerms.flag }}
+                          </el-dropdown-item>
                         </el-dropdown-menu>
                       </template>
-                      </el-dropdown>
+                    </el-dropdown>
                   </template>
                 </el-input>
               </el-row>
@@ -44,56 +53,58 @@
 
           <el-row>
             <el-input
-              placeholder="Search a flag"
-              :prefix-icon="ElIconSearch"
-              v-model="searchTerm"
-              v-focus
+                :placeholder="'Search a '+ currentTerms.flag"
+                :prefix-icon="ElIconSearch"
+                v-model="searchTerm"
+                v-focus
             ></el-input>
           </el-row>
 
           <el-table
-            :data="filteredFlags"
-            :stripe="true"
-            :highlight-current-row="false"
-            :default-sort="{ prop: 'id', order: 'descending' }"
-            v-on:row-click="goToFlag"
-            style="width: 100%"
+              :data="filteredFlags"
+              :stripe="true"
+              :highlight-current-row="false"
+              :default-sort="{ prop: 'id', order: 'descending' }"
+              v-on:row-click="goToFlag"
+              style="width: 100%"
           >
-            <el-table-column prop="id" align="center" label="Flag ID" sortable fixed width="95"></el-table-column>
+            <el-table-column prop="id" :label="currentTerms.flag +' ID'" sortable fixed width="120"></el-table-column>
             <el-table-column prop="description" label="Description" min-width="300"></el-table-column>
             <el-table-column prop="tags" label="Tags" min-width="200">
               <template v-slot="scope">
                 <el-tag
-                  v-for="tag in scope.row.tags"
-                  :key="tag.id"
-                  :type="warning"
-                  disable-transitions
-                >{{ tag.value }}</el-tag>
+                    v-for="tag in scope.row.tags"
+                    :key="tag.id"
+                    :type="warning"
+                    disable-transitions
+                >{{ tag.value }}
+                </el-tag>
               </template>
             </el-table-column>
             <el-table-column prop="updatedBy" label="Last Updated By" sortable width="200"></el-table-column>
             <el-table-column
-              prop="updatedAt"
-              label="Updated At (UTC)"
-              :formatter="datetimeFormatter"
-              sortable
-              width="180"
+                prop="updatedAt"
+                label="Updated At (UTC)"
+                :formatter="datetimeFormatter"
+                sortable
+                width="180"
             ></el-table-column>
             <el-table-column
-              prop="enabled"
-              label="Enabled"
-              sortable
-              align="center"
-              fixed="right"
-              width="140"
-              :filters="[{ text: 'Enabled', value: true }, { text: 'Disabled', value: false }]"
-              :filter-method="filterStatus"
+                prop="enabled"
+                label="Enabled"
+                sortable
+                align="center"
+                fixed="right"
+                width="140"
+                :filters="[{ text: 'Enabled', value: true }, { text: 'Disabled', value: false }]"
+                :filter-method="filterStatus"
             >
               <template v-slot="scope">
                 <el-tag
-                  :type="scope.row.enabled ? 'primary' : 'danger'"
-                  disable-transitions
-                >{{ scope.row.enabled ? "on" : "off" }}</el-tag>
+                    :type="scope.row.enabled ? 'primary' : 'danger'"
+                    disable-transitions
+                >{{ scope.row.enabled ? "on" : "off" }}
+                </el-tag>
               </template>
             </el-table-column>
           </el-table>
@@ -101,45 +112,48 @@
           <el-collapse class="deleted-flags-table" @change="fetchDeletedFlags">
             <el-collapse-item title="Deleted Flags">
               <el-table
-                :data="getDeletedFlags"
-                :stripe="true"
-                :highlight-current-row="false"
-                :default-sort="{ prop: 'id', order: 'descending' }"
-                style="width: 100%"
+                  :data="getDeletedFlags"
+                  :stripe="true"
+                  :highlight-current-row="false"
+                  :default-sort="{ prop: 'id', order: 'descending' }"
+                  style="width: 100%"
               >
-                <el-table-column prop="id" align="center" label="Flag ID" sortable fixed width="95"></el-table-column>
+                <el-table-column prop="id" align="center" :label="currentTerms.flag + ' ID'" sortable fixed
+                                 width="95"></el-table-column>
                 <el-table-column prop="description" label="Description" min-width="300"></el-table-column>
                 <el-table-column prop="tags" label="Tags" min-width="200">
                   <template v-slot="scope">
                     <el-tag
-                      v-for="tag in scope.row.tags"
-                      :key="tag.id"
-                      :type="warning"
-                      disable-transitions
-                    >{{ tag.value }}</el-tag>
+                        v-for="tag in scope.row.tags"
+                        :key="tag.id"
+                        :type="warning"
+                        disable-transitions
+                    >{{ tag.value }}
+                    </el-tag>
                   </template>
                 </el-table-column>
                 <el-table-column prop="updatedBy" label="Last Updated By" sortable width="200"></el-table-column>
                 <el-table-column
-                  prop="updatedAt"
-                  label="Updated At (UTC)"
-                  :formatter="datetimeFormatter"
-                  sortable
-                  width="180"
+                    prop="updatedAt"
+                    label="Updated At (UTC)"
+                    :formatter="datetimeFormatter"
+                    sortable
+                    width="180"
                 ></el-table-column>
                 <el-table-column
-                  prop="action"
-                  label="Action"
-                  align="center"
-                  fixed="right"
-                  width="100"
+                    prop="action"
+                    label="Action"
+                    align="center"
+                    fixed="right"
+                    width="100"
                 >
                   <template v-slot="scope">
                     <el-button
-                      @click="restoreFlag(scope.row)"
-                      type="warning"
-                      size="small"
-                    >Restore</el-button>
+                        @click="restoreFlag(scope.row)"
+                        type="warning"
+                        size="small"
+                    >Restore
+                    </el-button>
                   </template>
                 </el-table-column>
               </el-table>
@@ -152,14 +166,14 @@
 </template>
 
 <script>
-import { Search as ElIconSearch } from '@element-plus/icons'
+import {Plus, Search as ElIconSearch} from '@element-plus/icons'
 import Spinner from "@/components/Spinner";
 import helpers from "@/helpers/helpers";
-import { ElIcon } from 'element-plus';
-import { Plus } from '@element-plus/icons';
-import { getAxiosFlagrInstance } from '../utils/apiUtil';
+import {ElIcon} from 'element-plus';
+import {getAxiosFlagrInstance, logout} from '../utils/apiUtil';
+import {MODES} from '../constants';
 
-const { handleErr } = helpers;
+const {handleErr} = helpers;
 
 export default {
   name: "flags",
@@ -170,6 +184,7 @@ export default {
   },
   data() {
     return {
+      activeTab: this.$store.state.mode || MODES.ABMode,
       loaded: false,
       deletedFlagsLoaded: false,
       flags: [],
@@ -178,46 +193,47 @@ export default {
       newFlag: {
         description: ""
       },
+      MODES,
       ElIconSearch
     };
   },
   created() {
-    getAxiosFlagrInstance().get(`/flags`).then(response => {
-      let flags = response.data;
-      if(typeof flags === 'string'){
-        logout();
-      } else {
-        this.loaded = true;
-        flags.reverse();
-        this.flags = flags;
-      }
-    }, handleErr.bind(this));
+    this.getFlags()
   },
   computed: {
-    filteredFlags: function() {
+    isModeAB() {
+      return this.$store.state.mode === MODES.ABMode;
+    },
+    currentMode() {
+      return this.$store.state.mode;
+    },
+    currentTerms() {
+      return this.$store.state.terms;
+    },
+    filteredFlags: function () {
       if (this.searchTerm) {
-        return this.flags.filter(({ id, key, description, tags }) =>
-          this.searchTerm
-            .split(",")
-            .map(term => {
-              const termLowerCase = term.toLowerCase();
-              return (
-                id.toString().includes(term) ||
-                key.includes(term) ||
-                description.toLowerCase().includes(termLowerCase) ||
-                tags
-                  .map(tag =>
-                    tag.value.toLowerCase().includes(termLowerCase)
-                  )
-                  .includes(true)
-              );
-            })
-            .every(e => e)
+        return this.flags.filter(({id, key, description, tags}) =>
+            this.searchTerm
+                .split(",")
+                .map(term => {
+                  const termLowerCase = term.toLowerCase();
+                  return (
+                      id.toString().includes(term) ||
+                      key.includes(term) ||
+                      description.toLowerCase().includes(termLowerCase) ||
+                      tags
+                          .map(tag =>
+                              tag.value.toLowerCase().includes(termLowerCase)
+                          )
+                          .includes(true)
+                  );
+                })
+                .every(e => e)
         );
       }
       return this.flags;
     },
-    getDeletedFlags: function() {
+    getDeletedFlags: function () {
       return this.deletedFlags;
     }
   },
@@ -228,25 +244,49 @@ export default {
     datetimeFormatter(row, col, val) {
       return val ? val.split(".")[0] : "";
     },
+    setMode(val) {
+      this.$store.dispatch("updateMode", val.props.name);
+      this.getFlags()
+    },
     goToFlag(row) {
-      this.$router.push({ name: "flag", params: { flagId: row.id } });
+      this.$router.push({name: "flag", params: {flagId: row.id}});
     },
     onCommandDropdown(command) {
       if (command === "simple_boolean_flag") {
-        this.createFlag({ template: command });
+        this.createFlag({template: command});
       }
+    },
+    getFlags() {
+      let tagsUrl = '';
+      if (this.isModeAB) {
+        tagsUrl = '?tags=AB';
+      } else {
+        tagsUrl = '?tags=latch';
+      }
+      getAxiosFlagrInstance().get(`/flags${tagsUrl}`).then(response => {
+        let flags = response.data;
+        if (typeof flags === 'string') {
+          logout();
+        } else {
+          this.loaded = true;
+          flags.reverse();
+          this.flags = flags;
+        }
+      }, handleErr.bind(this));
     },
     createFlag(params) {
       if (!this.newFlag.description) {
         return;
       }
-      getAxiosFlagrInstance().post(`/flags`, {
+      let url = this.isModeAB ? `/flags` : `/latches`;
+      getAxiosFlagrInstance().post(url, {
         ...this.newFlag,
         ...(params || {})
       }).then(response => {
         let flag = response.data;
         this.newFlag.description = "";
-        this.$message.success("flag created");
+        let msg = this.isModeAB ? "Flag created" : "Latch created";
+        this.$message.success(msg);
 
         flag._new = true;
         this.flags.unshift(flag);
@@ -262,7 +302,7 @@ export default {
           let flag = response.data;
           this.$message.success(`Flag updated`);
           this.flags.push(flag);
-          this.deletedFlags = this.deletedFlags.filter(function(el) {
+          this.deletedFlags = this.deletedFlags.filter(function (el) {
             return el.id != flag.id;
           });
         }, handleErr.bind(this));
@@ -292,12 +332,15 @@ export default {
   .el-table {
     margin-top: 2em;
   }
+
   .el-table__row {
     cursor: pointer;
   }
+
   .el-button-group .el-button--primary:first-child {
     border-right-color: #dcdfe6;
   }
+
   .deleted-flags-table {
     margin-top: 2rem;
   }

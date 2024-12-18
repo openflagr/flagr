@@ -5,6 +5,22 @@ const API_URLS = {
   USER_DETAILS: "api/v1/user/details",
   REFRESH_TOKEN: "api/v1/auth/authenticate/refresh",
 }
+export const MODES = {
+  ABMode: "ABMode",
+  LatchMode: "LatchMode",
+}
+
+export const ABModeConstants = {
+  flag: 'Flag',
+  segment: 'Segment',
+  constraint: 'Constraint'
+}
+
+export const LatchModeConstants = {
+  flag: 'Latch',
+  segment: 'Cohort',
+  constraint: 'Lever'
+}
 
 const ENVS = {
   PROD: 'PROD',

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations/latch"
+
 	"github.com/Allen-Career-Institute/flagr/pkg/entity"
 	"github.com/Allen-Career-Institute/flagr/pkg/mapper/entity_restapi/e2r"
 	"github.com/Allen-Career-Institute/flagr/pkg/mapper/entity_restapi/r2e"
@@ -33,6 +35,9 @@ type CRUD interface {
 	SetFlagEnabledState(flag.SetFlagEnabledParams) middleware.Responder
 	GetFlagSnapshots(params flag.GetFlagSnapshotsParams) middleware.Responder
 	GetFlagEntityTypes(params flag.GetFlagEntityTypesParams) middleware.Responder
+
+	//Latch
+	CreateLatch(latch.CreateLatchParams) middleware.Responder
 
 	//Tags
 	CreateTag(tag.CreateTagParams) middleware.Responder

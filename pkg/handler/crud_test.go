@@ -1122,7 +1122,7 @@ func TestCrudTags(t *testing.T) {
 	res = c.FindTags(tag.FindTagsParams{
 		FlagID: int64(1),
 	})
-	assert.Zero(t, len(res.(*tag.FindTagsOK).Payload))
+	assert.Equal(t, 1, len(res.(*tag.FindTagsOK).Payload))
 
 	// step 1. it should be able to create tag
 	res = c.CreateTag(tag.CreateTagParams{
@@ -1239,7 +1239,7 @@ func TestFindAllTags(t *testing.T) {
 
 	t.Run("FindAllTags - got all the results", func(t *testing.T) {
 		res = c.FindAllTags(tag.FindAllTagsParams{})
-		assert.Len(t, res.(*tag.FindAllTagsOK).Payload, numOfTags)
+		assert.Len(t, res.(*tag.FindAllTagsOK).Payload, numOfTags+1)
 	})
 
 	t.Run("FindAllTags (with matching value_like)", func(t *testing.T) {

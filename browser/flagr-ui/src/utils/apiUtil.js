@@ -308,7 +308,6 @@ export async function logout() {
 		store.dispatch("reset")
 		if (typeof window !== "undefined") {
 			localStorage.removeItem("tokens")
-			console.log('logging out in logout')
 			router.replace({ name: 'Login' })
 		}
 	}

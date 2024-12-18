@@ -66,7 +66,6 @@ export default {
   methods: {
     checkAuthentication() {
       const isAuthenticated = !!localStorage.getItem('tokens');
-      console.log('isAuthenticated', isAuthenticated)
       if (!isAuthenticated || !this.isAuth) {
         this.showHeader = false;
       } else {
@@ -75,7 +74,6 @@ export default {
       }
     },
     logoutUser() {
-      console.log('logging out')
       logout();
       this.$router.push('/login');
     }
@@ -83,7 +81,6 @@ export default {
   watch: {
     // Watch for route changes to recheck authentication on navigation
     isAuth() {
-      console.log("isauth changed")
       this.checkAuthentication();
     },
     $route() {
@@ -136,6 +133,10 @@ ol {
   }
   span[size="small"] {
     font-size: 0.85em;
+  }
+
+  .mb-4 {
+    margin-bottom: 16px;
   }
 
   .navbar {

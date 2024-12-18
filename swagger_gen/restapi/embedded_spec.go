@@ -1340,6 +1340,39 @@ func init() {
         }
       }
     },
+    "/latches": {
+      "post": {
+        "tags": [
+          "latch"
+        ],
+        "operationId": "createLatch",
+        "parameters": [
+          {
+            "description": "create a Latch",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/createFlagRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "returns the created latch",
+            "schema": {
+              "$ref": "#/definitions/flag"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
     "/tags": {
       "get": {
         "tags": [
@@ -2050,6 +2083,10 @@ func init() {
       "name": "flag"
     },
     {
+      "description": "Everything about the latch",
+      "name": "latch"
+    },
+    {
       "description": "Segment defines the audience of the flag, it's the user segmentation",
       "name": "segment"
     },
@@ -2079,6 +2116,7 @@ func init() {
       "name": "Flag Management",
       "tags": [
         "flag",
+        "latch",
         "segment",
         "constraint",
         "distribution",
@@ -3429,6 +3467,39 @@ func init() {
         }
       }
     },
+    "/latches": {
+      "post": {
+        "tags": [
+          "latch"
+        ],
+        "operationId": "createLatch",
+        "parameters": [
+          {
+            "description": "create a Latch",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/createFlagRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "returns the created latch",
+            "schema": {
+              "$ref": "#/definitions/flag"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
     "/tags": {
       "get": {
         "tags": [
@@ -4144,6 +4215,10 @@ func init() {
       "name": "flag"
     },
     {
+      "description": "Everything about the latch",
+      "name": "latch"
+    },
+    {
       "description": "Segment defines the audience of the flag, it's the user segmentation",
       "name": "segment"
     },
@@ -4173,6 +4248,7 @@ func init() {
       "name": "Flag Management",
       "tags": [
         "flag",
+        "latch",
         "segment",
         "constraint",
         "distribution",

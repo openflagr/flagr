@@ -11,6 +11,7 @@ import (
 	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations/export"
 	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations/flag"
 	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations/health"
+	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations/latch"
 	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations/segment"
 	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations/tag"
 	"github.com/Allen-Career-Institute/flagr/swagger_gen/restapi/operations/variant"
@@ -45,6 +46,9 @@ func setupCRUD(api *operations.FlagrAPI) {
 	api.FlagSetFlagEnabledHandler = flag.SetFlagEnabledHandlerFunc(c.SetFlagEnabledState)
 	api.FlagGetFlagSnapshotsHandler = flag.GetFlagSnapshotsHandlerFunc(c.GetFlagSnapshots)
 	api.FlagGetFlagEntityTypesHandler = flag.GetFlagEntityTypesHandlerFunc(c.GetFlagEntityTypes)
+
+	//latch
+	api.LatchCreateLatchHandler = latch.CreateLatchHandlerFunc(c.CreateLatch)
 
 	// tags
 	api.TagCreateTagHandler = tag.CreateTagHandlerFunc(c.CreateTag)

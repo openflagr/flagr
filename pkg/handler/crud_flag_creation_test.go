@@ -40,6 +40,7 @@ func TestCrudCreateFlag(t *testing.T) {
 		segment := entity.Segment{FlagID: flagID}
 		db.First(&segment)
 		assert.Zero(t, segment.ID)
+		assert.NotZero(t, res.(*flag.CreateFlagOK).Payload.Tags)
 	})
 
 	t.Run("it should be able to create simple_boolean_flag template", func(t *testing.T) {
@@ -73,6 +74,7 @@ func TestCrudCreateFlag(t *testing.T) {
 		assert.Equal(t, distribution.Percent, uint(100))
 		assert.Equal(t, distribution.SegmentID, segment.ID)
 		assert.Equal(t, distribution.VariantKey, variant.Key)
+		assert.NotZero(t, res.Payload.Tags)
 	})
 }
 

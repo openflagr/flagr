@@ -12,5 +12,13 @@
     {"value": "NOTIN", "label": "NOT IN"},
     {"value": "CONTAINS", "label": "CONTAINS"},
     {"value": "NOTCONTAINS", "label": "NOT CONTAINS"}
+  ],
+  "operators_latch":[
+    {"value": "IN", "label": "IN"},
+    {"value": "NOTIN", "label": "NOT IN"}
+  ],
+  "latch_options": [
+    {"value": "Batch Id", "label": "batch_id"},
+    {"value": "Stream Name", "label": "stream_name"}
   ]
 }

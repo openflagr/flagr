@@ -8,7 +8,60 @@ import (
 	"gorm.io/gorm"
 )
 
+const ErrorCreatingFlag = "cannot create flag. %s"
+
 func (c *crud) CreateFlag(params flag.CreateFlagParams) middleware.Responder {
+	f, tx, errCreateFlag := c.createFlagEntity(params)
+	if errCreateFlag != nil {
+		return errCreateFlag
+	}
+
+	if params.Body.Template == "simple_boolean_flag" {
+		if err := LoadSimpleBooleanFlagTemplate(f, tx); err != nil {
+			tx.Rollback()
+			return flag.NewCreateFlagDefault(500).WithPayload(
+				ErrorMessage(ErrorCreatingFlag, err))
+		}
+	} else if params.Body.Template != "" {
+		return flag.NewCreateFlagDefault(400).WithPayload(
+			ErrorMessage("unknown value for template: %s", params.Body.Template))
+	}
+
+	// adding AB tag in order to easily fetch only AB Experiments and ignore latch
+	err := associateTagWithFlagFunc(f, tx, "AB")
+	if err != nil {
+		return flag.NewCreateFlagDefault(500).WithPayload(
+			ErrorMessage("cannot associate AB tag to flag. %s", err))
+	}
+
+	err = tx.Commit().Error
+	if err != nil {
+		tx.Rollback()
+		return flag.NewCreateFlagDefault(500).WithPayload(ErrorMessage("%s", err))
+	}
+
+	resp, m := c.mapResponseAndSaveFlagSnapShot(params, f)
+	if m != nil {
+		return m
+	}
+
+	return resp
+}
+
+func (c *crud) mapResponseAndSaveFlagSnapShot(params flag.CreateFlagParams, f *entity.Flag) (*flag.CreateFlagOK, middleware.Responder) {
+	resp := flag.NewCreateFlagOK()
+	payload, err := e2rMapFlag(f)
+	if err != nil {
+		return nil, flag.NewCreateFlagDefault(500).WithPayload(
+			ErrorMessage("cannot map flag. %s", err))
+	}
+	resp.SetPayload(payload)
+
+	entity.SaveFlagSnapshot(getDB(), f.ID, getSubjectFromRequest(params.HTTPRequest))
+	return resp, nil
+}
+
+func (c *crud) createFlagEntity(params flag.CreateFlagParams) (*entity.Flag, *gorm.DB, middleware.Responder) {
 	f := &entity.Flag{}
 	if params.Body != nil {
 		f.Description = util.SafeString(params.Body.Description)
@@ -16,8 +69,8 @@ func (c *crud) CreateFlag(params flag.CreateFlagParams) middleware.Responder {
 
 		key, err := entity.CreateFlagKey(params.Body.Key)
 		if err != nil {
-			return flag.NewCreateFlagDefault(400).WithPayload(
-				ErrorMessage("cannot create flag. %s", err))
+			return nil, nil, flag.NewCreateFlagDefault(400).WithPayload(
+				ErrorMessage(ErrorCreatingFlag, err))
 		}
 		f.Key = key
 	}
@@ -26,38 +79,10 @@ func (c *crud) CreateFlag(params flag.CreateFlagParams) middleware.Responder {
 
 	if err := tx.Create(f).Error; err != nil {
 		tx.Rollback()
-		return flag.NewCreateFlagDefault(500).WithPayload(
-			ErrorMessage("cannot create flag. %s", err))
+		return nil, nil, flag.NewCreateFlagDefault(500).WithPayload(
+			ErrorMessage(ErrorCreatingFlag, err))
 	}
-
-	if params.Body.Template == "simple_boolean_flag" {
-		if err := LoadSimpleBooleanFlagTemplate(f, tx); err != nil {
-			tx.Rollback()
-			return flag.NewCreateFlagDefault(500).WithPayload(
-				ErrorMessage("cannot create flag. %s", err))
-		}
-	} else if params.Body.Template != "" {
-		return flag.NewCreateFlagDefault(400).WithPayload(
-			ErrorMessage("unknown value for template: %s", params.Body.Template))
-	}
-
-	err := tx.Commit().Error
-	if err != nil {
-		tx.Rollback()
-		return flag.NewCreateFlagDefault(500).WithPayload(ErrorMessage("%s", err))
-	}
-
-	resp := flag.NewCreateFlagOK()
-	payload, err := e2rMapFlag(f)
-	if err != nil {
-		return flag.NewCreateFlagDefault(500).WithPayload(
-			ErrorMessage("cannot map flag. %s", err))
-	}
-	resp.SetPayload(payload)
-
-	entity.SaveFlagSnapshot(getDB(), f.ID, getSubjectFromRequest(params.HTTPRequest))
-
-	return resp
+	return f, tx, nil
 }
 
 // LoadSimpleBooleanFlagTemplate loads the simple boolean flag template into

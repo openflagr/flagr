@@ -40,11 +40,11 @@ x-tagGroups:
     tags:
       - export
 consumes:
-- application/json
+  - application/json
 produces:
-- application/json
+  - application/json
 schemes:
-- http
+  - http
 basePath: "/api/v1"
 paths:
   /flags:
@@ -596,4 +596,3 @@ definitions:
       message:
         type: string
         minLength: 1
-

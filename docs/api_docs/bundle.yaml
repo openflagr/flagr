@@ -8,6 +8,8 @@ info:
 tags:
   - name: flag
     description: Everything about the flag
+  - name: latch
+    description: Everything about the latch
   - name: segment
     description: Segment defines the audience of the flag, it's the user segmentation
   - name: constraint
@@ -24,6 +26,7 @@ x-tagGroups:
   - name: Flag Management
     tags:
       - flag
+      - latch
       - segment
       - constraint
       - distribution
@@ -833,6 +836,27 @@ paths:
             items:
               type: string
               minLength: 1
+        default:
+          description: generic error response
+          schema:
+            $ref: '#/definitions/error'
+  /latches:
+    post:
+      tags:
+        - latch
+      operationId: createLatch
+      parameters:
+        - in: body
+          name: body
+          description: create a Latch
+          required: true
+          schema:
+            $ref: '#/definitions/createFlagRequest'
+      responses:
+        '200':
+          description: returns the created latch
+          schema:
+            $ref: '#/definitions/flag'
         default:
           description: generic error response
           schema:
