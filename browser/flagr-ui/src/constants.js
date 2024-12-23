@@ -30,7 +30,7 @@ const ENVS = {
 
 const ENVURLS = {
   PROD: {
-    VUE_APP_API_URL : 'http://flagr-new.allen-live.in/api/v1',
+    VUE_APP_API_URL : 'https://flagr-new.allen-live.in/api/v1',
     VUE_APP_SSO_API_URL : 'https://api.allen-live.in/internal-bff/',
   },
   STAGE: {
@@ -39,7 +39,7 @@ const ENVURLS = {
   },
   DEV: {
     VUE_APP_API_URL : 'http://flagr-new.allen-demo.in/api/v1',
-    VUE_APP_SSO_API_URL : 'https://bff-dev.allen-demo.in/internal-bff/',
+    VUE_APP_SSO_API_URL : 'http://bff-dev.allen-demo.in/internal-bff/',
   }
 }
 

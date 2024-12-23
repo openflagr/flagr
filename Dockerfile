@@ -1,7 +1,7 @@
 ######################################
 # Prepare npm_builder
 ######################################
-FROM node:18 as npm_builder
+FROM 537984406465.dkr.ecr.ap-south-1.amazonaws.com/node:18 as npm_builder
 WORKDIR /go/src/github.com/Allen-Career-Institute/flagr
 COPY . .
 ARG FLAGR_UI_POSSIBLE_ENTITY_TYPES=null
@@ -11,14 +11,14 @@ RUN make build_ui
 ######################################
 # Prepare go_builder
 ######################################
-FROM golang:1.21-alpine as go_builder
+FROM 537984406465.dkr.ecr.ap-south-1.amazonaws.com/golang:1.21-alpine as go_builder
 WORKDIR /go/src/github.com/Allen-Career-Institute/flagr
 
 RUN apk add --no-cache build-base git make
 COPY . .
 RUN make build
 
-FROM alpine
+FROM 537984406465.dkr.ecr.ap-south-1.amazonaws.com/alpine:3.21
 
 COPY --from=go_builder /go/src/github.com/Allen-Career-Institute/flagr/flagr .
 
@@ -33,7 +33,7 @@ ENV FLAGR_RECORDER_ENABLED=true
 # JWT Environment Variables
 ENV FLAGR_JWT_AUTH_ENABLED=true
 ENV FLAGR_JWT_AUTH_DEBUG=true
-ENV FLAGR_JWT_AUTH_WHITELIST_PATHS="/api/v1/health,/api/v1/evaluation,/login,/callback,/static,/favicon.ico,/flags"
+ENV FLAGR_JWT_AUTH_WHITELIST_PATHS="/api/v1/health,/api/v1/evaluation,/login,/callback,/static,/favicon.ico,/flags,/api/v1/flags"
 ENV FLAGR_JWT_AUTH_EXACT_WHITELIST_PATHS=",/,/login,/callback"
 ENV FLAGR_JWT_AUTH_COOKIE_TOKEN_NAME="access_token"
 # ENV FLAGR_JWT_AUTH_SECRET="secret"
