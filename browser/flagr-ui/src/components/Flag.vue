@@ -303,6 +303,7 @@
                               :mode="'code'"
                               v-on:has-error="variant.attachmentValid = false"
                               v-on:input="variant.attachmentValid = true"
+                              @json-change="onJsonChange(variant.id,$event)"
                               class="variant-attachment-content"
                             ></Vue3JsonEditor>
                           </el-collapse-item>
@@ -755,6 +756,13 @@ export default {
     }
   },
   methods: {
+    onJsonChange(variant, value) {
+      this.flag.variants.forEach(variantTemp => {
+        if(variantTemp.id = variant){
+          variantTemp.attachment = value
+        }
+      });
+    },
     deleteFlag() {
       const flagId = this.flagId;
       getAxiosFlagrInstance().delete(`/flags/${this.flagId}`).then(() => {
