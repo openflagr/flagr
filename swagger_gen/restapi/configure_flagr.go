@@ -5,8 +5,8 @@ package restapi
 import (
 	"crypto/tls"
 	"encoding/json"
-	"net/http"
 	"io"
+	"net/http"
 
 	"github.com/openflagr/flagr/pkg/config"
 	"github.com/openflagr/flagr/pkg/handler"

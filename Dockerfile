@@ -16,6 +16,7 @@ WORKDIR /go/src/github.com/openflagr/flagr
 
 RUN apk add --no-cache git make build-base
 ADD . .
+ENV CGO_ENABLED=0
 RUN make build
 
 FROM alpine

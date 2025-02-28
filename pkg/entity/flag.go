@@ -58,12 +58,12 @@ func PreloadSegmentsVariantsTags(db *gorm.DB) *gorm.DB {
 
 // Preload preloads the segments, variants and tags into flags
 func (f *Flag) Preload(db *gorm.DB) error {
-	return PreloadSegmentsVariantsTags(db).First(f, f.ID).Error
+	return PreloadSegmentsVariantsTags(db).First(f, f.Model.ID).Error
 }
 
 // PreloadTags preloads the tags into flags
 func (f *Flag) PreloadTags(db *gorm.DB) error {
-	return PreloadFlagTags(db).First(f, f.ID).Error
+	return PreloadFlagTags(db).First(f, f.Model.ID).Error
 }
 
 // PrepareEvaluation prepares the information for evaluation
@@ -77,7 +77,7 @@ func (f *Flag) PrepareEvaluation() error {
 		}
 	}
 	for i := range f.Variants {
-		f.FlagEvaluation.VariantsMap[f.Variants[i].ID] = &f.Variants[i]
+		f.FlagEvaluation.VariantsMap[f.Variants[i].Model.ID] = &f.Variants[i]
 	}
 	return nil
 }

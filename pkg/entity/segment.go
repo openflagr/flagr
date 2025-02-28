@@ -36,7 +36,7 @@ func PreloadConstraintsDistribution(db *gorm.DB) *gorm.DB {
 
 // Preload preloads the segment
 func (s *Segment) Preload(db *gorm.DB) error {
-	return PreloadConstraintsDistribution(db).First(s, s.ID).Error
+	return PreloadConstraintsDistribution(db).First(s, s.Model.ID).Error
 }
 
 // SegmentEvaluation is a struct that holds the necessary info for evaluation

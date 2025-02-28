@@ -11,11 +11,11 @@ all: deps gen build build_ui run
 rebuild: gen build
 
 test: verifiers
-	@CGO_CFLAGS="-Wno-nullability-completeness" go test -race -covermode=atomic -coverprofile=coverage.txt github.com/openflagr/flagr/pkg/...
+	@CGO_ENABLED=0 go test -race -covermode=atomic -coverprofile=coverage.txt github.com/openflagr/flagr/pkg/...
 
 .PHONY: benchmark
 benchmark:
-	@CGO_CFLAGS="-Wno-nullability-completeness" go test -race -benchmem -run=^$$ -bench . ./pkg/...
+	@CGO_ENABLED=0 go test -race -benchmem -run=^$$ -bench . ./pkg/...
 
 ci: test
 
@@ -26,7 +26,7 @@ vendor:
 
 build:
 	@echo "Building Flagr Server to $(PWD)/flagr ..."
-	@CGO_CFLAGS="-Wno-nullability-completeness" go build -o $(PWD)/flagr github.com/openflagr/flagr/swagger_gen/cmd/flagr-server
+	@CGO_ENABLED=0 go build -o $(PWD)/flagr github.com/openflagr/flagr/swagger_gen/cmd/flagr-server
 
 build_ui:
 	@echo "Building Flagr UI ..."
@@ -44,8 +44,8 @@ start:
 gen: api_docs swagger
 
 deps:
-	@CGO_CFLAGS="-Wno-nullability-completeness" go install github.com/go-swagger/go-swagger/cmd/swagger@v0.31.0
-	@CGO_CFLAGS="-Wno-nullability-completeness" go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.53.3
+	@CGO_ENABLED=0 go install github.com/go-swagger/go-swagger/cmd/swagger@v0.31.0
+	@CGO_ENABLED=0 go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.5
 
 serve_docs:
 	@npm install -g docsify-cli@4

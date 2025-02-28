@@ -228,8 +228,9 @@ func TestEvalFlag(t *testing.T) {
 			},
 		}
 		f.PrepareEvaluation()
-		ec := &EvalCache{}
-		ec.cache.Store(&cacheContainer{idCache: map[string]*entity.Flag{"100": &f}})
+		ec := &EvalCache{
+			cache: &cacheContainer{idCache: map[string]*entity.Flag{"100": &f}},
+		}
 		defer gostub.StubFunc(&GetEvalCache, ec).Reset()
 		result := EvalFlag(models.EvalContext{
 			EnableDebug: true,
@@ -254,8 +255,9 @@ func TestEvalFlag(t *testing.T) {
 		f.Segments[0].RolloutPercent = uint(0)
 
 		f.PrepareEvaluation()
-		ec := &EvalCache{}
-		ec.cache.Store(&cacheContainer{idCache: map[string]*entity.Flag{"100": &f}})
+		ec := &EvalCache{
+			cache: &cacheContainer{idCache: map[string]*entity.Flag{"100": &f}},
+		}
 		defer gostub.StubFunc(&GetEvalCache, ec).Reset()
 		result := EvalFlag(models.EvalContext{
 			EnableDebug:   true,
@@ -288,8 +290,9 @@ func TestEvalFlag(t *testing.T) {
 		}
 		f.PrepareEvaluation()
 
-		ec := &EvalCache{}
-		ec.cache.Store(&cacheContainer{idCache: map[string]*entity.Flag{"100": &f}})
+		ec := &EvalCache{
+			cache: &cacheContainer{idCache: map[string]*entity.Flag{"100": &f}},
+		}
 		defer gostub.StubFunc(&GetEvalCache, ec).Reset()
 		result := EvalFlag(models.EvalContext{
 			EnableDebug:   true,
@@ -305,8 +308,9 @@ func TestEvalFlag(t *testing.T) {
 	t.Run("test enabled=false", func(t *testing.T) {
 		f := entity.GenFixtureFlag()
 		f.Enabled = false
-		ec := &EvalCache{}
-		ec.cache.Store(&cacheContainer{idCache: map[string]*entity.Flag{"100": &f}})
+		ec := &EvalCache{
+			cache: &cacheContainer{idCache: map[string]*entity.Flag{"100": &f}},
+		}
 		defer gostub.StubFunc(&GetEvalCache, ec).Reset()
 		result := EvalFlag(models.EvalContext{
 			EnableDebug:   true,
@@ -323,8 +327,9 @@ func TestEvalFlag(t *testing.T) {
 		t.Run("empty entityType case", func(t *testing.T) {
 			f := entity.GenFixtureFlag()
 			f.EntityType = ""
-			ec := &EvalCache{}
-			ec.cache.Store(&cacheContainer{idCache: map[string]*entity.Flag{"100": &f}})
+			ec := &EvalCache{
+				cache: &cacheContainer{idCache: map[string]*entity.Flag{"100": &f}},
+			}
 			defer gostub.StubFunc(&GetEvalCache, ec).Reset()
 			result := EvalFlag(models.EvalContext{
 				EnableDebug:   true,
@@ -340,8 +345,9 @@ func TestEvalFlag(t *testing.T) {
 		t.Run("override case", func(t *testing.T) {
 			f := entity.GenFixtureFlag()
 			f.EntityType = "some_entity_type"
-			ec := &EvalCache{}
-			ec.cache.Store(&cacheContainer{idCache: map[string]*entity.Flag{"100": &f}})
+			ec := &EvalCache{
+				cache: &cacheContainer{idCache: map[string]*entity.Flag{"100": &f}},
+			}
 			defer gostub.StubFunc(&GetEvalCache, ec).Reset()
 			result := EvalFlag(models.EvalContext{
 				EnableDebug:   true,

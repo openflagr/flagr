@@ -23,7 +23,7 @@ type Variant struct {
 func (v *Variant) Validate() error {
 	ok, msg := util.IsSafeKey(v.Key)
 	if !ok {
-		return fmt.Errorf(msg)
+		return fmt.Errorf("%s", msg)
 	}
 	return nil
 }

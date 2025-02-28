@@ -20,7 +20,10 @@ type EvalCacheJSON struct {
 }
 
 func (ec *EvalCache) export() EvalCacheJSON {
-	idCache := ec.cache.Load().(*cacheContainer).idCache
+	ec.cacheMutex.RLock()
+	defer ec.cacheMutex.RUnlock()
+
+	idCache := ec.cache.idCache
 	fs := make([]entity.Flag, 0, len(idCache))
 	for _, f := range idCache {
 		ff := *f
