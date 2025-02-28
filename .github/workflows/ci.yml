@@ -23,8 +23,6 @@ jobs:
       - run: make ci
       - run: make benchmark
       - uses: codecov/codecov-action@v4
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
   ui_lint:
     runs-on: ubuntu-latest
     steps:
