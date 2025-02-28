@@ -2,10 +2,10 @@ package handler
 
 import (
 	"encoding/base64"
-	"encoding/json"
-	"github.com/brandur/simplebox"
 
-	jsoniter "github.com/json-iterator/go"
+	"encoding/json"
+
+	"github.com/brandur/simplebox"
 	"github.com/openflagr/flagr/pkg/util"
 	"github.com/openflagr/flagr/swagger_gen/models"
 )
@@ -57,8 +57,6 @@ type DataRecordFrame struct {
 
 // MarshalJSON defines the behavior of MarshalJSON for DataRecordFrame
 func (drf *DataRecordFrame) MarshalJSON() ([]byte, error) {
-	var json = jsoniter.ConfigFastest
-
 	payload, err := drf.evalResult.MarshalBinary()
 	if err != nil {
 		return nil, err
@@ -97,6 +95,5 @@ func (drf *DataRecordFrame) GetPartitionKey() string {
 
 // Output sets the paylaod using its input and returns the json marshal bytes
 func (drf *DataRecordFrame) Output() ([]byte, error) {
-	var json = jsoniter.ConfigFastest
 	return json.Marshal(drf)
 }

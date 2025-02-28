@@ -4,9 +4,9 @@ package restapi
 
 import (
 	"crypto/tls"
-	jsoniter "github.com/json-iterator/go"
-	"net/http"
+	"encoding/json"
 	"io"
+	"net/http"
 
 	"github.com/openflagr/flagr/pkg/config"
 	"github.com/openflagr/flagr/pkg/handler"
@@ -29,14 +29,12 @@ func configureAPI(api *operations.FlagrAPI) http.Handler {
 	api.ServeError = errors.ServeError
 
 	api.JSONConsumer = runtime.ConsumerFunc(func(reader io.Reader, data interface{}) error {
-		json := jsoniter.ConfigFastest
 		dec := json.NewDecoder(reader)
 		dec.UseNumber()
 		return dec.Decode(data)
 	})
 
 	api.JSONProducer = runtime.ProducerFunc(func(writer io.Writer, data interface{}) error {
-		json := jsoniter.ConfigFastest
 		enc := json.NewEncoder(writer)
 		enc.SetEscapeHTML(false)
 		return enc.Encode(data)

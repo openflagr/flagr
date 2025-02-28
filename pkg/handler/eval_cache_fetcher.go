@@ -2,10 +2,11 @@ package handler
 
 import (
 	"fmt"
-	jsoniter "github.com/json-iterator/go"
 	"io"
 	"net/http"
 	"os"
+
+	"encoding/json"
 
 	"github.com/openflagr/flagr/pkg/config"
 	"github.com/openflagr/flagr/pkg/entity"
@@ -19,7 +20,10 @@ type EvalCacheJSON struct {
 }
 
 func (ec *EvalCache) export() EvalCacheJSON {
-	idCache := ec.cache.Load().(*cacheContainer).idCache
+	ec.cacheMutex.RLock()
+	defer ec.cacheMutex.RUnlock()
+
+	idCache := ec.cache.idCache
 	fs := make([]entity.Flag, 0, len(idCache))
 	for _, f := range idCache {
 		ff := *f
@@ -97,8 +101,6 @@ type jsonFileFetcher struct {
 }
 
 func (ff *jsonFileFetcher) fetch() ([]entity.Flag, error) {
-	var json = jsoniter.ConfigFastest
-
 	b, err := os.ReadFile(ff.filePath)
 	if err != nil {
 		return nil, err
@@ -116,8 +118,6 @@ type jsonHTTPFetcher struct {
 }
 
 func (hf *jsonHTTPFetcher) fetch() ([]entity.Flag, error) {
-	var json = jsoniter.ConfigFastest
-
 	client := http.Client{Timeout: config.Config.EvalCacheRefreshTimeout}
 	res, err := client.Get(hf.url)
 	if err != nil {

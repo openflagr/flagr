@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -31,7 +30,7 @@ func TestJSONHTTPFetcher(t *testing.T) {
 	t.Run("happy code path", func(t *testing.T) {
 		h := func(w http.ResponseWriter, r *http.Request) {
 			b, _ := os.ReadFile("./testdata/sample_eval_cache.json")
-			io.WriteString(w, string(b))
+			w.Write(b)
 		}
 
 		server := httptest.NewServer(http.HandlerFunc(h))

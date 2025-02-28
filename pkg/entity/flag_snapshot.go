@@ -2,7 +2,9 @@ package entity
 
 import (
 	"fmt"
-	jsoniter "github.com/json-iterator/go"
+
+	"encoding/json"
+
 	"github.com/openflagr/flagr/pkg/config"
 	"github.com/openflagr/flagr/pkg/util"
 	"github.com/sirupsen/logrus"
@@ -20,8 +22,6 @@ type FlagSnapshot struct {
 
 // SaveFlagSnapshot saves the Flag Snapshot
 func SaveFlagSnapshot(db *gorm.DB, flagID uint, updatedBy string) {
-	var json = jsoniter.ConfigFastest
-
 	tx := db.Begin()
 	f := &Flag{}
 	if err := tx.First(f, flagID).Error; err != nil {
@@ -42,24 +42,24 @@ func SaveFlagSnapshot(db *gorm.DB, flagID uint, updatedBy string) {
 		return
 	}
 
-	fs := FlagSnapshot{FlagID: f.ID, UpdatedBy: updatedBy, Flag: b}
+	fs := FlagSnapshot{FlagID: f.Model.ID, UpdatedBy: updatedBy, Flag: b}
 	if err := tx.Create(&fs).Error; err != nil {
 		logrus.WithFields(logrus.Fields{
 			"err":    err,
-			"flagID": f.ID,
+			"flagID": f.Model.ID,
 		}).Error("failed to save FlagSnapshot")
 		tx.Rollback()
 		return
 	}
 
 	f.UpdatedBy = updatedBy
-	f.SnapshotID = fs.ID
+	f.SnapshotID = fs.Model.ID
 
 	if err := tx.Save(f).Error; err != nil {
 		logrus.WithFields(logrus.Fields{
 			"err":            err,
-			"flagID":         f.ID,
-			"flagSnapshotID": fs.ID,
+			"flagID":         f.Model.ID,
+			"flagSnapshotID": fs.Model.ID,
 		}).Error("failed to save Flag's UpdatedBy and SnapshotID")
 		tx.Rollback()
 		return

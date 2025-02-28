@@ -2,7 +2,6 @@ package handler
 
 import (
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/openflagr/flagr/swagger_gen/models"
@@ -28,7 +27,8 @@ type cacheContainer struct {
 
 // EvalCache is the in-memory cache just for evaluation
 type EvalCache struct {
-	cache           atomic.Value
+	cache           *cacheContainer
+	cacheMutex      sync.RWMutex
 	refreshTimeout  time.Duration
 	refreshInterval time.Duration
 }
@@ -37,6 +37,7 @@ type EvalCache struct {
 var GetEvalCache = func() *EvalCache {
 	singletonEvalCacheOnce.Do(func() {
 		ec := &EvalCache{
+			cache:           &cacheContainer{},
 			refreshTimeout:  config.Config.EvalCacheRefreshTimeout,
 			refreshInterval: config.Config.EvalCacheRefreshInterval,
 		}
@@ -82,10 +83,12 @@ func (ec *EvalCache) GetByTags(tags []string, operator *string) []*entity.Flag {
 
 func (ec *EvalCache) getByTagsANY(tags []string) map[uint]*entity.Flag {
 	results := map[uint]*entity.Flag{}
-	cache := ec.cache.Load().(*cacheContainer)
+
+	ec.cacheMutex.RLock()
+	defer ec.cacheMutex.RUnlock()
 
 	for _, t := range tags {
-		fSet, ok := cache.tagCache[t]
+		fSet, ok := ec.cache.tagCache[t]
 		if ok {
 			for fID, f := range fSet {
 				results[fID] = f
@@ -97,10 +100,12 @@ func (ec *EvalCache) getByTagsANY(tags []string) map[uint]*entity.Flag {
 
 func (ec *EvalCache) getByTagsALL(tags []string) map[uint]*entity.Flag {
 	results := map[uint]*entity.Flag{}
-	cache := ec.cache.Load().(*cacheContainer)
+
+	ec.cacheMutex.RLock()
+	defer ec.cacheMutex.RUnlock()
 
 	for i, t := range tags {
-		fSet, ok := cache.tagCache[t]
+		fSet, ok := ec.cache.tagCache[t]
 		if !ok {
 			// no flags
 			return map[uint]*entity.Flag{}
@@ -131,10 +136,13 @@ func (ec *EvalCache) getByTagsALL(tags []string) map[uint]*entity.Flag {
 // GetByFlagKeyOrID gets the flag by Key or ID
 func (ec *EvalCache) GetByFlagKeyOrID(keyOrID interface{}) *entity.Flag {
 	s := util.SafeString(keyOrID)
-	cache := ec.cache.Load().(*cacheContainer)
-	f, ok := cache.idCache[s]
+
+	ec.cacheMutex.RLock()
+	defer ec.cacheMutex.RUnlock()
+
+	f, ok := ec.cache.idCache[s]
 	if !ok {
-		f = cache.keyCache[s]
+		f = ec.cache.keyCache[s]
 	}
 	return f
 }
@@ -150,11 +158,14 @@ func (ec *EvalCache) reloadMapCache() error {
 			return nil, err
 		}
 
-		ec.cache.Store(&cacheContainer{
+		ec.cacheMutex.Lock()
+		ec.cache = &cacheContainer{
 			idCache:  idCache,
 			keyCache: keyCache,
 			tagCache: tagCache,
-		})
+		}
+		ec.cacheMutex.Unlock()
+
 		return nil, err
 	})
 

@@ -24,14 +24,14 @@
     "xss": "^1.0.9"
   },
   "devDependencies": {
-    "@vue/cli-service": "^4",
-    "@vue/cli-plugin-eslint": "^4",
-    "@vue/cli-plugin-babel": "^4",
+    "@vue/cli-plugin-babel": "^5.0.8",
+    "@vue/cli-plugin-eslint": "^5.0.8",
+    "@vue/cli-service": "^5.0.8",
     "babel-eslint": "^10.0.3",
-    "eslint": "^6",
-    "eslint-plugin-vue": "^6",
+    "eslint": "^7.32.0",
+    "eslint-plugin-vue": "^7.20.0",
     "less": "^3.11.3",
-    "less-loader": "^5.0.0",
+    "less-loader": "^8.1.1",
     "lodash": "^4.17.19",
     "minimist": ">=1.2.2",
     "vue-template-compiler": "^2.6.10"
