@@ -863,6 +863,8 @@ export default {
       );
     },
     createConstraint(segment) {
+      segment.newConstraint.property = segment.newConstraint.property.trim();
+      segment.newConstraint.value = segment.newConstraint.value.trim();
       Axios.post(
         `${API_URL}/flags/${this.flagId}/segments/${segment.id}/constraints`,
         segment.newConstraint
@@ -874,6 +876,8 @@ export default {
       }, handleErr.bind(this));
     },
     putConstraint(segment, constraint) {
+      constraint.property = constraint.property.trim();
+      constraint.value = constraint.value.trim();
       Axios.put(
         `${API_URL}/flags/${this.flagId}/segments/${segment.id}/constraints/${constraint.id}`,
         constraint
