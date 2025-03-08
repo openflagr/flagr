@@ -758,7 +758,7 @@ export default {
   methods: {
     onJsonChange(variant, value) {
       this.flag.variants.forEach(variantTemp => {
-        if(variantTemp.id = variant){
+        if(variantTemp.id == variant){
           variantTemp.attachment = value
         }
       });
