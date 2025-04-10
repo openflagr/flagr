@@ -76,7 +76,7 @@
         </el-breadcrumb>
 
         <div v-if="loaded && flag">
-          <el-tabs>
+          <el-tabs @tab-click="handleHistoryTabClick">
             <el-tab-pane label="Config">
               <el-card class="flag-config-card">
                 <div slot="header" class="el-card-header">
@@ -547,7 +547,7 @@
             </el-tab-pane>
 
             <el-tab-pane label="History">
-              <flag-history :flag-id="parseInt($route.params.flagId, 10)"></flag-history>
+              <flag-history v-if="historyLoaded" :flag-id="parseInt($route.params.flagId, 10)"></flag-history>
             </el-tab-pane>
           </el-tabs>
         </div>
@@ -656,7 +656,8 @@ export default {
       newDistributions: {},
       operatorOptions: operators,
       operatorValueToLabelMap: OPERATOR_VALUE_TO_LABEL_MAP,
-      showMdEditor: false
+      showMdEditor: false,
+      historyLoaded: false
     };
   },
   computed: {
@@ -980,6 +981,11 @@ export default {
     },
     toggleShowMdEditor() {
       this.showMdEditor = !this.showMdEditor;
+    },
+    handleHistoryTabClick(tab) {
+      if (tab.label == "History" && !this.historyLoaded) {
+        this.historyLoaded = true;
+      }
     }
   },
   mounted() {
