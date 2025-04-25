@@ -948,6 +948,8 @@ export default {
       );
     },
     createConstraint(segment) {
+      segment.newConstraint.property = segment.newConstraint.property.trim();
+      segment.newConstraint.value = segment.newConstraint.value.trim();
       getAxiosFlagrInstance().post(
         `/flags/${this.flagId}/segments/${segment.id}/constraints`,
         segment.newConstraint
@@ -959,6 +961,8 @@ export default {
       }, handleErr.bind(this));
     },
     putConstraint(segment, constraint) {
+      constraint.property = constraint.property.trim();
+      constraint.value = constraint.value.trim();
       getAxiosFlagrInstance().put(
         `/flags/${this.flagId}/segments/${segment.id}/constraints/${constraint.id}`,
         constraint
