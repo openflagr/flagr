@@ -1460,6 +1460,7 @@ func init() {
         },
         "value": {
           "type": "string",
+          "maxLength": 65535,
           "minLength": 1
         }
       }
@@ -1482,6 +1483,7 @@ func init() {
         },
         "value": {
           "type": "string",
+          "maxLength": 65535,
           "minLength": 1
         }
       }
@@ -3587,6 +3589,7 @@ func init() {
         },
         "value": {
           "type": "string",
+          "maxLength": 65535,
           "minLength": 1
         }
       }
@@ -3609,6 +3612,7 @@ func init() {
         },
         "value": {
           "type": "string",
+          "maxLength": 65535,
           "minLength": 1
         }
       }
