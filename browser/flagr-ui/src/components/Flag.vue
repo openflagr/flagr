@@ -771,10 +771,17 @@ export default {
       }, handleErr.bind(this));
     },
     putFlag(flag) {
+      const flagKey = flag.key ? flag.key.trim() : "";
+
+      if (!flagKey) {
+        this.$message.error("Flag key cannot be empty");
+        return;
+      }
+
       getAxiosFlagrInstance().put(`/flags/${this.flagId}`, {
         description: flag.description,
         dataRecordsEnabled: flag.dataRecordsEnabled,
-        key: flag.key || "",
+        key: flagKey,
         entityType: flag.entityType || "",
         notes: flag.notes || ""
       }).then(() => {
