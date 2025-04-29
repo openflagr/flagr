@@ -28,4 +28,3 @@ _data
 coverage.txt
 /vendor
 .history
-.golangci.yml
