@@ -1276,6 +1276,7 @@ definitions:
       value:
         type: string
         minLength: 1
+        maxLength: 65535
   createConstraintRequest:
     type: object
     required:
@@ -1292,6 +1293,7 @@ definitions:
       value:
         type: string
         minLength: 1
+        maxLength: 65535
   distribution:
     type: object
     required:

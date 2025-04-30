@@ -771,10 +771,17 @@ export default {
       }, handleErr.bind(this));
     },
     putFlag(flag) {
+      const flagKey = flag.key ? flag.key.trim() : "";
+
+      if (!flagKey) {
+        this.$message.error("Flag key cannot be empty");
+        return;
+      }
+
       getAxiosFlagrInstance().put(`/flags/${this.flagId}`, {
         description: flag.description,
         dataRecordsEnabled: flag.dataRecordsEnabled,
-        key: flag.key || "",
+        key: flagKey,
         entityType: flag.entityType || "",
         notes: flag.notes || ""
       }).then(() => {
@@ -948,6 +955,27 @@ export default {
       );
     },
     createConstraint(segment) {
+      // Trim inputs
+      segment.newConstraint.property = segment.newConstraint.property.trim();
+      segment.newConstraint.value = segment.newConstraint.value.trim();
+
+      // Validate property
+      if (!segment.newConstraint.property) {
+        this.$message.error("Constraint property cannot be empty");
+        return;
+      }
+
+      // Validate value
+      if (!segment.newConstraint.value) {
+        this.$message.error("Constraint value cannot be empty");
+        return;
+      }
+
+      if (segment.newConstraint.value.length > 65535) {
+        this.$message.error("Constraint value cannot exceed 65535 characters");
+        return;
+      }
+
       getAxiosFlagrInstance().post(
         `/flags/${this.flagId}/segments/${segment.id}/constraints`,
         segment.newConstraint
@@ -959,6 +987,26 @@ export default {
       }, handleErr.bind(this));
     },
     putConstraint(segment, constraint) {
+      // Trim inputs
+      constraint.property = constraint.property.trim();
+      constraint.value = constraint.value.trim();
+
+      // Validate property
+      if (!constraint.property) {
+        this.$message.error("Constraint property cannot be empty");
+        return;
+      }
+
+      // Validate value
+      if (!constraint.value) {
+        this.$message.error("Constraint value cannot be empty");
+        return;
+      }
+
+      if (constraint.value.length > 65535) {
+        this.$message.error("Constraint value cannot exceed 65535 characters");
+        return;
+      }
       getAxiosFlagrInstance().put(
         `/flags/${this.flagId}/segments/${segment.id}/constraints/${constraint.id}`,
         constraint

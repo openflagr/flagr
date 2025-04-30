@@ -38,6 +38,7 @@ type Constraint struct {
 
 	// value
 	// Required: true
+	// Max Length: 65535
 	// Min Length: 1
 	Value *string `json:"value"`
 }
@@ -177,6 +178,10 @@ func (m *Constraint) validateValue(formats strfmt.Registry) error {
 	}
 
 	if err := validate.MinLength("value", "body", *m.Value, 1); err != nil {
+		return err
+	}
+
+	if err := validate.MaxLength("value", "body", *m.Value, 65535); err != nil {
 		return err
 	}
 
