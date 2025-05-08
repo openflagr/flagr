@@ -32,6 +32,7 @@ type EvalCache struct {
 	cache           atomic.Value
 	refreshTimeout  time.Duration
 	refreshInterval time.Duration
+	isInitialized   atomic.Bool // Track if cache loaded successfully
 }
 
 // GetEvalCache gets the EvalCache
@@ -41,6 +42,7 @@ var GetEvalCache = func() *EvalCache {
 			refreshTimeout:  config.Config.EvalCacheRefreshTimeout,
 			refreshInterval: config.Config.EvalCacheRefreshInterval,
 		}
+		ec.isInitialized.Store(true)
 		singletonEvalCache = ec
 	})
 	return singletonEvalCache
@@ -48,21 +50,39 @@ var GetEvalCache = func() *EvalCache {
 
 // Start starts the polling of EvalCache
 func (ec *EvalCache) Start() {
+	// Initial load attempt
 	err := ec.reloadMapCache()
 	if err != nil {
-		panic(err)
+		// Log error instead of panic
+		logrus.WithError(err).Error("initial cache load failed - feature flag evaluations will be disabled")
+		ec.isInitialized.Store(false)
 	}
+
+	// Background refresh
 	go func() {
 		for range time.Tick(ec.refreshInterval) {
 			err := ec.reloadMapCache()
 			if err != nil {
 				logrus.WithField("err", err).Error("reload evaluation cache error")
+				// Don't update isInitialized here - only first load matters
+			} else {
+				// Enable evaluations if cache load succeeds
+				wasInitialized := ec.isInitialized.Load()
+				ec.isInitialized.Store(true)
+				if !wasInitialized {
+					logrus.Info("cache successfully reloaded - feature flag evaluations are now enabled")
+				}
 			}
 		}
 	}()
 }
 
 func (ec *EvalCache) GetByTags(tags []string, operator *string) []*entity.Flag {
+	if !ec.isInitialized.Load() {
+		logrus.Error("cache not initialized - returning empty list for flag evaluation")
+		return []*entity.Flag{}
+	}
+
 	var results map[uint]*entity.Flag
 
 	if operator == nil || *operator == models.EvaluationBatchRequestFlagTagsOperatorANY {
@@ -131,8 +151,24 @@ func (ec *EvalCache) getByTagsALL(tags []string) map[uint]*entity.Flag {
 
 // GetByFlagKeyOrID gets the flag by Key or ID
 func (ec *EvalCache) GetByFlagKeyOrID(keyOrID interface{}) *entity.Flag {
+	if !ec.isInitialized.Load() {
+		logrus.Error("cache not initialized - returning nil for flag evaluation")
+		return nil
+	}
+
+	cacheVal := ec.cache.Load()
+	if cacheVal == nil {
+		logrus.Error("cache is nil - returning nil for flag evaluation")
+		return nil
+	}
+
+	cache, ok := cacheVal.(*cacheContainer)
+	if !ok {
+		logrus.Error("invalid cache type - returning nil for flag evaluation")
+		return nil
+	}
+
 	s := util.SafeString(keyOrID)
-	cache := ec.cache.Load().(*cacheContainer)
 	f, ok := cache.idCache[s]
 	if !ok {
 		f = cache.keyCache[s]
