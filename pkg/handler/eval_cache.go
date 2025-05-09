@@ -64,11 +64,11 @@ func (ec *EvalCache) Start() {
 			err := ec.reloadMapCache()
 			if err != nil {
 				logrus.WithField("err", err).Error("reload evaluation cache error")
-				// Don't update isInitialized here - only first load matters
 			} else {
 				// Enable evaluations if cache load succeeds
 				wasInitialized := ec.isInitialized.Load()
 				ec.isInitialized.Store(true)
+
 				if !wasInitialized {
 					logrus.Info("cache successfully reloaded - feature flag evaluations are now enabled")
 				}
