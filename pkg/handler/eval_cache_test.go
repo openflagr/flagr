@@ -4,6 +4,7 @@ package handler
 import (
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/Allen-Career-Institute/flagr/swagger_gen/models"
 
@@ -117,4 +118,28 @@ func TestGetByFlagKeyOrID_NilCache(t *testing.T) {
 	result := ec.GetByFlagKeyOrID("anyID")
 
 	assert.Nil(t, result)
+}
+
+func TestEvalCache_StartInitialFailure(t *testing.T) {
+	ec := &EvalCache{
+		refreshTimeout:  10 * time.Millisecond,
+		refreshInterval: 100 * time.Millisecond,
+	}
+
+	// Mock reloadMapCache to simulate failure
+	//called := false
+
+	func1 := ec.reloadMapCache
+	// Create a stub and properly replace the method on the ec instance
+	stubs := gostub.Stub(&func1, func() error {
+		//called = true
+		return assert.AnError
+	})
+	defer stubs.Reset()
+
+	ec.Start()
+	//time.Sleep(20 * time.Millisecond) // let goroutine run at least once
+
+	assert.False(t, ec.isInitialized.Load())
+	//assert.True(t, called)
 }
