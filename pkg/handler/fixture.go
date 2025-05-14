@@ -20,6 +20,7 @@ func GenFixtureEvalCache() *EvalCache {
 		keyCache: map[string]*entity.Flag{f.Key: &f},
 		tagCache: tagCache,
 	})
+	ec.isInitialized.Store(true)
 
 	return ec
 }
