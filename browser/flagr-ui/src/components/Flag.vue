@@ -192,6 +192,15 @@
                     </el-col>
                   </el-row>
                   <el-row style="margin: 10px;">
+                    <el-col :span="24">
+                      <el-button
+                        type="primary"
+                        size="small"
+                        @click="$router.push('/webhooks')"
+                      >Webhooks</el-button>
+                    </el-col>
+                  </el-row>
+                  <el-row style="margin: 10px;">
                     <h5>
                       <span style="margin-right: 10px;">Flag Notes</span>
                       <el-button round size="mini" @click="toggleShowMdEditor">

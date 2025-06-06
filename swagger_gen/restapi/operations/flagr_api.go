@@ -28,6 +28,7 @@ import (
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/segment"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/tag"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/variant"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/webhook"
 )
 
 // NewFlagrAPI creates a new Flagr instance
@@ -59,6 +60,9 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		FlagCreateFlagHandler: flag.CreateFlagHandlerFunc(func(params flag.CreateFlagParams) middleware.Responder {
 			return middleware.NotImplemented("operation flag.CreateFlag has not yet been implemented")
 		}),
+		WebhookCreateGlobalWebhookHandler: webhook.CreateGlobalWebhookHandlerFunc(func(params webhook.CreateGlobalWebhookParams) middleware.Responder {
+			return middleware.NotImplemented("operation webhook.CreateGlobalWebhook has not yet been implemented")
+		}),
 		SegmentCreateSegmentHandler: segment.CreateSegmentHandlerFunc(func(params segment.CreateSegmentParams) middleware.Responder {
 			return middleware.NotImplemented("operation segment.CreateSegment has not yet been implemented")
 		}),
@@ -73,6 +77,9 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		}),
 		FlagDeleteFlagHandler: flag.DeleteFlagHandlerFunc(func(params flag.DeleteFlagParams) middleware.Responder {
 			return middleware.NotImplemented("operation flag.DeleteFlag has not yet been implemented")
+		}),
+		WebhookDeleteGlobalWebhookHandler: webhook.DeleteGlobalWebhookHandlerFunc(func(params webhook.DeleteGlobalWebhookParams) middleware.Responder {
+			return middleware.NotImplemented("operation webhook.DeleteGlobalWebhook has not yet been implemented")
 		}),
 		SegmentDeleteSegmentHandler: segment.DeleteSegmentHandlerFunc(func(params segment.DeleteSegmentParams) middleware.Responder {
 			return middleware.NotImplemented("operation segment.DeleteSegment has not yet been implemented")
@@ -94,6 +101,9 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		}),
 		FlagFindFlagsHandler: flag.FindFlagsHandlerFunc(func(params flag.FindFlagsParams) middleware.Responder {
 			return middleware.NotImplemented("operation flag.FindFlags has not yet been implemented")
+		}),
+		WebhookFindGlobalWebhooksHandler: webhook.FindGlobalWebhooksHandlerFunc(func(params webhook.FindGlobalWebhooksParams) middleware.Responder {
+			return middleware.NotImplemented("operation webhook.FindGlobalWebhooks has not yet been implemented")
 		}),
 		SegmentFindSegmentsHandler: segment.FindSegmentsHandlerFunc(func(params segment.FindSegmentsParams) middleware.Responder {
 			return middleware.NotImplemented("operation segment.FindSegments has not yet been implemented")
@@ -136,6 +146,9 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		}),
 		FlagPutFlagHandler: flag.PutFlagHandlerFunc(func(params flag.PutFlagParams) middleware.Responder {
 			return middleware.NotImplemented("operation flag.PutFlag has not yet been implemented")
+		}),
+		WebhookPutGlobalWebhookHandler: webhook.PutGlobalWebhookHandlerFunc(func(params webhook.PutGlobalWebhookParams) middleware.Responder {
+			return middleware.NotImplemented("operation webhook.PutGlobalWebhook has not yet been implemented")
 		}),
 		SegmentPutSegmentHandler: segment.PutSegmentHandlerFunc(func(params segment.PutSegmentParams) middleware.Responder {
 			return middleware.NotImplemented("operation segment.PutSegment has not yet been implemented")
@@ -196,6 +209,8 @@ type FlagrAPI struct {
 	ConstraintCreateConstraintHandler constraint.CreateConstraintHandler
 	// FlagCreateFlagHandler sets the operation handler for the create flag operation
 	FlagCreateFlagHandler flag.CreateFlagHandler
+	// WebhookCreateGlobalWebhookHandler sets the operation handler for the create global webhook operation
+	WebhookCreateGlobalWebhookHandler webhook.CreateGlobalWebhookHandler
 	// SegmentCreateSegmentHandler sets the operation handler for the create segment operation
 	SegmentCreateSegmentHandler segment.CreateSegmentHandler
 	// TagCreateTagHandler sets the operation handler for the create tag operation
@@ -206,6 +221,8 @@ type FlagrAPI struct {
 	ConstraintDeleteConstraintHandler constraint.DeleteConstraintHandler
 	// FlagDeleteFlagHandler sets the operation handler for the delete flag operation
 	FlagDeleteFlagHandler flag.DeleteFlagHandler
+	// WebhookDeleteGlobalWebhookHandler sets the operation handler for the delete global webhook operation
+	WebhookDeleteGlobalWebhookHandler webhook.DeleteGlobalWebhookHandler
 	// SegmentDeleteSegmentHandler sets the operation handler for the delete segment operation
 	SegmentDeleteSegmentHandler segment.DeleteSegmentHandler
 	// TagDeleteTagHandler sets the operation handler for the delete tag operation
@@ -220,6 +237,8 @@ type FlagrAPI struct {
 	DistributionFindDistributionsHandler distribution.FindDistributionsHandler
 	// FlagFindFlagsHandler sets the operation handler for the find flags operation
 	FlagFindFlagsHandler flag.FindFlagsHandler
+	// WebhookFindGlobalWebhooksHandler sets the operation handler for the find global webhooks operation
+	WebhookFindGlobalWebhooksHandler webhook.FindGlobalWebhooksHandler
 	// SegmentFindSegmentsHandler sets the operation handler for the find segments operation
 	SegmentFindSegmentsHandler segment.FindSegmentsHandler
 	// TagFindTagsHandler sets the operation handler for the find tags operation
@@ -248,6 +267,8 @@ type FlagrAPI struct {
 	DistributionPutDistributionsHandler distribution.PutDistributionsHandler
 	// FlagPutFlagHandler sets the operation handler for the put flag operation
 	FlagPutFlagHandler flag.PutFlagHandler
+	// WebhookPutGlobalWebhookHandler sets the operation handler for the put global webhook operation
+	WebhookPutGlobalWebhookHandler webhook.PutGlobalWebhookHandler
 	// SegmentPutSegmentHandler sets the operation handler for the put segment operation
 	SegmentPutSegmentHandler segment.PutSegmentHandler
 	// SegmentPutSegmentsReorderHandler sets the operation handler for the put segments reorder operation
@@ -344,6 +365,9 @@ func (o *FlagrAPI) Validate() error {
 	if o.FlagCreateFlagHandler == nil {
 		unregistered = append(unregistered, "flag.CreateFlagHandler")
 	}
+	if o.WebhookCreateGlobalWebhookHandler == nil {
+		unregistered = append(unregistered, "webhook.CreateGlobalWebhookHandler")
+	}
 	if o.SegmentCreateSegmentHandler == nil {
 		unregistered = append(unregistered, "segment.CreateSegmentHandler")
 	}
@@ -358,6 +382,9 @@ func (o *FlagrAPI) Validate() error {
 	}
 	if o.FlagDeleteFlagHandler == nil {
 		unregistered = append(unregistered, "flag.DeleteFlagHandler")
+	}
+	if o.WebhookDeleteGlobalWebhookHandler == nil {
+		unregistered = append(unregistered, "webhook.DeleteGlobalWebhookHandler")
 	}
 	if o.SegmentDeleteSegmentHandler == nil {
 		unregistered = append(unregistered, "segment.DeleteSegmentHandler")
@@ -379,6 +406,9 @@ func (o *FlagrAPI) Validate() error {
 	}
 	if o.FlagFindFlagsHandler == nil {
 		unregistered = append(unregistered, "flag.FindFlagsHandler")
+	}
+	if o.WebhookFindGlobalWebhooksHandler == nil {
+		unregistered = append(unregistered, "webhook.FindGlobalWebhooksHandler")
 	}
 	if o.SegmentFindSegmentsHandler == nil {
 		unregistered = append(unregistered, "segment.FindSegmentsHandler")
@@ -421,6 +451,9 @@ func (o *FlagrAPI) Validate() error {
 	}
 	if o.FlagPutFlagHandler == nil {
 		unregistered = append(unregistered, "flag.PutFlagHandler")
+	}
+	if o.WebhookPutGlobalWebhookHandler == nil {
+		unregistered = append(unregistered, "webhook.PutGlobalWebhookHandler")
 	}
 	if o.SegmentPutSegmentHandler == nil {
 		unregistered = append(unregistered, "segment.PutSegmentHandler")
@@ -538,6 +571,10 @@ func (o *FlagrAPI) initHandlerCache() {
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
+	o.handlers["POST"]["/webhooks"] = webhook.NewCreateGlobalWebhook(o.context, o.WebhookCreateGlobalWebhookHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
 	o.handlers["POST"]["/flags/{flagID}/segments"] = segment.NewCreateSegment(o.context, o.SegmentCreateSegmentHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
@@ -555,6 +592,10 @@ func (o *FlagrAPI) initHandlerCache() {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
 	o.handlers["DELETE"]["/flags/{flagID}"] = flag.NewDeleteFlag(o.context, o.FlagDeleteFlagHandler)
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/webhooks/{webhookID}"] = webhook.NewDeleteGlobalWebhook(o.context, o.WebhookDeleteGlobalWebhookHandler)
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
@@ -583,6 +624,10 @@ func (o *FlagrAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/flags"] = flag.NewFindFlags(o.context, o.FlagFindFlagsHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/webhooks"] = webhook.NewFindGlobalWebhooks(o.context, o.WebhookFindGlobalWebhooksHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
@@ -639,6 +684,10 @@ func (o *FlagrAPI) initHandlerCache() {
 		o.handlers["PUT"] = make(map[string]http.Handler)
 	}
 	o.handlers["PUT"]["/flags/{flagID}"] = flag.NewPutFlag(o.context, o.FlagPutFlagHandler)
+	if o.handlers["PUT"] == nil {
+		o.handlers["PUT"] = make(map[string]http.Handler)
+	}
+	o.handlers["PUT"]["/webhooks/{webhookID}"] = webhook.NewPutGlobalWebhook(o.context, o.WebhookPutGlobalWebhookHandler)
 	if o.handlers["PUT"] == nil {
 		o.handlers["PUT"] = make(map[string]http.Handler)
 	}
