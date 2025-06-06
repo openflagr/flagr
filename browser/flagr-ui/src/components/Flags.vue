@@ -6,6 +6,9 @@
           <el-breadcrumb-item>Home page</el-breadcrumb-item>
         </el-breadcrumb>
 
+        <div class="header-actions" v-if="loaded">
+        </div>
+
         <spinner v-if="!loaded" />
 
         <div v-if="loaded">
@@ -289,5 +292,11 @@ export default {
   .deleted-flags-table {
     margin-top: 2rem;
   }
+}
+
+.header-actions {
+  margin: 20px 0;
+  display: flex;
+  justify-content: flex-end;
 }
 </style>

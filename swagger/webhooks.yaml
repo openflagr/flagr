@@ -1,0 +1,84 @@
+get:
+  tags:
+    - webhook
+  operationId: findGlobalWebhooks
+  responses:
+    200:
+      description: all webhooks
+      schema:
+        type: array
+        items:
+          $ref: "#/definitions/webhook"
+    default:
+      description: generic error response
+      schema:
+        $ref: "#/definitions/error"
+
+post:
+  tags:
+    - webhook
+  operationId: createGlobalWebhook
+  parameters:
+    - in: body
+      name: body
+      description: create a webhook
+      required: true
+      schema:
+        $ref: "#/definitions/createWebhookRequest"
+  responses:
+    200:
+      description: webhook just created
+      schema:
+        $ref: "#/definitions/webhook"
+    default:
+      description: generic error response
+      schema:
+        $ref: "#/definitions/error"
+
+put:
+  tags:
+    - webhook
+  operationId: putGlobalWebhook
+  parameters:
+    - in: path
+      name: webhookID
+      description: numeric ID of the webhook
+      required: true
+      type: integer
+      format: int64
+      minimum: 1
+    - in: body
+      name: body
+      description: update a webhook
+      required: true
+      schema:
+        $ref: "#/definitions/putWebhookRequest"
+  responses:
+    200:
+      description: webhook just updated
+      schema:
+        $ref: "#/definitions/webhook"
+    default:
+      description: generic error response
+      schema:
+        $ref: "#/definitions/error"
+
+delete:
+  tags:
+    - webhook
+  operationId: deleteGlobalWebhook
+  parameters:
+    - in: path
+      name: webhookID
+      description: numeric ID of the webhook
+      required: true
+      type: integer
+      format: int64
+      minimum: 1
+  responses:
+    200:
+      description: webhook just deleted
+    default:
+      description: generic error response
+      schema:
+        $ref: "#/definitions/error" 

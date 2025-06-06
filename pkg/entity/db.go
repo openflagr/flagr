@@ -32,6 +32,8 @@ var AutoMigrateTables = []interface{}{
 	Variant{},
 	Tag{},
 	FlagEntityType{},
+	Webhook{},
+	WebhookEvent{},
 }
 
 func connectDB() (db *gorm.DB, err error) {

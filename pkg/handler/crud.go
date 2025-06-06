@@ -3,20 +3,26 @@ package handler
 import (
 	"errors"
 	"fmt"
+	"net/http"
+	"reflect"
 	"strings"
 
 	"github.com/openflagr/flagr/pkg/entity"
 	"github.com/openflagr/flagr/pkg/mapper/entity_restapi/e2r"
 	"github.com/openflagr/flagr/pkg/mapper/entity_restapi/r2e"
 	"github.com/openflagr/flagr/pkg/util"
+	"github.com/openflagr/flagr/pkg/webhook"
+	"github.com/openflagr/flagr/swagger_gen/models"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/constraint"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/distribution"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/flag"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/segment"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/tag"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/variant"
+	webhookops "github.com/openflagr/flagr/swagger_gen/restapi/operations/webhook"
 
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -62,14 +68,24 @@ type CRUD interface {
 	FindVariants(variant.FindVariantsParams) middleware.Responder
 	PutVariant(variant.PutVariantParams) middleware.Responder
 	DeleteVariant(variant.DeleteVariantParams) middleware.Responder
+
+	// Global Webhooks
+	CreateGlobalWebhook(params webhookops.CreateGlobalWebhookParams) middleware.Responder
+	FindGlobalWebhooks(params webhookops.FindGlobalWebhooksParams) middleware.Responder
+	PutGlobalWebhook(params webhookops.PutGlobalWebhookParams) middleware.Responder
+	DeleteGlobalWebhook(params webhookops.DeleteGlobalWebhookParams) middleware.Responder
 }
 
 // NewCRUD creates a new CRUD instance
 func NewCRUD() CRUD {
-	return &crud{}
+	return &crud{
+		webhookService: webhook.NewService(),
+	}
 }
 
-type crud struct{}
+type crud struct {
+	webhookService *webhook.Service
+}
 
 var (
 	e2rMapFlag          = e2r.MapFlag
@@ -227,42 +243,27 @@ func (c *crud) GetFlagEntityTypes(params flag.GetFlagEntityTypesParams) middlewa
 
 func (c *crud) PutFlag(params flag.PutFlagParams) middleware.Responder {
 	f := &entity.Flag{}
-	tx := getDB()
-
-	if err := tx.First(f, params.FlagID).Error; err != nil {
+	if err := getDB().First(f, params.FlagID).Error; err != nil {
 		return flag.NewPutFlagDefault(404).WithPayload(ErrorMessage("%s", err))
 	}
 
 	if params.Body.Description != nil {
 		f.Description = *params.Body.Description
 	}
-	if params.Body.DataRecordsEnabled != nil {
-		f.DataRecordsEnabled = *params.Body.DataRecordsEnabled
-	}
 	if params.Body.Key != nil {
-		key, err := entity.CreateFlagKey(*params.Body.Key)
-		if err != nil {
-			return flag.NewPutFlagDefault(400).WithPayload(ErrorMessage("%s", err))
-		}
-		f.Key = key
+		f.Key = *params.Body.Key
 	}
 	if params.Body.EntityType != nil {
-		et := *params.Body.EntityType
-		if err := entity.CreateFlagEntityType(tx, et); err != nil {
-			return flag.NewPutFlagDefault(400).WithPayload(ErrorMessage("%s", err))
-		}
-		f.EntityType = et
+		f.EntityType = *params.Body.EntityType
 	}
-
 	if params.Body.Notes != nil {
 		f.Notes = *params.Body.Notes
 	}
-
-	if err := tx.Save(f).Error; err != nil {
-		return flag.NewPutFlagDefault(500).WithPayload(ErrorMessage("%s", err))
+	if params.Body.DataRecordsEnabled != nil {
+		f.DataRecordsEnabled = *params.Body.DataRecordsEnabled
 	}
 
-	if err := entity.PreloadSegmentsVariantsTags(tx).First(f, params.FlagID).Error; err != nil {
+	if err := getDB().Save(f).Error; err != nil {
 		return flag.NewPutFlagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
@@ -274,6 +275,12 @@ func (c *crud) PutFlag(params flag.PutFlagParams) middleware.Responder {
 	resp.SetPayload(payload)
 
 	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
+
+	// Trigger webhooks for flag updates
+	if err := c.webhookService.TriggerWebhooks("flag.updated", f); err != nil {
+		logrus.WithError(err).Error("Failed to trigger webhooks")
+	}
+
 	return resp
 }
 
@@ -297,6 +304,12 @@ func (c *crud) SetFlagEnabledState(params flag.SetFlagEnabledParams) middleware.
 	resp.SetPayload(payload)
 
 	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
+
+	// Trigger webhook for flag enabled state change
+	if err := c.webhookService.TriggerWebhooks("flag.enabled", f); err != nil {
+		logrus.WithError(err).Error("Failed to trigger webhooks")
+	}
+
 	return resp
 }
 
@@ -324,7 +337,17 @@ func (c *crud) RestoreFlag(params flag.RestoreFlagParams) middleware.Responder {
 }
 
 func (c *crud) DeleteFlag(params flag.DeleteFlagParams) middleware.Responder {
-	if err := getDB().Delete(&entity.Flag{}, params.FlagID).Error; err != nil {
+	f := &entity.Flag{}
+	if err := getDB().First(f, params.FlagID).Error; err != nil {
+		return flag.NewDeleteFlagDefault(404).WithPayload(ErrorMessage("%s", err))
+	}
+
+	// Trigger webhook before deletion
+	if err := c.webhookService.TriggerWebhooks("flag.deleted", f); err != nil {
+		logrus.WithError(err).Error("Failed to trigger webhooks")
+	}
+
+	if err := getDB().Delete(f).Error; err != nil {
 		return flag.NewDeleteFlagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 	return flag.NewDeleteFlagOK()
@@ -341,6 +364,12 @@ func (c *crud) DeleteTag(params tag.DeleteTagParams) middleware.Responder {
 		return tag.NewDeleteTagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
+
+	// Trigger webhook for tag deletion
+	if err := c.webhookService.TriggerWebhooks("tag.deleted", t); err != nil {
+		logrus.WithError(err).Error("Failed to trigger webhooks")
+	}
+
 	return tag.NewDeleteTagOK()
 }
 
@@ -403,25 +432,44 @@ func (c *crud) CreateTag(params tag.CreateTagParams) middleware.Responder {
 	resp.SetPayload(e2r.MapTag(t))
 
 	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
+
+	// Trigger webhook for tag creation
+	if err := c.webhookService.TriggerWebhooks("tag.created", t); err != nil {
+		logrus.WithError(err).Error("Failed to trigger webhooks")
+	}
+
 	return resp
 }
 
 func (c *crud) CreateSegment(params segment.CreateSegmentParams) middleware.Responder {
-	s := &entity.Segment{}
-	s.FlagID = uint(params.FlagID)
-	s.RolloutPercent = uint(*params.Body.RolloutPercent)
-	s.Description = util.SafeString(params.Body.Description)
-	s.Rank = entity.SegmentDefaultRank
+	f := &entity.Flag{}
+	if err := getDB().First(f, params.FlagID).Error; err != nil {
+		return segment.NewCreateSegmentDefault(404).WithPayload(ErrorMessage("%s", err))
+	}
 
-	err := getDB().Create(s).Error
-	if err != nil {
+	s := &entity.Segment{}
+	if params.Body != nil {
+		s.Description = util.SafeString(params.Body.Description)
+		s.RolloutPercent = util.SafeUint(params.Body.RolloutPercent)
+	}
+
+	s.FlagID = util.SafeUint(params.FlagID)
+
+	if err := getDB().Create(s).Error; err != nil {
 		return segment.NewCreateSegmentDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
 	resp := segment.NewCreateSegmentOK()
-	resp.SetPayload(e2r.MapSegment(s))
+	payload := e2r.MapSegment(s)
+	resp.SetPayload(payload)
 
 	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
+
+	// Trigger webhook for segment creation
+	if err := c.webhookService.TriggerWebhooks("segment.created", s); err != nil {
+		logrus.WithError(err).Error("Failed to trigger webhooks")
+	}
+
 	return resp
 }
 
@@ -445,26 +493,45 @@ func (c *crud) FindSegments(params segment.FindSegmentsParams) middleware.Respon
 }
 
 func (c *crud) PutSegment(params segment.PutSegmentParams) middleware.Responder {
-	s := &entity.Segment{}
-	err := entity.
-		PreloadConstraintsDistribution(getDB()).
-		First(s, params.SegmentID).
-		Error
-	if err != nil {
-		return segment.NewPutSegmentDefault(500).WithPayload(ErrorMessage("%s", err))
+	f := &entity.Flag{}
+	if err := getDB().First(f, params.FlagID).Error; err != nil {
+		return segment.NewPutSegmentDefault(404).WithPayload(ErrorMessage("%s", err))
 	}
 
-	s.RolloutPercent = util.SafeUint(params.Body.RolloutPercent)
-	s.Description = util.SafeString(params.Body.Description)
+	s := &entity.Segment{}
+	if err := getDB().First(s, params.SegmentID).Error; err != nil {
+		return segment.NewPutSegmentDefault(404).WithPayload(ErrorMessage("%s", err))
+	}
+
+	oldRolloutPercent := s.RolloutPercent
+
+	if params.Body.Description != nil {
+		s.Description = *params.Body.Description
+	}
+	if params.Body.RolloutPercent != nil {
+		s.RolloutPercent = util.SafeUint(params.Body.RolloutPercent)
+	}
 
 	if err := getDB().Save(s).Error; err != nil {
 		return segment.NewPutSegmentDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
 	resp := segment.NewPutSegmentOK()
-	resp.SetPayload(e2r.MapSegment(s))
+	payload := e2r.MapSegment(s)
+	resp.SetPayload(payload)
 
 	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
+
+	// Trigger webhooks for segment updates
+	if err := c.webhookService.TriggerWebhooks("segment.updated", s); err != nil {
+		logrus.WithError(err).Error("Failed to trigger webhooks")
+	}
+	if oldRolloutPercent != s.RolloutPercent {
+		if err := c.webhookService.TriggerWebhooks("segment.rollout_percent.updated", s); err != nil {
+			logrus.WithError(err).Error("Failed to trigger webhooks")
+		}
+	}
+
 	return resp
 }
 
@@ -494,8 +561,23 @@ func (c *crud) PutSegmentsReorder(params segment.PutSegmentsReorderParams) middl
 }
 
 func (c *crud) DeleteSegment(params segment.DeleteSegmentParams) middleware.Responder {
-	if err := getDB().Delete(&entity.Segment{}, util.SafeUint(params.SegmentID)).Error; err != nil {
+	f := &entity.Flag{}
+	if err := getDB().First(f, params.FlagID).Error; err != nil {
+		return segment.NewDeleteSegmentDefault(404).WithPayload(ErrorMessage("%s", err))
+	}
+
+	s := &entity.Segment{}
+	if err := getDB().First(s, params.SegmentID).Error; err != nil {
+		return segment.NewDeleteSegmentDefault(404).WithPayload(ErrorMessage("%s", err))
+	}
+
+	if err := getDB().Delete(s).Error; err != nil {
 		return segment.NewDeleteSegmentDefault(500).WithPayload(ErrorMessage("%s", err))
+	}
+
+	// Trigger webhook after deletion
+	if err := c.webhookService.TriggerWebhooks("segment.deleted", s); err != nil {
+		logrus.WithError(err).Error("Failed to trigger webhooks")
 	}
 
 	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
@@ -503,24 +585,44 @@ func (c *crud) DeleteSegment(params segment.DeleteSegmentParams) middleware.Resp
 }
 
 func (c *crud) CreateConstraint(params constraint.CreateConstraintParams) middleware.Responder {
+	f := &entity.Flag{}
+	if err := getDB().First(f, params.FlagID).Error; err != nil {
+		return constraint.NewCreateConstraintDefault(404).WithPayload(ErrorMessage("%s", err))
+	}
+
+	s := &entity.Segment{}
+	if err := getDB().First(s, params.SegmentID).Error; err != nil {
+		return constraint.NewCreateConstraintDefault(404).WithPayload(ErrorMessage("%s", err))
+	}
+
 	cons := &entity.Constraint{}
-	cons.SegmentID = uint(params.SegmentID)
 	if params.Body != nil {
 		cons.Property = util.SafeString(params.Body.Property)
 		cons.Operator = util.SafeString(params.Body.Operator)
 		cons.Value = util.SafeString(params.Body.Value)
 	}
+
+	cons.SegmentID = util.SafeUint(params.SegmentID)
+
 	if err := cons.Validate(); err != nil {
 		return constraint.NewCreateConstraintDefault(400).WithPayload(ErrorMessage("%s", err))
 	}
+
 	if err := getDB().Create(cons).Error; err != nil {
 		return constraint.NewCreateConstraintDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
 	resp := constraint.NewCreateConstraintOK()
-	resp.SetPayload(e2r.MapConstraint(cons))
+	payload := e2r.MapConstraint(cons)
+	resp.SetPayload(payload)
 
 	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
+
+	// Trigger webhook for constraint creation
+	if err := c.webhookService.TriggerWebhooks("constraint.created", cons); err != nil {
+		logrus.WithError(err).Error("Failed to trigger webhooks")
+	}
+
 	return resp
 }
 
@@ -536,41 +638,85 @@ func (c *crud) FindConstraints(params constraint.FindConstraintsParams) middlewa
 }
 
 func (c *crud) PutConstraint(params constraint.PutConstraintParams) middleware.Responder {
-	cons := &entity.Constraint{}
+	f := &entity.Flag{}
+	if err := getDB().First(f, params.FlagID).Error; err != nil {
+		return constraint.NewPutConstraintDefault(404).WithPayload(ErrorMessage("%s", err))
+	}
 
+	cons := &entity.Constraint{}
 	if err := getDB().First(cons, params.ConstraintID).Error; err != nil {
 		return constraint.NewPutConstraintDefault(404).WithPayload(ErrorMessage("%s", err))
 	}
+
+	oldProperty := cons.Property
+	oldOperator := cons.Operator
+	oldValue := cons.Value
 
 	if params.Body != nil {
 		cons.Property = util.SafeString(params.Body.Property)
 		cons.Operator = util.SafeString(params.Body.Operator)
 		cons.Value = util.SafeString(params.Body.Value)
 	}
+
 	if err := cons.Validate(); err != nil {
 		return constraint.NewPutConstraintDefault(400).WithPayload(ErrorMessage("%s", err))
 	}
 
-	if err := getDB().Save(&cons).Error; err != nil {
+	if err := getDB().Save(cons).Error; err != nil {
 		return constraint.NewPutConstraintDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
 	resp := constraint.NewPutConstraintOK()
-	resp.SetPayload(e2r.MapConstraint(cons))
+	payload := e2r.MapConstraint(cons)
+	resp.SetPayload(payload)
 
 	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
+
+	// Trigger webhooks for constraint updates
+	if err := c.webhookService.TriggerWebhooks("constraint.updated", cons); err != nil {
+		logrus.WithError(err).Error("Failed to trigger webhooks")
+	}
+	if oldProperty != cons.Property {
+		if err := c.webhookService.TriggerWebhooks("constraint.property.updated", cons); err != nil {
+			logrus.WithError(err).Error("Failed to trigger webhooks")
+		}
+	}
+	if oldOperator != cons.Operator {
+		if err := c.webhookService.TriggerWebhooks("constraint.operator.updated", cons); err != nil {
+			logrus.WithError(err).Error("Failed to trigger webhooks")
+		}
+	}
+	if oldValue != cons.Value {
+		if err := c.webhookService.TriggerWebhooks("constraint.value.updated", cons); err != nil {
+			logrus.WithError(err).Error("Failed to trigger webhooks")
+		}
+	}
+
 	return resp
 }
 
 func (c *crud) DeleteConstraint(params constraint.DeleteConstraintParams) middleware.Responder {
-	if err := getDB().Delete(&entity.Constraint{}, params.ConstraintID).Error; err != nil {
+	f := &entity.Flag{}
+	if err := getDB().First(f, params.FlagID).Error; err != nil {
+		return constraint.NewDeleteConstraintDefault(404).WithPayload(ErrorMessage("%s", err))
+	}
+
+	cons := &entity.Constraint{}
+	if err := getDB().First(cons, params.ConstraintID).Error; err != nil {
+		return constraint.NewDeleteConstraintDefault(404).WithPayload(ErrorMessage("%s", err))
+	}
+
+	// Trigger webhook before deletion
+	if err := c.webhookService.TriggerWebhooks("constraint.deleted", cons); err != nil {
+		logrus.WithError(err).Error("Failed to trigger webhooks")
+	}
+
+	if err := getDB().Delete(cons).Error; err != nil {
 		return constraint.NewDeleteConstraintDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
-	resp := constraint.NewDeleteConstraintOK()
-
 	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
-	return resp
+	return constraint.NewDeleteConstraintOK()
 }
 
 // PutDistributions puts the whole distributions and overwrite the old ones
@@ -626,15 +772,24 @@ func (c *crud) FindDistributions(params distribution.FindDistributionsParams) mi
 }
 
 func (c *crud) CreateVariant(params variant.CreateVariantParams) middleware.Responder {
-	v := &entity.Variant{}
-	v.FlagID = uint(params.FlagID)
-	v.Key = util.SafeString(params.Body.Key)
-
-	a, err := r2eMapAttachment(params.Body.Attachment)
-	if err != nil {
-		return variant.NewCreateVariantDefault(400).WithPayload(ErrorMessage("%s", err))
+	f := &entity.Flag{}
+	if err := getDB().First(f, params.FlagID).Error; err != nil {
+		return variant.NewCreateVariantDefault(404).WithPayload(ErrorMessage("%s", err))
 	}
-	v.Attachment = a
+
+	v := &entity.Variant{}
+	if params.Body != nil {
+		v.Key = util.SafeString(params.Body.Key)
+		if params.Body.Attachment != nil {
+			attachment, err := r2e.MapAttachment(params.Body.Attachment)
+			if err != nil {
+				return variant.NewCreateVariantDefault(400).WithPayload(ErrorMessage("%s", err))
+			}
+			v.Attachment = attachment
+		}
+	}
+
+	v.FlagID = util.SafeUint(params.FlagID)
 
 	if err := v.Validate(); err != nil {
 		return variant.NewCreateVariantDefault(400).WithPayload(ErrorMessage("%s", err))
@@ -645,9 +800,16 @@ func (c *crud) CreateVariant(params variant.CreateVariantParams) middleware.Resp
 	}
 
 	resp := variant.NewCreateVariantOK()
-	resp.SetPayload(e2r.MapVariant(v))
+	payload := e2r.MapVariant(v)
+	resp.SetPayload(payload)
 
 	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
+
+	// Trigger webhook for variant creation
+	if err := c.webhookService.TriggerWebhooks("variant.created", v); err != nil {
+		logrus.WithError(err).Error("Failed to trigger webhooks")
+	}
+
 	return resp
 }
 
@@ -668,49 +830,176 @@ func (c *crud) FindVariants(params variant.FindVariantsParams) middleware.Respon
 }
 
 func (c *crud) PutVariant(params variant.PutVariantParams) middleware.Responder {
-	v := &entity.Variant{}
+	f := &entity.Flag{}
+	if err := getDB().First(f, params.FlagID).Error; err != nil {
+		return variant.NewPutVariantDefault(404).WithPayload(ErrorMessage("%s", err))
+	}
 
+	v := &entity.Variant{}
 	if err := getDB().First(v, params.VariantID).Error; err != nil {
 		return variant.NewPutVariantDefault(404).WithPayload(ErrorMessage("%s", err))
 	}
 
-	v.Key = util.SafeString(params.Body.Key)
+	oldAttachment := v.Attachment
+
+	if params.Body.Key != nil {
+		v.Key = *params.Body.Key
+	}
 	if params.Body.Attachment != nil {
-		a, err := r2eMapAttachment(params.Body.Attachment)
+		attachment, err := r2e.MapAttachment(params.Body.Attachment)
 		if err != nil {
 			return variant.NewPutVariantDefault(400).WithPayload(ErrorMessage("%s", err))
 		}
-		v.Attachment = a
+		v.Attachment = attachment
 	}
 
 	if err := v.Validate(); err != nil {
 		return variant.NewPutVariantDefault(400).WithPayload(ErrorMessage("%s", err))
 	}
 
-	if err := getDB().Save(&v).Error; err != nil {
+	if err := getDB().Save(v).Error; err != nil {
 		return variant.NewPutVariantDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
-	if err := validatePutVariantForDistributions(v); err != nil {
-		return variant.NewPutVariantDefault(err.StatusCode).WithPayload(ErrorMessage("%s", err))
-	}
-
 	resp := variant.NewPutVariantOK()
-	resp.SetPayload(e2r.MapVariant(v))
+	payload := e2r.MapVariant(v)
+	resp.SetPayload(payload)
 
 	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
+
+	// Trigger webhooks for variant updates
+	if err := c.webhookService.TriggerWebhooks("variant.updated", v); err != nil {
+		logrus.WithError(err).Error("Failed to trigger webhooks")
+	}
+	if !reflect.DeepEqual(oldAttachment, v.Attachment) {
+		if err := c.webhookService.TriggerWebhooks("variant.attachment.updated", v); err != nil {
+			logrus.WithError(err).Error("Failed to trigger webhooks")
+		}
+	}
+
 	return resp
 }
 
 func (c *crud) DeleteVariant(params variant.DeleteVariantParams) middleware.Responder {
-	if err := validateDeleteVariant(params); err != nil {
-		return variant.NewDeleteVariantDefault(err.StatusCode).WithPayload(ErrorMessage("%s", err))
+	f := &entity.Flag{}
+	if err := getDB().First(f, params.FlagID).Error; err != nil {
+		return variant.NewDeleteVariantDefault(404).WithPayload(ErrorMessage("%s", err))
 	}
 
-	if err := getDB().Delete(&entity.Variant{}, params.VariantID).Error; err != nil {
+	v := &entity.Variant{}
+	if err := getDB().First(v, params.VariantID).Error; err != nil {
+		return variant.NewDeleteVariantDefault(404).WithPayload(ErrorMessage("%s", err))
+	}
+
+	if err := getDB().Delete(v).Error; err != nil {
 		return variant.NewDeleteVariantDefault(500).WithPayload(ErrorMessage("%s", err))
+	}
+
+	// Trigger webhook after deletion
+	if err := c.webhookService.TriggerWebhooks("variant.deleted", v); err != nil {
+		logrus.WithError(err).Error("Failed to trigger webhooks")
 	}
 
 	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
 	return variant.NewDeleteVariantOK()
+}
+
+// CreateGlobalWebhook creates a new global webhook
+func (c *crud) CreateGlobalWebhook(params webhookops.CreateGlobalWebhookParams) middleware.Responder {
+	webhook := &entity.Webhook{
+		URL:         *params.Body.URL,
+		Description: params.Body.Description,
+		Events:      *params.Body.Events,
+		Secret:      params.Body.Secret,
+		Enabled:     *params.Body.Enabled,
+	}
+
+	if err := getDB().Create(webhook).Error; err != nil {
+		return webhookops.NewCreateGlobalWebhookDefault(http.StatusInternalServerError).WithPayload(&models.Error{
+			Message: util.StringPtr(err.Error()),
+		})
+	}
+
+	return webhookops.NewCreateGlobalWebhookOK().WithPayload(&models.Webhook{
+		ID:          int64(webhook.ID),
+		URL:         &webhook.URL,
+		Description: webhook.Description,
+		Events:      &webhook.Events,
+		Secret:      webhook.Secret,
+		Enabled:     &webhook.Enabled,
+	})
+}
+
+// FindGlobalWebhooks finds all global webhooks
+func (c *crud) FindGlobalWebhooks(params webhookops.FindGlobalWebhooksParams) middleware.Responder {
+	var webhooks []*models.Webhook
+	if err := getDB().Find(&webhooks).Error; err != nil {
+		return webhookops.NewFindGlobalWebhooksDefault(http.StatusInternalServerError).WithPayload(&models.Error{
+			Message: util.StringPtr(err.Error()),
+		})
+	}
+
+	return webhookops.NewFindGlobalWebhooksOK().WithPayload(webhooks)
+}
+
+// PutGlobalWebhook updates a global webhook
+func (c *crud) PutGlobalWebhook(params webhookops.PutGlobalWebhookParams) middleware.Responder {
+	var webhook models.Webhook
+	if err := getDB().First(&webhook, params.WebhookID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return webhookops.NewPutGlobalWebhookDefault(http.StatusNotFound).WithPayload(&models.Error{
+				Message: util.StringPtr("webhook not found"),
+			})
+		}
+		return webhookops.NewPutGlobalWebhookDefault(http.StatusInternalServerError).WithPayload(&models.Error{
+			Message: util.StringPtr(err.Error()),
+		})
+	}
+
+	if params.Body.URL != nil {
+		webhook.URL = params.Body.URL
+	}
+	if params.Body.Description != nil {
+		webhook.Description = *params.Body.Description
+	}
+	if params.Body.Events != nil {
+		webhook.Events = params.Body.Events
+	}
+	if params.Body.Secret != nil {
+		webhook.Secret = *params.Body.Secret
+	}
+	if params.Body.Enabled != nil {
+		webhook.Enabled = params.Body.Enabled
+	}
+
+	if err := getDB().Save(&webhook).Error; err != nil {
+		return webhookops.NewPutGlobalWebhookDefault(http.StatusInternalServerError).WithPayload(&models.Error{
+			Message: util.StringPtr(err.Error()),
+		})
+	}
+
+	return webhookops.NewPutGlobalWebhookOK().WithPayload(&webhook)
+}
+
+// DeleteGlobalWebhook deletes a global webhook
+func (c *crud) DeleteGlobalWebhook(params webhookops.DeleteGlobalWebhookParams) middleware.Responder {
+	var webhook models.Webhook
+	if err := getDB().First(&webhook, params.WebhookID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return webhookops.NewDeleteGlobalWebhookDefault(http.StatusNotFound).WithPayload(&models.Error{
+				Message: util.StringPtr("webhook not found"),
+			})
+		}
+		return webhookops.NewDeleteGlobalWebhookDefault(http.StatusInternalServerError).WithPayload(&models.Error{
+			Message: util.StringPtr(err.Error()),
+		})
+	}
+
+	if err := getDB().Delete(&webhook).Error; err != nil {
+		return webhookops.NewDeleteGlobalWebhookDefault(http.StatusInternalServerError).WithPayload(&models.Error{
+			Message: util.StringPtr(err.Error()),
+		})
+	}
+
+	return webhookops.NewDeleteGlobalWebhookOK()
 }
