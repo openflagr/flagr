@@ -9,5 +9,5 @@ type Tag struct {
 	gorm.Model
 
 	Value string  `gorm:"type:varchar(64);uniqueIndex:idx_tag_value"`
-	Flags []*Flag `gorm:"many2many:flags_tags;"`
+	Flags []*Flag `gorm:"many2many:flags_tags;joinForeignKey:TagID;joinReferences:FlagID;"`
 }

@@ -32,6 +32,7 @@ var AutoMigrateTables = []interface{}{
 	User{},
 	Variant{},
 	Tag{},
+	FlagTag{},
 	FlagEntityType{},
 }
 

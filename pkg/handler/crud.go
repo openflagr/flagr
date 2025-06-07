@@ -263,6 +263,9 @@ func (c *crud) PutFlag(params flag.PutFlagParams) middleware.Responder {
 		f.Notes = *params.Body.Notes
 	}
 
+	// Set the updatedBy field before saving
+	f.UpdatedBy = getSubjectFromRequest(params.HTTPRequest)
+
 	if err := tx.Save(f).Error; err != nil {
 		return flag.NewPutFlagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
@@ -289,6 +292,8 @@ func (c *crud) SetFlagEnabledState(params flag.SetFlagEnabledParams) middleware.
 	}
 
 	f.Enabled = *params.Body.Enabled
+	// Set the updatedBy field before saving
+	f.UpdatedBy = getSubjectFromRequest(params.HTTPRequest)
 
 	if err := getDB().Save(f).Error; err != nil {
 		return flag.NewSetFlagEnabledDefault(500).WithPayload(ErrorMessage("%s", err))
@@ -312,6 +317,8 @@ func (c *crud) RestoreFlag(params flag.RestoreFlagParams) middleware.Responder {
 	}
 
 	f.DeletedAt = gorm.DeletedAt{}
+	// Set the updatedBy field before saving
+	f.UpdatedBy = getSubjectFromRequest(params.HTTPRequest)
 
 	if err := getDB().Unscoped().Save(f).Error; err != nil {
 		return flag.NewRestoreFlagDefault(500).WithPayload(ErrorMessage("%s", err))
@@ -336,16 +343,15 @@ func (c *crud) DeleteFlag(params flag.DeleteFlagParams) middleware.Responder {
 }
 
 func (c *crud) DeleteTag(params tag.DeleteTagParams) middleware.Responder {
-	t := &entity.Tag{}
-	t.ID = uint(params.TagID)
+	flagID := uint(params.FlagID)
+	tagID := uint(params.TagID)
 
-	s := &entity.Flag{}
-	s.ID = uint(params.FlagID)
-
-	if err := getDB().Model(s).Association("Tags").Delete(t); err != nil {
-		return tag.NewDeleteTagDefault(500).WithPayload(ErrorMessage("%s", err))
+	if err := entity.RemoveTagFromFlag(getDB(), flagID, tagID); err != nil {
+		return tag.NewDeleteTagDefault(500).WithPayload(ErrorMessage("failed to remove tag association: %s", err))
 	}
-	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
+
+	user := getSubjectFromRequest(params.HTTPRequest)
+	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), user)
 	return tag.NewDeleteTagOK()
 }
 
@@ -399,15 +405,21 @@ func (c *crud) CreateTag(params tag.CreateTagParams) middleware.Responder {
 		return tag.NewCreateTagDefault(400).WithPayload(ErrorMessage("%s", reason))
 	}
 
-	getDB().Where("value = ?", util.SafeString(params.Body.Value)).Find(t) // Find the existing tag to associate if it exists
-	if err := getDB().Model(s).Association("Tags").Append(t); err != nil {
-		return tag.NewCreateTagDefault(500).WithPayload(ErrorMessage("%s", err))
+	// Find or create the tag
+	if err := getDB().Where("value = ?", util.SafeString(params.Body.Value)).FirstOrCreate(t).Error; err != nil {
+		return tag.NewCreateTagDefault(500).WithPayload(ErrorMessage("failed to find or create tag: %s", err))
+	}
+
+	// Add the tag to the flag with timestamp information
+	user := getSubjectFromRequest(params.HTTPRequest)
+	if err := entity.AddTagToFlag(getDB(), s.ID, t.ID, user, user); err != nil {
+		return tag.NewCreateTagDefault(500).WithPayload(ErrorMessage("failed to associate tag with flag: %s", err))
 	}
 
 	resp := tag.NewCreateTagOK()
 	resp.SetPayload(e2r.MapTag(t))
 
-	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest))
+	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), user)
 	return resp
 }
 

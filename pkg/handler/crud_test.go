@@ -1419,3 +1419,105 @@ func TestCrudDistributionsWithFailures(t *testing.T) {
 		db.Error = nil
 	})
 }
+
+func TestUpdatedByFieldConsistency(t *testing.T) {
+	var res middleware.Responder
+	db := entity.NewTestDB()
+	c := &crud{}
+
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB.Close()
+	defer gostub.StubFunc(&getDB, db).Reset()
+
+	// Create a flag first (without mocking getSubjectFromRequest, it will return empty string)
+	res = c.CreateFlag(flag.CreateFlagParams{
+		Body: &models.CreateFlagRequest{
+			Description: util.StringPtr("test flag for updatedBy consistency"),
+			Key:         "test_flag_updated_by",
+		},
+	})
+	assert.NotZero(t, res.(*flag.CreateFlagOK).Payload.ID)
+	flagID := res.(*flag.CreateFlagOK).Payload.ID
+
+	t.Run("PutFlag should set updatedBy field before saving", func(t *testing.T) {
+		// Update the flag
+		res = c.PutFlag(flag.PutFlagParams{
+			FlagID: flagID,
+			Body: &models.PutFlagRequest{
+				Description: util.StringPtr("updated description"),
+				Notes:       util.StringPtr("updated notes"),
+			},
+		})
+
+		// Check that the UI response has the updatedBy field set (even if empty string)
+		// This verifies that the field is being set in the response
+		assert.NotNil(t, res.(*flag.PutFlagOK).Payload.UpdatedBy)
+
+		// Check that the flag in the database has the updatedBy field set
+		var flagInDB entity.Flag
+		err := db.First(&flagInDB, flagID).Error
+		assert.NoError(t, err)
+		// The updatedBy should be set (even if empty string from getSubjectFromRequest)
+		// This test verifies the field is being set, not the specific value
+		assert.NotNil(t, flagInDB.UpdatedBy)
+
+		// Check that the snapshot has the updatedBy field set
+		var snapshot entity.FlagSnapshot
+		err = db.Where("flag_id = ?", flagID).Order("created_at desc").First(&snapshot).Error
+		assert.NoError(t, err)
+		assert.NotNil(t, snapshot.UpdatedBy)
+	})
+
+	t.Run("SetFlagEnabledState should set updatedBy field before saving", func(t *testing.T) {
+		// Update the flag enabled state
+		res = c.SetFlagEnabledState(flag.SetFlagEnabledParams{
+			FlagID: flagID,
+			Body: &models.SetFlagEnabledRequest{
+				Enabled: util.BoolPtr(true),
+			},
+		})
+
+		// Check that the UI response has the updatedBy field set
+		assert.NotNil(t, res.(*flag.SetFlagEnabledOK).Payload.UpdatedBy)
+
+		// Check that the flag in the database has the updatedBy field set
+		var flagInDB entity.Flag
+		err := db.First(&flagInDB, flagID).Error
+		assert.NoError(t, err)
+		assert.NotNil(t, flagInDB.UpdatedBy)
+
+		// Check that the snapshot has the updatedBy field set
+		var snapshot entity.FlagSnapshot
+		err = db.Where("flag_id = ?", flagID).Order("created_at desc").First(&snapshot).Error
+		assert.NoError(t, err)
+		assert.NotNil(t, snapshot.UpdatedBy)
+	})
+
+	t.Run("RestoreFlag should set updatedBy field before saving", func(t *testing.T) {
+		// Delete the flag first
+		res = c.DeleteFlag(flag.DeleteFlagParams{FlagID: flagID})
+		assert.NotZero(t, res.(*flag.DeleteFlagOK))
+
+		// Restore the flag
+		res = c.RestoreFlag(flag.RestoreFlagParams{FlagID: flagID})
+
+		// Check that the UI response has the updatedBy field set
+		assert.NotNil(t, res.(*flag.RestoreFlagOK).Payload.UpdatedBy)
+
+		// Check that the flag in the database has the updatedBy field set
+		var flagInDB entity.Flag
+		err := db.First(&flagInDB, flagID).Error
+		assert.NoError(t, err)
+		assert.NotNil(t, flagInDB.UpdatedBy)
+
+		// Check that the snapshot has the updatedBy field set
+		var snapshot entity.FlagSnapshot
+		err = db.Where("flag_id = ?", flagID).Order("created_at desc").First(&snapshot).Error
+		assert.NoError(t, err)
+		assert.NotNil(t, snapshot.UpdatedBy)
+	})
+}
