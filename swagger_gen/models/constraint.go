@@ -28,7 +28,7 @@ type Constraint struct {
 	// operator
 	// Required: true
 	// Min Length: 1
-	// Enum: ["EQ","NEQ","LT","LTE","GT","GTE","EREG","NEREG","IN","NOTIN","CONTAINS","NOTCONTAINS"]
+	// Enum: ["EQ","NEQ","LT","LTE","GT","GTE","EREG","NEREG","IN","NOTIN","CONTAINS","NOTCONTAINS","CHECKLIST"]
 	Operator *string `json:"operator"`
 
 	// property
@@ -84,7 +84,7 @@ var constraintTypeOperatorPropEnum []interface{}
 
 func init() {
 	var res []string
-	if err := json.Unmarshal([]byte(`["EQ","NEQ","LT","LTE","GT","GTE","EREG","NEREG","IN","NOTIN","CONTAINS","NOTCONTAINS"]`), &res); err != nil {
+	if err := json.Unmarshal([]byte(`["EQ","NEQ","LT","LTE","GT","GTE","EREG","NEREG","IN","NOTIN","CONTAINS","NOTCONTAINS","CHECKLIST"]`), &res); err != nil {
 		panic(err)
 	}
 	for _, v := range res {
@@ -129,6 +129,9 @@ const (
 
 	// ConstraintOperatorNOTCONTAINS captures enum value "NOTCONTAINS"
 	ConstraintOperatorNOTCONTAINS string = "NOTCONTAINS"
+
+	// ConstraintOperatorCHECKLIST captures enum value "CHECKLIST"
+	ConstraintOperatorCHECKLIST string = "CHECKLIST"
 )
 
 // prop value enum
