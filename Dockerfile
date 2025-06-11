@@ -1,7 +1,7 @@
 ######################################
 # Prepare npm_builder
 ######################################
-FROM 537984406465.dkr.ecr.ap-south-1.amazonaws.com/node:18 as npm_builder
+FROM 537984406465.dkr.ecr.ap-south-1.amazonaws.com/docker-hub/library/node:18 as npm_builder
 WORKDIR /go/src/github.com/Allen-Career-Institute/flagr
 COPY . .
 ARG FLAGR_UI_POSSIBLE_ENTITY_TYPES=null
@@ -11,14 +11,14 @@ RUN make build_ui
 ######################################
 # Prepare go_builder
 ######################################
-FROM 537984406465.dkr.ecr.ap-south-1.amazonaws.com/golang:1.21-alpine as go_builder
+FROM 537984406465.dkr.ecr.ap-south-1.amazonaws.com/docker-hub/library/golang:1.21-alpine as go_builder
 WORKDIR /go/src/github.com/Allen-Career-Institute/flagr
 
 RUN apk add --no-cache build-base git make
 COPY . .
 RUN make build
 
-FROM 537984406465.dkr.ecr.ap-south-1.amazonaws.com/alpine:3.21
+FROM 537984406465.dkr.ecr.ap-south-1.amazonaws.com/docker-hub/library/alpine:3.21
 
 COPY --from=go_builder /go/src/github.com/Allen-Career-Institute/flagr/flagr .
 
