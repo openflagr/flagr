@@ -86,6 +86,23 @@ func TestConstraintToExpr(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, expr)
 	})
+
+		t.Run("happy code path - CHECKLIST", func(t *testing.T) {
+		c := Constraint{
+			SegmentID: 0,
+			Property:  "id",
+			Operator:  models.ConstraintOperatorCHECKLIST,
+			Value:     `[
+										{"c":0,"v":"first value","d":null},
+										{"c":1,"v":"second value","d":null},
+										{"c":0,"v":"third value","d":null}
+									]`,
+		}
+		expr, err := c.ToExpr()
+		assert.NoError(t, err)
+		assert.NotNil(t, expr)
+		assert.Equal(t, "(id IN [second value])", expr.String())
+	})
 }
 
 func TestConstraintValidate(t *testing.T) {

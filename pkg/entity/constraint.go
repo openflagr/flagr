@@ -3,6 +3,7 @@ package entity
 import (
 	"fmt"
 	"strings"
+	"encoding/json"
 
 	"github.com/openflagr/flagr/swagger_gen/models"
 	"github.com/zhouzhuojie/conditions"
@@ -36,6 +37,7 @@ var OperatorToExprMap = map[string]string{
 	models.ConstraintOperatorNOTIN:       "NOT IN",
 	models.ConstraintOperatorCONTAINS:    "CONTAINS",
 	models.ConstraintOperatorNOTCONTAINS: "NOT CONTAINS",
+	models.ConstraintOperatorCHECKLIST: 	"IN",
 }
 
 // ToExpr transfer the constraint to conditions.Expr for evaluation
@@ -66,7 +68,33 @@ func (c *Constraint) toExprStr() (string, error) {
 		return "", fmt.Errorf("not supported operator: %s", c.Operator)
 	}
 
-	return fmt.Sprintf("({%s} %s %s)", c.Property, o, c.Value), nil
+	var value string
+	if c.Operator == models.ConstraintOperatorCHECKLIST {
+		var checkList []struct {
+			C int
+			V string
+		}		
+		err := json.Unmarshal([]byte(c.Value), &checkList)
+    if err != nil {
+    	return "", fmt.Errorf("error: %s", err)
+    }		
+		
+		values := []string{}
+		for _, item := range checkList {
+			if item.C == 1 {
+				values = append(values, fmt.Sprintf(`"%s"`, item.V))
+			}
+		}
+		if len(values) == 0 {
+			return "", fmt.Errorf("empty checklist: no items selected")
+    }
+
+		value = fmt.Sprintf("[%s]", strings.Join(values, ","))
+	} else {
+		value = c.Value
+	}
+
+	return fmt.Sprintf("({%s} %s %s)", c.Property, o, value), nil
 }
 
 // Validate validates Constraint

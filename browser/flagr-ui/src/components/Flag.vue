@@ -54,6 +54,121 @@
           ></el-alert>
         </el-dialog>
 
+        <el-dialog :title="'Edit collection (' +
+                            operators?.getLabel() +
+                            ')'" :visible.sync="dialogEditCollectionValueOpen">
+          <template v-if="loaded && flag">
+            <div v-for="(item, index) in newCollectionValue" :key="index">
+              <div class="flex-row">  
+                <el-col :span="2">
+                  <el-tag type="primary" :disable-transitions="true">
+                    #<b>{{ index + 1 }}</b>
+                  </el-tag>
+                </el-col>
+                <template v-if="operators.isCheckList()">
+                  <el-col :span="2">
+                    <el-switch
+                      v-model="item.checked"
+                      active-color="#13ce66"
+                      inactive-color="#ff4949"
+                      @change="(e) => item.checked = e"
+                      :active-value="true"
+                      :inactive-value="false"
+                    ></el-switch>
+                  </el-col>
+                  <el-col :span="9">
+                    <el-input size="small" v-model="item.value"/>
+                  </el-col>
+                  <el-col style="margin-left: 5px" :span="9">
+                    <el-input size="small" v-model="item.description"/>
+                  </el-col>
+                </template>
+                <template v-else>
+                  <el-col :span="24">
+                    <el-input size="small" v-model="item.value"/>
+                  </el-col>
+                </template>
+                <el-button style="margin-left: 5px" @click="newCollectionValue.splice(index, 1)" size="small">
+                  <span class="el-icon-delete"></span>
+                </el-button>
+              </div>
+              <div class="row=flex">
+                <el-alert
+                  class="edit-collection-value-row-alert"
+                  v-for="error in newCollectionValueValidation?.details[index]"
+                  :key="error"
+                  :title="error"
+                  type="error"
+                  show-icon
+                ></el-alert>
+              </div>
+            </div>
+            <div class="flex-row" style="margin-top: 7px; padding-top: 8px; border-top: 1px solid #EBEEF5">
+              <el-col :span="2">
+                <el-tag type="primary" :disable-transitions="true">
+                  Add
+                </el-tag>
+              </el-col>
+              <template v-if="operators.isCheckList()">
+                <el-col :span="2">
+                  <el-switch
+                    v-model="newCollectionValueItem.checked"
+                    active-color="#13ce66"
+                    inactive-color="#ff4949"
+                    @change="(e) => newCollectionValueItem.checked = e"
+                    :active-value="true"
+                    :inactive-value="false"
+                  ></el-switch>
+                </el-col>
+                <el-col :span="9">
+                  <el-input size="small" v-model="newCollectionValueItem.value"/>
+                </el-col>
+                <el-col style="margin-left: 5px" :span="9">
+                  <el-input size="small" v-model="newCollectionValueItem.description"/>
+                </el-col>
+              </template>
+              <template v-else>
+                <el-col :span="24">
+                  <el-input size="small" v-model="newCollectionValueItem.value"/>
+                </el-col>
+              </template>
+              <el-button
+                :disabled="!(newCollectionValueItem.value && newCollectionValueItemIsValid)"
+                style="margin-left: 5px"
+                @click="addCollectionValueItem()"
+                size="small"
+              >
+                <span class="el-icon-plus"></span>
+              </el-button>
+            </div>
+            <template v-if="newCollectionValueItem.value" >
+              <div class="flex-row" v-for="(error, index) in newCollectionValueItemValidation"
+                  :key="index">
+                <el-alert
+                  class="edit-collection-value-alert"
+                  :title="error"
+                  type="error"
+                  show-icon
+                ></el-alert>
+              </div>
+            </template>
+          </template>
+          <el-button
+            class="width--full"
+            style="margin-top: 15px"
+            :disabled="!newCollectionValueIsValid"
+            @click.prevent="() => applyCollectionValue()"
+          >Apply</el-button>
+          <el-alert
+            class="edit-collection-value-alert"
+            v-for="(error) in newCollectionValueValidation?.errors"
+            :key="error"
+            :title="error"
+            type="error"
+            show-icon
+          ></el-alert>
+        </el-dialog>
+
         <el-dialog title="Create segment" :visible.sync="dialogCreateSegmentOpen">
           <div>
             <p>
@@ -406,17 +521,24 @@
                                         placeholder="operator"
                                       >
                                         <el-option
-                                          v-for="item in operatorOptions"
+                                          v-for="item in operatorItems"
                                           :key="item.value"
                                           :label="item.label"
                                           :value="item.value"
                                         ></el-option>
                                       </el-select>
                                     </el-col>
-                                    <el-col :span="20">
+                                    <el-col :span="19">
                                       <el-input size="small" v-model="constraint.value">
                                         <template slot="prepend">Value&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</template>
                                       </el-input>
+                                    </el-col>
+                                    <el-col :span="1">
+                                      <el-button
+                                        size="small"
+                                        @click="editCollectionValue(constraint)"
+                                        :disabled="!isCollectionValueOperator(constraint.operator)"
+                                      >...</el-button>                                    
                                     </el-col>
                                     <el-col :span="2">
                                       <el-button
@@ -464,15 +586,22 @@
                                       placeholder="operator"
                                     >
                                       <el-option
-                                        v-for="item in operatorOptions"
+                                        v-for="item in operatorItems"
                                         :key="item.value"
                                         :label="item.label"
                                         :value="item.value"
                                       ></el-option>
                                     </el-select>
                                   </el-col>
-                                  <el-col :span="11">
+                                  <el-col :span="10">
                                     <el-input size="small" v-model="segment.newConstraint.value"></el-input>
+                                  </el-col>
+                                  <el-col :span="1">
+                                    <el-button
+                                      size="small"
+                                      @click="editCollectionValue(segment.newConstraint)"
+                                      :disabled="!isCollectionValueOperator(segment.newConstraint.operator)"
+                                    >...</el-button>
                                   </el-col>
                                   <el-col :span="4">
                                     <el-button
@@ -568,12 +697,7 @@ import DebugConsole from "@/components/DebugConsole";
 import FlagHistory from "@/components/FlagHistory";
 import MarkdownEditor from "@/components/MarkdownEditor.vue";
 import vueJsonEditor from "vue-json-editor";
-import { operators } from "@/operators.json";
-
-const OPERATOR_VALUE_TO_LABEL_MAP = operators.reduce((acc, el) => {
-  acc[el.value] = el.label;
-  return acc;
-}, {});
+import { Operators } from "@/operators";
 
 const { sum, pluck, handleErr } = helpers;
 
@@ -630,6 +754,7 @@ export default {
       loaded: false,
       dialogDeleteFlagVisible: false,
       dialogEditDistributionOpen: false,
+      dialogEditCollectionValueOpen: false,
       dialogCreateSegmentOpen: false,
       entityTypes: [],
       allTags: [],
@@ -653,9 +778,12 @@ export default {
       newVariant: clone(DEFAULT_VARIANT),
       newTag: clone(DEFAULT_TAG),
       selectedSegment: null,
+      selectedConstraint: null,
       newDistributions: {},
-      operatorOptions: operators,
-      operatorValueToLabelMap: OPERATOR_VALUE_TO_LABEL_MAP,
+      newCollectionValue: [],
+      newCollectionValueItem: {},
+      operators: null,
+      operatorItems: Operators.ITEMS,
       showMdEditor: false,
       historyLoaded: false
     };
@@ -670,6 +798,18 @@ export default {
       );
       return percentageSum === 100;
     },
+    newCollectionValueValidation() {
+      return this.operators?.validateCollection(this.newCollectionValue);
+    },
+    newCollectionValueIsValid() {
+      return !this.newCollectionValueValidation?.errors.length;
+    },
+    newCollectionValueItemValidation() {
+      return this.operators.validateCollectionNewItem(this.newCollectionValue, this.newCollectionValueItem);
+    },    
+    newCollectionValueItemIsValid() {
+      return !this.newCollectionValueItemValidation.length;
+    },    
     flagId() {
       return this.$route.params.flagId;
     },
@@ -770,6 +910,40 @@ export default {
         this.flag.variants.push(variant);
         this.$message.success("new variant created");
       }, handleErr.bind(this));
+    },
+    editCollectionValue(constraint) {
+      this.selectedConstraint = constraint;
+      this.operators.set(constraint.operator);
+
+      this.$set(this, "newCollectionValue", []);
+      this.newCollectionValueItem = this.operators.new();
+
+      const items = this.operators.unpack(constraint.value);
+
+      items.forEach((item, index) => {
+        this.$set(
+          this.newCollectionValue,
+          index,
+          item
+        );        
+      });
+
+      this.dialogEditCollectionValueOpen = true;
+    },
+    applyCollectionValue() {
+      this.selectedConstraint.value = this.operators.pack(this.newCollectionValue);
+
+      this.dialogEditCollectionValueOpen = false;
+    },
+    isCollectionValueOperator(operator) {
+      return Operators.isCollectionValue(operator);
+    },
+    isCheckListOperator() {
+      return this.operators.isCheckList();
+    },
+    addCollectionValueItem() {
+      this.$set(this.newCollectionValue, this.newCollectionValue.length, this.newCollectionValueItem);
+      this.newCollectionValueItem = this.operators.new(this.newCollectionValueItem);
     },
     deleteVariant(variant) {
       const isVariantInUse = this.flag.segments.some(segment =>
@@ -989,6 +1163,7 @@ export default {
     }
   },
   mounted() {
+    this.operators = new Operators();
     this.fetchFlag();
     this.loadAllTags();
   }
@@ -1074,6 +1249,14 @@ ol.constraints-inner {
 
 .edit-distribution-alert {
   margin-top: 10px;
+}
+
+.edit-collection-value-alert {
+  margin-top: 10px;
+}
+
+.edit-collection-value-row-alert {
+  margin: 0 0 5px 3px;
 }
 
 .el-form-item {
