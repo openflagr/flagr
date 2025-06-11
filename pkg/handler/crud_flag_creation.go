@@ -49,6 +49,12 @@ func (c *crud) CreateFlag(params flag.CreateFlagParams) middleware.Responder {
 }
 
 func (c *crud) mapResponseAndSaveFlagSnapShot(params flag.CreateFlagParams, f *entity.Flag) (*flag.CreateFlagOK, middleware.Responder) {
+	// Reload the flag with all relationships (segments, variants, tags) to include in response
+	if err := entity.PreloadSegmentsVariantsTags(getDB()).First(f, f.ID).Error; err != nil {
+		return nil, flag.NewCreateFlagDefault(500).WithPayload(
+			ErrorMessage("cannot reload flag with relationships. %s", err))
+	}
+
 	resp := flag.NewCreateFlagOK()
 	payload, err := e2rMapFlag(f)
 	if err != nil {

@@ -2,10 +2,24 @@ package entity
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/Allen-Career-Institute/flagr/pkg/util"
 	"gorm.io/gorm"
 )
+
+// FlagTag represents the join table between flags and tags with timestamps
+type FlagTag struct {
+	FlagID    uint `gorm:"primaryKey"`
+	TagID     uint `gorm:"primaryKey"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+// TableName specifies the table name for FlagTag to match the many-to-many relationship
+func (FlagTag) TableName() string {
+	return "flags_tags"
+}
 
 // Flag is the unit of flags
 type Flag struct {
@@ -18,7 +32,7 @@ type Flag struct {
 	Enabled     bool
 	Segments    []Segment
 	Variants    []Variant
-	Tags        []Tag `gorm:"many2many:flags_tags;"`
+	Tags        []Tag `gorm:"many2many:flags_tags;joinForeignKey:FlagID;joinReferences:TagID;"`
 	SnapshotID  uint
 	Notes       string `gorm:"type:text"`
 
@@ -103,4 +117,32 @@ func CreateFlagEntityType(db *gorm.DB, key string) error {
 	}
 	d := FlagEntityType{Key: key}
 	return db.Where(d).FirstOrCreate(&d).Error
+}
+
+// AddTagToFlag adds a tag to a flag
+func AddTagToFlag(db *gorm.DB, flagID, tagID uint) error {
+	// Check if association already exists
+	var existingAssoc FlagTag
+	result := db.Where("flag_id = ? AND tag_id = ?", flagID, tagID).First(&existingAssoc)
+
+	if result.Error != nil && result.Error != gorm.ErrRecordNotFound {
+		return result.Error
+	}
+
+	if result.Error == gorm.ErrRecordNotFound {
+		// Create new association
+		flagTag := FlagTag{
+			FlagID: flagID,
+			TagID:  tagID,
+		}
+		return db.Create(&flagTag).Error
+	}
+
+	// Association already exists, no need to update
+	return nil
+}
+
+// RemoveTagFromFlag removes a tag from a flag
+func RemoveTagFromFlag(db *gorm.DB, flagID, tagID uint) error {
+	return db.Where("flag_id = ? AND tag_id = ?", flagID, tagID).Delete(&FlagTag{}).Error
 }
