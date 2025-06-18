@@ -126,7 +126,14 @@ func createCORSMiddleware() negroni.Handler {
 // applyStaticFileMiddleware handles static files and Vue.js routing
 func applyStaticFileMiddleware(n *negroni.Negroni) {
 	n.UseFunc(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		// Allow API paths to pass through
 		if strings.Contains(r.URL.Path, APIURLPath) {
+			next(w, r)
+			return
+		}
+
+		// Allow pprof paths to pass through when enabled
+		if strings.HasPrefix(r.URL.Path, "/debug/pprof") {
 			next(w, r)
 			return
 		}
