@@ -22,7 +22,7 @@
 Flagr is an open source Go service that delivers the right experience to the right entity and monitors the impact. It provides feature flags, experimentation (A/B testing), and dynamic configuration. It has clear swagger REST APIs for flags management and flag evaluation.
 
 ## Documentation
-- https://openflagr.github.io/flagr
+- https://openflagr.github.io/flagr....
 
 ## Quick demo
 
