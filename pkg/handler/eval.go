@@ -71,11 +71,13 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 		}
 		for _, flagID := range flagIDs {
 			evalContext := models.EvalContext{
-				EnableDebug:   params.Body.EnableDebug,
-				EntityContext: entity.EntityContext,
-				EntityID:      entity.EntityID,
-				EntityType:    entity.EntityType,
-				FlagID:        flagID,
+				EnableDebug:      params.Body.EnableDebug,
+				EntityContext:    entity.EntityContext,
+				EntityID:         entity.EntityID,
+				EntityType:       entity.EntityType,
+				FlagID:           flagID,
+				FlagTags:         flagTags,
+				FlagTagsOperator: flagTagsOperator,
 			}
 
 			evalResult := EvalFlag(evalContext)
@@ -83,11 +85,13 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 		}
 		for _, flagKey := range flagKeys {
 			evalContext := models.EvalContext{
-				EnableDebug:   params.Body.EnableDebug,
-				EntityContext: entity.EntityContext,
-				EntityID:      entity.EntityID,
-				EntityType:    entity.EntityType,
-				FlagKey:       flagKey,
+				EnableDebug:      params.Body.EnableDebug,
+				EntityContext:    entity.EntityContext,
+				EntityID:         entity.EntityID,
+				EntityType:       entity.EntityType,
+				FlagKey:          flagKey,
+				FlagTags:         flagTags,
+				FlagTagsOperator: flagTagsOperator,
 			}
 
 			evalResult := EvalFlag(evalContext)
@@ -195,6 +199,8 @@ var EvalFlagWithContext = func(flag *entity.Flag, evalContext models.EvalContext
 	evalResult.EvalDebugLog.SegmentDebugLogs = logs
 	evalResult.SegmentID = sID
 	evalResult.VariantID = vID
+	evalResult.EvalContext = &evalContext
+
 	v := flag.FlagEvaluation.VariantsMap[util.SafeUint(vID)]
 	if v != nil {
 		evalResult.VariantAttachment = v.Attachment
