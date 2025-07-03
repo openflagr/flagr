@@ -33,6 +33,9 @@ type EvalResult struct {
 	// flag snapshot ID
 	FlagSnapshotID int64 `json:"flagSnapshotID,omitempty"`
 
+	// flagTags. flagTags looks up flags by tag. Either works.
+	FlagTags []string `json:"flagTags,omitempty"`
+
 	// segment ID
 	SegmentID int64 `json:"segmentID,omitempty"`
 

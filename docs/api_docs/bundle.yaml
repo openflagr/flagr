@@ -1353,6 +1353,12 @@ definitions:
       flagSnapshotID:
         type: integer
         format: int64
+      flagTags:
+        description: flagTags. flagTags looks up flags by tag. Either works.
+        type: array
+        x-omitempty: true
+        items:
+          type: string
       segmentID:
         type: integer
         format: int64

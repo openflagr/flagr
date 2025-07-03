@@ -105,10 +105,16 @@ func BlankResult(f *entity.Flag, evalContext models.EvalContext, msg string) *mo
 	flagID := uint(0)
 	flagKey := ""
 	flagSnapshotID := uint(0)
+	flagTags := []string{}
 	if f != nil {
 		flagID = f.ID
 		flagSnapshotID = f.SnapshotID
 		flagKey = f.Key
+		if len(f.Tags) > 0 {
+			for _, tag := range f.Tags {
+				flagTags = append(flagTags, tag.Value)
+			}
+		}
 	}
 	return &models.EvalResult{
 		EvalContext: &evalContext,
@@ -119,6 +125,7 @@ func BlankResult(f *entity.Flag, evalContext models.EvalContext, msg string) *mo
 		FlagID:         int64(flagID),
 		FlagKey:        flagKey,
 		FlagSnapshotID: int64(flagSnapshotID),
+		FlagTags:       flagTags,
 		Timestamp:      util.TimeNow(),
 	}
 }

@@ -488,6 +488,7 @@ func TestPostEvaluation(t *testing.T) {
 				EntityID:      "entityID1",
 				EntityType:    "entityType1",
 				FlagID:        int64(100),
+				FlagTags:      []string{"tag1", "tag2"},
 			},
 		})
 		assert.NotNil(t, resp)
