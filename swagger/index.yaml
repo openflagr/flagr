@@ -526,6 +526,16 @@ definitions:
         type: string
       entityContext:
         type: object
+  getEvaluationEntity:
+    type: object
+    description: evaluationEntity's "query optimized" serialization
+    properties:
+      id:
+        type: string
+      type:
+        type: string
+      ctx:
+        type: object
   evaluationBatchRequest:
     type: object
     required:
