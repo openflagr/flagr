@@ -349,6 +349,7 @@ step_11_test_tag_batch_evaluation() {
     matches "\"flagID\":1"
     matches "\"variantKey\":\"key_1\""
     matches "\"variantID\":1"
+    contains "flagTags"
 
 }
 
@@ -361,12 +362,14 @@ step_12_test_tag_operator_batch_evaluation() {
     matches "\"flagID\":1"
     matches "\"variantKey\":\"key_1\""
     matches "\"variantID\":1"
+    contains "flagTags"
 
     shakedown POST "$flagr_url"/evaluation/batch -H 'Content-Type:application/json' -d '{"entities":[{ "entityType": "externalalert", "entityContext": {"property_1": "value_2"} }],"flagTags": ["value_1", "value_3"], "flagTagsOperator": "ANY", "enableDebug": false }'
     status 200
     matches "\"flagID\":1"
     matches "\"variantKey\":\"key_1\""
     matches "\"variantID\":1"
+    contains "flagTags"
 
 }
 
