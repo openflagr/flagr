@@ -1386,6 +1386,132 @@ func init() {
           }
         }
       }
+    },
+    "/webhooks": {
+      "get": {
+        "tags": [
+          "webhook"
+        ],
+        "operationId": "findGlobalWebhooks",
+        "responses": {
+          "200": {
+            "description": "all webhooks",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/webhook"
+              }
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "webhook"
+        ],
+        "operationId": "createGlobalWebhook",
+        "parameters": [
+          {
+            "description": "create a webhook",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/createWebhookRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "webhook just created",
+            "schema": {
+              "$ref": "#/definitions/webhook"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
+    "/webhooks/{webhookID}": {
+      "put": {
+        "tags": [
+          "webhook"
+        ],
+        "operationId": "putGlobalWebhook",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the webhook",
+            "name": "webhookID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "update a webhook",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/putWebhookRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "webhook just updated",
+            "schema": {
+              "$ref": "#/definitions/webhook"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "webhook"
+        ],
+        "operationId": "deleteGlobalWebhook",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the webhook",
+            "name": "webhookID",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "webhook just deleted"
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -1513,6 +1639,34 @@ func init() {
           "type": "object"
         },
         "key": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "createWebhookRequest": {
+      "type": "object",
+      "required": [
+        "url",
+        "events"
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "events": {
+          "description": "Comma-separated list of events to trigger on",
+          "type": "string"
+        },
+        "secret": {
+          "description": "Optional secret for webhook signature",
+          "type": "string"
+        },
+        "url": {
           "type": "string",
           "minLength": 1
         }
@@ -1939,6 +2093,34 @@ func init() {
         }
       }
     },
+    "putWebhookRequest": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string",
+          "x-nullable": true
+        },
+        "enabled": {
+          "type": "boolean",
+          "x-nullable": true
+        },
+        "events": {
+          "description": "Comma-separated list of events to trigger on",
+          "type": "string",
+          "x-nullable": true
+        },
+        "secret": {
+          "description": "Optional secret for webhook signature",
+          "type": "string",
+          "x-nullable": true
+        },
+        "url": {
+          "type": "string",
+          "minLength": 1,
+          "x-nullable": true
+        }
+      }
+    },
     "segment": {
       "type": "object",
       "required": [
@@ -2040,6 +2222,88 @@ func init() {
         "key": {
           "type": "string",
           "minLength": 1
+        }
+      }
+    },
+    "webhook": {
+      "type": "object",
+      "required": [
+        "url",
+        "events"
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "events": {
+          "description": "Comma-separated list of events to trigger on",
+          "type": "string"
+        },
+        "flagID": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": 1
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": 1,
+          "readOnly": true
+        },
+        "secret": {
+          "description": "Optional secret for webhook signature",
+          "type": "string"
+        },
+        "url": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "webhookEvent": {
+      "type": "object",
+      "required": [
+        "event",
+        "payload",
+        "status"
+      ],
+      "properties": {
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "error": {
+          "type": "string"
+        },
+        "event": {
+          "type": "string",
+          "minLength": 1
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": 1,
+          "readOnly": true
+        },
+        "payload": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "success",
+            "failed",
+            "pending"
+          ]
+        },
+        "webhookID": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": 1
         }
       }
     }
@@ -3475,6 +3739,132 @@ func init() {
           }
         }
       }
+    },
+    "/webhooks": {
+      "get": {
+        "tags": [
+          "webhook"
+        ],
+        "operationId": "findGlobalWebhooks",
+        "responses": {
+          "200": {
+            "description": "all webhooks",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/webhook"
+              }
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "webhook"
+        ],
+        "operationId": "createGlobalWebhook",
+        "parameters": [
+          {
+            "description": "create a webhook",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/createWebhookRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "webhook just created",
+            "schema": {
+              "$ref": "#/definitions/webhook"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
+    "/webhooks/{webhookID}": {
+      "put": {
+        "tags": [
+          "webhook"
+        ],
+        "operationId": "putGlobalWebhook",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the webhook",
+            "name": "webhookID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "update a webhook",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/putWebhookRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "webhook just updated",
+            "schema": {
+              "$ref": "#/definitions/webhook"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "webhook"
+        ],
+        "operationId": "deleteGlobalWebhook",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the webhook",
+            "name": "webhookID",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "webhook just deleted"
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -3603,6 +3993,34 @@ func init() {
           "type": "object"
         },
         "key": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "createWebhookRequest": {
+      "type": "object",
+      "required": [
+        "url",
+        "events"
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "events": {
+          "description": "Comma-separated list of events to trigger on",
+          "type": "string"
+        },
+        "secret": {
+          "description": "Optional secret for webhook signature",
+          "type": "string"
+        },
+        "url": {
           "type": "string",
           "minLength": 1
         }
@@ -4031,6 +4449,34 @@ func init() {
         }
       }
     },
+    "putWebhookRequest": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string",
+          "x-nullable": true
+        },
+        "enabled": {
+          "type": "boolean",
+          "x-nullable": true
+        },
+        "events": {
+          "description": "Comma-separated list of events to trigger on",
+          "type": "string",
+          "x-nullable": true
+        },
+        "secret": {
+          "description": "Optional secret for webhook signature",
+          "type": "string",
+          "x-nullable": true
+        },
+        "url": {
+          "type": "string",
+          "minLength": 1,
+          "x-nullable": true
+        }
+      }
+    },
     "segment": {
       "type": "object",
       "required": [
@@ -4134,6 +4580,88 @@ func init() {
         "key": {
           "type": "string",
           "minLength": 1
+        }
+      }
+    },
+    "webhook": {
+      "type": "object",
+      "required": [
+        "url",
+        "events"
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "events": {
+          "description": "Comma-separated list of events to trigger on",
+          "type": "string"
+        },
+        "flagID": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": 1
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": 1,
+          "readOnly": true
+        },
+        "secret": {
+          "description": "Optional secret for webhook signature",
+          "type": "string"
+        },
+        "url": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "webhookEvent": {
+      "type": "object",
+      "required": [
+        "event",
+        "payload",
+        "status"
+      ],
+      "properties": {
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "error": {
+          "type": "string"
+        },
+        "event": {
+          "type": "string",
+          "minLength": 1
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": 1,
+          "readOnly": true
+        },
+        "payload": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "success",
+            "failed",
+            "pending"
+          ]
+        },
+        "webhookID": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": 1
         }
       }
     }

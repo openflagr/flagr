@@ -91,6 +91,16 @@ paths:
     $ref: ./export_sqlite.yaml
   /export/eval_cache/json:
     $ref: ./export_eval_cache_json.yaml
+  /webhooks:
+    get:
+      $ref: './webhooks.yaml#/get'
+    post:
+      $ref: './webhooks.yaml#/post'
+  /webhooks/{webhookID}:
+    put:
+      $ref: './webhooks.yaml#/put'
+    delete:
+      $ref: './webhooks.yaml#/delete'
 
 
 definitions:
@@ -596,4 +606,107 @@ definitions:
       message:
         type: string
         minLength: 1
+
+  # Webhook
+  webhook:
+    type: object
+    required:
+      - url
+      - events
+    properties:
+      id:
+        type: integer
+        format: int64
+        minimum: 1
+        readOnly: true
+      url:
+        type: string
+        minLength: 1
+      description:
+        type: string
+      events:
+        type: string
+        description: Comma-separated list of system events to trigger on (e.g., flag.updated, flag.deleted)
+      secret:
+        type: string
+        description: Optional secret for webhook signature
+      enabled:
+        type: boolean
+        default: true
+
+  createWebhookRequest:
+    type: object
+    required:
+      - url
+      - events
+    properties:
+      url:
+        type: string
+        minLength: 1
+      description:
+        type: string
+      events:
+        type: string
+        description: Comma-separated list of system events to trigger on (e.g., flag.updated, flag.deleted)
+      secret:
+        type: string
+        description: Optional secret for webhook signature
+      enabled:
+        type: boolean
+        default: true
+
+  putWebhookRequest:
+    type: object
+    properties:
+      url:
+        type: string
+        minLength: 1
+        x-nullable: true
+      description:
+        type: string
+        x-nullable: true
+      events:
+        type: string
+        description: Comma-separated list of system events to trigger on (e.g., flag.updated, flag.deleted)
+        x-nullable: true
+      secret:
+        type: string
+        description: Optional secret for webhook signature
+        x-nullable: true
+      enabled:
+        type: boolean
+        x-nullable: true
+
+  webhookEvent:
+    type: object
+    required:
+      - event
+      - payload
+      - status
+    properties:
+      id:
+        type: integer
+        format: int64
+        minimum: 1
+        readOnly: true
+      webhookID:
+        type: integer
+        format: int64
+        minimum: 1
+      event:
+        type: string
+        minLength: 1
+      payload:
+        type: string
+      status:
+        type: string
+        enum:
+          - success
+          - failed
+          - pending
+      error:
+        type: string
+      createdAt:
+        type: string
+        format: date-time
 

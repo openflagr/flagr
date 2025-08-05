@@ -970,6 +970,89 @@ paths:
           description: generic error response
           schema:
             $ref: '#/definitions/error'
+  /webhooks:
+    get:
+      tags:
+        - webhook
+      operationId: findGlobalWebhooks
+      responses:
+        '200':
+          description: all webhooks
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/webhook'
+        default:
+          description: generic error response
+          schema:
+            $ref: '#/definitions/error'
+    post:
+      tags:
+        - webhook
+      operationId: createGlobalWebhook
+      parameters:
+        - in: body
+          name: body
+          description: create a webhook
+          required: true
+          schema:
+            $ref: '#/definitions/createWebhookRequest'
+      responses:
+        '200':
+          description: webhook just created
+          schema:
+            $ref: '#/definitions/webhook'
+        default:
+          description: generic error response
+          schema:
+            $ref: '#/definitions/error'
+  /webhooks/{webhookID}:
+    put:
+      tags:
+        - webhook
+      operationId: putGlobalWebhook
+      parameters:
+        - in: path
+          name: webhookID
+          description: numeric ID of the webhook
+          required: true
+          type: integer
+          format: int64
+          minimum: 1
+        - in: body
+          name: body
+          description: update a webhook
+          required: true
+          schema:
+            $ref: '#/definitions/putWebhookRequest'
+      responses:
+        '200':
+          description: webhook just updated
+          schema:
+            $ref: '#/definitions/webhook'
+        default:
+          description: generic error response
+          schema:
+            $ref: '#/definitions/error'
+    delete:
+      tags:
+        - webhook
+      operationId: deleteGlobalWebhook
+      parameters:
+        - in: path
+          name: webhookID
+          description: numeric ID of the webhook
+          required: true
+          type: integer
+          format: int64
+          minimum: 1
+      responses:
+        '200':
+          description: webhook just deleted
+        default:
+          description: generic error response
+          schema:
+            $ref: '#/definitions/error'
 definitions:
   flag:
     type: object
@@ -1467,3 +1550,105 @@ definitions:
       message:
         type: string
         minLength: 1
+  webhook:
+    type: object
+    required:
+      - url
+      - events
+    properties:
+      id:
+        type: integer
+        format: int64
+        minimum: 1
+        readOnly: true
+      flagID:
+        type: integer
+        format: int64
+        minimum: 1
+      url:
+        type: string
+        minLength: 1
+      description:
+        type: string
+      events:
+        type: string
+        description: Comma-separated list of events to trigger on
+      secret:
+        type: string
+        description: Optional secret for webhook signature
+      enabled:
+        type: boolean
+        default: true
+  createWebhookRequest:
+    type: object
+    required:
+      - url
+      - events
+    properties:
+      url:
+        type: string
+        minLength: 1
+      description:
+        type: string
+      events:
+        type: string
+        description: Comma-separated list of events to trigger on
+      secret:
+        type: string
+        description: Optional secret for webhook signature
+      enabled:
+        type: boolean
+        default: true
+  putWebhookRequest:
+    type: object
+    properties:
+      url:
+        type: string
+        minLength: 1
+        x-nullable: true
+      description:
+        type: string
+        x-nullable: true
+      events:
+        type: string
+        description: Comma-separated list of events to trigger on
+        x-nullable: true
+      secret:
+        type: string
+        description: Optional secret for webhook signature
+        x-nullable: true
+      enabled:
+        type: boolean
+        x-nullable: true
+  webhookEvent:
+    type: object
+    required:
+      - event
+      - payload
+      - status
+    properties:
+      id:
+        type: integer
+        format: int64
+        minimum: 1
+        readOnly: true
+      webhookID:
+        type: integer
+        format: int64
+        minimum: 1
+      event:
+        type: string
+        minLength: 1
+      payload:
+        type: string
+      status:
+        type: string
+        enum:
+          - success
+          - failed
+          - pending
+      error:
+        type: string
+      createdAt:
+        type: string
+        format: date-time
