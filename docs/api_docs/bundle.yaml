@@ -1249,6 +1249,7 @@ definitions:
           - NOTIN
           - CONTAINS
           - NOTCONTAINS
+          - CHECKLIST
       value:
         type: string
         minLength: 1
