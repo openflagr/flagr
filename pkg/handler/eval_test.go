@@ -167,6 +167,10 @@ func TestEvalFlag(t *testing.T) {
 		})
 		assert.NotNil(t, result)
 		assert.NotZero(t, result.VariantID)
+		assert.NotEmpty(t, result.FlagTags)
+		assert.Len(t, result.FlagTags, 2)
+		assert.Contains(t, result.FlagTags, "tag1")
+		assert.Contains(t, result.FlagTags, "tag2")
 	})
 
 	t.Run("test happy code path with flagKey", func(t *testing.T) {
@@ -467,6 +471,10 @@ func TestEvalFlagsByTags(t *testing.T) {
 		})
 		assert.NotZero(t, len(results))
 		assert.NotZero(t, results[0].VariantID)
+		assert.NotEmpty(t, results[0].FlagTags)
+		assert.Len(t, results[0].FlagTags, 2)
+		assert.Contains(t, results[0].FlagTags, "tag1")
+		assert.Contains(t, results[0].FlagTags, "tag2")
 	})
 }
 
@@ -515,6 +523,7 @@ func TestPostEvaluationBatch(t *testing.T) {
 		assert.NotNil(t, resp)
 	})
 }
+
 func TestTagsPostEvaluationBatch(t *testing.T) {
 	t.Run("test happy code path", func(t *testing.T) {
 		defer gostub.StubFunc(&EvalFlag, &models.EvalResult{}).Reset()
