@@ -15,6 +15,7 @@ import (
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/segment"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/tag"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/variant"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/webhook"
 )
 
 var getDB = entity.GetDB
@@ -74,6 +75,12 @@ func setupCRUD(api *operations.FlagrAPI) {
 	api.VariantFindVariantsHandler = variant.FindVariantsHandlerFunc(c.FindVariants)
 	api.VariantPutVariantHandler = variant.PutVariantHandlerFunc(c.PutVariant)
 	api.VariantDeleteVariantHandler = variant.DeleteVariantHandlerFunc(c.DeleteVariant)
+
+	// global webhooks
+	api.WebhookCreateGlobalWebhookHandler = webhook.CreateGlobalWebhookHandlerFunc(c.CreateGlobalWebhook)
+	api.WebhookFindGlobalWebhooksHandler = webhook.FindGlobalWebhooksHandlerFunc(c.FindGlobalWebhooks)
+	api.WebhookPutGlobalWebhookHandler = webhook.PutGlobalWebhookHandlerFunc(c.PutGlobalWebhook)
+	api.WebhookDeleteGlobalWebhookHandler = webhook.DeleteGlobalWebhookHandlerFunc(c.DeleteGlobalWebhook)
 }
 
 func setupEvaluation(api *operations.FlagrAPI) {

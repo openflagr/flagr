@@ -4,6 +4,7 @@
 - Introduction
     - [Overview](flagr_overview.md)
     - [Use Cases](flagr_use_cases.md)
+    - [Webhooks](flagr_webhooks.md)
     - [Debug Console](flagr_debugging.md)
 - Server Configuration
     - [Env](flagr_env.md)
