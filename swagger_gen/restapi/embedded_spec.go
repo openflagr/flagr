@@ -111,6 +111,53 @@ func init() {
           "export"
         ],
         "operationId": "getExportEvalCacheJSON",
+        "parameters": [
+          {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "minimum": 1,
+              "type": "integer",
+              "format": "int64"
+            },
+            "collectionFormat": "csv",
+            "description": "\"query optimized\" flagIDs parameter. Has precedence over ` + "`" + `enabled` + "`" + `, ` + "`" + `keys` + "`" + ` and ` + "`" + `tags` + "`" + ` parameters.",
+            "name": "ids",
+            "in": "query"
+          },
+          {
+            "type": "array",
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "description": "\"query optimized\" flagKeys parameter. Has precedence over ` + "`" + `enabled` + "`" + ` and ` + "`" + `tags` + "`" + ` parameter.",
+            "name": "keys",
+            "in": "query"
+          },
+          {
+            "type": "boolean",
+            "description": "return flags having given enabled status",
+            "name": "enabled",
+            "in": "query"
+          },
+          {
+            "type": "array",
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "description": "\"query optimized\" flagTags parameter",
+            "name": "tags",
+            "in": "query"
+          },
+          {
+            "type": "boolean",
+            "description": "whether to use ALL (tags) semantics (ANY by default): ` + "`" + `?tags=foo,bar\u0026all=true` + "`" + ` is equivalent to postEvaluation's ` + "`" + `flagTagsOperator: \"ALL\"` + "`" + `",
+            "name": "all",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -2208,6 +2255,53 @@ func init() {
           "export"
         ],
         "operationId": "getExportEvalCacheJSON",
+        "parameters": [
+          {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "minimum": 1,
+              "type": "integer",
+              "format": "int64"
+            },
+            "collectionFormat": "csv",
+            "description": "\"query optimized\" flagIDs parameter. Has precedence over ` + "`" + `enabled` + "`" + `, ` + "`" + `keys` + "`" + ` and ` + "`" + `tags` + "`" + ` parameters.",
+            "name": "ids",
+            "in": "query"
+          },
+          {
+            "type": "array",
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "description": "\"query optimized\" flagKeys parameter. Has precedence over ` + "`" + `enabled` + "`" + ` and ` + "`" + `tags` + "`" + ` parameter.",
+            "name": "keys",
+            "in": "query"
+          },
+          {
+            "type": "boolean",
+            "description": "return flags having given enabled status",
+            "name": "enabled",
+            "in": "query"
+          },
+          {
+            "type": "array",
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "description": "\"query optimized\" flagTags parameter",
+            "name": "tags",
+            "in": "query"
+          },
+          {
+            "type": "boolean",
+            "description": "whether to use ALL (tags) semantics (ANY by default): ` + "`" + `?tags=foo,bar\u0026all=true` + "`" + ` is equivalent to postEvaluation's ` + "`" + `flagTagsOperator: \"ALL\"` + "`" + `",
+            "name": "all",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",

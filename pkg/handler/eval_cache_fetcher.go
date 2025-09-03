@@ -1,16 +1,17 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
-
-	"encoding/json"
+	"slices"
 
 	"github.com/openflagr/flagr/pkg/config"
 	"github.com/openflagr/flagr/pkg/entity"
 	"github.com/openflagr/flagr/pkg/util"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/export"
 	"gorm.io/gorm"
 )
 
@@ -19,13 +20,78 @@ type EvalCacheJSON struct {
 	Flags []entity.Flag
 }
 
-func (ec *EvalCache) export() EvalCacheJSON {
+func (ec *EvalCache) export(query export.GetExportEvalCacheJSONParams) EvalCacheJSON {
+	var targetIDs map[uint]struct{}
+	if len(query.Ids) > 0 {
+		targetIDs = make(map[uint]struct{}, len(query.Ids))
+		for _, id := range query.Ids {
+			targetIDs[uint(id)] = struct{}{}
+		}
+	}
+
+	var targetKeys map[string]struct{}
+	if len(query.Keys) > 0 {
+		targetKeys = make(map[string]struct{}, len(query.Keys))
+		for _, key := range query.Keys {
+			targetKeys[key] = struct{}{}
+		}
+	}
+
+	var hasTags func(*entity.Flag) bool
+	if len(query.Tags) > 0 {
+		if query.All != nil && *query.All {
+			hasTags = func(f *entity.Flag) bool {
+				for _, tag := range query.Tags {
+					if !slices.ContainsFunc(f.Tags, func(t entity.Tag) bool { return t.Value == tag }) {
+						return false
+					}
+				}
+				return true
+			}
+		} else {
+			hasTags = func(f *entity.Flag) bool {
+				for _, tag := range query.Tags {
+					if slices.ContainsFunc(f.Tags, func(t entity.Tag) bool { return t.Value == tag }) {
+						return true
+					}
+				}
+				return false
+			}
+		}
+	}
+
 	ec.cacheMutex.RLock()
 	defer ec.cacheMutex.RUnlock()
 
 	idCache := ec.cache.idCache
 	fs := make([]entity.Flag, 0, len(idCache))
 	for _, f := range idCache {
+		if targetIDs != nil {
+			if _, ok := targetIDs[f.ID]; ok {
+				ff := *f
+				fs = append(fs, ff)
+			}
+			continue
+		}
+
+		if targetKeys != nil {
+			if _, ok := targetKeys[f.Key]; ok {
+				ff := *f
+				fs = append(fs, ff)
+			}
+			continue
+		}
+
+		if query.Enabled != nil && *query.Enabled != f.Enabled {
+			continue
+		}
+
+		if hasTags != nil {
+			if !hasTags(f) {
+				continue
+			}
+		}
+
 		ff := *f
 		fs = append(fs, ff)
 	}

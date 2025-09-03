@@ -6,10 +6,15 @@ package export
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/go-openapi/errors"
+	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // NewGetExportEvalCacheJSONParams creates a new GetExportEvalCacheJSONParams object
@@ -27,6 +32,33 @@ func NewGetExportEvalCacheJSONParams() GetExportEvalCacheJSONParams {
 type GetExportEvalCacheJSONParams struct {
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
+
+	/*whether to use ALL (tags) semantics (ANY by default): `?tags=foo,bar&all=true` is equivalent to postEvaluation's `flagTagsOperator: "ALL"`
+	  In: query
+	*/
+	All *bool
+
+	/*return flags having given enabled status
+	  In: query
+	*/
+	Enabled *bool
+
+	/*"query optimized" flagIDs parameter. Has precedence over `enabled`, `keys` and `tags` parameters.
+	  Min Items: 1
+	  In: query
+	  Collection Format: csv
+	*/
+	Ids []int64
+
+	/*"query optimized" flagKeys parameter. Has precedence over `enabled` and `tags` parameter.
+	  In: query
+	*/
+	Keys []string
+
+	/*"query optimized" flagTags parameter
+	  In: query
+	*/
+	Tags []string
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -37,9 +69,192 @@ func (o *GetExportEvalCacheJSONParams) BindRequest(r *http.Request, route *middl
 	var res []error
 
 	o.HTTPRequest = r
+	qs := runtime.Values(r.URL.Query())
 
+	qAll, qhkAll, _ := qs.GetOK("all")
+	if err := o.bindAll(qAll, qhkAll, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
+	qEnabled, qhkEnabled, _ := qs.GetOK("enabled")
+	if err := o.bindEnabled(qEnabled, qhkEnabled, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
+	qIds, qhkIds, _ := qs.GetOK("ids")
+	if err := o.bindIds(qIds, qhkIds, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
+	qKeys, qhkKeys, _ := qs.GetOK("keys")
+	if err := o.bindKeys(qKeys, qhkKeys, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
+	qTags, qhkTags, _ := qs.GetOK("tags")
+	if err := o.bindTags(qTags, qhkTags, route.Formats); err != nil {
+		res = append(res, err)
+	}
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+// bindAll binds and validates parameter All from query.
+func (o *GetExportEvalCacheJSONParams) bindAll(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+
+	// Required: false
+	// AllowEmptyValue: false
+
+	if raw == "" { // empty values pass all other validations
+		return nil
+	}
+
+	value, err := swag.ConvertBool(raw)
+	if err != nil {
+		return errors.InvalidType("all", "query", "bool", raw)
+	}
+	o.All = &value
+
+	return nil
+}
+
+// bindEnabled binds and validates parameter Enabled from query.
+func (o *GetExportEvalCacheJSONParams) bindEnabled(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+
+	// Required: false
+	// AllowEmptyValue: false
+
+	if raw == "" { // empty values pass all other validations
+		return nil
+	}
+
+	value, err := swag.ConvertBool(raw)
+	if err != nil {
+		return errors.InvalidType("enabled", "query", "bool", raw)
+	}
+	o.Enabled = &value
+
+	return nil
+}
+
+// bindIds binds and validates array parameter Ids from query.
+//
+// Arrays are parsed according to CollectionFormat: "csv" (defaults to "csv" when empty).
+func (o *GetExportEvalCacheJSONParams) bindIds(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var qvIds string
+	if len(rawData) > 0 {
+		qvIds = rawData[len(rawData)-1]
+	}
+
+	// CollectionFormat: csv
+	idsIC := swag.SplitByFormat(qvIds, "csv")
+	if len(idsIC) == 0 {
+		return nil
+	}
+
+	var idsIR []int64
+	for i, idsIV := range idsIC {
+		// items.Format: "int64"
+		idsI, err := swag.ConvertInt64(idsIV)
+		if err != nil {
+			return errors.InvalidType(fmt.Sprintf("%s.%v", "ids", i), "query", "int64", idsI)
+		}
+
+		if err := validate.MinimumInt(fmt.Sprintf("%s.%v", "ids", i), "query", idsI, 1, false); err != nil {
+			return err
+		}
+
+		idsIR = append(idsIR, idsI)
+	}
+
+	o.Ids = idsIR
+	if err := o.validateIds(formats); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// validateIds carries out validations for parameter Ids
+func (o *GetExportEvalCacheJSONParams) validateIds(formats strfmt.Registry) error {
+
+	idsSize := int64(len(o.Ids))
+
+	// minItems: 1
+	if err := validate.MinItems("ids", "query", idsSize, 1); err != nil {
+		return err
+	}
+	return nil
+}
+
+// bindKeys binds and validates array parameter Keys from query.
+//
+// Arrays are parsed according to CollectionFormat: "" (defaults to "csv" when empty).
+func (o *GetExportEvalCacheJSONParams) bindKeys(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var qvKeys string
+	if len(rawData) > 0 {
+		qvKeys = rawData[len(rawData)-1]
+	}
+
+	// CollectionFormat:
+	keysIC := swag.SplitByFormat(qvKeys, "")
+	if len(keysIC) == 0 {
+		return nil
+	}
+
+	var keysIR []string
+	for i, keysIV := range keysIC {
+		keysI := keysIV
+
+		if err := validate.MinLength(fmt.Sprintf("%s.%v", "keys", i), "query", keysI, 1); err != nil {
+			return err
+		}
+
+		keysIR = append(keysIR, keysI)
+	}
+
+	o.Keys = keysIR
+
+	return nil
+}
+
+// bindTags binds and validates array parameter Tags from query.
+//
+// Arrays are parsed according to CollectionFormat: "" (defaults to "csv" when empty).
+func (o *GetExportEvalCacheJSONParams) bindTags(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var qvTags string
+	if len(rawData) > 0 {
+		qvTags = rawData[len(rawData)-1]
+	}
+
+	// CollectionFormat:
+	tagsIC := swag.SplitByFormat(qvTags, "")
+	if len(tagsIC) == 0 {
+		return nil
+	}
+
+	var tagsIR []string
+	for i, tagsIV := range tagsIC {
+		tagsI := tagsIV
+
+		if err := validate.MinLength(fmt.Sprintf("%s.%v", "tags", i), "query", tagsI, 1); err != nil {
+			return err
+		}
+
+		tagsIR = append(tagsIR, tagsI)
+	}
+
+	o.Tags = tagsIR
+
 	return nil
 }
