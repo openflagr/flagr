@@ -87,6 +87,28 @@ Error Set:
 | Python | [pyflagr](https://github.com/openflagr/pyflagr) |
 | Ruby | [rbflagr](https://github.com/openflagr/rbflagr) |
 
+## Webhook Tester
+
+A simple local webhook listener is included for testing webhook integrations.
+
+**How to use:**
+
+1. Open a terminal and navigate to the `webhook-tester` directory:
+   ```sh
+   cd webhook-tester
+   ```
+2. Install dependencies (only needed once):
+   ```sh
+   npm install
+   ```
+3. Start the webhook tester:
+   ```sh
+   npm start
+   ```
+4. The tester will listen on [http://localhost:3000](http://localhost:3000) and log all incoming webhook requests to the console.
+
+You can configure your Flagr webhooks to point to `http://localhost:3000/any-path` during development to inspect payloads and headers.
+
 ## License and Credit
 - [`openflagr/flagr`](https://github.com/openflagr/flagr) Apache 2.0
 - [`checkr/flagr`](https://github.com/checkr/flagr) Apache 2.0

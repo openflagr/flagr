@@ -14,12 +14,17 @@
                 </div>
               </router-link>
             </el-col>
-            <el-col :span="1" :offset="15">
+            <el-col :span="2">
+              <router-link to="/webhooks">
+                <h3>Webhooks</h3>
+              </router-link>
+            </el-col>
+            <el-col :span="1" :offset="13">
               <a href="https://openflagr.github.io/flagr/api_docs" target="_blank"
                 ><h3>API</h3></a
               >
             </el-col>
-            <el-col :span="1" :offset="1">
+            <el-col :span="1">
               <a href="https://openflagr.github.io/flagr" target="_blank"
                 ><h3>Docs</h3></a
               >
