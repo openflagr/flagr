@@ -1418,7 +1418,8 @@ func init() {
             "IN",
             "NOTIN",
             "CONTAINS",
-            "NOTCONTAINS"
+            "NOTCONTAINS",
+            "CHECKLIST"
           ]
         },
         "property": {
@@ -3515,7 +3516,8 @@ func init() {
             "IN",
             "NOTIN",
             "CONTAINS",
-            "NOTCONTAINS"
+            "NOTCONTAINS",
+            "CHECKLIST"
           ]
         },
         "property": {
