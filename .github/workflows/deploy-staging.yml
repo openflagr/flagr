@@ -1,0 +1,14 @@
+name: Deploy to Staging
+
+on: 
+    workflow_dispatch:
+
+permissions: 
+  contents: read
+
+jobs: 
+  deploy-proxysql:
+    uses: ./.github/workflows/deploy-proxysql.yml
+    with: 
+      environment: staging
+    secrets: inherit
