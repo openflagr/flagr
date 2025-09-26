@@ -15,40 +15,20 @@ jobs:
 
     env:
       # ProxySQL Database Configuration
-      PROXYSQL_HOST: ${{ secrets.PROXYSQL_HOST }}
-      PROXYSQL_PORT: ${{ secrets.PROXYSQL_PORT }}
+      FLAGR_DB_DBDRIVER: ${{ secrets.FLAGR_DB_DBDRIVER }}
+      FLAGR_DB_DBCONNECTIONSTR: ${{ secrets.FLAGR_DB_DBCONNECTIONSTR }}
       PROXYSQL_MYSQL_USER: ${{ secrets.PROXYSQL_MYSQL_USER }}
       PROXYSQL_MYSQL_PASSWORD: ${{ secrets.PROXYSQL_MYSQL_PASSWORD }}
       PROXYSQL_MYSQL_SCHEMANAME: ${{ secrets.PROXYSQL_MYSQL_SCHEMANAME }}
 
-      # Redis Configuration
-      REDIS_URL: ${{ secrets.REDIS_URL }}
-
-      # Authentication
-      INTERNAL_PAUBOX_TOKEN: ${{ secrets.INTERNAL_PAUBOX_TOKEN }}
 
       # Monitoring
-      SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
       ENVIRONMENT: ${{ vars.ENVIRONMENT }}
-      LOG_LEVEL: ${{ vars.LOG_LEVEL }}
 
-      # Legacy commented out variables
-      # DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      # IAM_ADMIN: ${{ secrets.IAM_ADMIN }}
-      # PAUBOX_MARKETING_URL: ${{ secrets.PAUBOX_MARKETING_URL }}
-      # SERVICE_ADDRESS: ${{ secrets.SERVICE_ADDRESS }}
-      # S3_BUCKET: ${{ secrets.S3_BUCKET }}
-      # S3_ACCESS_KEY: ${{ secrets.S3_ACCESS_KEY }}
-      # S3_REGION: ${{ secrets.S3_REGION }}
-      # S3_URL: ${{ secrets.S3_URL }}
-      # ADMIN_API_SERVER: ${{ secrets.ADMIN_API_SERVER }}
-      # PAUBOX_HOST: ${{ secrets.PAUBOX_HOST }}
-      # PAUBOX_API_KEY: ${{ secrets.PAUBOX_API_KEY }}
-      # IAM_URL: ${{ vars.IAM_URL }}
 
     steps:
       - name: Debug database URL
-        run: echo "DATABASE_URL=${{ env.DATABASE_URL }}"
+        run: echo "DATABASE_URL=${{ env.FLAGR_DB_DBCONNECTIONSTR }}"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -106,16 +86,13 @@ jobs:
           container-name: iam-app
           image: ${{ secrets.AWS_ECR_REPOSITORY }}:rust-latest
           environment-variables: |
-            PROXYSQL_HOST=${{ secrets.PROXYSQL_HOST }}
-            PROXYSQL_PORT=${{ secrets.PROXYSQL_PORT }}
+            FLAGR_DB_DBDRIVER=${{ secrets.FLAGR_DB_DBDRIVER }}
+            FLAGR_DB_DBCONNECTIONSTR=${{ secrets.FLAGR_DB_DBCONNECTIONSTR }}
             PROXYSQL_MYSQL_USER=${{ secrets.PROXYSQL_MYSQL_USER }}
             PROXYSQL_MYSQL_PASSWORD=${{ secrets.PROXYSQL_MYSQL_PASSWORD }}
             PROXYSQL_MYSQL_SCHEMANAME=${{ secrets.PROXYSQL_MYSQL_SCHEMANAME }}
-            REDIS_URL=${{ secrets.REDIS_URL }}
-            INTERNAL_PAUBOX_TOKEN=${{ secrets.INTERNAL_PAUBOX_TOKEN }}
-            SENTRY_DSN=${{ secrets.SENTRY_DSN }}
             ENVIRONMENT=${{ vars.ENVIRONMENT }}
-            LOG_LEVEL=${{ vars.LOG_LEVEL }}
+
 
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
