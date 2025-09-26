@@ -1,0 +1,25 @@
+FROM proxysql/proxysql:latest
+
+RUN mkdir -p /var/lib/proxysql /var/run/proxysql && chown -R proxysql:proxysql /var/lib/proxysql /var/run/proxysql
+
+COPY proxysql.cnf /etc/proxysql.cnf
+
+CMD ["sh", "-c", "if [ ! -f /var/lib/proxysql/proxysql-ca.pem ]; then \
+                     openssl req -new -x509 -days 365 -extensions v3_ca \
+                     -keyout /var/lib/proxysql/proxysql-ca-key.pem \
+                     -out /var/lib/proxysql/proxysql-ca.pem \
+                     -nodes -subj '/CN=localhost'; \
+                   fi; \
+                   if [ ! -f /var/lib/proxysql/proxysql-key.pem ]; then \
+                     openssl genpkey -algorithm RSA -out /var/lib/proxysql/proxysql-key.pem -pkeyopt rsa_keygen_bits:2048; \
+                   fi; \
+                   if [ ! -f /var/lib/proxysql/proxysql-cert.pem ]; then \
+                     openssl req -new -key /var/lib/proxysql/proxysql-key.pem \
+                     -out /var/lib/proxysql/proxysql-cert.csr -subj '/CN=localhost'; \
+                     openssl x509 -req -days 365 -in /var/lib/proxysql/proxysql-cert.csr \
+                     -CA /var/lib/proxysql/proxysql-ca.pem -CAkey /var/lib/proxysql/proxysql-ca-key.pem \
+                     -CAcreateserial -out /var/lib/proxysql/proxysql-cert.pem; \
+                     rm /var/lib/proxysql/proxysql-cert.csr; \
+                   fi; \
+                   chown -R proxysql:proxysql /var/lib/proxysql /var/run/proxysql; \
+                   proxysql --initial --config=/etc/proxysql.cnf --foreground"]

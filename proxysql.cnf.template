@@ -1,0 +1,105 @@
+
+datadir="/var/lib/proxysql"
+errorlog="/var/lib/proxysql/proxysql.log"
+
+admin_variables =
+{
+    mysql_ifaces="0.0.0.0:6032"
+    web_enabled="false"
+    admin_credentials="admin:{{PROXYSQL_ADMIN_PASSWORD}}"
+    stats_credentials="stats:{{PROXYSQL_STATS_PASSWORD}}"
+}
+
+mysql_variables = 
+{
+    threads=4
+    max_connections=2048
+    default_query_delay=0
+    default_query_timeout=36000000
+    have_compress=true
+    poll_timeout=2000
+    interfaces="0.0.0.0:6033;/var/run/proxysql/mysqld.sock"
+    default_schema="information_schema"
+    stacksize=1048576
+    server_version="10.6.5"
+    connect_timeout_server=3000
+    monitor_connect_interval="2000"
+    monitor_ping_interval="2000"
+    monitor_read_only_interval="2000"
+    monitor_enabled="true"
+    monitor_password="{{PROXYSQL_MONITOR_PASSWORD}}"
+    monitor_username="monitor"
+    ping_interval_server_msec=120000
+    ping_timeout_server=500
+    commands_stats=true
+    sessions_sort=true
+    connect_retries_on_failure=10
+}
+
+mysql_users:
+(
+    {
+        username="{{PROXYSQL_MYSQL_USER}}"
+        password="{{PROXYSQL_MYSQL_PASSWORD}}"
+        default_schema="{{PROXYSQL_MYSQL_DEFAULT_SCHEMA}}"
+        default_hostgroup=1
+    }
+)
+mysql_servers:
+(
+    {
+        hostgroup_id=1
+        hostname="{{PROXYSQL_MATRIX_DB1_HOST}}"
+        port=3306
+    },
+    {
+        hostgroup_id=1
+        hostname="{{PROXYSQL_MATRIX_DB2_HOST}}"
+        port=3306
+    },
+    {
+        hostgroup_id=1
+        hostname="{{PROXYSQL_MATRIX_DB3_HOST}}"
+        port=3306
+    }
+    )
+mysql_galera_hostgroups =
+(
+    {
+        writer_hostgroup=1
+        reader_hostgroup=2
+        backup_writer_hostgroup=3
+        offline_hostgroup=99
+        max_writers=1
+        writer_is_also_reader=1
+        max_transactions_behind=30
+        active=1
+    }
+)
+mysql_query_rules =
+(
+    {
+        rule_id=1
+        active=1
+        schemaname="{{PROXYSQL_MYSQL_SCHEMANAME}}"
+        match_pattern="^SELECT .* FOR UPDATE$"
+        destination_hostgroup=1
+        apply=1
+    },
+    {
+        rule_id=2
+        active=1
+        schemaname="{{PROXYSQL_MYSQL_SCHEMANAME}}"
+        match_pattern="^SELECT .*$"
+        destination_hostgroup=2
+        apply=1
+    },
+    {
+        rule_id=3
+        active=1
+        schemaname="{{PROXYSQL_MYSQL_SCHEMANAME}}"
+        match_pattern=".*"
+        destination_hostgroup=1
+        apply=1
+    }
+)

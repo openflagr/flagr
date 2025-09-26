@@ -1,0 +1,96 @@
+
+name: Deploy ProxySQL
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+
+jobs:
+  build-and-push:
+    name: Build and push
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up AWS CLI
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_GITHUB_ACTIONS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_GITHUB_ACTIONS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_ECR_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      
+      - name: Replace placeholders in ProxySQL template
+        run: |
+          sed -e "s/{{PROXYSQL_ADMIN_PASSWORD}}/${{ secrets.PROXYSQL_ADMIN_PASSWORD }}/" \
+              -e "s/{{PROXYSQL_STATS_PASSWORD}}/${{ secrets.PROXYSQL_STATS_PASSWORD }}/" \
+              -e "s/{{PROXYSQL_MONITOR_PASSWORD}}/${{ secrets.PROXYSQL_MONITOR_PASSWORD }}/" \
+              -e "s/{{PROXYSQL_MYSQL_USER}}/${{ secrets.PROXYSQL_MYSQL_USER }}/" \
+              -e "s/{{PROXYSQL_MYSQL_PASSWORD}}/${{ secrets.PROXYSQL_MYSQL_PASSWORD }}/" \
+              -e "s/{{PROXYSQL_MYSQL_DEFAULT_SCHEMA}}/${{ secrets.PROXYSQL_MYSQL_DEFAULT_SCHEMA }}/" \
+              -e "s/{{PROXYSQL_MATRIX_DB1_HOST}}/${{ secrets.PROXYSQL_MATRIX_DB1_HOST }}/" \
+              -e "s/{{PROXYSQL_MATRIX_DB2_HOST}}/${{ secrets.PROXYSQL_MATRIX_DB2_HOST }}/" \
+              -e "s/{{PROXYSQL_MATRIX_DB3_HOST}}/${{ secrets.PROXYSQL_MATRIX_DB3_HOST }}/" \
+              -e "s/{{PROXYSQL_MYSQL_SCHEMANAME}}/${{ secrets.PROXYSQL_MYSQL_SCHEMANAME }}/" \
+              proxysql.cnf.template > proxysql.cnf
+
+      - name: Pull latest Docker image (if available)
+        run: |
+          docker pull ${{ secrets.AWS_ECR_REPOSITORY }}:proxysql-latest || true
+
+      - name: Build, tag, and push App image to Amazon ECR
+        id: build-image
+        run: |
+          docker build \
+          --cache-from=${{ secrets.AWS_ECR_REPOSITORY }}:proxysql-latest \
+          --cache-to=type=inline \
+          -t ${{ secrets.AWS_ECR_REPOSITORY }}:proxysql-latest \
+          -f Dockerfile.proxysql .
+          docker push ${{ secrets.AWS_ECR_REPOSITORY }}:proxysql-latest
+          echo "image=${{ secrets.AWS_ECR_REPOSITORY }}:proxysql-latest" >> $GITHUB_OUTPUT
+
+      - name: Cleanup old Docker image
+        run: |
+          docker rmi ${{ secrets.AWS_ECR_REPOSITORY }}:proxysql-latest || true
+      
+      - name: Fetch existing task definition
+        id: fetch-task-def
+        run: |
+          aws ecs describe-task-definition --task-definition paubox-iam-${{ inputs.environment }}-proxysql-task > ecs-task-definition.json
+      
+      - name: Clean up downloaded task definition
+        run: |
+          jq '.taskDefinition' ecs-task-definition.json > no-task-definition.json
+          cat no-task-definition.json | jq 'del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)' > ecs-task-definition-trimmed.json
+
+      - name: Render Amazon ECS task definition
+        id: render-container
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ecs-task-definition-trimmed.json
+          container-name: proxysql
+          image: ${{ steps.build-image.outputs.image }}
+
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.render-container.outputs.task-definition }}
+          service: proxysql-service
+          cluster: paubox-iam-${{ inputs.environment }}
+          # wait-for-service-stability: true
+
+  deploy-app:
+    needs: build-and-push
+    uses: ./.github/workflows/deploy-app.yml
+    with:
+      environment: ${{ inputs.environment }}
+    secrets: inherit
