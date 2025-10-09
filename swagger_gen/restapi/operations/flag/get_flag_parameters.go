@@ -28,7 +28,6 @@ func NewGetFlagParams() GetFlagParams {
 //
 // swagger:parameters getFlag
 type GetFlagParams struct {
-
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
@@ -82,7 +81,7 @@ func (o *GetFlagParams) bindFlagID(rawData []string, hasKey bool, formats strfmt
 	return nil
 }
 
-// validateFlagID carries on validations for parameter FlagID
+// validateFlagID carries out validations for parameter FlagID
 func (o *GetFlagParams) validateFlagID(formats strfmt.Registry) error {
 
 	if err := validate.MinimumInt("flagID", "path", o.FlagID, 1, false); err != nil {

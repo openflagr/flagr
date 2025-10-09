@@ -36,7 +36,7 @@ func MapAttachment(a interface{}) (entity.Attachment, error) {
 	if a != nil {
 		m, ok := a.(map[string]interface{})
 		if !ok {
-			return e, fmt.Errorf("Make sure JSON is properly formatted into key/value pairs. Invalid attachment format %s", spew.Sdump(a))
+			return e, fmt.Errorf("make sure JSON is properly formatted into key/value pairs. Invalid attachment format %s", spew.Sdump(a))
 		}
 		e = m
 	}

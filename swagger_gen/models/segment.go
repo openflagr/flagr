@@ -7,6 +7,7 @@ package models
 
 import (
 	"context"
+	stderrors "errors"
 	"strconv"
 
 	"github.com/go-openapi/errors"
@@ -94,11 +95,15 @@ func (m *Segment) validateConstraints(formats strfmt.Registry) error {
 
 		if m.Constraints[i] != nil {
 			if err := m.Constraints[i].Validate(formats); err != nil {
-				if ve, ok := err.(*errors.Validation); ok {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
 					return ve.ValidateName("constraints" + "." + strconv.Itoa(i))
-				} else if ce, ok := err.(*errors.CompositeError); ok {
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
 					return ce.ValidateName("constraints" + "." + strconv.Itoa(i))
 				}
+
 				return err
 			}
 		}
@@ -133,11 +138,15 @@ func (m *Segment) validateDistributions(formats strfmt.Registry) error {
 
 		if m.Distributions[i] != nil {
 			if err := m.Distributions[i].Validate(formats); err != nil {
-				if ve, ok := err.(*errors.Validation); ok {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
 					return ve.ValidateName("distributions" + "." + strconv.Itoa(i))
-				} else if ce, ok := err.(*errors.CompositeError); ok {
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
 					return ce.ValidateName("distributions" + "." + strconv.Itoa(i))
 				}
+
 				return err
 			}
 		}
@@ -222,11 +231,15 @@ func (m *Segment) contextValidateConstraints(ctx context.Context, formats strfmt
 			}
 
 			if err := m.Constraints[i].ContextValidate(ctx, formats); err != nil {
-				if ve, ok := err.(*errors.Validation); ok {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
 					return ve.ValidateName("constraints" + "." + strconv.Itoa(i))
-				} else if ce, ok := err.(*errors.CompositeError); ok {
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
 					return ce.ValidateName("constraints" + "." + strconv.Itoa(i))
 				}
+
 				return err
 			}
 		}
@@ -247,11 +260,15 @@ func (m *Segment) contextValidateDistributions(ctx context.Context, formats strf
 			}
 
 			if err := m.Distributions[i].ContextValidate(ctx, formats); err != nil {
-				if ve, ok := err.(*errors.Validation); ok {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
 					return ve.ValidateName("distributions" + "." + strconv.Itoa(i))
-				} else if ce, ok := err.(*errors.CompositeError); ok {
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
 					return ce.ValidateName("distributions" + "." + strconv.Itoa(i))
 				}
+
 				return err
 			}
 		}
@@ -263,7 +280,7 @@ func (m *Segment) contextValidateDistributions(ctx context.Context, formats strf
 
 func (m *Segment) contextValidateID(ctx context.Context, formats strfmt.Registry) error {
 
-	if err := validate.ReadOnly(ctx, "id", "body", int64(m.ID)); err != nil {
+	if err := validate.ReadOnly(ctx, "id", "body", m.ID); err != nil {
 		return err
 	}
 

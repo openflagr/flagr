@@ -6,6 +6,7 @@ package segment
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	stderrors "errors"
 	"io"
 	"net/http"
 
@@ -32,7 +33,6 @@ func NewCreateSegmentParams() CreateSegmentParams {
 //
 // swagger:parameters createSegment
 type CreateSegmentParams struct {
-
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
@@ -41,6 +41,7 @@ type CreateSegmentParams struct {
 	  In: body
 	*/
 	Body *models.CreateSegmentRequest
+
 	/*numeric ID of the flag to get
 	  Required: true
 	  Minimum: 1
@@ -59,10 +60,12 @@ func (o *CreateSegmentParams) BindRequest(r *http.Request, route *middleware.Mat
 	o.HTTPRequest = r
 
 	if runtime.HasBody(r) {
-		defer r.Body.Close()
+		defer func() {
+			_ = r.Body.Close()
+		}()
 		var body models.CreateSegmentRequest
 		if err := route.Consumer.Consume(r.Body, &body); err != nil {
-			if err == io.EOF {
+			if stderrors.Is(err, io.EOF) {
 				res = append(res, errors.Required("body", "body", ""))
 			} else {
 				res = append(res, errors.NewParseError("body", "body", "", err))
@@ -119,7 +122,7 @@ func (o *CreateSegmentParams) bindFlagID(rawData []string, hasKey bool, formats 
 	return nil
 }
 
-// validateFlagID carries on validations for parameter FlagID
+// validateFlagID carries out validations for parameter FlagID
 func (o *CreateSegmentParams) validateFlagID(formats strfmt.Registry) error {
 
 	if err := validate.MinimumInt("flagID", "path", o.FlagID, 1, false); err != nil {

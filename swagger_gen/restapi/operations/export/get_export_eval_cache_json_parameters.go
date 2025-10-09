@@ -25,7 +25,6 @@ func NewGetExportEvalCacheJSONParams() GetExportEvalCacheJSONParams {
 //
 // swagger:parameters getExportEvalCacheJSON
 type GetExportEvalCacheJSONParams struct {
-
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 }

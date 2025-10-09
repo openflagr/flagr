@@ -28,7 +28,6 @@ func NewDeleteVariantParams() DeleteVariantParams {
 //
 // swagger:parameters deleteVariant
 type DeleteVariantParams struct {
-
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
@@ -38,6 +37,7 @@ type DeleteVariantParams struct {
 	  In: path
 	*/
 	FlagID int64
+
 	/*numeric ID of the variant
 	  Required: true
 	  Minimum: 1
@@ -93,7 +93,7 @@ func (o *DeleteVariantParams) bindFlagID(rawData []string, hasKey bool, formats 
 	return nil
 }
 
-// validateFlagID carries on validations for parameter FlagID
+// validateFlagID carries out validations for parameter FlagID
 func (o *DeleteVariantParams) validateFlagID(formats strfmt.Registry) error {
 
 	if err := validate.MinimumInt("flagID", "path", o.FlagID, 1, false); err != nil {
@@ -126,7 +126,7 @@ func (o *DeleteVariantParams) bindVariantID(rawData []string, hasKey bool, forma
 	return nil
 }
 
-// validateVariantID carries on validations for parameter VariantID
+// validateVariantID carries out validations for parameter VariantID
 func (o *DeleteVariantParams) validateVariantID(formats strfmt.Registry) error {
 
 	if err := validate.MinimumInt("variantID", "path", o.VariantID, 1, false); err != nil {

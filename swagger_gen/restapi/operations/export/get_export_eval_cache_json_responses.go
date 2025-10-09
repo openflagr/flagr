@@ -26,7 +26,7 @@ type GetExportEvalCacheJSONOK struct {
 	/*
 	  In: Body
 	*/
-	Payload interface{} `json:"body,omitempty"`
+	Payload any `json:"body,omitempty"`
 }
 
 // NewGetExportEvalCacheJSONOK creates GetExportEvalCacheJSONOK with default headers values
@@ -36,13 +36,13 @@ func NewGetExportEvalCacheJSONOK() *GetExportEvalCacheJSONOK {
 }
 
 // WithPayload adds the payload to the get export eval cache Json o k response
-func (o *GetExportEvalCacheJSONOK) WithPayload(payload interface{}) *GetExportEvalCacheJSONOK {
+func (o *GetExportEvalCacheJSONOK) WithPayload(payload any) *GetExportEvalCacheJSONOK {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the get export eval cache Json o k response
-func (o *GetExportEvalCacheJSONOK) SetPayload(payload interface{}) {
+func (o *GetExportEvalCacheJSONOK) SetPayload(payload any) {
 	o.Payload = payload
 }
 

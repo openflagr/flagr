@@ -29,7 +29,6 @@ func NewGetFlagSnapshotsParams() GetFlagSnapshotsParams {
 //
 // swagger:parameters getFlagSnapshots
 type GetFlagSnapshotsParams struct {
-
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
@@ -39,14 +38,17 @@ type GetFlagSnapshotsParams struct {
 	  In: path
 	*/
 	FlagID int64
+
 	/*the number of snapshots to return
 	  In: query
 	*/
 	Limit *int64
+
 	/*return snapshots given the offset, it should usually set together with limit
 	  In: query
 	*/
 	Offset *int64
+
 	/*sort order
 	  In: query
 	*/
@@ -61,7 +63,6 @@ func (o *GetFlagSnapshotsParams) BindRequest(r *http.Request, route *middleware.
 	var res []error
 
 	o.HTTPRequest = r
-
 	qs := runtime.Values(r.URL.Query())
 
 	rFlagID, rhkFlagID, _ := route.Params.GetOK("flagID")
@@ -112,7 +113,7 @@ func (o *GetFlagSnapshotsParams) bindFlagID(rawData []string, hasKey bool, forma
 	return nil
 }
 
-// validateFlagID carries on validations for parameter FlagID
+// validateFlagID carries out validations for parameter FlagID
 func (o *GetFlagSnapshotsParams) validateFlagID(formats strfmt.Registry) error {
 
 	if err := validate.MinimumInt("flagID", "path", o.FlagID, 1, false); err != nil {
@@ -190,10 +191,10 @@ func (o *GetFlagSnapshotsParams) bindSort(rawData []string, hasKey bool, formats
 	return nil
 }
 
-// validateSort carries on validations for parameter Sort
+// validateSort carries out validations for parameter Sort
 func (o *GetFlagSnapshotsParams) validateSort(formats strfmt.Registry) error {
 
-	if err := validate.EnumCase("sort", "query", *o.Sort, []interface{}{"ASC", "DESC"}, true); err != nil {
+	if err := validate.EnumCase("sort", "query", *o.Sort, []any{"ASC", "DESC"}, true); err != nil {
 		return err
 	}
 

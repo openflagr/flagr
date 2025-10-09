@@ -28,7 +28,6 @@ func NewDeleteFlagParams() DeleteFlagParams {
 //
 // swagger:parameters deleteFlag
 type DeleteFlagParams struct {
-
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
@@ -82,7 +81,7 @@ func (o *DeleteFlagParams) bindFlagID(rawData []string, hasKey bool, formats str
 	return nil
 }
 
-// validateFlagID carries on validations for parameter FlagID
+// validateFlagID carries out validations for parameter FlagID
 func (o *DeleteFlagParams) validateFlagID(formats strfmt.Registry) error {
 
 	if err := validate.MinimumInt("flagID", "path", o.FlagID, 1, false); err != nil {

@@ -181,10 +181,7 @@ func (c *crud) GetFlagSnapshots(params flag.GetFlagSnapshotsParams) middleware.R
 		tx = tx.Offset(int(*params.Offset))
 	}
 
-	descending := true
-	if params.Sort != nil && *params.Sort == "ASC" {
-		descending = false
-	}
+	descending := params.Sort == nil || *params.Sort != "ASC"
 
 	if err := tx.
 		Order(clause.OrderByColumn{

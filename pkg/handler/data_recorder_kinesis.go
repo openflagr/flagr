@@ -3,9 +3,9 @@ package handler
 import (
 	producer "github.com/a8m/kinesis-producer"
 	"github.com/a8m/kinesis-producer/loggers/kplogrus"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/kinesis"
+	"github.com/aws/aws-sdk-go/aws"             //nolint:staticcheck // Using AWS SDK v1 intentionally for backward compatibility
+	"github.com/aws/aws-sdk-go/aws/session"     //nolint:staticcheck // Using AWS SDK v1 intentionally for backward compatibility
+	"github.com/aws/aws-sdk-go/service/kinesis" //nolint:staticcheck // Using AWS SDK v1 intentionally for backward compatibility
 	"github.com/openflagr/flagr/pkg/config"
 	"github.com/openflagr/flagr/swagger_gen/models"
 	"github.com/sirupsen/logrus"

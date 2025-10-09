@@ -28,7 +28,6 @@ func NewFindTagsParams() FindTagsParams {
 //
 // swagger:parameters findTags
 type FindTagsParams struct {
-
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
@@ -82,7 +81,7 @@ func (o *FindTagsParams) bindFlagID(rawData []string, hasKey bool, formats strfm
 	return nil
 }
 
-// validateFlagID carries on validations for parameter FlagID
+// validateFlagID carries out validations for parameter FlagID
 func (o *FindTagsParams) validateFlagID(formats strfmt.Registry) error {
 
 	if err := validate.MinimumInt("flagID", "path", o.FlagID, 1, false); err != nil {

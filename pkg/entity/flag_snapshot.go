@@ -42,7 +42,7 @@ func SaveFlagSnapshot(db *gorm.DB, flagID uint, updatedBy string) {
 		return
 	}
 
-	fs := FlagSnapshot{FlagID: f.Model.ID, UpdatedBy: updatedBy, Flag: b}
+	fs := FlagSnapshot{FlagID: f.ID, UpdatedBy: updatedBy, Flag: b}
 	if err := tx.Create(&fs).Error; err != nil {
 		logrus.WithFields(logrus.Fields{
 			"err":    err,
@@ -53,7 +53,7 @@ func SaveFlagSnapshot(db *gorm.DB, flagID uint, updatedBy string) {
 	}
 
 	f.UpdatedBy = updatedBy
-	f.SnapshotID = fs.Model.ID
+	f.SnapshotID = fs.ID
 
 	if err := tx.Save(f).Error; err != nil {
 		logrus.WithFields(logrus.Fields{

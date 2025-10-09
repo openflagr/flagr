@@ -47,14 +47,14 @@ func (o *PutDistributionsURL) Build() (*url.URL, error) {
 
 	flagID := swag.FormatInt64(o.FlagID)
 	if flagID != "" {
-		_path = strings.Replace(_path, "{flagID}", flagID, -1)
+		_path = strings.ReplaceAll(_path, "{flagID}", flagID)
 	} else {
 		return nil, errors.New("flagId is required on PutDistributionsURL")
 	}
 
 	segmentID := swag.FormatInt64(o.SegmentID)
 	if segmentID != "" {
-		_path = strings.Replace(_path, "{segmentID}", segmentID, -1)
+		_path = strings.ReplaceAll(_path, "{segmentID}", segmentID)
 	} else {
 		return nil, errors.New("segmentId is required on PutDistributionsURL")
 	}

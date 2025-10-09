@@ -47,14 +47,14 @@ func (o *DeleteVariantURL) Build() (*url.URL, error) {
 
 	flagID := swag.FormatInt64(o.FlagID)
 	if flagID != "" {
-		_path = strings.Replace(_path, "{flagID}", flagID, -1)
+		_path = strings.ReplaceAll(_path, "{flagID}", flagID)
 	} else {
 		return nil, errors.New("flagId is required on DeleteVariantURL")
 	}
 
 	variantID := swag.FormatInt64(o.VariantID)
 	if variantID != "" {
-		_path = strings.Replace(_path, "{variantID}", variantID, -1)
+		_path = strings.ReplaceAll(_path, "{variantID}", variantID)
 	} else {
 		return nil, errors.New("variantId is required on DeleteVariantURL")
 	}

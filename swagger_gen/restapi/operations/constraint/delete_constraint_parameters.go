@@ -28,7 +28,6 @@ func NewDeleteConstraintParams() DeleteConstraintParams {
 //
 // swagger:parameters deleteConstraint
 type DeleteConstraintParams struct {
-
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
@@ -38,12 +37,14 @@ type DeleteConstraintParams struct {
 	  In: path
 	*/
 	ConstraintID int64
+
 	/*numeric ID of the flag
 	  Required: true
 	  Minimum: 1
 	  In: path
 	*/
 	FlagID int64
+
 	/*numeric ID of the segment
 	  Required: true
 	  Minimum: 1
@@ -104,7 +105,7 @@ func (o *DeleteConstraintParams) bindConstraintID(rawData []string, hasKey bool,
 	return nil
 }
 
-// validateConstraintID carries on validations for parameter ConstraintID
+// validateConstraintID carries out validations for parameter ConstraintID
 func (o *DeleteConstraintParams) validateConstraintID(formats strfmt.Registry) error {
 
 	if err := validate.MinimumInt("constraintID", "path", o.ConstraintID, 1, false); err != nil {
@@ -137,7 +138,7 @@ func (o *DeleteConstraintParams) bindFlagID(rawData []string, hasKey bool, forma
 	return nil
 }
 
-// validateFlagID carries on validations for parameter FlagID
+// validateFlagID carries out validations for parameter FlagID
 func (o *DeleteConstraintParams) validateFlagID(formats strfmt.Registry) error {
 
 	if err := validate.MinimumInt("flagID", "path", o.FlagID, 1, false); err != nil {
@@ -170,7 +171,7 @@ func (o *DeleteConstraintParams) bindSegmentID(rawData []string, hasKey bool, fo
 	return nil
 }
 
-// validateSegmentID carries on validations for parameter SegmentID
+// validateSegmentID carries out validations for parameter SegmentID
 func (o *DeleteConstraintParams) validateSegmentID(formats strfmt.Registry) error {
 
 	if err := validate.MinimumInt("segmentID", "path", o.SegmentID, 1, false); err != nil {
