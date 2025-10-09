@@ -18,7 +18,7 @@ import (
 type EvaluationEntity struct {
 
 	// entity context
-	EntityContext interface{} `json:"entityContext,omitempty"`
+	EntityContext any `json:"entityContext,omitempty"`
 
 	// entity ID
 	EntityID string `json:"entityID,omitempty"`

@@ -16,7 +16,7 @@ func TestSaveFlagSnapshot(t *testing.T) {
 	defer tmpDB.Close()
 
 	t.Run("happy code path", func(t *testing.T) {
-		SaveFlagSnapshot(db, f.Model.ID, "flagr-test@example.com")
+		SaveFlagSnapshot(db, f.ID, "flagr-test@example.com")
 	})
 
 	t.Run("save on non-existing flag", func(t *testing.T) {

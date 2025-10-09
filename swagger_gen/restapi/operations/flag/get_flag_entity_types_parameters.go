@@ -25,7 +25,6 @@ func NewGetFlagEntityTypesParams() GetFlagEntityTypesParams {
 //
 // swagger:parameters getFlagEntityTypes
 type GetFlagEntityTypesParams struct {
-
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 }

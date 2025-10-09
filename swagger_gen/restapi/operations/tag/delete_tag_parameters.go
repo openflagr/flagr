@@ -28,7 +28,6 @@ func NewDeleteTagParams() DeleteTagParams {
 //
 // swagger:parameters deleteTag
 type DeleteTagParams struct {
-
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
@@ -38,6 +37,7 @@ type DeleteTagParams struct {
 	  In: path
 	*/
 	FlagID int64
+
 	/*numeric ID of the tag
 	  Required: true
 	  Minimum: 1
@@ -93,7 +93,7 @@ func (o *DeleteTagParams) bindFlagID(rawData []string, hasKey bool, formats strf
 	return nil
 }
 
-// validateFlagID carries on validations for parameter FlagID
+// validateFlagID carries out validations for parameter FlagID
 func (o *DeleteTagParams) validateFlagID(formats strfmt.Registry) error {
 
 	if err := validate.MinimumInt("flagID", "path", o.FlagID, 1, false); err != nil {
@@ -126,7 +126,7 @@ func (o *DeleteTagParams) bindTagID(rawData []string, hasKey bool, formats strfm
 	return nil
 }
 
-// validateTagID carries on validations for parameter TagID
+// validateTagID carries out validations for parameter TagID
 func (o *DeleteTagParams) validateTagID(formats strfmt.Registry) error {
 
 	if err := validate.MinimumInt("tagID", "path", o.TagID, 1, false); err != nil {

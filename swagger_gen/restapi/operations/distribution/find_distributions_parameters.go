@@ -28,7 +28,6 @@ func NewFindDistributionsParams() FindDistributionsParams {
 //
 // swagger:parameters findDistributions
 type FindDistributionsParams struct {
-
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
@@ -38,6 +37,7 @@ type FindDistributionsParams struct {
 	  In: path
 	*/
 	FlagID int64
+
 	/*numeric ID of the segment
 	  Required: true
 	  Minimum: 1
@@ -93,7 +93,7 @@ func (o *FindDistributionsParams) bindFlagID(rawData []string, hasKey bool, form
 	return nil
 }
 
-// validateFlagID carries on validations for parameter FlagID
+// validateFlagID carries out validations for parameter FlagID
 func (o *FindDistributionsParams) validateFlagID(formats strfmt.Registry) error {
 
 	if err := validate.MinimumInt("flagID", "path", o.FlagID, 1, false); err != nil {
@@ -126,7 +126,7 @@ func (o *FindDistributionsParams) bindSegmentID(rawData []string, hasKey bool, f
 	return nil
 }
 
-// validateSegmentID carries on validations for parameter SegmentID
+// validateSegmentID carries out validations for parameter SegmentID
 func (o *FindDistributionsParams) validateSegmentID(formats strfmt.Registry) error {
 
 	if err := validate.MinimumInt("segmentID", "path", o.SegmentID, 1, false); err != nil {

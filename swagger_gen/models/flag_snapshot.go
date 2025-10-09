@@ -7,6 +7,7 @@ package models
 
 import (
 	"context"
+	stderrors "errors"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
@@ -68,11 +69,15 @@ func (m *FlagSnapshot) validateFlag(formats strfmt.Registry) error {
 
 	if m.Flag != nil {
 		if err := m.Flag.Validate(formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
+			ve := new(errors.Validation)
+			if stderrors.As(err, &ve) {
 				return ve.ValidateName("flag")
-			} else if ce, ok := err.(*errors.CompositeError); ok {
+			}
+			ce := new(errors.CompositeError)
+			if stderrors.As(err, &ce) {
 				return ce.ValidateName("flag")
 			}
+
 			return err
 		}
 	}
@@ -82,7 +87,7 @@ func (m *FlagSnapshot) validateFlag(formats strfmt.Registry) error {
 
 func (m *FlagSnapshot) validateID(formats strfmt.Registry) error {
 
-	if err := validate.Required("id", "body", int64(m.ID)); err != nil {
+	if err := validate.Required("id", "body", m.ID); err != nil {
 		return err
 	}
 
@@ -129,11 +134,15 @@ func (m *FlagSnapshot) contextValidateFlag(ctx context.Context, formats strfmt.R
 	if m.Flag != nil {
 
 		if err := m.Flag.ContextValidate(ctx, formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
+			ve := new(errors.Validation)
+			if stderrors.As(err, &ve) {
 				return ve.ValidateName("flag")
-			} else if ce, ok := err.(*errors.CompositeError); ok {
+			}
+			ce := new(errors.CompositeError)
+			if stderrors.As(err, &ce) {
 				return ce.ValidateName("flag")
 			}
+
 			return err
 		}
 	}
@@ -143,7 +152,7 @@ func (m *FlagSnapshot) contextValidateFlag(ctx context.Context, formats strfmt.R
 
 func (m *FlagSnapshot) contextValidateID(ctx context.Context, formats strfmt.Registry) error {
 
-	if err := validate.ReadOnly(ctx, "id", "body", int64(m.ID)); err != nil {
+	if err := validate.ReadOnly(ctx, "id", "body", m.ID); err != nil {
 		return err
 	}
 

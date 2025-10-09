@@ -33,7 +33,7 @@ func NewDeleteSegmentOK() *DeleteSegmentOK {
 // WriteResponse to the client
 func (o *DeleteSegmentOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
-	rw.Header().Del(runtime.HeaderContentType) //Remove Content-Type on empty responses
+	rw.Header().Del(runtime.HeaderContentType) // Remove Content-Type on empty responses
 
 	rw.WriteHeader(200)
 }

@@ -20,7 +20,7 @@ import (
 type Variant struct {
 
 	// attachment
-	Attachment interface{} `json:"attachment,omitempty"`
+	Attachment any `json:"attachment,omitempty"`
 
 	// id
 	// Read Only: true
@@ -92,7 +92,7 @@ func (m *Variant) ContextValidate(ctx context.Context, formats strfmt.Registry) 
 
 func (m *Variant) contextValidateID(ctx context.Context, formats strfmt.Registry) error {
 
-	if err := validate.ReadOnly(ctx, "id", "body", int64(m.ID)); err != nil {
+	if err := validate.ReadOnly(ctx, "id", "body", m.ID); err != nil {
 		return err
 	}
 

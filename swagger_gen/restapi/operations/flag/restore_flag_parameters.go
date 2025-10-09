@@ -28,7 +28,6 @@ func NewRestoreFlagParams() RestoreFlagParams {
 //
 // swagger:parameters restoreFlag
 type RestoreFlagParams struct {
-
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
@@ -82,7 +81,7 @@ func (o *RestoreFlagParams) bindFlagID(rawData []string, hasKey bool, formats st
 	return nil
 }
 
-// validateFlagID carries on validations for parameter FlagID
+// validateFlagID carries out validations for parameter FlagID
 func (o *RestoreFlagParams) validateFlagID(formats strfmt.Registry) error {
 
 	if err := validate.MinimumInt("flagID", "path", o.FlagID, 1, false); err != nil {

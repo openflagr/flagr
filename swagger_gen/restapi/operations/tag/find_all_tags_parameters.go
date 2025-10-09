@@ -28,7 +28,6 @@ func NewFindAllTagsParams() FindAllTagsParams {
 //
 // swagger:parameters findAllTags
 type FindAllTagsParams struct {
-
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
@@ -36,10 +35,12 @@ type FindAllTagsParams struct {
 	  In: query
 	*/
 	Limit *int64
+
 	/*return tags given the offset, it should usually set together with limit
 	  In: query
 	*/
 	Offset *int64
+
 	/*return tags partially matching given value
 	  In: query
 	*/
@@ -54,7 +55,6 @@ func (o *FindAllTagsParams) BindRequest(r *http.Request, route *middleware.Match
 	var res []error
 
 	o.HTTPRequest = r
-
 	qs := runtime.Values(r.URL.Query())
 
 	qLimit, qhkLimit, _ := qs.GetOK("limit")

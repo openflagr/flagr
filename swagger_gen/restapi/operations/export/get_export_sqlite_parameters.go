@@ -28,7 +28,6 @@ func NewGetExportSqliteParams() GetExportSqliteParams {
 //
 // swagger:parameters getExportSqlite
 type GetExportSqliteParams struct {
-
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
@@ -47,7 +46,6 @@ func (o *GetExportSqliteParams) BindRequest(r *http.Request, route *middleware.M
 	var res []error
 
 	o.HTTPRequest = r
-
 	qs := runtime.Values(r.URL.Query())
 
 	qExcludeSnapshots, qhkExcludeSnapshots, _ := qs.GetOK("exclude_snapshots")

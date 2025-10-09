@@ -46,7 +46,7 @@ func (o *FindTagsURL) Build() (*url.URL, error) {
 
 	flagID := swag.FormatInt64(o.FlagID)
 	if flagID != "" {
-		_path = strings.Replace(_path, "{flagID}", flagID, -1)
+		_path = strings.ReplaceAll(_path, "{flagID}", flagID)
 	} else {
 		return nil, errors.New("flagId is required on FindTagsURL")
 	}

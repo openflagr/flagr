@@ -77,7 +77,7 @@ func (f *Flag) PrepareEvaluation() error {
 		}
 	}
 	for i := range f.Variants {
-		f.FlagEvaluation.VariantsMap[f.Variants[i].Model.ID] = &f.Variants[i]
+		f.FlagEvaluation.VariantsMap[f.Variants[i].ID] = &f.Variants[i]
 	}
 	return nil
 }

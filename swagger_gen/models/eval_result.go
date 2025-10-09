@@ -7,6 +7,7 @@ package models
 
 import (
 	"context"
+	stderrors "errors"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
@@ -43,7 +44,7 @@ type EvalResult struct {
 	Timestamp string `json:"timestamp,omitempty"`
 
 	// variant attachment
-	VariantAttachment interface{} `json:"variantAttachment,omitempty"`
+	VariantAttachment any `json:"variantAttachment,omitempty"`
 
 	// variant ID
 	VariantID int64 `json:"variantID,omitempty"`
@@ -77,11 +78,15 @@ func (m *EvalResult) validateEvalContext(formats strfmt.Registry) error {
 
 	if m.EvalContext != nil {
 		if err := m.EvalContext.Validate(formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
+			ve := new(errors.Validation)
+			if stderrors.As(err, &ve) {
 				return ve.ValidateName("evalContext")
-			} else if ce, ok := err.(*errors.CompositeError); ok {
+			}
+			ce := new(errors.CompositeError)
+			if stderrors.As(err, &ce) {
 				return ce.ValidateName("evalContext")
 			}
+
 			return err
 		}
 	}
@@ -96,11 +101,15 @@ func (m *EvalResult) validateEvalDebugLog(formats strfmt.Registry) error {
 
 	if m.EvalDebugLog != nil {
 		if err := m.EvalDebugLog.Validate(formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
+			ve := new(errors.Validation)
+			if stderrors.As(err, &ve) {
 				return ve.ValidateName("evalDebugLog")
-			} else if ce, ok := err.(*errors.CompositeError); ok {
+			}
+			ce := new(errors.CompositeError)
+			if stderrors.As(err, &ce) {
 				return ce.ValidateName("evalDebugLog")
 			}
+
 			return err
 		}
 	}
@@ -135,11 +144,15 @@ func (m *EvalResult) contextValidateEvalContext(ctx context.Context, formats str
 		}
 
 		if err := m.EvalContext.ContextValidate(ctx, formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
+			ve := new(errors.Validation)
+			if stderrors.As(err, &ve) {
 				return ve.ValidateName("evalContext")
-			} else if ce, ok := err.(*errors.CompositeError); ok {
+			}
+			ce := new(errors.CompositeError)
+			if stderrors.As(err, &ce) {
 				return ce.ValidateName("evalContext")
 			}
+
 			return err
 		}
 	}
@@ -156,11 +169,15 @@ func (m *EvalResult) contextValidateEvalDebugLog(ctx context.Context, formats st
 		}
 
 		if err := m.EvalDebugLog.ContextValidate(ctx, formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
+			ve := new(errors.Validation)
+			if stderrors.As(err, &ve) {
 				return ve.ValidateName("evalDebugLog")
-			} else if ce, ok := err.(*errors.CompositeError); ok {
+			}
+			ce := new(errors.CompositeError)
+			if stderrors.As(err, &ce) {
 				return ce.ValidateName("evalDebugLog")
 			}
+
 			return err
 		}
 	}

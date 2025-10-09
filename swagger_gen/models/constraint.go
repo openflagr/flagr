@@ -80,7 +80,7 @@ func (m *Constraint) validateID(formats strfmt.Registry) error {
 	return nil
 }
 
-var constraintTypeOperatorPropEnum []interface{}
+var constraintTypeOperatorPropEnum []any
 
 func init() {
 	var res []string
@@ -199,7 +199,7 @@ func (m *Constraint) ContextValidate(ctx context.Context, formats strfmt.Registr
 
 func (m *Constraint) contextValidateID(ctx context.Context, formats strfmt.Registry) error {
 
-	if err := validate.ReadOnly(ctx, "id", "body", int64(m.ID)); err != nil {
+	if err := validate.ReadOnly(ctx, "id", "body", m.ID); err != nil {
 		return err
 	}
 

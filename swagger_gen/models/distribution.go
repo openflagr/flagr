@@ -138,7 +138,7 @@ func (m *Distribution) ContextValidate(ctx context.Context, formats strfmt.Regis
 
 func (m *Distribution) contextValidateID(ctx context.Context, formats strfmt.Registry) error {
 
-	if err := validate.ReadOnly(ctx, "id", "body", int64(m.ID)); err != nil {
+	if err := validate.ReadOnly(ctx, "id", "body", m.ID); err != nil {
 		return err
 	}
 

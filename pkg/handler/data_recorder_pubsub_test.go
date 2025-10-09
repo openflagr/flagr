@@ -60,7 +60,7 @@ func mockClient(t *testing.T) *pubsub.Client {
 	ctx := context.Background()
 	srv := pstest.NewServer()
 	defer srv.Close()
-	conn, err := grpc.Dial(srv.Addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(srv.Addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		t.Fatal("cannot connect to mocked server")
 	}

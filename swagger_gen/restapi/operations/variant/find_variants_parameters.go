@@ -28,7 +28,6 @@ func NewFindVariantsParams() FindVariantsParams {
 //
 // swagger:parameters findVariants
 type FindVariantsParams struct {
-
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
@@ -82,7 +81,7 @@ func (o *FindVariantsParams) bindFlagID(rawData []string, hasKey bool, formats s
 	return nil
 }
 
-// validateFlagID carries on validations for parameter FlagID
+// validateFlagID carries out validations for parameter FlagID
 func (o *FindVariantsParams) validateFlagID(formats strfmt.Registry) error {
 
 	if err := validate.MinimumInt("flagID", "path", o.FlagID, 1, false); err != nil {

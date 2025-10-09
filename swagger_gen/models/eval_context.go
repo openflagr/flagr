@@ -24,7 +24,7 @@ type EvalContext struct {
 	EnableDebug bool `json:"enableDebug,omitempty"`
 
 	// entity context
-	EntityContext interface{} `json:"entityContext,omitempty"`
+	EntityContext any `json:"entityContext,omitempty"`
 
 	// entityID is used to deterministically at random to evaluate the flag result. If it's empty, flagr will randomly generate one.
 	EntityID string `json:"entityID,omitempty"`
@@ -77,7 +77,7 @@ func (m *EvalContext) validateFlagID(formats strfmt.Registry) error {
 	return nil
 }
 
-var evalContextTypeFlagTagsOperatorPropEnum []interface{}
+var evalContextTypeFlagTagsOperatorPropEnum []any
 
 func init() {
 	var res []string

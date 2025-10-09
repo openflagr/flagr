@@ -54,102 +54,200 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 		JSONProducer: runtime.JSONProducer(),
 
 		ConstraintCreateConstraintHandler: constraint.CreateConstraintHandlerFunc(func(params constraint.CreateConstraintParams) middleware.Responder {
+			_ = params
+
 			return middleware.NotImplemented("operation constraint.CreateConstraint has not yet been implemented")
 		}),
+
 		FlagCreateFlagHandler: flag.CreateFlagHandlerFunc(func(params flag.CreateFlagParams) middleware.Responder {
+			_ = params
+
 			return middleware.NotImplemented("operation flag.CreateFlag has not yet been implemented")
 		}),
+
 		SegmentCreateSegmentHandler: segment.CreateSegmentHandlerFunc(func(params segment.CreateSegmentParams) middleware.Responder {
+			_ = params
+
 			return middleware.NotImplemented("operation segment.CreateSegment has not yet been implemented")
 		}),
+
 		TagCreateTagHandler: tag.CreateTagHandlerFunc(func(params tag.CreateTagParams) middleware.Responder {
+			_ = params
+
 			return middleware.NotImplemented("operation tag.CreateTag has not yet been implemented")
 		}),
+
 		VariantCreateVariantHandler: variant.CreateVariantHandlerFunc(func(params variant.CreateVariantParams) middleware.Responder {
+			_ = params
+
 			return middleware.NotImplemented("operation variant.CreateVariant has not yet been implemented")
 		}),
+
 		ConstraintDeleteConstraintHandler: constraint.DeleteConstraintHandlerFunc(func(params constraint.DeleteConstraintParams) middleware.Responder {
+			_ = params
+
 			return middleware.NotImplemented("operation constraint.DeleteConstraint has not yet been implemented")
 		}),
+
 		FlagDeleteFlagHandler: flag.DeleteFlagHandlerFunc(func(params flag.DeleteFlagParams) middleware.Responder {
+			_ = params
+
 			return middleware.NotImplemented("operation flag.DeleteFlag has not yet been implemented")
 		}),
+
 		SegmentDeleteSegmentHandler: segment.DeleteSegmentHandlerFunc(func(params segment.DeleteSegmentParams) middleware.Responder {
+			_ = params
+
 			return middleware.NotImplemented("operation segment.DeleteSegment has not yet been implemented")
 		}),
+
 		TagDeleteTagHandler: tag.DeleteTagHandlerFunc(func(params tag.DeleteTagParams) middleware.Responder {
+			_ = params
+
 			return middleware.NotImplemented("operation tag.DeleteTag has not yet been implemented")
 		}),
+
 		VariantDeleteVariantHandler: variant.DeleteVariantHandlerFunc(func(params variant.DeleteVariantParams) middleware.Responder {
+			_ = params
+
 			return middleware.NotImplemented("operation variant.DeleteVariant has not yet been implemented")
 		}),
+
 		TagFindAllTagsHandler: tag.FindAllTagsHandlerFunc(func(params tag.FindAllTagsParams) middleware.Responder {
+			_ = params
+
 			return middleware.NotImplemented("operation tag.FindAllTags has not yet been implemented")
 		}),
+
 		ConstraintFindConstraintsHandler: constraint.FindConstraintsHandlerFunc(func(params constraint.FindConstraintsParams) middleware.Responder {
+			_ = params
+
 			return middleware.NotImplemented("operation constraint.FindConstraints has not yet been implemented")
 		}),
+
 		DistributionFindDistributionsHandler: distribution.FindDistributionsHandlerFunc(func(params distribution.FindDistributionsParams) middleware.Responder {
+			_ = params
+
 			return middleware.NotImplemented("operation distribution.FindDistributions has not yet been implemented")
 		}),
+
 		FlagFindFlagsHandler: flag.FindFlagsHandlerFunc(func(params flag.FindFlagsParams) middleware.Responder {
+			_ = params
+
 			return middleware.NotImplemented("operation flag.FindFlags has not yet been implemented")
 		}),
+
 		SegmentFindSegmentsHandler: segment.FindSegmentsHandlerFunc(func(params segment.FindSegmentsParams) middleware.Responder {
+			_ = params
+
 			return middleware.NotImplemented("operation segment.FindSegments has not yet been implemented")
 		}),
+
 		TagFindTagsHandler: tag.FindTagsHandlerFunc(func(params tag.FindTagsParams) middleware.Responder {
+			_ = params
+
 			return middleware.NotImplemented("operation tag.FindTags has not yet been implemented")
 		}),
+
 		VariantFindVariantsHandler: variant.FindVariantsHandlerFunc(func(params variant.FindVariantsParams) middleware.Responder {
+			_ = params
+
 			return middleware.NotImplemented("operation variant.FindVariants has not yet been implemented")
 		}),
+
 		ExportGetExportEvalCacheJSONHandler: export.GetExportEvalCacheJSONHandlerFunc(func(params export.GetExportEvalCacheJSONParams) middleware.Responder {
+			_ = params
+
 			return middleware.NotImplemented("operation export.GetExportEvalCacheJSON has not yet been implemented")
 		}),
+
 		ExportGetExportSqliteHandler: export.GetExportSqliteHandlerFunc(func(params export.GetExportSqliteParams) middleware.Responder {
+			_ = params
+
 			return middleware.NotImplemented("operation export.GetExportSqlite has not yet been implemented")
 		}),
+
 		FlagGetFlagHandler: flag.GetFlagHandlerFunc(func(params flag.GetFlagParams) middleware.Responder {
+			_ = params
+
 			return middleware.NotImplemented("operation flag.GetFlag has not yet been implemented")
 		}),
+
 		FlagGetFlagEntityTypesHandler: flag.GetFlagEntityTypesHandlerFunc(func(params flag.GetFlagEntityTypesParams) middleware.Responder {
+			_ = params
+
 			return middleware.NotImplemented("operation flag.GetFlagEntityTypes has not yet been implemented")
 		}),
+
 		FlagGetFlagSnapshotsHandler: flag.GetFlagSnapshotsHandlerFunc(func(params flag.GetFlagSnapshotsParams) middleware.Responder {
+			_ = params
+
 			return middleware.NotImplemented("operation flag.GetFlagSnapshots has not yet been implemented")
 		}),
+
 		HealthGetHealthHandler: health.GetHealthHandlerFunc(func(params health.GetHealthParams) middleware.Responder {
+			_ = params
+
 			return middleware.NotImplemented("operation health.GetHealth has not yet been implemented")
 		}),
+
 		EvaluationPostEvaluationHandler: evaluation.PostEvaluationHandlerFunc(func(params evaluation.PostEvaluationParams) middleware.Responder {
+			_ = params
+
 			return middleware.NotImplemented("operation evaluation.PostEvaluation has not yet been implemented")
 		}),
+
 		EvaluationPostEvaluationBatchHandler: evaluation.PostEvaluationBatchHandlerFunc(func(params evaluation.PostEvaluationBatchParams) middleware.Responder {
+			_ = params
+
 			return middleware.NotImplemented("operation evaluation.PostEvaluationBatch has not yet been implemented")
 		}),
+
 		ConstraintPutConstraintHandler: constraint.PutConstraintHandlerFunc(func(params constraint.PutConstraintParams) middleware.Responder {
+			_ = params
+
 			return middleware.NotImplemented("operation constraint.PutConstraint has not yet been implemented")
 		}),
+
 		DistributionPutDistributionsHandler: distribution.PutDistributionsHandlerFunc(func(params distribution.PutDistributionsParams) middleware.Responder {
+			_ = params
+
 			return middleware.NotImplemented("operation distribution.PutDistributions has not yet been implemented")
 		}),
+
 		FlagPutFlagHandler: flag.PutFlagHandlerFunc(func(params flag.PutFlagParams) middleware.Responder {
+			_ = params
+
 			return middleware.NotImplemented("operation flag.PutFlag has not yet been implemented")
 		}),
+
 		SegmentPutSegmentHandler: segment.PutSegmentHandlerFunc(func(params segment.PutSegmentParams) middleware.Responder {
+			_ = params
+
 			return middleware.NotImplemented("operation segment.PutSegment has not yet been implemented")
 		}),
+
 		SegmentPutSegmentsReorderHandler: segment.PutSegmentsReorderHandlerFunc(func(params segment.PutSegmentsReorderParams) middleware.Responder {
+			_ = params
+
 			return middleware.NotImplemented("operation segment.PutSegmentsReorder has not yet been implemented")
 		}),
+
 		VariantPutVariantHandler: variant.PutVariantHandlerFunc(func(params variant.PutVariantParams) middleware.Responder {
+			_ = params
+
 			return middleware.NotImplemented("operation variant.PutVariant has not yet been implemented")
 		}),
+
 		FlagRestoreFlagHandler: flag.RestoreFlagHandlerFunc(func(params flag.RestoreFlagParams) middleware.Responder {
+			_ = params
+
 			return middleware.NotImplemented("operation flag.RestoreFlag has not yet been implemented")
 		}),
+
 		FlagSetFlagEnabledHandler: flag.SetFlagEnabledHandlerFunc(func(params flag.SetFlagEnabledParams) middleware.Responder {
+			_ = params
+
 			return middleware.NotImplemented("operation flag.SetFlagEnabled has not yet been implemented")
 		}),
 	}
@@ -275,7 +373,7 @@ type FlagrAPI struct {
 	CommandLineOptionsGroups []swag.CommandLineOptionsGroup
 
 	// User defined logger function.
-	Logger func(string, ...interface{})
+	Logger func(string, ...any)
 }
 
 // UseRedoc for documentation at /docs
@@ -461,12 +559,12 @@ func (o *FlagrAPI) Authorizer() runtime.Authorizer {
 }
 
 // ConsumersFor gets the consumers for the specified media types.
+//
 // MIME type parameters are ignored here.
 func (o *FlagrAPI) ConsumersFor(mediaTypes []string) map[string]runtime.Consumer {
 	result := make(map[string]runtime.Consumer, len(mediaTypes))
 	for _, mt := range mediaTypes {
-		switch mt {
-		case "application/json":
+		if mt == "application/json" {
 			result["application/json"] = o.JSONConsumer
 		}
 
@@ -474,10 +572,12 @@ func (o *FlagrAPI) ConsumersFor(mediaTypes []string) map[string]runtime.Consumer
 			result[mt] = c
 		}
 	}
+
 	return result
 }
 
 // ProducersFor gets the producers for the specified media types.
+//
 // MIME type parameters are ignored here.
 func (o *FlagrAPI) ProducersFor(mediaTypes []string) map[string]runtime.Producer {
 	result := make(map[string]runtime.Producer, len(mediaTypes))
@@ -493,6 +593,7 @@ func (o *FlagrAPI) ProducersFor(mediaTypes []string) map[string]runtime.Producer
 			result[mt] = p
 		}
 	}
+
 	return result
 }
 

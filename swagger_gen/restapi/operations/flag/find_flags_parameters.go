@@ -28,7 +28,6 @@ func NewFindFlagsParams() FindFlagsParams {
 //
 // swagger:parameters findFlags
 type FindFlagsParams struct {
-
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
@@ -36,34 +35,42 @@ type FindFlagsParams struct {
 	  In: query
 	*/
 	Deleted *bool
+
 	/*return flags exactly matching given description
 	  In: query
 	*/
 	Description *string
+
 	/*return flags partially matching given description
 	  In: query
 	*/
 	DescriptionLike *string
+
 	/*return flags having given enabled status
 	  In: query
 	*/
 	Enabled *bool
+
 	/*return flags matching given key
 	  In: query
 	*/
 	Key *string
+
 	/*the numbers of flags to return
 	  In: query
 	*/
 	Limit *int64
+
 	/*return flags given the offset, it should usually set together with limit
 	  In: query
 	*/
 	Offset *int64
+
 	/*return flags with preloaded segments and variants
 	  In: query
 	*/
 	Preload *bool
+
 	/*return flags with the given tags (comma separated)
 	  In: query
 	*/
@@ -78,7 +85,6 @@ func (o *FindFlagsParams) BindRequest(r *http.Request, route *middleware.Matched
 	var res []error
 
 	o.HTTPRequest = r
-
 	qs := runtime.Values(r.URL.Query())
 
 	qDeleted, qhkDeleted, _ := qs.GetOK("deleted")

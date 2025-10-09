@@ -20,7 +20,7 @@ import (
 type PutVariantRequest struct {
 
 	// attachment
-	Attachment interface{} `json:"attachment,omitempty"`
+	Attachment any `json:"attachment,omitempty"`
 
 	// key
 	// Required: true

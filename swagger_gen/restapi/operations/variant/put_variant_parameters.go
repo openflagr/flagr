@@ -6,6 +6,7 @@ package variant
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	stderrors "errors"
 	"io"
 	"net/http"
 
@@ -32,7 +33,6 @@ func NewPutVariantParams() PutVariantParams {
 //
 // swagger:parameters putVariant
 type PutVariantParams struct {
-
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
@@ -41,12 +41,14 @@ type PutVariantParams struct {
 	  In: body
 	*/
 	Body *models.PutVariantRequest
+
 	/*numeric ID of the flag
 	  Required: true
 	  Minimum: 1
 	  In: path
 	*/
 	FlagID int64
+
 	/*numeric ID of the variant
 	  Required: true
 	  Minimum: 1
@@ -65,10 +67,12 @@ func (o *PutVariantParams) BindRequest(r *http.Request, route *middleware.Matche
 	o.HTTPRequest = r
 
 	if runtime.HasBody(r) {
-		defer r.Body.Close()
+		defer func() {
+			_ = r.Body.Close()
+		}()
 		var body models.PutVariantRequest
 		if err := route.Consumer.Consume(r.Body, &body); err != nil {
-			if err == io.EOF {
+			if stderrors.Is(err, io.EOF) {
 				res = append(res, errors.Required("body", "body", ""))
 			} else {
 				res = append(res, errors.NewParseError("body", "body", "", err))
@@ -130,7 +134,7 @@ func (o *PutVariantParams) bindFlagID(rawData []string, hasKey bool, formats str
 	return nil
 }
 
-// validateFlagID carries on validations for parameter FlagID
+// validateFlagID carries out validations for parameter FlagID
 func (o *PutVariantParams) validateFlagID(formats strfmt.Registry) error {
 
 	if err := validate.MinimumInt("flagID", "path", o.FlagID, 1, false); err != nil {
@@ -163,7 +167,7 @@ func (o *PutVariantParams) bindVariantID(rawData []string, hasKey bool, formats 
 	return nil
 }
 
-// validateVariantID carries on validations for parameter VariantID
+// validateVariantID carries out validations for parameter VariantID
 func (o *PutVariantParams) validateVariantID(formats strfmt.Registry) error {
 
 	if err := validate.MinimumInt("variantID", "path", o.VariantID, 1, false); err != nil {
