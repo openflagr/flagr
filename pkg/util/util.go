@@ -3,7 +3,9 @@ package util
 import (
 	"fmt"
 	"math"
+	"path"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/dchest/uniuri"
@@ -41,6 +43,24 @@ func IsSafeValue(s string) (bool, string) {
 		return false, fmt.Sprintf("value:%s cannot be longer than %d", s, valueLengthLimit)
 	}
 	return true, ""
+}
+
+// HasSafePrefix checks if the given string is a safe URL path prefix
+func HasSafePrefix(s string, prefix string) bool {
+	if prefix == "" {
+		return true
+	}
+
+	// Check for path traversal attempts or suspicious patterns
+	if s == "." || s == ".." || strings.Contains(s, "..") {
+		return false
+	}
+
+	// First normalize the path (prefix is controlled by us, no need to clean it)
+	cleanedS := path.Clean(s)
+
+	// Check if the normalized path starts with the prefix
+	return strings.HasPrefix(cleanedS, prefix)
 }
 
 // NewSecureRandomKey creates a new secure random key

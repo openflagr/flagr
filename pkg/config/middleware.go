@@ -4,8 +4,8 @@ import (
 	"crypto/subtle"
 	"fmt"
 	"net/http"
+	"slices"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/DataDog/datadog-go/statsd"
@@ -13,6 +13,7 @@ import (
 	jwt "github.com/form3tech-oss/jwt-go"
 	"github.com/gohttp/pprof"
 	negronilogrus "github.com/meatballhat/negroni-logrus"
+	"github.com/openflagr/flagr/pkg/util"
 	"github.com/phyber/negroni-gzip/gzip"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -198,15 +199,13 @@ func (a *jwtAuth) whitelist(req *http.Request) bool {
 
 	// If we set to 401 unauthorized, let the client handles the 401 itself
 	if Config.JWTAuthNoTokenStatusCode == http.StatusUnauthorized {
-		for _, p := range a.ExactWhitelistPaths {
-			if p == path {
-				return true
-			}
+		if slices.Contains(a.ExactWhitelistPaths, path) {
+			return true
 		}
 	}
 
 	for _, p := range a.PrefixWhitelistPaths {
-		if p != "" && strings.HasPrefix(path, p) {
+		if p != "" && util.HasSafePrefix(path, p) {
 			return true
 		}
 	}
@@ -243,14 +242,12 @@ type basicAuth struct {
 func (a *basicAuth) whitelist(req *http.Request) bool {
 	path := req.URL.Path
 
-	for _, p := range a.ExactWhitelistPaths {
-		if p == path {
-			return true
-		}
+	if slices.Contains(a.ExactWhitelistPaths, path) {
+		return true
 	}
 
 	for _, p := range a.PrefixWhitelistPaths {
-		if p != "" && strings.HasPrefix(path, p) {
+		if p != "" && util.HasSafePrefix(path, p) {
 			return true
 		}
 	}

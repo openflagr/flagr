@@ -314,6 +314,27 @@ func TestJWTAuthMiddlewareWithUnauthorized(t *testing.T) {
 			})
 		}
 	})
+
+	t.Run("it will return 401 for some paths", func(t *testing.T) {
+		Config.JWTAuthEnabled = true
+		Config.JWTAuthNoTokenStatusCode = http.StatusUnauthorized
+		defer func() {
+			Config.JWTAuthEnabled = false
+			Config.JWTAuthNoTokenStatusCode = http.StatusTemporaryRedirect
+		}()
+
+		testPaths := []string{"/api/v1/flags", "/api/v1/health/..", "/api/v1/admin", "//api/v1/flags", "/..", "/."}
+		for _, path := range testPaths {
+			t.Run(fmt.Sprintf("path: %s", path), func(t *testing.T) {
+				hh := SetupGlobalMiddleware(h)
+				res := httptest.NewRecorder()
+				res.Body = new(bytes.Buffer)
+				req, _ := http.NewRequest("GET", fmt.Sprintf("http://localhost:18000%s", path), nil)
+				hh.ServeHTTP(res, req)
+				assert.Equal(t, http.StatusUnauthorized, res.Code)
+			})
+		}
+	})
 }
 
 func TestBasicAuthMiddleware(t *testing.T) {
