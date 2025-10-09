@@ -191,3 +191,110 @@ func TestNewSecureRandomKey(t *testing.T) {
 	ok, _ := IsSafeKey(NewSecureRandomKey())
 	assert.True(t, ok)
 }
+
+func TestHasSafePrefix(t *testing.T) {
+	tests := []struct {
+		name   string
+		s      string
+		prefix string
+		want   bool
+	}{
+		{
+			name:   "empty prefix always matches",
+			s:      "any/path/here",
+			prefix: "",
+			want:   true,
+		},
+		{
+			name:   "exact prefix match",
+			s:      "api/v1/flags",
+			prefix: "api/v1",
+			want:   true,
+		},
+		{
+			name:   "non-matching prefix",
+			s:      "api/v1/flags",
+			prefix: "api/v2",
+			want:   false,
+		},
+		{
+			name:   "prefix with trailing slash",
+			s:      "api/v1/flags",
+			prefix: "api/v1/",
+			want:   true,
+		},
+		{
+			name:   "path traversal attempt should fail",
+			s:      "../api/v1/flags",
+			prefix: "api",
+			want:   false,
+		},
+		{
+			name:   "good match",
+			s:      "api",
+			prefix: "api",
+			want:   true,
+		},
+		{
+			name:   "path traversal attempt should fail",
+			s:      "..",
+			prefix: "api",
+			want:   false,
+		},
+		{
+			name:   "path traversal attempt should fail",
+			s:      ".",
+			prefix: "api",
+			want:   false,
+		},
+		{
+			name:   "sneaky path traversal should fail",
+			s:      "api/v1/../../secrets",
+			prefix: "api",
+			want:   false,
+		},
+		{
+			name:   "path with dot should be cleaned",
+			s:      "api/./v1/flags",
+			prefix: "api/v1",
+			want:   true,
+		},
+		{
+			name:   "prefix with dot should be cleaned",
+			s:      "api/v1/flags",
+			prefix: "api/./v1",
+			want:   false,
+		},
+		{
+			name:   "multiple slashes should be cleaned",
+			s:      "api///v1////flags",
+			prefix: "api/v1",
+			want:   true,
+		},
+		{
+			name:   "complex traversal attempt should fail",
+			s:      "api/v1/flags/../../../etc/passwd",
+			prefix: "api",
+			want:   false,
+		},
+		{
+			name:   "complex traversal attempt should fail",
+			s:      "api/v1/health/../flags",
+			prefix: "api/v1/health",
+			want:   false,
+		},
+		{
+			name:   "longer path with valid prefix",
+			s:      "api/v1/flags/123/settings",
+			prefix: "api/v1/flags",
+			want:   true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := HasSafePrefix(tt.s, tt.prefix)
+			assert.Equal(t, tt.want, got, "HasSafePrefix(%v, %v)", tt.s, tt.prefix)
+		})
+	}
+}
