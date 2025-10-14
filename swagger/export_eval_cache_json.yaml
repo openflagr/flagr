@@ -5,6 +5,52 @@ get:
   description: Export JSON format of the eval cache dump
   produces:
     - application/json
+  parameters:
+    - in: query
+      name: ids
+      description: >-
+        "query optimized" flagIDs parameter.
+        Has precedence over `enabled`, `keys` and `tags` parameters.
+      required: false
+      type: array
+      collectionFormat: csv
+      minItems: 1
+      items:
+        type: integer
+        format: int64
+        minimum: 1
+    - in: query
+      name: keys
+      description: >-
+        "query optimized" flagKeys parameter.
+        Has precedence over `enabled` and `tags` parameter.
+      required: false
+      type: array
+      items:
+        type: string
+        minLength: 1
+    - in: query
+      name: enabled
+      description: >-
+        return flags having given enabled status
+      required: false
+      type: boolean
+    - in: query
+      name: tags
+      description: >-
+        "query optimized" flagTags parameter
+      required: false
+      type: array
+      items:
+        type: string
+        minLength: 1
+    - in: query
+      name: all
+      type: boolean
+      description: >-
+        whether to use ALL (tags) semantics (ANY by default):
+        `?tags=foo,bar&all=true` is equivalent to postEvaluation's
+        `flagTagsOperator: "ALL"`
   responses:
     200:
       description: OK
