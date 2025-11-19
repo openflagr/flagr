@@ -476,6 +476,86 @@ func TestEvalFlagsByTags(t *testing.T) {
 		assert.Contains(t, results[0].FlagTags, "tag1")
 		assert.Contains(t, results[0].FlagTags, "tag2")
 	})
+
+	t.Run("test happy code path with ALL operator", func(t *testing.T) {
+		defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
+		op := models.EvaluationBatchRequestFlagTagsOperatorALL
+		results := EvalFlagsByTags(models.EvalContext{
+			EnableDebug:      true,
+			EntityContext:    map[string]interface{}{"dl_state": "CA"},
+			FlagTags:         []string{"tag1", "tag2"},
+			FlagTagsOperator: &op,
+		})
+		assert.NotZero(t, len(results))
+		assert.NotZero(t, results[0].VariantID)
+		assert.NotEmpty(t, results[0].FlagTags)
+		assert.Len(t, results[0].FlagTags, 2)
+		assert.Contains(t, results[0].FlagTags, "tag1")
+		assert.Contains(t, results[0].FlagTags, "tag2")
+	})
+
+	t.Run("test happy code path with ANY operator", func(t *testing.T) {
+		defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
+		op := models.EvaluationBatchRequestFlagTagsOperatorANY
+		results := EvalFlagsByTags(models.EvalContext{
+			EnableDebug:      true,
+			EntityContext:    map[string]interface{}{"dl_state": "CA"},
+			FlagTags:         []string{"tag1"},
+			FlagTagsOperator: &op,
+		})
+		assert.NotZero(t, len(results))
+		assert.NotZero(t, results[0].VariantID)
+		assert.NotEmpty(t, results[0].FlagTags)
+		assert.Len(t, results[0].FlagTags, 2)
+		assert.Contains(t, results[0].FlagTags, "tag1")
+		assert.Contains(t, results[0].FlagTags, "tag2")
+	})
+
+	t.Run("test mixed match with ALL operator", func(t *testing.T) {
+		defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
+		op := models.EvaluationBatchRequestFlagTagsOperatorALL
+		results := EvalFlagsByTags(models.EvalContext{
+			EnableDebug:      true,
+			EntityContext:    map[string]interface{}{"dl_state": "CA"},
+			FlagTags:         []string{"tag1", "tag_not_exist"},
+			FlagTagsOperator: &op,
+		})
+		assert.Zero(t, len(results))
+	})
+
+	t.Run("test mixed match with ANY operator", func(t *testing.T) {
+		defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
+		op := models.EvaluationBatchRequestFlagTagsOperatorANY
+		results := EvalFlagsByTags(models.EvalContext{
+			EnableDebug:      true,
+			EntityContext:    map[string]interface{}{"dl_state": "CA"},
+			FlagTags:         []string{"tag1", "tag_not_exist"},
+			FlagTagsOperator: &op,
+		})
+		assert.NotZero(t, len(results))
+		assert.NotZero(t, results[0].VariantID)
+		assert.Contains(t, results[0].FlagTags, "tag1")
+	})
+
+	t.Run("test no match", func(t *testing.T) {
+		defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
+		results := EvalFlagsByTags(models.EvalContext{
+			EnableDebug:   true,
+			EntityContext: map[string]interface{}{"dl_state": "CA"},
+			FlagTags:      []string{"tag_not_exist"},
+		})
+		assert.Zero(t, len(results))
+	})
+
+	t.Run("test empty tags", func(t *testing.T) {
+		defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
+		results := EvalFlagsByTags(models.EvalContext{
+			EnableDebug:   true,
+			EntityContext: map[string]interface{}{"dl_state": "CA"},
+			FlagTags:      []string{},
+		})
+		assert.Zero(t, len(results))
+	})
 }
 
 func TestPostEvaluation(t *testing.T) {
