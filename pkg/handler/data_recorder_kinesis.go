@@ -1,12 +1,13 @@
 package handler
 
 import (
+	"context"
+
 	producer "github.com/a8m/kinesis-producer"
 	"github.com/a8m/kinesis-producer/loggers/kplogrus"
-	"github.com/aws/aws-sdk-go/aws"             //nolint:staticcheck // Using AWS SDK v1 intentionally for backward compatibility
-	"github.com/aws/aws-sdk-go/aws/session"     //nolint:staticcheck // Using AWS SDK v1 intentionally for backward compatibility
-	"github.com/aws/aws-sdk-go/service/kinesis" //nolint:staticcheck // Using AWS SDK v1 intentionally for backward compatibility
-	"github.com/openflagr/flagr/pkg/config"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/kinesis"
+	flagrConfig "github.com/openflagr/flagr/pkg/config"
 	"github.com/openflagr/flagr/swagger_gen/models"
 	"github.com/sirupsen/logrus"
 )
@@ -22,24 +23,24 @@ type kinesisRecorder struct {
 
 // NewKinesisRecorder creates a new Kinesis recorder
 var NewKinesisRecorder = func() DataRecorder {
-	se, err := session.NewSession(aws.NewConfig())
+	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
 		logrus.WithField("kinesis_error", err).Fatal("error creating aws session")
 	}
 
-	client := kinesis.New(se)
+	client := kinesis.NewFromConfig(cfg)
 
 	p := newKinesisProducer(&producer.Config{
-		StreamName:          config.Config.RecorderKinesisStreamName,
+		StreamName:          flagrConfig.Config.RecorderKinesisStreamName,
 		Client:              client,
-		BacklogCount:        config.Config.RecorderKinesisBacklogCount,
-		MaxConnections:      config.Config.RecorderKinesisMaxConnections,
-		FlushInterval:       config.Config.RecorderKinesisFlushInterval,
-		BatchSize:           config.Config.RecorderKinesisBatchSize,
-		BatchCount:          config.Config.RecorderKinesisBatchCount,
-		AggregateBatchCount: config.Config.RecorderKinesisAggregateBatchCount,
-		AggregateBatchSize:  config.Config.RecorderKinesisAggregateBatchSize,
-		Verbose:             config.Config.RecorderKinesisVerbose,
+		BacklogCount:        flagrConfig.Config.RecorderKinesisBacklogCount,
+		MaxConnections:      flagrConfig.Config.RecorderKinesisMaxConnections,
+		FlushInterval:       flagrConfig.Config.RecorderKinesisFlushInterval,
+		BatchSize:           flagrConfig.Config.RecorderKinesisBatchSize,
+		BatchCount:          flagrConfig.Config.RecorderKinesisBatchCount,
+		AggregateBatchCount: flagrConfig.Config.RecorderKinesisAggregateBatchCount,
+		AggregateBatchSize:  flagrConfig.Config.RecorderKinesisAggregateBatchSize,
+		Verbose:             flagrConfig.Config.RecorderKinesisVerbose,
 		Logger:              &kplogrus.Logger{Logger: logrus.StandardLogger()},
 	})
 
@@ -55,7 +56,7 @@ var NewKinesisRecorder = func() DataRecorder {
 		producer: p,
 		options: DataRecordFrameOptions{
 			Encrypted:       false, // not implemented yet
-			FrameOutputMode: config.Config.RecorderFrameOutputMode,
+			FrameOutputMode: flagrConfig.Config.RecorderFrameOutputMode,
 		},
 	}
 }
