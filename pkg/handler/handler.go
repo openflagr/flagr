@@ -19,7 +19,7 @@ import (
 
 var getDB = entity.GetDB
 
-// Setup initialize all the handler functions
+// Setup initialize all of handler functions
 func Setup(api *operations.FlagrAPI) {
 	if config.Config.EvalOnlyMode {
 		setupHealth(api)
@@ -35,7 +35,6 @@ func Setup(api *operations.FlagrAPI) {
 
 func setupCRUD(api *operations.FlagrAPI) {
 	c := NewCRUD()
-	// flags
 	api.FlagFindFlagsHandler = flag.FindFlagsHandlerFunc(c.FindFlags)
 	api.FlagCreateFlagHandler = flag.CreateFlagHandlerFunc(c.CreateFlag)
 	api.FlagGetFlagHandler = flag.GetFlagHandlerFunc(c.GetFlag)
@@ -46,30 +45,25 @@ func setupCRUD(api *operations.FlagrAPI) {
 	api.FlagGetFlagSnapshotsHandler = flag.GetFlagSnapshotsHandlerFunc(c.GetFlagSnapshots)
 	api.FlagGetFlagEntityTypesHandler = flag.GetFlagEntityTypesHandlerFunc(c.GetFlagEntityTypes)
 
-	// tags
 	api.TagCreateTagHandler = tag.CreateTagHandlerFunc(c.CreateTag)
 	api.TagDeleteTagHandler = tag.DeleteTagHandlerFunc(c.DeleteTag)
 	api.TagFindTagsHandler = tag.FindTagsHandlerFunc(c.FindTags)
 	api.TagFindAllTagsHandler = tag.FindAllTagsHandlerFunc(c.FindAllTags)
 
-	// segments
 	api.SegmentCreateSegmentHandler = segment.CreateSegmentHandlerFunc(c.CreateSegment)
 	api.SegmentFindSegmentsHandler = segment.FindSegmentsHandlerFunc(c.FindSegments)
 	api.SegmentPutSegmentHandler = segment.PutSegmentHandlerFunc(c.PutSegment)
 	api.SegmentDeleteSegmentHandler = segment.DeleteSegmentHandlerFunc(c.DeleteSegment)
 	api.SegmentPutSegmentsReorderHandler = segment.PutSegmentsReorderHandlerFunc(c.PutSegmentsReorder)
 
-	// constraints
 	api.ConstraintCreateConstraintHandler = constraint.CreateConstraintHandlerFunc(c.CreateConstraint)
 	api.ConstraintFindConstraintsHandler = constraint.FindConstraintsHandlerFunc(c.FindConstraints)
 	api.ConstraintPutConstraintHandler = constraint.PutConstraintHandlerFunc(c.PutConstraint)
 	api.ConstraintDeleteConstraintHandler = constraint.DeleteConstraintHandlerFunc(c.DeleteConstraint)
 
-	// distributions
 	api.DistributionFindDistributionsHandler = distribution.FindDistributionsHandlerFunc(c.FindDistributions)
 	api.DistributionPutDistributionsHandler = distribution.PutDistributionsHandlerFunc(c.PutDistributions)
 
-	// variants
 	api.VariantCreateVariantHandler = variant.CreateVariantHandlerFunc(c.CreateVariant)
 	api.VariantFindVariantsHandler = variant.FindVariantsHandlerFunc(c.FindVariants)
 	api.VariantPutVariantHandler = variant.PutVariantHandlerFunc(c.PutVariant)
@@ -85,7 +79,6 @@ func setupEvaluation(api *operations.FlagrAPI) {
 	api.EvaluationPostEvaluationBatchHandler = evaluation.PostEvaluationBatchHandlerFunc(e.PostEvaluationBatch)
 
 	if config.Config.RecorderEnabled {
-		// Try GetDataRecorder to catch fatal errors before we start the evaluation api
 		GetDataRecorder()
 	}
 }
