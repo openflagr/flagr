@@ -22,7 +22,7 @@ type FlagSnapshot struct {
 }
 
 // SaveFlagSnapshot saves the Flag Snapshot
-func SaveFlagSnapshot(db *gorm.DB, flagID uint, updatedBy string, operation string) {
+func SaveFlagSnapshot(db *gorm.DB, flagID uint, updatedBy string, operation notification.Operation) {
 	tx := db.Begin()
 	f := &Flag{}
 	if err := tx.First(f, flagID).Error; err != nil {
@@ -86,7 +86,7 @@ func SaveFlagSnapshot(db *gorm.DB, flagID uint, updatedBy string, operation stri
 
 	logFlagSnapshotUpdate(flagID, updatedBy)
 	notification.SendFlagNotification(
-		notification.Operation(operation),
+		operation,
 		flagID,
 		f.Key,
 		f.Description,

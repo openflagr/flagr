@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/openflagr/flagr/pkg/entity"
+	"github.com/openflagr/flagr/pkg/notification"
 	"github.com/openflagr/flagr/pkg/util"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/flag"
 	"gorm.io/gorm"
@@ -55,7 +56,7 @@ func (c *crud) CreateFlag(params flag.CreateFlagParams) middleware.Responder {
 	}
 	resp.SetPayload(payload)
 
-	entity.SaveFlagSnapshot(getDB(), f.ID, getSubjectFromRequest(params.HTTPRequest), "create")
+	entity.SaveFlagSnapshot(getDB(), f.ID, getSubjectFromRequest(params.HTTPRequest), notification.OperationCreate)
 
 	return resp
 }
