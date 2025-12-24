@@ -41,11 +41,11 @@ func (s *slackNotifier) Send(ctx context.Context, n Notification) error {
 func formatNotification(n Notification) string {
 	var emoji string
 	switch n.Operation {
-	case "create":
+	case OperationCreate:
 		emoji = ":rocket:"
-	case "update":
+	case OperationUpdate:
 		emoji = ":pencil2:"
-	case "delete":
+	case OperationDelete:
 		emoji = ":wastebasket:"
 	default:
 		emoji = ":information_source:"
