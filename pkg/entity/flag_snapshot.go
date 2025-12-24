@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 
 	"github.com/openflagr/flagr/pkg/config"
+	"github.com/openflagr/flagr/pkg/notification"
 	"github.com/openflagr/flagr/pkg/util"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
@@ -21,7 +22,7 @@ type FlagSnapshot struct {
 }
 
 // SaveFlagSnapshot saves the Flag Snapshot
-func SaveFlagSnapshot(db *gorm.DB, flagID uint, updatedBy string) {
+func SaveFlagSnapshot(db *gorm.DB, flagID uint, updatedBy string, operation string) {
 	tx := db.Begin()
 	f := &Flag{}
 	if err := tx.First(f, flagID).Error; err != nil {
@@ -65,11 +66,35 @@ func SaveFlagSnapshot(db *gorm.DB, flagID uint, updatedBy string) {
 		return
 	}
 
+	preFS := &FlagSnapshot{}
+	tx.Where("flag_id = ?", flagID).Order("id desc").Offset(1).First(preFS)
+
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
+		return
+	}
+
+	preValue := ""
+	postValue := ""
+	diff := ""
+
+	if config.Config.NotificationDetailedDiffEnabled {
+		preValue = string(preFS.Flag)
+		postValue = string(fs.Flag)
+		diff = notification.CalculateDiff(preValue, postValue)
 	}
 
 	logFlagSnapshotUpdate(flagID, updatedBy)
+	notification.SendFlagNotification(
+		notification.Operation(operation),
+		flagID,
+		f.Key,
+		f.Description,
+		preValue,
+		postValue,
+		diff,
+		updatedBy,
+	)
 }
 
 var logFlagSnapshotUpdate = func(flagID uint, updatedBy string) {
