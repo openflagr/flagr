@@ -82,11 +82,11 @@ func formatEmailSubject(n Notification) string {
 func formatEmailBody(n Notification) string {
 	var emoji string
 	switch n.Operation {
-	case "create":
+	case OperationCreate:
 		emoji = "🚀"
-	case "update":
+	case OperationUpdate:
 		emoji = "✏️"
-	case "delete":
+	case OperationDelete:
 		emoji = "🗑️"
 	default:
 		emoji = "ℹ️"
