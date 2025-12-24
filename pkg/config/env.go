@@ -230,6 +230,25 @@ var Config = struct {
 	BasicAuthPrefixWhitelistPaths []string `env:"FLAGR_BASIC_AUTH_WHITELIST_PATHS" envDefault:"/api/v1/health,/api/v1/flags,/api/v1/evaluation" envSeparator:","`
 	BasicAuthExactWhitelistPaths  []string `env:"FLAGR_BASIC_AUTH_EXACT_WHITELIST_PATHS" envDefault:"" envSeparator:","`
 
+	// NotificationEnabled - enable notifications for CRUD operations
+	NotificationEnabled bool `env:"FLAGR_NOTIFICATION_ENABLED" envDefault:"false"`
+	// NotificationDetailedDiffEnabled - notify detailed diff of pre and post values
+	NotificationDetailedDiffEnabled bool `env:"FLAGR_NOTIFICATION_DETAILED_DIFF_ENABLED" envDefault:"false"`
+	// NotificationProvider - notification provider to use (slack, email, discord, etc.)
+	NotificationProvider string `env:"FLAGR_NOTIFICATION_PROVIDER" envDefault:"slack"`
+	// NotificationSlackWebhookURL - Slack webhook URL for notifications
+	NotificationSlackWebhookURL string `env:"FLAGR_NOTIFICATION_SLACK_WEBHOOK_URL" envDefault:""`
+	// NotificationSlackChannel - Slack channel to send notifications to
+	NotificationSlackChannel string `env:"FLAGR_NOTIFICATION_SLACK_CHANNEL" envDefault:""`
+	// NotificationEmailTo - recipient email address
+	NotificationEmailTo string `env:"FLAGR_NOTIFICATION_EMAIL_TO" envDefault:""`
+	// NotificationEmailURL - HTTP email API URL (e.g., https://api.sendgrid.com/v3/mail/send)
+	NotificationEmailURL string `env:"FLAGR_NOTIFICATION_EMAIL_URL" envDefault:""`
+	// NotificationEmailAPIKey - API key for email service
+	NotificationEmailAPIKey string `env:"FLAGR_NOTIFICATION_EMAIL_API_KEY" envDefault:""`
+	// NotificationEmailFrom - sender email address
+	NotificationEmailFrom string `env:"FLAGR_NOTIFICATION_EMAIL_FROM" envDefault:""`
+
 	// WebPrefix - base path for web and API
 	// e.g. FLAGR_WEB_PREFIX=/foo
 	// UI path  => localhost:18000/foo"
