@@ -68,9 +68,9 @@ func NewSecureRandomKey() string {
 	return randomKeyPrefix + uniuri.NewLenChars(uniuri.StdLen, randomKeyCharset)
 }
 
-// SafeStringWithDefault parse an interface to string
+// SafeStringWithDefault parse an any to string
 // and set it to default value if it's empty
-func SafeStringWithDefault(s interface{}, deft string) (ret string) {
+func SafeStringWithDefault(s any, deft string) (ret string) {
 	ret = SafeString(s)
 	if ret == "" {
 		ret = deft
@@ -79,12 +79,12 @@ func SafeStringWithDefault(s interface{}, deft string) (ret string) {
 }
 
 // SafeString safely cast to string
-func SafeString(s interface{}) (ret string) {
+func SafeString(s any) (ret string) {
 	return cast.ToString(s)
 }
 
 // SafeUint returns the uint of the value
-func SafeUint(s interface{}) (ret uint) {
+func SafeUint(s any) (ret uint) {
 	return cast.ToUint(s)
 }
 
