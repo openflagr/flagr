@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/openflagr/flagr/pkg/entity"
+	"github.com/openflagr/flagr/pkg/notification"
 	"github.com/openflagr/flagr/pkg/util"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/export"
 	"github.com/prashantv/gostub"
@@ -56,7 +57,7 @@ func TestExportFlags(t *testing.T) {
 func TestExportFlagSnapshots(t *testing.T) {
 	f := entity.GenFixtureFlag()
 	db := entity.PopulateTestDB(f)
-	entity.SaveFlagSnapshot(db, f.ID, "flagr-test@example.com")
+	entity.SaveFlagSnapshot(db, f.ID, "flagr-test@example.com", notification.OperationUpdate)
 
 	tmpDB1, dbErr1 := db.DB()
 	if dbErr1 != nil {
@@ -85,7 +86,7 @@ func TestExportFlagSnapshots(t *testing.T) {
 func TestExportSQLiteFile(t *testing.T) {
 	f := entity.GenFixtureFlag()
 	db := entity.PopulateTestDB(f)
-	entity.SaveFlagSnapshot(db, f.ID, "flagr-test@example.com")
+	entity.SaveFlagSnapshot(db, f.ID, "flagr-test@example.com", notification.OperationUpdate)
 
 	tmpDB1, dbErr1 := db.DB()
 	if dbErr1 != nil {
@@ -115,7 +116,7 @@ func TestExportSQLiteFile(t *testing.T) {
 func TestExportSQLiteHandler(t *testing.T) {
 	f := entity.GenFixtureFlag()
 	db := entity.PopulateTestDB(f)
-	entity.SaveFlagSnapshot(db, f.ID, "flagr-test@example.com")
+	entity.SaveFlagSnapshot(db, f.ID, "flagr-test@example.com", "test")
 
 	tmpDB1, dbErr1 := db.DB()
 	if dbErr1 != nil {
