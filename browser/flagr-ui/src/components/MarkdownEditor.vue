@@ -1,26 +1,35 @@
 <template>
-  <div id="editor" v-if="showEditor || markdown">
+  <div
+    v-if="showEditor || markdown"
+    id="editor"
+  >
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/4.0.0/github-markdown.min.css"
-    />
+    >
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css"
-    />
+    >
 
     <el-row :gutter="10">
-      <el-col :span="12" v-if="showEditor">
+      <el-col
+        v-if="showEditor"
+        :span="12"
+      >
         <el-input
+          v-model="input"
           type="textarea"
           :rows="12"
           placeholder="Please input"
-          v-model="input"
           @change="syncMarkdown"
-        ></el-input>
+        />
       </el-col>
       <el-col :span="showEditor ? 12 : 24">
-        <div class="markdown-body" v-html="compiledMarkdown"></div>
+        <div
+          class="markdown-body"
+          v-html="compiledMarkdown"
+        />
       </el-col>
     </el-row>
   </div>
@@ -32,9 +41,6 @@ import MarkdownIt from "markdown-it";
 import mk from "@iktakahiro/markdown-it-katex";
 import xss from "xss";
 
-let md = MarkdownIt("commonmark");
-md.use(mk);
-
 const props = defineProps({
   showEditor: Boolean,
   markdown: {
@@ -42,8 +48,9 @@ const props = defineProps({
     default: "",
   },
 });
-
 const emit = defineEmits(["update:markdown"]);
+let md = MarkdownIt("commonmark");
+md.use(mk);
 
 const input = ref(props.markdown);
 

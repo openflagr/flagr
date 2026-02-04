@@ -77,7 +77,7 @@ test.describe('Full E2E Workflow', () => {
     const evalCollapse = page.locator('.dc-container .el-collapse-item').first()
     await evalCollapse.locator('.el-collapse-item__header').click()
     await page.waitForTimeout(300)
-    await evalCollapse.locator('button').filter({ hasText: /^POST \/api\/v1\/evaluation$/ }).click()
+    await evalCollapse.locator('button').filter({ hasText: /^\s*POST \/api\/v1\/evaluation\s*$/ }).click()
     await page.waitForTimeout(1000)
 
     // 14. History tab

@@ -25,14 +25,14 @@ test.describe('Debug Console', () => {
     await page.waitForTimeout(300)
     await expect(evalItem).toContainText('Request')
     await expect(evalItem).toContainText('Response')
-    await expect(evalItem.locator('button').filter({ hasText: /^POST \/api\/v1\/evaluation$/ })).toBeVisible()
+    await expect(evalItem.locator('button').filter({ hasText: /^\s*POST \/api\/v1\/evaluation\s*$/ })).toBeVisible()
   })
 
   test('POST evaluation', async ({ page }) => {
     const evalItem = page.locator('.dc-container .el-collapse-item').first()
     await evalItem.locator('.el-collapse-item__header').click()
     await page.waitForTimeout(300)
-    await evalItem.locator('button').filter({ hasText: /^POST \/api\/v1\/evaluation$/ }).click()
+    await evalItem.locator('button').filter({ hasText: /^\s*POST \/api\/v1\/evaluation\s*$/ }).click()
     await page.waitForTimeout(1000)
     const msg = page.locator('.el-message')
     await expect(msg).toContainText(/evaluation (success|error)/)

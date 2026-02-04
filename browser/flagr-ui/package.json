@@ -5,7 +5,7 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint",
+    "lint": "eslint src/",
     "watch": "vue-cli-service build --watch",
     "test:e2e": "playwright test"
   },
@@ -26,32 +26,17 @@
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.25.0",
+    "@eslint/js": "^9.39.2",
     "@vue/cli-plugin-babel": "^5.0.8",
-    "@vue/cli-plugin-eslint": "^5.0.9",
     "@vue/cli-service": "^5.0.8",
-    "eslint": "^7.32.0",
+    "eslint": "^9.39.2",
     "eslint-plugin-vue": "^9.0.0",
+    "globals": "^16.0.0",
     "less": "^3.11.3",
     "less-loader": "^8.1.1",
     "lodash": "^4.17.19",
     "minimist": ">=1.2.2",
     "@playwright/test": "^1.49.1"
-  },
-  "eslintConfig": {
-    "root": true,
-    "env": {
-      "node": true
-    },
-    "extends": [
-      "plugin:vue/vue3-essential",
-      "eslint:recommended"
-    ],
-    "rules": {
-      "vue/multi-word-component-names": "off"
-    },
-    "parserOptions": {
-      "parser": "@babel/eslint-parser"
-    }
   },
   "postcss": {
     "plugins": {

@@ -1,8 +1,14 @@
 <template>
   <el-row>
-    <el-col :span="20" :offset="2">
+    <el-col
+      :span="20"
+      :offset="2"
+    >
       <div class="flags-container container">
-        <el-breadcrumb separator="/" v-if="loaded">
+        <el-breadcrumb
+          v-if="loaded"
+          separator="/"
+        >
           <el-breadcrumb-item>Home page</el-breadcrumb-item>
         </el-breadcrumb>
 
@@ -11,7 +17,10 @@
         <div v-if="loaded">
           <el-row>
             <el-col>
-              <el-input placeholder="Specific new flag description" v-model="newFlag.description">
+              <el-input
+                v-model="newFlag.description"
+                placeholder="Specific new flag description"
+              >
                 <template #prepend>
                   <el-icon><Plus /></el-icon>
                 </template>
@@ -29,7 +38,9 @@
                         <el-dropdown-item
                           command="simple_boolean_flag"
                           :disabled="!newFlag.description"
-                        >Create Simple Boolean Flag</el-dropdown-item>
+                        >
+                          Create Simple Boolean Flag
+                        </el-dropdown-item>
                       </el-dropdown-menu>
                     </template>
                   </el-dropdown>
@@ -40,11 +51,11 @@
 
           <el-row>
             <el-input
-              placeholder="Search a flag"
-              :prefix-icon="Search"
               v-model="searchTerm"
               v-focus
-            ></el-input>
+              placeholder="Search a flag"
+              :prefix-icon="Search"
+            />
           </el-row>
 
           <el-table
@@ -52,28 +63,50 @@
             :stripe="true"
             :highlight-current-row="false"
             :default-sort="{ prop: 'id', order: 'descending' }"
-            v-on:row-click="goToFlag"
             style="width: 100%"
+            @row-click="goToFlag"
           >
-            <el-table-column prop="id" align="center" label="Flag ID" sortable fixed width="95"></el-table-column>
-            <el-table-column prop="description" label="Description" min-width="300"></el-table-column>
-            <el-table-column prop="tags" label="Tags" min-width="200">
+            <el-table-column
+              prop="id"
+              align="center"
+              label="Flag ID"
+              sortable
+              fixed
+              width="95"
+            />
+            <el-table-column
+              prop="description"
+              label="Description"
+              min-width="300"
+            />
+            <el-table-column
+              prop="tags"
+              label="Tags"
+              min-width="200"
+            >
               <template #default="scope">
                 <el-tag
                   v-for="tag in scope.row.tags"
                   :key="tag.id"
                   disable-transitions
-                >{{ tag.value }}</el-tag>
+                >
+                  {{ tag.value }}
+                </el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="updatedBy" label="Last Updated By" sortable width="200"></el-table-column>
+            <el-table-column
+              prop="updatedBy"
+              label="Last Updated By"
+              sortable
+              width="200"
+            />
             <el-table-column
               prop="updatedAt"
               label="Updated At (UTC)"
               :formatter="datetimeFormatter"
               sortable
               width="180"
-            ></el-table-column>
+            />
             <el-table-column
               prop="enabled"
               label="Enabled"
@@ -88,12 +121,17 @@
                 <el-tag
                   :type="scope.row.enabled ? 'primary' : 'danger'"
                   disable-transitions
-                >{{ scope.row.enabled ? "on" : "off" }}</el-tag>
+                >
+                  {{ scope.row.enabled ? "on" : "off" }}
+                </el-tag>
               </template>
             </el-table-column>
           </el-table>
 
-          <el-collapse class="deleted-flags-table" @change="fetchDeletedFlags">
+          <el-collapse
+            class="deleted-flags-table"
+            @change="fetchDeletedFlags"
+          >
             <el-collapse-item title="Deleted Flags">
               <el-table
                 :data="deletedFlags"
@@ -102,25 +140,47 @@
                 :default-sort="{ prop: 'id', order: 'descending' }"
                 style="width: 100%"
               >
-                <el-table-column prop="id" align="center" label="Flag ID" sortable fixed width="95"></el-table-column>
-                <el-table-column prop="description" label="Description" min-width="300"></el-table-column>
-                <el-table-column prop="tags" label="Tags" min-width="200">
+                <el-table-column
+                  prop="id"
+                  align="center"
+                  label="Flag ID"
+                  sortable
+                  fixed
+                  width="95"
+                />
+                <el-table-column
+                  prop="description"
+                  label="Description"
+                  min-width="300"
+                />
+                <el-table-column
+                  prop="tags"
+                  label="Tags"
+                  min-width="200"
+                >
                   <template #default="scope">
                     <el-tag
                       v-for="tag in scope.row.tags"
                       :key="tag.id"
                       disable-transitions
-                    >{{ tag.value }}</el-tag>
+                    >
+                      {{ tag.value }}
+                    </el-tag>
                   </template>
                 </el-table-column>
-                <el-table-column prop="updatedBy" label="Last Updated By" sortable width="200"></el-table-column>
+                <el-table-column
+                  prop="updatedBy"
+                  label="Last Updated By"
+                  sortable
+                  width="200"
+                />
                 <el-table-column
                   prop="updatedAt"
                   label="Updated At (UTC)"
                   :formatter="datetimeFormatter"
                   sortable
                   width="180"
-                ></el-table-column>
+                />
                 <el-table-column
                   prop="action"
                   label="Action"
@@ -130,10 +190,12 @@
                 >
                   <template #default="scope">
                     <el-button
-                      @click="restoreFlag(scope.row)"
                       type="warning"
                       size="small"
-                    >Restore</el-button>
+                      @click="restoreFlag(scope.row)"
+                    >
+                      Restore
+                    </el-button>
                   </template>
                 </el-table-column>
               </el-table>

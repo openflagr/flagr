@@ -11,13 +11,18 @@
           <el-col :span="5">
             <span>Request</span>
           </el-col>
-          <el-col :span="7" class="evaluation-button-col">
+          <el-col
+            :span="7"
+            class="evaluation-button-col"
+          >
             <el-button
               size="small"
-              @click="postEvaluation(evalContext)"
               type="primary"
               plain
-            >POST /api/v1/evaluation</el-button>
+              @click="postEvaluation(evalContext)"
+            >
+              POST /api/v1/evaluation
+            </el-button>
           </el-col>
           <el-col :span="6">
             <span>Response</span>
@@ -48,13 +53,18 @@
           <el-col :span="5">
             <span>Request</span>
           </el-col>
-          <el-col :span="7" class="evaluation-button-col">
+          <el-col
+            :span="7"
+            class="evaluation-button-col"
+          >
             <el-button
               size="small"
-              @click="postEvaluationBatch(batchEvalContext)"
               type="primary"
               plain
-            >POST /api/v1/evaluation/batch</el-button>
+              @click="postEvaluationBatch(batchEvalContext)"
+            >
+              POST /api/v1/evaluation/batch
+            </el-button>
           </el-col>
           <el-col :span="6">
             <span>Response</span>
@@ -91,9 +101,14 @@ import { ElMessage } from "element-plus";
 
 import constants from "@/constants";
 
-const { API_URL } = constants;
+const props = defineProps({
+  flag: {
+    type: Object,
+    required: true,
+  },
+});
 
-const props = defineProps(["flag"]);
+const { API_URL } = constants;
 
 const evalContext = ref({
   entityID: "a1234",

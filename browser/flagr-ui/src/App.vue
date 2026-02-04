@@ -2,34 +2,47 @@
   <div id="app">
     <div class="navbar">
       <el-row>
-        <el-col :span="20" :offset="2">
+        <el-col
+          :span="20"
+          :offset="2"
+        >
           <el-row>
             <el-col :span="6">
               <router-link :to="{ name: 'home' }">
                 <div class="logo-container">
-                  <h3 class="logo">Flagr</h3>
+                  <h3 class="logo">
+                    Flagr
+                  </h3>
                   <div>
                     <span class="version">v{{ version }}</span>
                   </div>
                 </div>
               </router-link>
             </el-col>
-            <el-col :span="1" :offset="15">
-              <a href="https://openflagr.github.io/flagr/api_docs" target="_blank"
-                ><h3>API</h3></a
-              >
+            <el-col
+              :span="1"
+              :offset="15"
+            >
+              <a
+                href="https://openflagr.github.io/flagr/api_docs"
+                target="_blank"
+              ><h3>API</h3></a>
             </el-col>
-            <el-col :span="1" :offset="1">
-              <a href="https://openflagr.github.io/flagr" target="_blank"
-                ><h3>Docs</h3></a
-              >
+            <el-col
+              :span="1"
+              :offset="1"
+            >
+              <a
+                href="https://openflagr.github.io/flagr"
+                target="_blank"
+              ><h3>Docs</h3></a>
             </el-col>
           </el-row>
         </el-col>
       </el-row>
     </div>
     <div class="router-view-container">
-      <router-view></router-view>
+      <router-view />
     </div>
   </div>
 </template>
