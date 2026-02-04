@@ -17,7 +17,7 @@ jobs:
     - name: Publish Docker SemVer Tag
       uses: elgohr/Publish-Docker-Github-Action@v5
       with:
-        name: openflagr/flagr
+        name: foxdalas/flagr
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
         registry: ghcr.io
