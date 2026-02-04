@@ -13,7 +13,7 @@ jobs:
       GOEXPERIMENT: greenteagc
     steps:
       - name: Check out source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -31,14 +31,14 @@ jobs:
         with:
           node-version: '16'
       - name: Check out source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - run: cd browser/flagr-ui && npm install
       - run: cd browser/flagr-ui && npm run lint
   integration_test:
     runs-on: ubuntu-latest
     steps:
       - name: Check out source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - run: cd integration_tests && make build-image
       - run: cd integration_tests && make down
       - run: cd integration_tests && make up
@@ -46,7 +46,7 @@ jobs:
   actionlint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Download actionlint
         id: get_actionlint
         run: bash <(curl https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
