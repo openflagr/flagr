@@ -602,6 +602,109 @@ func TestPostEvaluationBatch(t *testing.T) {
 		})
 		assert.NotNil(t, resp)
 	})
+
+	t.Run("test duplicate flagKeys are deduplicated", func(t *testing.T) {
+		evalCount := 0
+		originalEvalFlag := EvalFlag
+		EvalFlag = func(evalContext models.EvalContext) *models.EvalResult {
+			evalCount++
+			return &models.EvalResult{}
+		}
+		defer func() { EvalFlag = originalEvalFlag }()
+
+		e := NewEval()
+		// Send 100 duplicate flagKeys - should only evaluate once
+		flagKeys := make([]string, 100)
+		for i := range flagKeys {
+			flagKeys[i] = "same_flag_key"
+		}
+		resp := e.PostEvaluationBatch(evaluation.PostEvaluationBatchParams{
+			Body: &models.EvaluationBatchRequest{
+				EnableDebug: true,
+				Entities: []*models.EvaluationEntity{
+					{
+						EntityContext: map[string]interface{}{"dl_state": "CA"},
+						EntityID:      "entityID1",
+						EntityType:    "entityType1",
+					},
+				},
+				FlagKeys: flagKeys,
+			},
+		})
+		_, ok := resp.(*evaluation.PostEvaluationBatchOK)
+		assert.True(t, ok, "expected PostEvaluationBatchOK response")
+		assert.Equal(t, 1, evalCount, "expected only 1 evaluation after deduplication")
+	})
+
+	t.Run("test duplicate flagIDs are deduplicated", func(t *testing.T) {
+		evalCount := 0
+		originalEvalFlag := EvalFlag
+		EvalFlag = func(evalContext models.EvalContext) *models.EvalResult {
+			evalCount++
+			return &models.EvalResult{}
+		}
+		defer func() { EvalFlag = originalEvalFlag }()
+
+		e := NewEval()
+		// Send 100 duplicate flagIDs - should only evaluate once
+		flagIDs := make([]int64, 100)
+		for i := range flagIDs {
+			flagIDs[i] = 123
+		}
+		resp := e.PostEvaluationBatch(evaluation.PostEvaluationBatchParams{
+			Body: &models.EvaluationBatchRequest{
+				EnableDebug: true,
+				Entities: []*models.EvaluationEntity{
+					{
+						EntityContext: map[string]interface{}{"dl_state": "CA"},
+						EntityID:      "entityID1",
+						EntityType:    "entityType1",
+					},
+				},
+				FlagIDs: flagIDs,
+			},
+		})
+		_, ok := resp.(*evaluation.PostEvaluationBatchOK)
+		assert.True(t, ok, "expected PostEvaluationBatchOK response")
+		assert.Equal(t, 1, evalCount, "expected only 1 evaluation after deduplication")
+	})
+
+	t.Run("test mixed duplicates are deduplicated", func(t *testing.T) {
+		evalCount := 0
+		originalEvalFlag := EvalFlag
+		EvalFlag = func(evalContext models.EvalContext) *models.EvalResult {
+			evalCount++
+			return &models.EvalResult{}
+		}
+		defer func() { EvalFlag = originalEvalFlag }()
+
+		e := NewEval()
+		// 50 duplicates of key_1, 50 duplicates of key_2 = 2 unique keys
+		flagKeys := make([]string, 100)
+		for i := range flagKeys {
+			if i%2 == 0 {
+				flagKeys[i] = "flag_key_1"
+			} else {
+				flagKeys[i] = "flag_key_2"
+			}
+		}
+		resp := e.PostEvaluationBatch(evaluation.PostEvaluationBatchParams{
+			Body: &models.EvaluationBatchRequest{
+				EnableDebug: true,
+				Entities: []*models.EvaluationEntity{
+					{
+						EntityContext: map[string]interface{}{"dl_state": "CA"},
+						EntityID:      "entityID1",
+						EntityType:    "entityType1",
+					},
+				},
+				FlagKeys: flagKeys,
+			},
+		})
+		_, ok := resp.(*evaluation.PostEvaluationBatchOK)
+		assert.True(t, ok, "expected PostEvaluationBatchOK response")
+		assert.Equal(t, 2, evalCount, "expected 2 evaluations after deduplication")
+	})
 }
 
 func TestTagsPostEvaluationBatch(t *testing.T) {

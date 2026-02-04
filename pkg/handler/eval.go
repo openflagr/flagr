@@ -55,6 +55,48 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 	flagTagsOperator := params.Body.FlagTagsOperator
 	results := &models.EvaluationBatchResponse{}
 
+	// Deduplicate flagKeys to prevent DoS via repeated keys
+	if len(flagKeys) > 0 {
+		seen := make(map[string]bool)
+		uniqueFlagKeys := make([]string, 0, len(flagKeys))
+		for _, k := range flagKeys {
+			if !seen[k] {
+				seen[k] = true
+				uniqueFlagKeys = append(uniqueFlagKeys, k)
+			}
+		}
+		flagKeys = uniqueFlagKeys
+	}
+
+	// Deduplicate flagIDs to prevent DoS via repeated IDs
+	if len(flagIDs) > 0 {
+		seen := make(map[int64]bool)
+		uniqueFlagIDs := make([]int64, 0, len(flagIDs))
+		for _, id := range flagIDs {
+			if !seen[id] {
+				seen[id] = true
+				uniqueFlagIDs = append(uniqueFlagIDs, id)
+			}
+		}
+		flagIDs = uniqueFlagIDs
+	}
+
+	// Validate batch size to prevent DoS attacks via resource exhaustion (if enabled)
+	maxBatchSize := config.Config.EvalBatchSize
+	if maxBatchSize > 0 {
+		// Calculate total evaluations: entities * (flagIDs + flagKeys + flagTags)
+		// For flagTags, we count each tag as potentially matching one flag (conservative estimate)
+		flagsPerEntity := len(flagIDs) + len(flagKeys)
+		if len(flagTags) > 0 {
+			flagsPerEntity++ // flagTags is evaluated once per entity regardless of count
+		}
+		totalEvaluations := len(entities) * flagsPerEntity
+		if totalEvaluations > maxBatchSize {
+			return evaluation.NewPostEvaluationBatchDefault(400).WithPayload(
+				ErrorMessage("batch evaluation size %d exceeds maximum allowed size of %d", totalEvaluations, maxBatchSize))
+		}
+	}
+
 	// TODO make it concurrent
 	for _, entity := range entities {
 		if len(flagTags) > 0 {
