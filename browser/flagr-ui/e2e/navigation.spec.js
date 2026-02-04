@@ -48,6 +48,6 @@ test.describe('Navigation and Layout', () => {
 
     // Unknown URL doesn't break
     await page.goto('/#/unknown')
-    await expect(page.locator('#app')).toBeVisible()
+    await expect(page.locator('#app').first()).toBeVisible()
   })
 })

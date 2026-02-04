@@ -76,7 +76,7 @@ test.describe('Flag Variants', () => {
     await createBtn.click()
     await page.waitForTimeout(500)
     // Click delete button (icon button in save-remove row, not "Save Variant")
-    const deleteIcons = page.locator('.variants-container-inner .el-icon-delete')
+    const deleteIcons = page.locator('.variants-container-inner .save-remove-variant-row .el-icon')
     if (await deleteIcons.count() > 0) {
       await deleteIcons.last().click()
       await page.waitForTimeout(500)

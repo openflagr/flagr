@@ -1,3 +1,5 @@
+import { ElMessage } from 'element-plus'
+
 function indexBy (arr, prop) {
   return arr.reduce((acc, el) => {
     acc[el[prop]] = el
@@ -32,11 +34,10 @@ function get (obj, path, def) {
 
 function handleErr (err) {
   let msg = get(err, 'response.data.message', 'request error')
-  this.$message.error(msg)
+  ElMessage.error(msg)
   if (get(err, 'response.status') === 401) {
     let redirectURL = err.response.headers['www-authenticate'].split(`"`)[1]
     window.location = redirectURL
-    return
   }
 }
 

@@ -1,4 +1,4 @@
-const API = 'http://localhost:18000/api/v1'
+const API = 'http://127.0.0.1:18000/api/v1'
 
 async function createFlag(description) {
   const res = await fetch(`${API}/flags`, {

@@ -12,7 +12,7 @@ test.describe('Flag Constraints', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto(`http://localhost:8080/#/flags/${flagId}`)
-    await page.waitForSelector('.flag-container', { timeout: 10000 })
+    await page.waitForSelector('.flag-config-card', { timeout: 10000 })
   })
 
   test('Empty state shows no constraints message', async ({ page }) => {
@@ -28,7 +28,7 @@ test.describe('Flag Constraints', () => {
     // In the new constraint row, there are: Property input, operator select, value input, button
     // Find the value input in the last el-row of constraints
     const newConstraintRow = segment.locator('.constraints > div:last-child .el-row')
-    const valueInput = newConstraintRow.locator('.el-input input').nth(2)
+    const valueInput = newConstraintRow.locator('.el-col').nth(2).locator('input')
     await valueInput.fill('"US"')
     const addBtn = segment.locator('button').filter({ hasText: 'Add Constraint' })
     await addBtn.click()
@@ -51,7 +51,7 @@ test.describe('Flag Constraints', () => {
     const propInput = segment.locator('input[placeholder="Property"]').last()
     await propInput.fill('  env  ')
     const newConstraintRow = segment.locator('.constraints > div:last-child .el-row')
-    const valueInput = newConstraintRow.locator('.el-input input').nth(2)
+    const valueInput = newConstraintRow.locator('.el-col').nth(2).locator('input')
     await valueInput.fill('  "prod"  ')
     const addBtn = segment.locator('button').filter({ hasText: 'Add Constraint' })
     await addBtn.click()

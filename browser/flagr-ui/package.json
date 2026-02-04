@@ -10,32 +10,31 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@element-plus/icons-vue": "^2.3.1",
     "@iktakahiro/markdown-it-katex": "^4.0.0",
     "axios": "^1.8.2",
     "core-js": "^3.48.0",
     "diff": "^3.4.0",
-    "element-ui": "^2.4.6",
+    "element-plus": "^2.9.0",
     "lodash.clone": "^4.5.0",
     "markdown-it": "^12.3.2",
-    "vue": "^2.6.10",
-    "vue-json-editor": "^1.2.0",
-    "vue-router": "^2.7.0",
-    "vuedraggable": "^2.14.1",
-    "vuex": "^2.4.1",
+    "vue": "^3.4.0",
+    "vue-router": "^4.5.0",
+    "vue3-json-editor": "^1.0.0",
+    "vuedraggable": "^4.1.0",
     "xss": "^1.0.9"
   },
   "devDependencies": {
+    "@babel/eslint-parser": "^7.25.0",
     "@vue/cli-plugin-babel": "^5.0.8",
     "@vue/cli-plugin-eslint": "^5.0.9",
     "@vue/cli-service": "^5.0.8",
-    "babel-eslint": "^10.0.3",
     "eslint": "^7.32.0",
-    "eslint-plugin-vue": "^7.20.0",
+    "eslint-plugin-vue": "^9.0.0",
     "less": "^3.11.3",
     "less-loader": "^8.1.1",
     "lodash": "^4.17.19",
     "minimist": ">=1.2.2",
-    "vue-template-compiler": "^2.6.10",
     "@playwright/test": "^1.49.1"
   },
   "eslintConfig": {
@@ -44,12 +43,14 @@
       "node": true
     },
     "extends": [
-      "plugin:vue/essential",
+      "plugin:vue/vue3-essential",
       "eslint:recommended"
     ],
-    "rules": {},
+    "rules": {
+      "vue/multi-word-component-names": "off"
+    },
     "parserOptions": {
-      "parser": "babel-eslint"
+      "parser": "@babel/eslint-parser"
     }
   },
   "postcss": {

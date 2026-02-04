@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <el-menu mode="horizontal" class="navbar">
+    <div class="navbar">
       <el-row>
         <el-col :span="20" :offset="2">
           <el-row>
@@ -27,21 +27,16 @@
           </el-row>
         </el-col>
       </el-row>
-    </el-menu>
+    </div>
     <div class="router-view-container">
       <router-view></router-view>
     </div>
   </div>
 </template>
 
-<script>
-const version = require("../package.json").version || "1.0.0";
-export default {
-  name: "app",
-  data: () => ({
-    version,
-  }),
-};
+<script setup>
+import pkg from "../package.json";
+const version = pkg.version || "1.0.0";
 </script>
 
 <style lang="less">
@@ -78,6 +73,7 @@ ol {
     background-color: #74e5e0;
     color: #2e4960;
     border: 0;
+    padding: 0 20px;
 
     .logo-container {
       display: flex;
@@ -201,6 +197,10 @@ ol {
 
   .el-tag {
     margin: 2.5px;
+  }
+
+  .el-icon {
+    vertical-align: middle;
   }
 }
 </style>

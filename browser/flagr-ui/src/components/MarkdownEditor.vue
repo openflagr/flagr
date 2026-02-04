@@ -26,7 +26,8 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, computed } from "vue";
 import MarkdownIt from "markdown-it";
 import mk from "@iktakahiro/markdown-it-katex";
 import xss from "xss";
@@ -34,33 +35,25 @@ import xss from "xss";
 let md = MarkdownIt("commonmark");
 md.use(mk);
 
-export default {
-  name: "editor",
-  props: {
-    showEditor: Boolean,
-    markdown: {
-      type: String,
-      default: "",
-    },
+const props = defineProps({
+  showEditor: Boolean,
+  markdown: {
+    type: String,
+    default: "",
   },
-  data() {
-    return {
-      input: this.markdown,
-    };
-  },
-  computed: {
-    compiledMarkdown() {
-      return md.render(xss(this.input));
-    },
-  },
-  methods: {
-    syncMarkdown(md) {
-      this.$emit("update:markdown", md);
-    },
-  },
-  watch: {},
-  mounted() {},
-};
+});
+
+const emit = defineEmits(["update:markdown"]);
+
+const input = ref(props.markdown);
+
+const compiledMarkdown = computed(() => {
+  return md.render(xss(input.value));
+});
+
+function syncMarkdown(val) {
+  emit("update:markdown", val);
+}
 </script>
 
 <style lang="less" scoped>
@@ -69,4 +62,3 @@ export default {
   padding: 0.5rem;
 }
 </style>
-

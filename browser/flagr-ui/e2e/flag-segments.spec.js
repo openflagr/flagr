@@ -76,7 +76,7 @@ test.describe('Flag Segments', () => {
     const segments = page.locator('.segments-container-inner .segment')
     const lastSegment = segments.last()
     // Find the delete icon button
-    const deleteIcon = lastSegment.locator('.el-icon-delete').first()
+    const deleteIcon = lastSegment.locator('.flex-row.id-row .el-icon').first()
     await deleteIcon.click()
     await page.waitForTimeout(500)
     await expect(page.locator('.el-message').last()).toContainText('segment deleted')

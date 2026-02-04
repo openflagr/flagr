@@ -11,7 +11,7 @@ test.describe('Flag Tags', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto(`http://localhost:8080/#/flags/${flagId}`)
-    await page.waitForSelector('.flag-container', { timeout: 10000 })
+    await page.waitForSelector('.flag-config-card', { timeout: 10000 })
   })
 
   test('New Tag button visible, input hidden', async ({ page }) => {

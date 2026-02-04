@@ -12,24 +12,26 @@
           <el-row>
             <el-col>
               <el-input placeholder="Specific new flag description" v-model="newFlag.description">
-                <template slot="prepend">
-                  <span class="el-icon-plus" />
+                <template #prepend>
+                  <el-icon><Plus /></el-icon>
                 </template>
-                <template slot="append">
+                <template #append>
                   <el-dropdown
                     split-button
                     type="primary"
                     :disabled="!newFlag.description"
                     @command="onCommandDropdown"
-                    @click.prevent="createFlag"
+                    @click="createFlag"
                   >
                     Create New Flag
-                    <el-dropdown-menu slot="dropdown">
-                      <el-dropdown-item
-                        command="simple_boolean_flag"
-                        :disabled="!newFlag.description"
-                      >Create Simple Boolean Flag</el-dropdown-item>
-                    </el-dropdown-menu>
+                    <template #dropdown>
+                      <el-dropdown-menu>
+                        <el-dropdown-item
+                          command="simple_boolean_flag"
+                          :disabled="!newFlag.description"
+                        >Create Simple Boolean Flag</el-dropdown-item>
+                      </el-dropdown-menu>
+                    </template>
                   </el-dropdown>
                 </template>
               </el-input>
@@ -39,7 +41,7 @@
           <el-row>
             <el-input
               placeholder="Search a flag"
-              prefix-icon="el-icon-search"
+              :prefix-icon="Search"
               v-model="searchTerm"
               v-focus
             ></el-input>
@@ -56,11 +58,10 @@
             <el-table-column prop="id" align="center" label="Flag ID" sortable fixed width="95"></el-table-column>
             <el-table-column prop="description" label="Description" min-width="300"></el-table-column>
             <el-table-column prop="tags" label="Tags" min-width="200">
-              <template slot-scope="scope">
+              <template #default="scope">
                 <el-tag
                   v-for="tag in scope.row.tags"
                   :key="tag.id"
-                  :type="warning"
                   disable-transitions
                 >{{ tag.value }}</el-tag>
               </template>
@@ -83,7 +84,7 @@
               :filters="[{ text: 'Enabled', value: true }, { text: 'Disabled', value: false }]"
               :filter-method="filterStatus"
             >
-              <template slot-scope="scope">
+              <template #default="scope">
                 <el-tag
                   :type="scope.row.enabled ? 'primary' : 'danger'"
                   disable-transitions
@@ -95,7 +96,7 @@
           <el-collapse class="deleted-flags-table" @change="fetchDeletedFlags">
             <el-collapse-item title="Deleted Flags">
               <el-table
-                :data="getDeletedFlags"
+                :data="deletedFlags"
                 :stripe="true"
                 :highlight-current-row="false"
                 :default-sort="{ prop: 'id', order: 'descending' }"
@@ -104,11 +105,10 @@
                 <el-table-column prop="id" align="center" label="Flag ID" sortable fixed width="95"></el-table-column>
                 <el-table-column prop="description" label="Description" min-width="300"></el-table-column>
                 <el-table-column prop="tags" label="Tags" min-width="200">
-                  <template slot-scope="scope">
+                  <template #default="scope">
                     <el-tag
                       v-for="tag in scope.row.tags"
                       :key="tag.id"
-                      :type="warning"
                       disable-transitions
                     >{{ tag.value }}</el-tag>
                   </template>
@@ -128,7 +128,7 @@
                   fixed="right"
                   width="100"
                 >
-                  <template slot-scope="scope">
+                  <template #default="scope">
                     <el-button
                       @click="restoreFlag(scope.row)"
                       type="warning"
@@ -145,134 +145,123 @@
   </el-row>
 </template>
 
-<script>
+<script setup>
+import { ref, computed } from "vue";
+import { useRouter } from "vue-router";
 import Axios from "axios";
+import { Search } from "@element-plus/icons-vue";
+import { ElMessage, ElMessageBox } from "element-plus";
 
 import constants from "@/constants";
 import Spinner from "@/components/Spinner";
 import helpers from "@/helpers/helpers";
 
 const { handleErr } = helpers;
-
 const { API_URL } = constants;
 
-export default {
-  name: "flags",
-  components: {
-    spinner: Spinner
-  },
-  data() {
-    return {
-      loaded: false,
-      deletedFlagsLoaded: false,
-      flags: [],
-      deletedFlags: [],
-      searchTerm: "",
-      newFlag: {
-        description: ""
-      }
-    };
-  },
-  created() {
-    Axios.get(`${API_URL}/flags`).then(response => {
-      let flags = response.data;
-      this.loaded = true;
-      flags.reverse();
-      this.flags = flags;
-    }, handleErr.bind(this));
-  },
-  computed: {
-    filteredFlags: function() {
-      if (this.searchTerm) {
-        return this.flags.filter(({ id, key, description, tags }) =>
-          this.searchTerm
-            .split(",")
-            .map(term => {
-              const termLowerCase = term.toLowerCase();
-              return (
-                id.toString().includes(term) ||
-                key.includes(term) ||
-                description.toLowerCase().includes(termLowerCase) ||
-                tags
-                  .map(tag =>
-                    tag.value.toLowerCase().includes(termLowerCase)
-                  )
-                  .includes(true)
-              );
-            })
-            .every(e => e)
-        );
-      }
-      return this.flags;
-    },
-    getDeletedFlags: function() {
-      return this.deletedFlags;
-    }
-  },
-  methods: {
-    flagEnabledFormatter(row, col, val) {
-      return val ? "on" : "off";
-    },
-    datetimeFormatter(row, col, val) {
-      return val ? val.split(".")[0] : "";
-    },
-    goToFlag(row) {
-      this.$router.push({ name: "flag", params: { flagId: row.id } });
-    },
-    onCommandDropdown(command) {
-      if (command === "simple_boolean_flag") {
-        this.createFlag({ template: command });
-      }
-    },
-    createFlag(params) {
-      if (!this.newFlag.description) {
-        return;
-      }
-      Axios.post(`${API_URL}/flags`, {
-        ...this.newFlag,
-        ...(params || {})
-      }).then(response => {
-        let flag = response.data;
-        this.newFlag.description = "";
-        this.$message.success("flag created");
+const router = useRouter();
 
-        flag._new = true;
-        this.flags.unshift(flag);
-      }, handleErr.bind(this));
-    },
-    restoreFlag(row) {
-      this.$confirm('This will recover the deleted flag. Continue?', 'Warning', {
-        confirmButtonText: 'OK',
-        cancelButtonText: 'Cancel',
-        type: 'warning'
-      }).then(() => {
-        Axios.put(`${API_URL}/flags/${row.id}/restore`).then(response => {
-          let flag = response.data;
-          this.$message.success(`Flag updated`);
-          this.flags.push(flag);
-          this.deletedFlags = this.deletedFlags.filter(function(el) {
-            return el.id != flag.id;
-          });
-        }, handleErr.bind(this));
-      });
+const loaded = ref(false);
+const deletedFlagsLoaded = ref(false);
+const flags = ref([]);
+const deletedFlags = ref([]);
+const searchTerm = ref("");
+const newFlag = ref({ description: "" });
 
-    },
-    fetchDeletedFlags() {
-      if (!this.deletedFlagsLoaded) {
-        var self = this;
-        Axios.get(`${API_URL}/flags?deleted=true`).then(response => {
-          let flags = response.data;
-          flags.reverse();
-          self.deletedFlags = flags;
-          self.deletedFlagsLoaded = true;
-        }, handleErr.bind(this));
-      }
-    },
-    filterStatus(value, row) {
-      return row.enabled === value;
-    }
+// created() equivalent — runs at setup time
+Axios.get(`${API_URL}/flags`).then(response => {
+  let data = response.data;
+  loaded.value = true;
+  data.reverse();
+  flags.value = data;
+}, handleErr);
+
+const filteredFlags = computed(() => {
+  if (searchTerm.value) {
+    return flags.value.filter(({ id, key, description, tags }) =>
+      searchTerm.value
+        .split(",")
+        .map(term => {
+          const termLowerCase = term.toLowerCase();
+          return (
+            id.toString().includes(term) ||
+            key.includes(term) ||
+            description.toLowerCase().includes(termLowerCase) ||
+            tags
+              .map(tag =>
+                tag.value.toLowerCase().includes(termLowerCase)
+              )
+              .includes(true)
+          );
+        })
+        .every(e => e)
+    );
   }
-};
+  return flags.value;
+});
+
+function datetimeFormatter(row, col, val) {
+  return val ? val.split(".")[0] : "";
+}
+
+function goToFlag(row) {
+  router.push({ name: "flag", params: { flagId: row.id } });
+}
+
+function onCommandDropdown(command) {
+  if (command === "simple_boolean_flag") {
+    createFlag({ template: command });
+  }
+}
+
+function createFlag(params) {
+  if (!newFlag.value.description) {
+    return;
+  }
+  Axios.post(`${API_URL}/flags`, {
+    ...newFlag.value,
+    ...(params || {})
+  }).then(response => {
+    let flag = response.data;
+    newFlag.value.description = "";
+    ElMessage.success("flag created");
+
+    flag._new = true;
+    flags.value.unshift(flag);
+  }, handleErr);
+}
+
+function restoreFlag(row) {
+  ElMessageBox.confirm('This will recover the deleted flag. Continue?', 'Warning', {
+    confirmButtonText: 'OK',
+    cancelButtonText: 'Cancel',
+    type: 'warning'
+  }).then(() => {
+    Axios.put(`${API_URL}/flags/${row.id}/restore`).then(response => {
+      let flag = response.data;
+      ElMessage.success(`Flag updated`);
+      flags.value.push(flag);
+      deletedFlags.value = deletedFlags.value.filter(function(el) {
+        return el.id != flag.id;
+      });
+    }, handleErr);
+  });
+}
+
+function fetchDeletedFlags() {
+  if (!deletedFlagsLoaded.value) {
+    Axios.get(`${API_URL}/flags?deleted=true`).then(response => {
+      let data = response.data;
+      data.reverse();
+      deletedFlags.value = data;
+      deletedFlagsLoaded.value = true;
+    }, handleErr);
+  }
+}
+
+function filterStatus(value, row) {
+  return row.enabled === value;
+}
 </script>
 
 <style lang="less">

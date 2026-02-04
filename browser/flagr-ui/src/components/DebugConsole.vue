@@ -1,8 +1,10 @@
 <template>
   <el-card class="dc-container">
-    <div slot="header" class="el-card-header">
-      <h2>Debug Console</h2>
-    </div>
+    <template #header>
+      <div class="el-card-header">
+        <h2>Debug Console</h2>
+      </div>
+    </template>
     <el-collapse>
       <el-collapse-item title="Evaluation">
         <el-row :gutter="10">
@@ -11,7 +13,7 @@
           </el-col>
           <el-col :span="7" class="evaluation-button-col">
             <el-button
-              size="mini"
+              size="small"
               @click="postEvaluation(evalContext)"
               type="primary"
               plain
@@ -23,20 +25,20 @@
         </el-row>
         <el-row :gutter="10">
           <el-col :span="12">
-            <vue-json-editor
+            <vue3-json-editor
               v-model="evalContext"
-              :showBtns="false"
-              ref="evalContextEditor"
+              :show-btns="false"
+              :mode="'code'"
               class="json-editor"
-            ></vue-json-editor>
+            />
           </el-col>
           <el-col :span="12">
-            <vue-json-editor
+            <vue3-json-editor
               v-model="evalResult"
-              :showBtns="false"
-              ref="evalResultEditor"
+              :show-btns="false"
+              :mode="'code'"
               class="json-editor"
-            ></vue-json-editor>
+            />
           </el-col>
         </el-row>
       </el-collapse-item>
@@ -48,7 +50,7 @@
           </el-col>
           <el-col :span="7" class="evaluation-button-col">
             <el-button
-              size="mini"
+              size="small"
               @click="postEvaluationBatch(batchEvalContext)"
               type="primary"
               plain
@@ -60,20 +62,20 @@
         </el-row>
         <el-row :gutter="10">
           <el-col :span="12">
-            <vue-json-editor
+            <vue3-json-editor
               v-model="batchEvalContext"
-              :showBtns="false"
-              ref="batchEvalContextEditor"
+              :show-btns="false"
+              :mode="'code'"
               class="json-editor"
-            ></vue-json-editor>
+            />
           </el-col>
           <el-col :span="12">
-            <vue-json-editor
+            <vue3-json-editor
               v-model="batchEvalResult"
-              :showBtns="false"
-              ref="batchEvalResultEditor"
+              :show-btns="false"
+              :mode="'code'"
               class="json-editor"
-            ></vue-json-editor>
+            />
           </el-col>
         </el-row>
       </el-collapse-item>
@@ -81,87 +83,75 @@
   </el-card>
 </template>
 
-<script>
+<script setup>
+import { ref } from "vue";
 import Axios from "axios";
-import vueJsonEditor from "vue-json-editor";
+import { Vue3JsonEditor } from "vue3-json-editor";
+import { ElMessage } from "element-plus";
 
 import constants from "@/constants";
 
 const { API_URL } = constants;
 
-export default {
-  name: "debug-console",
-  props: ["flag"],
-  data() {
-    return {
-      evalContext: {
-        entityID: "a1234",
-        entityType: "report",
-        entityContext: {
-          hello: "world"
-        },
-        enableDebug: true,
-        flagID: this.flag.id,
-        flagKey: this.flag.key
-      },
-      evalResult: {},
-      batchEvalContext: {
-        entities: [
-          {
-            entityID: "a1234",
-            entityType: "report",
-            entityContext: {
-              hello: "world"
-            }
-          },
-          {
-            entityID: "a5678",
-            entityType: "report",
-            entityContext: {
-              hello: "world"
-            }
-          }
-        ],
-        enableDebug: true,
-        flagIDs: [this.flag.id]
-      },
-      batchEvalResult: {}
-    };
+const props = defineProps(["flag"]);
+
+const evalContext = ref({
+  entityID: "a1234",
+  entityType: "report",
+  entityContext: {
+    hello: "world"
   },
-  methods: {
-    postEvaluation(evalContext) {
-      Axios.post(`${API_URL}/evaluation`, evalContext).then(
-        response => {
-          this.$message.success(`evaluation success`);
-          this.evalResult = response.data;
-        },
-        () => {
-          this.$message.error(`evaluation error`);
-        }
-      );
+  enableDebug: true,
+  flagID: props.flag.id,
+  flagKey: props.flag.key
+});
+const evalResult = ref({});
+
+const batchEvalContext = ref({
+  entities: [
+    {
+      entityID: "a1234",
+      entityType: "report",
+      entityContext: {
+        hello: "world"
+      }
     },
-    postEvaluationBatch(batchEvalContext) {
-      Axios.post(`${API_URL}/evaluation/batch`, batchEvalContext).then(
-        response => {
-          this.$message.success(`evaluation success`);
-          this.batchEvalResult = response.data;
-        },
-        () => {
-          this.$message.error(`evaluation error`);
-        }
-      );
+    {
+      entityID: "a5678",
+      entityType: "report",
+      entityContext: {
+        hello: "world"
+      }
     }
-  },
-  components: {
-    vueJsonEditor
-  },
-  mounted() {
-    this.$refs.evalContextEditor.editor.setMode("code");
-    this.$refs.evalResultEditor.editor.setMode("code");
-    this.$refs.batchEvalContextEditor.editor.setMode("code");
-    this.$refs.batchEvalResultEditor.editor.setMode("code");
-  }
-};
+  ],
+  enableDebug: true,
+  flagIDs: [props.flag.id]
+});
+const batchEvalResult = ref({});
+
+function postEvaluation(evalCtx) {
+  Axios.post(`${API_URL}/evaluation`, evalCtx).then(
+    response => {
+      ElMessage.success(`evaluation success`);
+      evalResult.value = response.data;
+    },
+    () => {
+      ElMessage.error(`evaluation error`);
+    }
+  );
+}
+
+function postEvaluationBatch(batchEvalCtx) {
+  Axios.post(`${API_URL}/evaluation/batch`, batchEvalCtx).then(
+    response => {
+      ElMessage.success(`evaluation success`);
+      batchEvalResult.value = response.data;
+    },
+    () => {
+      ElMessage.error(`evaluation error`);
+    }
+  );
+}
 </script>
 
 <style lang="less" scoped>
