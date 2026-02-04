@@ -23,6 +23,7 @@ import (
 
 // Eval is the Eval interface
 type Eval interface {
+	GetEvaluationBatch(evaluation.GetEvaluationBatchParams) middleware.Responder
 	PostEvaluation(evaluation.PostEvaluationParams) middleware.Responder
 	PostEvaluationBatch(evaluation.PostEvaluationBatchParams) middleware.Responder
 }
@@ -33,6 +34,71 @@ func NewEval() Eval {
 }
 
 type eval struct{}
+
+func (e *eval) GetEvaluationBatch(params evaluation.GetEvaluationBatchParams) middleware.Responder {
+	var ctx = make(map[string]any)
+	for k, v := range params.HTTPRequest.URL.Query() {
+		if k == "entityId" || k == "flagId" || k == "flagKey" || k == "flagTag" || k == "flagTagQuery" {
+			continue
+		}
+		var value any
+		if err := json.Unmarshal([]byte(v[0]), &value); err != nil {
+			continue
+		}
+		ctx[k] = value
+	}
+	evaluationEntity := models.EvaluationEntity{
+		EntityID:      *params.EntityID,
+		EntityContext: ctx,
+		EntityType:    "user",
+	}
+	flagTagsOperator := "ANY"
+	if params.FlagTagQuery != nil && *params.FlagTagQuery == "ALL" {
+		flagTagsOperator = "ALL"
+	}
+
+	results := &models.EvaluationBatchResponse{}
+	if len(params.FlagTag) > 0 {
+		evalContext := models.EvalContext{
+			EnableDebug:      false,
+			EntityContext:    evaluationEntity.EntityContext,
+			EntityID:         evaluationEntity.EntityID,
+			EntityType:       evaluationEntity.EntityType,
+			FlagTags:         params.FlagTag,
+			FlagTagsOperator: &flagTagsOperator,
+		}
+		evalResults := EvalFlagsByTags(evalContext)
+		results.EvaluationResults = append(results.EvaluationResults, evalResults...)
+	}
+	for _, flagID := range params.FlagID {
+		evalContext := models.EvalContext{
+			EnableDebug:   false,
+			EntityContext: evaluationEntity.EntityContext,
+			EntityID:      evaluationEntity.EntityID,
+			EntityType:    evaluationEntity.EntityType,
+			FlagID:        flagID,
+		}
+
+		evalResult := EvalFlag(evalContext)
+		results.EvaluationResults = append(results.EvaluationResults, evalResult)
+	}
+	for _, flagKey := range params.FlagKey {
+		evalContext := models.EvalContext{
+			EnableDebug:   false,
+			EntityContext: evaluationEntity.EntityContext,
+			EntityID:      evaluationEntity.EntityID,
+			EntityType:    evaluationEntity.EntityType,
+			FlagKey:       flagKey,
+		}
+
+		evalResult := EvalFlag(evalContext)
+		results.EvaluationResults = append(results.EvaluationResults, evalResult)
+	}
+
+	resp := evaluation.NewPostEvaluationBatchOK()
+	resp.SetPayload(results)
+	return resp
+}
 
 func (e *eval) PostEvaluation(params evaluation.PostEvaluationParams) middleware.Responder {
 	evalContext := params.Body

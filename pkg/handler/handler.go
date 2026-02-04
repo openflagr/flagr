@@ -81,6 +81,7 @@ func setupEvaluation(api *operations.FlagrAPI) {
 	ec.Start()
 
 	e := NewEval()
+	api.EvaluationGetEvaluationBatchHandler = evaluation.GetEvaluationBatchHandlerFunc(e.GetEvaluationBatch)
 	api.EvaluationPostEvaluationHandler = evaluation.PostEvaluationHandlerFunc(e.PostEvaluation)
 	api.EvaluationPostEvaluationBatchHandler = evaluation.PostEvaluationBatchHandlerFunc(e.PostEvaluationBatch)
 

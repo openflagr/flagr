@@ -1,3 +1,53 @@
+get:
+  tags:
+    - evaluation
+  operationId: getEvaluationBatch
+  description: Salo flagr-response's lambda GET-handler drop-in replacement
+  parameters:
+    - in: query
+      name: entityId
+      type: string
+      required: false
+      default: ""
+    - in: query
+      name: flagId
+      type: array
+      collectionFormat: multi
+      required: false
+      items:
+        type: integer
+        format: int64
+    - in: query
+      name: flagKey
+      type: array
+      collectionFormat: multi
+      required: false
+      items:
+        type: string
+    - in: query
+      name: flagTag
+      type: array
+      collectionFormat: multi
+      required: false
+      items:
+        type: string
+    - in: query
+      name: flagTagQuery
+      type: string
+      enum:
+        - ANY
+        - ALL
+      required: false
+      default: ALL
+  responses:
+    200:
+      description: evaluation batch result
+      schema:
+        $ref: "#/definitions/evaluationBatchResponse"
+    default:
+      description: generic error response
+      schema:
+        $ref: "#/definitions/error"
 post:
   tags:
     - evaluation

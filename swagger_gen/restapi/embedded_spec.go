@@ -69,6 +69,73 @@ func init() {
       }
     },
     "/evaluation/batch": {
+      "get": {
+        "description": "Salo flagr-response lambda drop-in replacement",
+        "tags": [
+          "evaluation"
+        ],
+        "operationId": "getEvaluationBatch",
+        "parameters": [
+          {
+            "type": "string",
+            "default": "",
+            "name": "entityId",
+            "in": "query"
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "collectionFormat": "multi",
+            "name": "flagId",
+            "in": "query"
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi",
+            "name": "flagKey",
+            "in": "query"
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi",
+            "name": "flagTag",
+            "in": "query"
+          },
+          {
+            "enum": [
+              "ANY",
+              "ALL"
+            ],
+            "type": "string",
+            "default": "ALL",
+            "name": "flagTagQuery",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "evaluation batch result",
+            "schema": {
+              "$ref": "#/definitions/evaluationBatchResponse"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
       "post": {
         "tags": [
           "evaluation"
@@ -2166,6 +2233,73 @@ func init() {
       }
     },
     "/evaluation/batch": {
+      "get": {
+        "description": "Salo flagr-response lambda drop-in replacement",
+        "tags": [
+          "evaluation"
+        ],
+        "operationId": "getEvaluationBatch",
+        "parameters": [
+          {
+            "type": "string",
+            "default": "",
+            "name": "entityId",
+            "in": "query"
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "collectionFormat": "multi",
+            "name": "flagId",
+            "in": "query"
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi",
+            "name": "flagKey",
+            "in": "query"
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi",
+            "name": "flagTag",
+            "in": "query"
+          },
+          {
+            "enum": [
+              "ANY",
+              "ALL"
+            ],
+            "type": "string",
+            "default": "ALL",
+            "name": "flagTagQuery",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "evaluation batch result",
+            "schema": {
+              "$ref": "#/definitions/evaluationBatchResponse"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
       "post": {
         "tags": [
           "evaluation"
