@@ -12,12 +12,12 @@ jobs:
       CGO_ENABLED: 0
       GOEXPERIMENT: greenteagc
     steps:
+      - name: Check out source code
+        uses: actions/checkout@v4
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-      - name: Check out source code
-        uses: actions/checkout@v4
       - run: echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
       - run: make deps
       - run: make verify_swagger_nochange
