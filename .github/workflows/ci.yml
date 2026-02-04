@@ -23,7 +23,7 @@ jobs:
       - run: make verify_swagger_nochange
       - run: make ci
       - run: make benchmark
-      - uses: codecov/codecov-action@v4
+      - uses: codecov/codecov-action@v5
   ui_lint:
     runs-on: ubuntu-latest
     steps:
