@@ -27,7 +27,7 @@ jobs:
   ui_lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: '16'
       - name: Check out source code
