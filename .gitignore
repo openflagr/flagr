@@ -28,3 +28,4 @@ _data
 coverage.txt
 /vendor
 .history
+dist/

@@ -1,0 +1,55 @@
+version: 2
+project_name: flagr
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - main: ./swagger_gen/cmd/flagr-server
+    binary: flagr
+    env:
+      - CGO_ENABLED=0
+      - GOEXPERIMENT=greenteagc
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X github.com/openflagr/flagr/pkg/version.Version={{.Version}}
+      - -X github.com/openflagr/flagr/pkg/version.Commit={{.Commit}}
+      - -X github.com/openflagr/flagr/pkg/version.Date={{.Date}}
+
+archives:
+  - formats:
+      - tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - src: browser/flagr-ui/dist/**
+        dst: browser/flagr-ui/dist
+        strip_parent: true
+      - LICENSE
+      - README.md
+
+dockers_v2:
+  - dockerfile: Dockerfile.goreleaser
+    images:
+      - "ghcr.io/foxdalas/flagr"
+    tags:
+      - "{{ .Version }}"
+      - latest
+    extra_files:
+      - browser/flagr-ui/dist
+      - buildscripts/demo_sqlite3.db
+    platforms:
+      - linux/amd64
+      - linux/arm64
+
+changelog:
+  use: github-native
+
+checksum:
+  name_template: checksums.txt

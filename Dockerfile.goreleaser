@@ -1,0 +1,21 @@
+FROM alpine:3.20
+
+ARG TARGETPLATFORM
+COPY ${TARGETPLATFORM}/flagr /flagr
+COPY browser/flagr-ui/dist /browser/flagr-ui/dist
+
+RUN mkdir -p /data
+COPY buildscripts/demo_sqlite3.db /data/demo_sqlite3.db
+
+ENV HOST=0.0.0.0
+ENV PORT=18000
+ENV FLAGR_DB_DBDRIVER=sqlite3
+ENV FLAGR_DB_DBCONNECTIONSTR=/data/demo_sqlite3.db
+ENV FLAGR_RECORDER_ENABLED=false
+
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup && \
+    chown -R appuser:appgroup /data
+USER appuser
+
+EXPOSE 18000
+CMD ["/flagr"]
