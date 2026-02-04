@@ -15,7 +15,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.25.2
+          go-version-file: go.mod
       - name: Check out source code
         uses: actions/checkout@v4
       - run: echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
