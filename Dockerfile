@@ -1,7 +1,7 @@
 ######################################
 # Prepare npm_builder
 ######################################
-FROM node:16 as npm_builder
+FROM node:25 as npm_builder
 WORKDIR /go/src/github.com/openflagr/flagr
 ADD . .
 ARG FLAGR_UI_POSSIBLE_ENTITY_TYPES=null
