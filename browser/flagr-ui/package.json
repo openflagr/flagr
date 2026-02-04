@@ -14,7 +14,7 @@
     "@iktakahiro/markdown-it-katex": "^4.0.0",
     "axios": "^1.8.2",
     "core-js": "^3.48.0",
-    "diff": "^3.4.0",
+    "diff": "^8.0.3",
     "element-plus": "^2.9.0",
     "lodash.clone": "^4.5.0",
     "markdown-it": "^12.3.2",
