@@ -6,7 +6,8 @@
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
-    "watch": "vue-cli-service build --watch"
+    "watch": "vue-cli-service build --watch",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@iktakahiro/markdown-it-katex": "^4.0.0",
@@ -34,7 +35,8 @@
     "less-loader": "^8.1.1",
     "lodash": "^4.17.19",
     "minimist": ">=1.2.2",
-    "vue-template-compiler": "^2.6.10"
+    "vue-template-compiler": "^2.6.10",
+    "@playwright/test": "^1.49.1"
   },
   "eslintConfig": {
     "root": true,

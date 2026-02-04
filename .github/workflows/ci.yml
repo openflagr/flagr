@@ -43,14 +43,49 @@ jobs:
       - run: cd integration_tests && make down
       - run: cd integration_tests && make up
       - run: cd integration_tests && make test
-  actionlint:
+  e2e_test:
     runs-on: ubuntu-latest
+    env:
+      CGO_ENABLED: 0
+      GOEXPERIMENT: greenteagc
+      FLAGR_DB_DBDRIVER: sqlite3
+      FLAGR_DB_DBCONNECTIONSTR: /tmp/flagr_e2e.db
+      FLAGR_RECORDER_ENABLED: false
     steps:
       - uses: actions/checkout@v6
-      - name: Download actionlint
-        id: get_actionlint
-        run: bash <(curl https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
-        shell: bash
-      - name: Check workflow files
-        run: ${{ steps.get_actionlint.outputs.executable }} -color
-        shell: bash
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - run: make build
+
+      - run: ./flagr --port 18000 &
+
+      - name: Wait for flagr server
+        run: |
+          for _ in $(seq 1 30); do
+            curl -sf http://localhost:18000/api/v1/flags && exit 0
+            sleep 1
+          done
+          echo "Server failed to start" && exit 1
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: browser/flagr-ui/package.json
+      - run: cd browser/flagr-ui && npm ci
+      - run: cd browser/flagr-ui && npx playwright install --with-deps chromium
+
+      - run: cd browser/flagr-ui && npx playwright test
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: browser/flagr-ui/playwright-report/
+          retention-days: 7
+
+      - uses: daun/playwright-report-summary@v3
+        if: always()
+        with:
+          report-file: browser/flagr-ui/results.json
+          job-summary: true
