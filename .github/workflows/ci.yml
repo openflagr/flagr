@@ -27,11 +27,11 @@ jobs:
   ui_lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-node@v6
-        with:
-          node-version: '16'
       - name: Check out source code
         uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: browser/flagr-ui/package.json
       - run: cd browser/flagr-ui && npm install
       - run: cd browser/flagr-ui && npm run lint
   integration_test:
