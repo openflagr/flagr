@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/dchest/uniuri"
+	"github.com/openflagr/flagr/pkg/config"
 	"github.com/openflagr/flagr/pkg/entity"
 	"github.com/openflagr/flagr/pkg/util"
 	"github.com/openflagr/flagr/swagger_gen/models"
@@ -704,6 +705,88 @@ func TestPostEvaluationBatch(t *testing.T) {
 		_, ok := resp.(*evaluation.PostEvaluationBatchOK)
 		assert.True(t, ok, "expected PostEvaluationBatchOK response")
 		assert.Equal(t, 2, evalCount, "expected 2 evaluations after deduplication")
+	})
+
+	t.Run("test batch size limit exceeded", func(t *testing.T) {
+		originalBatchSize := config.Config.EvalBatchSize
+		config.Config.EvalBatchSize = 10 // Set max batch size to 10
+		defer func() { config.Config.EvalBatchSize = originalBatchSize }()
+
+		e := NewEval()
+		// 10 entities * 2 flagIDs = 20 evaluations (exceeds limit of 10)
+		entities := make([]*models.EvaluationEntity, 10)
+		for i := range entities {
+			entities[i] = &models.EvaluationEntity{
+				EntityContext: map[string]interface{}{"dl_state": "CA"},
+				EntityID:      fmt.Sprintf("entity%d", i),
+				EntityType:    "entityType1",
+			}
+		}
+		resp := e.PostEvaluationBatch(evaluation.PostEvaluationBatchParams{
+			Body: &models.EvaluationBatchRequest{
+				EnableDebug: true,
+				Entities:    entities,
+				FlagIDs:     []int64{100, 200},
+			},
+		})
+		_, ok := resp.(*evaluation.PostEvaluationBatchDefault)
+		assert.True(t, ok, "expected PostEvaluationBatchDefault response for size exceeded")
+	})
+
+	t.Run("test batch size limit not exceeded", func(t *testing.T) {
+		originalBatchSize := config.Config.EvalBatchSize
+		config.Config.EvalBatchSize = 100 // Set max batch size to 100
+		defer func() { config.Config.EvalBatchSize = originalBatchSize }()
+
+		defer gostub.StubFunc(&EvalFlag, &models.EvalResult{}).Reset()
+
+		e := NewEval()
+		// 10 entities * 2 flagIDs = 20 evaluations (within limit of 100)
+		entities := make([]*models.EvaluationEntity, 10)
+		for i := range entities {
+			entities[i] = &models.EvaluationEntity{
+				EntityContext: map[string]interface{}{"dl_state": "CA"},
+				EntityID:      fmt.Sprintf("entity%d", i),
+				EntityType:    "entityType1",
+			}
+		}
+		resp := e.PostEvaluationBatch(evaluation.PostEvaluationBatchParams{
+			Body: &models.EvaluationBatchRequest{
+				EnableDebug: true,
+				Entities:    entities,
+				FlagIDs:     []int64{100, 200},
+			},
+		})
+		_, ok := resp.(*evaluation.PostEvaluationBatchOK)
+		assert.True(t, ok, "expected PostEvaluationBatchOK response when within limit")
+	})
+
+	t.Run("test batch size limit disabled when zero", func(t *testing.T) {
+		originalBatchSize := config.Config.EvalBatchSize
+		config.Config.EvalBatchSize = 0 // Disable batch size limit
+		defer func() { config.Config.EvalBatchSize = originalBatchSize }()
+
+		defer gostub.StubFunc(&EvalFlag, &models.EvalResult{}).Reset()
+
+		e := NewEval()
+		// Large batch that would normally exceed limit
+		entities := make([]*models.EvaluationEntity, 1000)
+		for i := range entities {
+			entities[i] = &models.EvaluationEntity{
+				EntityContext: map[string]interface{}{"dl_state": "CA"},
+				EntityID:      fmt.Sprintf("entity%d", i),
+				EntityType:    "entityType1",
+			}
+		}
+		resp := e.PostEvaluationBatch(evaluation.PostEvaluationBatchParams{
+			Body: &models.EvaluationBatchRequest{
+				EnableDebug: true,
+				Entities:    entities,
+				FlagIDs:     []int64{100, 200},
+			},
+		})
+		_, ok := resp.(*evaluation.PostEvaluationBatchOK)
+		assert.True(t, ok, "expected PostEvaluationBatchOK response when limit is disabled")
 	})
 }
 
