@@ -14,7 +14,7 @@
                     Flagr
                   </h3>
                   <div>
-                    <span class="version">v{{ version }}</span>
+                    <span class="version">{{ version }}</span>
                   </div>
                 </div>
               </router-link>
@@ -48,8 +48,7 @@
 </template>
 
 <script setup>
-import pkg from "../package.json";
-const version = pkg.version || "1.0.0";
+const version = process.env.VUE_APP_VERSION;
 </script>
 
 <style lang="less">

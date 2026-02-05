@@ -4,7 +4,7 @@ test.describe('Navigation and Layout', () => {
   test('Navbar renders with logo and version', async ({ page }) => {
     await page.goto('/')
     await expect(page.locator('.logo')).toContainText('Flagr')
-    await expect(page.locator('.version')).toContainText('v')
+    await expect(page.locator('.version')).toBeVisible()
     // Check API and Docs links
     const apiLink = page.locator('a[href*="api_docs"]')
     await expect(apiLink).toHaveAttribute('target', '_blank')
