@@ -30,18 +30,22 @@
         </el-row>
         <el-row :gutter="10">
           <el-col :span="12">
-            <vue3-json-editor
+            <JsonEditorVue
               v-model="evalContext"
-              :show-btns="false"
-              :mode="'code'"
+              :mode="'text'"
+              :main-menu-bar="false"
+              :navigation-bar="false"
+              :status-bar="false"
               class="json-editor"
             />
           </el-col>
           <el-col :span="12">
-            <vue3-json-editor
+            <JsonEditorVue
               v-model="evalResult"
-              :show-btns="false"
-              :mode="'code'"
+              :mode="'text'"
+              :main-menu-bar="false"
+              :navigation-bar="false"
+              :status-bar="false"
               class="json-editor"
             />
           </el-col>
@@ -72,18 +76,22 @@
         </el-row>
         <el-row :gutter="10">
           <el-col :span="12">
-            <vue3-json-editor
+            <JsonEditorVue
               v-model="batchEvalContext"
-              :show-btns="false"
-              :mode="'code'"
+              :mode="'text'"
+              :main-menu-bar="false"
+              :navigation-bar="false"
+              :status-bar="false"
               class="json-editor"
             />
           </el-col>
           <el-col :span="12">
-            <vue3-json-editor
+            <JsonEditorVue
               v-model="batchEvalResult"
-              :show-btns="false"
-              :mode="'code'"
+              :mode="'text'"
+              :main-menu-bar="false"
+              :navigation-bar="false"
+              :status-bar="false"
               class="json-editor"
             />
           </el-col>
@@ -96,7 +104,7 @@
 <script setup>
 import { ref } from "vue";
 import Axios from "axios";
-import { Vue3JsonEditor } from "vue3-json-editor";
+import JsonEditorVue from "json-editor-vue";
 import { ElMessage } from "element-plus";
 
 import constants from "@/constants";
@@ -172,7 +180,7 @@ function postEvaluationBatch(batchEvalCtx) {
 <style lang="less" scoped>
 .json-editor {
   margin-top: 3px;
-  .jsoneditor {
+  :deep(.jse-main) {
     height: 400px;
   }
 }

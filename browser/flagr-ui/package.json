@@ -20,7 +20,7 @@
     "markdown-it": "^12.3.2",
     "vue": "^3.4.0",
     "vue-router": "^4.5.0",
-    "vue3-json-editor": "^1.0.0",
+    "json-editor-vue": "^0.18.0",
     "vuedraggable": "^4.1.0",
     "xss": "^1.0.9"
   },

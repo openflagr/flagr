@@ -61,6 +61,58 @@ test.describe('Flag Variants', () => {
     }
   })
 
+  test('Save and verify variant attachment JSON', async ({ page }) => {
+    // 1. Ensure we have a variant
+    const variantInputs = page.locator('.variants-container-inner .variant-key-input input')
+    if (await variantInputs.count() === 0) {
+      // Create variant if none exists
+      const keyInput = page.locator('input[placeholder="Variant Key"]')
+      const createBtn = page.locator('button').filter({ hasText: 'Create Variant' })
+      await keyInput.fill('attachment-test')
+      await createBtn.click()
+      await page.waitForTimeout(500)
+    }
+
+    // 2. Open attachment collapse
+    const collapseHeader = page.locator('.variant-attachment-collapsable-title .el-collapse-item__header').first()
+    await collapseHeader.click()
+    await page.waitForTimeout(500)
+
+    // 3. Find CodeMirror editor and enter JSON
+    // Click on the line content to focus
+    const cmLine = page.locator('.variant-attachment-content .cm-line').first()
+    await cmLine.click({ clickCount: 3 }) // Triple-click to select all in the line
+    await page.waitForTimeout(200)
+
+    // Type new JSON - this will replace the selected text
+    const testJson = '{"testKey": "testValue123"}'
+    await page.keyboard.type(testJson, { delay: 5 })
+    await page.waitForTimeout(300)
+
+    // Click outside the editor to trigger blur and ensure v-model syncs
+    await page.locator('.variant-attachment-collapsable-title').first().click()
+    await page.waitForTimeout(500)
+
+    // 4. Save variant
+    await page.locator('.variants-container-inner button').filter({ hasText: 'Save Variant' }).first().click()
+    await expect(page.locator('.el-message').last()).toContainText('variant updated')
+    await page.waitForTimeout(500)
+
+    // 5. Reload page
+    await page.reload()
+    await page.waitForSelector('.flag-container', { timeout: 10000 })
+
+    // 6. Open attachment again
+    const collapseHeaderAfter = page.locator('.variant-attachment-collapsable-title .el-collapse-item__header').first()
+    await collapseHeaderAfter.click()
+    await page.waitForTimeout(500)
+
+    // 7. Verify JSON was saved
+    const editorContent = page.locator('.variant-attachment-content .cm-content').first()
+    await expect(editorContent).toContainText('testKey')
+    await expect(editorContent).toContainText('testValue123')
+  })
+
   test('Invalid variant attachment shows error', async ({ page }) => {
     const saveBtn = page.locator('.variants-container-inner button').filter({ hasText: 'Save Variant' })
     if (await saveBtn.count() > 0) {

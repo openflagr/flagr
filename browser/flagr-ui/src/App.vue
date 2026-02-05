@@ -196,15 +196,10 @@ ol {
     margin-bottom: 1em;
   }
 
-  .jsoneditor {
-    border-color: #e4e7ed;
-    .jsoneditor-menu {
-      background-color: #e4e7ed;
-      border-bottom-color: #e4e7ed;
-    }
-    .jsoneditor-poweredBy {
-      display: none;
-    }
+  .jse-main {
+    --jse-main-border: 1px solid #e4e7ed;
+    --jse-theme-color: #e4e7ed;
+    --jse-theme-color-highlight: #d1d5db;
   }
 
   .el-tag {

@@ -403,13 +403,14 @@
                             >
                               You can add JSON in key/value pairs format.
                             </p>
-                            <vue3-json-editor
+                            <JsonEditorVue
                               v-model="variant.attachment"
-                              :show-btns="false"
-                              :mode="'code'"
+                              :mode="'text'"
+                              :main-menu-bar="false"
+                              :navigation-bar="false"
+                              :status-bar="false"
                               class="variant-attachment-content"
-                              @has-error="variant.attachmentValid = false"
-                              @input="variant.attachmentValid = true"
+                              @change="(content, prev, { contentErrors }) => handleAttachmentChange(variant, content, contentErrors)"
                             />
                           </el-collapse-item>
                         </el-collapse>
@@ -778,7 +779,7 @@ import { useRoute, useRouter } from "vue-router";
 import clone from "lodash.clone";
 import draggable from "vuedraggable";
 import Axios from "axios";
-import { Vue3JsonEditor } from "vue3-json-editor";
+import JsonEditorVue from "json-editor-vue";
 import { ElMessage } from "element-plus";
 
 import constants from "@/constants";
@@ -826,6 +827,10 @@ function processVariant(variant) {
   if (typeof variant.attachment === "string") {
     variant.attachment = JSON.parse(variant.attachment);
   }
+}
+
+function handleAttachmentChange(variant, content, contentErrors) {
+  variant.attachmentValid = !(contentErrors && contentErrors.parseError);
 }
 
 const route = useRoute();
@@ -1009,9 +1014,21 @@ function putVariant(variant) {
     ElMessage.error("variant attachment is not valid");
     return;
   }
+
+  // Prepare payload - parse attachment if it's a string (from text mode editor)
+  let payload = { ...variant };
+  if (typeof payload.attachment === "string") {
+    try {
+      payload.attachment = JSON.parse(payload.attachment);
+    } catch {
+      ElMessage.error("variant attachment is not valid JSON");
+      return;
+    }
+  }
+
   Axios.put(
     `${API_URL}/flags/${flagId.value}/variants/${variant.id}`,
-    variant
+    payload
   ).then(() => {
     ElMessage.success("variant updated");
   }, handleErr);
