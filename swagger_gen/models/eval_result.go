@@ -19,6 +19,9 @@ import (
 // swagger:model evalResult
 type EvalResult struct {
 
+	// flag's data records status.
+	DataRecordsEnabled bool `json:"dataRecordsEnabled"`
+
 	// eval context
 	EvalContext *EvalContext `json:"evalContext,omitempty"`
 

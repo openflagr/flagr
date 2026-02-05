@@ -275,6 +275,7 @@ var EvalFlagWithContext = func(flag *entity.Flag, evalContext models.EvalContext
 	}
 
 	logEvalResult(evalResult, flag.DataRecordsEnabled)
+	evalResult.DataRecordsEnabled = flag.DataRecordsEnabled
 	return evalResult
 }
 

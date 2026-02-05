@@ -70,7 +70,7 @@ func init() {
     },
     "/evaluation/batch": {
       "get": {
-        "description": "Salo flagr-response lambda drop-in replacement",
+        "description": "Salo flagr-response's lambda GET-handler drop-in replacement",
         "tags": [
           "evaluation"
         ],
@@ -1689,6 +1689,11 @@ func init() {
     "evalResult": {
       "type": "object",
       "properties": {
+        "dataRecordsEnabled": {
+          "description": "flag's data records status.",
+          "type": "boolean",
+          "x-omitempty": false
+        },
         "evalContext": {
           "$ref": "#/definitions/evalContext"
         },
@@ -2234,7 +2239,7 @@ func init() {
     },
     "/evaluation/batch": {
       "get": {
-        "description": "Salo flagr-response lambda drop-in replacement",
+        "description": "Salo flagr-response's lambda GET-handler drop-in replacement",
         "tags": [
           "evaluation"
         ],
@@ -3855,6 +3860,11 @@ func init() {
     "evalResult": {
       "type": "object",
       "properties": {
+        "dataRecordsEnabled": {
+          "description": "flag's data records status.",
+          "type": "boolean",
+          "x-omitempty": false
+        },
         "evalContext": {
           "$ref": "#/definitions/evalContext"
         },

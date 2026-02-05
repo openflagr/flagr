@@ -503,6 +503,10 @@ definitions:
         type: string
       evalDebugLog:
         $ref: "#/definitions/evalDebugLog"
+      dataRecordsEnabled:
+        description: flag's data records status.
+        type: boolean
+        x-omitempty: false
   evalDebugLog:
     type: object
     properties:

@@ -32,7 +32,7 @@ func NewGetEvaluationBatch(ctx *middleware.Context, handler GetEvaluationBatchHa
 /*
 	GetEvaluationBatch swagger:route GET /evaluation/batch evaluation getEvaluationBatch
 
-Salo flagr-response lambda drop-in replacement
+Salo flagr-response's lambda GET-handler drop-in replacement
 */
 type GetEvaluationBatch struct {
 	Context *middleware.Context

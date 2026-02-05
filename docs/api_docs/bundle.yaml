@@ -896,7 +896,7 @@ paths:
       tags:
         - evaluation
       operationId: getEvaluationBatch
-      description: Salo flagr-response lambda drop-in replacement
+      description: Salo flagr-response's lambda GET-handler drop-in replacement
       parameters:
         - in: query
           name: entityId
@@ -1425,6 +1425,10 @@ definitions:
         type: string
       evalDebugLog:
         $ref: '#/definitions/evalDebugLog'
+      dataRecordsEnabled:
+        description: flag's data records status.
+        type: boolean
+        x-omitempty: false
   evalDebugLog:
     type: object
     properties:
