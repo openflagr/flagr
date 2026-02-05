@@ -43,6 +43,17 @@ var Config = struct {
 	// This field will be derived from DBDriver
 	EvalOnlyMode bool `env:"FLAGR_EVAL_ONLY_MODE" envDefault:"false"`
 
+	// EvalBatchSize - maximum number of total evaluations allowed in a single batch request.
+	// This is calculated as: len(entities) * (len(flagIDs) + len(flagKeys) + estimated_flags_from_tags).
+	// Set to 0 to disable the limit (default). Enable this for additional DoS protection.
+	// Note: Duplicate flagKeys and flagIDs are always deduplicated regardless of this setting.
+	//
+	// Example calculation for 10k flags:
+	// - With 2 entities and 10 flagIDs + 10 flagKeys: 2 * (10 + 10) = 40 evaluations
+	// - With 2 entities and 2 tags (~100 flags each): 2 * 100 = 200 evaluations
+	// A reasonable limit might be 500-1000 for typical use cases.
+	EvalBatchSize int `env:"FLAGR_EVAL_BATCH_SIZE" envDefault:"0"`
+
 	/**
 	DBDriver and DBConnectionStr define how we can write and read flags data.
 	For databases, flagr supports sqlite3, mysql and postgres.
