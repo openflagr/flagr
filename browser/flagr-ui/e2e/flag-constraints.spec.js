@@ -82,4 +82,96 @@ test.describe('Flag Constraints', () => {
   test('Multiple constraints heading', async ({ page }) => {
     await expect(page.locator('.segment').first()).toContainText('Constraints (match ALL of them)')
   })
+
+  test('Create constraint with numeric operator (LT)', async ({ page }) => {
+    const segment = page.locator('.segment').first()
+    const propInput = segment.locator('input[placeholder="Property"]').last()
+    await propInput.fill('age')
+
+    // Select "<" (LT) operator from dropdown
+    const selects = segment.locator('.constraints .el-select')
+    await selects.last().click()
+    await page.waitForTimeout(300)
+    const ltOption = page.locator('.el-select-dropdown__item:visible').filter({ hasText: '<' }).first()
+    await ltOption.click()
+    await page.waitForTimeout(200)
+
+    // Fill numeric value
+    const newConstraintRow = segment.locator('.constraints > div:last-child .el-row')
+    const valueInput = newConstraintRow.locator('.el-col').nth(2).locator('input')
+    await valueInput.fill('18')
+
+    const addBtn = segment.locator('button').filter({ hasText: 'Add Constraint' })
+    await addBtn.click()
+    await expect(page.locator('.el-message')).toContainText('new constraint created')
+  })
+
+  test('Create constraint with regex operator (EREG)', async ({ page }) => {
+    const segment = page.locator('.segment').first()
+    const propInput = segment.locator('input[placeholder="Property"]').last()
+    await propInput.fill('email')
+
+    // Select "=~" (EREG) operator from dropdown
+    const selects = segment.locator('.constraints .el-select')
+    await selects.last().click()
+    await page.waitForTimeout(300)
+    const eregOption = page.locator('.el-select-dropdown__item:visible').filter({ hasText: '=~' }).first()
+    await eregOption.click()
+    await page.waitForTimeout(200)
+
+    // Fill regex pattern value
+    const newConstraintRow = segment.locator('.constraints > div:last-child .el-row')
+    const valueInput = newConstraintRow.locator('.el-col').nth(2).locator('input')
+    await valueInput.fill('".*@test\\\\.com"')
+
+    const addBtn = segment.locator('button').filter({ hasText: 'Add Constraint' })
+    await addBtn.click()
+    await expect(page.locator('.el-message')).toContainText('new constraint created')
+  })
+
+  test('Create constraint with IN operator', async ({ page }) => {
+    const segment = page.locator('.segment').first()
+    const propInput = segment.locator('input[placeholder="Property"]').last()
+    await propInput.fill('country')
+
+    // Select "IN" operator from dropdown
+    const selects = segment.locator('.constraints .el-select')
+    await selects.last().click()
+    await page.waitForTimeout(300)
+    const inOption = page.locator('.el-select-dropdown__item:visible').filter({ hasText: /^IN$/ }).first()
+    await inOption.click()
+    await page.waitForTimeout(200)
+
+    // Fill JSON array value
+    const newConstraintRow = segment.locator('.constraints > div:last-child .el-row')
+    const valueInput = newConstraintRow.locator('.el-col').nth(2).locator('input')
+    await valueInput.fill('["US","CA","MX"]')
+
+    const addBtn = segment.locator('button').filter({ hasText: 'Add Constraint' })
+    await addBtn.click()
+    await expect(page.locator('.el-message')).toContainText('new constraint created')
+  })
+
+  test('Create constraint with CONTAINS operator', async ({ page }) => {
+    const segment = page.locator('.segment').first()
+    const propInput = segment.locator('input[placeholder="Property"]').last()
+    await propInput.fill('role')
+
+    // Select "CONTAINS" operator from dropdown
+    const selects = segment.locator('.constraints .el-select')
+    await selects.last().click()
+    await page.waitForTimeout(300)
+    const containsOption = page.locator('.el-select-dropdown__item:visible').filter({ hasText: 'CONTAINS' }).first()
+    await containsOption.click()
+    await page.waitForTimeout(200)
+
+    // Fill string value (quoted for backend parser)
+    const newConstraintRow = segment.locator('.constraints > div:last-child .el-row')
+    const valueInput = newConstraintRow.locator('.el-col').nth(2).locator('input')
+    await valueInput.fill('"admin"')
+
+    const addBtn = segment.locator('button').filter({ hasText: 'Add Constraint' })
+    await addBtn.click()
+    await expect(page.locator('.el-message')).toContainText('new constraint created')
+  })
 })

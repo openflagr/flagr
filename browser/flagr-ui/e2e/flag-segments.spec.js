@@ -97,8 +97,7 @@ test.describe('Flag Segments', () => {
     await reorderBtn.click()
     await page.waitForTimeout(500)
     const msg = page.locator('.el-message').last()
-    if (await msg.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await expect(msg).toContainText('segment reordered')
-    }
+    await expect(msg).toBeVisible({ timeout: 3000 })
+    await expect(msg).toContainText('segment reordered')
   })
 })

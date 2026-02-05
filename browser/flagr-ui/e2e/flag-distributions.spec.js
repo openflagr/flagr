@@ -73,7 +73,7 @@ test.describe('Flag Distributions', () => {
     const checkboxes = dialog.locator('.el-checkbox')
     for (let i = 0; i < await checkboxes.count(); i++) {
       const cb = checkboxes.nth(i)
-      const isChecked = await cb.evaluate(el => el.classList.contains('is-checked'))
+      const isChecked = await cb.locator('input[type="checkbox"]').isChecked()
       if (!isChecked) {
         await cb.click()
         await page.waitForTimeout(200)
@@ -107,6 +107,56 @@ test.describe('Flag Distributions', () => {
     await page.waitForTimeout(300)
     const dialog = page.locator('.el-dialog').filter({ hasText: 'Edit distribution' })
     await expect(dialog).toBeVisible()
+    await page.keyboard.press('Escape')
+  })
+
+  test('Distribution with single variant at 100%', async ({ page }) => {
+    const editBtn = page.locator('.segment-distributions button').filter({ hasText: 'edit' }).first()
+    await editBtn.click()
+    await page.waitForTimeout(300)
+    const dialog = page.locator('.el-dialog').filter({ hasText: 'Edit distribution' })
+
+    // Uncheck all variants first
+    const checkboxes = dialog.locator('.el-checkbox')
+    for (let i = 0; i < await checkboxes.count(); i++) {
+      const cb = checkboxes.nth(i)
+      const isChecked = await cb.locator('input[type="checkbox"]').isChecked()
+      if (isChecked) {
+        await cb.click()
+        await page.waitForTimeout(200)
+      }
+    }
+
+    // Check only the first variant
+    const firstCheckbox = checkboxes.first()
+    await firstCheckbox.click()
+    await page.waitForTimeout(200)
+
+    // Set to 100%
+    const sliderInputs = dialog.locator('.el-input-number input')
+    if (await sliderInputs.count() > 0) {
+      await sliderInputs.first().fill('')
+      await sliderInputs.first().type('100')
+      await sliderInputs.first().press('Enter')
+      await page.waitForTimeout(200)
+    }
+
+    // Save
+    const saveBtn = dialog.locator('button').filter({ hasText: 'Save' })
+    await expect(saveBtn).toBeEnabled()
+    await saveBtn.click()
+    await expect(page.locator('.el-message')).toContainText('distributions updated')
+
+    // Verify after reload
+    await page.reload()
+    await page.waitForSelector('.flag-container', { timeout: 10000 })
+    await page.locator('.segment-distributions button').filter({ hasText: 'edit' }).first().click()
+    await page.waitForTimeout(300)
+    const dialogAfter = page.locator('.el-dialog').filter({ hasText: 'Edit distribution' })
+    const sliderInputsAfter = dialogAfter.locator('.el-input-number input')
+    if (await sliderInputsAfter.count() > 0) {
+      await expect(sliderInputsAfter.first()).toHaveValue('100')
+    }
     await page.keyboard.press('Escape')
   })
 })

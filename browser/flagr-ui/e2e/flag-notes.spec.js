@@ -25,8 +25,7 @@ test.describe('Flag Notes', () => {
 
   test('Editor hidden when no notes and editor closed', async ({ page }) => {
     const editor = page.locator('#editor')
-    // If there are no notes and editor is closed, #editor should not be visible
-    // This is the expected default state
+    await expect(editor).not.toBeVisible()
   })
 
   test('Markdown editor textarea appears in edit mode', async ({ page }) => {
@@ -43,7 +42,7 @@ test.describe('Flag Notes', () => {
     await page.waitForTimeout(300)
     const textarea = page.locator('#editor textarea')
     await textarea.fill('**bold text**')
-    await textarea.dispatchEvent('change')
+    await textarea.blur()
     await page.waitForTimeout(300)
     const preview = page.locator('.markdown-body')
     await expect(preview).toBeVisible()
@@ -55,7 +54,7 @@ test.describe('Flag Notes', () => {
     await page.waitForTimeout(300)
     const textarea = page.locator('#editor textarea')
     await textarea.fill('<script>alert(1)</script>')
-    await textarea.dispatchEvent('change')
+    await textarea.blur()
     await page.waitForTimeout(300)
     const scriptTag = page.locator('.markdown-body script')
     expect(await scriptTag.count()).toBe(0)
@@ -68,7 +67,7 @@ test.describe('Flag Notes', () => {
     const textarea = page.locator('#editor textarea')
     const noteText = 'Test note ' + Date.now()
     await textarea.fill(noteText)
-    await textarea.dispatchEvent('change')
+    await textarea.blur()
     await page.waitForTimeout(300)
     await page.locator('button').filter({ hasText: 'Save Flag' }).click()
     await expect(page.locator('.el-message')).toContainText('Flag updated')
@@ -76,8 +75,7 @@ test.describe('Flag Notes', () => {
     await page.waitForSelector('.flag-container')
     await page.waitForTimeout(500)
     const preview = page.locator('.markdown-body')
-    if (await preview.isVisible().catch(() => false)) {
-      await expect(preview).toContainText(noteText)
-    }
+    await expect(preview).toBeVisible({ timeout: 5000 })
+    await expect(preview).toContainText(noteText)
   })
 })

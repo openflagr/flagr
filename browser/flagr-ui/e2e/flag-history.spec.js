@@ -31,9 +31,8 @@ test.describe('Flag History', () => {
     await page.locator('.el-tabs__item').filter({ hasText: 'History' }).click()
     await page.waitForTimeout(1000)
     const snapshots = page.locator('.snapshot-container')
-    if (await snapshots.count() > 0) {
-      await expect(snapshots.first()).toContainText('Snapshot ID')
-    }
+    await expect(snapshots.first()).toBeVisible({ timeout: 5000 })
+    await expect(snapshots.first()).toContainText('Snapshot ID')
   })
 
   test('Diff between snapshots', async ({ page }) => {

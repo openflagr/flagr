@@ -160,4 +160,68 @@ test.describe('Flags Page', () => {
       await expect(page).toHaveURL(/\/#\/flags\/\d+/)
     }
   })
+
+  test('Search by description is case-insensitive', async ({ page }) => {
+    const descInput = page.locator('input[placeholder="Specific new flag description"]')
+    const createBtn = page.locator('button').filter({ hasText: 'Create New Flag' })
+
+    // Create flag with mixed case description
+    const mixedCaseName = 'TestFlag-CASE-' + Date.now()
+    await descInput.fill(mixedCaseName)
+    await createBtn.click()
+    await page.waitForTimeout(500)
+
+    // Search with lowercase
+    const searchInput = page.locator('input[placeholder="Search a flag"]')
+    await searchInput.fill('testflag-case')
+    await page.waitForTimeout(300)
+
+    // Verify flag is found (case-insensitive match)
+    const rows = page.locator('.el-table__body .el-table__row')
+    const count = await rows.count()
+    expect(count).toBeGreaterThanOrEqual(1)
+
+    const tableBody = page.locator('.flags-container .el-table__body').first()
+    await expect(tableBody).toContainText(new RegExp(mixedCaseName, 'i'))
+
+    // Clear search
+    await searchInput.fill('')
+  })
+
+  test('Search by key is case-insensitive', async ({ page }) => {
+    // Create a flag and set its key via the flag detail page
+    const descInput = page.locator('input[placeholder="Specific new flag description"]')
+    const createBtn = page.locator('button').filter({ hasText: 'Create New Flag' })
+
+    const ts = Date.now()
+    await descInput.fill('key-case-test-' + ts)
+    await createBtn.click()
+    await page.waitForTimeout(500)
+
+    // Navigate to the new flag to set its key
+    await page.locator('.el-table__body .el-table__row').first().click()
+    await page.waitForSelector('.flag-container', { timeout: 10000 })
+
+    const keyInput = page.locator('.flag-content input[placeholder="Key"]')
+    const mixedCaseKey = 'MyTestKey-' + ts
+    await keyInput.fill(mixedCaseKey)
+    await page.locator('button').filter({ hasText: 'Save Flag' }).click()
+    await expect(page.locator('.el-message').last()).toContainText('Flag updated')
+
+    // Go back to flags list
+    await page.goto('/')
+    await page.waitForSelector('.flags-container')
+
+    // Search with lowercase version of the key
+    const searchInput = page.locator('input[placeholder="Search a flag"]')
+    await searchInput.fill('mytestkey-')
+    await page.waitForTimeout(300)
+
+    // Verify flag is found
+    const rows = page.locator('.el-table__body .el-table__row')
+    expect(await rows.count()).toBeGreaterThanOrEqual(1)
+
+    // Clear search
+    await searchInput.fill('')
+  })
 })

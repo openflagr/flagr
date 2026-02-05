@@ -92,4 +92,44 @@ test.describe('Flag Tags', () => {
     await page.waitForTimeout(500)
     await expect(tagInput).toHaveValue('tag')
   })
+
+  test('Create tags with allowed special characters', async ({ page }) => {
+    // Backend regex: ^[ \w\d-/\.\:]+$
+    // Allowed: alphanumeric, hyphen, slash, dot, colon, space
+    const validTags = [
+      'my-tag-' + Date.now(),
+      'v1.0.' + Date.now(),
+      'env:prod-' + Date.now(),
+      'feature/login-' + Date.now()
+    ]
+
+    for (const tagName of validTags) {
+      await page.locator('button').filter({ hasText: '+ New Tag' }).click()
+      await page.waitForTimeout(300)
+      const tagInput = page.locator('.tag-key-input input')
+      await tagInput.fill(tagName)
+      await tagInput.press('Enter')
+      await page.waitForTimeout(500)
+      await expect(page.locator('.el-message').last()).toContainText('new tag created')
+      await expect(page.locator('.tags-container-inner .el-tag').filter({ hasText: tagName })).toBeVisible()
+    }
+  })
+
+  test('Tag with invalid characters shows error', async ({ page }) => {
+    // Characters NOT allowed: @, #, $, !, etc.
+    const invalidTagName = 'tag@invalid-' + Date.now()
+
+    await page.locator('button').filter({ hasText: '+ New Tag' }).click()
+    await page.waitForTimeout(300)
+    const tagInput = page.locator('.tag-key-input input')
+    await tagInput.fill(invalidTagName)
+    await tagInput.press('Enter')
+    await page.waitForTimeout(500)
+
+    // Backend returns 400 error for invalid tag format
+    await expect(page.locator('.el-message--error').last()).toBeVisible()
+    const tagExists = await page.locator('.tags-container-inner .el-tag')
+      .filter({ hasText: invalidTagName }).count()
+    expect(tagExists).toBe(0)
+  })
 })

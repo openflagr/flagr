@@ -247,7 +247,7 @@ const filteredFlags = computed(() => {
           const termLowerCase = term.toLowerCase();
           return (
             id.toString().includes(term) ||
-            key.includes(term) ||
+            key.toLowerCase().includes(termLowerCase) ||
             description.toLowerCase().includes(termLowerCase) ||
             tags
               .map(tag =>

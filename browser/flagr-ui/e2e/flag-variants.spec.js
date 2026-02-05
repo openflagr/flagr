@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-const { createFlag } = require('./helpers')
+const { createFlag, createVariant, createSegment } = require('./helpers')
 
 let flagId
 
@@ -138,5 +138,77 @@ test.describe('Flag Variants', () => {
 
   test('Variant in use check exists', async ({ page }) => {
     await expect(page.locator('.variants-container')).toBeVisible()
+  })
+})
+
+test.describe('Variant Delete Protection', () => {
+  let flagIdWithDist
+
+  test.beforeAll(async () => {
+    // Create flag with variant and segment for distribution test
+    const flag = await createFlag('variant-delete-protection-' + Date.now())
+    flagIdWithDist = flag.id
+    await createVariant(flagIdWithDist, 'protected-variant')
+    await createSegment(flagIdWithDist, 'protection-segment')
+  })
+
+  test('Cannot delete variant that is in active distribution', async ({ page }) => {
+    await page.goto(`http://localhost:8080/#/flags/${flagIdWithDist}`)
+    await page.waitForSelector('.flag-container', { timeout: 10000 })
+
+    // First, add the variant to a distribution via UI
+    const editBtn = page.locator('.segment-distributions button').filter({ hasText: 'edit' }).first()
+    await editBtn.click()
+    await page.waitForTimeout(300)
+
+    const dialog = page.locator('.el-dialog').filter({ hasText: 'Edit distribution' })
+    const checkboxes = dialog.locator('.el-checkbox')
+
+    // Check the first variant
+    const firstCheckbox = checkboxes.first()
+    const isChecked = await firstCheckbox.locator('input[type="checkbox"]').isChecked()
+    if (!isChecked) {
+      await firstCheckbox.click()
+      await page.waitForTimeout(200)
+    }
+
+    // Set to 100%
+    const sliderInputs = dialog.locator('.el-input-number input')
+    if (await sliderInputs.count() > 0) {
+      await sliderInputs.first().fill('')
+      await sliderInputs.first().type('100')
+      await sliderInputs.first().press('Enter')
+      await page.waitForTimeout(200)
+    }
+
+    // Save distribution
+    const saveBtn = dialog.locator('button').filter({ hasText: 'Save' })
+    if (await saveBtn.isEnabled()) {
+      await saveBtn.click()
+      await page.waitForTimeout(500)
+    } else {
+      await page.keyboard.press('Escape')
+    }
+
+    // Now try to delete the variant - expect alert
+    let alertMessage = ''
+    page.on('dialog', async dialog => {
+      alertMessage = dialog.message()
+      await dialog.dismiss()
+    })
+
+    // Find and click delete button for the variant
+    const deleteIcons = page.locator('.variants-container-inner .save-remove-variant-row .el-icon')
+    if (await deleteIcons.count() > 0) {
+      await deleteIcons.first().click()
+      await page.waitForTimeout(500)
+    }
+
+    // Verify alert was shown with the expected message
+    expect(alertMessage).toContain('being used by a segment distribution')
+
+    // Verify variant still exists
+    const variantInputs = page.locator('.variants-container-inner .variant-key-input input')
+    expect(await variantInputs.count()).toBeGreaterThanOrEqual(1)
   })
 })

@@ -32,7 +32,7 @@
             >
               <div>
                 <el-checkbox
-                  :checked="!!newDistributions[variant.id]"
+                  :model-value="!!newDistributions[variant.id]"
                   @change="(e) => selectVariant(e, variant)"
                 />
                 <el-tag
@@ -44,7 +44,7 @@
               </div>
               <el-slider
                 v-if="!newDistributions[variant.id]"
-                :value="0"
+                :model-value="0"
                 :disabled="true"
                 show-input
               />
@@ -168,7 +168,6 @@
                   </div>
                   <el-row
                     class="flag-content"
-                    type="flex"
                     align="middle"
                   >
                     <el-col :span="17">
@@ -215,7 +214,6 @@
                   </el-row>
                   <el-row
                     class="flag-content"
-                    type="flex"
                     align="middle"
                   >
                     <el-col :span="17">
@@ -272,7 +270,7 @@
                       </div>
                     </el-col>
                   </el-row>
-                  <el-row style="margin: 10px;">
+                  <div style="margin: 10px;">
                     <h5>
                       <span style="margin-right: 10px;">Flag Notes</span>
                       <el-button
@@ -289,20 +287,20 @@
                         {{ !showMdEditor ? "edit" : "view" }}
                       </el-button>
                     </h5>
-                  </el-row>
-                  <el-row>
+                  </div>
+                  <div>
                     <markdown-editor
                       v-model:markdown="flag.notes"
                       :show-editor="showMdEditor"
                       @save="putFlag(flag)"
                     />
-                  </el-row>
-                  <el-row style="margin: 10px;">
+                  </div>
+                  <div style="margin: 10px;">
                     <h5>
                       <span style="margin-right: 10px;">Tags</span>
                     </h5>
-                  </el-row>
-                  <el-row>
+                  </div>
+                  <div>
                     <div class="tags-container-inner">
                       <el-tag
                         v-for="tag in flag.tags"
@@ -337,7 +335,7 @@
                         + New Tag
                       </el-button>
                     </div>
-                  </el-row>
+                  </div>
                 </el-card>
               </el-card>
 
@@ -693,7 +691,6 @@
                             </h5>
                             <el-row
                               v-if="segment.distributions.length"
-                              type="flex"
                               :gutter="20"
                             >
                               <el-col

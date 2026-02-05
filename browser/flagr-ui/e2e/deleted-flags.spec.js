@@ -38,14 +38,13 @@ test.describe('Deleted Flags', () => {
 
     // Handle Element UI dialog
     const confirmBtn = page.locator('.el-dialog').locator('button').filter({ hasText: 'Confirm' })
-    if (await confirmBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await confirmBtn.click()
-    }
+    await expect(confirmBtn).toBeVisible({ timeout: 3000 })
+    await confirmBtn.click()
 
     await page.waitForTimeout(1000)
 
     // Should redirect to home
-    await page.waitForURL(/\/#\/$/, { timeout: 5000 }).catch(() => {})
+    await page.waitForURL(/\/#\/$/, { timeout: 5000 })
 
     // Open deleted flags
     const collapse = page.locator('.deleted-flags-table')
@@ -65,19 +64,17 @@ test.describe('Deleted Flags', () => {
     await collapse.locator('.el-collapse-item__header').click()
     await page.waitForTimeout(1000)
 
-    // Check if there are any deleted flags with Restore button
+    // Deleted flag from previous test should have a Restore button
     const restoreBtn = collapse.locator('button').filter({ hasText: 'Restore' }).first()
-    if (await restoreBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await restoreBtn.click()
+    await expect(restoreBtn).toBeVisible({ timeout: 5000 })
+    await restoreBtn.click()
 
-      // Handle confirm dialog
-      const okBtn = page.locator('.el-message-box').locator('button').filter({ hasText: 'OK' })
-      if (await okBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await okBtn.click()
-      }
+    // Handle confirm dialog
+    const okBtn = page.locator('.el-message-box').locator('button').filter({ hasText: 'OK' })
+    await expect(okBtn).toBeVisible({ timeout: 3000 })
+    await okBtn.click()
 
-      await page.waitForTimeout(500)
-      await expect(page.locator('.el-message')).toContainText('Flag updated')
-    }
+    await page.waitForTimeout(500)
+    await expect(page.locator('.el-message')).toContainText('Flag updated')
   })
 })

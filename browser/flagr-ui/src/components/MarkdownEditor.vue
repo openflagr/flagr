@@ -36,7 +36,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import MarkdownIt from "markdown-it";
 import mk from "@iktakahiro/markdown-it-katex";
 import xss from "xss";
@@ -53,6 +53,9 @@ let md = MarkdownIt("commonmark");
 md.use(mk);
 
 const input = ref(props.markdown);
+watch(() => props.markdown, (newVal) => {
+  input.value = newVal;
+});
 
 const compiledMarkdown = computed(() => {
   return md.render(xss(input.value));

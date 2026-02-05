@@ -36,8 +36,8 @@ test.describe('Flag Config', () => {
 
     // Reload and verify
     await page.reload()
-    await page.waitForSelector('.flag-container')
-    await expect(keyInput).toHaveValue(newKey)
+    await page.waitForSelector('.flag-content input[placeholder="Key"]')
+    await expect(page.locator('.flag-content input[placeholder="Key"]')).toHaveValue(newKey)
   })
 
   test('Edit flag description', async ({ page }) => {
