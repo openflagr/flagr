@@ -934,7 +934,7 @@ func TestCrudVariants(t *testing.T) {
 		VariantID: int64(1),
 		Body: &models.PutVariantRequest{
 			Key: util.StringPtr("another_control"),
-			Attachment: map[string]interface{}{
+			Attachment: map[string]any{
 				"valid_string_value": "1",
 			},
 		},
@@ -946,7 +946,7 @@ func TestCrudVariants(t *testing.T) {
 		VariantID: int64(1),
 		Body: &models.PutVariantRequest{
 			Key: util.StringPtr("another_control"),
-			Attachment: map[string]interface{}{
+			Attachment: map[string]any{
 				"valid_int_value": 1,
 			},
 		},
@@ -958,8 +958,8 @@ func TestCrudVariants(t *testing.T) {
 		VariantID: int64(1),
 		Body: &models.PutVariantRequest{
 			Key: util.StringPtr("another_control"),
-			Attachment: map[string]interface{}{
-				"valid_structured_value": map[string]interface{}{
+			Attachment: map[string]any{
+				"valid_structured_value": map[string]any{
 					"string_value": "string",
 					"int_value":    1,
 				},

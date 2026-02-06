@@ -114,11 +114,11 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 
 type recoveryLogger struct{}
 
-func (r *recoveryLogger) Printf(format string, v ...interface{}) {
+func (r *recoveryLogger) Printf(format string, v ...any) {
 	logrus.Errorf(format, v...)
 }
 
-func (r *recoveryLogger) Println(v ...interface{}) {
+func (r *recoveryLogger) Println(v ...any) {
 	logrus.Errorln(v...)
 }
 
@@ -133,7 +133,7 @@ setupJWTAuthMiddleware setup an JWTMiddleware from the ENV config
 */
 func setupJWTAuthMiddleware() *jwtAuth {
 	var signingMethod jwt.SigningMethod
-	var validationKey interface{}
+	var validationKey any
 	var errParsingKey error
 
 	switch Config.JWTAuthSigningMethod {
@@ -155,7 +155,7 @@ func setupJWTAuthMiddleware() *jwtAuth {
 		PrefixWhitelistPaths: Config.JWTAuthPrefixWhitelistPaths,
 		ExactWhitelistPaths:  Config.JWTAuthExactWhitelistPaths,
 		JWTMiddleware: jwtmiddleware.New(jwtmiddleware.Options{
-			ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
+			ValidationKeyGetter: func(token *jwt.Token) (any, error) {
 				return validationKey, errParsingKey
 			},
 			SigningMethod: signingMethod,

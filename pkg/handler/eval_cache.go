@@ -134,7 +134,7 @@ func (ec *EvalCache) getByTagsALL(tags []string) map[uint]*entity.Flag {
 }
 
 // GetByFlagKeyOrID gets the flag by Key or ID
-func (ec *EvalCache) GetByFlagKeyOrID(keyOrID interface{}) *entity.Flag {
+func (ec *EvalCache) GetByFlagKeyOrID(keyOrID any) *entity.Flag {
 	s := util.SafeString(keyOrID)
 
 	ec.cacheMutex.RLock()
@@ -152,7 +152,7 @@ func (ec *EvalCache) reloadMapCache() error {
 		defer config.Global.NewrelicApp.StartTransaction("eval_cache_reload", nil, nil).End()
 	}
 
-	_, _, err := withtimeout.Do(ec.refreshTimeout, func() (interface{}, error) {
+	_, _, err := withtimeout.Do(ec.refreshTimeout, func() (any, error) {
 		idCache, keyCache, tagCache, err := ec.fetchAllFlags()
 		if err != nil {
 			return nil, err

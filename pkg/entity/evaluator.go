@@ -8,7 +8,7 @@ import (
 type EvalContext struct {
 	EntityID      string
 	EntityType    string
-	EntityContext map[string]interface{}
+	EntityContext map[string]any
 
 	EnableDebug bool
 }

@@ -35,7 +35,7 @@ func getSubjectFromRequest(r *http.Request) string {
 			// for this case, we choose to skip the error check because just like HeaderAuthUserField
 			// in the future, we can extend this function to support cookie jwt token validation
 			// this assumes that the cookie we get already passed the auth middleware
-			token, _ := jwt.Parse(c.Value, func(token *jwt.Token) (interface{}, error) { return "", nil })
+			token, _ := jwt.Parse(c.Value, func(token *jwt.Token) (any, error) { return "", nil })
 			if claims, ok := token.Claims.(jwt.MapClaims); ok {
 				return util.SafeString(claims[config.Config.CookieAuthUserFieldJWTClaim])
 			}

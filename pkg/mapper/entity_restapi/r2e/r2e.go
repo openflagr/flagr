@@ -30,11 +30,11 @@ func MapDistribution(r *models.Distribution, segmentID uint) entity.Distribution
 }
 
 // MapAttachment maps attachment
-func MapAttachment(a interface{}) (entity.Attachment, error) {
+func MapAttachment(a any) (entity.Attachment, error) {
 	e := entity.Attachment{}
 
 	if a != nil {
-		m, ok := a.(map[string]interface{})
+		m, ok := a.(map[string]any)
 		if !ok {
 			return e, fmt.Errorf("make sure JSON is properly formatted into key/value pairs. Invalid attachment format %s", spew.Sdump(a))
 		}

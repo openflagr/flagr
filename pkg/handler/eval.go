@@ -313,7 +313,7 @@ var evalSegment = func(
 	evalNextSegment bool,
 ) {
 	if len(segment.Constraints) != 0 {
-		m, ok := evalContext.EntityContext.(map[string]interface{})
+		m, ok := evalContext.EntityContext.(map[string]any)
 		if !ok {
 			log = &models.SegmentDebugLog{
 				Msg:       fmt.Sprintf("constraints are present in the segment_id %v, but got invalid entity_context: %s.", segment.ID, spew.Sdump(evalContext.EntityContext)),
@@ -356,7 +356,7 @@ var evalSegment = func(
 	return vID, log, false
 }
 
-func debugConstraintMsg(enableDebug bool, expr conditions.Expr, m map[string]interface{}) string {
+func debugConstraintMsg(enableDebug bool, expr conditions.Expr, m map[string]any) string {
 	if !enableDebug {
 		return ""
 	}
