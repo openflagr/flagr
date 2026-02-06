@@ -22,7 +22,7 @@ var (
 )
 
 // AutoMigrateTables stores the entity tables that we can auto migrate in gorm
-var AutoMigrateTables = []interface{}{
+var AutoMigrateTables = []any{
 	Flag{},
 	Constraint{},
 	Distribution{},

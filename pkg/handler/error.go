@@ -11,7 +11,7 @@ import (
 type Error struct {
 	StatusCode int
 	Message    string
-	Values     []interface{}
+	Values     []any
 }
 
 func (e *Error) Error() string {
@@ -20,7 +20,7 @@ func (e *Error) Error() string {
 }
 
 // NewError creates Error
-func NewError(statusCode int, msg string, values ...interface{}) *Error {
+func NewError(statusCode int, msg string, values ...any) *Error {
 	return &Error{
 		StatusCode: statusCode,
 		Message:    msg,
@@ -29,7 +29,7 @@ func NewError(statusCode int, msg string, values ...interface{}) *Error {
 }
 
 // ErrorMessage generates error messages
-func ErrorMessage(s string, data ...interface{}) *models.Error {
+func ErrorMessage(s string, data ...any) *models.Error {
 	return &models.Error{
 		Message: util.StringPtr(fmt.Sprintf(s, data...)),
 	}

@@ -32,7 +32,7 @@ func TestEvalSegment(t *testing.T) {
 		s.RolloutPercent = uint(100)
 		vID, log, evalNextSegment := evalSegment(100, models.EvalContext{
 			EnableDebug:   true,
-			EntityContext: map[string]interface{}{"dl_state": "CA"},
+			EntityContext: map[string]any{"dl_state": "CA"},
 			EntityID:      "entityID1",
 			EntityType:    "entityType1",
 			FlagID:        int64(100),
@@ -48,7 +48,7 @@ func TestEvalSegment(t *testing.T) {
 		s.RolloutPercent = uint(100)
 		vID, log, evalNextSegment := evalSegment(100, models.EvalContext{
 			EnableDebug:   true,
-			EntityContext: map[string]interface{}{},
+			EntityContext: map[string]any{},
 			EntityID:      "entityID1",
 			EntityType:    "entityType1",
 			FlagID:        int64(100),
@@ -64,7 +64,7 @@ func TestEvalSegment(t *testing.T) {
 		s.RolloutPercent = uint(100)
 		vID, log, evalNextSegment := evalSegment(100, models.EvalContext{
 			EnableDebug:   true,
-			EntityContext: map[string]interface{}{"dl_state": "NY"},
+			EntityContext: map[string]any{"dl_state": "NY"},
 			EntityID:      "entityID1",
 			EntityType:    "entityType1",
 			FlagID:        int64(100),
@@ -107,7 +107,7 @@ func TestEvalSegment(t *testing.T) {
 
 		vID, log, evalNextSegment := evalSegment(100, models.EvalContext{
 			EnableDebug:   true,
-			EntityContext: map[string]interface{}{"foo": float64(9990403)},
+			EntityContext: map[string]any{"foo": float64(9990403)},
 			EntityID:      "entityID1",
 			EntityType:    "entityType1",
 			FlagID:        int64(100),
@@ -134,7 +134,7 @@ func TestEvalSegment(t *testing.T) {
 
 		vID, log, evalNextSegment := evalSegment(100, models.EvalContext{
 			EnableDebug:   true,
-			EntityContext: map[string]interface{}{"foo": float64(9990404)},
+			EntityContext: map[string]any{"foo": float64(9990404)},
 			EntityID:      "entityID1",
 			EntityType:    "entityType1",
 			FlagID:        int64(100),
@@ -161,7 +161,7 @@ func TestEvalFlag(t *testing.T) {
 		defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
 		result := EvalFlag(models.EvalContext{
 			EnableDebug:   true,
-			EntityContext: map[string]interface{}{"dl_state": "CA"},
+			EntityContext: map[string]any{"dl_state": "CA"},
 			EntityID:      "entityID1",
 			EntityType:    "entityType1",
 			FlagID:        int64(100),
@@ -178,7 +178,7 @@ func TestEvalFlag(t *testing.T) {
 		defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
 		result := EvalFlag(models.EvalContext{
 			EnableDebug:   true,
-			EntityContext: map[string]interface{}{"dl_state": "CA"},
+			EntityContext: map[string]any{"dl_state": "CA"},
 			EntityID:      "entityID1",
 			EntityType:    "entityType1",
 			FlagKey:       "flag_key_100",
@@ -191,7 +191,7 @@ func TestEvalFlag(t *testing.T) {
 		defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
 		result := EvalFlag(models.EvalContext{
 			EnableDebug:   true,
-			EntityContext: map[string]interface{}{"dl_state": "CA"},
+			EntityContext: map[string]any{"dl_state": "CA"},
 			EntityID:      "entityID1",
 			EntityType:    "entityType1",
 			FlagKey:       "flag_key_100",
@@ -239,7 +239,7 @@ func TestEvalFlag(t *testing.T) {
 		defer gostub.StubFunc(&GetEvalCache, ec).Reset()
 		result := EvalFlag(models.EvalContext{
 			EnableDebug: true,
-			EntityContext: map[string]interface{}{
+			EntityContext: map[string]any{
 				"dl_state":  "CA",
 				"state":     "CA",
 				"rate":      2000,
@@ -266,7 +266,7 @@ func TestEvalFlag(t *testing.T) {
 		defer gostub.StubFunc(&GetEvalCache, ec).Reset()
 		result := EvalFlag(models.EvalContext{
 			EnableDebug:   true,
-			EntityContext: map[string]interface{}{"dl_state": "CA", "state": "CA", "rate": 2000},
+			EntityContext: map[string]any{"dl_state": "CA", "state": "CA", "rate": 2000},
 			EntityID:      "entityID1",
 			EntityType:    "entityType1",
 			FlagID:        int64(100),
@@ -301,7 +301,7 @@ func TestEvalFlag(t *testing.T) {
 		defer gostub.StubFunc(&GetEvalCache, ec).Reset()
 		result := EvalFlag(models.EvalContext{
 			EnableDebug:   true,
-			EntityContext: map[string]interface{}{"dl_state": "CA", "state": "NY"},
+			EntityContext: map[string]any{"dl_state": "CA", "state": "NY"},
 			EntityID:      "entityID1",
 			EntityType:    "entityType1",
 			FlagID:        int64(100),
@@ -319,7 +319,7 @@ func TestEvalFlag(t *testing.T) {
 		defer gostub.StubFunc(&GetEvalCache, ec).Reset()
 		result := EvalFlag(models.EvalContext{
 			EnableDebug:   true,
-			EntityContext: map[string]interface{}{"dl_state": "CA"},
+			EntityContext: map[string]any{"dl_state": "CA"},
 			EntityID:      "entityID1",
 			EntityType:    "entityType1",
 			FlagID:        int64(100),
@@ -338,7 +338,7 @@ func TestEvalFlag(t *testing.T) {
 			defer gostub.StubFunc(&GetEvalCache, ec).Reset()
 			result := EvalFlag(models.EvalContext{
 				EnableDebug:   true,
-				EntityContext: map[string]interface{}{"dl_state": "CA"},
+				EntityContext: map[string]any{"dl_state": "CA"},
 				EntityID:      "entityID1",
 				EntityType:    "entityType1",
 				FlagID:        int64(100),
@@ -356,7 +356,7 @@ func TestEvalFlag(t *testing.T) {
 			defer gostub.StubFunc(&GetEvalCache, ec).Reset()
 			result := EvalFlag(models.EvalContext{
 				EnableDebug:   true,
-				EntityContext: map[string]interface{}{"dl_state": "CA"},
+				EntityContext: map[string]any{"dl_state": "CA"},
 				EntityID:      "entityID1",
 				EntityType:    "entityType1",
 				FlagID:        int64(100),
@@ -384,7 +384,7 @@ func TestEvalFlagDistribution(t *testing.T) {
 		for i := 0; i < num; i++ {
 			result := EvalFlag(models.EvalContext{
 				EnableDebug:   false,
-				EntityContext: map[string]interface{}{"dl_state": "CA"},
+				EntityContext: map[string]any{"dl_state": "CA"},
 				EntityID:      fmt.Sprintf("%d", i),
 				EntityType:    "entityType1",
 				FlagID:        int64(100),
@@ -404,7 +404,7 @@ func TestEvalFlagDistribution(t *testing.T) {
 		for i := 0; i < num; i++ {
 			result := EvalFlag(models.EvalContext{
 				EnableDebug:   false,
-				EntityContext: map[string]interface{}{"dl_state": "CA"},
+				EntityContext: map[string]any{"dl_state": "CA"},
 				EntityID:      util.NewSecureRandomKey(),
 				EntityType:    "entityType1",
 				FlagID:        int64(100),
@@ -424,7 +424,7 @@ func TestEvalFlagDistribution(t *testing.T) {
 		for i := 0; i < num; i++ {
 			result := EvalFlag(models.EvalContext{
 				EnableDebug:   false,
-				EntityContext: map[string]interface{}{"dl_state": "CA"},
+				EntityContext: map[string]any{"dl_state": "CA"},
 				EntityID:      uniuri.NewLen(uniuri.UUIDLen),
 				EntityType:    "entityType1",
 				FlagID:        int64(100),
@@ -444,7 +444,7 @@ func TestEvalFlagDistribution(t *testing.T) {
 		for i := 0; i < num; i++ {
 			result := EvalFlag(models.EvalContext{
 				EnableDebug:   false,
-				EntityContext: map[string]interface{}{"dl_state": "CA"},
+				EntityContext: map[string]any{"dl_state": "CA"},
 				EntityID:      fmt.Sprintf("random_int%d%s", i, util.NewSecureRandomKey()),
 				EntityType:    "entityType1",
 				FlagID:        int64(100),
@@ -467,7 +467,7 @@ func TestEvalFlagsByTags(t *testing.T) {
 		defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
 		results := EvalFlagsByTags(models.EvalContext{
 			EnableDebug:   true,
-			EntityContext: map[string]interface{}{"dl_state": "CA"},
+			EntityContext: map[string]any{"dl_state": "CA"},
 			FlagTags:      []string{"tag1", "tag2"},
 		})
 		assert.NotZero(t, len(results))
@@ -483,7 +483,7 @@ func TestEvalFlagsByTags(t *testing.T) {
 		op := models.EvaluationBatchRequestFlagTagsOperatorALL
 		results := EvalFlagsByTags(models.EvalContext{
 			EnableDebug:      true,
-			EntityContext:    map[string]interface{}{"dl_state": "CA"},
+			EntityContext:    map[string]any{"dl_state": "CA"},
 			FlagTags:         []string{"tag1", "tag2"},
 			FlagTagsOperator: &op,
 		})
@@ -500,7 +500,7 @@ func TestEvalFlagsByTags(t *testing.T) {
 		op := models.EvaluationBatchRequestFlagTagsOperatorANY
 		results := EvalFlagsByTags(models.EvalContext{
 			EnableDebug:      true,
-			EntityContext:    map[string]interface{}{"dl_state": "CA"},
+			EntityContext:    map[string]any{"dl_state": "CA"},
 			FlagTags:         []string{"tag1"},
 			FlagTagsOperator: &op,
 		})
@@ -517,7 +517,7 @@ func TestEvalFlagsByTags(t *testing.T) {
 		op := models.EvaluationBatchRequestFlagTagsOperatorALL
 		results := EvalFlagsByTags(models.EvalContext{
 			EnableDebug:      true,
-			EntityContext:    map[string]interface{}{"dl_state": "CA"},
+			EntityContext:    map[string]any{"dl_state": "CA"},
 			FlagTags:         []string{"tag1", "tag_not_exist"},
 			FlagTagsOperator: &op,
 		})
@@ -529,7 +529,7 @@ func TestEvalFlagsByTags(t *testing.T) {
 		op := models.EvaluationBatchRequestFlagTagsOperatorANY
 		results := EvalFlagsByTags(models.EvalContext{
 			EnableDebug:      true,
-			EntityContext:    map[string]interface{}{"dl_state": "CA"},
+			EntityContext:    map[string]any{"dl_state": "CA"},
 			FlagTags:         []string{"tag1", "tag_not_exist"},
 			FlagTagsOperator: &op,
 		})
@@ -542,7 +542,7 @@ func TestEvalFlagsByTags(t *testing.T) {
 		defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
 		results := EvalFlagsByTags(models.EvalContext{
 			EnableDebug:   true,
-			EntityContext: map[string]interface{}{"dl_state": "CA"},
+			EntityContext: map[string]any{"dl_state": "CA"},
 			FlagTags:      []string{"tag_not_exist"},
 		})
 		assert.Zero(t, len(results))
@@ -552,7 +552,7 @@ func TestEvalFlagsByTags(t *testing.T) {
 		defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
 		results := EvalFlagsByTags(models.EvalContext{
 			EnableDebug:   true,
-			EntityContext: map[string]interface{}{"dl_state": "CA"},
+			EntityContext: map[string]any{"dl_state": "CA"},
 			FlagTags:      []string{},
 		})
 		assert.Zero(t, len(results))
@@ -573,7 +573,7 @@ func TestPostEvaluation(t *testing.T) {
 		resp := e.PostEvaluation(evaluation.PostEvaluationParams{
 			Body: &models.EvalContext{
 				EnableDebug:   true,
-				EntityContext: map[string]interface{}{"dl_state": "CA", "state": "NY"},
+				EntityContext: map[string]any{"dl_state": "CA", "state": "NY"},
 				EntityID:      "entityID1",
 				EntityType:    "entityType1",
 				FlagID:        int64(100),
@@ -592,7 +592,7 @@ func TestPostEvaluationBatch(t *testing.T) {
 				EnableDebug: true,
 				Entities: []*models.EvaluationEntity{
 					{
-						EntityContext: map[string]interface{}{"dl_state": "CA", "state": "NY"},
+						EntityContext: map[string]any{"dl_state": "CA", "state": "NY"},
 						EntityID:      "entityID1",
 						EntityType:    "entityType1",
 					},
@@ -624,7 +624,7 @@ func TestPostEvaluationBatch(t *testing.T) {
 				EnableDebug: true,
 				Entities: []*models.EvaluationEntity{
 					{
-						EntityContext: map[string]interface{}{"dl_state": "CA"},
+						EntityContext: map[string]any{"dl_state": "CA"},
 						EntityID:      "entityID1",
 						EntityType:    "entityType1",
 					},
@@ -657,7 +657,7 @@ func TestPostEvaluationBatch(t *testing.T) {
 				EnableDebug: true,
 				Entities: []*models.EvaluationEntity{
 					{
-						EntityContext: map[string]interface{}{"dl_state": "CA"},
+						EntityContext: map[string]any{"dl_state": "CA"},
 						EntityID:      "entityID1",
 						EntityType:    "entityType1",
 					},
@@ -694,7 +694,7 @@ func TestPostEvaluationBatch(t *testing.T) {
 				EnableDebug: true,
 				Entities: []*models.EvaluationEntity{
 					{
-						EntityContext: map[string]interface{}{"dl_state": "CA"},
+						EntityContext: map[string]any{"dl_state": "CA"},
 						EntityID:      "entityID1",
 						EntityType:    "entityType1",
 					},
@@ -717,7 +717,7 @@ func TestPostEvaluationBatch(t *testing.T) {
 		entities := make([]*models.EvaluationEntity, 10)
 		for i := range entities {
 			entities[i] = &models.EvaluationEntity{
-				EntityContext: map[string]interface{}{"dl_state": "CA"},
+				EntityContext: map[string]any{"dl_state": "CA"},
 				EntityID:      fmt.Sprintf("entity%d", i),
 				EntityType:    "entityType1",
 			}
@@ -745,7 +745,7 @@ func TestPostEvaluationBatch(t *testing.T) {
 		entities := make([]*models.EvaluationEntity, 10)
 		for i := range entities {
 			entities[i] = &models.EvaluationEntity{
-				EntityContext: map[string]interface{}{"dl_state": "CA"},
+				EntityContext: map[string]any{"dl_state": "CA"},
 				EntityID:      fmt.Sprintf("entity%d", i),
 				EntityType:    "entityType1",
 			}
@@ -773,7 +773,7 @@ func TestPostEvaluationBatch(t *testing.T) {
 		entities := make([]*models.EvaluationEntity, 1000)
 		for i := range entities {
 			entities[i] = &models.EvaluationEntity{
-				EntityContext: map[string]interface{}{"dl_state": "CA"},
+				EntityContext: map[string]any{"dl_state": "CA"},
 				EntityID:      fmt.Sprintf("entity%d", i),
 				EntityType:    "entityType1",
 			}
@@ -800,7 +800,7 @@ func TestTagsPostEvaluationBatch(t *testing.T) {
 				FlagTags:    []string{"tag1", "tag2"},
 				Entities: []*models.EvaluationEntity{
 					{
-						EntityContext: map[string]interface{}{"dl_state": "CA", "state": "NY"},
+						EntityContext: map[string]any{"dl_state": "CA", "state": "NY"},
 						EntityID:      "entityID1",
 						EntityType:    "entityType1",
 					},
@@ -827,7 +827,7 @@ func BenchmarkEvalFlag(b *testing.B) {
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		EvalFlag(models.EvalContext{
-			EntityContext: map[string]interface{}{"dl_state": "CA"},
+			EntityContext: map[string]any{"dl_state": "CA"},
 			EntityID:      "entityID1",
 			EntityType:    "entityType1",
 			FlagID:        int64(100),
@@ -842,10 +842,130 @@ func BenchmarkEvalFlagsByTags(b *testing.B) {
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		EvalFlagsByTags(models.EvalContext{
-			EntityContext: map[string]interface{}{"dl_state": "CA"},
+			EntityContext: map[string]any{"dl_state": "CA"},
 			EntityID:      "entityID1",
 			EntityType:    "entityType1",
 			FlagTags:      []string{"tag1", "tag2"},
+		})
+	}
+}
+
+func genBenchmarkEvalCache(numFlags int) (*EvalCache, []int64, []string) {
+	idCache := make(map[string]*entity.Flag, numFlags)
+	keyCache := make(map[string]*entity.Flag, numFlags)
+	tagCache := make(map[string]map[uint]*entity.Flag)
+	flagIDs := make([]int64, 0, numFlags)
+	flagKeys := make([]string, 0, numFlags)
+
+	for i := 0; i < numFlags; i++ {
+		f := entity.GenFixtureFlag()
+		f.ID = uint(100 + i)
+		f.Key = fmt.Sprintf("flag_key_%d", 100+i)
+		f.Tags = []entity.Tag{
+			{Value: "tag1"},
+			{Value: "tag2"},
+			{Value: fmt.Sprintf("cohort_%d", i%3)},
+		}
+
+		for vi := range f.Variants {
+			f.Variants[vi].ID = uint(300 + i*10 + vi)
+			f.Variants[vi].FlagID = f.ID
+		}
+		for si := range f.Segments {
+			f.Segments[si].FlagID = f.ID
+			for di := range f.Segments[si].Distributions {
+				if di < len(f.Variants) {
+					f.Segments[si].Distributions[di].VariantID = f.Variants[di].ID
+					f.Segments[si].Distributions[di].VariantKey = f.Variants[di].Key
+				}
+			}
+		}
+		if err := f.PrepareEvaluation(); err != nil {
+			panic(err)
+		}
+
+		idCache[util.SafeString(f.ID)] = &f
+		keyCache[f.Key] = &f
+		for _, tag := range f.Tags {
+			if _, ok := tagCache[tag.Value]; !ok {
+				tagCache[tag.Value] = map[uint]*entity.Flag{}
+			}
+			tagCache[tag.Value][f.ID] = &f
+		}
+
+		flagIDs = append(flagIDs, int64(f.ID))
+		flagKeys = append(flagKeys, f.Key)
+	}
+
+	return &EvalCache{
+		cache: &cacheContainer{
+			idCache:  idCache,
+			keyCache: keyCache,
+			tagCache: tagCache,
+		},
+	}, flagIDs, flagKeys
+}
+
+func BenchmarkPostEvaluationBatch(b *testing.B) {
+	b.StopTimer()
+	defer gostub.StubFunc(&logEvalResult).Reset()
+	evalCache, flagIDs, flagKeys := genBenchmarkEvalCache(10)
+	defer gostub.StubFunc(&GetEvalCache, evalCache).Reset()
+
+	numEntities := 10
+	entities := make([]*models.EvaluationEntity, numEntities)
+	for i := range entities {
+		entities[i] = &models.EvaluationEntity{
+			EntityContext: map[string]any{"dl_state": "CA", "state": "NY"},
+			EntityID:      fmt.Sprintf("entityID%d", i),
+			EntityType:    "entityType1",
+		}
+	}
+
+	e := NewEval()
+
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		e.PostEvaluationBatch(evaluation.PostEvaluationBatchParams{
+			Body: &models.EvaluationBatchRequest{
+				EnableDebug: false,
+				Entities:    entities,
+				FlagIDs:     flagIDs,
+				FlagKeys:    flagKeys,
+			},
+		})
+	}
+}
+
+func BenchmarkPostEvaluationBatchWithTags(b *testing.B) {
+	b.StopTimer()
+	defer gostub.StubFunc(&logEvalResult).Reset()
+	evalCache, _, _ := genBenchmarkEvalCache(10)
+	defer gostub.StubFunc(&GetEvalCache, evalCache).Reset()
+
+	numEntities := 10
+
+	entities := make([]*models.EvaluationEntity, numEntities)
+	for i := range entities {
+		entities[i] = &models.EvaluationEntity{
+			EntityContext: map[string]any{"dl_state": "CA", "state": "NY"},
+			EntityID:      fmt.Sprintf("entityID%d", i),
+			EntityType:    "entityType1",
+		}
+	}
+
+	e := NewEval()
+	op := models.EvaluationBatchRequestFlagTagsOperatorALL
+
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		e.PostEvaluationBatch(evaluation.PostEvaluationBatchParams{
+			Body: &models.EvaluationBatchRequest{
+				EnableDebug:      false,
+				Entities:         entities,
+				FlagTags:         []string{"tag1", "tag2"},
+				FlagTagsOperator: &op,
+			},
 		})
 	}
 }

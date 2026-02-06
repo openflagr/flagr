@@ -14,14 +14,19 @@
     <a href="https://codecov.io/gh/openflagr/flagr">
         <img src="https://codecov.io/gh/openflagr/flagr/branch/main/graph/badge.svg?token=iwjv26grrN">
     </a>
+    <a href="https://deepwiki.com/openflagr/flagr">
+        <img src="https://deepwiki.com/badge.svg?color=green" alt="Ask DeepWiki">
+    </a>
 </p>
 
 ## Introduction
+
 `openflagr/flagr` is a community-driven OSS effort of advancing the development of Flagr.
 
 Flagr is an open source Go service that delivers the right experience to the right entity and monitors the impact. It provides feature flags, experimentation (A/B testing), and dynamic configuration. It has clear swagger REST APIs for flags management and flag evaluation.
 
 ## Documentation
+
 - https://openflagr.github.io/flagr
 
 ## Quick demo
@@ -56,7 +61,6 @@ curl --request POST \
      }'
 ```
 
-
 ## Flagr Evaluation Performance
 
 Tested with `vegeta`. For more details, see [benchmarks](./benchmark).
@@ -80,14 +84,14 @@ Error Set:
 
 ## Client Libraries
 
-| Language | Clients |
-| -------- | ------- |
-| Go | [goflagr](https://github.com/openflagr/goflagr) |
+| Language   | Clients                                         |
+| ---------- | ----------------------------------------------- |
+| Go         | [goflagr](https://github.com/openflagr/goflagr) |
 | Javascript | [jsflagr](https://github.com/openflagr/jsflagr) |
-| Python | [pyflagr](https://github.com/openflagr/pyflagr) |
-| Ruby | [rbflagr](https://github.com/openflagr/rbflagr) |
+| Python     | [pyflagr](https://github.com/openflagr/pyflagr) |
+| Ruby       | [rbflagr](https://github.com/openflagr/rbflagr) |
 
 ## License and Credit
+
 - [`openflagr/flagr`](https://github.com/openflagr/flagr) Apache 2.0
 - [`checkr/flagr`](https://github.com/checkr/flagr) Apache 2.0
-
