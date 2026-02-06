@@ -1,6 +1,9 @@
 PWD := $(shell pwd)
 GOPATH := $(shell go env GOPATH)
 UIPATH := $(PWD)/browser/flagr-ui
+GO_TOOLCHAIN := $(shell go env GOVERSION)
+GOLANGCI_LINT_VERSION ?= v2.8.0
+GOLANGCI_LINT := $(GOPATH)/bin/golangci-lint
 
 ################################
 ### Public
@@ -11,7 +14,8 @@ all: deps gen build build_ui run
 rebuild: gen build
 
 test: verifiers
-	@go test -covermode=atomic -coverprofile=coverage.txt github.com/openflagr/flagr/pkg/...
+	@PKGS="$$(go list -f '{{if or (gt (len .TestGoFiles) 0) (gt (len .XTestGoFiles) 0)}}{{.ImportPath}}{{end}}' ./pkg/...)"; \
+	go test -covermode=atomic -coverprofile=coverage.txt $$PKGS
 
 .PHONY: benchmark
 benchmark:
@@ -45,7 +49,7 @@ gen: api_docs swagger
 
 deps:
 	@CGO_ENABLED=0 go install github.com/go-swagger/go-swagger/cmd/swagger@v0.33.1
-	@CGO_ENABLED=0 go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.8.0
+	@GOTOOLCHAIN=$(GO_TOOLCHAIN) CGO_ENABLED=0 go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
 
 serve_docs:
 	@npm install -g docsify-cli@4
@@ -63,7 +67,8 @@ verifiers: verify_lint verify_swagger
 
 verify_lint:
 	@echo "Running $@"
-	@golangci-lint run --timeout 5m -D errcheck ./pkg/...
+	@GOTOOLCHAIN=$(GO_TOOLCHAIN) CGO_ENABLED=0 go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
+	@$(GOLANGCI_LINT) run --timeout 5m -D errcheck ./pkg/...
 
 verify_swagger:
 	@echo "Running $@"
