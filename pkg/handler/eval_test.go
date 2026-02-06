@@ -859,7 +859,7 @@ func genBenchmarkEvalCache(numFlags int) (*EvalCache, []int64, []string) {
 
 	for i := 0; i < numFlags; i++ {
 		f := entity.GenFixtureFlag()
-		f.Model.ID = uint(100 + i)
+		f.ID = uint(100 + i)
 		f.Key = fmt.Sprintf("flag_key_%d", 100+i)
 		f.Tags = []entity.Tag{
 			{Value: "tag1"},
@@ -868,7 +868,7 @@ func genBenchmarkEvalCache(numFlags int) (*EvalCache, []int64, []string) {
 		}
 
 		for vi := range f.Variants {
-			f.Variants[vi].Model.ID = uint(300 + i*10 + vi)
+			f.Variants[vi].ID = uint(300 + i*10 + vi)
 			f.Variants[vi].FlagID = f.ID
 		}
 		for si := range f.Segments {
