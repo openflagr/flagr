@@ -195,6 +195,7 @@ definitions:
   flagSnapshot:
     type: object
     required:
+      - id
       - flag
       - updatedAt
     properties:
@@ -601,3 +602,4 @@ definitions:
       message:
         type: string
         minLength: 1
+
