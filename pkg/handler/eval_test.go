@@ -850,15 +850,69 @@ func BenchmarkEvalFlagsByTags(b *testing.B) {
 	}
 }
 
+func genBenchmarkEvalCache(numFlags int) (*EvalCache, []int64, []string) {
+	idCache := make(map[string]*entity.Flag, numFlags)
+	keyCache := make(map[string]*entity.Flag, numFlags)
+	tagCache := make(map[string]map[uint]*entity.Flag)
+	flagIDs := make([]int64, 0, numFlags)
+	flagKeys := make([]string, 0, numFlags)
+
+	for i := 0; i < numFlags; i++ {
+		f := entity.GenFixtureFlag()
+		f.Model.ID = uint(100 + i)
+		f.Key = fmt.Sprintf("flag_key_%d", 100+i)
+		f.Tags = []entity.Tag{
+			{Value: "tag1"},
+			{Value: "tag2"},
+			{Value: fmt.Sprintf("cohort_%d", i%3)},
+		}
+
+		for vi := range f.Variants {
+			f.Variants[vi].Model.ID = uint(300 + i*10 + vi)
+			f.Variants[vi].FlagID = f.ID
+		}
+		for si := range f.Segments {
+			f.Segments[si].FlagID = f.ID
+			for di := range f.Segments[si].Distributions {
+				if di < len(f.Variants) {
+					f.Segments[si].Distributions[di].VariantID = f.Variants[di].ID
+					f.Segments[si].Distributions[di].VariantKey = f.Variants[di].Key
+				}
+			}
+		}
+		if err := f.PrepareEvaluation(); err != nil {
+			panic(err)
+		}
+
+		idCache[util.SafeString(f.ID)] = &f
+		keyCache[f.Key] = &f
+		for _, tag := range f.Tags {
+			if _, ok := tagCache[tag.Value]; !ok {
+				tagCache[tag.Value] = map[uint]*entity.Flag{}
+			}
+			tagCache[tag.Value][f.ID] = &f
+		}
+
+		flagIDs = append(flagIDs, int64(f.ID))
+		flagKeys = append(flagKeys, f.Key)
+	}
+
+	return &EvalCache{
+		cache: &cacheContainer{
+			idCache:  idCache,
+			keyCache: keyCache,
+			tagCache: tagCache,
+		},
+	}, flagIDs, flagKeys
+}
+
 func BenchmarkPostEvaluationBatch(b *testing.B) {
 	b.StopTimer()
 	defer gostub.StubFunc(&logEvalResult).Reset()
-	defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
+	evalCache, flagIDs, flagKeys := genBenchmarkEvalCache(10)
+	defer gostub.StubFunc(&GetEvalCache, evalCache).Reset()
 
 	numEntities := 10
-	numFlagIDs := 5
-	numFlagKeys := 5
-
 	entities := make([]*models.EvaluationEntity, numEntities)
 	for i := range entities {
 		entities[i] = &models.EvaluationEntity{
@@ -866,16 +920,6 @@ func BenchmarkPostEvaluationBatch(b *testing.B) {
 			EntityID:      fmt.Sprintf("entityID%d", i),
 			EntityType:    "entityType1",
 		}
-	}
-
-	flagIDs := make([]int64, numFlagIDs)
-	for i := range flagIDs {
-		flagIDs[i] = int64(100 + i)
-	}
-
-	flagKeys := make([]string, numFlagKeys)
-	for i := range flagKeys {
-		flagKeys[i] = fmt.Sprintf("flag_key_%d", i)
 	}
 
 	e := NewEval()
@@ -896,7 +940,8 @@ func BenchmarkPostEvaluationBatch(b *testing.B) {
 func BenchmarkPostEvaluationBatchWithTags(b *testing.B) {
 	b.StopTimer()
 	defer gostub.StubFunc(&logEvalResult).Reset()
-	defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
+	evalCache, _, _ := genBenchmarkEvalCache(10)
+	defer gostub.StubFunc(&GetEvalCache, evalCache).Reset()
 
 	numEntities := 10
 
