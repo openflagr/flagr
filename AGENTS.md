@@ -20,4 +20,4 @@ make swagger       # Regenerate API code
 
 - **Don't edit `swagger_gen/`** - regenerate with `make swagger`
 - Dev uses SQLite: `pkg/handler/flagr.sqlite`
-- See `deepwiki` and `docs/` for more details
+- See [deepwiki.com/openflagr/flagr](https://deepwiki.com/openflagr/flagr) and `docs/`
