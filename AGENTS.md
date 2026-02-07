@@ -7,7 +7,7 @@ Flagr is a Go feature flag and A/B testing service with REST APIs.
 ```bash
 make test          # Run tests
 make build         # Build server
-./flagr --port 18000  # Run server (default port)
+make start         # Run backend + frontend dev server
 make swagger       # Regenerate API code
 ```
 
