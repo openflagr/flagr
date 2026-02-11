@@ -42,6 +42,20 @@ func GenFixtureFlag() Flag {
 	return f
 }
 
+func GenFixtureFlagWithTags(id uint, key string, enabled bool, tags []string) Flag {
+	f := Flag{
+		Model:       gorm.Model{ID: id},
+		Key:         key,
+		Description: "",
+		Enabled:     enabled,
+		Tags:        []Tag{},
+	}
+	for _, tag := range tags {
+		f.Tags = append(f.Tags, Tag{Value: tag})
+	}
+	return f
+}
+
 // GenFixtureSegment is a fixture
 func GenFixtureSegment() Segment {
 	s := Segment{
