@@ -10,12 +10,11 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CGO_ENABLED: 0
-      GOEXPERIMENT: greenteagc
     steps:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.25.2
+          go-version: 1.26
       - name: Check out source code
         uses: actions/checkout@v4
       - run: echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
