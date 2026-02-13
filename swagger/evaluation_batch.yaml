@@ -1,3 +1,74 @@
+get:
+  tags:
+    - evaluation
+  operationId: getEvaluationBatch
+  parameters:
+    - in: query
+      name: entity
+      description: >-
+        JSON encoded "query optimized" evaluation entities:
+        ?entity={"id":"1","type":"a","ctx":{"foo":"bar"}}&entity={"id":"2","ctx":{"baz":42}}
+      required: true
+      type: array
+      collectionFormat: multi
+      minItems: 1
+      items:
+        type: string
+    - in: query
+      name: dbg
+      description: >-
+        "query optimized" enableDebug parameter
+      required: false
+      type: boolean
+      default: false
+    - in: query
+      name: ids
+      description: >-
+        "query optimized" flagIDs parameter
+      required: false
+      type: array
+      collectionFormat: csv
+      minItems: 1
+      items:
+        type: integer
+        format: int64
+    - in: query
+      name: keys
+      description: >-
+        "query optimized" flagKeys parameter
+      required: false
+      type: array
+      collectionFormat: csv
+      minItems: 1
+      items:
+        type: string
+        minLength: 1
+    - in: query
+      name: tags
+      description: >-
+        "query optimized" flagTags parameter
+      required: false
+      type: array
+      collectionFormat: csv
+      items:
+        type: string
+    - in: query
+      name: all
+      description: >-
+        whether to use ALL (flagTags) semantics (ANY by default):
+        `?tags=foo,bar&all=true` is equivalent to postEvaluationBatch's `flagTagsOperator: "ALL"`
+      required: false
+      type: boolean
+      default: false
+  responses:
+    200:
+      description: evaluation batch result
+      schema:
+        $ref: "#/definitions/evaluationBatchResponse"
+    default:
+      description: generic error response
+      schema:
+        $ref: "#/definitions/error"
 post:
   tags:
     - evaluation

@@ -36,6 +36,72 @@ func init() {
   "basePath": "/api/v1",
   "paths": {
     "/evaluation": {
+      "get": {
+        "tags": [
+          "evaluation"
+        ],
+        "operationId": "getEvaluation",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "JSON encoded \"query optimized\" evaluation entity: ?entity={\"id\":\"1\",\"type\":\"a\",\"ctx\":{\"foo\":\"bar\"}}",
+            "name": "entity",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "boolean",
+            "default": false,
+            "description": "\"query optimized\" enableDebug parameter",
+            "name": "dbg",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "\"query optimized\" flagID parameter",
+            "name": "id",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "\"query optimized\" flagKey parameter",
+            "name": "key",
+            "in": "query"
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "csv",
+            "description": "\"query optimized\" flagTags parameter",
+            "name": "tags",
+            "in": "query"
+          },
+          {
+            "type": "boolean",
+            "default": false,
+            "description": "whether to use ALL (flagTags) semantics (ANY by default): ` + "`" + `?tags=foo,bar\u0026all=true` + "`" + ` is equivalent to postEvaluation's ` + "`" + `flagTagsOperator: \"ALL\"` + "`" + `",
+            "name": "all",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "evaluation result",
+            "schema": {
+              "$ref": "#/definitions/evalResult"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
       "post": {
         "tags": [
           "evaluation"
@@ -69,6 +135,88 @@ func init() {
       }
     },
     "/evaluation/batch": {
+      "get": {
+        "tags": [
+          "evaluation"
+        ],
+        "operationId": "getEvaluationBatch",
+        "parameters": [
+          {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi",
+            "description": "JSON encoded \"query optimized\" evaluation entities: ?entity={\"id\":\"1\",\"type\":\"a\",\"ctx\":{\"foo\":\"bar\"}}\u0026entity={\"id\":\"2\",\"ctx\":{\"baz\":42}}",
+            "name": "entity",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "boolean",
+            "default": false,
+            "description": "\"query optimized\" enableDebug parameter",
+            "name": "dbg",
+            "in": "query"
+          },
+          {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "collectionFormat": "csv",
+            "description": "\"query optimized\" flagIDs parameter",
+            "name": "ids",
+            "in": "query"
+          },
+          {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "collectionFormat": "csv",
+            "description": "\"query optimized\" flagKeys parameter",
+            "name": "keys",
+            "in": "query"
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "csv",
+            "description": "\"query optimized\" flagTags parameter",
+            "name": "tags",
+            "in": "query"
+          },
+          {
+            "type": "boolean",
+            "default": false,
+            "description": "whether to use ALL (flagTags) semantics (ANY by default): ` + "`" + `?tags=foo,bar\u0026all=true` + "`" + ` is equivalent to postEvaluationBatch's ` + "`" + `flagTagsOperator: \"ALL\"` + "`" + `",
+            "name": "all",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "evaluation batch result",
+            "schema": {
+              "$ref": "#/definitions/evaluationBatchResponse"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
       "post": {
         "tags": [
           "evaluation"
@@ -1839,6 +1987,21 @@ func init() {
           "minLength": 1
         },
         "updatedBy": {
+          "type": "string"
+        }
+      }
+    },
+    "getEvaluationEntity": {
+      "description": "evaluationEntity's \"query optimized\" serialization",
+      "type": "object",
+      "properties": {
+        "ctx": {
+          "type": "object"
+        },
+        "id": {
+          "type": "string"
+        },
+        "type": {
           "type": "string"
         }
       }
@@ -2133,6 +2296,72 @@ func init() {
   "basePath": "/api/v1",
   "paths": {
     "/evaluation": {
+      "get": {
+        "tags": [
+          "evaluation"
+        ],
+        "operationId": "getEvaluation",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "JSON encoded \"query optimized\" evaluation entity: ?entity={\"id\":\"1\",\"type\":\"a\",\"ctx\":{\"foo\":\"bar\"}}",
+            "name": "entity",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "boolean",
+            "default": false,
+            "description": "\"query optimized\" enableDebug parameter",
+            "name": "dbg",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "\"query optimized\" flagID parameter",
+            "name": "id",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "\"query optimized\" flagKey parameter",
+            "name": "key",
+            "in": "query"
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "csv",
+            "description": "\"query optimized\" flagTags parameter",
+            "name": "tags",
+            "in": "query"
+          },
+          {
+            "type": "boolean",
+            "default": false,
+            "description": "whether to use ALL (flagTags) semantics (ANY by default): ` + "`" + `?tags=foo,bar\u0026all=true` + "`" + ` is equivalent to postEvaluation's ` + "`" + `flagTagsOperator: \"ALL\"` + "`" + `",
+            "name": "all",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "evaluation result",
+            "schema": {
+              "$ref": "#/definitions/evalResult"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
       "post": {
         "tags": [
           "evaluation"
@@ -2166,6 +2395,88 @@ func init() {
       }
     },
     "/evaluation/batch": {
+      "get": {
+        "tags": [
+          "evaluation"
+        ],
+        "operationId": "getEvaluationBatch",
+        "parameters": [
+          {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi",
+            "description": "JSON encoded \"query optimized\" evaluation entities: ?entity={\"id\":\"1\",\"type\":\"a\",\"ctx\":{\"foo\":\"bar\"}}\u0026entity={\"id\":\"2\",\"ctx\":{\"baz\":42}}",
+            "name": "entity",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "boolean",
+            "default": false,
+            "description": "\"query optimized\" enableDebug parameter",
+            "name": "dbg",
+            "in": "query"
+          },
+          {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "collectionFormat": "csv",
+            "description": "\"query optimized\" flagIDs parameter",
+            "name": "ids",
+            "in": "query"
+          },
+          {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "collectionFormat": "csv",
+            "description": "\"query optimized\" flagKeys parameter",
+            "name": "keys",
+            "in": "query"
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "csv",
+            "description": "\"query optimized\" flagTags parameter",
+            "name": "tags",
+            "in": "query"
+          },
+          {
+            "type": "boolean",
+            "default": false,
+            "description": "whether to use ALL (flagTags) semantics (ANY by default): ` + "`" + `?tags=foo,bar\u0026all=true` + "`" + ` is equivalent to postEvaluationBatch's ` + "`" + `flagTagsOperator: \"ALL\"` + "`" + `",
+            "name": "all",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "evaluation batch result",
+            "schema": {
+              "$ref": "#/definitions/evaluationBatchResponse"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
       "post": {
         "tags": [
           "evaluation"
@@ -3938,6 +4249,21 @@ func init() {
           "minLength": 1
         },
         "updatedBy": {
+          "type": "string"
+        }
+      }
+    },
+    "getEvaluationEntity": {
+      "description": "evaluationEntity's \"query optimized\" serialization",
+      "type": "object",
+      "properties": {
+        "ctx": {
+          "type": "object"
+        },
+        "id": {
+          "type": "string"
+        },
+        "type": {
           "type": "string"
         }
       }
