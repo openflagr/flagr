@@ -6,7 +6,6 @@ import (
 
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/openflagr/flagr/pkg/entity"
-	"github.com/openflagr/flagr/pkg/util"
 	"github.com/openflagr/flagr/swagger_gen/models"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/flag"
 	"github.com/prashantv/gostub"
@@ -29,7 +28,7 @@ func TestCrudCreateFlag(t *testing.T) {
 	t.Run("it should be able to create one flag", func(t *testing.T) {
 		res = c.CreateFlag(flag.CreateFlagParams{
 			Body: &models.CreateFlagRequest{
-				Description: util.StringPtr("funny flag"),
+				Description: new("funny flag"),
 				Key:         "some_random_flag_key",
 			},
 		})
@@ -45,7 +44,7 @@ func TestCrudCreateFlag(t *testing.T) {
 	t.Run("it should be able to create simple_boolean_flag template", func(t *testing.T) {
 		res = c.CreateFlag(flag.CreateFlagParams{
 			Body: &models.CreateFlagRequest{
-				Description: util.StringPtr("simple flag"),
+				Description: new("simple flag"),
 				Key:         "simple_boolean_flag_key",
 				Template:    "simple_boolean_flag",
 			},
@@ -93,7 +92,7 @@ func TestCrudCreateFlagWithFailures(t *testing.T) {
 		defer gostub.StubFunc(&e2rMapFlag, nil, fmt.Errorf("e2r MapFlag error")).Reset()
 		res = c.CreateFlag(flag.CreateFlagParams{
 			Body: &models.CreateFlagRequest{
-				Description: util.StringPtr("funny flag"),
+				Description: new("funny flag"),
 			},
 		})
 		assert.NotZero(t, res.(*flag.CreateFlagDefault).Payload)
@@ -103,7 +102,7 @@ func TestCrudCreateFlagWithFailures(t *testing.T) {
 		db.Error = fmt.Errorf("db generic error")
 		res = c.CreateFlag(flag.CreateFlagParams{
 			Body: &models.CreateFlagRequest{
-				Description: util.StringPtr("funny flag"),
+				Description: new("funny flag"),
 			},
 		})
 		assert.NotZero(t, res.(*flag.CreateFlagDefault).Payload)
@@ -113,7 +112,7 @@ func TestCrudCreateFlagWithFailures(t *testing.T) {
 	t.Run("CreateFlag - invalid key error", func(t *testing.T) {
 		res = c.CreateFlag(flag.CreateFlagParams{
 			Body: &models.CreateFlagRequest{
-				Description: util.StringPtr(" flag with a space"),
+				Description: new(" flag with a space"),
 				Key:         " 1-2-3", // invalid key
 			},
 		})
@@ -123,7 +122,7 @@ func TestCrudCreateFlagWithFailures(t *testing.T) {
 	t.Run("CreateFlag - invalid template error", func(t *testing.T) {
 		res = c.CreateFlag(flag.CreateFlagParams{
 			Body: &models.CreateFlagRequest{
-				Description: util.StringPtr(" flag with a space"),
+				Description: new(" flag with a space"),
 				Key:         "invalid_template",
 				Template:    "invalid_template",
 			},

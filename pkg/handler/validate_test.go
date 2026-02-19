@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/openflagr/flagr/pkg/entity"
-	"github.com/openflagr/flagr/pkg/util"
 	"github.com/openflagr/flagr/swagger_gen/models"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/distribution"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/flag"
@@ -31,20 +30,20 @@ func TestValidatePutDistributions(t *testing.T) {
 
 	c.CreateFlag(flag.CreateFlagParams{
 		Body: &models.CreateFlagRequest{
-			Description: util.StringPtr("funny flag"),
+			Description: new("funny flag"),
 		},
 	})
 	c.CreateSegment(segment.CreateSegmentParams{
 		FlagID: int64(1),
 		Body: &models.CreateSegmentRequest{
-			Description:    util.StringPtr("segment1"),
-			RolloutPercent: util.Int64Ptr(int64(100)),
+			Description:    new("segment1"),
+			RolloutPercent: new(int64(100)),
 		},
 	})
 	c.CreateVariant(variant.CreateVariantParams{
 		FlagID: int64(1),
 		Body: &models.CreateVariantRequest{
-			Key: util.StringPtr("control"),
+			Key: new("control"),
 		},
 	})
 
@@ -55,9 +54,9 @@ func TestValidatePutDistributions(t *testing.T) {
 			Body: &models.PutDistributionsRequest{
 				Distributions: []*models.Distribution{
 					{
-						Percent:    util.Int64Ptr(int64(100)),
-						VariantID:  util.Int64Ptr(int64(1)),
-						VariantKey: util.StringPtr("control"),
+						Percent:    new(int64(100)),
+						VariantID:  new(int64(1)),
+						VariantKey: new("control"),
 					},
 				},
 			},
@@ -74,8 +73,8 @@ func TestValidatePutDistributions(t *testing.T) {
 				Distributions: []*models.Distribution{
 					{
 						Percent:    nil,
-						VariantID:  util.Int64Ptr(int64(1)),
-						VariantKey: util.StringPtr("control"),
+						VariantID:  new(int64(1)),
+						VariantKey: new("control"),
 					},
 				},
 			},
@@ -91,9 +90,9 @@ func TestValidatePutDistributions(t *testing.T) {
 			Body: &models.PutDistributionsRequest{
 				Distributions: []*models.Distribution{
 					{
-						Percent:    util.Int64Ptr(int64(100)),
-						VariantID:  util.Int64Ptr(int64(1)),
-						VariantKey: util.StringPtr("control"),
+						Percent:    new(int64(100)),
+						VariantID:  new(int64(1)),
+						VariantKey: new("control"),
 					},
 				},
 			},
@@ -109,9 +108,9 @@ func TestValidatePutDistributions(t *testing.T) {
 			Body: &models.PutDistributionsRequest{
 				Distributions: []*models.Distribution{
 					{
-						Percent:    util.Int64Ptr(int64(100)),
-						VariantID:  util.Int64Ptr(int64(999999)),
-						VariantKey: util.StringPtr("control"),
+						Percent:    new(int64(100)),
+						VariantID:  new(int64(999999)),
+						VariantKey: new("control"),
 					},
 				},
 			},
@@ -127,9 +126,9 @@ func TestValidatePutDistributions(t *testing.T) {
 			Body: &models.PutDistributionsRequest{
 				Distributions: []*models.Distribution{
 					{
-						Percent:    util.Int64Ptr(int64(100)),
-						VariantID:  util.Int64Ptr(int64(1)),
-						VariantKey: util.StringPtr("treatment"),
+						Percent:    new(int64(100)),
+						VariantID:  new(int64(1)),
+						VariantKey: new("treatment"),
 					},
 				},
 			},
@@ -153,26 +152,26 @@ func TestValidateDeleteVariant(t *testing.T) {
 
 	c.CreateFlag(flag.CreateFlagParams{
 		Body: &models.CreateFlagRequest{
-			Description: util.StringPtr("funny flag"),
+			Description: new("funny flag"),
 		},
 	})
 	c.CreateSegment(segment.CreateSegmentParams{
 		FlagID: int64(1),
 		Body: &models.CreateSegmentRequest{
-			Description:    util.StringPtr("segment1"),
-			RolloutPercent: util.Int64Ptr(int64(100)),
+			Description:    new("segment1"),
+			RolloutPercent: new(int64(100)),
 		},
 	})
 	c.CreateVariant(variant.CreateVariantParams{
 		FlagID: int64(1),
 		Body: &models.CreateVariantRequest{
-			Key: util.StringPtr("control"),
+			Key: new("control"),
 		},
 	})
 	c.CreateVariant(variant.CreateVariantParams{
 		FlagID: int64(1),
 		Body: &models.CreateVariantRequest{
-			Key: util.StringPtr("treatment"),
+			Key: new("treatment"),
 		},
 	})
 	c.PutDistributions(distribution.PutDistributionsParams{
@@ -181,14 +180,14 @@ func TestValidateDeleteVariant(t *testing.T) {
 		Body: &models.PutDistributionsRequest{
 			Distributions: []*models.Distribution{
 				{
-					Percent:    util.Int64Ptr(int64(100)),
-					VariantID:  util.Int64Ptr(int64(1)),
-					VariantKey: util.StringPtr("control"),
+					Percent:    new(int64(100)),
+					VariantID:  new(int64(1)),
+					VariantKey: new("control"),
 				},
 				{
-					Percent:    util.Int64Ptr(int64(0)),
-					VariantID:  util.Int64Ptr(int64(2)),
-					VariantKey: util.StringPtr("treatment"),
+					Percent:    new(int64(0)),
+					VariantID:  new(int64(2)),
+					VariantKey: new("treatment"),
 				},
 			},
 		},
@@ -227,26 +226,26 @@ func TestValidatePutVariantForDistributions(t *testing.T) {
 
 	c.CreateFlag(flag.CreateFlagParams{
 		Body: &models.CreateFlagRequest{
-			Description: util.StringPtr("funny flag"),
+			Description: new("funny flag"),
 		},
 	})
 	c.CreateSegment(segment.CreateSegmentParams{
 		FlagID: int64(1),
 		Body: &models.CreateSegmentRequest{
-			Description:    util.StringPtr("segment1"),
-			RolloutPercent: util.Int64Ptr(int64(100)),
+			Description:    new("segment1"),
+			RolloutPercent: new(int64(100)),
 		},
 	})
 	c.CreateVariant(variant.CreateVariantParams{
 		FlagID: int64(1),
 		Body: &models.CreateVariantRequest{
-			Key: util.StringPtr("control"),
+			Key: new("control"),
 		},
 	})
 	c.CreateVariant(variant.CreateVariantParams{
 		FlagID: int64(1),
 		Body: &models.CreateVariantRequest{
-			Key: util.StringPtr("treatment"),
+			Key: new("treatment"),
 		},
 	})
 	c.PutDistributions(distribution.PutDistributionsParams{
@@ -255,14 +254,14 @@ func TestValidatePutVariantForDistributions(t *testing.T) {
 		Body: &models.PutDistributionsRequest{
 			Distributions: []*models.Distribution{
 				{
-					Percent:    util.Int64Ptr(int64(100)),
-					VariantID:  util.Int64Ptr(int64(1)),
-					VariantKey: util.StringPtr("control"),
+					Percent:    new(int64(100)),
+					VariantID:  new(int64(1)),
+					VariantKey: new("control"),
 				},
 				{
-					Percent:    util.Int64Ptr(int64(0)),
-					VariantID:  util.Int64Ptr(int64(2)),
-					VariantKey: util.StringPtr("treatment"),
+					Percent:    new(int64(0)),
+					VariantID:  new(int64(2)),
+					VariantKey: new("treatment"),
 				},
 			},
 		},

@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/openflagr/flagr/pkg/entity"
-	"github.com/openflagr/flagr/pkg/util"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/export"
 	"github.com/prashantv/gostub"
 	"github.com/stretchr/testify/assert"
@@ -104,7 +103,7 @@ func TestExportSQLiteFile(t *testing.T) {
 	})
 
 	t.Run("happy code path and exclude_snapshots", func(t *testing.T) {
-		f, done, err := exportSQLiteFile(util.BoolPtr(true))
+		f, done, err := exportSQLiteFile(new(true))
 		defer done()
 
 		assert.NoError(t, err)
