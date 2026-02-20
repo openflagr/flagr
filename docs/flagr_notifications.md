@@ -1,43 +1,58 @@
 # Notifications
 
-Flagr supports sending notifications for CRUD operations via Slack, Webhooks, or Email.
+Flagr provides an integrated notification system that allows you to monitor changes and updates to your operational resources in real-time. You can configure Flagr to automatically send notifications regarding CRUD (Create, Read, Update, Delete) operations over several distinct channels: **Email**, **Slack**, or generic **Webhooks**.
 
-## Configuration
+## Tracked Operations
 
-Set these environment variables to enable notifications:
+Flagr monitors the following operations across your entities and immediately broadcasts them:
+- **Flags**: Create, Update, Delete, Restore, Enable, Disable
+- **Tags**: Create
+- **Segments**: Create, Update, Delete
+- **Constraints**: Create, Update, Delete
+- **Distributions**: Update
+- **Variants**: Create, Update, Delete
 
-- `FLAGR_NOTIFICATION_ENABLED=true` - Enable notifications (default: false)
-- `FLAGR_NOTIFICATION_DETAILED_DIFF_ENABLED=true` - Include detailed value diffs in notifications (default: false)
-- `FLAGR_NOTIFICATION_TIMEOUT=10s` - Timeout for HTTP requests when sending notifications
-- `FLAGR_NOTIFICATION_PROVIDER=slack` - Notification provider (options: `slack`, `email`, `webhook`)
+## Global Configuration
 
-### Webhook
-- `FLAGR_NOTIFICATION_WEBHOOK_URL=...` - Generic webhook URL to POST JSON payloads to
-- `FLAGR_NOTIFICATION_WEBHOOK_HEADERS=...` - Optional comma-separated headers (e.g., `Authorization: Bearer token, X-Custom-Header: value`)
+You must globally enable the notifications feature via environment variables and define the timeout for HTTP providers.
 
-### Slack
-- `FLAGR_NOTIFICATION_SLACK_WEBHOOK_URL=...` - Slack webhook URL
-- `FLAGR_NOTIFICATION_SLACK_CHANNEL=#channel-name` - Optional Slack channel
+- `FLAGR_NOTIFICATION_ENABLED=true` (Default: `false`) - Globally toggles the notification subsystem.
+- `FLAGR_NOTIFICATION_PROVIDER=slack` (Options: `slack`, `email`, `webhook`) - Determines the active transport channel.
+- `FLAGR_NOTIFICATION_DETAILED_DIFF_ENABLED=true` (Default: `false`) - When enabled, Flagr will embed the precise visual JSON diff of the modified entity within the notification payload.
+- `FLAGR_NOTIFICATION_TIMEOUT=10s` (Default: `10s`) - Configures the timeout window for dialing external notification webhooks and email APIs.
 
-### Email
-- `FLAGR_NOTIFICATION_EMAIL_URL=...` - HTTP email API URL
-- `FLAGR_NOTIFICATION_EMAIL_TO=...` - Recipient email address
-- `FLAGR_NOTIFICATION_EMAIL_FROM=...` - Sender email address
-- `FLAGR_NOTIFICATION_EMAIL_API_KEY=...` - Optional API key for email service
+## Provider Configuration
 
-## Operations That Trigger Notifications
+Depending on the `FLAGR_NOTIFICATION_PROVIDER` selected above, configure the target transport mechanism:
 
-- Create, Update, Delete, Restore flags
-- Enable/Disable flags
-- Create tags
-- Create, Update, Delete segments
-- Create, Update, Delete constraints
-- Update distributions
-- Create, Update, Delete variants
+### 1. Slack
 
-## Notification Format
+When using Slack, the notification is delivered as a formatted `Mrkdwn` message directly to your channel block.
 
-Internal to Flagr, every CRUD notification is structured as a generic `Notification` object.
+- `FLAGR_NOTIFICATION_SLACK_WEBHOOK_URL=...` - The Incoming Webhook URL provided by your Slack Workspace.
+- `FLAGR_NOTIFICATION_SLACK_CHANNEL=#engineering` - (Optional) Overrides the destination Slack channel.
+
+### 2. Email
+
+The Email provider sends beautifully formatted HTML summaries of modifications to a target inbox leveraging the SendGrid REST APIs.
+
+- `FLAGR_NOTIFICATION_EMAIL_URL=https://api.sendgrid.com/v3/mail/send` - HTTP email delivery API endpoint.
+- `FLAGR_NOTIFICATION_EMAIL_TO=alerts@your-org.com` - The recipient's email address.
+- `FLAGR_NOTIFICATION_EMAIL_FROM=flagr-ops@your-org.com` - The designated sender address.
+- `FLAGR_NOTIFICATION_EMAIL_API_KEY=...` - The authorization key for evaluating HTTP API calls.
+
+### 3. Generic Webhook
+
+If you wish to consume these events programmatically, the generic `webhook` provider sends HTTP `POST` requests directly to an arbitrary URL containing a serialized JSON `Notification` object representing the change.
+
+- `FLAGR_NOTIFICATION_WEBHOOK_URL=https://api.your-org.com/webhooks/flagr` - HTTP destination endpoint for generic webhook POST requests.
+- `FLAGR_NOTIFICATION_WEBHOOK_HEADERS=Authorization: Bearer secret-token, X-Custom-Header: value` - (Optional) Custom comma-separated HTTP headers, often utilized for securing your webhook receiver with an API token.
+
+---
+
+## The JSON Webhook Payload Format
+
+If `FLAGR_NOTIFICATION_PROVIDER` is set to `webhook`, the target endpoint will receive a structured payload similar to the following:
 
 ```json
 {
@@ -53,29 +68,4 @@ Internal to Flagr, every CRUD notification is structured as a generic `Notificat
 }
 ```
 
-Depending on your configured `FLAGR_NOTIFICATION_PROVIDER`, this generic object is formatted and delivered:
-- **`webhook`**: The JSON representation above is serialized and HTTP `POST`ed directly to the target URL.
-- **`slack`** & **`email`**: The object is parsed into a human-readable text document (with Mrkdwn formatting for Slack) and delivered to the channel or inbox. If `FLAGR_NOTIFICATION_DETAILED_DIFF_ENABLED=true`, the `Diff` property is also included visually in the message.
-
-## How It Works
-
-1. After successful CRUD operations, `SaveFlagSnapshot()` is called
-2. The snapshot is saved to the database
-3. A notification is sent asynchronously via `SendFlagNotification()`
-4. Notifications are non-blocking - failures are logged but don't affect the operation
-
-## Testing
-
-```bash
-# Run notification tests
-go test ./pkg/notification/... -v
-
-# Run tests with mock notifier
-go test ./pkg/notification/... -run TestNotification -v
-```
-
-## Adding New Providers
-
-1. Implement the `Notifier` interface in `pkg/notification/`
-2. Update `GetNotifier()` in `pkg/notification/notifier.go` to support the new provider
-3. Add configuration options in `pkg/config/env.go`
+> **Note**: The `Diff` key is visually rendered in Markdown format for rendering natively across internal dashboards or chat systems, but is only populated if `FLAGR_NOTIFICATION_DETAILED_DIFF_ENABLED=true` is set on the server.
