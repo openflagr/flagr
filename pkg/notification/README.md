@@ -46,11 +46,55 @@ Set these environment variables to enable notifications:
 
 ## Notification Format
 
+### Webhook (JSON)
+
+The generic webhook provider will emit an HTTP POST request with a JSON payload representing the `Notification` object. Depending on whether detailed diffs are enabled, the payload will look like this:
+
+```json
+{
+  "Operation": "update",
+  "EntityType": "flag",
+  "EntityID": 123,
+  "EntityKey": "my-feature-flag",
+  "Description": "Optional description of the update",
+  "PreValue": "{\"key\": \"value\"}",
+  "PostValue": "{\"key\": \"new_value\"}",
+  "Diff": "--- Previous\n+++ Current\n@@ -1 +1 @@\n-{\"key\": \"value\"}\n+{\"key\": \"new_value\"}",
+  "User": "admin@example.com",
+  "Details": {}
+}
+```
+
+### Slack and Email (Text)
+
+Slack and Email providers format the `Notification` object into a human-readable format. For Slack, it uses Mrkdwn formatting.
+
 ```
 :rocket: *create flag*
 *Key:* my-feature-flag
 *ID:* 123
 *User:* user@example.com
+```
+
+If `FLAGR_NOTIFICATION_DETAILED_DIFF_ENABLED=true` is set, updates will include the markdown diff alongside the values:
+
+```
+:pencil2: *update flag*
+*Description:* Enabled the new login UI
+*ID:* 123
+*Key:* my-feature-flag
+*User:* admin@example.com
+
+*Diff:*
+```diff
+--- Previous
++++ Current
+@@ -1,3 +1,3 @@
+ {
+-  "enabled": false
++  "enabled": true
+ }
+```
 ```
 
 ## Testing
