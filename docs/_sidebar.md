@@ -7,6 +7,7 @@
     - [Debug Console](flagr_debugging.md)
 - Server Configuration
     - [Env](flagr_env.md)
+    - [Notifications](flagr_notifications.md)
 - Client SDKs
     - [Ruby SDK 🔗](https://github.com/openflagr/rbflagr)
     - [Go SDK 🔗](https://github.com/openflagr/goflagr)
