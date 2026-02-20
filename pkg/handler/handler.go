@@ -19,7 +19,7 @@ import (
 
 var getDB = entity.GetDB
 
-// Setup initialize all of handler functions
+// Setup initialize all the handler functions
 func Setup(api *operations.FlagrAPI) {
 	if config.Config.EvalOnlyMode {
 		setupHealth(api)

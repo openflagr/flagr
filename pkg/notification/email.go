@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"time"
 
 	"github.com/openflagr/flagr/pkg/config"
 	"github.com/sirupsen/logrus"
@@ -24,7 +23,7 @@ func NewEmailNotifier() Notifier {
 	}
 
 	return &emailNotifier{
-		httpClient: &http.Client{Timeout: 10 * time.Second},
+		httpClient: &http.Client{Timeout: config.Config.NotificationTimeout},
 	}
 }
 

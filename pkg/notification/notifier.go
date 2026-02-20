@@ -70,6 +70,8 @@ func GetNotifier() Notifier {
 			singletonNotifier = NewSlackNotifier()
 		case "email":
 			singletonNotifier = NewEmailNotifier()
+		case "webhook":
+			singletonNotifier = NewWebhookNotifier()
 		default:
 			logrus.Warnf("unknown notification provider: %s, using null notifier", config.Config.NotificationProvider)
 			singletonNotifier = &nullNotifier{}
