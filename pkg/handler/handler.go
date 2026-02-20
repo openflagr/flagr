@@ -4,6 +4,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/openflagr/flagr/pkg/config"
 	"github.com/openflagr/flagr/pkg/entity"
+	"github.com/openflagr/flagr/pkg/notification"
 	"github.com/openflagr/flagr/swagger_gen/models"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/constraint"
@@ -21,6 +22,8 @@ var getDB = entity.GetDB
 
 // Setup initialize all the handler functions
 func Setup(api *operations.FlagrAPI) {
+	notification.ValidateConfig()
+
 	if config.Config.EvalOnlyMode {
 		setupHealth(api)
 		setupEvaluation(api)

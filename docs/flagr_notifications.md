@@ -4,22 +4,43 @@ Flagr provides an integrated notification system that allows you to monitor chan
 
 ## Tracked Operations
 
-Flagr monitors the following operations across your entities and immediately broadcasts them:
-- **Flags**: Create, Update, Delete, Restore, Enable, Disable
-- **Tags**: Create
-- **Segments**: Create, Update, Delete
-- **Constraints**: Create, Update, Delete
-- **Distributions**: Update
-- **Variants**: Create, Update, Delete
+Flagr monitors changes to **flags** and their related configuration. All notifications have `EntityType: "flag"` in the payload.
+
+The following operations trigger notifications:
+
+| Operation | Description |
+|-----------|-------------|
+| `create` | A new flag is created |
+| `update` | Any change to a flag's metadata, enabled state, or any of its associated entities (segments, variants, constraints, distributions, tags) |
+| `delete` | A flag is soft-deleted |
+| `restore` | A soft-deleted flag is restored |
+
+**Note**: Operations such as adding/removing tags, updating segment rollout percentages, modifying constraints, or changing variant attachments all trigger an `update` notification for the parent flag. Enabling or disabling a flag is also considered an update.
 
 ## Global Configuration
 
-You must globally enable the notifications feature via environment variables and define the timeout for HTTP providers.
+You must globally enable the notifications feature via environment variables.
 
 - `FLAGR_NOTIFICATION_ENABLED=true` (Default: `false`) - Globally toggles the notification subsystem.
 - `FLAGR_NOTIFICATION_PROVIDER=slack` (Options: `slack`, `email`, `webhook`) - Determines the active transport channel.
 - `FLAGR_NOTIFICATION_DETAILED_DIFF_ENABLED=true` (Default: `false`) - When enabled, Flagr will embed the precise visual JSON diff of the modified entity within the notification payload.
 - `FLAGR_NOTIFICATION_TIMEOUT=10s` (Default: `10s`) - Configures the timeout window for dialing external notification webhooks and email APIs.
+
+### Retry Configuration (HTTP providers only)
+
+- `FLAGR_NOTIFICATION_MAX_RETRIES=3` (Default: `3`) - Maximum number of retry attempts for transient HTTP failures (5xx errors). Set to `0` to disable retries.
+- `FLAGR_NOTIFICATION_RETRY_BASE=1s` (Default: `1s`) - Base delay for exponential backoff between retries.
+- `FLAGR_NOTIFICATION_RETRY_MAX=10s` (Default: `10s`) - Maximum delay between retries.
+
+### Concurrency & Observability
+
+- Notifications are sent asynchronously with a default concurrency limit of 100 to prevent resource exhaustion under load.
+- Metric `notification.sent` is emitted when statsd is enabled, tagged with `provider`, `operation`, `entity_type`, and `status` (`success`/`failure`).
+
+### Important Notes
+
+- **Asynchronous delivery**: Notifications are sent in background goroutines. Failures are logged but **do not affect the API response**.
+- **Startup validation**: When `FLAGR_NOTIFICATION_ENABLED=true`, Flagr validates the configuration based on the selected provider and logs warnings if required settings are missing. Notifications will be silently dropped until properly configured.
 
 ## Provider Configuration
 

@@ -45,8 +45,12 @@ func (w *webhookNotifier) Send(ctx context.Context, n Notification) error {
 		req.Header.Set(k, v)
 	}
 
-	resp, err := w.httpClient.Do(req)
+	// Execute request with retry
+	resp, err := doRequestWithRetry(ctx, w.httpClient, req, config.Config.NotificationMaxRetries, config.Config.NotificationRetryBase, config.Config.NotificationRetryMax)
 	if err != nil {
+		if resp != nil {
+			resp.Body.Close()
+		}
 		return fmt.Errorf("failed to send webhook: %w", err)
 	}
 	defer resp.Body.Close()
@@ -63,4 +67,8 @@ func (w *webhookNotifier) Send(ctx context.Context, n Notification) error {
 	}).Info("webhook notification sent successfully")
 
 	return nil
+}
+
+func (w *webhookNotifier) Name() string {
+	return "webhook"
 }

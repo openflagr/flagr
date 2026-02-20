@@ -38,6 +38,10 @@ func (s *slackNotifier) Send(ctx context.Context, n Notification) error {
 	return s.client.Send(ctx, subject, message)
 }
 
+func (s *slackNotifier) Name() string {
+	return "slack"
+}
+
 func formatNotification(n Notification) string {
 	var emoji string
 	switch n.Operation {

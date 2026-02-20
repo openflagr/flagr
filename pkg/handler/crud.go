@@ -322,9 +322,16 @@ func (c *crud) RestoreFlag(params flag.RestoreFlagParams) middleware.Responder {
 }
 
 func (c *crud) DeleteFlag(params flag.DeleteFlagParams) middleware.Responder {
+	f := &entity.Flag{}
+	if err := getDB().First(f, params.FlagID).Error; err != nil {
+		return flag.NewDeleteFlagDefault(404).WithPayload(ErrorMessage("%s", err))
+	}
+
 	if err := getDB().Delete(&entity.Flag{}, params.FlagID).Error; err != nil {
 		return flag.NewDeleteFlagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
+
+	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest), notification.OperationDelete)
 	return flag.NewDeleteFlagOK()
 }
 
@@ -709,6 +716,6 @@ func (c *crud) DeleteVariant(params variant.DeleteVariantParams) middleware.Resp
 		return variant.NewDeleteVariantDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
-	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest), "update")
+	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest), notification.OperationUpdate)
 	return variant.NewDeleteVariantOK()
 }

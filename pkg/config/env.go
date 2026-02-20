@@ -254,6 +254,12 @@ var Config = struct {
 	NotificationEmailFrom string `env:"FLAGR_NOTIFICATION_EMAIL_FROM" envDefault:""`
 	// NotificationTimeout - timeout for sending notifications
 	NotificationTimeout time.Duration `env:"FLAGR_NOTIFICATION_TIMEOUT" envDefault:"10s"`
+	// NotificationMaxRetries - maximum number of retry attempts for HTTP notifications
+	NotificationMaxRetries int `env:"FLAGR_NOTIFICATION_MAX_RETRIES" envDefault:"3"`
+	// NotificationRetryBase - base delay for exponential backoff (used with jitter)
+	NotificationRetryBase time.Duration `env:"FLAGR_NOTIFICATION_RETRY_BASE" envDefault:"1s"`
+	// NotificationRetryMax - maximum delay between retries
+	NotificationRetryMax time.Duration `env:"FLAGR_NOTIFICATION_RETRY_MAX" envDefault:"10s"`
 
 	// WebPrefix - base path for web and API
 	// e.g. FLAGR_WEB_PREFIX=/foo
