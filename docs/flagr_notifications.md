@@ -56,3 +56,26 @@ Internal to Flagr, every CRUD notification is structured as a generic `Notificat
 Depending on your configured `FLAGR_NOTIFICATION_PROVIDER`, this generic object is formatted and delivered:
 - **`webhook`**: The JSON representation above is serialized and HTTP `POST`ed directly to the target URL.
 - **`slack`** & **`email`**: The object is parsed into a human-readable text document (with Mrkdwn formatting for Slack) and delivered to the channel or inbox. If `FLAGR_NOTIFICATION_DETAILED_DIFF_ENABLED=true`, the `Diff` property is also included visually in the message.
+
+## How It Works
+
+1. After successful CRUD operations, `SaveFlagSnapshot()` is called
+2. The snapshot is saved to the database
+3. A notification is sent asynchronously via `SendFlagNotification()`
+4. Notifications are non-blocking - failures are logged but don't affect the operation
+
+## Testing
+
+```bash
+# Run notification tests
+go test ./pkg/notification/... -v
+
+# Run tests with mock notifier
+go test ./pkg/notification/... -run TestNotification -v
+```
+
+## Adding New Providers
+
+1. Implement the `Notifier` interface in `pkg/notification/`
+2. Update `GetNotifier()` in `pkg/notification/notifier.go` to support the new provider
+3. Add configuration options in `pkg/config/env.go`
