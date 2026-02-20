@@ -9,9 +9,23 @@ Flagr now supports sending notifications for CRUD operations via Slack or other 
 Set these environment variables to enable notifications:
 
 - `FLAGR_NOTIFICATION_ENABLED=true` - Enable notifications (default: false)
-- `FLAGR_NOTIFICATION_PROVIDER=slack` - Notification provider (default: slack)
+- `FLAGR_NOTIFICATION_DETAILED_DIFF_ENABLED=true` - Include detailed value diffs in notifications (default: false)
+- `FLAGR_NOTIFICATION_TIMEOUT=10s` - Timeout for HTTP requests when sending notifications
+- `FLAGR_NOTIFICATION_PROVIDER=slack` - Notification provider (options: `slack`, `email`, `webhook`)
+
+### Slack
 - `FLAGR_NOTIFICATION_SLACK_WEBHOOK_URL=...` - Slack webhook URL
 - `FLAGR_NOTIFICATION_SLACK_CHANNEL=#channel-name` - Optional Slack channel
+
+### Webhook
+- `FLAGR_NOTIFICATION_WEBHOOK_URL=...` - Generic webhook URL to POST JSON payloads to
+- `FLAGR_NOTIFICATION_WEBHOOK_HEADERS=...` - Optional comma-separated headers (e.g., `Authorization: Bearer token, X-Custom-Header: value`)
+
+### Email
+- `FLAGR_NOTIFICATION_EMAIL_URL=...` - HTTP email API URL
+- `FLAGR_NOTIFICATION_EMAIL_TO=...` - Recipient email address
+- `FLAGR_NOTIFICATION_EMAIL_FROM=...` - Sender email address
+- `FLAGR_NOTIFICATION_EMAIL_API_KEY=...` - Optional API key for email service
 
 ## How It Works
 
