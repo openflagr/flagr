@@ -8,7 +8,6 @@ import (
 	"github.com/openflagr/flagr/pkg/config"
 	"github.com/openflagr/flagr/pkg/entity"
 	"github.com/openflagr/flagr/pkg/notification"
-	"github.com/openflagr/flagr/pkg/util"
 	"github.com/openflagr/flagr/swagger_gen/models"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/flag"
 	"github.com/prashantv/gostub"
@@ -30,7 +29,7 @@ func TestHandlerNotifications(t *testing.T) {
 		params := flag.CreateFlagParams{
 			HTTPRequest: &http.Request{},
 			Body: &models.CreateFlagRequest{
-				Description: util.StringPtr("test flag"),
+				Description: new("test flag"),
 				Key:         "test_flag_notif",
 			},
 		}
@@ -60,7 +59,7 @@ func TestHandlerNotifications(t *testing.T) {
 		params := flag.PutFlagParams{
 			FlagID: int64(f.ID),
 			Body: &models.PutFlagRequest{
-				Description: util.StringPtr("updated description"),
+				Description: new("updated description"),
 			},
 			HTTPRequest: &http.Request{},
 		}
@@ -94,7 +93,7 @@ func TestHandlerNotifications(t *testing.T) {
 		params1 := flag.PutFlagParams{
 			FlagID: int64(f.ID),
 			Body: &models.PutFlagRequest{
-				Description: util.StringPtr("first update"),
+				Description: new("first update"),
 			},
 			HTTPRequest: &http.Request{},
 		}
@@ -104,7 +103,7 @@ func TestHandlerNotifications(t *testing.T) {
 		params2 := flag.PutFlagParams{
 			FlagID: int64(f.ID),
 			Body: &models.PutFlagRequest{
-				Description: util.StringPtr("second update"),
+				Description: new("second update"),
 			},
 			HTTPRequest: &http.Request{},
 		}
