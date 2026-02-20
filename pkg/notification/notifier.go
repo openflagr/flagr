@@ -10,6 +10,7 @@ import (
 
 type Notifier interface {
 	Send(ctx context.Context, n Notification) error
+	Name() string
 }
 
 type Operation string
@@ -91,6 +92,10 @@ func (n *nullNotifier) Send(ctx context.Context, notification Notification) erro
 	return nil
 }
 
+func (n *nullNotifier) Name() string {
+	return "null"
+}
+
 type MockNotifier struct {
 	sent      []Notification
 	mu        sync.Mutex
@@ -108,6 +113,10 @@ func (m *MockNotifier) Send(ctx context.Context, n Notification) error {
 	defer m.mu.Unlock()
 	m.sent = append(m.sent, n)
 	return m.sendError
+}
+
+func (m *MockNotifier) Name() string {
+	return "mock"
 }
 
 func (m *MockNotifier) SetSendError(err error) {

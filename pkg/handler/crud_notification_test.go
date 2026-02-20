@@ -120,4 +120,74 @@ func TestHandlerNotifications(t *testing.T) {
 		assert.Contains(t, sent[1].Diff, "-  \"Description\": \"first update\"")
 		assert.Contains(t, sent[1].Diff, "+  \"Description\": \"second update\"")
 	})
+
+	t.Run("DeleteFlag sends notification", func(t *testing.T) {
+		f := entity.GenFixtureFlag()
+		db.Create(&f)
+		mockNotifier.ClearSent()
+
+		params := flag.DeleteFlagParams{
+			FlagID:      int64(f.ID),
+			HTTPRequest: &http.Request{},
+		}
+		c.DeleteFlag(params)
+
+		assert.Eventually(t, func() bool {
+			return len(mockNotifier.GetSentNotifications()) > 0
+		}, 1*time.Second, 10*time.Millisecond)
+
+		sent := mockNotifier.GetSentNotifications()
+		assert.Len(t, sent, 1)
+		assert.Equal(t, notification.OperationDelete, sent[0].Operation)
+		assert.Equal(t, notification.EntityTypeFlag, sent[0].EntityType)
+		assert.Equal(t, f.Key, sent[0].EntityKey)
+	})
+
+	t.Run("RestoreFlag sends notification", func(t *testing.T) {
+		f := entity.GenFixtureFlag()
+		db.Create(&f)
+		// Soft delete first
+		db.Delete(&f)
+		mockNotifier.ClearSent()
+
+		params := flag.RestoreFlagParams{
+			FlagID:      int64(f.ID),
+			HTTPRequest: &http.Request{},
+		}
+		c.RestoreFlag(params)
+
+		assert.Eventually(t, func() bool {
+			return len(mockNotifier.GetSentNotifications()) > 0
+		}, 1*time.Second, 10*time.Millisecond)
+
+		sent := mockNotifier.GetSentNotifications()
+		assert.Len(t, sent, 1)
+		assert.Equal(t, notification.OperationRestore, sent[0].Operation)
+		assert.Equal(t, f.Key, sent[0].EntityKey)
+	})
+
+	t.Run("SetFlagEnabledState sends notification", func(t *testing.T) {
+		f := entity.GenFixtureFlag()
+		db.Create(&f)
+		mockNotifier.ClearSent()
+
+		params := flag.SetFlagEnabledParams{
+			FlagID: int64(f.ID),
+			Body: &models.SetFlagEnabledRequest{
+				Enabled: new(false),
+			},
+			HTTPRequest: &http.Request{},
+		}
+		c.SetFlagEnabledState(params)
+
+		assert.Eventually(t, func() bool {
+			return len(mockNotifier.GetSentNotifications()) > 0
+		}, 1*time.Second, 10*time.Millisecond)
+
+		sent := mockNotifier.GetSentNotifications()
+		assert.Len(t, sent, 1)
+		assert.Equal(t, notification.OperationUpdate, sent[0].Operation)
+		assert.Equal(t, f.Key, sent[0].EntityKey)
+		assert.Equal(t, f.ID, sent[0].EntityID) // Verify entity ID is set correctly
+	})
 }

@@ -54,15 +54,19 @@ func (e *emailNotifier) Send(ctx context.Context, n Notification) error {
 		req.Header.Set("Authorization", "Bearer "+config.Config.NotificationEmailAPIKey)
 	}
 
-	resp, err := e.httpClient.Do(req)
+	// Execute request with retry
+	resp, err := doRequestWithRetry(ctx, e.httpClient, req, config.Config.NotificationMaxRetries, config.Config.NotificationRetryBase, config.Config.NotificationRetryMax)
 	if err != nil {
+		if resp != nil {
+			resp.Body.Close()
+		}
 		return fmt.Errorf("failed to send email: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= 400 {
-		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("email service returned error: %d - %s", resp.StatusCode, string(body))
+		b, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("email service returned error: %d - %s", resp.StatusCode, string(b))
 	}
 
 	logrus.WithFields(logrus.Fields{
@@ -72,6 +76,10 @@ func (e *emailNotifier) Send(ctx context.Context, n Notification) error {
 		"subject": subject,
 	}).Info("email notification sent successfully")
 	return nil
+}
+
+func (e *emailNotifier) Name() string {
+	return "email"
 }
 
 func formatEmailSubject(n Notification) string {
