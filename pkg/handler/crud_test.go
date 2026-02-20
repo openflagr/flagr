@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 
 	"github.com/openflagr/flagr/pkg/entity"
-	"github.com/openflagr/flagr/pkg/util"
 	"github.com/openflagr/flagr/swagger_gen/models"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/constraint"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/distribution"
@@ -42,7 +41,7 @@ func TestCrudFlags(t *testing.T) {
 
 	c.CreateFlag(flag.CreateFlagParams{
 		Body: &models.CreateFlagRequest{
-			Description: util.StringPtr("funny flag"),
+			Description: new("funny flag"),
 			Key:         "flag_key_1",
 		},
 	})
@@ -57,12 +56,12 @@ func TestCrudFlags(t *testing.T) {
 		allFlags := len(res.(*flag.FindFlagsOK).Payload)
 
 		res = c.FindFlags(flag.FindFlagsParams{
-			Enabled: util.BoolPtr(true),
+			Enabled: new(true),
 		})
 		enabledFlags := len(res.(*flag.FindFlagsOK).Payload)
 
 		res = c.FindFlags(flag.FindFlagsParams{
-			Enabled: util.BoolPtr(false),
+			Enabled: new(false),
 		})
 		disabledFlags := len(res.(*flag.FindFlagsOK).Payload)
 
@@ -85,20 +84,20 @@ func TestCrudFlags(t *testing.T) {
 		c.CreateSegment(segment.CreateSegmentParams{
 			FlagID: int64(1),
 			Body: &models.CreateSegmentRequest{
-				Description:    util.StringPtr("segment1"),
-				RolloutPercent: util.Int64Ptr(int64(100)),
+				Description:    new("segment1"),
+				RolloutPercent: new(int64(100)),
 			},
 		})
 		c.CreateVariant(variant.CreateVariantParams{
 			FlagID: int64(1),
 			Body: &models.CreateVariantRequest{
-				Key: util.StringPtr("variant1"),
+				Key: new("variant1"),
 			},
 		})
 		c.CreateTag(tag.CreateTagParams{
 			FlagID: int64(1),
 			Body: &models.CreateTagRequest{
-				Value: util.StringPtr("Tag1"),
+				Value: new("Tag1"),
 			},
 		})
 		res = c.GetFlag(flag.GetFlagParams{FlagID: int64(1)})
@@ -111,10 +110,10 @@ func TestCrudFlags(t *testing.T) {
 		res = c.PutFlag(flag.PutFlagParams{
 			FlagID: int64(1),
 			Body: &models.PutFlagRequest{
-				Description:        util.StringPtr("another funny flag"),
-				DataRecordsEnabled: util.BoolPtr(true),
-				Key:                util.StringPtr("flag_key_1"),
-				Notes:              util.StringPtr("# funny flag notes"),
+				Description:        new("another funny flag"),
+				DataRecordsEnabled: new(true),
+				Key:                new("flag_key_1"),
+				Notes:              new("# funny flag notes"),
 			}},
 		)
 		assert.NotZero(t, res.(*flag.PutFlagOK).Payload.ID)
@@ -127,7 +126,7 @@ func TestCrudFlags(t *testing.T) {
 		res = c.SetFlagEnabledState(flag.SetFlagEnabledParams{
 			FlagID: int64(1),
 			Body: &models.SetFlagEnabledRequest{
-				Enabled: util.BoolPtr(true),
+				Enabled: new(true),
 			}},
 		)
 		assert.True(t, *res.(*flag.SetFlagEnabledOK).Payload.Enabled)
@@ -137,7 +136,7 @@ func TestCrudFlags(t *testing.T) {
 		res = c.PutFlag(flag.PutFlagParams{
 			FlagID: int64(1),
 			Body: &models.PutFlagRequest{
-				EntityType: util.StringPtr("report"),
+				EntityType: new("report"),
 			}},
 		)
 		assert.NotZero(t, res.(*flag.PutFlagOK).Payload.ID)
@@ -190,7 +189,7 @@ func TestCrudFlagsWithFailures(t *testing.T) {
 	t.Run("GetFlag - got e2r MapFlag error", func(t *testing.T) {
 		c.CreateFlag(flag.CreateFlagParams{
 			Body: &models.CreateFlagRequest{
-				Description: util.StringPtr("funny flag"),
+				Description: new("funny flag"),
 				Key:         "flag_key_1",
 			},
 		})
@@ -216,8 +215,8 @@ func TestCrudFlagsWithFailures(t *testing.T) {
 		res = c.PutFlag(flag.PutFlagParams{
 			FlagID: int64(99999),
 			Body: &models.PutFlagRequest{
-				Description:        util.StringPtr("another funny flag"),
-				DataRecordsEnabled: util.BoolPtr(true),
+				Description:        new("another funny flag"),
+				DataRecordsEnabled: new(true),
 			}},
 		)
 		assert.NotZero(t, res.(*flag.PutFlagDefault).Payload)
@@ -228,8 +227,8 @@ func TestCrudFlagsWithFailures(t *testing.T) {
 		res = c.PutFlag(flag.PutFlagParams{
 			FlagID: int64(1),
 			Body: &models.PutFlagRequest{
-				Description:        util.StringPtr("another funny flag"),
-				DataRecordsEnabled: util.BoolPtr(true),
+				Description:        new("another funny flag"),
+				DataRecordsEnabled: new(true),
 			}},
 		)
 		assert.NotZero(t, res.(*flag.PutFlagDefault).Payload)
@@ -240,8 +239,8 @@ func TestCrudFlagsWithFailures(t *testing.T) {
 		res = c.PutFlag(flag.PutFlagParams{
 			FlagID: int64(1),
 			Body: &models.PutFlagRequest{
-				Description:        util.StringPtr("another funny flag"),
-				DataRecordsEnabled: util.BoolPtr(true),
+				Description:        new("another funny flag"),
+				DataRecordsEnabled: new(true),
 			}},
 		)
 		assert.NotZero(t, res.(*flag.PutFlagDefault).Payload)
@@ -252,9 +251,9 @@ func TestCrudFlagsWithFailures(t *testing.T) {
 		res = c.PutFlag(flag.PutFlagParams{
 			FlagID: int64(2),
 			Body: &models.PutFlagRequest{
-				Description:        util.StringPtr("another funny flag"),
-				DataRecordsEnabled: util.BoolPtr(true),
-				Key:                util.StringPtr("flag_key_1"),
+				Description:        new("another funny flag"),
+				DataRecordsEnabled: new(true),
+				Key:                new("flag_key_1"),
 			}},
 		)
 		assert.NotZero(t, res.(*flag.PutFlagDefault).Payload)
@@ -264,7 +263,7 @@ func TestCrudFlagsWithFailures(t *testing.T) {
 		res = c.SetFlagEnabledState(flag.SetFlagEnabledParams{
 			FlagID: int64(99999),
 			Body: &models.SetFlagEnabledRequest{
-				Enabled: util.BoolPtr(true),
+				Enabled: new(true),
 			}},
 		)
 		assert.NotZero(t, res.(*flag.SetFlagEnabledDefault).Payload)
@@ -275,7 +274,7 @@ func TestCrudFlagsWithFailures(t *testing.T) {
 		res = c.SetFlagEnabledState(flag.SetFlagEnabledParams{
 			FlagID: int64(1),
 			Body: &models.SetFlagEnabledRequest{
-				Enabled: util.BoolPtr(true),
+				Enabled: new(true),
 			}},
 		)
 		assert.NotZero(t, res.(*flag.SetFlagEnabledDefault).Payload)
@@ -286,7 +285,7 @@ func TestCrudFlagsWithFailures(t *testing.T) {
 		res = c.SetFlagEnabledState(flag.SetFlagEnabledParams{
 			FlagID: int64(1),
 			Body: &models.SetFlagEnabledRequest{
-				Enabled: util.BoolPtr(true),
+				Enabled: new(true),
 			}},
 		)
 		assert.NotZero(t, res.(*flag.SetFlagEnabledDefault).Payload)
@@ -328,10 +327,10 @@ func TestFindFlags(t *testing.T) {
 	defer tmpDB.Close()
 	defer gostub.StubFunc(&getDB, db).Reset()
 
-	for i := 0; i < numOfFlags; i++ {
+	for i := range numOfFlags {
 		c.CreateFlag(flag.CreateFlagParams{
 			Body: &models.CreateFlagRequest{
-				Description: util.StringPtr(fmt.Sprintf("flag_%d", i)),
+				Description: new(fmt.Sprintf("flag_%d", i)),
 				Key:         fmt.Sprintf("flag_key_%d", i),
 			},
 		})
@@ -346,20 +345,20 @@ func TestFindFlags(t *testing.T) {
 		c.CreateSegment(segment.CreateSegmentParams{
 			FlagID: int64(1),
 			Body: &models.CreateSegmentRequest{
-				Description:    util.StringPtr("segment1"),
-				RolloutPercent: util.Int64Ptr(int64(100)),
+				Description:    new("segment1"),
+				RolloutPercent: new(int64(100)),
 			},
 		})
 		c.CreateVariant(variant.CreateVariantParams{
 			FlagID: int64(1),
 			Body: &models.CreateVariantRequest{
-				Key: util.StringPtr("variant1"),
+				Key: new("variant1"),
 			},
 		})
 		c.CreateTag(tag.CreateTagParams{
 			FlagID: int64(1),
 			Body: &models.CreateTagRequest{
-				Value: util.StringPtr("tag1"),
+				Value: new("tag1"),
 			},
 		})
 		res = c.FindFlags(flag.FindFlagsParams{})
@@ -373,24 +372,24 @@ func TestFindFlags(t *testing.T) {
 		c.CreateSegment(segment.CreateSegmentParams{
 			FlagID: 1,
 			Body: &models.CreateSegmentRequest{
-				Description:    util.StringPtr("segment2"),
-				RolloutPercent: util.Int64Ptr(int64(100)),
+				Description:    new("segment2"),
+				RolloutPercent: new(int64(100)),
 			},
 		})
 		c.CreateVariant(variant.CreateVariantParams{
 			FlagID: int64(1),
 			Body: &models.CreateVariantRequest{
-				Key: util.StringPtr("variant2"),
+				Key: new("variant2"),
 			},
 		})
 		c.CreateTag(tag.CreateTagParams{
 			FlagID: int64(1),
 			Body: &models.CreateTagRequest{
-				Value: util.StringPtr("tag2"),
+				Value: new("tag2"),
 			},
 		})
 		res = c.FindFlags(flag.FindFlagsParams{
-			Preload: util.BoolPtr(true),
+			Preload: new(true),
 		})
 		assert.Len(t, res.(*flag.FindFlagsOK).Payload, numOfFlags)
 		assert.NotZero(t, len(res.(*flag.FindFlagsOK).Payload[0].Segments))
@@ -399,38 +398,38 @@ func TestFindFlags(t *testing.T) {
 
 	t.Run("FindFlags (with enabled only) - got all the enabled results", func(t *testing.T) {
 		res = c.FindFlags(flag.FindFlagsParams{
-			Enabled: util.BoolPtr(true),
+			Enabled: new(true),
 		})
 		assert.Len(t, res.(*flag.FindFlagsOK).Payload, 0)
 	})
 	t.Run("FindFlags (with matching description)", func(t *testing.T) {
 		res = c.FindFlags(flag.FindFlagsParams{
-			Description: util.StringPtr("flag_1"),
+			Description: new("flag_1"),
 		})
 		assert.Len(t, res.(*flag.FindFlagsOK).Payload, 1)
 	})
 	t.Run("FindFlags (with matching key)", func(t *testing.T) {
 		res = c.FindFlags(flag.FindFlagsParams{
-			Key: util.StringPtr("flag_key_1"),
+			Key: new("flag_key_1"),
 		})
 		assert.Len(t, res.(*flag.FindFlagsOK).Payload, 1)
 	})
 	t.Run("FindFlags (with matching description_like)", func(t *testing.T) {
 		res = c.FindFlags(flag.FindFlagsParams{
-			DescriptionLike: util.StringPtr("flag_"),
+			DescriptionLike: new("flag_"),
 		})
 		assert.Len(t, res.(*flag.FindFlagsOK).Payload, numOfFlags)
 	})
 	t.Run("FindFlags (with limit)", func(t *testing.T) {
 		res = c.FindFlags(flag.FindFlagsParams{
-			Limit: util.Int64Ptr(int64(2)),
+			Limit: new(int64(2)),
 		})
 		assert.Len(t, res.(*flag.FindFlagsOK).Payload, 2)
 	})
 	t.Run("FindFlags (with limit and offset)", func(t *testing.T) {
 		res = c.FindFlags(flag.FindFlagsParams{
-			Limit:  util.Int64Ptr(int64(2)),
-			Offset: util.Int64Ptr(int64(2)),
+			Limit:  new(int64(2)),
+			Offset: new(int64(2)),
 		})
 		assert.Len(t, res.(*flag.FindFlagsOK).Payload, 2)
 		assert.Equal(t, res.(*flag.FindFlagsOK).Payload[0].ID, int64(3))
@@ -440,12 +439,12 @@ func TestFindFlags(t *testing.T) {
 		c.CreateTag(tag.CreateTagParams{
 			FlagID: int64(1),
 			Body: &models.CreateTagRequest{
-				Value: util.StringPtr("tag1"),
+				Value: new("tag1"),
 			},
 		})
 
 		res = c.FindFlags(flag.FindFlagsParams{
-			Tags: util.StringPtr("tag1"),
+			Tags: new("tag1"),
 		})
 		assert.Len(t, res.(*flag.FindFlagsOK).Payload, 1)
 		assert.Equal(t, res.(*flag.FindFlagsOK).Payload[0].ID, int64(1))
@@ -453,7 +452,7 @@ func TestFindFlags(t *testing.T) {
 	t.Run("FindFlags (deleted Flag)", func(t *testing.T) {
 		res = c.DeleteFlag(flag.DeleteFlagParams{FlagID: int64(1)})
 		res = c.FindFlags(flag.FindFlagsParams{
-			Deleted: util.BoolPtr(true),
+			Deleted: new(true),
 		})
 		assert.Len(t, res.(*flag.FindFlagsOK).Payload, 1)
 	})
@@ -485,7 +484,7 @@ func TestGetFlagSnapshots(t *testing.T) {
 	fb, err := json.Marshal(f)
 	assert.NoError(t, err)
 
-	for i := 0; i < numOfSnapshots; i++ {
+	for range numOfSnapshots {
 		snapshot := entity.FlagSnapshot{
 			FlagID: 1,
 			Flag:   fb,
@@ -501,15 +500,15 @@ func TestGetFlagSnapshots(t *testing.T) {
 
 	t.Run("GetFlagSnapshots (with limit)", func(t *testing.T) {
 		res = c.GetFlagSnapshots(flag.GetFlagSnapshotsParams{
-			Limit: util.Int64Ptr(int64(2)),
+			Limit: new(int64(2)),
 		})
 		assert.Len(t, res.(*flag.GetFlagSnapshotsOK).Payload, 2)
 	})
 
 	t.Run("GetFlagSnapshots (with limit and offset)", func(t *testing.T) {
 		res = c.GetFlagSnapshots(flag.GetFlagSnapshotsParams{
-			Limit:  util.Int64Ptr(int64(2)),
-			Offset: util.Int64Ptr(int64(2)),
+			Limit:  new(int64(2)),
+			Offset: new(int64(2)),
 		})
 		assert.Len(t, res.(*flag.GetFlagSnapshotsOK).Payload, 2)
 		assert.Equal(t, int64(8), res.(*flag.GetFlagSnapshotsOK).Payload[0].ID)
@@ -518,8 +517,8 @@ func TestGetFlagSnapshots(t *testing.T) {
 
 	t.Run("GetFlagSnapshots (sort ascending)", func(t *testing.T) {
 		res = c.GetFlagSnapshots(flag.GetFlagSnapshotsParams{
-			Limit: util.Int64Ptr(int64(2)),
-			Sort:  util.StringPtr("ASC"),
+			Limit: new(int64(2)),
+			Sort:  new("ASC"),
 		})
 		assert.Len(t, res.(*flag.GetFlagSnapshotsOK).Payload, 2)
 		assert.Equal(t, int64(1), res.(*flag.GetFlagSnapshotsOK).Payload[0].ID)
@@ -528,8 +527,8 @@ func TestGetFlagSnapshots(t *testing.T) {
 
 	t.Run("GetFlagSnapshots (sort descending)", func(t *testing.T) {
 		res = c.GetFlagSnapshots(flag.GetFlagSnapshotsParams{
-			Limit: util.Int64Ptr(int64(2)),
-			Sort:  util.StringPtr("DESC"),
+			Limit: new(int64(2)),
+			Sort:  new("DESC"),
 		})
 		assert.Len(t, res.(*flag.GetFlagSnapshotsOK).Payload, 2)
 		assert.Equal(t, int64(10), res.(*flag.GetFlagSnapshotsOK).Payload[0].ID)
@@ -553,7 +552,7 @@ func TestCrudSegments(t *testing.T) {
 
 	c.CreateFlag(flag.CreateFlagParams{
 		Body: &models.CreateFlagRequest{
-			Description: util.StringPtr("funny flag"),
+			Description: new("funny flag"),
 		},
 	})
 
@@ -561,16 +560,16 @@ func TestCrudSegments(t *testing.T) {
 	res = c.CreateSegment(segment.CreateSegmentParams{
 		FlagID: int64(1),
 		Body: &models.CreateSegmentRequest{
-			Description:    util.StringPtr("segment1"),
-			RolloutPercent: util.Int64Ptr(int64(100)),
+			Description:    new("segment1"),
+			RolloutPercent: new(int64(100)),
 		},
 	})
 	assert.NotZero(t, res.(*segment.CreateSegmentOK).Payload)
 	res = c.CreateSegment(segment.CreateSegmentParams{
 		FlagID: int64(1),
 		Body: &models.CreateSegmentRequest{
-			Description:    util.StringPtr("segment2"),
-			RolloutPercent: util.Int64Ptr(int64(100)),
+			Description:    new("segment2"),
+			RolloutPercent: new(int64(100)),
 		},
 	})
 	assert.NotZero(t, res.(*segment.CreateSegmentOK).Payload)
@@ -584,8 +583,8 @@ func TestCrudSegments(t *testing.T) {
 		FlagID:    int64(1),
 		SegmentID: int64(1),
 		Body: &models.PutSegmentRequest{
-			Description:    util.StringPtr("segment1"),
-			RolloutPercent: util.Int64Ptr(int64(0)),
+			Description:    new("segment1"),
+			RolloutPercent: new(int64(0)),
 		},
 	})
 	assert.NotZero(t, res.(*segment.PutSegmentOK).Payload.ID)
@@ -626,7 +625,7 @@ func TestCrudSegmentsWithFailures(t *testing.T) {
 
 	c.CreateFlag(flag.CreateFlagParams{
 		Body: &models.CreateFlagRequest{
-			Description: util.StringPtr("funny flag"),
+			Description: new("funny flag"),
 		},
 	})
 
@@ -642,8 +641,8 @@ func TestCrudSegmentsWithFailures(t *testing.T) {
 		res = c.CreateSegment(segment.CreateSegmentParams{
 			FlagID: int64(1),
 			Body: &models.CreateSegmentRequest{
-				Description:    util.StringPtr("segment1"),
-				RolloutPercent: util.Int64Ptr(int64(100)),
+				Description:    new("segment1"),
+				RolloutPercent: new(int64(100)),
 			},
 		})
 		assert.NotZero(t, res.(*segment.CreateSegmentDefault).Payload)
@@ -655,8 +654,8 @@ func TestCrudSegmentsWithFailures(t *testing.T) {
 			FlagID:    int64(1),
 			SegmentID: int64(999999),
 			Body: &models.PutSegmentRequest{
-				Description:    util.StringPtr("segment1"),
-				RolloutPercent: util.Int64Ptr(int64(0)),
+				Description:    new("segment1"),
+				RolloutPercent: new(int64(0)),
 			},
 		})
 		assert.NotZero(t, res.(*segment.PutSegmentDefault).Payload)
@@ -700,14 +699,14 @@ func TestCrudConstraints(t *testing.T) {
 
 	c.CreateFlag(flag.CreateFlagParams{
 		Body: &models.CreateFlagRequest{
-			Description: util.StringPtr("funny flag"),
+			Description: new("funny flag"),
 		},
 	})
 	c.CreateSegment(segment.CreateSegmentParams{
 		FlagID: int64(1),
 		Body: &models.CreateSegmentRequest{
-			Description:    util.StringPtr("segment1"),
-			RolloutPercent: util.Int64Ptr(int64(100)),
+			Description:    new("segment1"),
+			RolloutPercent: new(int64(100)),
 		},
 	})
 
@@ -723,9 +722,9 @@ func TestCrudConstraints(t *testing.T) {
 		FlagID:    int64(1),
 		SegmentID: int64(1),
 		Body: &models.CreateConstraintRequest{
-			Operator: util.StringPtr("EQ"),
-			Property: util.StringPtr("state"),
-			Value:    util.StringPtr(`"NY"`),
+			Operator: new("EQ"),
+			Property: new("state"),
+			Value:    new(`"NY"`),
 		},
 	})
 	assert.NotZero(t, res.(*constraint.CreateConstraintOK).Payload.ID)
@@ -743,9 +742,9 @@ func TestCrudConstraints(t *testing.T) {
 		SegmentID:    int64(1),
 		ConstraintID: int64(1),
 		Body: &models.CreateConstraintRequest{
-			Operator: util.StringPtr("EQ"),
-			Property: util.StringPtr("state"),
-			Value:    util.StringPtr(`"CA"`),
+			Operator: new("EQ"),
+			Property: new("state"),
+			Value:    new(`"CA"`),
 		},
 	})
 	assert.NotZero(t, res.(*constraint.PutConstraintOK).Payload.ID)
@@ -758,9 +757,9 @@ func TestCrudConstraints(t *testing.T) {
 			SegmentID:    int64(1),
 			ConstraintID: int64(1),
 			Body: &models.CreateConstraintRequest{
-				Operator: util.StringPtr("EQ"),
-				Property: util.StringPtr(propertyName),
-				Value:    util.StringPtr(`"CA"`),
+				Operator: new("EQ"),
+				Property: new(propertyName),
+				Value:    new(`"CA"`),
 			},
 		})
 		assert.NotZero(t, res.(*constraint.PutConstraintOK).Payload.ID)
@@ -790,23 +789,23 @@ func TestCrudConstraintsFailures(t *testing.T) {
 
 	c.CreateFlag(flag.CreateFlagParams{
 		Body: &models.CreateFlagRequest{
-			Description: util.StringPtr("funny flag"),
+			Description: new("funny flag"),
 		},
 	})
 	c.CreateSegment(segment.CreateSegmentParams{
 		FlagID: int64(1),
 		Body: &models.CreateSegmentRequest{
-			Description:    util.StringPtr("segment1"),
-			RolloutPercent: util.Int64Ptr(int64(100)),
+			Description:    new("segment1"),
+			RolloutPercent: new(int64(100)),
 		},
 	})
 	c.CreateConstraint(constraint.CreateConstraintParams{
 		FlagID:    int64(1),
 		SegmentID: int64(1),
 		Body: &models.CreateConstraintRequest{
-			Operator: util.StringPtr("EQ"),
-			Property: util.StringPtr("state"),
-			Value:    util.StringPtr(`"NY"`),
+			Operator: new("EQ"),
+			Property: new("state"),
+			Value:    new(`"NY"`),
 		},
 	})
 
@@ -825,9 +824,9 @@ func TestCrudConstraintsFailures(t *testing.T) {
 			FlagID:    int64(1),
 			SegmentID: int64(1),
 			Body: &models.CreateConstraintRequest{
-				Operator: util.StringPtr("IN"),
-				Property: util.StringPtr("state"),
-				Value:    util.StringPtr(`"NY"]`), // invalid array []
+				Operator: new("IN"),
+				Property: new("state"),
+				Value:    new(`"NY"]`), // invalid array []
 			},
 		})
 		assert.NotZero(t, res.(*constraint.CreateConstraintDefault).Payload)
@@ -839,9 +838,9 @@ func TestCrudConstraintsFailures(t *testing.T) {
 			FlagID:    int64(1),
 			SegmentID: int64(1),
 			Body: &models.CreateConstraintRequest{
-				Operator: util.StringPtr("EQ"),
-				Property: util.StringPtr("state"),
-				Value:    util.StringPtr(`"NY"`), // invalid array []
+				Operator: new("EQ"),
+				Property: new("state"),
+				Value:    new(`"NY"`), // invalid array []
 			},
 		})
 		assert.NotZero(t, res.(*constraint.CreateConstraintDefault).Payload)
@@ -854,9 +853,9 @@ func TestCrudConstraintsFailures(t *testing.T) {
 			SegmentID:    int64(1),
 			ConstraintID: int64(999999),
 			Body: &models.CreateConstraintRequest{
-				Operator: util.StringPtr("EQ"),
-				Property: util.StringPtr("state"),
-				Value:    util.StringPtr(`"CA"`),
+				Operator: new("EQ"),
+				Property: new("state"),
+				Value:    new(`"CA"`),
 			},
 		})
 		assert.NotZero(t, res.(*constraint.PutConstraintDefault).Payload)
@@ -868,9 +867,9 @@ func TestCrudConstraintsFailures(t *testing.T) {
 			SegmentID:    int64(1),
 			ConstraintID: int64(1),
 			Body: &models.CreateConstraintRequest{
-				Operator: util.StringPtr("IN"),
-				Property: util.StringPtr("state"),
-				Value:    util.StringPtr(`"CA"]`),
+				Operator: new("IN"),
+				Property: new("state"),
+				Value:    new(`"CA"]`),
 			},
 		})
 		assert.NotZero(t, res.(*constraint.PutConstraintDefault).Payload)
@@ -903,7 +902,7 @@ func TestCrudVariants(t *testing.T) {
 
 	c.CreateFlag(flag.CreateFlagParams{
 		Body: &models.CreateFlagRequest{
-			Description: util.StringPtr("funny flag"),
+			Description: new("funny flag"),
 		},
 	})
 
@@ -917,7 +916,7 @@ func TestCrudVariants(t *testing.T) {
 	res = c.CreateVariant(variant.CreateVariantParams{
 		FlagID: int64(1),
 		Body: &models.CreateVariantRequest{
-			Key: util.StringPtr("control"),
+			Key: new("control"),
 		},
 	})
 	assert.NotZero(t, res.(*variant.CreateVariantOK).Payload.ID)
@@ -933,7 +932,7 @@ func TestCrudVariants(t *testing.T) {
 		FlagID:    int64(1),
 		VariantID: int64(1),
 		Body: &models.PutVariantRequest{
-			Key: util.StringPtr("another_control"),
+			Key: new("another_control"),
 			Attachment: map[string]any{
 				"valid_string_value": "1",
 			},
@@ -945,7 +944,7 @@ func TestCrudVariants(t *testing.T) {
 		FlagID:    int64(1),
 		VariantID: int64(1),
 		Body: &models.PutVariantRequest{
-			Key: util.StringPtr("another_control"),
+			Key: new("another_control"),
 			Attachment: map[string]any{
 				"valid_int_value": 1,
 			},
@@ -957,7 +956,7 @@ func TestCrudVariants(t *testing.T) {
 		FlagID:    int64(1),
 		VariantID: int64(1),
 		Body: &models.PutVariantRequest{
-			Key: util.StringPtr("another_control"),
+			Key: new("another_control"),
 			Attachment: map[string]any{
 				"valid_structured_value": map[string]any{
 					"string_value": "string",
@@ -991,13 +990,13 @@ func TestCrudVariantsWithFailures(t *testing.T) {
 
 	c.CreateFlag(flag.CreateFlagParams{
 		Body: &models.CreateFlagRequest{
-			Description: util.StringPtr("funny flag"),
+			Description: new("funny flag"),
 		},
 	})
 	c.CreateVariant(variant.CreateVariantParams{
 		FlagID: int64(1),
 		Body: &models.CreateVariantRequest{
-			Key: util.StringPtr("control"),
+			Key: new("control"),
 		},
 	})
 
@@ -1006,7 +1005,7 @@ func TestCrudVariantsWithFailures(t *testing.T) {
 		res = c.CreateVariant(variant.CreateVariantParams{
 			FlagID: int64(1),
 			Body: &models.CreateVariantRequest{
-				Key: util.StringPtr("control"),
+				Key: new("control"),
 			},
 		})
 		assert.NotZero(t, res.(*variant.CreateVariantDefault).Payload)
@@ -1016,7 +1015,7 @@ func TestCrudVariantsWithFailures(t *testing.T) {
 		res = c.CreateVariant(variant.CreateVariantParams{
 			FlagID: int64(1),
 			Body: &models.CreateVariantRequest{
-				Key: util.StringPtr(" 123_invalid_key"),
+				Key: new(" 123_invalid_key"),
 			},
 		})
 		assert.NotZero(t, res.(*variant.CreateVariantDefault).Payload)
@@ -1027,7 +1026,7 @@ func TestCrudVariantsWithFailures(t *testing.T) {
 		res = c.CreateVariant(variant.CreateVariantParams{
 			FlagID: int64(1),
 			Body: &models.CreateVariantRequest{
-				Key: util.StringPtr("key"),
+				Key: new("key"),
 			},
 		})
 		assert.NotZero(t, res.(*variant.CreateVariantDefault).Payload)
@@ -1048,7 +1047,7 @@ func TestCrudVariantsWithFailures(t *testing.T) {
 			FlagID:    int64(1),
 			VariantID: int64(999999),
 			Body: &models.PutVariantRequest{
-				Key: util.StringPtr("another_control"),
+				Key: new("another_control"),
 			},
 		})
 		assert.NotZero(t, *res.(*variant.PutVariantDefault).Payload)
@@ -1059,7 +1058,7 @@ func TestCrudVariantsWithFailures(t *testing.T) {
 			FlagID:    int64(1),
 			VariantID: int64(1),
 			Body: &models.PutVariantRequest{
-				Key: util.StringPtr(" spaces in key 123_invalid_key"),
+				Key: new(" spaces in key 123_invalid_key"),
 			},
 		})
 		assert.NotZero(t, *res.(*variant.PutVariantDefault).Payload)
@@ -1071,7 +1070,7 @@ func TestCrudVariantsWithFailures(t *testing.T) {
 			FlagID:    int64(1),
 			VariantID: int64(1),
 			Body: &models.PutVariantRequest{
-				Key: util.StringPtr("key"),
+				Key: new("key"),
 			},
 		})
 		assert.NotZero(t, *res.(*variant.PutVariantDefault).Payload)
@@ -1112,7 +1111,7 @@ func TestCrudTags(t *testing.T) {
 
 	c.CreateFlag(flag.CreateFlagParams{
 		Body: &models.CreateFlagRequest{
-			Description: util.StringPtr("funny flag"),
+			Description: new("funny flag"),
 		},
 	})
 
@@ -1126,7 +1125,7 @@ func TestCrudTags(t *testing.T) {
 	res = c.CreateTag(tag.CreateTagParams{
 		FlagID: int64(1),
 		Body: &models.CreateTagRequest{
-			Value: util.StringPtr("tag1"),
+			Value: new("tag1"),
 		},
 	})
 	assert.NotZero(t, res.(*tag.CreateTagOK).Payload.ID)
@@ -1164,13 +1163,13 @@ func TestCrudTagsWithFailures(t *testing.T) {
 
 	c.CreateFlag(flag.CreateFlagParams{
 		Body: &models.CreateFlagRequest{
-			Description: util.StringPtr("funny flag"),
+			Description: new("funny flag"),
 		},
 	})
 	c.CreateTag(tag.CreateTagParams{
 		FlagID: int64(1),
 		Body: &models.CreateTagRequest{
-			Value: util.StringPtr("tag1"),
+			Value: new("tag1"),
 		},
 	})
 
@@ -1179,7 +1178,7 @@ func TestCrudTagsWithFailures(t *testing.T) {
 		res = c.CreateTag(tag.CreateTagParams{
 			FlagID: int64(1),
 			Body: &models.CreateTagRequest{
-				Value: util.StringPtr("tag1"),
+				Value: new("tag1"),
 			},
 		})
 		assert.NotZero(t, res.(*tag.CreateTagDefault).Payload)
@@ -1222,15 +1221,15 @@ func TestFindAllTags(t *testing.T) {
 
 	c.CreateFlag(flag.CreateFlagParams{
 		Body: &models.CreateFlagRequest{
-			Description: util.StringPtr("funny flag"),
+			Description: new("funny flag"),
 		},
 	})
 
-	for i := 0; i < numOfTags; i++ {
+	for i := range numOfTags {
 		c.CreateTag(tag.CreateTagParams{
 			FlagID: 1,
 			Body: &models.CreateTagRequest{
-				Value: util.StringPtr(fmt.Sprintf("tag_%d", i)),
+				Value: new(fmt.Sprintf("tag_%d", i)),
 			},
 		})
 	}
@@ -1242,20 +1241,20 @@ func TestFindAllTags(t *testing.T) {
 
 	t.Run("FindAllTags (with matching value_like)", func(t *testing.T) {
 		res = c.FindAllTags(tag.FindAllTagsParams{
-			ValueLike: util.StringPtr("tag_"),
+			ValueLike: new("tag_"),
 		})
 		assert.Len(t, res.(*tag.FindAllTagsOK).Payload, numOfTags)
 	})
 	t.Run("FindAllTags (with limit)", func(t *testing.T) {
 		res = c.FindAllTags(tag.FindAllTagsParams{
-			Limit: util.Int64Ptr(int64(2)),
+			Limit: new(int64(2)),
 		})
 		assert.Len(t, res.(*tag.FindAllTagsOK).Payload, 2)
 	})
 	t.Run("FindAllTags (with limit and offset)", func(t *testing.T) {
 		res = c.FindAllTags(tag.FindAllTagsParams{
-			Limit:  util.Int64Ptr(int64(2)),
-			Offset: util.Int64Ptr(int64(2)),
+			Limit:  new(int64(2)),
+			Offset: new(int64(2)),
 		})
 		assert.Len(t, res.(*tag.FindAllTagsOK).Payload, 2)
 		assert.Equal(t, res.(*tag.FindAllTagsOK).Payload[0].ID, int64(3))
@@ -1277,20 +1276,20 @@ func TestCrudDistributions(t *testing.T) {
 
 	c.CreateFlag(flag.CreateFlagParams{
 		Body: &models.CreateFlagRequest{
-			Description: util.StringPtr("funny flag"),
+			Description: new("funny flag"),
 		},
 	})
 	c.CreateSegment(segment.CreateSegmentParams{
 		FlagID: int64(1),
 		Body: &models.CreateSegmentRequest{
-			Description:    util.StringPtr("segment1"),
-			RolloutPercent: util.Int64Ptr(int64(100)),
+			Description:    new("segment1"),
+			RolloutPercent: new(int64(100)),
 		},
 	})
 	c.CreateVariant(variant.CreateVariantParams{
 		FlagID: int64(1),
 		Body: &models.CreateVariantRequest{
-			Key: util.StringPtr("control"),
+			Key: new("control"),
 		},
 	})
 
@@ -1308,9 +1307,9 @@ func TestCrudDistributions(t *testing.T) {
 		Body: &models.PutDistributionsRequest{
 			Distributions: []*models.Distribution{
 				{
-					Percent:    util.Int64Ptr(int64(100)),
-					VariantID:  util.Int64Ptr(int64(1)),
-					VariantKey: util.StringPtr("control"),
+					Percent:    new(int64(100)),
+					VariantID:  new(int64(1)),
+					VariantKey: new("control"),
 				},
 			},
 		},
@@ -1340,20 +1339,20 @@ func TestCrudDistributionsWithFailures(t *testing.T) {
 
 	c.CreateFlag(flag.CreateFlagParams{
 		Body: &models.CreateFlagRequest{
-			Description: util.StringPtr("funny flag"),
+			Description: new("funny flag"),
 		},
 	})
 	c.CreateSegment(segment.CreateSegmentParams{
 		FlagID: int64(1),
 		Body: &models.CreateSegmentRequest{
-			Description:    util.StringPtr("segment1"),
-			RolloutPercent: util.Int64Ptr(int64(100)),
+			Description:    new("segment1"),
+			RolloutPercent: new(int64(100)),
 		},
 	})
 	c.CreateVariant(variant.CreateVariantParams{
 		FlagID: int64(1),
 		Body: &models.CreateVariantRequest{
-			Key: util.StringPtr("control"),
+			Key: new("control"),
 		},
 	})
 	c.PutDistributions(distribution.PutDistributionsParams{
@@ -1362,9 +1361,9 @@ func TestCrudDistributionsWithFailures(t *testing.T) {
 		Body: &models.PutDistributionsRequest{
 			Distributions: []*models.Distribution{
 				{
-					Percent:    util.Int64Ptr(int64(100)),
-					VariantID:  util.Int64Ptr(int64(1)),
-					VariantKey: util.StringPtr("control"),
+					Percent:    new(int64(100)),
+					VariantID:  new(int64(1)),
+					VariantKey: new("control"),
 				},
 			},
 		},
@@ -1387,9 +1386,9 @@ func TestCrudDistributionsWithFailures(t *testing.T) {
 			Body: &models.PutDistributionsRequest{
 				Distributions: []*models.Distribution{
 					{
-						Percent:    util.Int64Ptr(int64(50)), // not adds up to 100
-						VariantID:  util.Int64Ptr(int64(1)),
-						VariantKey: util.StringPtr("control"),
+						Percent:    new(int64(50)), // not adds up to 100
+						VariantID:  new(int64(1)),
+						VariantKey: new("control"),
 					},
 				},
 			},
@@ -1406,9 +1405,9 @@ func TestCrudDistributionsWithFailures(t *testing.T) {
 			Body: &models.PutDistributionsRequest{
 				Distributions: []*models.Distribution{
 					{
-						Percent:    util.Int64Ptr(int64(100)),
-						VariantID:  util.Int64Ptr(int64(1)),
-						VariantKey: util.StringPtr("control"),
+						Percent:    new(int64(100)),
+						VariantID:  new(int64(1)),
+						VariantKey: new("control"),
 					},
 				},
 			},

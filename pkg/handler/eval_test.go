@@ -381,7 +381,7 @@ func TestEvalFlagDistribution(t *testing.T) {
 
 	t.Run("test distribution on integers", func(t *testing.T) {
 		cnt := make(map[int64]int)
-		for i := 0; i < num; i++ {
+		for i := range num {
 			result := EvalFlag(models.EvalContext{
 				EnableDebug:   false,
 				EntityContext: map[string]any{"dl_state": "CA"},
@@ -401,7 +401,7 @@ func TestEvalFlagDistribution(t *testing.T) {
 
 	t.Run("test distribution on secure random key generator", func(t *testing.T) {
 		cnt := make(map[int64]int)
-		for i := 0; i < num; i++ {
+		for range num {
 			result := EvalFlag(models.EvalContext{
 				EnableDebug:   false,
 				EntityContext: map[string]any{"dl_state": "CA"},
@@ -421,7 +421,7 @@ func TestEvalFlagDistribution(t *testing.T) {
 
 	t.Run("test distribution on uuid", func(t *testing.T) {
 		cnt := make(map[int64]int)
-		for i := 0; i < num; i++ {
+		for range num {
 			result := EvalFlag(models.EvalContext{
 				EnableDebug:   false,
 				EntityContext: map[string]any{"dl_state": "CA"},
@@ -441,7 +441,7 @@ func TestEvalFlagDistribution(t *testing.T) {
 
 	t.Run("test distribution on random string + int", func(t *testing.T) {
 		cnt := make(map[int64]int)
-		for i := 0; i < num; i++ {
+		for i := range num {
 			result := EvalFlag(models.EvalContext{
 				EnableDebug:   false,
 				EntityContext: map[string]any{"dl_state": "CA"},
@@ -814,7 +814,7 @@ func TestTagsPostEvaluationBatch(t *testing.T) {
 func TestRateLimitPerFlagConsoleLogging(t *testing.T) {
 	r := &models.EvalResult{FlagID: 1}
 	t.Run("running fast triggers rate limiting", func(t *testing.T) {
-		for i := 0; i < 100; i++ {
+		for range 100 {
 			rateLimitPerFlagConsoleLogging(r)
 		}
 	})
@@ -857,7 +857,7 @@ func genBenchmarkEvalCache(numFlags int) (*EvalCache, []int64, []string) {
 	flagIDs := make([]int64, 0, numFlags)
 	flagKeys := make([]string, 0, numFlags)
 
-	for i := 0; i < numFlags; i++ {
+	for i := range numFlags {
 		f := entity.GenFixtureFlag()
 		f.ID = uint(100 + i)
 		f.Key = fmt.Sprintf("flag_key_%d", 100+i)

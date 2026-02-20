@@ -7,7 +7,6 @@ import (
 
 	"github.com/go-openapi/strfmt"
 	"github.com/openflagr/flagr/pkg/entity"
-	"github.com/openflagr/flagr/pkg/util"
 
 	"github.com/openflagr/flagr/swagger_gen/models"
 )
@@ -18,11 +17,11 @@ func MapFlag(e *entity.Flag) (*models.Flag, error) {
 	r.ID = int64(e.ID)
 	r.Key = e.Key
 	r.CreatedBy = e.CreatedBy
-	r.DataRecordsEnabled = util.BoolPtr(e.DataRecordsEnabled)
+	r.DataRecordsEnabled = new(e.DataRecordsEnabled)
 	r.EntityType = e.EntityType
-	r.Description = util.StringPtr(e.Description)
+	r.Description = new(e.Description)
 	r.Notes = e.Notes
-	r.Enabled = util.BoolPtr(e.Enabled)
+	r.Enabled = new(e.Enabled)
 	r.UpdatedAt = strfmt.DateTime(e.UpdatedAt)
 	r.UpdatedBy = e.UpdatedBy
 	r.Segments = MapSegments(e.Segments)
@@ -59,7 +58,7 @@ func MapFlagSnapshot(e *entity.FlagSnapshot) (*models.FlagSnapshot, error) {
 		Flag:      f,
 		ID:        int64(e.ID),
 		UpdatedBy: e.UpdatedBy,
-		UpdatedAt: util.StringPtr(e.UpdatedAt.UTC().Format(time.RFC3339)),
+		UpdatedAt: new(e.UpdatedAt.UTC().Format(time.RFC3339)),
 	}
 	return r, nil
 }
@@ -81,9 +80,9 @@ func MapFlagSnapshots(e []entity.FlagSnapshot) ([]*models.FlagSnapshot, error) {
 func MapSegment(e *entity.Segment) *models.Segment {
 	r := &models.Segment{}
 	r.ID = int64(e.ID)
-	r.Description = util.StringPtr(e.Description)
-	r.Rank = util.Int64Ptr(int64(e.Rank))
-	r.RolloutPercent = util.Int64Ptr(int64(e.RolloutPercent))
+	r.Description = new(e.Description)
+	r.Rank = new(int64(e.Rank))
+	r.RolloutPercent = new(int64(e.RolloutPercent))
 	r.Constraints = MapConstraints(e.Constraints)
 	r.Distributions = MapDistributions(e.Distributions)
 	return r
@@ -102,7 +101,7 @@ func MapSegments(e []entity.Segment) []*models.Segment {
 func MapTag(e *entity.Tag) *models.Tag {
 	r := &models.Tag{}
 	r.ID = int64(e.ID)
-	r.Value = util.StringPtr(e.Value)
+	r.Value = new(e.Value)
 	return r
 }
 
@@ -119,9 +118,9 @@ func MapTags(e []entity.Tag) []*models.Tag {
 func MapConstraint(e *entity.Constraint) *models.Constraint {
 	r := &models.Constraint{}
 	r.ID = int64(e.ID)
-	r.Property = util.StringPtr(e.Property)
-	r.Operator = util.StringPtr(e.Operator)
-	r.Value = util.StringPtr(e.Value)
+	r.Property = new(e.Property)
+	r.Operator = new(e.Operator)
+	r.Value = new(e.Value)
 	return r
 }
 
@@ -138,9 +137,9 @@ func MapConstraints(e []entity.Constraint) []*models.Constraint {
 func MapDistribution(e *entity.Distribution) *models.Distribution {
 	r := &models.Distribution{
 		ID:         int64(e.ID),
-		Percent:    util.Int64Ptr(int64(e.Percent)),
-		VariantID:  util.Int64Ptr(int64(e.VariantID)),
-		VariantKey: util.StringPtr(e.VariantKey),
+		Percent:    new(int64(e.Percent)),
+		VariantID:  new(int64(e.VariantID)),
+		VariantKey: new(e.VariantKey),
 	}
 	return r
 }
@@ -158,7 +157,7 @@ func MapDistributions(e []entity.Distribution) []*models.Distribution {
 func MapVariant(e *entity.Variant) *models.Variant {
 	r := &models.Variant{
 		ID:         int64(e.ID),
-		Key:        util.StringPtr(e.Key),
+		Key:        new(e.Key),
 		Attachment: e.Attachment,
 	}
 	return r

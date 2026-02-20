@@ -3,7 +3,6 @@ package handler
 import (
 	"fmt"
 
-	"github.com/openflagr/flagr/pkg/util"
 	"github.com/openflagr/flagr/swagger_gen/models"
 )
 
@@ -31,6 +30,6 @@ func NewError(statusCode int, msg string, values ...any) *Error {
 // ErrorMessage generates error messages
 func ErrorMessage(s string, data ...any) *models.Error {
 	return &models.Error{
-		Message: util.StringPtr(fmt.Sprintf(s, data...)),
+		Message: new(fmt.Sprintf(s, data...)),
 	}
 }

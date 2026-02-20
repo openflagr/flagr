@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"maps"
 	"sync"
 	"time"
 
@@ -90,9 +91,7 @@ func (ec *EvalCache) getByTagsANY(tags []string) map[uint]*entity.Flag {
 	for _, t := range tags {
 		fSet, ok := ec.cache.tagCache[t]
 		if ok {
-			for fID, f := range fSet {
-				results[fID] = f
-			}
+			maps.Copy(results, fSet)
 		}
 	}
 	return results
@@ -113,9 +112,7 @@ func (ec *EvalCache) getByTagsALL(tags []string) map[uint]*entity.Flag {
 
 		if i == 0 {
 			// store all the flags
-			for fID, f := range fSet {
-				results[fID] = f
-			}
+			maps.Copy(results, fSet)
 		} else {
 			for fID := range results {
 				if _, ok := fSet[fID]; !ok {
