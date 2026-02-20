@@ -97,3 +97,27 @@ func Round(f float64) int {
 func TimeNow() string {
 	return time.Now().UTC().Format(time.RFC3339)
 }
+
+// ParseHeaders converts a comma-separated list of key-value pairs separated by colons into a map of strings.
+// It gracefully handles edge cases such as empty headers, missing values, spaces around keys and values,
+// and malformed chunks by filtering them out.
+// Example: "Authorization: Bearer token, X-Custom-Header: value" will be parsed correctly.
+func ParseHeaders(headerStr string) map[string]string {
+	headers := make(map[string]string)
+	if headerStr == "" {
+		return headers
+	}
+
+	pairs := strings.Split(headerStr, ",")
+	for _, pair := range pairs {
+		parts := strings.SplitN(pair, ":", 2)
+		if len(parts) == 2 {
+			key := strings.TrimSpace(parts[0])
+			val := strings.TrimSpace(parts[1])
+			if key != "" {
+				headers[key] = val
+			}
+		}
+	}
+	return headers
+}
