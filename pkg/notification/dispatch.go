@@ -33,7 +33,7 @@ func recordNotificationMetrics(provider string, operation Operation, entityType 
 	config.Global.StatsdClient.Incr("notification.sent", tags, 1)
 }
 
-func SendNotification(operation Operation, entityType EntityType, entityID uint, entityKey string, description string, preValue string, postValue string, diff string, user string) {
+func sendNotification(operation Operation, entityType EntityType, entityID uint, entityKey string, description string, preValue string, postValue string, diff string, user string) {
 	go func() {
 		// Acquire semaphore slot
 		notificationSemaphore <- struct{}{}
@@ -76,7 +76,7 @@ func SendNotification(operation Operation, entityType EntityType, entityID uint,
 }
 
 func SendFlagNotification(operation Operation, flagID uint, flagKey string, description string, preValue string, postValue string, diff string, user string) {
-	SendNotification(operation, EntityTypeFlag, flagID, flagKey, description, preValue, postValue, diff, user)
+	sendNotification(operation, EntityTypeFlag, flagID, flagKey, description, preValue, postValue, diff, user)
 }
 
 func CalculateDiff(pre, post string) string {
