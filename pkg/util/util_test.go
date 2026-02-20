@@ -284,3 +284,90 @@ func TestHasSafePrefix(t *testing.T) {
 		})
 	}
 }
+
+func TestParseHeaders(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected map[string]string
+	}{
+		{
+			name:     "empty string",
+			input:    "",
+			expected: map[string]string{},
+		},
+		{
+			name:  "single valid header",
+			input: "Authorization: Bearer token",
+			expected: map[string]string{
+				"Authorization": "Bearer token",
+			},
+		},
+		{
+			name:  "multiple valid headers",
+			input: "Authorization: Bearer token, X-Custom-Header: value",
+			expected: map[string]string{
+				"Authorization":   "Bearer token",
+				"X-Custom-Header": "value",
+			},
+		},
+		{
+			name:  "messy spacing around colons and commas",
+			input: "  Auth :  Token  ,  Another : Value  ",
+			expected: map[string]string{
+				"Auth":    "Token",
+				"Another": "Value",
+			},
+		},
+		{
+			name:  "missing value formatting",
+			input: "Authorization:,",
+			expected: map[string]string{
+				"Authorization": "",
+			},
+		},
+		{
+			name:     "missing colon format is ignored",
+			input:    "InvalidFormat",
+			expected: map[string]string{},
+		},
+		{
+			name:  "extra colons in the value are kept",
+			input: "Trace-Id: 123:456:789",
+			expected: map[string]string{
+				"Trace-Id": "123:456:789",
+			},
+		},
+		{
+			name:     "spaces only",
+			input:    "     ",
+			expected: map[string]string{},
+		},
+		{
+			name:     "colons only",
+			input:    ":::",
+			expected: map[string]string{},
+		},
+		{
+			name:  "trailing and leading commas",
+			input: ",Authorization: Bearer token,",
+			expected: map[string]string{
+				"Authorization": "Bearer token",
+			},
+		},
+		{
+			name:  "valid headers mixed with invalid garbage",
+			input: "InvalidFormat, Authorization: Bearer token, , :valueOnly",
+			expected: map[string]string{
+				"Authorization": "Bearer token",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := ParseHeaders(tt.input)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}

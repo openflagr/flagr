@@ -240,6 +240,10 @@ var Config = struct {
 	NotificationSlackWebhookURL string `env:"FLAGR_NOTIFICATION_SLACK_WEBHOOK_URL" envDefault:""`
 	// NotificationSlackChannel - Slack channel to send notifications to
 	NotificationSlackChannel string `env:"FLAGR_NOTIFICATION_SLACK_CHANNEL" envDefault:""`
+	// NotificationWebhookURL - Webhook URL for generic notifications
+	NotificationWebhookURL string `env:"FLAGR_NOTIFICATION_WEBHOOK_URL" envDefault:""`
+	// NotificationWebhookHeaders - Webhook Headers for generic notifications, e.g. "Authorization: Bearer token,X-Custom-Header: value"
+	NotificationWebhookHeaders string `env:"FLAGR_NOTIFICATION_WEBHOOK_HEADERS" envDefault:""`
 	// NotificationEmailTo - recipient email address
 	NotificationEmailTo string `env:"FLAGR_NOTIFICATION_EMAIL_TO" envDefault:""`
 	// NotificationEmailURL - HTTP email API URL (e.g., https://api.sendgrid.com/v3/mail/send)
@@ -248,6 +252,8 @@ var Config = struct {
 	NotificationEmailAPIKey string `env:"FLAGR_NOTIFICATION_EMAIL_API_KEY" envDefault:""`
 	// NotificationEmailFrom - sender email address
 	NotificationEmailFrom string `env:"FLAGR_NOTIFICATION_EMAIL_FROM" envDefault:""`
+	// NotificationTimeout - timeout for sending notifications
+	NotificationTimeout time.Duration `env:"FLAGR_NOTIFICATION_TIMEOUT" envDefault:"10s"`
 
 	// WebPrefix - base path for web and API
 	// e.g. FLAGR_WEB_PREFIX=/foo

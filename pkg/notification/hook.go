@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 
+	"github.com/openflagr/flagr/pkg/config"
 	"github.com/pmezard/go-difflib/difflib"
 	"github.com/sirupsen/logrus"
 )
@@ -18,7 +18,8 @@ func SendNotification(operation Operation, entityType EntityType, entityID uint,
 			}
 		}()
 
-		ctx := context.Background()
+		ctx, cancel := context.WithTimeout(context.Background(), config.Config.NotificationTimeout)
+		defer cancel()
 		notifier := GetNotifier()
 
 		notif := Notification{
@@ -47,21 +48,6 @@ func SendNotification(operation Operation, entityType EntityType, entityID uint,
 
 func SendFlagNotification(operation Operation, flagID uint, flagKey string, description string, preValue string, postValue string, diff string, user string) {
 	SendNotification(operation, EntityTypeFlag, flagID, flagKey, description, preValue, postValue, diff, user)
-}
-
-func SendSegmentNotification(operation Operation, segmentID uint, flagID uint, user string) {
-	key := fmt.Sprintf("segment-%d-of-flag-%d", segmentID, flagID)
-	SendNotification(operation, EntityTypeSegment, segmentID, key, "", "", "", "", user)
-}
-
-func SendVariantNotification(operation Operation, variantID uint, flagID uint, variantKey, user string) {
-	key := fmt.Sprintf("variant-%s-of-flag-%d", variantKey, flagID)
-	SendNotification(operation, EntityTypeVariant, variantID, key, "", "", "", "", user)
-}
-
-func SendConstraintNotification(operation Operation, constraintID uint, segmentID uint, flagID uint, user string) {
-	key := fmt.Sprintf("constraint-%d-of-segment-%d", constraintID, segmentID)
-	SendNotification(operation, EntityTypeConstraint, constraintID, key, "", "", "", "", user)
 }
 
 func CalculateDiff(pre, post string) string {
