@@ -25,7 +25,11 @@ type FlagSnapshot struct {
 func SaveFlagSnapshot(db *gorm.DB, flagID uint, updatedBy string, operation notification.Operation) {
 	tx := db.Begin()
 	f := &Flag{}
-	// Use Unscoped to include soft-deleted flags (needed for delete notifications)
+	// Use Unscoped to include soft-deleted flags. This is necessary for:
+	// 1. Delete operations: we need to snapshot the flag after it's been soft-deleted
+	// 2. Restore operations: we need to update the flag that was previously soft-deleted
+	// This is safe because flagID comes from validated request params and the operation
+	// is explicitly tracked (create/update/delete/restore).
 	if err := tx.Unscoped().First(f, flagID).Error; err != nil {
 		logrus.WithFields(logrus.Fields{
 			"err":    err,
@@ -57,7 +61,8 @@ func SaveFlagSnapshot(db *gorm.DB, flagID uint, updatedBy string, operation noti
 	f.UpdatedBy = updatedBy
 	f.SnapshotID = fs.ID
 
-	// Use Unscoped to ensure we can update soft-deleted flags (e.g., after delete)
+	// Use Unscoped to update soft-deleted flags (e.g., after delete operation).
+	// Without Unscoped(), GORM would add "deleted_at IS NULL" condition and fail.
 	if err := tx.Unscoped().Save(f).Error; err != nil {
 		logrus.WithFields(logrus.Fields{
 			"err":            err,

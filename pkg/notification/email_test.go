@@ -65,6 +65,22 @@ func TestEmailNotifier(t *testing.T) {
 		assert.Contains(t, body, "delete segment")
 	})
 
+	t.Run("formats body correctly for restore", func(t *testing.T) {
+		n := Notification{
+			Operation:  OperationRestore,
+			EntityType: EntityTypeFlag,
+			EntityKey:  "restored-flag",
+			EntityID:   42,
+			User:       "admin@example.com",
+		}
+		body := formatEmailBody(n)
+		assert.Contains(t, body, "♻️")
+		assert.Contains(t, body, "restore flag")
+		assert.Contains(t, body, "Key: restored-flag")
+		assert.Contains(t, body, "ID: 42")
+		assert.Contains(t, body, "User: admin@example.com")
+	})
+
 	t.Run("formats body correctly with description and values", func(t *testing.T) {
 		n := Notification{
 			Operation:   "update",

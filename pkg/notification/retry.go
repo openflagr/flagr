@@ -43,17 +43,25 @@ func doRequestWithRetry(ctx context.Context, client *http.Client, req *http.Requ
 		// Don't close body here; caller will handle it if resp is returned
 
 		if resp.StatusCode < 500 {
+			// Close any previous failed response body before returning success
+			if lastResp != nil {
+				lastResp.Body.Close()
+			}
 			return resp, nil // Success or client error (4xx) is considered final; no retry on 4xx
 		}
 
 		// 5xx - retryable
+		// Close previous lastResp.Body before overwriting to prevent resource leak
+		if lastResp != nil {
+			lastResp.Body.Close()
+		}
 		lastResp = resp
 		lastErr = fmt.Errorf("HTTP %d error", resp.StatusCode)
 		if attempt < maxRetries {
 			delay = minDuration(2*delay, maxDelay)
 			continue
 		}
-		// Final attempt failed with 5xx
+		// Final attempt failed with 5xx - caller is responsible for closing body
 		return resp, lastErr
 	}
 

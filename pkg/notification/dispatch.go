@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sync"
 
 	"github.com/openflagr/flagr/pkg/config"
 	"github.com/pmezard/go-difflib/difflib"
@@ -34,19 +35,25 @@ func recordNotificationMetrics(provider string, operation Operation, entityType 
 }
 
 func sendNotification(operation Operation, entityType EntityType, entityID uint, entityKey string, description string, preValue string, postValue string, diff string, user string) {
+	// Capture notifiers BEFORE spawning goroutine to avoid test pollution
+	// when Notifiers is modified between test runs
+	notifiers := GetNotifiers()
+	if len(notifiers) == 0 {
+		return
+	}
+
 	go func() {
 		// Acquire semaphore slot
 		notificationSemaphore <- struct{}{}
 		defer func() {
 			<-notificationSemaphore
 			if r := recover(); r != nil {
-				logrus.WithField("panic", r).Error("panic in SendNotification")
+				logrus.WithField("panic", r).Error("panic in sendNotification")
 			}
 		}()
 
 		ctx, cancel := context.WithTimeout(context.Background(), config.Config.NotificationTimeout)
 		defer cancel()
-		notifier := GetNotifier()
 
 		notif := Notification{
 			Operation:   operation,
@@ -61,17 +68,37 @@ func sendNotification(operation Operation, entityType EntityType, entityID uint,
 			Details:     make(map[string]any),
 		}
 
-		err := notifier.Send(ctx, notif)
-		if err != nil {
+		// Send to all notifiers concurrently, aggregate errors
+		var (
+			wg   sync.WaitGroup
+			mu   sync.Mutex
+			errs []error
+		)
+
+		for _, notifier := range notifiers {
+			wg.Add(1)
+			go func(n Notifier) {
+				defer wg.Done()
+				err := n.Send(ctx, notif)
+				recordNotificationMetrics(n.Name(), operation, entityType, err == nil)
+				if err != nil {
+					mu.Lock()
+					errs = append(errs, fmt.Errorf("%s: %w", n.Name(), err))
+					mu.Unlock()
+				}
+			}(notifier)
+		}
+
+		wg.Wait()
+
+		if len(errs) > 0 {
 			logrus.WithFields(logrus.Fields{
 				"operation":  operation,
 				"entityType": entityType,
 				"entityID":   entityID,
-				"error":      err,
-			}).Warn("failed to send notification")
+				"errors":     errs,
+			}).Warn("failed to send notifications to some providers")
 		}
-		// Record metrics regardless of success/failure for observability
-		recordNotificationMetrics(notifier.Name(), operation, entityType, err == nil)
 	}()
 }
 

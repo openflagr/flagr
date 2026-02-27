@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	"github.com/openflagr/flagr/pkg/config"
-	"github.com/sirupsen/logrus"
 )
 
 type Notifier interface {
@@ -46,44 +45,39 @@ type Notification struct {
 }
 
 var (
-	singletonNotifier Notifier
-	once              sync.Once
+	// Notifiers is the list of configured notifiers. Set directly for testing.
+	Notifiers []Notifier
+	once      sync.Once
 )
 
-// SetNotifier sets the global notifier, useful for testing
-func SetNotifier(n Notifier) {
-	singletonNotifier = n
-}
-
-func GetNotifier() Notifier {
-	if singletonNotifier != nil {
-		return singletonNotifier
+// GetNotifiers returns the list of configured notifiers.
+// It initializes the notifiers on first call using sync.Once.
+// For testing, set Notifiers directly before calling GetNotifiers.
+func GetNotifiers() []Notifier {
+	// If already set (e.g., by tests), return immediately
+	if len(Notifiers) > 0 {
+		return Notifiers
 	}
 
 	once.Do(func() {
-		if !config.Config.NotificationEnabled {
-			singletonNotifier = &nullNotifier{}
-			return
+		if config.Config.NotificationSlackEnabled {
+			if sn := NewSlackNotifier(); sn != nil {
+				Notifiers = append(Notifiers, sn)
+			}
 		}
-
-		switch config.Config.NotificationProvider {
-		case "slack":
-			singletonNotifier = NewSlackNotifier()
-		case "email":
-			singletonNotifier = NewEmailNotifier()
-		case "webhook":
-			singletonNotifier = NewWebhookNotifier()
-		default:
-			logrus.Warnf("unknown notification provider: %s, using null notifier", config.Config.NotificationProvider)
-			singletonNotifier = &nullNotifier{}
+		if config.Config.NotificationEmailEnabled {
+			if en := NewEmailNotifier(); en != nil {
+				Notifiers = append(Notifiers, en)
+			}
+		}
+		if config.Config.NotificationWebhookEnabled {
+			if wn := NewWebhookNotifier(); wn != nil {
+				Notifiers = append(Notifiers, wn)
+			}
 		}
 	})
 
-	if singletonNotifier == nil {
-		return &nullNotifier{}
-	}
-
-	return singletonNotifier
+	return Notifiers
 }
 
 type nullNotifier struct{}

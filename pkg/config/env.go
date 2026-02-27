@@ -230,28 +230,9 @@ var Config = struct {
 	BasicAuthPrefixWhitelistPaths []string `env:"FLAGR_BASIC_AUTH_WHITELIST_PATHS" envDefault:"/api/v1/health,/api/v1/flags,/api/v1/evaluation" envSeparator:","`
 	BasicAuthExactWhitelistPaths  []string `env:"FLAGR_BASIC_AUTH_EXACT_WHITELIST_PATHS" envDefault:"" envSeparator:","`
 
-	// NotificationEnabled - enable notifications for CRUD operations
-	NotificationEnabled bool `env:"FLAGR_NOTIFICATION_ENABLED" envDefault:"false"`
+	// ===== Notification - Global Settings =====
 	// NotificationDetailedDiffEnabled - notify detailed diff of pre and post values
 	NotificationDetailedDiffEnabled bool `env:"FLAGR_NOTIFICATION_DETAILED_DIFF_ENABLED" envDefault:"false"`
-	// NotificationProvider - notification provider to use (slack, email, discord, etc.)
-	NotificationProvider string `env:"FLAGR_NOTIFICATION_PROVIDER" envDefault:"slack"`
-	// NotificationSlackWebhookURL - Slack webhook URL for notifications
-	NotificationSlackWebhookURL string `env:"FLAGR_NOTIFICATION_SLACK_WEBHOOK_URL" envDefault:""`
-	// NotificationSlackChannel - Slack channel to send notifications to
-	NotificationSlackChannel string `env:"FLAGR_NOTIFICATION_SLACK_CHANNEL" envDefault:""`
-	// NotificationWebhookURL - Webhook URL for generic notifications
-	NotificationWebhookURL string `env:"FLAGR_NOTIFICATION_WEBHOOK_URL" envDefault:""`
-	// NotificationWebhookHeaders - Webhook Headers for generic notifications, e.g. "Authorization: Bearer token,X-Custom-Header: value"
-	NotificationWebhookHeaders string `env:"FLAGR_NOTIFICATION_WEBHOOK_HEADERS" envDefault:""`
-	// NotificationEmailTo - recipient email address
-	NotificationEmailTo string `env:"FLAGR_NOTIFICATION_EMAIL_TO" envDefault:""`
-	// NotificationEmailURL - HTTP email API URL (e.g., https://api.sendgrid.com/v3/mail/send)
-	NotificationEmailURL string `env:"FLAGR_NOTIFICATION_EMAIL_URL" envDefault:""`
-	// NotificationEmailAPIKey - API key for email service
-	NotificationEmailAPIKey string `env:"FLAGR_NOTIFICATION_EMAIL_API_KEY" envDefault:""`
-	// NotificationEmailFrom - sender email address
-	NotificationEmailFrom string `env:"FLAGR_NOTIFICATION_EMAIL_FROM" envDefault:""`
 	// NotificationTimeout - timeout for sending notifications
 	NotificationTimeout time.Duration `env:"FLAGR_NOTIFICATION_TIMEOUT" envDefault:"10s"`
 	// NotificationMaxRetries - maximum number of retry attempts for HTTP notifications
@@ -260,6 +241,34 @@ var Config = struct {
 	NotificationRetryBase time.Duration `env:"FLAGR_NOTIFICATION_RETRY_BASE" envDefault:"1s"`
 	// NotificationRetryMax - maximum delay between retries
 	NotificationRetryMax time.Duration `env:"FLAGR_NOTIFICATION_RETRY_MAX" envDefault:"10s"`
+
+	// ===== Notification - Slack Provider =====
+	// NotificationSlackEnabled - enable Slack notifications
+	NotificationSlackEnabled bool `env:"FLAGR_NOTIFICATION_SLACK_ENABLED" envDefault:"false"`
+	// NotificationSlackWebhookURL - Slack webhook URL for notifications
+	NotificationSlackWebhookURL string `env:"FLAGR_NOTIFICATION_SLACK_WEBHOOK_URL" envDefault:""`
+	// NotificationSlackChannel - Slack channel to send notifications to
+	NotificationSlackChannel string `env:"FLAGR_NOTIFICATION_SLACK_CHANNEL" envDefault:""`
+
+	// ===== Notification - Email Provider =====
+	// NotificationEmailEnabled - enable email notifications
+	NotificationEmailEnabled bool `env:"FLAGR_NOTIFICATION_EMAIL_ENABLED" envDefault:"false"`
+	// NotificationEmailURL - HTTP email API URL (e.g., https://api.sendgrid.com/v3/mail/send)
+	NotificationEmailURL string `env:"FLAGR_NOTIFICATION_EMAIL_URL" envDefault:""`
+	// NotificationEmailAPIKey - API key for email service
+	NotificationEmailAPIKey string `env:"FLAGR_NOTIFICATION_EMAIL_API_KEY" envDefault:""`
+	// NotificationEmailFrom - sender email address
+	NotificationEmailFrom string `env:"FLAGR_NOTIFICATION_EMAIL_FROM" envDefault:""`
+	// NotificationEmailTo - recipient email address
+	NotificationEmailTo string `env:"FLAGR_NOTIFICATION_EMAIL_TO" envDefault:""`
+
+	// ===== Notification - Webhook Provider =====
+	// NotificationWebhookEnabled - enable generic webhook notifications
+	NotificationWebhookEnabled bool `env:"FLAGR_NOTIFICATION_WEBHOOK_ENABLED" envDefault:"false"`
+	// NotificationWebhookURL - Webhook URL for generic notifications
+	NotificationWebhookURL string `env:"FLAGR_NOTIFICATION_WEBHOOK_URL" envDefault:""`
+	// NotificationWebhookHeaders - Webhook Headers for generic notifications, e.g. "Authorization: Bearer token,X-Custom-Header: value"
+	NotificationWebhookHeaders string `env:"FLAGR_NOTIFICATION_WEBHOOK_HEADERS" envDefault:""`
 
 	// WebPrefix - base path for web and API
 	// e.g. FLAGR_WEB_PREFIX=/foo

@@ -19,8 +19,9 @@ func TestHandlerNotifications(t *testing.T) {
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	mockNotifier := notification.NewMockNotifier()
-	notification.SetNotifier(mockNotifier)
-	defer notification.SetNotifier(nil)
+	// Use gostub to set notifiers and reset via defer
+	stubs := gostub.Stub(&notification.Notifiers, []notification.Notifier{mockNotifier})
+	defer stubs.Reset()
 
 	c := NewCRUD()
 

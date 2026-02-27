@@ -95,6 +95,8 @@ func formatEmailBody(n Notification) string {
 		emoji = "✏️"
 	case OperationDelete:
 		emoji = "🗑️"
+	case OperationRestore:
+		emoji = "♻️"
 	default:
 		emoji = "ℹ️"
 	}
