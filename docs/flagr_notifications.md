@@ -19,12 +19,19 @@ The following operations trigger notifications:
 
 ## Global Configuration
 
-You must globally enable the notifications feature via environment variables.
+Notifications are enabled automatically when at least one provider is configured. No global toggle is required.
 
-- `FLAGR_NOTIFICATION_ENABLED=true` (Default: `false`) - Globally toggles the notification subsystem.
 - `FLAGR_NOTIFICATION_PROVIDER=slack` (Options: `slack`, `email`, `webhook`) - Determines the active transport channel.
 - `FLAGR_NOTIFICATION_DETAILED_DIFF_ENABLED=true` (Default: `false`) - When enabled, Flagr will embed the precise visual JSON diff of the modified entity within the notification payload.
 - `FLAGR_NOTIFICATION_TIMEOUT=10s` (Default: `10s`) - Configures the timeout window for dialing external notification webhooks and email APIs.
+
+### Provider Configuration
+
+Enable at least one provider to activate the notification system:
+
+- `FLAGR_NOTIFICATION_SLACK_ENABLED=true` (Default: `false`) - Enable Slack notifications
+- `FLAGR_NOTIFICATION_EMAIL_ENABLED=true` (Default: `false`) - Enable email notifications  
+- `FLAGR_NOTIFICATION_WEBHOOK_ENABLED=true` (Default: `false`) - Enable generic webhook notifications
 
 ### Retry Configuration (HTTP providers only)
 
@@ -40,11 +47,9 @@ You must globally enable the notifications feature via environment variables.
 ### Important Notes
 
 - **Asynchronous delivery**: Notifications are sent in background goroutines. Failures are logged but **do not affect the API response**.
-- **Startup validation**: When `FLAGR_NOTIFICATION_ENABLED=true`, Flagr validates the configuration based on the selected provider and logs warnings if required settings are missing. Notifications will be silently dropped until properly configured.
+- **Startup validation**: Flagr validates the notification configuration at startup and logs warnings if required settings are missing for the enabled providers. Notifications will be silently dropped until properly configured.
 
-## Provider Configuration
-
-Depending on the `FLAGR_NOTIFICATION_PROVIDER` selected above, configure the target transport mechanism:
+## Provider Settings
 
 ### 1. Slack
 
