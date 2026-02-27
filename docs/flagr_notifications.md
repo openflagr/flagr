@@ -47,7 +47,8 @@ Enable at least one provider to activate the notification system:
 ### Important Notes
 
 - **Asynchronous delivery**: Notifications are sent in background goroutines. Failures are logged but **do not affect the API response**.
-- **Startup validation**: Flagr validates the notification configuration at startup and logs warnings if required settings are missing for the enabled providers. Notifications will be silently dropped until properly configured.
+- **Startup validation**: Flagr validates the notification configuration at startup and logs warnings if required settings are missing for enabled providers.
+- **Silent fallback**: If a provider is enabled (e.g., `FLAGR_NOTIFICATION_SLACK_ENABLED=true`) but its required settings are missing (e.g., `FLAGR_NOTIFICATION_SLACK_WEBHOOK_URL`), notifications for that provider will be silently dropped. A warning is logged at startup to help diagnose misconfiguration.
 
 ## Provider Settings
 
