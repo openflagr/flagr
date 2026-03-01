@@ -155,6 +155,18 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 			return middleware.NotImplemented("operation variant.FindVariants has not yet been implemented")
 		}),
 
+		EvaluationGetEvaluationHandler: evaluation.GetEvaluationHandlerFunc(func(params evaluation.GetEvaluationParams) middleware.Responder {
+			_ = params
+
+			return middleware.NotImplemented("operation evaluation.GetEvaluation has not yet been implemented")
+		}),
+
+		EvaluationGetEvaluationBatchHandler: evaluation.GetEvaluationBatchHandlerFunc(func(params evaluation.GetEvaluationBatchParams) middleware.Responder {
+			_ = params
+
+			return middleware.NotImplemented("operation evaluation.GetEvaluationBatch has not yet been implemented")
+		}),
+
 		ExportGetExportEvalCacheJSONHandler: export.GetExportEvalCacheJSONHandlerFunc(func(params export.GetExportEvalCacheJSONParams) middleware.Responder {
 			_ = params
 
@@ -324,6 +336,10 @@ type FlagrAPI struct {
 	TagFindTagsHandler tag.FindTagsHandler
 	// VariantFindVariantsHandler sets the operation handler for the find variants operation
 	VariantFindVariantsHandler variant.FindVariantsHandler
+	// EvaluationGetEvaluationHandler sets the operation handler for the get evaluation operation
+	EvaluationGetEvaluationHandler evaluation.GetEvaluationHandler
+	// EvaluationGetEvaluationBatchHandler sets the operation handler for the get evaluation batch operation
+	EvaluationGetEvaluationBatchHandler evaluation.GetEvaluationBatchHandler
 	// ExportGetExportEvalCacheJSONHandler sets the operation handler for the get export eval cache JSON operation
 	ExportGetExportEvalCacheJSONHandler export.GetExportEvalCacheJSONHandler
 	// ExportGetExportSqliteHandler sets the operation handler for the get export sqlite operation
@@ -486,6 +502,12 @@ func (o *FlagrAPI) Validate() error {
 	}
 	if o.VariantFindVariantsHandler == nil {
 		unregistered = append(unregistered, "variant.FindVariantsHandler")
+	}
+	if o.EvaluationGetEvaluationHandler == nil {
+		unregistered = append(unregistered, "evaluation.GetEvaluationHandler")
+	}
+	if o.EvaluationGetEvaluationBatchHandler == nil {
+		unregistered = append(unregistered, "evaluation.GetEvaluationBatchHandler")
 	}
 	if o.ExportGetExportEvalCacheJSONHandler == nil {
 		unregistered = append(unregistered, "export.GetExportEvalCacheJSONHandler")
@@ -696,6 +718,14 @@ func (o *FlagrAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/flags/{flagID}/variants"] = variant.NewFindVariants(o.context, o.VariantFindVariantsHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/evaluation"] = evaluation.NewGetEvaluation(o.context, o.EvaluationGetEvaluationHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/evaluation/batch"] = evaluation.NewGetEvaluationBatch(o.context, o.EvaluationGetEvaluationBatchHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
