@@ -3,7 +3,7 @@ package handler
 import (
 	"context"
 
-	"cloud.google.com/go/pubsub"
+	"cloud.google.com/go/pubsub/v2"
 	"github.com/openflagr/flagr/pkg/config"
 	"github.com/openflagr/flagr/swagger_gen/models"
 	"github.com/sirupsen/logrus"
@@ -12,7 +12,7 @@ import (
 
 type pubsubRecorder struct {
 	producer *pubsub.Client
-	topic    *pubsub.Topic
+	publisher *pubsub.Publisher
 	options  DataRecordFrameOptions
 }
 
@@ -35,7 +35,7 @@ var NewPubsubRecorder = func() DataRecorder {
 
 	return &pubsubRecorder{
 		producer: client,
-		topic:    client.Topic(config.Config.RecorderPubsubTopicName),
+		publisher: client.Publisher(config.Config.RecorderPubsubTopicName),
 		options: DataRecordFrameOptions{
 			Encrypted:       false, // not implemented yet
 			FrameOutputMode: config.Config.RecorderFrameOutputMode,
@@ -58,7 +58,7 @@ func (p *pubsubRecorder) AsyncRecord(r models.EvalResult) {
 		return
 	}
 	ctx := context.Background()
-	res := p.topic.Publish(ctx, &pubsub.Message{Data: output})
+	res := p.publisher.Publish(ctx, &pubsub.Message{Data: output})
 	if config.Config.RecorderPubsubVerbose {
 		go func() {
 			ctx, cancel := context.WithTimeout(ctx, config.Config.RecorderPubsubVerboseCancelTimeout)
