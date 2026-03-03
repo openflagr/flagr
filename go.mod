@@ -53,7 +53,6 @@ require (
 )
 
 require (
-	cloud.google.com/go/pubsub v1.50.1
 	github.com/glebarez/sqlite v1.6.0
 	github.com/newrelic/go-agent v2.1.0+incompatible
 	gorm.io/driver/mysql v1.4.5
@@ -62,6 +61,7 @@ require (
 )
 
 require (
+	cloud.google.com/go/pubsub/v2 v2.0.0
 	github.com/aws/aws-sdk-go-v2/config v1.32.5
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.42.3
 	github.com/nikoksr/notify v1.5.0
@@ -73,7 +73,6 @@ require (
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
 	cloud.google.com/go/compute/metadata v0.9.0 // indirect
 	cloud.google.com/go/iam v1.5.3 // indirect
-	cloud.google.com/go/pubsub/v2 v2.0.0 // indirect
 	github.com/DataDog/datadog-agent/pkg/obfuscate v0.41.1 // indirect
 	github.com/DataDog/datadog-agent/pkg/remoteconfig/state v0.42.0-rc.5 // indirect
 	github.com/DataDog/datadog-go/v5 v5.2.0 // indirect
