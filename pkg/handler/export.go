@@ -100,8 +100,8 @@ var exportFlagEntityTypes = func(tmpDB *gorm.DB) error {
 	return nil
 }
 
-var exportEvalCacheJSONHandler = func(export.GetExportEvalCacheJSONParams) middleware.Responder {
+var exportEvalCacheJSONHandler = func(query export.GetExportEvalCacheJSONParams) middleware.Responder {
 	return export.NewGetExportEvalCacheJSONOK().WithPayload(
-		GetEvalCache().export(),
+		GetEvalCache().export(query),
 	)
 }
