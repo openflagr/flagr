@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@iktakahiro/markdown-it-katex": "^4.0.0",
-    "axios": "^1.8.2",
+    "axios": "^1.13.5",
     "core-js": "^3.4.4",
     "diff": "^3.4.0",
     "element-ui": "^2.4.6",
