@@ -23,6 +23,8 @@ import (
 
 // Eval is the Eval interface
 type Eval interface {
+	GetEvaluation(evaluation.GetEvaluationParams) middleware.Responder
+	GetEvaluationBatch(evaluation.GetEvaluationBatchParams) middleware.Responder
 	PostEvaluation(evaluation.PostEvaluationParams) middleware.Responder
 	PostEvaluationBatch(evaluation.PostEvaluationBatchParams) middleware.Responder
 }
@@ -33,6 +35,79 @@ func NewEval() Eval {
 }
 
 type eval struct{}
+
+func (e *eval) GetEvaluation(params evaluation.GetEvaluationParams) middleware.Responder {
+	var evaluationEntity models.GetEvaluationEntity
+	err := json.Unmarshal([]byte(params.Entity), &evaluationEntity)
+	if err != nil {
+		return evaluation.NewGetEvaluationDefault(400).WithPayload(
+			ErrorMessage("entity in not a valid evaluation entity"))
+	}
+	flagTagsOperator := "ANY"
+	if params.All != nil && *params.All {
+		flagTagsOperator = "ALL"
+	}
+	evalContext := models.EvalContext{
+		EntityID:         evaluationEntity.ID,
+		EntityType:       evaluationEntity.Type,
+		EntityContext:    evaluationEntity.Ctx,
+		FlagTags:         params.Tags,
+		FlagTagsOperator: &flagTagsOperator,
+	}
+	if params.Dbg != nil && *params.Dbg {
+		evalContext.EnableDebug = true
+	}
+	if params.ID != nil {
+		evalContext.FlagID = *params.ID
+	}
+	if params.Key != nil {
+		evalContext.FlagKey = *params.Key
+	}
+
+	evalResult := EvalFlag(evalContext)
+	resp := evaluation.NewPostEvaluationOK()
+	resp.SetPayload(evalResult)
+	return resp
+}
+
+func (e *eval) GetEvaluationBatch(params evaluation.GetEvaluationBatchParams) middleware.Responder {
+	var evaluationEntities []*models.EvaluationEntity
+	for _, rawEntity := range params.Entity {
+		var getEvaluationEntity models.GetEvaluationEntity
+		err := json.Unmarshal([]byte(rawEntity), &getEvaluationEntity)
+		evaluationEntity := models.EvaluationEntity{
+			EntityID:      getEvaluationEntity.ID,
+			EntityContext: getEvaluationEntity.Ctx,
+			EntityType:    getEvaluationEntity.Type,
+		}
+		if err != nil {
+			return evaluation.NewGetEvaluationBatchDefault(400).WithPayload(
+				ErrorMessage("entity is not a valid evaluation entity: %s", rawEntity))
+		}
+		evaluationEntities = append(evaluationEntities, &evaluationEntity)
+	}
+	flagTagsOperator := "ANY"
+	if params.All != nil && *params.All {
+		flagTagsOperator = "ALL"
+	}
+	var enableDebug = false
+	if params.Dbg != nil && *params.Dbg {
+		enableDebug = true
+	}
+
+	results := EvaluateBatch(
+		evaluationEntities,
+		params.Ids,
+		params.Keys,
+		params.Tags,
+		&flagTagsOperator,
+		enableDebug,
+	)
+
+	resp := evaluation.NewPostEvaluationBatchOK()
+	resp.SetPayload(results)
+	return resp
+}
 
 func (e *eval) PostEvaluation(params evaluation.PostEvaluationParams) middleware.Responder {
 	evalContext := params.Body
@@ -48,11 +123,28 @@ func (e *eval) PostEvaluation(params evaluation.PostEvaluationParams) middleware
 }
 
 func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) middleware.Responder {
-	entities := params.Body.Entities
-	flagIDs := params.Body.FlagIDs
-	flagKeys := params.Body.FlagKeys
-	flagTags := params.Body.FlagTags
-	flagTagsOperator := params.Body.FlagTagsOperator
+	results := EvaluateBatch(
+		params.Body.Entities,
+		params.Body.FlagIDs,
+		params.Body.FlagKeys,
+		params.Body.FlagTags,
+		params.Body.FlagTagsOperator,
+		params.Body.EnableDebug,
+	)
+
+	resp := evaluation.NewPostEvaluationBatchOK()
+	resp.SetPayload(results)
+	return resp
+}
+
+func EvaluateBatch(
+	evaluationEntities []*models.EvaluationEntity,
+	flagIDs []int64,
+	flagKeys []string,
+	flagTags []string,
+	flagTagsOperator *string,
+	enableDebug bool,
+) *models.EvaluationBatchResponse {
 	results := &models.EvaluationBatchResponse{}
 
 	// Deduplicate flagKeys to prevent DoS via repeated keys
@@ -96,13 +188,13 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 	}
 
 	// TODO make it concurrent
-	for _, entity := range entities {
+	for _, evaluationEntity := range evaluationEntities {
 		if len(flagTags) > 0 {
 			evalContext := models.EvalContext{
-				EnableDebug:      params.Body.EnableDebug,
-				EntityContext:    entity.EntityContext,
-				EntityID:         entity.EntityID,
-				EntityType:       entity.EntityType,
+				EnableDebug:      enableDebug,
+				EntityContext:    evaluationEntity.EntityContext,
+				EntityID:         evaluationEntity.EntityID,
+				EntityType:       evaluationEntity.EntityType,
 				FlagTags:         flagTags,
 				FlagTagsOperator: flagTagsOperator,
 			}
@@ -111,10 +203,10 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 		}
 		for _, flagID := range flagIDs {
 			evalContext := models.EvalContext{
-				EnableDebug:   params.Body.EnableDebug,
-				EntityContext: entity.EntityContext,
-				EntityID:      entity.EntityID,
-				EntityType:    entity.EntityType,
+				EnableDebug:   enableDebug,
+				EntityContext: evaluationEntity.EntityContext,
+				EntityID:      evaluationEntity.EntityID,
+				EntityType:    evaluationEntity.EntityType,
 				FlagID:        flagID,
 			}
 
@@ -123,10 +215,10 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 		}
 		for _, flagKey := range flagKeys {
 			evalContext := models.EvalContext{
-				EnableDebug:   params.Body.EnableDebug,
-				EntityContext: entity.EntityContext,
-				EntityID:      entity.EntityID,
-				EntityType:    entity.EntityType,
+				EnableDebug:   enableDebug,
+				EntityContext: evaluationEntity.EntityContext,
+				EntityID:      evaluationEntity.EntityID,
+				EntityType:    evaluationEntity.EntityType,
 				FlagKey:       flagKey,
 			}
 
@@ -135,9 +227,7 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 		}
 	}
 
-	resp := evaluation.NewPostEvaluationBatchOK()
-	resp.SetPayload(results)
-	return resp
+	return results
 }
 
 // BlankResult creates a blank result

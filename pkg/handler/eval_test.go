@@ -559,6 +559,46 @@ func TestEvalFlagsByTags(t *testing.T) {
 	})
 }
 
+func TestGetEvaluation(t *testing.T) {
+	t.Run("test empty query", func(t *testing.T) {
+		defer gostub.StubFunc(&EvalFlag, &models.EvalResult{}).Reset()
+		e := NewEval()
+		resp := e.GetEvaluation(evaluation.GetEvaluationParams{})
+		assert.NotNil(t, resp)
+	})
+
+	t.Run("test happy code path", func(t *testing.T) {
+		defer gostub.StubFunc(&EvalFlag, &models.EvalResult{}).Reset()
+		e := NewEval()
+		enableDebug := true
+		flagID := int64(100)
+		resp := e.GetEvaluation(evaluation.GetEvaluationParams{
+			Entity: "{\"id\":\"entityID1\",\"type\":\"entityType1\",\"ctx\":{\"dl_state\":\"CA\",\"state\":\"NY\"}}",
+			ID:     &flagID,
+			Dbg:    &enableDebug,
+		})
+		assert.NotNil(t, resp)
+	})
+}
+
+func TestGetEvaluationBatch(t *testing.T) {
+	t.Run("test happy code path", func(t *testing.T) {
+		defer gostub.StubFunc(&EvalFlag, &models.EvalResult{}).Reset()
+		e := NewEval()
+		enableDebug := true
+		resp := e.GetEvaluationBatch(evaluation.GetEvaluationBatchParams{
+			Dbg: &enableDebug,
+			Entity: []string{
+				"{\"id\":\"entityID1\",\"type\":\"entityType1\",\"ctx\":{\"dl_state\":\"CA\",\"state\":\"NY\"}}",
+				"{\"id\":\"entityID2\",\"type\":\"entityType2\",\"ctx\":{\"dl_state\":\"CA\",\"state\":\"NY\"}}",
+			},
+			Ids:  []int64{100, 200},
+			Keys: []string{"flag_key_1", "flag_key_2"},
+		})
+		assert.NotNil(t, resp)
+	})
+}
+
 func TestPostEvaluation(t *testing.T) {
 	t.Run("test empty body", func(t *testing.T) {
 		defer gostub.StubFunc(&EvalFlag, &models.EvalResult{}).Reset()
