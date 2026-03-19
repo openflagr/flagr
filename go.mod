@@ -46,9 +46,9 @@ require (
 	github.com/yadvendar/negroni-newrelic-go-agent v0.0.0-20160803090806-3dc58758cb67
 	github.com/zhouzhuojie/conditions v0.2.3
 	github.com/zhouzhuojie/withtimeout v0.0.0-20190405051827-12b39eb2edd5
-	golang.org/x/net v0.47.0
+	golang.org/x/net v0.48.0
 	google.golang.org/api v0.247.0
-	google.golang.org/grpc v1.74.2
+	google.golang.org/grpc v1.79.3
 	gopkg.in/DataDog/dd-trace-go.v1 v1.46.0
 )
 
@@ -69,7 +69,7 @@ require (
 require (
 	cloud.google.com/go/auth v0.16.4 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
-	cloud.google.com/go/compute/metadata v0.8.0 // indirect
+	cloud.google.com/go/compute/metadata v0.9.0 // indirect
 	cloud.google.com/go/iam v1.5.2 // indirect
 	github.com/DataDog/datadog-agent/pkg/obfuscate v0.41.1 // indirect
 	github.com/DataDog/datadog-agent/pkg/remoteconfig/state v0.42.0-rc.5 // indirect
@@ -164,19 +164,19 @@ require (
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	go4.org/intern v0.0.0-20220617035311-6925f38cc365 // indirect
 	go4.org/unsafe/assume-no-moving-gc v0.0.0-20220617031537-928513b29760 // indirect
-	golang.org/x/crypto v0.45.0 // indirect
-	golang.org/x/mod v0.29.0 // indirect
-	golang.org/x/oauth2 v0.30.0 // indirect
-	golang.org/x/sync v0.18.0 // indirect
+	golang.org/x/crypto v0.46.0 // indirect
+	golang.org/x/mod v0.30.0 // indirect
+	golang.org/x/oauth2 v0.34.0 // indirect
+	golang.org/x/sync v0.19.0 // indirect
 	golang.org/x/sys v0.40.0 // indirect
-	golang.org/x/text v0.31.0 // indirect
+	golang.org/x/text v0.32.0 // indirect
 	golang.org/x/time v0.12.0 // indirect
-	golang.org/x/tools v0.38.0 // indirect
+	golang.org/x/tools v0.39.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/genproto v0.0.0-20250603155806-513f23925822 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20250721164621-a45f3dfb1074 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250818200422-3122310a409c // indirect
-	google.golang.org/protobuf v1.36.8 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20251202230838-ff82c1b0f217 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20251202230838-ff82c1b0f217 // indirect
+	google.golang.org/protobuf v1.36.10 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	inet.af/netaddr v0.0.0-20220811202034-502d2d690317 // indirect
 	modernc.org/libc v1.22.5 // indirect
