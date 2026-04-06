@@ -20,17 +20,17 @@ services:
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
       MYSQL_DATABASE: "flagr"
 
-  postgres13:
-    image: postgres:13
-    container_name: flagr-postgres13
+  postgres14:
+    image: 063399264027.dkr.ecr.eu-west-1.amazonaws.com/tradeshift-base/tradeshift-postgres-alpine-14-alpine:latest
+    container_name: flagr-postgres14
     environment:
       POSTGRES_PASSWORD: "test"
       POSTGRES_USER: "test"
       POSTGRES_DB: "flagr"
 
-  postgres9:
-    image: postgres:9
-    container_name: flagr-postgres9
+  postgres16:
+    image: 063399264027.dkr.ecr.eu-west-1.amazonaws.com/tradeshift-base/tradeshift-postgres-alpine-16-alpine:latest
+    container_name: flagr-postgres16
     environment:
       POSTGRES_PASSWORD: "test"
       POSTGRES_USER: "test"
@@ -64,14 +64,14 @@ services:
       FLAGR_DB_DBCONNECTIONSTR: "root:@tcp(mysql8:3306)/flagr?parseTime=true"
     command: sh -c "sleep 15 && ./flagr"
 
-  flagr_with_postgres9:
+  flagr_with_postgres14:
     image: flagr_integration_tests
     environment:
       FLAGR_DB_DBDRIVER: "postgres"
       FLAGR_DB_DBCONNECTIONSTR: "sslmode=disable host=postgres9 user=test password=test dbname=flagr"
     command: sh -c "sleep 15 && ./flagr"
 
-  flagr_with_postgres13:
+  flagr_with_postgres16:
     image: flagr_integration_tests
     environment:
       FLAGR_DB_DBDRIVER: "postgres"

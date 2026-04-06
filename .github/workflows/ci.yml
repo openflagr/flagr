@@ -10,11 +10,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: 1.21
       - name: Check out source code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - run: echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
       - run: make deps
       - run: make verify_swagger_nochange
@@ -24,18 +24,25 @@ jobs:
   ui_lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: "16"
       - name: Check out source code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - run: cd browser/flagr-ui && npm install
       - run: cd browser/flagr-ui && npm run lint
   integration_test:
     runs-on: ubuntu-latest
     steps:
       - name: Check out source code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+      - name: Docker Auth
+        uses: tradeshift/actions-docker@v1
+        with:
+          registry: 063399264027.dkr.ecr.eu-west-1.amazonaws.com/tradeshift-base
+          auth-only: true
+          aws-access-key-id: ${{ secrets.ECR_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.ECR_AWS_SECRET_ACCESS_KEY }
       - run: cd integration_tests && make build-image
       - run: cd integration_tests && make down
       - run: cd integration_tests && make up
@@ -43,7 +50,7 @@ jobs:
   actionlint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Download actionlint
         id: get_actionlint
         run: bash <(curl https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
@@ -54,7 +61,7 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: tradeshift/actions-docker@v1
         with:
           repository: 063399264027.dkr.ecr.eu-west-1.amazonaws.com/tradeshift-base/openflagr

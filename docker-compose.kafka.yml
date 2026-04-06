@@ -19,7 +19,7 @@ mysql8:
     - "18101:3306"
 
 postgres:
-  image: postgres:13
+  image: 063399264027.dkr.ecr.eu-west-1.amazonaws.com/tradeshift-base/tradeshift-postgres-alpine-16-alpine:latest
   container_name: flagr-postgres
   environment:
     POSTGRES_PASSWORD: "test"
