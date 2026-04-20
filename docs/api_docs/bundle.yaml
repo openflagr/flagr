@@ -878,7 +878,7 @@ paths:
       parameters:
         - in: body
           name: body
-          description: evalution context
+          description: evaluation context
           required: true
           schema:
             $ref: '#/definitions/evalContext'
@@ -899,7 +899,7 @@ paths:
       parameters:
         - in: body
           name: body
-          description: evalution batch request
+          description: evaluation batch request
           required: true
           schema:
             $ref: '#/definitions/evaluationBatchRequest'

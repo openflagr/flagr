@@ -93,7 +93,7 @@ func (drf *DataRecordFrame) GetPartitionKey() string {
 	return util.SafeString(drf.evalResult.EvalContext.EntityID)
 }
 
-// Output sets the paylaod using its input and returns the json marshal bytes
+// Output sets the payload using its input and returns the json marshal bytes
 func (drf *DataRecordFrame) Output() ([]byte, error) {
 	return json.Marshal(drf)
 }

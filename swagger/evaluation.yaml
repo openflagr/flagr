@@ -5,7 +5,7 @@ post:
   parameters:
     - in: body
       name: body
-      description: evalution context
+      description: evaluation context
       required: true
       schema:
         $ref: "#/definitions/evalContext"

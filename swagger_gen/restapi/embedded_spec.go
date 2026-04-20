@@ -43,7 +43,7 @@ func init() {
         "operationId": "postEvaluation",
         "parameters": [
           {
-            "description": "evalution context",
+            "description": "evaluation context",
             "name": "body",
             "in": "body",
             "required": true,
@@ -76,7 +76,7 @@ func init() {
         "operationId": "postEvaluationBatch",
         "parameters": [
           {
-            "description": "evalution batch request",
+            "description": "evaluation batch request",
             "name": "body",
             "in": "body",
             "required": true,
@@ -2140,7 +2140,7 @@ func init() {
         "operationId": "postEvaluation",
         "parameters": [
           {
-            "description": "evalution context",
+            "description": "evaluation context",
             "name": "body",
             "in": "body",
             "required": true,
@@ -2173,7 +2173,7 @@ func init() {
         "operationId": "postEvaluationBatch",
         "parameters": [
           {
-            "description": "evalution batch request",
+            "description": "evaluation batch request",
             "name": "body",
             "in": "body",
             "required": true,

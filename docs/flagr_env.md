@@ -21,7 +21,7 @@ For that, you can use the standard AWS authentication methods:
 
 ### Environment
 
-The most common way of authentication is over the environemnt, providing the `ACCESS_KEY_ID` and the `SECRET_ACCESS_KEY`. That way flagr can authenticate with AWS to connect to your Kinesis Stream.
+The most common way of authentication is over the environment, providing the `ACCESS_KEY_ID` and the `SECRET_ACCESS_KEY`. That way flagr can authenticate with AWS to connect to your Kinesis Stream.
 
 e.g.:
 ```
