@@ -28,7 +28,7 @@ type Distribution struct {
 	Bitmap  string `gorm:"type:text" json:"-"`
 }
 
-// DistributionArray is useful for faster evalution
+// DistributionArray is useful for faster evaluation
 type DistributionArray struct {
 	VariantIDs          []uint
 	PercentsAccumulated []int // useful for binary search to find the rollout variant

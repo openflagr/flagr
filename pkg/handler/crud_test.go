@@ -710,7 +710,7 @@ func TestCrudConstraints(t *testing.T) {
 		},
 	})
 
-	// step 1. it should return 0 constraints before creaetion
+	// step 1. it should return 0 constraints before creation
 	res = c.FindConstraints(constraint.FindConstraintsParams{
 		FlagID:    int64(1),
 		SegmentID: int64(1),
@@ -906,7 +906,7 @@ func TestCrudVariants(t *testing.T) {
 		},
 	})
 
-	// step 0. it should return 0 variants before creaetion
+	// step 0. it should return 0 variants before creation
 	res = c.FindVariants(variant.FindVariantsParams{
 		FlagID: int64(1),
 	})
@@ -921,7 +921,7 @@ func TestCrudVariants(t *testing.T) {
 	})
 	assert.NotZero(t, res.(*variant.CreateVariantOK).Payload.ID)
 
-	// step 2. it should return some variants after creaetion
+	// step 2. it should return some variants after creation
 	res = c.FindVariants(variant.FindVariantsParams{
 		FlagID: int64(1),
 	})
@@ -1115,7 +1115,7 @@ func TestCrudTags(t *testing.T) {
 		},
 	})
 
-	// step 0. it should return 0 tags before creaetion
+	// step 0. it should return 0 tags before creation
 	res = c.FindTags(tag.FindTagsParams{
 		FlagID: int64(1),
 	})
@@ -1130,7 +1130,7 @@ func TestCrudTags(t *testing.T) {
 	})
 	assert.NotZero(t, res.(*tag.CreateTagOK).Payload.ID)
 
-	// step 2. it should return some tags after creaetion
+	// step 2. it should return some tags after creation
 	res = c.FindTags(tag.FindTagsParams{
 		FlagID: int64(1),
 	})

@@ -5,7 +5,7 @@ post:
   parameters:
     - in: body
       name: body
-      description: evalution batch request
+      description: evaluation batch request
       required: true
       schema:
         $ref: "#/definitions/evaluationBatchRequest"

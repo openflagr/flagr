@@ -34,7 +34,7 @@ type PostEvaluationBatchParams struct {
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
-	/*evalution batch request
+	/*evaluation batch request
 	  Required: true
 	  In: body
 	*/

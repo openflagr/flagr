@@ -34,7 +34,7 @@ type PostEvaluationParams struct {
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
-	/*evalution context
+	/*evaluation context
 	  Required: true
 	  In: body
 	*/
