@@ -22,11 +22,23 @@ const (
 	OperationRestore Operation = "restore"
 )
 
+// ComponentType identifies which part of a flag was modified.
+type ComponentType string
+
+const (
+	ComponentFlag         ComponentType = "flag"
+	ComponentSegment      ComponentType = "segment"
+	ComponentVariant      ComponentType = "variant"
+	ComponentConstraint   ComponentType = "constraint"
+	ComponentDistribution ComponentType = "distribution"
+	ComponentTag          ComponentType = "tag"
+)
+
 type Notification struct {
 	Operation     Operation `json:"operation"`
 	FlagID        uint      `json:"flag_id"`
 	FlagKey       string    `json:"flag_key"`
-	ComponentType string    `json:"component_type,omitempty"`
+	ComponentType ComponentType `json:"component_type,omitempty"`
 	ComponentID   uint      `json:"component_id,omitempty"`
 	ComponentKey  string    `json:"component_key,omitempty"`
 	PreValue      string    `json:"pre_value,omitempty"`

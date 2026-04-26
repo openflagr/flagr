@@ -23,7 +23,7 @@ type FlagSnapshot struct {
 }
 
 // SaveFlagSnapshot saves the Flag Snapshot and sends a notification.
-func SaveFlagSnapshot(db *gorm.DB, flagID uint, updatedBy string, operation notification.Operation, componentType string, componentID uint, componentKey string) {
+func SaveFlagSnapshot(db *gorm.DB, flagID uint, updatedBy string, operation notification.Operation, componentType notification.ComponentType, componentID uint, componentKey string) {
 	tx := db.Begin()
 	f := &Flag{}
 	// Use Unscoped to include soft-deleted flags. This is necessary for:

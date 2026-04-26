@@ -18,10 +18,10 @@ func TestSaveFlagSnapshot(t *testing.T) {
 	defer tmpDB.Close()
 
 	t.Run("happy code path", func(t *testing.T) {
-		SaveFlagSnapshot(db, f.ID, "flagr-test@example.com", notification.OperationUpdate, "flag", f.ID, f.Key)
+		SaveFlagSnapshot(db, f.ID, "flagr-test@example.com", notification.OperationUpdate, notification.ComponentFlag, f.ID, f.Key)
 	})
 
 	t.Run("save on non-existing flag", func(t *testing.T) {
-		SaveFlagSnapshot(db, uint(999999), "flagr-test@example.com", notification.OperationUpdate, "flag", 0, "")
+		SaveFlagSnapshot(db, uint(999999), "flagr-test@example.com", notification.OperationUpdate, notification.ComponentFlag, 0, "")
 	})
 }

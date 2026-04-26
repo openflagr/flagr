@@ -56,7 +56,7 @@ func (c *crud) CreateFlag(params flag.CreateFlagParams) middleware.Responder {
 	}
 	resp.SetPayload(payload)
 
-	entity.SaveFlagSnapshot(getDB(), f.ID, getSubjectFromRequest(params.HTTPRequest), notification.OperationCreate, "flag", f.ID, f.Key)
+	entity.SaveFlagSnapshot(getDB(), f.ID, getSubjectFromRequest(params.HTTPRequest), notification.OperationCreate, notification.ComponentFlag, f.ID, f.Key)
 
 	return resp
 }
