@@ -345,7 +345,7 @@ func (c *crud) DeleteTag(params tag.DeleteTagParams) middleware.Responder {
 	if err := getDB().Model(s).Association("Tags").Delete(t); err != nil {
 		return tag.NewDeleteTagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
-	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest), notification.OperationUpdate, notification.ComponentTag, uint(params.TagID), "")
+	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest), notification.OperationDelete, notification.ComponentTag, uint(params.TagID), "")
 	return tag.NewDeleteTagOK()
 }
 
@@ -407,7 +407,7 @@ func (c *crud) CreateTag(params tag.CreateTagParams) middleware.Responder {
 	resp := tag.NewCreateTagOK()
 	resp.SetPayload(e2r.MapTag(t))
 
-	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest), notification.OperationUpdate, notification.ComponentTag, t.ID, t.Value)
+	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest), notification.OperationCreate, notification.ComponentTag, t.ID, t.Value)
 	return resp
 }
 
@@ -426,7 +426,7 @@ func (c *crud) CreateSegment(params segment.CreateSegmentParams) middleware.Resp
 	resp := segment.NewCreateSegmentOK()
 	resp.SetPayload(e2r.MapSegment(s))
 
-	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest), notification.OperationUpdate, notification.ComponentSegment, s.ID, "")
+	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest), notification.OperationCreate, notification.ComponentSegment, s.ID, "")
 	return resp
 }
 
@@ -503,7 +503,7 @@ func (c *crud) DeleteSegment(params segment.DeleteSegmentParams) middleware.Resp
 		return segment.NewDeleteSegmentDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
-	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest), notification.OperationUpdate, notification.ComponentSegment, util.SafeUint(params.SegmentID), "")
+	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest), notification.OperationDelete, notification.ComponentSegment, util.SafeUint(params.SegmentID), "")
 	return segment.NewDeleteSegmentOK()
 }
 
@@ -525,7 +525,7 @@ func (c *crud) CreateConstraint(params constraint.CreateConstraintParams) middle
 	resp := constraint.NewCreateConstraintOK()
 	resp.SetPayload(e2r.MapConstraint(cons))
 
-	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest), notification.OperationUpdate, notification.ComponentConstraint, cons.ID, "")
+	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest), notification.OperationCreate, notification.ComponentConstraint, cons.ID, "")
 	return resp
 }
 
@@ -574,7 +574,7 @@ func (c *crud) DeleteConstraint(params constraint.DeleteConstraintParams) middle
 
 	resp := constraint.NewDeleteConstraintOK()
 
-	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest), notification.OperationUpdate, notification.ComponentConstraint, util.SafeUint(params.ConstraintID), "")
+	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest), notification.OperationDelete, notification.ComponentConstraint, util.SafeUint(params.ConstraintID), "")
 	return resp
 }
 
@@ -652,7 +652,7 @@ func (c *crud) CreateVariant(params variant.CreateVariantParams) middleware.Resp
 	resp := variant.NewCreateVariantOK()
 	resp.SetPayload(e2r.MapVariant(v))
 
-	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest), notification.OperationUpdate, notification.ComponentVariant, v.ID, v.Key)
+	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest), notification.OperationCreate, notification.ComponentVariant, v.ID, v.Key)
 	return resp
 }
 
@@ -716,6 +716,6 @@ func (c *crud) DeleteVariant(params variant.DeleteVariantParams) middleware.Resp
 		return variant.NewDeleteVariantDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
-	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest), notification.OperationUpdate, notification.ComponentVariant, util.SafeUint(params.VariantID), "")
+	entity.SaveFlagSnapshot(getDB(), util.SafeUint(params.FlagID), getSubjectFromRequest(params.HTTPRequest), notification.OperationDelete, notification.ComponentVariant, util.SafeUint(params.VariantID), "")
 	return variant.NewDeleteVariantOK()
 }
