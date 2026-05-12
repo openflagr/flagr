@@ -325,16 +325,20 @@ var evalSegment = func(
 		expr := segment.SegmentEvaluation.ConditionsExpr
 		match, err := conditions.Evaluate(expr, m)
 		if err != nil {
-			log = &models.SegmentDebugLog{
-				Msg:       err.Error(),
-				SegmentID: int64(segment.ID),
+			if config.Config.EvalDebugEnabled && evalContext.EnableDebug {
+				log = &models.SegmentDebugLog{
+					Msg:       err.Error(),
+					SegmentID: int64(segment.ID),
+				}
 			}
 			return nil, log, true
 		}
 		if !match {
-			log = &models.SegmentDebugLog{
-				Msg:       debugConstraintMsg(evalContext.EnableDebug, expr, m),
-				SegmentID: int64(segment.ID),
+			if config.Config.EvalDebugEnabled && evalContext.EnableDebug {
+				log = &models.SegmentDebugLog{
+					Msg:       debugConstraintMsg(evalContext.EnableDebug, expr, m),
+					SegmentID: int64(segment.ID),
+				}
 			}
 			return nil, log, true
 		}
@@ -342,7 +346,7 @@ var evalSegment = func(
 
 	vID, debugMsg := segment.SegmentEvaluation.DistributionArray.Rollout(
 		evalContext.EntityID,
-		fmt.Sprint(flagID), // default use the flagID as salt
+		segment.SegmentEvaluation.FlagIDStr, // pre-formatted during PrepareEvaluation
 		segment.RolloutPercent,
 	)
 
