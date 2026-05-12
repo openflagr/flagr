@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"cloud.google.com/go/pubsub"
-	"cloud.google.com/go/pubsub/pstest"
+	"cloud.google.com/go/pubsub/v2"
+	"cloud.google.com/go/pubsub/v2/pstest"
 	"github.com/openflagr/flagr/swagger_gen/models"
 	"github.com/prashantv/gostub"
 	"github.com/stretchr/testify/assert"
@@ -33,11 +33,11 @@ func TestPubsubAsyncRecord(t *testing.T) {
 	t.Run("enabled and valid", func(t *testing.T) {
 		client := mockClient(t)
 		defer client.Close()
-		topic := client.Topic("test")
+		publisher := client.Publisher("test")
 		assert.NotPanics(t, func() {
 			pr := &pubsubRecorder{
 				producer: client,
-				topic:    topic,
+				publisher: publisher,
 			}
 
 			pr.AsyncRecord(
