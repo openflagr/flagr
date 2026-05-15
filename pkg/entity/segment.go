@@ -1,6 +1,8 @@
 package entity
 
 import (
+	"strconv"
+
 	"github.com/zhouzhuojie/conditions"
 	"gorm.io/gorm"
 )
@@ -43,6 +45,7 @@ func (s *Segment) Preload(db *gorm.DB) error {
 type SegmentEvaluation struct {
 	ConditionsExpr    conditions.Expr
 	DistributionArray DistributionArray
+	FlagIDStr         string // pre-formatted flagID string used as salt in rollout
 }
 
 // PrepareEvaluation prepares the segment for evaluation by parsing constraints
@@ -54,6 +57,7 @@ func (s *Segment) PrepareEvaluation() error {
 			VariantIDs:          make([]uint, dLen),
 			PercentsAccumulated: make([]int, dLen),
 		},
+		FlagIDStr: strconv.FormatUint(uint64(s.FlagID), 10),
 	}
 
 	if len(s.Constraints) != 0 {

@@ -937,6 +937,242 @@ func BenchmarkPostEvaluationBatch(b *testing.B) {
 	}
 }
 
+// genBenchmarkEvalCacheWithConstraints creates a flag with multiple constraints for targeted benchmarks.
+func genBenchmarkEvalCacheWithConstraints(constraints []entity.Constraint, numFlags int) *EvalCache {
+	idCache := make(map[string]*entity.Flag, numFlags)
+	keyCache := make(map[string]*entity.Flag, numFlags)
+
+	for i := range numFlags {
+		f := entity.GenFixtureFlag()
+		f.ID = uint(200 + i)
+		f.Key = fmt.Sprintf("flag_key_constraint_%d", 200+i)
+
+		s := entity.GenFixtureSegment()
+		s.ID = uint(300 + i)
+		s.FlagID = f.ID
+		s.Constraints = constraints
+
+		for ci := range s.Constraints {
+			s.Constraints[ci].SegmentID = s.ID
+		}
+
+		// Reset distributions to match variants
+		for di := range s.Distributions {
+			if di < len(f.Variants) {
+				s.Distributions[di].VariantID = f.Variants[di].ID
+				s.Distributions[di].VariantKey = f.Variants[di].Key
+			}
+		}
+
+		s.PrepareEvaluation()
+		f.Segments = []entity.Segment{s}
+		f.PrepareEvaluation()
+
+		idCache[util.SafeString(f.ID)] = &f
+		keyCache[f.Key] = &f
+	}
+
+	return &EvalCache{
+		cache: &cacheContainer{
+			idCache:  idCache,
+			keyCache: keyCache,
+			tagCache: make(map[string]map[uint]*entity.Flag),
+		},
+	}
+}
+
+// genBenchmarkEvalCacheWithSegments creates a flag with multiple segments for targeted benchmarks.
+func genBenchmarkEvalCacheWithSegments(numSegments int) *EvalCache {
+	idCache := make(map[string]*entity.Flag, 1)
+	keyCache := make(map[string]*entity.Flag, 1)
+
+	f := entity.GenFixtureFlag()
+	f.ID = uint(300)
+	f.Key = "flag_key_multi_segment"
+
+	segments := make([]entity.Segment, numSegments)
+	for si := range numSegments {
+		s := entity.GenFixtureSegment()
+		s.ID = uint(400 + si)
+		s.FlagID = f.ID
+		s.Rank = uint(si)
+
+		// For segments before the last one, use a non-matching constraint
+		if si < numSegments-1 {
+			s.Constraints = []entity.Constraint{
+				{
+					Model:     gorm.Model{ID: uint(500 + si)},
+					SegmentID: s.ID,
+					Property:  "dl_state",
+					Operator:  models.ConstraintOperatorEQ,
+					Value:     `"NONEXISTENT"`,
+				},
+			}
+		}
+		// Last segment matches
+
+		for di := range s.Distributions {
+			if di < len(f.Variants) {
+				s.Distributions[di].VariantID = f.Variants[di].ID
+				s.Distributions[di].VariantKey = f.Variants[di].Key
+			}
+		}
+
+		s.PrepareEvaluation()
+		segments[si] = s
+	}
+
+	f.Segments = segments
+	f.PrepareEvaluation()
+
+	idCache[util.SafeString(f.ID)] = &f
+	keyCache[f.Key] = &f
+
+	return &EvalCache{
+		cache: &cacheContainer{
+			idCache:  idCache,
+			keyCache: keyCache,
+			tagCache: make(map[string]map[uint]*entity.Flag),
+		},
+	}
+}
+
+// BenchmarkEvalFlag_ShortCircuit benchmarks evaluation where the first of 5 constraints
+// fails (false AND ...), which triggers short-circuit evaluation in v0.2.4.
+func BenchmarkEvalFlag_ShortCircuit(b *testing.B) {
+	b.StopTimer()
+	defer gostub.StubFunc(&logEvalResult).Reset()
+
+	constraints := []entity.Constraint{
+		{Model: gorm.Model{ID: 600}, SegmentID: 301, Property: "dl_state", Operator: models.ConstraintOperatorEQ, Value: `"NONEXISTENT"`},
+		{Model: gorm.Model{ID: 601}, SegmentID: 301, Property: "state", Operator: models.ConstraintOperatorEQ, Value: `"CA"`},
+		{Model: gorm.Model{ID: 602}, SegmentID: 301, Property: "region", Operator: models.ConstraintOperatorEQ, Value: `"west"`},
+		{Model: gorm.Model{ID: 603}, SegmentID: 301, Property: "country", Operator: models.ConstraintOperatorEQ, Value: `"US"`},
+		{Model: gorm.Model{ID: 604}, SegmentID: 301, Property: "active", Operator: models.ConstraintOperatorEQ, Value: `"true"`},
+	}
+	evalCache := genBenchmarkEvalCacheWithConstraints(constraints, 1)
+	defer gostub.StubFunc(&GetEvalCache, evalCache).Reset()
+
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		EvalFlag(models.EvalContext{
+			EntityContext: map[string]any{"dl_state": "CA", "state": "NY"},
+			EntityID:      "entityID1",
+			EntityType:    "entityType1",
+			FlagID:        int64(200),
+		})
+	}
+}
+
+// BenchmarkEvalFlag_AllMatch benchmarks evaluation where 5 constraints ALL match.
+// Tests var resolution performance with no short-circuit benefit.
+func BenchmarkEvalFlag_AllMatch(b *testing.B) {
+	b.StopTimer()
+	defer gostub.StubFunc(&logEvalResult).Reset()
+
+	constraints := []entity.Constraint{
+		{Model: gorm.Model{ID: 700}, SegmentID: 302, Property: "dl_state", Operator: models.ConstraintOperatorEQ, Value: `"CA"`},
+		{Model: gorm.Model{ID: 701}, SegmentID: 302, Property: "state", Operator: models.ConstraintOperatorEQ, Value: `"CA"`},
+		{Model: gorm.Model{ID: 702}, SegmentID: 302, Property: "region", Operator: models.ConstraintOperatorEQ, Value: `"west"`},
+		{Model: gorm.Model{ID: 703}, SegmentID: 302, Property: "country", Operator: models.ConstraintOperatorEQ, Value: `"US"`},
+		{Model: gorm.Model{ID: 704}, SegmentID: 302, Property: "active", Operator: models.ConstraintOperatorEQ, Value: `"true"`},
+	}
+	evalCache := genBenchmarkEvalCacheWithConstraints(constraints, 1)
+	defer gostub.StubFunc(&GetEvalCache, evalCache).Reset()
+
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		EvalFlag(models.EvalContext{
+			EntityContext: map[string]any{
+				"dl_state": "CA",
+				"state":    "CA",
+				"region":   "west",
+				"country":  "US",
+				"active":   "true",
+			},
+			EntityID:   "entityID1",
+			EntityType: "entityType1",
+			FlagID:     int64(202),
+		})
+	}
+}
+
+// BenchmarkEvalFlag_Regex benchmarks evaluation with regex operators (EREG).
+// Highlights regex caching improvement in v0.2.4.
+func BenchmarkEvalFlag_Regex(b *testing.B) {
+	b.StopTimer()
+	defer gostub.StubFunc(&logEvalResult).Reset()
+
+	constraints := []entity.Constraint{
+		{Model: gorm.Model{ID: 800}, SegmentID: 303, Property: "status", Operator: models.ConstraintOperatorEREG, Value: `"/^5[0-9][0-9]$/"`},
+	}
+	evalCache := genBenchmarkEvalCacheWithConstraints(constraints, 1)
+	defer gostub.StubFunc(&GetEvalCache, evalCache).Reset()
+
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		EvalFlag(models.EvalContext{
+			EntityContext: map[string]any{"status": "503"},
+			EntityID:      "entityID1",
+			EntityType:    "entityType1",
+			FlagID:        int64(203),
+		})
+	}
+}
+
+// BenchmarkEvalFlag_Complex benchmarks evaluation with a mix of operators
+// (AND, OR, IN, CONTAINS) to test overall expression evaluation performance.
+func BenchmarkEvalFlag_Complex(b *testing.B) {
+	b.StopTimer()
+	defer gostub.StubFunc(&logEvalResult).Reset()
+
+	constraints := []entity.Constraint{
+		{Model: gorm.Model{ID: 900}, SegmentID: 304, Property: "dl_state", Operator: models.ConstraintOperatorEQ, Value: `"CA"`},
+		{Model: gorm.Model{ID: 901}, SegmentID: 304, Property: "tier", Operator: models.ConstraintOperatorIN, Value: `["premium", "enterprise"]`},
+		{Model: gorm.Model{ID: 902}, SegmentID: 304, Property: "age", Operator: models.ConstraintOperatorGT, Value: "18"},
+		{Model: gorm.Model{ID: 903}, SegmentID: 304, Property: "email", Operator: models.ConstraintOperatorCONTAINS, Value: `"@company.com"`},
+		{Model: gorm.Model{ID: 904}, SegmentID: 304, Property: "status", Operator: models.ConstraintOperatorNEQ, Value: `"banned"`},
+	}
+	evalCache := genBenchmarkEvalCacheWithConstraints(constraints, 1)
+	defer gostub.StubFunc(&GetEvalCache, evalCache).Reset()
+
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		EvalFlag(models.EvalContext{
+			EntityContext: map[string]any{
+				"dl_state": "CA",
+				"tier":     "premium",
+				"age":      25,
+				"email":    "user@company.com",
+				"status":   "active",
+			},
+			EntityID:   "entityID1",
+			EntityType: "entityType1",
+			FlagID:     int64(204),
+		})
+	}
+}
+
+// BenchmarkEvalFlag_ManySegments benchmarks evaluation with 10 segments where
+// only the last segment's constraints match. Tests segment iteration performance.
+func BenchmarkEvalFlag_ManySegments(b *testing.B) {
+	b.StopTimer()
+	defer gostub.StubFunc(&logEvalResult).Reset()
+
+	evalCache := genBenchmarkEvalCacheWithSegments(10)
+	defer gostub.StubFunc(&GetEvalCache, evalCache).Reset()
+
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		EvalFlag(models.EvalContext{
+			EntityContext: map[string]any{"dl_state": "CA"},
+			EntityID:      "entityID1",
+			EntityType:    "entityType1",
+			FlagID:        int64(300),
+		})
+	}
+}
+
 func BenchmarkPostEvaluationBatchWithTags(b *testing.B) {
 	b.StopTimer()
 	defer gostub.StubFunc(&logEvalResult).Reset()
