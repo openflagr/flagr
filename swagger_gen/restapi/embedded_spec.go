@@ -1422,6 +1422,7 @@ func init() {
           ]
         },
         "property": {
+          "description": "The property name from the entity context to evaluate. Supports nested field access: use dots (e.g., ` + "`" + `user.name` + "`" + `)  for nested objects and brackets (e.g., ` + "`" + `users[0]` + "`" + `) for array indices.\n",
           "type": "string",
           "minLength": 1
         },
@@ -1444,6 +1445,7 @@ func init() {
           "minLength": 1
         },
         "property": {
+          "description": "The property name from the entity context to evaluate. Supports nested field access: use dots (e.g., ` + "`" + `user.name` + "`" + `)  for nested objects and brackets (e.g., ` + "`" + `users[0]` + "`" + `) for array indices.\n",
           "type": "string",
           "minLength": 1
         },
@@ -3519,6 +3521,7 @@ func init() {
           ]
         },
         "property": {
+          "description": "The property name from the entity context to evaluate. Supports nested field access: use dots (e.g., ` + "`" + `user.name` + "`" + `)  for nested objects and brackets (e.g., ` + "`" + `users[0]` + "`" + `) for array indices.\n",
           "type": "string",
           "minLength": 1
         },
@@ -3541,6 +3544,7 @@ func init() {
           "minLength": 1
         },
         "property": {
+          "description": "The property name from the entity context to evaluate. Supports nested field access: use dots (e.g., ` + "`" + `user.name` + "`" + `)  for nested objects and brackets (e.g., ` + "`" + `users[0]` + "`" + `) for array indices.\n",
           "type": "string",
           "minLength": 1
         },
