@@ -2,6 +2,10 @@ package handler
 
 import (
 	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
+	"strings"
 	"testing"
 
 	"encoding/json"
@@ -1415,4 +1419,86 @@ func TestCrudDistributionsWithFailures(t *testing.T) {
 		assert.NotZero(t, res.(*distribution.PutDistributionsDefault).Payload)
 		db.Error = nil
 	})
+}
+
+// TestAllMutationHandlersCallSaveFlagSnapshot enforces that every mutation
+// handler in crud.go calls entity.SaveFlagSnapshot. Without the snapshot the
+// EvalCache short-circuit would silently serve stale data after a change.
+func TestAllMutationHandlersCallSaveFlagSnapshot(t *testing.T) {
+	// Read the source files containing mutation handlers.
+	files := []string{"crud.go", "crud_flag_creation.go"}
+
+	// Identify mutation methods by these prefixes.
+	isMutation := func(name string) bool {
+		for _, p := range []string{"Create", "Put", "Delete", "Restore", "Set"} {
+			if strings.HasPrefix(name, p) {
+				return true
+			}
+		}
+		return false
+	}
+
+	for _, filename := range files {
+		fset := token.NewFileSet()
+		f, err := parser.ParseFile(fset, filename, nil, parser.AllErrors)
+		if err != nil {
+			t.Fatalf("failed to parse %s: %v", filename, err)
+		}
+
+		for _, decl := range f.Decls {
+			funcDecl, ok := decl.(*ast.FuncDecl)
+			if !ok {
+				continue
+			}
+
+			// Must be a method on *crud.
+			if funcDecl.Recv == nil || len(funcDecl.Recv.List) != 1 {
+				continue
+			}
+			starExpr, ok := funcDecl.Recv.List[0].Type.(*ast.StarExpr)
+			if !ok {
+				continue
+			}
+			recvIdent, ok := starExpr.X.(*ast.Ident)
+			if !ok || recvIdent.Name != "crud" {
+				continue
+			}
+
+			name := funcDecl.Name.Name
+			if !isMutation(name) {
+				continue
+			}
+
+			if funcDecl.Body == nil {
+				t.Errorf("%s: %s has nil body", filename, name)
+				continue
+			}
+
+			// Walk the function body looking for entity.SaveFlagSnapshot.
+			callsSnapshot := false
+			ast.Inspect(funcDecl.Body, func(n ast.Node) bool {
+				call, ok := n.(*ast.CallExpr)
+				if !ok {
+					return true
+				}
+				sel, ok := call.Fun.(*ast.SelectorExpr)
+				if !ok {
+					return true
+				}
+				pkg, ok := sel.X.(*ast.Ident)
+				if !ok {
+					return true
+				}
+				if pkg.Name == "entity" && sel.Sel.Name == "SaveFlagSnapshot" {
+					callsSnapshot = true
+					return false
+				}
+				return true
+			})
+
+			if !callsSnapshot {
+				t.Errorf("%s: mutation handler %q must call entity.SaveFlagSnapshot", filename, name)
+			}
+		}
+	}
 }
