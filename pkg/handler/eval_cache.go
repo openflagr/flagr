@@ -150,18 +150,25 @@ func (ec *EvalCache) GetByFlagKeyOrID(keyOrID any) *entity.Flag {
 	return f
 }
 
+// snapshotMaxID queries the latest flag_snapshot id. Returns 0 on error.
+// This is the lightweight change indicator used by the EvalCache to decide
+// whether a full reload is needed.
+func (ec *EvalCache) snapshotMaxID() uint {
+	var maxID uint
+	if err := getDB().Model(&entity.FlagSnapshot{}).
+		Select("COALESCE(MAX(id), 0)").
+		Scan(&maxID).Error; err != nil {
+		logrus.WithField("err", err).Warn(
+			"failed to query flag_snapshots MAX(id), falling back to full reload")
+	}
+	return maxID
+}
+
 // shortCircuitReload checks whether the cache is still fresh by comparing
 // the current flag_snapshot MAX(id) against the last known value.
 // Returns true when the reload can be skipped.
 func (ec *EvalCache) shortCircuitReload() bool {
-	var maxIDFromDB uint
-	if err := getDB().Model(&entity.FlagSnapshot{}).
-		Select("COALESCE(MAX(id), 0)").
-		Scan(&maxIDFromDB).Error; err != nil {
-		logrus.WithField("err", err).Warn(
-			"failed to query flag_snapshots MAX(id), falling back to full reload")
-		return false
-	}
+	maxIDFromDB := ec.snapshotMaxID()
 
 	ec.cacheMutex.RLock()
 	defer ec.cacheMutex.RUnlock()
@@ -189,10 +196,7 @@ func (ec *EvalCache) reloadMapCache() error {
 
 		// Query MAX(id) right after the data fetch so that the stored
 		// snapshot ID tracks the data as closely as possible.
-		var maxIDFromDB uint
-		getDB().Model(&entity.FlagSnapshot{}).
-			Select("COALESCE(MAX(id), 0)").
-			Scan(&maxIDFromDB)
+		maxIDFromDB := ec.snapshotMaxID()
 
 		ec.cacheMutex.Lock()
 		ec.cache = &cacheContainer{
