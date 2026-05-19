@@ -150,29 +150,25 @@ func (ec *EvalCache) GetByFlagKeyOrID(keyOrID any) *entity.Flag {
 	return f
 }
 
-// reloadRequired checks whether a full cache reload is needed by comparing
-// the current flag_snapshot MAX(id) against the last known value.
-// Returns (true, maxIDFromDB) when a reload is needed, or (false, 0) when
-// the cache is still fresh.
-func (ec *EvalCache) reloadRequired() (bool, uint) {
+// shortCircuitReload queries flag_snapshots MAX(id) and compares it
+// against the last known value. Returns (true, maxIDFromDB) when the
+// cache is still fresh and the reload can be short-circuited, or
+// (false, maxIDFromDB) when a full reload is needed. On query error
+// it conservatively returns (false, 0) to trigger a reload.
+func (ec *EvalCache) shortCircuitReload() (bool, uint) {
 	var maxIDFromDB uint
 	if err := getDB().Model(&entity.FlagSnapshot{}).
 		Select("COALESCE(MAX(id), 0)").
 		Scan(&maxIDFromDB).Error; err != nil {
 		logrus.WithField("err", err).Warn(
 			"failed to query flag_snapshots MAX(id), falling back to full reload")
-		return true, 0
+		return false, 0
 	}
 
 	ec.cacheMutex.RLock()
-	maxIDFromCache := ec.lastSnapshotMaxID
-	ec.cacheMutex.RUnlock()
-
-	// No new snapshot since last reload, and we have loaded at least once.
-	if maxIDFromDB == maxIDFromCache && maxIDFromCache > 0 {
-		return false, 0
-	}
-	return true, maxIDFromDB
+	defer ec.cacheMutex.RUnlock()
+	skip := ec.lastSnapshotMaxID == maxIDFromDB && ec.lastSnapshotMaxID > 0
+	return skip, maxIDFromDB
 }
 
 // reloadMapCache reloads the evaluation cache from the database. It short-circuits
@@ -184,8 +180,8 @@ func (ec *EvalCache) reloadMapCache() error {
 		defer config.Global.NewrelicApp.StartTransaction("eval_cache_reload", nil, nil).End()
 	}
 
-	needed, currentMaxID := ec.reloadRequired()
-	if !needed {
+	skip, maxIDFromDB := ec.shortCircuitReload()
+	if skip {
 		return nil
 	}
 
@@ -201,7 +197,7 @@ func (ec *EvalCache) reloadMapCache() error {
 			keyCache: keyCache,
 			tagCache: tagCache,
 		}
-		ec.lastSnapshotMaxID = currentMaxID
+		ec.lastSnapshotMaxID = maxIDFromDB
 		ec.cacheMutex.Unlock()
 
 		return nil, nil
