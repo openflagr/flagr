@@ -150,6 +150,20 @@ func (ec *EvalCache) GetByFlagKeyOrID(keyOrID any) *entity.Flag {
 	return f
 }
 
+// readSnapshotMaxID queries the highest flag_snapshot id. Returns 0 on error
+// (with a warning logged). This is the lightweight change indicator used to
+// short-circuit full cache reloads.
+func (ec *EvalCache) readSnapshotMaxID() uint {
+	var currentMaxID uint
+	if err := getDB().Model(&entity.FlagSnapshot{}).
+		Select("COALESCE(MAX(id), 0)").
+		Scan(&currentMaxID).Error; err != nil {
+		logrus.WithField("err", err).Warn(
+			"failed to query flag_snapshots MAX(id), falling back to full reload")
+	}
+	return currentMaxID
+}
+
 // reloadMapCache reloads the evaluation cache from the database. It short-circuits
 // when no new flag_snapshots have been created, since every API mutation that
 // affects evaluation data (flags, segments, variants, constraints, distributions,
@@ -159,25 +173,16 @@ func (ec *EvalCache) reloadMapCache() error {
 		defer config.Global.NewrelicApp.StartTransaction("eval_cache_reload", nil, nil).End()
 	}
 
-	// Lightweight check: has any evaluation data changed since last reload?
-	// Every mutation handler that affects the cache creates a flag_snapshot,
-	// so a rising MAX(id) means the cache is stale.
-	var currentMaxID uint
-	if err := getDB().Model(&entity.FlagSnapshot{}).
-		Select("COALESCE(MAX(id), 0)").
-		Scan(&currentMaxID).Error; err != nil {
-		logrus.WithField("err", err).Warn(
-			"failed to query flag_snapshots MAX(id), falling back to full reload")
-	} else {
-		// Protect the read so this is safe if reloadMapCache is ever
-		// called from multiple goroutines.
-		ec.cacheMutex.RLock()
-		savedMaxID := ec.lastSnapshotMaxID
-		ec.cacheMutex.RUnlock()
+	currentMaxID := ec.readSnapshotMaxID()
 
-		if currentMaxID == savedMaxID && savedMaxID > 0 {
-			return nil
-		}
+	ec.cacheMutex.RLock()
+	saved := ec.lastSnapshotMaxID
+	ec.cacheMutex.RUnlock()
+
+	// Short-circuit when no new snapshot exists. On the first load (saved == 0)
+	// we always proceed to populate the cache.
+	if currentMaxID == saved && saved > 0 {
+		return nil
 	}
 
 	_, _, err := withtimeout.Do(ec.refreshTimeout, func() (any, error) {
