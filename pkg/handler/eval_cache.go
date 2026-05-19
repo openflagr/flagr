@@ -150,27 +150,29 @@ func (ec *EvalCache) GetByFlagKeyOrID(keyOrID any) *entity.Flag {
 	return f
 }
 
-// shouldSkipReload queries flag_snapshots MAX(id) and compares it against
-// the last known value. Returns (true, 0) when the cache is still fresh and
-// no full reload is needed. Returns (false, maxID) when a reload is needed.
-func (ec *EvalCache) shouldSkipReload() (bool, uint) {
-	var currentMaxID uint
+// reloadRequired checks whether a full cache reload is needed by comparing
+// the current flag_snapshot MAX(id) against the last known value.
+// Returns (true, maxIDFromDB) when a reload is needed, or (false, 0) when
+// the cache is still fresh.
+func (ec *EvalCache) reloadRequired() (bool, uint) {
+	var maxIDFromDB uint
 	if err := getDB().Model(&entity.FlagSnapshot{}).
 		Select("COALESCE(MAX(id), 0)").
-		Scan(&currentMaxID).Error; err != nil {
+		Scan(&maxIDFromDB).Error; err != nil {
 		logrus.WithField("err", err).Warn(
 			"failed to query flag_snapshots MAX(id), falling back to full reload")
-		return false, 0
+		return true, 0
 	}
 
 	ec.cacheMutex.RLock()
-	saved := ec.lastSnapshotMaxID
+	maxIDFromCache := ec.lastSnapshotMaxID
 	ec.cacheMutex.RUnlock()
 
-	if currentMaxID == saved && saved > 0 {
-		return true, 0
+	// No new snapshot since last reload, and we have loaded at least once.
+	if maxIDFromDB == maxIDFromCache && maxIDFromCache > 0 {
+		return false, 0
 	}
-	return false, currentMaxID
+	return true, maxIDFromDB
 }
 
 // reloadMapCache reloads the evaluation cache from the database. It short-circuits
@@ -182,8 +184,8 @@ func (ec *EvalCache) reloadMapCache() error {
 		defer config.Global.NewrelicApp.StartTransaction("eval_cache_reload", nil, nil).End()
 	}
 
-	skip, currentMaxID := ec.shouldSkipReload()
-	if skip {
+	needed, currentMaxID := ec.reloadRequired()
+	if !needed {
 		return nil
 	}
 
