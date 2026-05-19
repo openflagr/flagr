@@ -150,6 +150,32 @@ func (ec *EvalCache) GetByFlagKeyOrID(keyOrID any) *entity.Flag {
 	return f
 }
 
+// getSnapshotMaxID queries the latest flag_snapshot id. Returns 0 on error.
+// This is the lightweight change indicator used by the EvalCache to decide
+// whether a full reload is needed.
+func (ec *EvalCache) getSnapshotMaxID() uint {
+	var maxID uint
+	if err := getDB().Model(&entity.FlagSnapshot{}).
+		Select("COALESCE(MAX(id), 0)").
+		Scan(&maxID).Error; err != nil {
+		logrus.WithField("err", err).Warn(
+			"failed to query flag_snapshots MAX(id), falling back to full reload")
+	}
+	return maxID
+}
+
+// shortCircuitReload checks whether the cache is still fresh by comparing
+// the current flag_snapshot MAX(id) against the last known value.
+// Returns true when the reload can be skipped.
+// shortCircuitReload checks whether the cache is still fresh by comparing
+// snapshotMaxID (the current flag_snapshot MAX(id)) against the last known
+// value. Returns true when the reload can be skipped.
+func (ec *EvalCache) shortCircuitReload(snapshotMaxID uint) bool {
+	ec.cacheMutex.RLock()
+	defer ec.cacheMutex.RUnlock()
+	return snapshotMaxID == ec.lastSnapshotMaxID && ec.lastSnapshotMaxID > 0
+}
+
 // reloadMapCache reloads the evaluation cache from the database. It short-circuits
 // when no new flag_snapshots have been created, since every API mutation that
 // affects evaluation data (flags, segments, variants, constraints, distributions,
@@ -159,16 +185,12 @@ func (ec *EvalCache) reloadMapCache() error {
 		defer config.Global.NewrelicApp.StartTransaction("eval_cache_reload", nil, nil).End()
 	}
 
-	// Lightweight check: has any evaluation data changed since last reload?
-	// Every mutation handler that affects the cache creates a flag_snapshot,
-	// so a rising MAX(id) means the cache is stale.
-	var currentMaxID uint
-	if err := getDB().Model(&entity.FlagSnapshot{}).
-		Select("COALESCE(MAX(id), 0)").
-		Scan(&currentMaxID).Error; err != nil {
-		logrus.WithField("err", err).Warn(
-			"failed to query flag_snapshots MAX(id), falling back to full reload")
-	} else if currentMaxID == ec.lastSnapshotMaxID && ec.lastSnapshotMaxID > 0 {
+	// Read the snapshot ID once, before the fetch. Using this same value
+	// for both the short-circuit decision and the post-reload store guarantees
+	// that lastSnapshotMaxID is never newer than the data in the cache.
+	preFetchMaxID := ec.getSnapshotMaxID()
+
+	if ec.shortCircuitReload(preFetchMaxID) {
 		return nil
 	}
 
@@ -184,14 +206,11 @@ func (ec *EvalCache) reloadMapCache() error {
 			keyCache: keyCache,
 			tagCache: tagCache,
 		}
+		ec.lastSnapshotMaxID = preFetchMaxID
 		ec.cacheMutex.Unlock()
 
 		return nil, nil
 	})
-
-	if err == nil {
-		ec.lastSnapshotMaxID = currentMaxID
-	}
 
 	return err
 }
