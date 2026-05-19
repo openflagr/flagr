@@ -150,25 +150,22 @@ func (ec *EvalCache) GetByFlagKeyOrID(keyOrID any) *entity.Flag {
 	return f
 }
 
-// shortCircuitReload queries flag_snapshots MAX(id) and compares it
-// against the last known value. Returns (true, maxIDFromDB) when the
-// cache is still fresh and the reload can be short-circuited, or
-// (false, maxIDFromDB) when a full reload is needed. On query error
-// it conservatively returns (false, 0) to trigger a reload.
-func (ec *EvalCache) shortCircuitReload() (bool, uint) {
+// shortCircuitReload checks whether the cache is still fresh by comparing
+// the current flag_snapshot MAX(id) against the last known value.
+// Returns true when the reload can be skipped.
+func (ec *EvalCache) shortCircuitReload() bool {
 	var maxIDFromDB uint
 	if err := getDB().Model(&entity.FlagSnapshot{}).
 		Select("COALESCE(MAX(id), 0)").
 		Scan(&maxIDFromDB).Error; err != nil {
 		logrus.WithField("err", err).Warn(
 			"failed to query flag_snapshots MAX(id), falling back to full reload")
-		return false, 0
+		return false
 	}
 
 	ec.cacheMutex.RLock()
 	defer ec.cacheMutex.RUnlock()
-	skip := ec.lastSnapshotMaxID == maxIDFromDB && ec.lastSnapshotMaxID > 0
-	return skip, maxIDFromDB
+	return maxIDFromDB == ec.lastSnapshotMaxID && ec.lastSnapshotMaxID > 0
 }
 
 // reloadMapCache reloads the evaluation cache from the database. It short-circuits
@@ -180,8 +177,7 @@ func (ec *EvalCache) reloadMapCache() error {
 		defer config.Global.NewrelicApp.StartTransaction("eval_cache_reload", nil, nil).End()
 	}
 
-	skip, maxIDFromDB := ec.shortCircuitReload()
-	if skip {
+	if ec.shortCircuitReload() {
 		return nil
 	}
 
@@ -190,6 +186,13 @@ func (ec *EvalCache) reloadMapCache() error {
 		if err != nil {
 			return nil, err
 		}
+
+		// Query MAX(id) right after the data fetch so that the stored
+		// snapshot ID tracks the data as closely as possible.
+		var maxIDFromDB uint
+		getDB().Model(&entity.FlagSnapshot{}).
+			Select("COALESCE(MAX(id), 0)").
+			Scan(&maxIDFromDB)
 
 		ec.cacheMutex.Lock()
 		ec.cache = &cacheContainer{
