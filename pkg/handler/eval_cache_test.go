@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/openflagr/flagr/pkg/entity"
+	"github.com/openflagr/flagr/pkg/notification"
 
 	"github.com/prashantv/gostub"
 	"github.com/stretchr/testify/assert"
@@ -23,6 +24,7 @@ func TestGetByFlagKeyOrID(t *testing.T) {
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	ec := GetEvalCache()
+	ec.lastSnapshotMaxID = 0
 	ec.reloadMapCache()
 	f := ec.GetByFlagKeyOrID(fixtureFlag.ID)
 	assert.Equal(t, f.ID, fixtureFlag.ID)
@@ -42,6 +44,7 @@ func TestGetByTags(t *testing.T) {
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	ec := GetEvalCache()
+	ec.lastSnapshotMaxID = 0
 	ec.reloadMapCache()
 
 	tags := make([]string, len(fixtureFlag.Tags))
@@ -70,4 +73,55 @@ func TestGetByTags(t *testing.T) {
 
 	f = ec.GetByTags(tags, &all)
 	assert.Len(t, f, 0)
+}
+
+func TestReloadMapCacheShortCircuit(t *testing.T) {
+	fixtureFlag := entity.GenFixtureFlag()
+	db := entity.PopulateTestDB(fixtureFlag)
+
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Fatalf("Failed to get database")
+	}
+	defer tmpDB.Close()
+	defer gostub.StubFunc(&getDB, db).Reset()
+
+	// Create an initial snapshot so MAX(id) > 0 and the short-circuit
+	// guard (lastSnapshotMaxID > 0) can engage.
+	entity.SaveFlagSnapshot(db, fixtureFlag.ID, "test",
+		notification.OperationCreate, notification.ComponentFlag, fixtureFlag.ID, fixtureFlag.Key)
+
+	ec := GetEvalCache()
+	ec.lastSnapshotMaxID = 0
+
+	// Wrap fetchAllFlags to count how many times it's called.
+	fetchCount := 0
+	origFetch := fetchAllFlags
+	fetchAllFlags = func() ([]entity.Flag, error) {
+		fetchCount++
+		return origFetch()
+	}
+	defer func() { fetchAllFlags = origFetch }()
+
+	// 1st call: must fetch (no prior MAX id tracked).
+	err := ec.reloadMapCache()
+	assert.NoError(t, err)
+	assert.Equal(t, 1, fetchCount, "first call should fetch full data")
+	assert.Greater(t, ec.lastSnapshotMaxID, uint(0), "should track snapshot max ID")
+
+	// 2nd call: must short-circuit (no new snapshot created).
+	err = ec.reloadMapCache()
+	assert.NoError(t, err)
+	assert.Equal(t, 1, fetchCount, "second call should short-circuit")
+	assert.Equal(t, ec.lastSnapshotMaxID, ec.lastSnapshotMaxID,
+		"snapshot max ID must not change when no new snapshot exists")
+
+	// Create another snapshot to simulate a mutation via the API.
+	entity.SaveFlagSnapshot(db, fixtureFlag.ID, "test",
+		notification.OperationUpdate, notification.ComponentFlag, fixtureFlag.ID, fixtureFlag.Key)
+
+	// 3rd call: must fetch again (new snapshot invalidated the cache).
+	err = ec.reloadMapCache()
+	assert.NoError(t, err)
+	assert.Equal(t, 2, fetchCount, "third call should fetch (new snapshot)")
 }
