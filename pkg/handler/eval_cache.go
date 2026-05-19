@@ -164,6 +164,17 @@ func (ec *EvalCache) readSnapshotMaxID() uint {
 	return currentMaxID
 }
 
+// shouldSkipReload compares currentMaxID with the last known snapshot ID.
+// Returns true when the cache is still fresh and no full reload is needed.
+// This is a pure-logic helper (no I/O) and is trivially testable.
+func (ec *EvalCache) shouldSkipReload(currentMaxID uint) bool {
+	ec.cacheMutex.RLock()
+	saved := ec.lastSnapshotMaxID
+	ec.cacheMutex.RUnlock()
+
+	return currentMaxID == saved && saved > 0
+}
+
 // reloadMapCache reloads the evaluation cache from the database. It short-circuits
 // when no new flag_snapshots have been created, since every API mutation that
 // affects evaluation data (flags, segments, variants, constraints, distributions,
@@ -174,14 +185,7 @@ func (ec *EvalCache) reloadMapCache() error {
 	}
 
 	currentMaxID := ec.readSnapshotMaxID()
-
-	ec.cacheMutex.RLock()
-	saved := ec.lastSnapshotMaxID
-	ec.cacheMutex.RUnlock()
-
-	// Short-circuit when no new snapshot exists. On the first load (saved == 0)
-	// we always proceed to populate the cache.
-	if currentMaxID == saved && saved > 0 {
+	if ec.shouldSkipReload(currentMaxID) {
 		return nil
 	}
 
