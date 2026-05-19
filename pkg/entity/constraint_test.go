@@ -386,3 +386,215 @@ func TestConstraintToExpr_NestedField(t *testing.T) {
 		assert.False(t, match)
 	})
 }
+
+func TestConstraintToExpr_RegexEscaping(t *testing.T) {
+	// EREG with backslash sequences (the main fix)
+	// These previously caused Go scanner "invalid char escape" errors
+	t.Run("EREG with \\d pattern", func(t *testing.T) {
+		c := Constraint{
+			Property: "status",
+			Operator: models.ConstraintOperatorEREG,
+			Value:    `"\d+"`,
+		}
+		expr, err := c.ToExpr()
+		assert.NoError(t, err)
+		match, err := conditions.Evaluate(expr, map[string]any{"status": "123"})
+		assert.NoError(t, err)
+		assert.True(t, match)
+		match, err = conditions.Evaluate(expr, map[string]any{"status": "abc"})
+		assert.NoError(t, err)
+		assert.False(t, match)
+	})
+
+	t.Run("EREG with \\. pattern (literal dot)", func(t *testing.T) {
+		c := Constraint{
+			Property: "email",
+			Operator: models.ConstraintOperatorEREG,
+			Value:    `".+@example\.com"`,
+		}
+		expr, err := c.ToExpr()
+		assert.NoError(t, err)
+		match, err := conditions.Evaluate(expr, map[string]any{"email": "user@example.com"})
+		assert.NoError(t, err)
+		assert.True(t, match)
+		match, err = conditions.Evaluate(expr, map[string]any{"email": "user@exampleXcom"})
+		assert.NoError(t, err)
+		assert.False(t, match)
+	})
+
+	t.Run("EREG with \\w pattern (word chars)", func(t *testing.T) {
+		c := Constraint{
+			Property: "name",
+			Operator: models.ConstraintOperatorEREG,
+			Value:    `"\w+"`,
+		}
+		expr, err := c.ToExpr()
+		assert.NoError(t, err)
+		match, err := conditions.Evaluate(expr, map[string]any{"name": "hello"})
+		assert.NoError(t, err)
+		assert.True(t, match)
+		match, err = conditions.Evaluate(expr, map[string]any{"name": "!!!"})
+		assert.NoError(t, err)
+		assert.False(t, match) // no word chars, \w+ has nothing to match
+	})
+
+	t.Run("EREG with \\s pattern (whitespace)", func(t *testing.T) {
+		c := Constraint{
+			Property: "text",
+			Operator: models.ConstraintOperatorEREG,
+			Value:    `"hello\sworld"`,
+		}
+		expr, err := c.ToExpr()
+		assert.NoError(t, err)
+		match, err := conditions.Evaluate(expr, map[string]any{"text": "hello world"})
+		assert.NoError(t, err)
+		assert.True(t, match)
+	})
+
+	t.Run("EREG with \\b pattern (word boundary)", func(t *testing.T) {
+		c := Constraint{
+			Property: "text",
+			Operator: models.ConstraintOperatorEREG,
+			Value:    `"\bword\b"`,
+		}
+		expr, err := c.ToExpr()
+		assert.NoError(t, err)
+		match, err := conditions.Evaluate(expr, map[string]any{"text": "word"})
+		assert.NoError(t, err)
+		assert.True(t, match)
+	})
+
+	// NEREG with backslash sequences
+	t.Run("NEREG with \\d pattern", func(t *testing.T) {
+		c := Constraint{
+			Property: "status",
+			Operator: models.ConstraintOperatorNEREG,
+			Value:    `"\d+"`,
+		}
+		expr, err := c.ToExpr()
+		assert.NoError(t, err)
+		match, err := conditions.Evaluate(expr, map[string]any{"status": "abc"})
+		assert.NoError(t, err)
+		assert.True(t, match)
+		match, err = conditions.Evaluate(expr, map[string]any{"status": "123"})
+		assert.NoError(t, err)
+		assert.False(t, match)
+	})
+
+	// Simple regex without backslashes should still work (regression check)
+	t.Run("EREG simple pattern without backslash", func(t *testing.T) {
+		c := Constraint{
+			Property: "status",
+			Operator: models.ConstraintOperatorEREG,
+			Value:    `"^5[0-9][0-9]$"`,
+		}
+		expr, err := c.ToExpr()
+		assert.NoError(t, err)
+		match, err := conditions.Evaluate(expr, map[string]any{"status": "500"})
+		assert.NoError(t, err)
+		assert.True(t, match)
+	})
+
+	// Regex literal form (starts with /) should be unchanged
+	t.Run("EREG with regex literal form", func(t *testing.T) {
+		c := Constraint{
+			Property: "status",
+			Operator: models.ConstraintOperatorEREG,
+			Value:    `/^5[0-9][0-9]$/`,
+		}
+		expr, err := c.ToExpr()
+		assert.NoError(t, err)
+		match, err := conditions.Evaluate(expr, map[string]any{"status": "500"})
+		assert.NoError(t, err)
+		assert.True(t, match)
+	})
+
+	// Pattern containing "/" falls back to string form
+	t.Run("EREG with pattern containing slash", func(t *testing.T) {
+		c := Constraint{
+			Property: "path",
+			Operator: models.ConstraintOperatorEREG,
+			Value:    `"/api/v1/.+"`,
+		}
+		expr, err := c.ToExpr()
+		assert.NoError(t, err)
+		match, err := conditions.Evaluate(expr, map[string]any{"path": "/api/v1/users"})
+		assert.NoError(t, err)
+		assert.True(t, match)
+	})
+
+	// Variable reference as value (unchanged)
+	t.Run("EREG with var ref value", func(t *testing.T) {
+		c := Constraint{
+			Property: "status",
+			Operator: models.ConstraintOperatorEREG,
+			Value:    `{pattern}`,
+		}
+		expr, err := c.ToExpr()
+		assert.NoError(t, err)
+		match, err := conditions.Evaluate(expr, map[string]any{
+			"status":  "123",
+			"pattern": `\d+`,
+		})
+		assert.NoError(t, err)
+		assert.True(t, match)
+	})
+
+	// Trimmed value handling
+	t.Run("EREG with trimmed value containing spaces", func(t *testing.T) {
+		c := Constraint{
+			Property: "status",
+			Operator: models.ConstraintOperatorEREG,
+			Value:    `  "\d+"  `,
+		}
+		expr, err := c.ToExpr()
+		assert.NoError(t, err)
+		match, err := conditions.Evaluate(expr, map[string]any{"status": "123"})
+		assert.NoError(t, err)
+		assert.True(t, match)
+	})
+
+	// Non-EREG operator should be unaffected
+	t.Run("EQ operator unaffected by regex fix", func(t *testing.T) {
+		c := Constraint{
+			Property: "name",
+			Operator: models.ConstraintOperatorEQ,
+			Value:    `"Alice"`,
+		}
+		expr, err := c.ToExpr()
+		assert.NoError(t, err)
+		match, err := conditions.Evaluate(expr, map[string]any{"name": "Alice"})
+		assert.NoError(t, err)
+		assert.True(t, match)
+	})
+
+	// Multiple constraints with regex in ConstraintArray
+	t.Run("ConstraintArray with regex patterns", func(t *testing.T) {
+		cs := ConstraintArray{
+			{
+				Property: "email",
+				Operator: models.ConstraintOperatorEREG,
+				Value:    `".+@example\.com"`,
+			},
+			{
+				Property: "status",
+				Operator: models.ConstraintOperatorEREG,
+				Value:    `"\d+"`,
+			},
+		}
+		expr, err := cs.ToExpr()
+		assert.NoError(t, err)
+		match, err := conditions.Evaluate(expr, map[string]any{
+			"email":  "user@example.com",
+			"status": "200",
+		})
+		assert.NoError(t, err)
+		assert.True(t, match)
+		match, err = conditions.Evaluate(expr, map[string]any{
+			"email":  "user@example.com",
+			"status": "abc",
+		})
+		assert.NoError(t, err)
+		assert.False(t, match)
+	})
+}
