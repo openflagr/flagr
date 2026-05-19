@@ -44,7 +44,7 @@ require (
 	github.com/tinylib/msgp v1.1.8 // indirect
 	github.com/urfave/negroni v1.0.0
 	github.com/yadvendar/negroni-newrelic-go-agent v0.0.0-20160803090806-3dc58758cb67
-	github.com/zhouzhuojie/conditions v0.2.5
+	github.com/zhouzhuojie/conditions v0.2.6
 	github.com/zhouzhuojie/withtimeout v0.0.0-20190405051827-12b39eb2edd5
 	golang.org/x/net v0.48.0
 	google.golang.org/api v0.257.0
