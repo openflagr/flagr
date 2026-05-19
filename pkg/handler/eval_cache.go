@@ -150,10 +150,10 @@ func (ec *EvalCache) GetByFlagKeyOrID(keyOrID any) *entity.Flag {
 	return f
 }
 
-// snapshotMaxID queries the latest flag_snapshot id. Returns 0 on error.
+// getSnapshotMaxID queries the latest flag_snapshot id. Returns 0 on error.
 // This is the lightweight change indicator used by the EvalCache to decide
 // whether a full reload is needed.
-func (ec *EvalCache) snapshotMaxID() uint {
+func (ec *EvalCache) getSnapshotMaxID() uint {
 	var maxID uint
 	if err := getDB().Model(&entity.FlagSnapshot{}).
 		Select("COALESCE(MAX(id), 0)").
@@ -167,12 +167,13 @@ func (ec *EvalCache) snapshotMaxID() uint {
 // shortCircuitReload checks whether the cache is still fresh by comparing
 // the current flag_snapshot MAX(id) against the last known value.
 // Returns true when the reload can be skipped.
-func (ec *EvalCache) shortCircuitReload() bool {
-	maxIDFromDB := ec.snapshotMaxID()
-
+// shortCircuitReload checks whether the cache is still fresh by comparing
+// snapshotMaxID (the current flag_snapshot MAX(id)) against the last known
+// value. Returns true when the reload can be skipped.
+func (ec *EvalCache) shortCircuitReload(snapshotMaxID uint) bool {
 	ec.cacheMutex.RLock()
 	defer ec.cacheMutex.RUnlock()
-	return maxIDFromDB == ec.lastSnapshotMaxID && ec.lastSnapshotMaxID > 0
+	return snapshotMaxID == ec.lastSnapshotMaxID && ec.lastSnapshotMaxID > 0
 }
 
 // reloadMapCache reloads the evaluation cache from the database. It short-circuits
@@ -184,7 +185,12 @@ func (ec *EvalCache) reloadMapCache() error {
 		defer config.Global.NewrelicApp.StartTransaction("eval_cache_reload", nil, nil).End()
 	}
 
-	if ec.shortCircuitReload() {
+	// Read the snapshot ID once, before the fetch. Using this same value
+	// for both the short-circuit decision and the post-reload store guarantees
+	// that lastSnapshotMaxID is never newer than the data in the cache.
+	preFetchMaxID := ec.getSnapshotMaxID()
+
+	if ec.shortCircuitReload(preFetchMaxID) {
 		return nil
 	}
 
@@ -194,17 +200,13 @@ func (ec *EvalCache) reloadMapCache() error {
 			return nil, err
 		}
 
-		// Query MAX(id) right after the data fetch so that the stored
-		// snapshot ID tracks the data as closely as possible.
-		maxIDFromDB := ec.snapshotMaxID()
-
 		ec.cacheMutex.Lock()
 		ec.cache = &cacheContainer{
 			idCache:  idCache,
 			keyCache: keyCache,
 			tagCache: tagCache,
 		}
-		ec.lastSnapshotMaxID = maxIDFromDB
+		ec.lastSnapshotMaxID = preFetchMaxID
 		ec.cacheMutex.Unlock()
 
 		return nil, nil
