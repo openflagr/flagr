@@ -168,8 +168,16 @@ func (ec *EvalCache) reloadMapCache() error {
 		Scan(&currentMaxID).Error; err != nil {
 		logrus.WithField("err", err).Warn(
 			"failed to query flag_snapshots MAX(id), falling back to full reload")
-	} else if currentMaxID == ec.lastSnapshotMaxID && ec.lastSnapshotMaxID > 0 {
-		return nil
+	} else {
+		// Protect the read so this is safe if reloadMapCache is ever
+		// called from multiple goroutines.
+		ec.cacheMutex.RLock()
+		savedMaxID := ec.lastSnapshotMaxID
+		ec.cacheMutex.RUnlock()
+
+		if currentMaxID == savedMaxID && savedMaxID > 0 {
+			return nil
+		}
 	}
 
 	_, _, err := withtimeout.Do(ec.refreshTimeout, func() (any, error) {
@@ -184,14 +192,11 @@ func (ec *EvalCache) reloadMapCache() error {
 			keyCache: keyCache,
 			tagCache: tagCache,
 		}
+		ec.lastSnapshotMaxID = currentMaxID
 		ec.cacheMutex.Unlock()
 
 		return nil, nil
 	})
-
-	if err == nil {
-		ec.lastSnapshotMaxID = currentMaxID
-	}
 
 	return err
 }
