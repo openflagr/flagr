@@ -150,7 +150,6 @@ func TestExportEvalCacheJSONHandler(t *testing.T) {
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	ec := GetEvalCache()
-	ec.lastSnapshotMaxID = 0
 	ec.reloadMapCache()
 
 	t.Run("happy code path", func(t *testing.T) {
