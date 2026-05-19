@@ -45,8 +45,8 @@ The definitions of the following concepts are in [API doc](https://openflagr.git
 
 There are three components in the flagr, Flagr Evaluator, Flagr Manager, and Flagr Metrics.
 
-- Flagr Evaluator. Flagr evaluator evaluates the incoming requests.
-- Flagr Manager. Flagr manager is the CRUD gateway. All the mutations of flags happen here.
-- Flagr Metrics. Flagr metrics is the data pipeline to collect evaluation results. Currently Flagr only supports Kafka as the pipeline.
+- **Flagr Evaluator**. Flagr evaluator evaluates the incoming requests. It maintains an in-memory cache (`EvalCache`) of all flags, segments, variants, constraints, distributions, and tags — pre-parsed and ready for fast evaluation. The cache is refreshed periodically (default every 3s, configurable via `FLAGR_EVALCACHE_REFRESHINTERVAL`). To avoid unnecessary database load, the reload short-circuits when no new `flag_snapshot` rows have been created, since every mutation handler that affects evaluation data also creates a snapshot.
+- **Flagr Manager**. Flagr manager is the CRUD gateway. All the mutations of flags happen here.
+- **Flagr Metrics**. Flagr metrics is the data pipeline to collect evaluation results. Currently Flagr only supports Kafka as the pipeline.
 
 ![Flagr Architecture](images/flagr_arch.png)
