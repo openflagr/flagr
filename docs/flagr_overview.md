@@ -10,6 +10,12 @@ The definitions of the following concepts are in [API doc](https://openflagr.git
 - **Variant Attachment** represents the dynamic configuration of a variant. For example, if you have a variant for the `green` button, you can dynamically control what's the hex color of green you want to use (e.g. `{"hex_color": "#42b983"}`).
 - **Segment** represents the segmentation, i.e. the set of audience we want to target. Segment is the smallest unit of a component we can analyze in Flagr Metrics.
 - **Constraint** represents rules that we can use to define the audience of the segment. In other words, the audience in the segment is defined by a set of constraints. Specifically, in Flagr, the constraints are connected with `AND` in a segment.
+
+  Constraint properties support nested field access using dotted and bracketed syntax:
+  - `user.name` — accesses `args["user"]["name"]` from a nested entity context
+  - `users[0]` — accesses the first element of `args["users"]` array
+  - `users[0].role` — chained array + property access
+  - Simple flat properties like `state` or `age` work as before.
 - **Distribution** represents the distribution of variants in a segment.
 - **Entity** represents the context of what we are going to assign the variant on. Usually, Flagr expects the context coming with the entity, so that one can define constraints based on the context of the entity.
 - **Rollout** and deterministic random logic. The goal here is to ensure deterministic and persistent evaluation result for entities. Steps to evaluating a flag given an entity context:

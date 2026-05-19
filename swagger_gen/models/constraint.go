@@ -31,7 +31,8 @@ type Constraint struct {
 	// Enum: ["EQ","NEQ","LT","LTE","GT","GTE","EREG","NEREG","IN","NOTIN","CONTAINS","NOTCONTAINS"]
 	Operator *string `json:"operator"`
 
-	// property
+	// The property name from the entity context to evaluate. Supports nested field access: use dots (e.g., `user.name`)  for nested objects and brackets (e.g., `users[0]`) for array indices.
+	//
 	// Required: true
 	// Min Length: 1
 	Property *string `json:"property"`

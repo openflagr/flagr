@@ -146,6 +146,144 @@ func TestEvalSegment(t *testing.T) {
 	})
 }
 
+func TestEvalSegment_NestedEntityContext(t *testing.T) {
+	t.Run("nested dotted path constraint matches nested entity context", func(t *testing.T) {
+		s := entity.GenFixtureSegment()
+		s.Constraints = []entity.Constraint{
+			{
+				Property: "user.name",
+				Operator: models.ConstraintOperatorEQ,
+				Value:    `"Alice"`,
+			},
+			{
+				Property: "user.age",
+				Operator: models.ConstraintOperatorGT,
+				Value:    "18",
+			},
+		}
+		s.PrepareEvaluation()
+
+		vID, log, evalNextSegment := evalSegment(100, models.EvalContext{
+			EnableDebug: true,
+			EntityContext: map[string]any{
+				"user": map[string]any{
+					"name": "Alice",
+					"age":  float64(25),
+				},
+			},
+			EntityID:   "entityID1",
+			EntityType: "entityType1",
+			FlagID:     int64(100),
+		}, s)
+
+		assert.NotNil(t, vID)
+		assert.NotEmpty(t, log)
+		assert.False(t, evalNextSegment)
+	})
+
+	t.Run("nested dotted path constraint no match", func(t *testing.T) {
+		s := entity.GenFixtureSegment()
+		s.Constraints = []entity.Constraint{
+			{
+				Property: "user.name",
+				Operator: models.ConstraintOperatorEQ,
+				Value:    `"Alice"`,
+			},
+		}
+		s.PrepareEvaluation()
+
+		vID, log, evalNextSegment := evalSegment(100, models.EvalContext{
+			EnableDebug:   true,
+			EntityContext: map[string]any{"user": map[string]any{"name": "Bob"}},
+			EntityID:      "entityID1",
+			EntityType:    "entityType1",
+			FlagID:        int64(100),
+		}, s)
+
+		assert.Nil(t, vID)
+		assert.NotEmpty(t, log)
+		assert.True(t, evalNextSegment)
+	})
+
+	t.Run("nested array index constraint matches", func(t *testing.T) {
+		s := entity.GenFixtureSegment()
+		s.Constraints = []entity.Constraint{
+			{
+				Property: "roles[0]",
+				Operator: models.ConstraintOperatorEQ,
+				Value:    `"admin"`,
+			},
+		}
+		s.PrepareEvaluation()
+
+		vID, log, evalNextSegment := evalSegment(100, models.EvalContext{
+			EnableDebug:   true,
+			EntityContext: map[string]any{"roles": []any{"admin", "editor"}},
+			EntityID:      "entityID1",
+			EntityType:    "entityType1",
+			FlagID:        int64(100),
+		}, s)
+
+		assert.NotNil(t, vID)
+		assert.NotEmpty(t, log)
+		assert.False(t, evalNextSegment)
+	})
+
+	t.Run("nested chained path (array + dot) matches", func(t *testing.T) {
+		s := entity.GenFixtureSegment()
+		s.Constraints = []entity.Constraint{
+			{
+				Property: "users[0].tier",
+				Operator: models.ConstraintOperatorIN,
+				Value:    `["premium", "enterprise"]`,
+			},
+		}
+		s.PrepareEvaluation()
+
+		vID, log, evalNextSegment := evalSegment(100, models.EvalContext{
+			EnableDebug: true,
+			EntityContext: map[string]any{
+				"users": []any{
+					map[string]any{"tier": "premium"},
+				},
+			},
+			EntityID:   "entityID1",
+			EntityType: "entityType1",
+			FlagID:     int64(100),
+		}, s)
+
+		assert.NotNil(t, vID)
+		assert.NotEmpty(t, log)
+		assert.False(t, evalNextSegment)
+	})
+
+	t.Run("nested path with missing key errors gracefully", func(t *testing.T) {
+		s := entity.GenFixtureSegment()
+		s.Constraints = []entity.Constraint{
+			{
+				Property: "user.missing_field",
+				Operator: models.ConstraintOperatorEQ,
+				Value:    `"value"`,
+			},
+		}
+		s.PrepareEvaluation()
+
+		// When a nested key is missing, the constraint evaluation should error
+		// and the segment should not match (evalNextSegment = true means try next)
+		vID, log, evalNextSegment := evalSegment(100, models.EvalContext{
+			EnableDebug:   true,
+			EntityContext: map[string]any{"user": map[string]any{"name": "Alice"}},
+			EntityID:      "entityID1",
+			EntityType:    "entityType1",
+			FlagID:        int64(100),
+		}, s)
+
+		assert.Nil(t, vID)
+		assert.NotEmpty(t, log)
+		assert.True(t, evalNextSegment)
+	})
+}
+
 func TestEvalFlag(t *testing.T) {
 	defer gostub.StubFunc(&logEvalResult).Reset()
 
