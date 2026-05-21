@@ -6,7 +6,7 @@ WORKDIR /go/src/github.com/openflagr/flagr
 ADD . .
 ARG FLAGR_UI_POSSIBLE_ENTITY_TYPES=null
 ENV VITE_FLAGR_UI_POSSIBLE_ENTITY_TYPES ${FLAGR_UI_POSSIBLE_ENTITY_TYPES}
-RUN make build_ui
+RUN apk add --no-cache make && make build_ui
 
 ######################################
 # Prepare go_builder
