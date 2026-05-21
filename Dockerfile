@@ -1,11 +1,11 @@
 ######################################
 # Prepare npm_builder
 ######################################
-FROM node:16 as npm_builder
+FROM node:20-alpine as npm_builder
 WORKDIR /go/src/github.com/openflagr/flagr
 ADD . .
 ARG FLAGR_UI_POSSIBLE_ENTITY_TYPES=null
-ENV VUE_APP_FLAGR_UI_POSSIBLE_ENTITY_TYPES ${FLAGR_UI_POSSIBLE_ENTITY_TYPES}
+ENV VITE_FLAGR_UI_POSSIBLE_ENTITY_TYPES ${FLAGR_UI_POSSIBLE_ENTITY_TYPES}
 RUN make build_ui
 
 ######################################
