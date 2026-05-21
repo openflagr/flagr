@@ -74,6 +74,11 @@ ol { margin: 0; padding-left: 20px; }
     a { color: inherit; text-decoration: none; font-size: 0.9em; font-weight: 500; opacity: 0.85; }
     a:hover { opacity: 1; }
   }
+  .router-view-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
 
   // --- Flex helpers ---
   .flex-row {

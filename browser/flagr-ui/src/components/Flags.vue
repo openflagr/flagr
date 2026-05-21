@@ -1,7 +1,5 @@
 <template>
-  <el-row>
-    <el-col :span="20" :offset="2">
-      <div class="container">
+  <div class="container">
 
         <spinner v-if="!loaded" />
 
@@ -14,13 +12,13 @@
                 placeholder="Search flags by ID, key, description, or tags..."
                 v-model="searchTerm"
                 v-focus
-                size="small"
+                size="large"
                 data-testid="search-input"
                 class="flags-search"
                 clearable
               />
             </div>
-            <el-button type="primary" size="small" @click="showCreateModal = true" data-testid="create-flag-btn">
+            <el-button type="primary" size="large" @click="showCreateModal = true" data-testid="create-flag-btn">
               <el-icon><Plus /></el-icon>
               Create Flag
             </el-button>
@@ -34,12 +32,13 @@
               :default-sort="{ prop: 'id', order: 'descending' }"
               @row-click="goToFlag"
               virtual-scroll
+              size="small"
               max-height="calc(100vh - 240px)"
               style="width: 100%"
               data-testid="flags-table"
             >
-              <el-table-column prop="id" align="center" label="Flag ID" sortable width="140"></el-table-column>
-              <el-table-column prop="description" label="Description" min-width="300">
+              <el-table-column prop="id" align="center" label="Flag ID" sortable width="100"></el-table-column>
+              <el-table-column prop="description" label="Description" min-width="250">
                 <template #default="scope">
                   <div class="flag-desc-cell">
                     <span class="flag-desc-text">{{ scope.row.description }}</span>
@@ -47,7 +46,7 @@
                   </div>
                 </template>
               </el-table-column>
-              <el-table-column prop="tags" label="Tags" min-width="200">
+              <el-table-column prop="tags" label="Tags" min-width="160">
                 <template #default="scope">
                   <div class="flag-tags-cell">
                     <el-tag
@@ -61,21 +60,20 @@
                   </div>
                 </template>
               </el-table-column>
-              <el-table-column prop="updatedBy" label="Last Updated By" sortable width="200"></el-table-column>
+              <el-table-column prop="updatedBy" label="Last Updated By" sortable width="140"></el-table-column>
               <el-table-column
                 prop="updatedAt"
                 label="Updated At (UTC)"
                 :formatter="datetimeFormatter"
                 sortable
-                width="180"
+                width="130"
               ></el-table-column>
               <el-table-column
                 prop="enabled"
                 label="Status"
                 sortable
                 align="center"
-                fixed="right"
-                width="130"
+                width="100"
                 :filters="[{ text: 'Enabled', value: true }, { text: 'Disabled', value: false }]"
                 :filter-method="filterStatus"
               >
@@ -111,6 +109,7 @@
                     :highlight-current-row="false"
                     :default-sort="{ prop: 'id', order: 'descending' }"
                     virtual-scroll
+                    size="small"
                     max-height="calc(100vh - 240px)"
                     style="width: 100%"
                   >
@@ -135,13 +134,12 @@
                       sortable
                       width="180"
                     ></el-table-column>
-                    <el-table-column
-                      prop="action"
-                      label="Action"
-                      align="center"
-                      fixed="right"
-                      width="100"
-                    >
+              <el-table-column
+                prop="action"
+                label="Action"
+                align="center"
+                width="100"
+              >
                       <template #default="scope">
                         <el-button
                           @click="restoreFlag(scope.row)"
@@ -160,8 +158,6 @@
           </el-card>
         </div>
       </div>
-    </el-col>
-  </el-row>
 
   <!-- Create Flag Modal -->
   <el-dialog
@@ -330,7 +326,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 .flags-search-wrap {
   flex: 1;
@@ -341,13 +337,15 @@ export default {
 .flags-search-icon {
   position: absolute;
   left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
   z-index: 1;
-  font-size: 16px;
+  font-size: 18px;
   color: var(--el-text-color-placeholder);
   pointer-events: none;
 }
 .flags-search :deep(.el-input__wrapper) {
-  padding-left: 36px;
+  padding-left: 40px;
   border-radius: 24px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.06);
   background-color: var(--el-bg-color);
@@ -374,7 +372,6 @@ export default {
   text-transform: uppercase;
 }
 .flags-table-card :deep(.el-table) .el-table__row {
-  transition: background-color 0.15s;
   cursor: pointer;
 }
 .flags-table-card :deep(.el-table) .el-table__row:hover {
@@ -383,7 +380,7 @@ export default {
 .flags-table-card :deep(.el-table) td.el-table__cell {
   border-bottom: 1px solid var(--el-border-color-lighter);
   white-space: nowrap;
-  padding: 12px 0;
+  padding: 6px 0;
 }
 .flags-table-card :deep(.el-table) .el-table__header-wrapper tr:first-child th:first-child {
   border-top-left-radius: 8px;
@@ -400,7 +397,7 @@ export default {
 }
 .flag-desc-text {
   font-weight: 500;
-  font-size: 14px;
+  font-size: 13px;
   color: var(--el-text-color-primary);
 }
 .flag-key-tag {
