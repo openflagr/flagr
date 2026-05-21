@@ -1,6 +1,5 @@
 PWD := $(shell pwd)
 GOPATH := $(shell go env GOPATH)
-UIPATH := $(PWD)/browser/flagr-ui
 
 ################################
 ### Public
@@ -30,7 +29,7 @@ build:
 
 build_ui:
 	@echo "Building Flagr UI ..."
-	@cd ./browser/flagr-ui/; npm install && npm run build
+	@cd ./browser/flagr-ui/; npm run build
 
 run_ui:
 	@cd ./browser/flagr-ui/; npm run dev
@@ -38,8 +37,6 @@ run_ui:
 run:
 	@$(PWD)/flagr --port 18000
 
-dev:
-	@cd $(UIPATH) && npm run dev:full
 
 start:
 	$(MAKE) -j run run_ui

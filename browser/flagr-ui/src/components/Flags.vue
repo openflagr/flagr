@@ -106,7 +106,7 @@
           <el-collapse class="deleted-flags-table" @change="fetchDeletedFlags" data-testid="deleted-flags-section">
             <el-collapse-item title="Deleted Flags">
               <el-table
-                :data="getDeletedFlags"
+                :data="deletedFlags"
                 :stripe="true"
                 :highlight-current-row="false"
                 :default-sort="{ prop: 'id', order: 'descending' }"
@@ -196,37 +196,28 @@ export default {
     }, handleErr.bind(this));
   },
   computed: {
-    filteredFlags: function() {
+    filteredFlags() {
       if (this.searchTerm) {
         return this.flags.filter(({ id, key, description, tags }) =>
           this.searchTerm
             .split(",")
-            .map(term => {
+            .every(term => {
               const termLowerCase = term.toLowerCase();
-              return (
-                id.toString().includes(term) ||
-                key.includes(term) ||
-                description.toLowerCase().includes(termLowerCase) ||
-                tags
-                  .map(tag =>
-                    tag.value.toLowerCase().includes(termLowerCase)
-                  )
-                  .includes(true)
+              const idMatch = id.toString().includes(term);
+              const keyMatch = key && key.includes(term);
+              const descMatch = description && description.toLowerCase().includes(termLowerCase);
+              const tagMatch = tags && tags.some(tag =>
+                tag.value && tag.value.toLowerCase().includes(termLowerCase)
               );
+              return idMatch || keyMatch || descMatch || tagMatch;
             })
-            .every(e => e)
         );
       }
       return this.flags;
     },
-    getDeletedFlags: function() {
-      return this.deletedFlags;
-    }
+
   },
   methods: {
-    flagEnabledFormatter(row, col, val) {
-      return val ? "on" : "off";
-    },
     datetimeFormatter(row, col, val) {
       return val ? val.split(".")[0] : "";
     },
@@ -273,7 +264,7 @@ export default {
     },
     fetchDeletedFlags() {
       if (!this.deletedFlagsLoaded) {
-        var self = this;
+        const self = this;
         Axios.get(`${API_URL}/flags?deleted=true`).then(response => {
           let flags = response.data;
           flags.reverse();

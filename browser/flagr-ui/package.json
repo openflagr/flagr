@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "vite",
-    "dev:full": "concurrently -k -n api,ui --prefix-colors blue,green \"make -C ../../ run\" \"vite\"",
+    "dev:full": "concurrently -k -n api,ui --prefix-colors blue,green \"cd ../.. && go run ./swagger_gen/cmd/flagr-server/ --port 18000\" \"vite\"",
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint src --ext .js,.vue",
@@ -32,7 +32,6 @@
     "eslint": "^8.57.0",
     "eslint-plugin-vue": "^9.32.0",
     "less": "^4.6.4",
-    "minimist": ">=1.2.2",
     "vite": "^6.4.2"
   },
   "eslintConfig": {

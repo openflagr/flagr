@@ -508,7 +508,6 @@
                   Delete Flag
                 </el-button>
               </el-card>
-              <spinner v-if="!loaded"></spinner>
             </el-tab-pane>
 
             <el-tab-pane label="History">
@@ -530,7 +529,6 @@ import { InfoFilled, Edit, View, Delete } from "@element-plus/icons-vue";
 
 import constants from "@/constants";
 import helpers from "@/helpers/helpers";
-import Spinner from "@/components/Spinner";
 import DebugConsole from "@/components/DebugConsole";
 import FlagHistory from "@/components/FlagHistory";
 import MarkdownEditor from "@/components/MarkdownEditor.vue";
@@ -538,10 +536,6 @@ import operatorsData from "@/operators.json";
 
 const operators = operatorsData.operators;
 
-const OPERATOR_VALUE_TO_LABEL_MAP = operators.reduce((acc, el) => {
-  acc[el.value] = el.label;
-  return acc;
-}, {});
 
 const { sum, pluck, handleErr } = helpers;
 
@@ -586,7 +580,6 @@ function processVariant(variant) {
 export default {
   name: "flag",
   components: {
-    spinner: Spinner,
     debugConsole: DebugConsole,
     flagHistory: FlagHistory,
     draggable: draggable,
@@ -607,27 +600,13 @@ export default {
       allTags: [],
       allowCreateEntityType: true,
       tagInputVisible: false,
-      flag: {
-        createdBy: "",
-        dataRecordsEnabled: false,
-        entityType: "",
-        description: "",
-        enabled: false,
-        id: 0,
-        key: "",
-        tags: [],
-        segments: [],
-        updatedAt: "",
-        variants: [],
-        notes: ""
-      },
+      flag: {},
       newSegment: clone(DEFAULT_SEGMENT),
       newVariant: clone(DEFAULT_VARIANT),
       newTag: clone(DEFAULT_TAG),
       selectedSegment: null,
       newDistributions: {},
       operatorOptions: operators,
-      operatorValueToLabelMap: OPERATOR_VALUE_TO_LABEL_MAP,
       showMdEditor: false,
       historyLoaded: false
     };
@@ -637,20 +616,13 @@ export default {
       return sum(pluck(Object.values(this.newDistributions), "percent"));
     },
     newDistributionIsValid() {
-      const percentageSum = sum(
-        pluck(Object.values(this.newDistributions), "percent")
-      );
-      return percentageSum === 100;
+      return this.newDistributionPercentageSum === 100;
     },
     flagId() {
       return this.$route.params.flagId;
     },
     toggleInnerConfigCard() {
-      if (!this.showMdEditor && !this.flag.notes) {
-        return "flag-inner-config-card";
-      } else {
-        return "";
-      }
+      return !this.showMdEditor && !this.flag?.notes ? "flag-inner-config-card" : ""
     }
   },
   methods: {
@@ -660,12 +632,6 @@ export default {
         this.$router.replace({ name: "home" });
         this.$message.success(`You deleted flag ${flagId}`);
       }, handleErr.bind(this));
-    },
-    openCreateSegmentDialog() {
-      this.dialogCreateSegmentOpen = true
-    },
-    openDeleteFlagDialog() {
-      this.dialogDeleteFlagVisible = true
     },
     putFlag(flag) {
       Axios.put(`${API_URL}/flags/${this.flagId}`, {

@@ -54,12 +54,10 @@ export default {
     },
   },
   methods: {
-    syncMarkdown(md) {
-      this.$emit("update:markdown", md);
-    },
-  },
-  watch: {},
-  mounted() {},
+    syncMarkdown(markdown) {
+      this.$emit("update:markdown", markdown);
+    }
+  }
 };
 </script>
 
