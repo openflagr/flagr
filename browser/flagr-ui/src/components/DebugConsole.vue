@@ -80,13 +80,13 @@ export default {
         this.evalResult = response.data;
         this.evalSummary = this.buildSummary(response.data);
         this.$message.success("evaluation success");
-      }, () => this.$message.error("evaluation error"));
+      }, err => { this.$message.error(err?.response?.data?.message || 'evaluation error') });
     },
     postEvaluationBatch(batchEvalContext) {
       Axios.post(`${API_URL}/evaluation/batch`, batchEvalContext).then(response => {
         this.batchEvalResult = response.data;
         this.$message.success("evaluation success");
-      }, () => this.$message.error("evaluation error"));
+      }, err => { this.$message.error(err?.response?.data?.message || 'evaluation error') });
     },
     buildSummary(result) {
       if (!result || !result.evalDebugLog) return null;

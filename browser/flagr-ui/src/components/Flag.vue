@@ -283,7 +283,7 @@ export default {
         this.$message.error("variant attachment is not valid")
         return
       }
-      Axios.put(`${API_URL}/flags/${this.flagId}/variants/${variant.id}`, variant).then(
+      Axios.put(`${API_URL}/flags/${this.flagId}/variants/${variant.id}`, { key: variant.key, attachment: variant.attachment }).then(
         () => this.$message.success("variant updated"),
         handleErr.bind(this)
       )

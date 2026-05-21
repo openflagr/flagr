@@ -46,8 +46,13 @@ export default {
   },
   computed: {
     compiledMarkdown() {
-      return md.render(xss(this.input));
+      return xss(md.render(this.input));
     },
+  },
+  watch: {
+    markdown(val) {
+      this.input = val
+    }
   },
   methods: {
     syncMarkdown(markdown) {

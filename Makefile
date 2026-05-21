@@ -29,7 +29,7 @@ build:
 
 build_ui:
 	@echo "Building Flagr UI ..."
-	@cd ./browser/flagr-ui/; npm run build
+	@cd ./browser/flagr-ui/; npm install && npm run build
 
 run_ui:
 	@cd ./browser/flagr-ui/; npm run dev
