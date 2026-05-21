@@ -33,10 +33,13 @@ build_ui:
 	@cd ./browser/flagr-ui/; npm install && npm run build
 
 run_ui:
-	@cd ./browser/flagr-ui/; npm run serve
+	@cd ./browser/flagr-ui/; npm run dev
 
 run:
 	@$(PWD)/flagr --port 18000
+
+dev:
+	@cd $(UIPATH) && npm run dev:full
 
 start:
 	$(MAKE) -j run run_ui

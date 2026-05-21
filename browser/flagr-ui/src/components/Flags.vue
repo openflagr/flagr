@@ -11,25 +11,33 @@
         <div v-if="loaded">
           <el-row>
             <el-col>
-              <el-input placeholder="Specific new flag description" v-model="newFlag.description">
-                <template slot="prepend">
-                  <span class="el-icon-plus" />
+              <el-input
+                placeholder="Specific new flag description"
+                v-model="newFlag.description"
+                data-testid="new-flag-input"
+              >
+                <template #prepend>
+                  <el-icon><Plus /></el-icon>
                 </template>
-                <template slot="append">
+                <template #append>
                   <el-dropdown
                     split-button
                     type="primary"
                     :disabled="!newFlag.description"
                     @command="onCommandDropdown"
                     @click.prevent="createFlag"
+                    data-testid="create-flag-btn"
                   >
                     Create New Flag
-                    <el-dropdown-menu slot="dropdown">
-                      <el-dropdown-item
-                        command="simple_boolean_flag"
-                        :disabled="!newFlag.description"
-                      >Create Simple Boolean Flag</el-dropdown-item>
-                    </el-dropdown-menu>
+                    <template #dropdown>
+                      <el-dropdown-menu>
+                        <el-dropdown-item
+                          command="simple_boolean_flag"
+                          :disabled="!newFlag.description"
+                          data-testid="create-boolean-flag-btn"
+                        >Create Simple Boolean Flag</el-dropdown-item>
+                      </el-dropdown-menu>
+                    </template>
                   </el-dropdown>
                 </template>
               </el-input>
@@ -39,10 +47,14 @@
           <el-row>
             <el-input
               placeholder="Search a flag"
-              prefix-icon="el-icon-search"
               v-model="searchTerm"
               v-focus
-            ></el-input>
+              data-testid="search-input"
+            >
+              <template #prefix>
+                <el-icon><Search /></el-icon>
+              </template>
+            </el-input>
           </el-row>
 
           <el-table
@@ -50,18 +62,18 @@
             :stripe="true"
             :highlight-current-row="false"
             :default-sort="{ prop: 'id', order: 'descending' }"
-            v-on:row-click="goToFlag"
+            @row-click="goToFlag"
             style="width: 100%"
+            data-testid="flags-table"
           >
             <el-table-column prop="id" align="center" label="Flag ID" sortable fixed width="95"></el-table-column>
             <el-table-column prop="description" label="Description" min-width="300"></el-table-column>
             <el-table-column prop="tags" label="Tags" min-width="200">
-              <template slot-scope="scope">
+              <template #default="scope">
                 <el-tag
                   v-for="tag in scope.row.tags"
                   :key="tag.id"
-                  :type="warning"
-                  disable-transitions
+                  type="warning"
                 >{{ tag.value }}</el-tag>
               </template>
             </el-table-column>
@@ -83,16 +95,15 @@
               :filters="[{ text: 'Enabled', value: true }, { text: 'Disabled', value: false }]"
               :filter-method="filterStatus"
             >
-              <template slot-scope="scope">
+              <template #default="scope">
                 <el-tag
                   :type="scope.row.enabled ? 'primary' : 'danger'"
-                  disable-transitions
                 >{{ scope.row.enabled ? "on" : "off" }}</el-tag>
               </template>
             </el-table-column>
           </el-table>
 
-          <el-collapse class="deleted-flags-table" @change="fetchDeletedFlags">
+          <el-collapse class="deleted-flags-table" @change="fetchDeletedFlags" data-testid="deleted-flags-section">
             <el-collapse-item title="Deleted Flags">
               <el-table
                 :data="getDeletedFlags"
@@ -104,12 +115,11 @@
                 <el-table-column prop="id" align="center" label="Flag ID" sortable fixed width="95"></el-table-column>
                 <el-table-column prop="description" label="Description" min-width="300"></el-table-column>
                 <el-table-column prop="tags" label="Tags" min-width="200">
-                  <template slot-scope="scope">
+                  <template #default="scope">
                     <el-tag
                       v-for="tag in scope.row.tags"
                       :key="tag.id"
-                      :type="warning"
-                      disable-transitions
+                      type="warning"
                     >{{ tag.value }}</el-tag>
                   </template>
                 </el-table-column>
@@ -128,11 +138,12 @@
                   fixed="right"
                   width="100"
                 >
-                  <template slot-scope="scope">
+                  <template #default="scope">
                     <el-button
                       @click="restoreFlag(scope.row)"
                       type="warning"
                       size="small"
+                      :data-testid="'restore-flag-' + scope.row.id"
                     >Restore</el-button>
                   </template>
                 </el-table-column>
@@ -147,6 +158,7 @@
 
 <script>
 import Axios from "axios";
+import { Plus, Search } from "@element-plus/icons-vue";
 
 import constants from "@/constants";
 import Spinner from "@/components/Spinner";
@@ -159,7 +171,9 @@ const { API_URL } = constants;
 export default {
   name: "flags",
   components: {
-    spinner: Spinner
+    spinner: Spinner,
+    Plus,
+    Search
   },
   data() {
     return {

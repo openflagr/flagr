@@ -1,22 +1,21 @@
-import Vue from 'vue'
-import Router from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 import Flags from '@/components/Flags'
 import Flag from '@/components/Flag'
 
-Vue.use(Router)
+const routes = [
+  {
+    path: '/',
+    name: 'home',
+    component: Flags
+  },
+  {
+    path: '/flags/:flagId',
+    name: 'flag',
+    component: Flag
+  }
+]
 
-export default new Router({
-  mode: 'hash',
-  routes: [
-    {
-      path: '/',
-      name: 'home',
-      component: Flags
-    },
-    {
-      path: '/flags/:flagId',
-      name: 'flag',
-      component: Flag
-    }
-  ]
+export default createRouter({
+  history: createWebHashHistory(),
+  routes
 })

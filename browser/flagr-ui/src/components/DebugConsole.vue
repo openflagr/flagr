@@ -1,8 +1,10 @@
 <template>
   <el-card class="dc-container">
-    <div slot="header" class="el-card-header">
-      <h2>Debug Console</h2>
-    </div>
+    <template #header>
+      <div class="el-card-header">
+        <h2>Debug Console</h2>
+      </div>
+    </template>
     <el-collapse>
       <el-collapse-item title="Evaluation">
         <el-row :gutter="10">
@@ -11,7 +13,7 @@
           </el-col>
           <el-col :span="7" class="evaluation-button-col">
             <el-button
-              size="mini"
+              size="small"
               @click="postEvaluation(evalContext)"
               type="primary"
               plain
@@ -23,20 +25,24 @@
         </el-row>
         <el-row :gutter="10">
           <el-col :span="12">
-            <vue-json-editor
-              v-model="evalContext"
-              :showBtns="false"
-              ref="evalContextEditor"
+            <json-editor
+              v-model:json="evalContext"
+              :main-menu-bar="false"
+              :navigation-bar="false"
+              :status-bar="false"
+              mode="text"
               class="json-editor"
-            ></vue-json-editor>
+            />
           </el-col>
           <el-col :span="12">
-            <vue-json-editor
-              v-model="evalResult"
-              :showBtns="false"
-              ref="evalResultEditor"
+            <json-editor
+              v-model:json="evalResult"
+              :main-menu-bar="false"
+              :navigation-bar="false"
+              :status-bar="false"
+              mode="text"
               class="json-editor"
-            ></vue-json-editor>
+            />
           </el-col>
         </el-row>
       </el-collapse-item>
@@ -48,7 +54,7 @@
           </el-col>
           <el-col :span="7" class="evaluation-button-col">
             <el-button
-              size="mini"
+              size="small"
               @click="postEvaluationBatch(batchEvalContext)"
               type="primary"
               plain
@@ -60,20 +66,24 @@
         </el-row>
         <el-row :gutter="10">
           <el-col :span="12">
-            <vue-json-editor
-              v-model="batchEvalContext"
-              :showBtns="false"
-              ref="batchEvalContextEditor"
+            <json-editor
+              v-model:json="batchEvalContext"
+              :main-menu-bar="false"
+              :navigation-bar="false"
+              :status-bar="false"
+              mode="text"
               class="json-editor"
-            ></vue-json-editor>
+            />
           </el-col>
           <el-col :span="12">
-            <vue-json-editor
-              v-model="batchEvalResult"
-              :showBtns="false"
-              ref="batchEvalResultEditor"
+            <json-editor
+              v-model:json="batchEvalResult"
+              :main-menu-bar="false"
+              :navigation-bar="false"
+              :status-bar="false"
+              mode="text"
               class="json-editor"
-            ></vue-json-editor>
+            />
           </el-col>
         </el-row>
       </el-collapse-item>
@@ -83,7 +93,7 @@
 
 <script>
 import Axios from "axios";
-import vueJsonEditor from "vue-json-editor";
+import JsonEditor from "vue3-ts-jsoneditor";
 
 import constants from "@/constants";
 
@@ -91,6 +101,7 @@ const { API_URL } = constants;
 
 export default {
   name: "debug-console",
+  components: { JsonEditor },
   props: ["flag"],
   data() {
     return {
@@ -151,15 +162,6 @@ export default {
         }
       );
     }
-  },
-  components: {
-    vueJsonEditor
-  },
-  mounted() {
-    this.$refs.evalContextEditor.editor.setMode("code");
-    this.$refs.evalResultEditor.editor.setMode("code");
-    this.$refs.batchEvalContextEditor.editor.setMode("code");
-    this.$refs.batchEvalResultEditor.editor.setMode("code");
   }
 };
 </script>
@@ -167,9 +169,7 @@ export default {
 <style lang="less" scoped>
 .json-editor {
   margin-top: 3px;
-  .jsoneditor {
-    height: 400px;
-  }
+  height: 400px;
 }
 .evaluation-button-col {
   text-align: right;

@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <el-menu mode="horizontal" class="navbar">
+    <header class="navbar">
       <el-row>
         <el-col :span="20" :offset="2">
           <el-row>
@@ -27,7 +27,7 @@
           </el-row>
         </el-col>
       </el-row>
-    </el-menu>
+    </header>
     <div class="router-view-container">
       <router-view></router-view>
     </div>
@@ -35,7 +35,8 @@
 </template>
 
 <script>
-const version = require("../package.json").version || "1.0.0";
+import pkg from "../package.json";
+const version = pkg.version || "1.0.0";
 export default {
   name: "app",
   data: () => ({
@@ -77,7 +78,7 @@ ol {
   .navbar {
     background-color: #74e5e0;
     color: #2e4960;
-    border: 0;
+    padding: 0 0;
 
     .logo-container {
       display: flex;

@@ -1,5 +1,5 @@
-const API_URL = process.env.VUE_APP_API_URL
-const FLAGR_UI_POSSIBLE_ENTITY_TYPES = process.env.VUE_APP_FLAGR_UI_POSSIBLE_ENTITY_TYPES
+const API_URL = import.meta.env.VITE_API_URL
+const FLAGR_UI_POSSIBLE_ENTITY_TYPES = import.meta.env.VITE_FLAGR_UI_POSSIBLE_ENTITY_TYPES
 
 export default {
   API_URL,
