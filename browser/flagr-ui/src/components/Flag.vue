@@ -65,6 +65,7 @@
               <variants-section
                 :variants="flag.variants"
                 @create-variant="handleCreateVariant"
+                @update-variant-key="handleUpdateVariantKey"
                 @save-variant="putVariant"
                 @delete-variant="deleteVariant"
                 @attachment-change="handleVariantAttachmentChange"
@@ -74,6 +75,8 @@
                 :segments="flag.segments"
                 :operator-options="operatorOptions"
                 @reorder="handleReorderSegments"
+                @move-up="moveSegmentUp"
+                @move-down="moveSegmentDown"
                 @new-segment="dialogCreateSegmentOpen = true"
                 @save-segment="putSegment"
                 @delete-segment="deleteSegment"
@@ -271,6 +274,12 @@ export default {
       )
     },
 
+
+    handleUpdateVariantKey({ variant, key }) {
+      variant.key = key
+    },
+
+
     putVariant(variant) {
       if (variant.attachmentValid === false) {
         this.$message.error("variant attachment is not valid")
@@ -357,6 +366,23 @@ export default {
         this.$message.success("segment reordered")
       }, handleErr.bind(this))
     },
+
+
+    moveSegmentUp(_element, index) {
+      if (index <= 0) return
+      const arr = this.flag.segments
+      const temp = arr[index - 1]
+      arr[index - 1] = arr[index]
+      arr[index] = temp
+    },
+    moveSegmentDown(_element, index) {
+      if (index >= this.flag.segments.length - 1) return
+      const arr = this.flag.segments
+      const temp = arr[index + 1]
+      arr[index + 1] = arr[index]
+      arr[index] = temp
+    },
+
 
     handleUpdateSegmentField({ segment, field, value }) {
       segment[field] = value

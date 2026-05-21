@@ -20,7 +20,6 @@
     "vue": "^3.5.0",
     "vue-router": "^4.5.0",
     "vue3-ts-jsoneditor": "^3.1.0",
-    "vuedraggable": "^4.1.0",
     "xss": "^1.0.9"
   },
   "devDependencies": {
