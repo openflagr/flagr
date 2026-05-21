@@ -70,10 +70,10 @@ export default {
     };
   },
   methods: {
-    syncEvalContext(text) { try { this.evalContext = JSON.parse(text) } catch(e) {} },
-    syncEvalResult(text) { try { this.evalResult = JSON.parse(text) } catch(e) {} },
-    syncBatchEvalContext(text) { try { this.batchEvalContext = JSON.parse(text) } catch(e) {} },
-    syncBatchEvalResult(text) { try { this.batchEvalResult = JSON.parse(text) } catch(e) {} },
+    syncEvalContext(text) { try { this.evalContext = JSON.parse(text) } catch(e) { /* ignore parse errors during editing */ } },
+    syncEvalResult(text) { try { this.evalResult = JSON.parse(text) } catch(e) { /* ignore parse errors during editing */ } },
+    syncBatchEvalContext(text) { try { this.batchEvalContext = JSON.parse(text) } catch(e) { /* ignore parse errors during editing */ } },
+    syncBatchEvalResult(text) { try { this.batchEvalResult = JSON.parse(text) } catch(e) { /* ignore parse errors during editing */ } },
 
     postEvaluation(evalContext) {
       Axios.post(`${API_URL}/evaluation`, evalContext).then(response => {

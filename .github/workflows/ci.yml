@@ -57,6 +57,7 @@ jobs:
         uses: actions/checkout@v4
       - run: make build
       - run: make build_ui
+      - run: cd browser/flagr-ui && npx playwright install --with-deps chromium
       - name: Run e2e tests
         run: make test-e2e
   actionlint:
