@@ -8,10 +8,12 @@ export default defineConfig({
     baseURL: 'http://localhost:8080',
     headless: true,
   },
-  webServer: {
-    command: 'npm run dev:full',
-    port: 8080,
-    reuseExistingServer: !process.env.CI,
-    timeout: 30000,
-  },
+  webServer: [
+    {
+      command: 'sh scripts/e2e-server.sh',
+      port: 8080,
+      reuseExistingServer: true,
+      timeout: 60000,
+    },
+  ],
 })

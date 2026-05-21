@@ -12,50 +12,6 @@
           </template>
         </el-dialog>
 
-        <el-dialog title="Edit distribution" v-model="dialogEditDistributionOpen">
-          <div v-if="loaded && flag">
-            <div v-for="variant in flag.variants" :key="'distribution-variant-' + variant.id">
-              <div>
-                <el-checkbox
-                  @change="(e) => selectVariant(e, variant)"
-                  :checked="!!newDistributions[variant.id]"
-                ></el-checkbox>
-                <el-tag type="danger">{{ variant.key }}</el-tag>
-              </div>
-              <el-slider
-                v-if="!newDistributions[variant.id]"
-                :value="0"
-                :disabled="true"
-                show-input
-              ></el-slider>
-              <div v-if="!!newDistributions[variant.id]">
-                <el-slider
-                  v-model="newDistributions[variant.id].percent"
-                  :disabled="false"
-                  show-input
-                ></el-slider>
-              </div>
-            </div>
-          </div>
-          <el-button
-            class="width--full"
-            :disabled="!newDistributionIsValid"
-            @click.prevent="() => saveDistribution(selectedSegment)"
-          >Save</el-button>
-
-          <el-alert
-            class="edit-distribution-alert"
-            v-if="!newDistributionIsValid"
-            :title="
-              'Percentages must add up to 100% (currently at ' +
-              newDistributionPercentageSum +
-              '%)'
-            "
-            type="error"
-            show-icon
-          ></el-alert>
-        </el-dialog>
-
         <el-dialog title="Create segment" v-model="dialogCreateSegmentOpen">
           <div>
             <p>
@@ -73,6 +29,14 @@
           </div>
         </el-dialog>
 
+        <distribution-dialog
+          :visible="dialogEditDistributionOpen"
+          :flag="flag"
+          :initial-distributions="distributionDraft"
+          @update:visible="dialogEditDistributionOpen = $event"
+          @save="handleSaveDistribution"
+        />
+
         <el-breadcrumb separator="/">
           <el-breadcrumb-item :to="{ name: 'home' }">Home page</el-breadcrumb-item>
           <el-breadcrumb-item>Flag ID: {{ $route.params.flagId }}</el-breadcrumb-item>
@@ -81,427 +45,51 @@
         <div v-if="loaded && flag">
           <el-tabs @tab-click="handleHistoryTabClick">
             <el-tab-pane label="Config">
-              <el-card class="flag-config-card">
-                <template #header>
-                  <div class="el-card-header">
-                    <div class="flex-row">
-                      <div class="flex-row-left">
-                        <h2>Flag</h2>
-                      </div>
-                      <div class="flex-row-right" v-if="flag">
-                        <el-tooltip content="Enable/Disable Flag" placement="top" effect="light">
-                          <el-switch
-                            v-model="flag.enabled"
-                            active-color="#13ce66"
-                            inactive-color="#ff4949"
-                            @change="setFlagEnabled"
-                            :active-value="true"
-                            :inactive-value="false"
-                            data-testid="flag-enable-switch"
-                          ></el-switch>
-                        </el-tooltip>
-                      </div>
-                    </div>
-                  </div>
-                </template>
-                <el-card shadow="hover" :class="toggleInnerConfigCard">
-                  <div class="flex-row id-row">
-                    <div class="flex-row-left">
-                      <el-tag type="primary">Flag ID: {{ $route.params.flagId }}</el-tag>
-                    </div>
-                    <div class="flex-row-right">
-                      <el-button size="small" @click="putFlag(flag)" data-testid="save-flag-btn">Save Flag</el-button>
-                    </div>
-                  </div>
-                  <el-row class="flag-content" align="middle">
-                    <el-col :span="17">
-                      <el-row>
-                        <el-col :span="24">
-                          <el-input size="small" placeholder="Key" v-model="flag.key" data-testid="flag-key-input">
-                            <template #prepend>Flag Key</template>
-                          </el-input>
-                        </el-col>
-                      </el-row>
-                    </el-col>
-                    <el-col style="text-align: right;" :span="5">
-                      <div>
-                        <el-switch
-                          size="small"
-                          v-model="flag.dataRecordsEnabled"
-                          active-color="#74E5E0"
-                          :active-value="true"
-                          :inactive-value="false"
-                          data-testid="data-records-switch"
-                        ></el-switch>
-                      </div>
-                    </el-col>
-                    <el-col :span="2">
-                      <div class="data-records-label">
-                        Data Records
-                        <el-tooltip
-                          content="Controls whether to log to data pipeline, e.g. Kafka, Kinesis, Pubsub"
-                          placement="top-end"
-                          effect="light"
-                        >
-                          <el-icon><InfoFilled /></el-icon>
-                        </el-tooltip>
-                      </div>
-                    </el-col>
-                  </el-row>
-                  <el-row class="flag-content" align="middle">
-                    <el-col :span="17">
-                      <el-row>
-                        <el-col :span="24">
-                          <el-input
-                            size="small"
-                            placeholder="Description"
-                            v-model="flag.description"
-                            data-testid="flag-desc-input"
-                          >
-                            <template #prepend>Flag Description</template>
-                          </el-input>
-                        </el-col>
-                      </el-row>
-                    </el-col>
-                    <el-col style="text-align: right;" :span="5">
-                      <div>
-                        <el-select
-                          v-show="!!flag.dataRecordsEnabled"
-                          v-model="flag.entityType"
-                          size="small"
-                          filterable
-                          :allow-create="allowCreateEntityType"
-                          default-first-option
-                          placeholder="<null>"
-                        >
-                          <el-option
-                            v-for="item in entityTypes"
-                            :key="item.value"
-                            :label="item.label"
-                            :value="item.value"
-                          ></el-option>
-                        </el-select>
-                      </div>
-                    </el-col>
-                    <el-col :span="2">
-                      <div v-show="!!flag.dataRecordsEnabled" class="data-records-label">
-                        Entity Type
-                        <el-tooltip
-                          content="Overrides the entityType in data records logging"
-                          placement="top-end"
-                          effect="light"
-                        >
-                          <el-icon><InfoFilled /></el-icon>
-                        </el-tooltip>
-                      </div>
-                    </el-col>
-                  </el-row>
-                  <el-row style="margin: 10px;">
-                    <h5>
-                      <span style="margin-right: 10px;">Flag Notes</span>
-                      <el-button round size="small" @click="toggleShowMdEditor">
-                        <el-icon v-if="!showMdEditor"><Edit /></el-icon>
-                        <el-icon v-else><View /></el-icon>
-                        {{ !showMdEditor ? "edit" : "view" }}
-                      </el-button>
-                    </h5>
-                  </el-row>
-                  <el-row>
-                    <markdown-editor
-                      :show-editor="showMdEditor"
-                      v-model:markdown="flag.notes"
-                      @save="putFlag(flag)"
-                    ></markdown-editor>
-                  </el-row>
-                  <el-row style="margin: 10px;">
-                    <h5>
-                      <span style="margin-right: 10px;">Tags</span>
-                    </h5>
-                  </el-row>
-                  <el-row>
-                    <div class="tags-container-inner">
-                      <el-tag
-                        v-for="tag in flag.tags"
-                        :key="tag.id"
-                        closable
-                        type="warning"
-                        @close="deleteTag(tag)"
-                      >{{tag.value}}</el-tag>
-                      <el-autocomplete
-                        class="tag-key-input"
-                        v-if="tagInputVisible"
-                        v-model="newTag.value"
-                        ref="saveTagInput"
-                        size="small"
-                        :trigger-on-focus="false"
-                        :fetch-suggestions="queryTags"
-                        @select="createTag"
-                        @keyup.enter="createTag"
-                        @keyup.esc="cancelCreateTag"
-                        data-testid="new-tag-input"
-                      ></el-autocomplete>
-                      <el-button
-                        v-else
-                        class="button-new-tag"
-                        size="small"
-                        @click="showTagInput"
-                      >+ New Tag</el-button>
-                    </div>
-                  </el-row>
-                </el-card>
-              </el-card>
+              <flag-config-card
+                :flag="flag"
+                :show-md-editor="showMdEditor"
+                :entity-types="entityTypes"
+                :allow-create-entity-type="allowCreateEntityType"
+                :tag-input-visible="tagInputVisible"
+                :all-tags="allTags"
+                @toggle-enabled="handleToggleEnabled"
+                @save-flag="putFlag"
+                @update-flag="handleUpdateFlag"
+                @toggle-notes="showMdEditor = !showMdEditor"
+                @delete-tag="deleteTag"
+                @create-tag="handleCreateTag"
+                @cancel-create-tag="handleCancelCreateTag"
+                @show-tag-input="handleShowTagInput"
+              />
 
-              <el-card class="variants-container">
-                <template #header>
-                  <div class="el-card-header">
-                    <h2>Variants</h2>
-                  </div>
-                </template>
-                <div class="variants-container-inner" v-if="flag.variants.length">
-                  <div v-for="variant in flag.variants" :key="variant.id">
-                    <el-card shadow="hover">
-                      <el-form label-position="left" label-width="100px">
-                        <div class="flex-row id-row">
-                          <el-tag type="primary">
-                            Variant ID:
-                            <b>{{ variant.id }}</b>
-                          </el-tag>
-                          <el-input
-                            class="variant-key-input"
-                            size="small"
-                            placeholder="Key"
-                            v-model="variant.key"
-                            data-testid="variant-key-input"
-                          >
-                            <template #prepend>Key</template>
-                          </el-input>
-                          <div class="flex-row-right save-remove-variant-row">
-                            <el-button size="small" @click="putVariant(variant)" data-testid="save-variant-btn">Save Variant</el-button>
-                            <el-button @click="deleteVariant(variant)" size="small" data-testid="delete-variant-btn">
-                              <el-icon><Delete /></el-icon>
-                            </el-button>
-                          </div>
-                        </div>
-                        <el-collapse class="flex-row">
-                          <el-collapse-item
-                            title="Variant attachment"
-                            class="variant-attachment-collapsable-title"
-                          >
-                            <p
-                              class="variant-attachment-title"
-                            >You can add JSON in key/value pairs format.</p>
-                            <json-editor
-                              v-model:json="variant.attachment"
-                              :main-menu-bar="false"
-                              :navigation-bar="false"
-                              :status-bar="false"
-                              mode="text"
-                              @change="variant.attachmentValid = true"
-                              @error="variant.attachmentValid = false"
-                              class="variant-attachment-content"
-                            />
-                          </el-collapse-item>
-                        </el-collapse>
-                      </el-form>
-                    </el-card>
-                  </div>
-                </div>
-                <div class="card--error" v-else>No variants created for this feature flag yet</div>
-                <div class="variants-input">
-                  <div class="flex-row equal-width constraints-inputs-container">
-                    <div>
-                      <el-input placeholder="Variant Key" v-model="newVariant.key" data-testid="new-variant-input"></el-input>
-                    </div>
-                  </div>
-                  <el-button
-                    class="width--full"
-                    :disabled="!newVariant.key"
-                    @click.prevent="createVariant"
-                    data-testid="create-variant-btn"
-                  >Create Variant</el-button>
-                </div>
-              </el-card>
+              <variants-section
+                :variants="flag.variants"
+                @create-variant="handleCreateVariant"
+                @save-variant="putVariant"
+                @delete-variant="deleteVariant"
+                @attachment-change="handleVariantAttachmentChange"
+              />
 
-              <el-card class="segments-container">
-                <template #header>
-                  <div class="el-card-header">
-                    <div class="flex-row">
-                      <div class="flex-row-left">
-                        <h2>Segments</h2>
-                      </div>
-                      <div class="flex-row-right">
-                        <el-tooltip
-                          content="You can drag and drop segments to reorder"
-                          placement="top"
-                          effect="light"
-                        >
-                          <el-button @click="putSegmentsReorder(flag.segments)">Reorder</el-button>
-                        </el-tooltip>
-                        <el-button @click="dialogCreateSegmentOpen = true" data-testid="open-new-segment-btn">New Segment</el-button>
-                    </div>
-                  </div>
-                    </div>
-                </template>
-                <div class="segments-container-inner" v-if="flag.segments.length">
-                <draggable v-model="flag.segments" item-key="id" @start="drag = true" @end="drag = false">
-                    <template #item="{ element }">
-                      <el-card
-                        shadow="hover"
-                        class="segment grabbable"
-                      >
-                        <div class="flex-row id-row">
-                          <div class="flex-row-left">
-                            <el-tag type="primary">
-                              Segment ID:
-                          <b>{{ element.id }}</b>
-                            </el-tag>
-                          </div>
-                          <div class="flex-row-right">
-                            <el-button
-                              size="small"
-                              @click="putSegment(element)"
-                              data-testid="save-segment-btn"
-                            >Save Segment Setting</el-button>
-                            <el-button @click="deleteSegment(element)" size="small" data-testid="delete-segment-btn">
-                              <el-icon><Delete /></el-icon>
-                            </el-button>
-                          </div>
-                        </div>
-                        <el-row :gutter="10" class="id-row">
-                          <el-col :span="15">
-                            <el-input
-                              size="small"
-                              placeholder="Description"
-                              v-model="element.description"
-                              data-testid="segment-desc-input"
-                            >
-                              <template #prepend>Description</template>
-                            </el-input>
-                          </el-col>
-                          <el-col :span="9">
-                            <el-input
-                              class="segment-rollout-percent"
-                              size="small"
-                              placeholder="0"
-                              v-model="element.rolloutPercent"
-                              data-testid="segment-rollout-input"
-                              :min="0"
-                              :max="100"
-                            >
-                              <template #prepend>Rollout</template>
-                              <template #append>%</template>
-                            </el-input>
-                          </el-col>
-                        </el-row>
-                        <el-row>
-                          <el-col :span="24">
-                            <h5>Constraints (match ALL of them)</h5>
-                            <div class="constraints">
-                              <div class="constraints-inner" v-if="element.constraints.length">
-                                <div v-for="constraint in element.constraints" :key="constraint.id">
-                                  <el-row :gutter="3" class="segment-constraint">
-                                    <el-col :span="20">
-                                      <el-input size="small" placeholder="Property" v-model="constraint.property" data-testid="constraint-prop-input">
-                                        <template #prepend>Property</template>
-                                      </el-input>
-                                    </el-col>
-                                    <el-col :span="4">
-                                      <el-select class="width--full" size="small" v-model="constraint.operator" placeholder="operator" data-testid="constraint-op-select">
-                                        <el-option
-                                          v-for="item in operatorOptions"
-                                          :key="item.value"
-                                          :label="item.label"
-                                          :value="item.value"
-                                        ></el-option>
-                                      </el-select>
-                                    </el-col>
-                                    <el-col :span="20">
-                                      <el-input size="small" v-model="constraint.value" data-testid="constraint-value-input">
-                                        <template #prepend>Value&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</template>
-                                      </el-input>
-                                    </el-col>
-                                    <el-col :span="2">
-                                      <el-button type="success" plain class="width--full" @click="putConstraint(element, constraint)" size="small" data-testid="save-constraint-btn">Save</el-button>
-                                    </el-col>
-                                    <el-col :span="2">
-                                      <el-button type="danger" plain class="width--full" @click="deleteConstraint(element, constraint)" size="small" data-testid="delete-constraint-btn">
-                                        <el-icon><Delete /></el-icon>
-                                      </el-button>
-                                    </el-col>
-                                  </el-row>
-                                </div>
-                              </div>
-                              <div class="card--empty" v-else>
-                                <span>No constraints (ALL will pass)</span>
-                              </div>
-                              <div>
-                                <el-row :gutter="3">
-                                  <el-col :span="5">
-                                    <el-input size="small" placeholder="Property" v-model="element.newConstraint.property" data-testid="new-constraint-prop-input"></el-input>
-                                  </el-col>
-                                  <el-col :span="4">
-                                    <el-select size="small" v-model="element.newConstraint.operator" placeholder="operator" data-testid="new-constraint-op-select">
-                                      <el-option
-                                        v-for="item in operatorOptions"
-                                        :key="item.value"
-                                        :label="item.label"
-                                        :value="item.value"
-                                      ></el-option>
-                                    </el-select>
-                                  </el-col>
-                                  <el-col :span="11">
-                                    <el-input size="small" v-model="element.newConstraint.value" data-testid="new-constraint-value-input"></el-input>
-                                  </el-col>
-                                  <el-col :span="4">
-                                    <el-button class="width--full" size="small" type="primary" plain :disabled="!element.newConstraint.property || !element.newConstraint.value" @click.prevent="() => createConstraint(element)" data-testid="add-constraint-btn">Add Constraint</el-button>
-                                  </el-col>
-                                </el-row>
-                              </div>
-                            </div>
-                          </el-col>
-                          <el-col :span="24" class="segment-distributions">
-                            <h5>
-                              <span>Distribution</span>
-                              <el-button round size="small" @click="editDistribution(element)">
-                                <el-icon><Edit /></el-icon> edit
-                              </el-button>
-                            </h5>
-                            <el-row v-if="element.distributions.length" :gutter="20">
-                              <el-col
-                                v-for="distribution in element.distributions"
-                                :key="distribution.id"
-                                :span="6"
-                              >
-                                <el-card shadow="never" class="distribution-card">
-                                  <div>
-                                    <span>
-                                      {{ distribution.variantKey }}
-                                    </span>
-                                  </div>
-                                  <el-progress
-                                    type="circle"
-                                    color="#74E5E0"
-                                    :width="70"
-                                    :percentage="distribution.percent"
-                                  ></el-progress>
-                                </el-card>
-                              </el-col>
-                            </el-row>
-                            <div class="card--error" v-else>No distribution yet</div>
-                          </el-col>
-                        </el-row>
-              </el-card>
-                </template>
-                  </draggable>
-                </div>
-                <div class="card--error" v-else>No segments created for this feature flag yet</div>
-              </el-card>
-              <debug-console :flag="flag"></debug-console>
+              <segments-section
+                :segments="flag.segments"
+                :operator-options="operatorOptions"
+                @reorder="handleReorderSegments"
+                @new-segment="dialogCreateSegmentOpen = true"
+                @save-segment="putSegment"
+                @delete-segment="deleteSegment"
+                @update-segment-field="handleUpdateSegmentField"
+                @create-constraint="createConstraint"
+                @save-constraint="putConstraint"
+                @delete-constraint="deleteConstraint"
+                @update-constraint-field="handleUpdateConstraintField"
+                @edit-distribution="handleEditDistribution"
+              />
+
+              <debug-console :flag="flag" />
+
               <el-card>
                 <template #header>
-                  <div class="el-card-header">
-                    <h2>Flag Settings</h2>
-                  </div>
+                  <div class="el-card-header"><h2>Flag Settings</h2></div>
                 </template>
                 <el-button type="danger" plain @click="dialogDeleteFlagVisible = true" data-testid="delete-flag-btn">
                   <el-icon><Delete /></el-icon>
@@ -521,73 +109,47 @@
 </template>
 
 <script>
-import clone from "lodash.clone";
-import draggable from "vuedraggable";
-import Axios from "axios";
-import JsonEditor from "vue3-ts-jsoneditor";
-import { InfoFilled, Edit, View, Delete } from "@element-plus/icons-vue";
+import Axios from "axios"
+import clone from "lodash.clone"
+import { Delete } from "@element-plus/icons-vue"
 
-import constants from "@/constants";
-import helpers from "@/helpers/helpers";
-import DebugConsole from "@/components/DebugConsole";
-import FlagHistory from "@/components/FlagHistory";
-import MarkdownEditor from "@/components/MarkdownEditor.vue";
-import operatorsData from "@/operators.json";
+import constants from "@/constants"
+import helpers from "@/helpers/helpers"
+import DebugConsole from "@/components/DebugConsole"
+import FlagHistory from "@/components/FlagHistory"
+import DistributionDialog from "@/components/DistributionDialog"
+import FlagConfigCard from "@/components/FlagConfigCard"
+import VariantsSection from "@/components/VariantsSection"
+import SegmentsSection from "@/components/SegmentsSection"
+import operatorsData from "@/operators.json"
 
-const operators = operatorsData.operators;
+const operators = operatorsData.operators
+const { pluck, handleErr } = helpers
+const { API_URL, FLAGR_UI_POSSIBLE_ENTITY_TYPES } = constants
 
-
-const { sum, pluck, handleErr } = helpers;
-
-const { API_URL, FLAGR_UI_POSSIBLE_ENTITY_TYPES } = constants;
-
-const DEFAULT_SEGMENT = {
-  description: "",
-  rolloutPercent: 50
-};
-
-const DEFAULT_CONSTRAINT = {
-  operator: "EQ",
-  property: "",
-  value: ""
-};
-
-const DEFAULT_VARIANT = {
-  key: ""
-};
-
-const DEFAULT_TAG = {
-  value: ""
-};
-
-const DEFAULT_DISTRIBUTION = {
-  bitmap: "",
-  variantID: 0,
-  variantKey: "",
-  percent: 0
-};
+const DEFAULT_SEGMENT = { description: "", rolloutPercent: 50 }
+const DEFAULT_CONSTRAINT = { operator: "EQ", property: "", value: "" }
+const DEFAULT_TAG = { value: "" }
 
 function processSegment(segment) {
-  segment.newConstraint = clone(DEFAULT_CONSTRAINT);
+  segment._newConstraint = clone(DEFAULT_CONSTRAINT)
 }
 
 function processVariant(variant) {
   if (typeof variant.attachment === "string") {
-    variant.attachment = JSON.parse(variant.attachment);
+    variant.attachment = JSON.parse(variant.attachment)
   }
 }
 
 export default {
   name: "flag",
   components: {
-    debugConsole: DebugConsole,
-    flagHistory: FlagHistory,
-    draggable: draggable,
-    MarkdownEditor,
-    JsonEditor,
-    InfoFilled,
-    Edit,
-    View,
+    DebugConsole,
+    FlagHistory,
+    DistributionDialog,
+    FlagConfigCard,
+    VariantsSection,
+    SegmentsSection,
     Delete
   },
   data() {
@@ -602,347 +164,323 @@ export default {
       tagInputVisible: false,
       flag: {},
       newSegment: clone(DEFAULT_SEGMENT),
-      newVariant: clone(DEFAULT_VARIANT),
       newTag: clone(DEFAULT_TAG),
       selectedSegment: null,
-      newDistributions: {},
+      distributionDraft: {},
       operatorOptions: operators,
       showMdEditor: false,
       historyLoaded: false
-    };
+    }
   },
   computed: {
-    newDistributionPercentageSum() {
-      return sum(pluck(Object.values(this.newDistributions), "percent"));
-    },
-    newDistributionIsValid() {
-      return this.newDistributionPercentageSum === 100;
-    },
     flagId() {
-      return this.$route.params.flagId;
-    },
-    toggleInnerConfigCard() {
-      return !this.showMdEditor && !this.flag?.notes ? "flag-inner-config-card" : ""
+      return this.$route.params.flagId
     }
   },
   methods: {
+    // --- Flag CRUD ---
     deleteFlag() {
-      const flagId = this.flagId;
-      Axios.delete(`${API_URL}/flags/${this.flagId}`).then(() => {
-        this.$router.replace({ name: "home" });
-        this.$message.success(`You deleted flag ${flagId}`);
-      }, handleErr.bind(this));
+      const id = this.flagId
+      Axios.delete(`${API_URL}/flags/${id}`).then(() => {
+        this.$router.replace({ name: "home" })
+        this.$message.success(`You deleted flag ${id}`)
+      }, handleErr.bind(this))
     },
-    putFlag(flag) {
+
+    putFlag() {
+      const f = this.flag
       Axios.put(`${API_URL}/flags/${this.flagId}`, {
-        description: flag.description,
-        dataRecordsEnabled: flag.dataRecordsEnabled,
-        key: flag.key || "",
-        entityType: flag.entityType || "",
-        notes: flag.notes || ""
+        description: f.description,
+        dataRecordsEnabled: f.dataRecordsEnabled,
+        key: f.key || "",
+        entityType: f.entityType || "",
+        notes: f.notes || ""
       }).then(() => {
-        this.$message.success(`Flag updated`);
-      }, handleErr.bind(this));
+        this.$message.success("Flag updated")
+      }, handleErr.bind(this))
     },
-    setFlagEnabled(checked) {
+
+    handleToggleEnabled(checked) {
       Axios.put(`${API_URL}/flags/${this.flagId}/enabled`, {
         enabled: checked
       }).then(() => {
-        const checkedStr = checked ? "on" : "off";
-        this.$message.success(`You turned ${checkedStr} this feature flag`);
-      }, handleErr.bind(this));
+        this.$message.success(`You turned ${checked ? "on" : "off"} this feature flag`)
+      }, handleErr.bind(this))
     },
-    selectVariant($event, variant) {
-      const checked = $event;
-      if (checked) {
-        const distribution = Object.assign(clone(DEFAULT_DISTRIBUTION), {
-          variantKey: variant.key,
-          variantID: variant.id
-        });
-        this.newDistributions[variant.id] = distribution;
-      } else {
-        delete this.newDistributions[variant.id];
-      }
-    },
-    editDistribution(segment) {
-      this.selectedSegment = segment;
 
-      this.newDistributions = {};
-
-      segment.distributions.forEach(distribution => {
-        this.newDistributions[distribution.variantID] = clone(distribution);
-      });
-
-      this.dialogEditDistributionOpen = true;
+    handleUpdateFlag(patch) {
+      Object.assign(this.flag, patch)
     },
-    saveDistribution(segment) {
-      const distributions = Object.values(this.newDistributions).filter(
-        distribution => distribution.percent !== 0
-      ).map(distribution => {
-        let dist = clone(distribution)
-        delete dist.id;
-        return dist
-      });
 
-      Axios.put(
-        `${API_URL}/flags/${this.flagId}/segments/${segment.id}/distributions`,
-        { distributions }
-      ).then(response => {
-        let distributions = response.data;
-        this.selectedSegment.distributions = distributions;
-        this.dialogEditDistributionOpen = false;
-        this.$message.success("distributions updated");
-      }, handleErr.bind(this));
+    // --- Tags ---
+    handleCreateTag({ value }) {
+      this.newTag.value = value
+      Axios.post(`${API_URL}/flags/${this.flagId}/tags`, { value }).then(
+        response => {
+          const tag = response.data
+          this.newTag = clone(DEFAULT_TAG)
+          if (!this.flag.tags.map(t => t.value).includes(tag.value)) {
+            this.flag.tags.push(tag)
+            this.$message.success("new tag created")
+          }
+          this.tagInputVisible = false
+          this.loadAllTags()
+        },
+        handleErr.bind(this)
+      )
     },
-    createVariant() {
-      Axios.post(
-        `${API_URL}/flags/${this.flagId}/variants`,
-        this.newVariant
-      ).then(response => {
-        let variant = response.data;
-        this.newVariant = clone(DEFAULT_VARIANT);
-        this.flag.variants.push(variant);
-        this.$message.success("new variant created");
-      }, handleErr.bind(this));
+
+    handleCancelCreateTag() {
+      this.newTag = clone(DEFAULT_TAG)
+      this.tagInputVisible = false
     },
-    deleteVariant(variant) {
-      const isVariantInUse = this.flag.segments.some(segment =>
-        segment.distributions.some(
-          distribution => distribution.variantID === variant.id
+
+    handleShowTagInput() {
+      this.tagInputVisible = true
+    },
+
+    deleteTag(tag) {
+      this.$confirm(`Are you sure you want to delete tag #${tag.value}`, "Warning", {
+        confirmButtonText: "OK", cancelButtonText: "Cancel", type: "warning"
+      }).then(() => {
+        Axios.delete(`${API_URL}/flags/${this.flagId}/tags/${tag.id}`).then(
+          () => {
+            this.$message.success("tag deleted")
+            this.fetchFlag()
+            this.loadAllTags()
+          },
+          handleErr.bind(this)
         )
-      );
+      }).catch(() => {})
+    },
 
-      if (isVariantInUse) {
+    loadAllTags() {
+      Axios.get(`${API_URL}/tags`).then(response => {
+        this.allTags = response.data
+      }, handleErr.bind(this))
+    },
+
+    // --- Variants ---
+    handleCreateVariant({ key }) {
+      Axios.post(`${API_URL}/flags/${this.flagId}/variants`, { key }).then(
+        response => {
+          this.flag.variants.push(response.data)
+          this.$message.success("new variant created")
+        },
+        handleErr.bind(this)
+      )
+    },
+
+    putVariant(variant) {
+      if (variant.attachmentValid === false) {
+        this.$message.error("variant attachment is not valid")
+        return
+      }
+      Axios.put(`${API_URL}/flags/${this.flagId}/variants/${variant.id}`, variant).then(
+        () => this.$message.success("variant updated"),
+        handleErr.bind(this)
+      )
+    },
+
+    deleteVariant(variant) {
+      if (this.flag.segments.some(s =>
+        s.distributions.some(d => d.variantID === variant.id)
+      )) {
         this.$message.warning(
           "This variant is being used by a segment distribution. Please remove the segment or edit the distribution in order to remove this variant."
-        );
-        return;
+        )
+        return
       }
-
       this.$confirm(
         `Are you sure you want to delete variant #${variant.id} [${variant.key}]`,
         "Warning",
-        {
-          confirmButtonText: "OK",
-          cancelButtonText: "Cancel",
-          type: "warning"
-        }
+        { confirmButtonText: "OK", cancelButtonText: "Cancel", type: "warning" }
       ).then(() => {
-        Axios.delete(
-          `${API_URL}/flags/${this.flagId}/variants/${variant.id}`
-        ).then(() => {
-          this.$message.success("variant deleted");
-          this.fetchFlag();
-        }, handleErr.bind(this));
-      }).catch(() => {});
-    },
-    putVariant(variant) {
-      if (variant.attachmentValid === false) {
-        this.$message.error("variant attachment is not valid");
-        return;
-      }
-      Axios.put(
-        `${API_URL}/flags/${this.flagId}/variants/${variant.id}`,
-        variant
-      ).then(() => {
-        this.$message.success("variant updated");
-      }, handleErr.bind(this));
-    },
-    createTag() {
-      Axios.post(`${API_URL}/flags/${this.flagId}/tags`, this.newTag).then(
-        response => {
-          let tag = response.data;
-          this.newTag = clone(DEFAULT_TAG);
-          if (!this.flag.tags.map(tag => tag.value).includes(tag.value)) {
-            this.flag.tags.push(tag);
-            this.$message.success("new tag created");
-          }
-          this.tagInputVisible = false;
-          this.loadAllTags();
-        },
-        handleErr.bind(this)
-      );
-    },
-    cancelCreateTag() {
-      this.newTag = clone(DEFAULT_TAG);
-      this.tagInputVisible = false;
-    },
-    queryTags(queryString, cb) {
-      let results = this.allTags.filter(tag =>
-        tag.value.toLowerCase().includes(queryString.toLowerCase())
-      );
-      cb(results);
-    },
-    loadAllTags() {
-      Axios.get(`${API_URL}/tags`).then(response => {
-        let result = response.data;
-        this.allTags = result;
-      }, handleErr.bind(this));
-    },
-    showTagInput() {
-      this.tagInputVisible = true;
-      this.$nextTick(() => {
-        if (this.$refs.saveTagInput) {
-          this.$refs.saveTagInput.focus();
-        }
-      });
-    },
-    deleteTag(tag) {
-      this.$confirm(
-        `Are you sure you want to delete tag #${tag.value}`,
-        "Warning",
-        {
-          confirmButtonText: "OK",
-          cancelButtonText: "Cancel",
-          type: "warning"
-        }
-      ).then(() => {
-        Axios.delete(`${API_URL}/flags/${this.flagId}/tags/${tag.id}`).then(
+        Axios.delete(`${API_URL}/flags/${this.flagId}/variants/${variant.id}`).then(
           () => {
-            this.$message.success("tag deleted");
-            this.fetchFlag();
-            this.loadAllTags();
+            this.$message.success("variant deleted")
+            this.fetchFlag()
           },
           handleErr.bind(this)
-        );
-      }).catch(() => {});
+        )
+      }).catch(() => {})
     },
-    createConstraint(segment) {
-      segment.newConstraint.property = segment.newConstraint.property.trim();
-      segment.newConstraint.value = segment.newConstraint.value.trim();
-      Axios.post(
-        `${API_URL}/flags/${this.flagId}/segments/${segment.id}/constraints`,
-        segment.newConstraint
-      ).then(response => {
-        let constraint = response.data;
-        segment.constraints.push(constraint);
-        segment.newConstraint = clone(DEFAULT_CONSTRAINT);
-        this.$message.success("new constraint created");
-      }, handleErr.bind(this));
+
+    handleVariantAttachmentChange({ variant, valid }) {
+      variant.attachmentValid = valid
     },
-    putConstraint(segment, constraint) {
-      constraint.property = constraint.property.trim();
-      constraint.value = constraint.value.trim();
-      Axios.put(
-        `${API_URL}/flags/${this.flagId}/segments/${segment.id}/constraints/${constraint.id}`,
-        constraint
-      ).then(() => {
-        this.$message.success("constraint updated");
-      }, handleErr.bind(this));
+
+    // --- Segments ---
+    createSegment() {
+      Axios.post(`${API_URL}/flags/${this.flagId}/segments`, this.newSegment).then(
+        response => {
+          const segment = response.data
+          processSegment(segment)
+          segment.constraints = []
+          this.newSegment = clone(DEFAULT_SEGMENT)
+          this.flag.segments.push(segment)
+          this.dialogCreateSegmentOpen = false
+          this.$message.success("new segment created")
+        },
+        handleErr.bind(this)
+      )
     },
-    deleteConstraint(segment, constraint) {
-      this.$confirm("Are you sure you want to delete this constraint?", "Warning", {
-        confirmButtonText: "OK",
-        cancelButtonText: "Cancel",
-        type: "warning"
-      }).then(() => {
-        Axios.delete(
-          `${API_URL}/flags/${this.flagId}/segments/${segment.id}/constraints/${constraint.id}`
-        ).then(() => {
-          const index = segment.constraints.findIndex(
-            c => c.id === constraint.id
-          );
-          segment.constraints.splice(index, 1);
-          this.$message.success("constraint deleted");
-        }, handleErr.bind(this));
-      }).catch(() => {});
-    },
+
     putSegment(segment) {
       Axios.put(`${API_URL}/flags/${this.flagId}/segments/${segment.id}`, {
         description: segment.description,
         rolloutPercent: parseInt(segment.rolloutPercent, 10)
       }).then(() => {
-        this.$message.success("segment updated");
-      }, handleErr.bind(this));
+        this.$message.success("segment updated")
+      }, handleErr.bind(this))
     },
-    putSegmentsReorder(segments) {
+
+    deleteSegment(segment) {
+      this.$confirm("Are you sure you want to delete this segment?", "Warning", {
+        confirmButtonText: "OK", cancelButtonText: "Cancel", type: "warning"
+      }).then(() => {
+        Axios.delete(`${API_URL}/flags/${this.flagId}/segments/${segment.id}`).then(
+          () => {
+            const idx = this.flag.segments.findIndex(el => el.id === segment.id)
+            this.flag.segments.splice(idx, 1)
+            this.$message.success("segment deleted")
+          },
+          handleErr.bind(this)
+        )
+      }).catch(() => {})
+    },
+
+    handleReorderSegments(segments) {
       Axios.put(`${API_URL}/flags/${this.flagId}/segments/reorder`, {
         segmentIDs: pluck(segments, "id")
       }).then(() => {
-        this.$message.success("segment reordered");
-      }, handleErr.bind(this));
+        this.$message.success("segment reordered")
+      }, handleErr.bind(this))
     },
-    deleteSegment(segment) {
-      this.$confirm("Are you sure you want to delete this segment?", "Warning", {
-        confirmButtonText: "OK",
-        cancelButtonText: "Cancel",
-        type: "warning"
+
+    handleUpdateSegmentField({ segment, field, value }) {
+      segment[field] = value
+    },
+
+    // --- Constraints ---
+    createConstraint(segment) {
+      const c = segment._newConstraint
+      c.property = c.property.trim()
+      c.value = c.value.trim()
+      Axios.post(
+        `${API_URL}/flags/${this.flagId}/segments/${segment.id}/constraints`,
+        c
+      ).then(response => {
+        segment.constraints.push(response.data)
+        segment._newConstraint = clone(DEFAULT_CONSTRAINT)
+        this.$message.success("new constraint created")
+      }, handleErr.bind(this))
+    },
+
+    putConstraint({ segment, constraint }) {
+      constraint.property = constraint.property.trim()
+      constraint.value = constraint.value.trim()
+      Axios.put(
+        `${API_URL}/flags/${this.flagId}/segments/${segment.id}/constraints/${constraint.id}`,
+        constraint
+      ).then(() => {
+        this.$message.success("constraint updated")
+      }, handleErr.bind(this))
+    },
+
+    deleteConstraint({ segment, constraint }) {
+      this.$confirm("Are you sure you want to delete this constraint?", "Warning", {
+        confirmButtonText: "OK", cancelButtonText: "Cancel", type: "warning"
       }).then(() => {
         Axios.delete(
-          `${API_URL}/flags/${this.flagId}/segments/${segment.id}`
+          `${API_URL}/flags/${this.flagId}/segments/${segment.id}/constraints/${constraint.id}`
         ).then(() => {
-          const index = this.flag.segments.findIndex(el => el.id === segment.id);
-          this.flag.segments.splice(index, 1);
-          this.$message.success("segment deleted");
-        }, handleErr.bind(this));
-      }).catch(() => {});
+          const idx = segment.constraints.findIndex(c => c.id === constraint.id)
+          segment.constraints.splice(idx, 1)
+          this.$message.success("constraint deleted")
+        }, handleErr.bind(this))
+      }).catch(() => {})
     },
-    createSegment() {
-      Axios.post(
-        `${API_URL}/flags/${this.flagId}/segments`,
-        this.newSegment
+
+    handleUpdateConstraintField({ constraint, field, value }) {
+      constraint[field] = value
+    },
+
+    // --- Distributions ---
+    handleEditDistribution(segment) {
+      this.selectedSegment = segment
+      this.distributionDraft = {}
+      segment.distributions.forEach(d => {
+        this.distributionDraft[d.variantID] = clone(d)
+      })
+      this.dialogEditDistributionOpen = true
+    },
+
+    handleSaveDistribution(draft) {
+      const distributions = Object.values(draft)
+        .filter(d => d.percent !== 0)
+        .map(d => {
+          const dist = clone(d)
+          delete dist.id
+          return dist
+        })
+      Axios.put(
+        `${API_URL}/flags/${this.flagId}/segments/${this.selectedSegment.id}/distributions`,
+        { distributions }
       ).then(response => {
-        let segment = response.data;
-        processSegment(segment);
-        segment.constraints = [];
-        this.newSegment = clone(DEFAULT_SEGMENT);
-        this.flag.segments.push(segment);
-        this.$message.success("new segment created");
-        this.dialogCreateSegmentOpen = false;
-      }, handleErr.bind(this));
+        this.selectedSegment.distributions = response.data
+        this.dialogEditDistributionOpen = false
+        this.$message.success("distributions updated")
+      }, handleErr.bind(this))
     },
-    fetchFlag() {
-      Axios.get(`${API_URL}/flags/${this.flagId}`).then(response => {
-        let flag = response.data;
-        flag.segments.forEach(segment => processSegment(segment));
-        flag.variants.forEach(variant => processVariant(variant));
-        this.flag = flag;
-        this.loaded = true;
-      }, handleErr.bind(this));
-      this.fetchEntityTypes();
-    },
-    fetchEntityTypes() {
-      function prepareEntityTypes(entityTypes) {
-        let arr = entityTypes.map(key => {
-          let label = key === "" ? "<null>" : key;
-          return { label: label, value: key };
-        });
-        if (entityTypes.indexOf("") === -1) {
-          arr.unshift({ label: "<null>", value: "" });
-        }
-        return arr;
-      }
 
-      if (
-        FLAGR_UI_POSSIBLE_ENTITY_TYPES &&
-        FLAGR_UI_POSSIBLE_ENTITY_TYPES != "null"
-      ) {
-        let entityTypes = FLAGR_UI_POSSIBLE_ENTITY_TYPES.split(",");
-        this.entityTypes = prepareEntityTypes(entityTypes);
-        this.allowCreateEntityType = false;
-        return;
-      }
-
-      Axios.get(`${API_URL}/flags/entity_types`).then(response => {
-        this.entityTypes = prepareEntityTypes(response.data);
-      }, handleErr.bind(this));
-    },
-    toggleShowMdEditor() {
-      this.showMdEditor = !this.showMdEditor;
-    },
+    // --- Other ---
     handleHistoryTabClick(tab) {
-      // Element Plus passes TabsPaneContext where label is in props.label
       const label = tab.props?.label || tab.label
       if (label == "History" && !this.historyLoaded) {
-        this.historyLoaded = true;
+        this.historyLoaded = true
       }
     },
+
+    // --- Data fetching ---
+    fetchFlag() {
+      Axios.get(`${API_URL}/flags/${this.flagId}`).then(response => {
+        const flag = response.data
+        flag.segments.forEach(s => processSegment(s))
+        flag.variants.forEach(v => processVariant(v))
+        this.flag = flag
+        this.loaded = true
+      }, handleErr.bind(this))
+      this.fetchEntityTypes()
+    },
+
+    fetchEntityTypes() {
+      const prepareEntityTypes = (entityTypes) => {
+        const arr = entityTypes.map(key => ({
+          label: key === "" ? "<null>" : key,
+          value: key
+        }))
+        if (entityTypes.indexOf("") === -1) {
+          arr.unshift({ label: "<null>", value: "" })
+        }
+        return arr
+      }
+
+      if (FLAGR_UI_POSSIBLE_ENTITY_TYPES && FLAGR_UI_POSSIBLE_ENTITY_TYPES != "null") {
+        this.entityTypes = prepareEntityTypes(FLAGR_UI_POSSIBLE_ENTITY_TYPES.split(","))
+        this.allowCreateEntityType = false
+        return
+      }
+      Axios.get(`${API_URL}/flags/entity_types`).then(response => {
+        this.entityTypes = prepareEntityTypes(response.data)
+      }, handleErr.bind(this))
+    }
   },
   mounted() {
-    this.fetchFlag();
-    this.loadAllTags();
-  },
-};
+    this.fetchFlag()
+    this.loadAllTags()
+  }
+}
 </script>
 
 <style lang="less">

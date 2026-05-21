@@ -37,7 +37,15 @@ run_ui:
 run:
 	@$(PWD)/flagr --port 18000
 
+test-e2e: build
+	@echo "Running Flagr UI e2e tests..."
+	@cd ./browser/flagr-ui/; npx playwright test
 
+.PHONY: stop-ui
+stop-ui:
+	@-kill $$(lsof -ti:18000 2>/dev/null) 2>/dev/null; kill $$(lsof -ti:8080 2>/dev/null) 2>/dev/null; sleep 1; echo "Stopped UI services"
+
+rebuild-run: build stop-ui start
 start:
 	$(MAKE) -j run run_ui
 

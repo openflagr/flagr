@@ -95,6 +95,18 @@ test.describe('Flag detail page', () => {
     await deleteFlag(flag.id)
   })
 
+  test('can create a segment via UI dialog', async ({ page }) => {
+    const flag = await createFlag()
+    await page.goto(`/#/flags/${flag.id}`)
+    await page.waitForSelector('input[data-testid="flag-key-input"]', { timeout: 10000 })
+    await page.locator('[data-testid="open-new-segment-btn"]').click()
+    await expect(page.locator('[data-testid="create-segment-btn"]')).toBeVisible({ timeout: 5000 })
+    await page.locator('[data-testid="new-segment-desc-input"]').fill(`ui-created-${Date.now()}`)
+    await page.locator('[data-testid="create-segment-btn"]').click()
+    await expect(page.locator('.el-message--success')).toBeVisible({ timeout: 5000 })
+    await deleteFlag(flag.id)
+  })
+
   test('can delete a segment via UI', async ({ page }) => {
     const flag = await createFlag()
     await createSegment(flag.id, `del-${Date.now()}`)
