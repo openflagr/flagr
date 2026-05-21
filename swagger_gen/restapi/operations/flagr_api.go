@@ -179,6 +179,12 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 			return middleware.NotImplemented("operation flag.GetFlagEntityTypes has not yet been implemented")
 		}),
 
+		FlagGetFlagSnapshotMaxIDHandler: flag.GetFlagSnapshotMaxIDHandlerFunc(func(params flag.GetFlagSnapshotMaxIDParams) middleware.Responder {
+			_ = params
+
+			return middleware.NotImplemented("operation flag.GetFlagSnapshotMaxID has not yet been implemented")
+		}),
+
 		FlagGetFlagSnapshotsHandler: flag.GetFlagSnapshotsHandlerFunc(func(params flag.GetFlagSnapshotsParams) middleware.Responder {
 			_ = params
 
@@ -332,6 +338,8 @@ type FlagrAPI struct {
 	FlagGetFlagHandler flag.GetFlagHandler
 	// FlagGetFlagEntityTypesHandler sets the operation handler for the get flag entity types operation
 	FlagGetFlagEntityTypesHandler flag.GetFlagEntityTypesHandler
+	// FlagGetFlagSnapshotMaxIDHandler sets the operation handler for the get flag snapshot max ID operation
+	FlagGetFlagSnapshotMaxIDHandler flag.GetFlagSnapshotMaxIDHandler
 	// FlagGetFlagSnapshotsHandler sets the operation handler for the get flag snapshots operation
 	FlagGetFlagSnapshotsHandler flag.GetFlagSnapshotsHandler
 	// HealthGetHealthHandler sets the operation handler for the get health operation
@@ -498,6 +506,9 @@ func (o *FlagrAPI) Validate() error {
 	}
 	if o.FlagGetFlagEntityTypesHandler == nil {
 		unregistered = append(unregistered, "flag.GetFlagEntityTypesHandler")
+	}
+	if o.FlagGetFlagSnapshotMaxIDHandler == nil {
+		unregistered = append(unregistered, "flag.GetFlagSnapshotMaxIDHandler")
 	}
 	if o.FlagGetFlagSnapshotsHandler == nil {
 		unregistered = append(unregistered, "flag.GetFlagSnapshotsHandler")
@@ -712,6 +723,10 @@ func (o *FlagrAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/flags/entity_types"] = flag.NewGetFlagEntityTypes(o.context, o.FlagGetFlagEntityTypesHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/flags/snapshots/max_id"] = flag.NewGetFlagSnapshotMaxID(o.context, o.FlagGetFlagSnapshotMaxIDHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}

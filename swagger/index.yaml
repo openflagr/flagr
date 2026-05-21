@@ -77,6 +77,8 @@ paths:
     $ref: ./flag_segment_distributions.yaml
   /flags/{flagID}/snapshots:
     $ref: ./flag_snapshots.yaml
+  /flags/snapshots/max_id:
+    $ref: ./flag_snapshots_max_id.yaml
   /flags/entity_types:
     $ref: ./flag_entity_types.yaml
   /tags:
@@ -211,6 +213,13 @@ definitions:
       updatedAt:
         type: string
         minLength: 1
+  # Flag Snapshot Max ID (lightweight cache stamp)
+  flagSnapshotMaxID:
+    type: object
+    properties:
+      maxID:
+        type: integer
+        format: int64
 
   # Tag
   tag:

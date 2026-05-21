@@ -301,6 +301,28 @@ func init() {
         }
       }
     },
+    "/flags/snapshots/max_id": {
+      "get": {
+        "tags": [
+          "flag"
+        ],
+        "operationId": "getFlagSnapshotMaxID",
+        "responses": {
+          "200": {
+            "description": "returns the max flag_snapshot id",
+            "schema": {
+              "$ref": "#/definitions/flagSnapshotMaxID"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
     "/flags/{flagID}": {
       "get": {
         "tags": [
@@ -1842,6 +1864,15 @@ func init() {
         },
         "updatedBy": {
           "type": "string"
+        }
+      }
+    },
+    "flagSnapshotMaxID": {
+      "type": "object",
+      "properties": {
+        "maxID": {
+          "type": "integer",
+          "format": "int64"
         }
       }
     },
@@ -2400,6 +2431,28 @@ func init() {
         }
       }
     },
+    "/flags/snapshots/max_id": {
+      "get": {
+        "tags": [
+          "flag"
+        ],
+        "operationId": "getFlagSnapshotMaxID",
+        "responses": {
+          "200": {
+            "description": "returns the max flag_snapshot id",
+            "schema": {
+              "$ref": "#/definitions/flagSnapshotMaxID"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
     "/flags/{flagID}": {
       "get": {
         "tags": [
@@ -3943,6 +3996,15 @@ func init() {
         },
         "updatedBy": {
           "type": "string"
+        }
+      }
+    },
+    "flagSnapshotMaxID": {
+      "type": "object",
+      "properties": {
+        "maxID": {
+          "type": "integer",
+          "format": "int64"
         }
       }
     },

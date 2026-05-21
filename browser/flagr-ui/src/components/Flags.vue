@@ -52,18 +52,18 @@
                     <el-tag
                       v-for="tag in scope.row.tags"
                       :key="tag.id"
-                      type="warning"
+                      type="success"
                       size="small"
-                      effect="plain"
+                      effect="light"
                     >{{ tag.value }}</el-tag>
                     <span v-if="!scope.row.tags.length" class="flags-empty-tag">—</span>
                   </div>
                 </template>
               </el-table-column>
-              <el-table-column prop="updatedBy" label="Last Updated By" sortable width="140"></el-table-column>
+              <el-table-column prop="updatedBy" label="Updated By" sortable width="140"></el-table-column>
               <el-table-column
                 prop="updatedAt"
-                label="Updated At (UTC)"
+                label="Updated At"
                 :formatter="datetimeFormatter"
                 sortable
                 width="130"
@@ -73,7 +73,7 @@
                 label="Status"
                 sortable
                 align="center"
-                width="100"
+                width="120"
                 :filters="[{ text: 'Enabled', value: true }, { text: 'Disabled', value: false }]"
                 :filter-method="filterStatus"
               >
@@ -120,16 +120,16 @@
                         <el-tag
                           v-for="tag in scope.row.tags"
                           :key="tag.id"
-                          type="warning"
+                          type="success"
                           size="small"
-                          effect="plain"
+                          effect="light"
                         >{{ tag.value }}</el-tag>
                       </template>
                     </el-table-column>
-                    <el-table-column prop="updatedBy" label="Last Updated By" sortable width="200"></el-table-column>
+                    <el-table-column prop="updatedBy" label="Updated By" sortable width="200"></el-table-column>
                     <el-table-column
                       prop="updatedAt"
-                      label="Updated At (UTC)"
+                      label="Updated At"
                       :formatter="datetimeFormatter"
                       sortable
                       width="180"
@@ -214,8 +214,19 @@ import constants from "@/constants";
 import Spinner from "@/components/Spinner";
 import helpers from "@/helpers/helpers";
 
-const { handleErr } = helpers;
+const { handleErr, debounce } = helpers;
 const { API_URL } = constants;
+
+
+const flagsCache = {
+  data: null, // { flags: [], maxSnapshotID: number }
+  get() {
+    return this.data;
+  },
+  set(data) {
+    this.data = data;
+  },
+};
 
 export default {
   name: "flags",
@@ -226,30 +237,37 @@ export default {
     ArrowDown,
   },
   data() {
+    const cached = flagsCache.get();
     return {
-      loaded: false,
+      loaded: !!cached,
+      flags: cached ? cached.flags : [],
       deletedFlagsLoaded: false,
-      flags: [],
       deletedFlags: [],
       searchTerm: "",
+      debouncedSearchTerm: "",
       showCreateModal: false,
       newFlag: {
         description: ""
       }
     };
   },
+
+  beforeDestroy() {
+    if (this._visHandler) document.removeEventListener('visibilitychange', this._visHandler);
+  },
+
+  mounted() {
+    this._visHandler = () => { if (!document.hidden) this.refreshFlags(); };
+    document.addEventListener('visibilitychange', this._visHandler);
+  },
+
   created() {
-    Axios.get(`${API_URL}/flags`).then(response => {
-      let flags = response.data;
-      this.loaded = true;
-      flags.reverse();
-      this.flags = flags;
-    }, handleErr.bind(this));
+    this.refreshFlags();
   },
   computed: {
     filteredFlags() {
-      if (this.searchTerm) {
-        const terms = this.searchTerm.split(",");
+      if (this.debouncedSearchTerm) {
+        const terms = this.debouncedSearchTerm.split(",");
         return this.flags.filter(({ id, key, description, tags }) =>
           terms.every(term => {
             const t = term.toLowerCase();
@@ -265,7 +283,40 @@ export default {
       return this.flags;
     },
   },
+  watch: {
+    searchTerm() {
+      this.debouncedFlags();
+    },
+  },
   methods: {
+    refreshFlags() {
+      const cached = flagsCache.get();
+      if (cached) {
+        Axios.get(`${API_URL}/flags/snapshots/max_id`).then(response => {
+          if (response.data.maxID !== cached.maxSnapshotID) {
+            Axios.get(`${API_URL}/flags`).then(r => {
+              let flags = r.data;
+              flags.reverse();
+              flagsCache.set({ flags, maxSnapshotID: response.data.maxID });
+              this.flags = flags;
+            }, handleErr.bind(this));
+          }
+        }, handleErr.bind(this));
+      } else {
+        Axios.get(`${API_URL}/flags/snapshots/max_id`).then(maxResp => {
+          Axios.get(`${API_URL}/flags`).then(r => {
+            let flags = r.data;
+            this.loaded = true;
+            flags.reverse();
+            flagsCache.set({ flags, maxSnapshotID: maxResp.data.maxID });
+            this.flags = flags;
+          }, handleErr.bind(this));
+        }, handleErr.bind(this));
+      }
+    },
+    debouncedFlags: debounce(function () {
+      this.debouncedSearchTerm = this.searchTerm;
+    }, 150),
     datetimeFormatter(row, col, val) {
       return val ? val.split(".")[0] : "";
     },
@@ -285,7 +336,7 @@ export default {
         this.newFlag.description = "";
         this.showCreateModal = false;
         this.$message.success("Flag created");
-
+        // cache auto-invalidates via snapshot ID
         flag._new = true;
         this.flags.unshift(flag);
       }, handleErr.bind(this));

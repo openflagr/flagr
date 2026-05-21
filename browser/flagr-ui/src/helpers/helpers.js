@@ -5,6 +5,13 @@ function pluck(arr, prop) {
 function sum(arr) {
   return arr.reduce((acc, el) => acc + el, 0)
 }
+function debounce(fn, delay) {
+  let timer = null;
+  return function (...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), delay);
+  };
+}
 
 function handleErr(err) {
   const msg = err?.response?.data?.message || 'request error'
@@ -18,5 +25,6 @@ function handleErr(err) {
 export default {
   pluck,
   sum,
-  handleErr
+  handleErr,
+  debounce,
 }

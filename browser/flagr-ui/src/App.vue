@@ -30,6 +30,7 @@ export default {
 body {
   margin: 0;
   padding: 0;
+  overflow-y: scroll;
   background-color: var(--el-bg-color-page);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
   -webkit-font-smoothing: antialiased;
