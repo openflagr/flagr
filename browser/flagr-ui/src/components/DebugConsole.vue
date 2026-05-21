@@ -10,9 +10,9 @@
           <el-button size="small" @click="postEvaluation(evalContext)" type="primary" plain>POST /api/v1/evaluation</el-button>
         </div>
         <div class="dc-editor-row">
-          <json-editor :json="evalContext" @update:json="evalContext = $event" @update:jsonString="syncEvalContext" :main-menu-bar="false" :navigation-bar="false" :status-bar="false" mode="text" class="dc-json-editor" />
+          <json-editor :json="evalContext" @update:json="evalContext = $event" :main-menu-bar="false" :navigation-bar="false" :status-bar="false" mode="text" class="dc-json-editor" />
           <div class="dc-response-col">
-            <json-editor :json="evalResult" @update:json="evalResult = $event" @update:jsonString="syncEvalResult" :main-menu-bar="false" :navigation-bar="false" :status-bar="false" mode="text" class="dc-json-editor" />
+            <json-editor :json="evalResult" @update:json="evalResult = $event" :main-menu-bar="false" :navigation-bar="false" :status-bar="false" mode="text" class="dc-json-editor" />
           </div>
         </div>
         <div v-if="evalSummary" class="dc-summary">
@@ -40,8 +40,8 @@
           <span class="dc-label">Response</span>
         </div>
         <div class="dc-editor-row">
-          <json-editor :json="batchEvalContext" @update:json="batchEvalContext = $event" @update:jsonString="syncBatchEvalContext" :main-menu-bar="false" :navigation-bar="false" :status-bar="false" mode="text" class="dc-json-editor" />
-          <json-editor :json="batchEvalResult" @update:json="batchEvalResult = $event" @update:jsonString="syncBatchEvalResult" :main-menu-bar="false" :navigation-bar="false" :status-bar="false" mode="text" class="dc-json-editor" />
+          <json-editor :json="batchEvalContext" @update:json="batchEvalContext = $event" :main-menu-bar="false" :navigation-bar="false" :status-bar="false" mode="text" class="dc-json-editor" />
+          <json-editor :json="batchEvalResult" @update:json="batchEvalResult = $event" :main-menu-bar="false" :navigation-bar="false" :status-bar="false" mode="text" class="dc-json-editor" />
         </div>
       </el-collapse-item>
     </el-collapse>
@@ -70,10 +70,6 @@ export default {
     };
   },
   methods: {
-    syncEvalContext(text) { try { this.evalContext = JSON.parse(text) } catch(e) { /* ignore parse errors during editing */ } },
-    syncEvalResult(text) { try { this.evalResult = JSON.parse(text) } catch(e) { /* ignore parse errors during editing */ } },
-    syncBatchEvalContext(text) { try { this.batchEvalContext = JSON.parse(text) } catch(e) { /* ignore parse errors during editing */ } },
-    syncBatchEvalResult(text) { try { this.batchEvalResult = JSON.parse(text) } catch(e) { /* ignore parse errors during editing */ } },
 
     postEvaluation(evalContext) {
       Axios.post(`${API_URL}/evaluation`, evalContext).then(response => {
