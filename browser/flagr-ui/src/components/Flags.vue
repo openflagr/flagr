@@ -252,7 +252,7 @@ export default {
     };
   },
 
-  beforeDestroy() {
+  beforeUnmount() {
     if (this._visHandler) document.removeEventListener('visibilitychange', this._visHandler);
   },
 
