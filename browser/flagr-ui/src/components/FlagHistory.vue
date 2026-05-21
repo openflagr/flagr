@@ -90,28 +90,4 @@ export default {
 </script>
 
 <style lang="less">
-.snapshot-container {
-  .diff-snapshot-id-change {
-    color: white;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    .el-tag {
-      color: #2e4960;
-      background-color: white;
-    }
-  }
-  .diff {
-    margin: 0;
-    del {
-      background-color: #f7b3b3;
-      text-decoration: none;
-    }
-    ins {
-      background-color: #b6ddc6;
-      text-decoration: none;
-    }
-    overflow-x: auto;
-  }
-}
 </style>

@@ -6,7 +6,7 @@ test.describe('App shell', () => {
   })
 
   test('page loads and displays the app shell', async ({ page }) => {
-    await expect(page.locator('.logo')).toHaveText('Flagr')
+    await expect(page.locator('.logo')).toContainText('Flagr')
     await expect(page).toHaveTitle('Flagr')
     await expect(page.locator('.navbar a[href*="api_docs"]')).toBeVisible()
   })

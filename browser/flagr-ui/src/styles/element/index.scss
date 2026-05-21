@@ -1,0 +1,61 @@
+@forward 'element-plus/theme-chalk/src/common/var.scss' with (
+  $colors: (
+    'white': #ffffff,
+    'black': #000000,
+    'primary': (
+      'base': #34D399,
+    ),
+    'success': (
+      'base': #059669,
+    ),
+    'warning': (
+      'base': #FBBF24,
+    ),
+    'danger': (
+      'base': #F87171,
+    ),
+    'error': (
+      'base': #F87171,
+    ),
+    'info': (
+      'base': #60A5FA,
+    ),
+  ),
+  $text-color: (
+    'primary': #047857,
+    'regular': #065F46,
+    'secondary': #34D399,
+    'placeholder': #6EE7B7,
+    'disabled': #A7F3D0,
+  ),
+  $border-color: (
+    '': #A7F3D0,
+    'light': #D1FAE5,
+    'lighter': #ECFDF5,
+    'extra-light': #F0FDF4,
+    'dark': #6EE7B7,
+    'darker': #34D399,
+  ),
+  $bg-color: (
+    '': #ffffff,
+    'page': #ECFDF5,
+    'overlay': #ffffff,
+  ),
+  $fill-color: (
+    '': #D1FAE5,
+    'light': #ECFDF5,
+    'lighter': #ffffff,
+    'extra-light': #ffffff,
+    'dark': #A7F3D0,
+    'darker': #6EE7B7,
+    'blank': #ffffff,
+  ),
+  $border-radius: (
+    'base': 8px,
+    'small': 4px,
+    'round': 16px,
+    'circle': 100%,
+  ),
+);
+
+@use 'element-plus/theme-chalk/src/index.scss' as *;

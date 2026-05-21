@@ -1,6 +1,6 @@
 <template>
-  <el-row>
-    <el-col :span="20" :offset="2">
+  <el-row justify="center">
+    <el-col :xs="22" :sm="20" :md="20" :lg="18" :xl="16">
       <div class="container flag-container">
         <el-dialog title="Delete feature flag" v-model="dialogDeleteFlagVisible">
           <span>Are you sure you want to delete this feature flag?</span>
@@ -13,15 +13,15 @@
         </el-dialog>
 
         <el-dialog title="Create segment" v-model="dialogCreateSegmentOpen">
-          <div>
-            <p>
-              <el-input placeholder="Segment description" v-model="newSegment.description" data-testid="new-segment-desc-input"></el-input>
-            </p>
-            <p>
-              <el-slider v-model="newSegment.rolloutPercent" show-input></el-slider>
-            </p>
+          <div class="create-segment-dialog">
+            <el-input placeholder="Segment description" v-model="newSegment.description" data-testid="new-segment-desc-input" />
+            <div class="create-segment-slider">
+              <label class="create-segment-label">Rollout %</label>
+              <el-slider v-model="newSegment.rolloutPercent" show-input :max="100" />
+            </div>
             <el-button
               class="width--full"
+              type="primary"
               :disabled="!newSegment.description"
               @click.prevent="createSegment"
               data-testid="create-segment-btn"
@@ -90,15 +90,12 @@
 
               <debug-console :flag="flag" />
 
-              <el-card>
-                <template #header>
-                  <div class="el-card-header"><h2>Flag Settings</h2></div>
-                </template>
-                <el-button type="danger" plain @click="dialogDeleteFlagVisible = true" data-testid="delete-flag-btn">
+              <div style="margin-top: 8px;">
+                <el-button type="danger" plain size="small" @click="dialogDeleteFlagVisible = true" data-testid="delete-flag-btn">
                   <el-icon><Delete /></el-icon>
                   Delete Flag
                 </el-button>
-              </el-card>
+              </div>
             </el-tab-pane>
 
             <el-tab-pane label="History">
@@ -207,6 +204,7 @@ export default {
       Axios.put(`${API_URL}/flags/${this.flagId}/enabled`, {
         enabled: checked
       }).then(() => {
+        this.flag.enabled = checked
         this.$message.success(`You turned ${checked ? "on" : "off"} this feature flag`)
       }, handleErr.bind(this))
     },
@@ -512,145 +510,31 @@ export default {
 <style lang="less">
 h5 {
   padding: 0;
-  margin: 10px 0 5px;
+  margin: 8px 0 4px;
+  font-size: 13px;
 }
+
+.create-segment-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.create-segment-slider {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.create-segment-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--el-text-color-secondary);
+}
+
 
 .grabbable {
   cursor: move;
   cursor: grab;
   cursor: -moz-grab;
   cursor: -webkit-grab;
-}
-
-.flag-inner-config-card {
-  .el-card__body {
-    padding-bottom: 0px;
-  }
-}
-
-.segment {
-  .highlightable {
-    padding: 4px;
-    &:hover {
-      background-color: #ddd;
-    }
-  }
-  .segment-constraint {
-    margin-bottom: 12px;
-    padding: 1px;
-    background-color: #f6f6f6;
-    border-radius: 5px;
-  }
-  .distribution-card {
-    height: 110px;
-    text-align: center;
-    .el-card__body {
-      padding: 3px 10px 10px 10px;
-    }
-    font-size: 0.9em;
-  }
-}
-
-ol.constraints-inner {
-  background-color: white;
-  padding-left: 8px;
-  padding-right: 8px;
-  border-radius: 3px;
-  border: 1px solid #ddd;
-  li {
-    padding: 3px 0;
-    .el-tag {
-      font-size: 0.7em;
-    }
-  }
-}
-
-.constraints-inputs-container {
-  padding: 5px 0;
-}
-
-.variants-container-inner {
-  .el-card {
-    margin-bottom: 1em;
-  }
-  .el-input-group__prepend {
-    width: 2em;
-  }
-}
-
-.segment-description-rollout {
-  margin-top: 10px;
-}
-
-.edit-distribution-button {
-  margin-top: 5px;
-}
-
-.edit-distribution-alert {
-  margin-top: 10px;
-}
-
-.el-form-item {
-  margin-bottom: 5px;
-}
-
-.id-row {
-  margin-bottom: 8px;
-}
-
-.flag-config-card {
-  .flag-content {
-    margin-top: 8px;
-    margin-bottom: -8px;
-    .el-input-group__prepend {
-      width: 8em;
-    }
-  }
-  .data-records-label {
-    margin-left: 3px;
-    margin-bottom: 5px;
-    margin-top: 6px;
-    font-size: 0.65em;
-    white-space: nowrap;
-    vertical-align: middle;
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
-  }
-}
-
-.variant-attachment-collapsable-title {
-  margin: 0;
-  font-size: 13px;
-  color: #909399;
-  width: 100%;
-}
-
-.variant-attachment-title {
-  margin: 0;
-  font-size: 13px;
-  color: #909399;
-}
-
-.variant-key-input {
-  margin-left: 10px;
-  width: 50%;
-}
-
-.save-remove-variant-row {
-  padding-bottom: 5px;
-}
-
-.tag-key-input {
-  margin: 2.5px;
-  width: 20%;
-}
-
-.tags-container-inner {
-  margin-bottom: 10px;
-}
-
-.button-new-tag {
-  margin: 2.5px;
 }
 </style>

@@ -9,20 +9,16 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css"
     />
 
-    <el-row :gutter="10">
-      <el-col :span="12" v-if="showEditor">
-        <el-input
-          type="textarea"
-          :rows="12"
-          placeholder="Please input"
-          v-model="input"
-          @change="syncMarkdown"
-        ></el-input>
-      </el-col>
-      <el-col :span="showEditor ? 12 : 24">
-        <div class="markdown-body" v-html="compiledMarkdown"></div>
-      </el-col>
-    </el-row>
+    <div v-if="showEditor" class="me-editor-section">
+      <el-input
+        type="textarea"
+        :rows="5"
+        placeholder="Please input"
+        v-model="input"
+        @change="syncMarkdown"
+      ></el-input>
+    </div>
+    <div class="markdown-body" v-html="compiledMarkdown"></div>
   </div>
 </template>
 
