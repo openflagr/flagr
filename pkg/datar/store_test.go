@@ -72,68 +72,55 @@ func TestFlushAggregates_Empty(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestQueryTraffic(t *testing.T) {
+func TestQueryFlagSummary(t *testing.T) {
 	db := testDB(t)
 	s := NewTestStore(db)
 
 	now := time.Now().UTC().Truncate(time.Hour)
-	h1 := now
-	h2 := now.Add(-1 * time.Hour)
+	prev := now.Add(-1 * time.Hour)
 
-	seedHourly(t, db, []entity.HourlyEvent{
-		{FlagID: 1, VariantID: 1, SegmentID: 10, BucketHour: h1, EvalCount: 50},
-		{FlagID: 1, VariantID: 2, SegmentID: 10, BucketHour: h1, EvalCount: 30},
-		{FlagID: 1, VariantID: 1, SegmentID: 10, BucketHour: h2, EvalCount: 20},
-	})
-
-	from := h2.Add(-time.Hour)
-	to := h1.Add(time.Hour)
-	rows, err := s.QueryTraffic(1, from, to)
-	assert.NoError(t, err)
-	assert.Equal(t, 3, len(rows))
-}
-
-func TestQuerySegments(t *testing.T) {
-	db := testDB(t)
-	s := NewTestStore(db)
-
-	now := time.Now().UTC().Truncate(time.Hour)
-	// Seed segments table too.
+	// Seed segments table.
 	assert.NoError(t, db.Exec("INSERT INTO segments (id, description, flag_id, rank, rollout_percent) VALUES (10, 'US users', 1, 1, 100)").Error)
+	assert.NoError(t, db.Exec("INSERT INTO segments (id, description, flag_id, rank, rollout_percent) VALUES (20, 'EU users', 1, 2, 100)").Error)
 
 	seedHourly(t, db, []entity.HourlyEvent{
-		{FlagID: 1, VariantID: 1, SegmentID: 10, BucketHour: now, EvalCount: 100},
-		{FlagID: 1, VariantID: 2, SegmentID: 10, BucketHour: now, EvalCount: 50},
+		{FlagID: 1, VariantID: 1, SegmentID: 10, BucketHour: now, EvalCount: 50},
+		{FlagID: 1, VariantID: 2, SegmentID: 10, BucketHour: now, EvalCount: 30},
+		{FlagID: 1, VariantID: 1, SegmentID: 20, BucketHour: now, EvalCount: 20},
+		{FlagID: 1, VariantID: 1, SegmentID: 10, BucketHour: prev, EvalCount: 10},
 	})
 
-	from := now.Add(-2 * time.Hour)
+	from := prev.Add(-time.Hour)
 	to := now.Add(time.Hour)
-	rows, err := s.QuerySegments(1, from, to)
+	rows, err := s.QueryFlagSummary(1, from, to)
 	assert.NoError(t, err)
-	if assert.Equal(t, 1, len(rows)) {
-		assert.Equal(t, int64(10), rows[0].SegmentID)
-		assert.Equal(t, "US users", rows[0].Description)
-		assert.Equal(t, int64(150), rows[0].EvalCount)
+	assert.Equal(t, 4, len(rows), "should return all 4 raw event rows")
+
+	// Verify segment descriptions are joined.
+	var gotUS, gotEU bool
+	for _, r := range rows {
+		if r.SegmentID == 10 {
+			assert.Equal(t, "US users", r.SegmentDescription)
+			gotUS = true
+		}
+		if r.SegmentID == 20 {
+			assert.Equal(t, "EU users", r.SegmentDescription)
+			gotEU = true
+		}
 	}
+	assert.True(t, gotUS, "should have segment 10 description")
+	assert.True(t, gotEU, "should have segment 20 description")
 }
 
-func TestQueryTimeBuckets(t *testing.T) {
+func TestQueryFlagSummary_NoData(t *testing.T) {
 	db := testDB(t)
 	s := NewTestStore(db)
 
-	now := time.Now().UTC().Truncate(time.Hour)
-	yesterday := now.Add(-24 * time.Hour)
-
-	seedHourly(t, db, []entity.HourlyEvent{
-		{FlagID: 1, VariantID: 1, SegmentID: 0, BucketHour: now, EvalCount: 80},
-		{FlagID: 1, VariantID: 1, SegmentID: 0, BucketHour: yesterday, EvalCount: 40},
-	})
-
-	from := yesterday.Add(-time.Hour)
-	to := now.Add(time.Hour)
-	rows, err := s.QueryTimeBuckets(1, from, to)
+	from := time.Now().UTC().Add(-24 * time.Hour)
+	to := time.Now().UTC().Add(time.Hour)
+	rows, err := s.QueryFlagSummary(999, from, to)
 	assert.NoError(t, err)
-	assert.Equal(t, 2, len(rows))
+	assert.Equal(t, 0, len(rows), "non-existent flag should return empty")
 }
 
 func TestQuerySummary(t *testing.T) {
@@ -249,24 +236,4 @@ func TestQuerySummary_Pagination(t *testing.T) {
 	assert.Equal(t, 1, len(rows), "offset=2 should skip first 2")
 }
 
-func TestQuerySegments_NoData(t *testing.T) {
-	db := testDB(t)
-	s := NewTestStore(db)
 
-	from := time.Now().UTC().Add(-24 * time.Hour)
-	to := time.Now().UTC().Add(time.Hour)
-	rows, err := s.QuerySegments(999, from, to)
-	assert.NoError(t, err)
-	assert.Equal(t, 0, len(rows), "non-existent flag should return empty")
-}
-
-func TestQueryTimeBuckets_NoData(t *testing.T) {
-	db := testDB(t)
-	s := NewTestStore(db)
-
-	from := time.Now().UTC().Add(-24 * time.Hour)
-	to := time.Now().UTC().Add(time.Hour)
-	rows, err := s.QueryTimeBuckets(999, from, to)
-	assert.NoError(t, err)
-	assert.Equal(t, 0, len(rows), "non-existent flag should return empty")
-}

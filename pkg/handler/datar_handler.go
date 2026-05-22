@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/go-openapi/runtime/middleware"
@@ -79,7 +80,6 @@ func HandleGetDatarSummary(params datar.GetDatarSummaryParams) middleware.Respon
 	)
 }
 
-// HandleGetDatarFlagSummary is the handler for GET /datar/flags/{flagID}/summary.
 func HandleGetDatarFlagSummary(params datar.GetDatarFlagSummaryParams) middleware.Responder {
 	d := GetDatar()
 	if d == nil {
@@ -91,63 +91,64 @@ func HandleGetDatarFlagSummary(params datar.GetDatarFlagSummaryParams) middlewar
 	from, to := parseTimeRange(params.From, params.To, 7)
 	flagID := params.FlagID
 
-	// Get variant traffic.
-	trafficRows, err := d.Store().QueryTraffic(flagID, from, to)
+	rows, err := d.Store().QueryFlagSummary(flagID, from, to)
 	if err != nil {
-		logrus.WithError(err).Error("Datar: QueryTraffic failed")
+		logrus.WithError(err).Error("Datar: QueryFlagSummary failed")
 		return datar.NewGetDatarFlagSummaryDefault(500).WithPayload(
 			datarError("query failed: %s", err),
 		)
 	}
 
-	// Get segment distribution.
-	segRows, err := d.Store().QuerySegments(flagID, from, to)
-	if err != nil {
-		logrus.WithError(err).Error("Datar: QuerySegments failed")
-		return datar.NewGetDatarFlagSummaryDefault(500).WithPayload(
-			datarError("query failed: %s", err),
-		)
-	}
-
-	// Get daily time buckets.
-	dayRows, err := d.Store().QueryTimeBuckets(flagID, from, to)
-	if err != nil {
-		logrus.WithError(err).Error("Datar: QueryTimeBuckets failed")
-		return datar.NewGetDatarFlagSummaryDefault(500).WithPayload(
-			datarError("query failed: %s", err),
-		)
-	}
-
-	// Aggregate variant totals from traffic rows.
+	// Aggregate raw rows into three bucket types in a single pass.
 	variantTotals := make(map[string]int64)
-	for _, p := range trafficRows {
-		vk := fmt.Sprintf("%d", p.VariantID)
-		variantTotals[vk] += int64(p.Count)
+	segCounts := make(map[int64]int64)
+	segDescs := make(map[int64]string)
+	dayCounts := make(map[string]int64)
+
+	for _, r := range rows {
+		vk := fmt.Sprintf("%d", r.VariantID)
+		variantTotals[vk] += int64(r.EvalCount)
+
+		if r.SegmentID > 0 {
+			segCounts[r.SegmentID] += int64(r.EvalCount)
+			segDescs[r.SegmentID] = r.SegmentDescription
+		}
+
+		// BucketHour from the driver is RFC 3339; extract YYYY-MM-DD.
+		if len(r.BucketHour) >= 10 {
+			dayCounts[r.BucketHour[:10]] += int64(r.EvalCount)
+		}
 	}
 
-	// Day entries.
-	days := make([]*models.DatarDayEntry, len(dayRows))
-	for i, dr := range dayRows {
-		t, err := time.Parse("2006-01-02", dr.Bucket)
+	// Segment entries sorted by eval count descending.
+	segs := make([]*models.DatarSegmentEntry, 0, len(segCounts))
+	for id, count := range segCounts {
+		segs = append(segs, &models.DatarSegmentEntry{
+			SegmentID:   id,
+			Description: segDescs[id],
+			EvalCount:   count,
+		})
+	}
+	sort.Slice(segs, func(i, j int) bool {
+		return segs[i].EvalCount > segs[j].EvalCount
+	})
+
+	// Day entries sorted by date.
+	days := make([]*models.DatarDayEntry, 0, len(dayCounts))
+	for dateStr, count := range dayCounts {
+		t, err := time.Parse("2006-01-02", dateStr)
 		if err != nil {
-			logrus.WithError(err).WithField("date", dr.Bucket).Warn("Datar: invalid date in time bucket")
+			logrus.WithError(err).WithField("date", dateStr).Warn("Datar: invalid date in time bucket")
 			continue
 		}
-		days[i] = &models.DatarDayEntry{
+		days = append(days, &models.DatarDayEntry{
 			Date:  strfmt.Date(t),
-			Count: dr.Count,
-		}
+			Count: count,
+		})
 	}
-
-	// Segment entries.
-	segs := make([]*models.DatarSegmentEntry, len(segRows))
-	for i, sr := range segRows {
-		segs[i] = &models.DatarSegmentEntry{
-			SegmentID:   sr.SegmentID,
-			Description: sr.Description,
-			EvalCount:   sr.EvalCount,
-		}
-	}
+	sort.Slice(days, func(i, j int) bool {
+		return time.Time(days[i].Date).Before(time.Time(days[j].Date))
+	})
 
 	resp := &models.DatarFlagSummaryResponse{
 		FlagID:           flagID,

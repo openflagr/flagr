@@ -84,74 +84,28 @@ func (s *Store) QuerySummary(from, to time.Time, limit, offset int) ([]SummaryRo
 	}
 	return rows, nil
 }
-
-// TrafficPoint is one bucket in a time-series by variant.
-type TrafficPoint struct {
-	BucketHour string `json:"bucket"`
-	VariantID  int64  `json:"variantID"`
-	Count      int32  `json:"count"`
+// RawEvent is one row from the datar_hourly_events join query for a flag.
+// Using string for BucketHour because the pure-Go SQLite driver returns
+// datetime values as strings regardless of how they were stored.
+type RawEvent struct {
+	VariantID          int64
+	SegmentID          int64
+	BucketHour         string
+	EvalCount          int32
+	SegmentDescription string
 }
 
-// QueryTraffic returns traffic grouped by variant per time bucket.
-func (s *Store) QueryTraffic(flagID int64, from, to time.Time) ([]TrafficPoint, error) {
-	var rows []TrafficPoint
-	err := s.db.Raw(`
-		SELECT e.bucket_hour, e.variant_id, CAST(SUM(e.eval_count) AS INTEGER) AS count
-		FROM datar_hourly_events e
-		WHERE e.flag_id = ? AND e.bucket_hour >= ? AND e.bucket_hour < ?
-		GROUP BY e.bucket_hour, e.variant_id
-		ORDER BY e.bucket_hour, e.variant_id
-	`, flagID, from, to).Scan(&rows).Error
+// QueryFlagSummary returns all raw event rows for a flag in the time range.
+// The caller aggregates into variant/segment/day buckets in Go.
+func (s *Store) QueryFlagSummary(flagID int64, from, to time.Time) ([]RawEvent, error) {
+	var rows []RawEvent
+	err := s.db.Table("datar_hourly_events").
+		Select("datar_hourly_events.variant_id, datar_hourly_events.segment_id, datar_hourly_events.bucket_hour, datar_hourly_events.eval_count, COALESCE(segments.description, '') AS segment_description").
+		Joins("LEFT JOIN segments ON segments.id = datar_hourly_events.segment_id").
+		Where("datar_hourly_events.flag_id = ? AND datar_hourly_events.bucket_hour >= ? AND datar_hourly_events.bucket_hour < ?", flagID, from, to).
+		Scan(&rows).Error
 	if err != nil {
-		logrus.WithError(err).Error("Datar: QueryTraffic failed")
-		return nil, err
-	}
-	return rows, nil
-}
-
-// SegmentRow is one segment's traffic count.
-type SegmentRow struct {
-	SegmentID   int64  `json:"segmentID"`
-	Description string `json:"description"`
-	EvalCount   int64  `json:"evalCount"`
-}
-
-// QuerySegments returns segment distribution for a flag.
-func (s *Store) QuerySegments(flagID int64, from, to time.Time) ([]SegmentRow, error) {
-	var rows []SegmentRow
-	err := s.db.Raw(`
-		SELECT e.segment_id, COALESCE(s.description, '') AS description, CAST(SUM(e.eval_count) AS INTEGER) AS eval_count
-		FROM datar_hourly_events e
-		LEFT JOIN segments s ON s.id = e.segment_id
-		WHERE e.flag_id = ? AND e.bucket_hour >= ? AND e.bucket_hour < ? AND e.segment_id > 0
-		GROUP BY e.segment_id
-		ORDER BY eval_count DESC
-	`, flagID, from, to).Scan(&rows).Error
-	if err != nil {
-		logrus.WithError(err).Error("Datar: QuerySegments failed")
-		return nil, err
-	}
-	return rows, nil
-}
-
-// TimeBucketRow is a daily time-series count.
-type TimeBucketRow struct {
-	Bucket string `json:"date"`
-	Count  int64  `json:"count"`
-}
-
-// QueryTimeBuckets returns daily traffic counts for a flag.
-func (s *Store) QueryTimeBuckets(flagID int64, from, to time.Time) ([]TimeBucketRow, error) {
-	var rows []TimeBucketRow
-	err := s.db.Raw(`
-		SELECT DATE(e.bucket_hour) AS bucket, CAST(SUM(e.eval_count) AS INTEGER) AS count
-		FROM datar_hourly_events e
-		WHERE e.flag_id = ? AND e.bucket_hour >= ? AND e.bucket_hour < ?
-		GROUP BY DATE(e.bucket_hour)
-		ORDER BY bucket
-	`, flagID, from, to).Scan(&rows).Error
-	if err != nil {
-		logrus.WithError(err).Error("Datar: QueryTimeBuckets failed")
+		logrus.WithError(err).Error("Datar: QueryFlagSummary failed")
 		return nil, err
 	}
 	return rows, nil
