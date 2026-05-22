@@ -22,6 +22,10 @@ export default defineConfig({
   },
   server: {
     port: 8080,
+    watch: {
+      usePolling: true,
+      interval: 1000,
+    },
     proxy: {
       '/api/v1': {
         target: 'http://127.0.0.1:18000',
