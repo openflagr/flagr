@@ -214,6 +214,11 @@ definitions:
         type: string
         minLength: 1
   # Flag Snapshot Max ID (lightweight cache stamp)
+  # - Monotonically increasing id for the flag_snapshot table.
+  # - Every flag config mutation appends a row, so the max id is effectively a
+  #   single version counter for the entire flag configuration.
+  # - Consumers can poll /flags/snapshots/max_id and compare with their cached
+  #   value to quickly detect changes without scanning individual flag records.
   flagSnapshotMaxID:
     type: object
     properties:
