@@ -104,26 +104,3 @@ func (s *Store) QueryFlagSummary(flagID int64, from, to time.Time) ([]RawEvent, 
 	return rows, nil
 }
 
-// SegmentDescriptions returns descriptions for the given segment IDs.
-func (s *Store) SegmentDescriptions(ids []int64) (map[int64]string, error) {
-	if len(ids) == 0 {
-		return nil, nil
-	}
-	type segRow struct {
-		ID          int64
-		Description string
-	}
-	var rows []segRow
-	err := s.db.Table("segments").
-		Select("id, description").
-		Where("id IN ?", ids).
-		Scan(&rows).Error
-	if err != nil {
-		return nil, err
-	}
-	descs := make(map[int64]string, len(rows))
-	for _, r := range rows {
-		descs[r.ID] = r.Description
-	}
-	return descs, nil
-}

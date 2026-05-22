@@ -17,9 +17,6 @@ import (
 // swagger:model datarSegmentEntry
 type DatarSegmentEntry struct {
 
-	// description
-	Description string `json:"description,omitempty"`
-
 	// eval count
 	EvalCount int64 `json:"evalCount,omitempty"`
 

@@ -95,11 +95,6 @@ func TestQueryFlagSummary(t *testing.T) {
 	rows, err := s.QueryFlagSummary(1, from, to)
 	assert.NoError(t, err)
 	assert.Equal(t, 4, len(rows), "should return all 4 raw event rows")
-	// Verify SegmentDescriptions returns correct descriptions.
-	descs, err := s.SegmentDescriptions([]int64{10, 20})
-	assert.NoError(t, err)
-	assert.Equal(t, "US users", descs[10])
-	assert.Equal(t, "EU users", descs[20])
 }
 
 func TestQueryFlagSummary_NoData(t *testing.T) {
@@ -113,16 +108,7 @@ func TestQueryFlagSummary_NoData(t *testing.T) {
 	assert.Equal(t, 0, len(rows), "non-existent flag should return empty")
 }
 
-func TestSegmentDescriptions_Empty(t *testing.T) {
-	db := testDB(t)
-	s := NewTestStore(db)
-	descs, err := s.SegmentDescriptions(nil)
-	assert.NoError(t, err)
-	assert.Nil(t, descs)
-	descs, err = s.SegmentDescriptions([]int64{})
-	assert.NoError(t, err)
-	assert.Nil(t, descs)
-}
+
 
 func TestQuerySummary(t *testing.T) {
 	db := testDB(t)

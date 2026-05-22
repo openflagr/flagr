@@ -118,26 +118,12 @@ func HandleGetDatarFlagSummary(params datar.GetDatarFlagSummaryParams) middlewar
 		}
 	}
 
-	// Fetch descriptions for just the segments that have data.
-	descIDs := make([]int64, 0, len(segIDs))
-	for id := range segIDs {
-		descIDs = append(descIDs, id)
-	}
-	segDescs, err := d.Store().SegmentDescriptions(descIDs)
-	if err != nil {
-		logrus.WithError(err).Error("Datar: SegmentDescriptions failed")
-		return datar.NewGetDatarFlagSummaryDefault(500).WithPayload(
-			datarError("segment descriptions failed: %s", err),
-		)
-	}
-
 	// Segment entries sorted by eval count descending.
 	segs := make([]*models.DatarSegmentEntry, 0, len(segIDs))
 	for id, count := range segIDs {
 		segs = append(segs, &models.DatarSegmentEntry{
-			SegmentID:   id,
-			Description: segDescs[id],
-			EvalCount:   count,
+			SegmentID: id,
+			EvalCount: count,
 		})
 	}
 	sort.Slice(segs, func(i, j int) bool {
