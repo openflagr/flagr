@@ -11,17 +11,17 @@ import (
 
 // Store handles DB operations for Datar aggregate data.
 type Store struct {
-	db        *gorm.DB
-	upsertRef string // "EXCLUDED" for PG/SQLite, "VALUES" for MySQL
+	db          *gorm.DB
+	addEvalExpr string // additive expression: "datar_hourly_events.eval_count + EXCLUDED.eval_count" or "... VALUES(eval_count)"
 }
 
-// initStore initializes a Store with dialect-aware upsert reference prefix.
+// initStore initializes a Store with dialect-aware upsert expressions.
 func initStore(db *gorm.DB) *Store {
-	ref := "EXCLUDED"
+	expr := "datar_hourly_events.eval_count + EXCLUDED.eval_count"
 	if db.Name() == "mysql" {
-		ref = "VALUES"
+		expr = "datar_hourly_events.eval_count + VALUES(eval_count)"
 	}
-	return &Store{db: db, upsertRef: ref}
+	return &Store{db: db, addEvalExpr: expr}
 }
 
 // NewStore creates a Store using Flagr's main DB connection.
@@ -62,10 +62,10 @@ func (s *Store) FlushAggregates(agg map[FlushKey]int32) error {
 		},
 		DoUpdates: clause.Set{{
 			Column: clause.Column{Name: "eval_count"},
-			Value:  gorm.Expr("datar_hourly_events.eval_count + " + s.upsertRef + ".eval_count"),
+			Value:  gorm.Expr(s.addEvalExpr),
 		}, {
 			Column: clause.Column{Name: "updated_at"},
-			Value:  gorm.Expr(s.upsertRef + ".updated_at"),
+			Value:  gorm.Expr("CURRENT_TIMESTAMP"),
 		}},
 	}).Create(&records).Error
 }
