@@ -103,7 +103,12 @@ func TestDatarEndpoints_FlagSummary(t *testing.T) {
 	}
 
 	assert.Equal(t, int64(1), okResp.Payload.FlagID)
-	assert.Equal(t, map[string]int64{"1": 125, "2": 50}, okResp.Payload.TrafficByVariant, "variant totals")
+	if assert.Len(t, okResp.Payload.TrafficByVariant, 2, "variant totals") {
+		assert.Equal(t, int64(1), okResp.Payload.TrafficByVariant[0].VariantID)
+		assert.Equal(t, int64(125), okResp.Payload.TrafficByVariant[0].Count, "variant 1 count")
+		assert.Equal(t, int64(2), okResp.Payload.TrafficByVariant[1].VariantID)
+		assert.Equal(t, int64(50), okResp.Payload.TrafficByVariant[1].Count, "variant 2 count")
+	}
 
 	assert.Len(t, okResp.Payload.TrafficBySegment, 1)
 	assert.Equal(t, int64(10), okResp.Payload.TrafficBySegment[0].SegmentID)

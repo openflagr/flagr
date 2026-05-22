@@ -30,7 +30,7 @@ type DatarFlagSummaryResponse struct {
 	TrafficBySegment []*DatarSegmentEntry `json:"trafficBySegment"`
 
 	// traffic by variant
-	TrafficByVariant map[string]int64 `json:"trafficByVariant,omitempty"`
+	TrafficByVariant []*DatarVariantEntry `json:"trafficByVariant"`
 }
 
 // Validate validates this datar flag summary response
@@ -42,6 +42,10 @@ func (m *DatarFlagSummaryResponse) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateTrafficBySegment(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateTrafficByVariant(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -111,6 +115,36 @@ func (m *DatarFlagSummaryResponse) validateTrafficBySegment(formats strfmt.Regis
 	return nil
 }
 
+func (m *DatarFlagSummaryResponse) validateTrafficByVariant(formats strfmt.Registry) error {
+	if swag.IsZero(m.TrafficByVariant) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.TrafficByVariant); i++ {
+		if swag.IsZero(m.TrafficByVariant[i]) { // not required
+			continue
+		}
+
+		if m.TrafficByVariant[i] != nil {
+			if err := m.TrafficByVariant[i].Validate(formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("trafficByVariant" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("trafficByVariant" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
 // ContextValidate validate this datar flag summary response based on the context it is used
 func (m *DatarFlagSummaryResponse) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
@@ -120,6 +154,10 @@ func (m *DatarFlagSummaryResponse) ContextValidate(ctx context.Context, formats 
 	}
 
 	if err := m.contextValidateTrafficBySegment(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateTrafficByVariant(ctx, formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -176,6 +214,35 @@ func (m *DatarFlagSummaryResponse) contextValidateTrafficBySegment(ctx context.C
 				ce := new(errors.CompositeError)
 				if stderrors.As(err, &ce) {
 					return ce.ValidateName("trafficBySegment" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *DatarFlagSummaryResponse) contextValidateTrafficByVariant(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.TrafficByVariant); i++ {
+
+		if m.TrafficByVariant[i] != nil {
+
+			if swag.IsZero(m.TrafficByVariant[i]) { // not required
+				return nil
+			}
+
+			if err := m.TrafficByVariant[i].ContextValidate(ctx, formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("trafficByVariant" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("trafficByVariant" + "." + strconv.Itoa(i))
 				}
 
 				return err

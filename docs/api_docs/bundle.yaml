@@ -1614,13 +1614,22 @@ definitions:
       lastEvaluatedAt:
         type: string
         format: date-time
+  datarVariantEntry:
+    type: object
+    properties:
+      variantID:
+        type: integer
+        format: int64
+      count:
+        type: integer
+        format: int64
   datarSegmentEntry:
     type: object
     properties:
       segmentID:
         type: integer
         format: int64
-      evalCount:
+      count:
         type: integer
         format: int64
   datarDayEntry:
@@ -1639,10 +1648,9 @@ definitions:
         type: integer
         format: int64
       trafficByVariant:
-        type: object
-        additionalProperties:
-          type: integer
-          format: int64
+        type: array
+        items:
+          $ref: '#/definitions/datarVariantEntry'
       trafficBySegment:
         type: array
         items:

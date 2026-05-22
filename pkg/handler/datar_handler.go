@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"sort"
+
 	"time"
 
 	"github.com/go-openapi/runtime/middleware"
@@ -100,13 +101,12 @@ func HandleGetDatarFlagSummary(params datar.GetDatarFlagSummaryParams) middlewar
 	}
 
 	// Aggregate raw rows into three bucket types in a single pass.
-	variantTotals := make(map[string]int64)
-	segIDs := make(map[int64]int64) // segmentID → eval count (no description yet)
+	variantTotals := make(map[int64]int64)
+	segIDs := make(map[int64]int64)
 	dayCounts := make(map[string]int64)
 
 	for _, r := range rows {
-		vk := fmt.Sprintf("%d", r.VariantID)
-		variantTotals[vk] += int64(r.EvalCount)
+		variantTotals[r.VariantID] += int64(r.EvalCount)
 
 		if r.SegmentID > 0 {
 			segIDs[r.SegmentID] += int64(r.EvalCount)
@@ -118,18 +118,29 @@ func HandleGetDatarFlagSummary(params datar.GetDatarFlagSummaryParams) middlewar
 		}
 	}
 
-	// Segment entries sorted by eval count descending.
+	// Variant entries sorted by count descending.
+	variants := make([]*models.DatarVariantEntry, 0, len(variantTotals))
+	for id, count := range variantTotals {
+		variants = append(variants, &models.DatarVariantEntry{
+			VariantID: id,
+			Count:     count,
+		})
+	}
+	sort.Slice(variants, func(i, j int) bool {
+		return variants[i].Count > variants[j].Count
+	})
+
+	// Segment entries sorted by count descending.
 	segs := make([]*models.DatarSegmentEntry, 0, len(segIDs))
 	for id, count := range segIDs {
 		segs = append(segs, &models.DatarSegmentEntry{
 			SegmentID: id,
-			EvalCount: count,
+			Count:     count,
 		})
 	}
 	sort.Slice(segs, func(i, j int) bool {
-		return segs[i].EvalCount > segs[j].EvalCount
+		return segs[i].Count > segs[j].Count
 	})
-
 	// Day entries sorted by date.
 	days := make([]*models.DatarDayEntry, 0, len(dayCounts))
 	for dateStr, count := range dayCounts {
@@ -149,7 +160,7 @@ func HandleGetDatarFlagSummary(params datar.GetDatarFlagSummaryParams) middlewar
 
 	resp := &models.DatarFlagSummaryResponse{
 		FlagID:           flagID,
-		TrafficByVariant: variantTotals,
+		TrafficByVariant: variants,
 		TrafficBySegment: segs,
 		TrafficByDay:     days,
 	}
