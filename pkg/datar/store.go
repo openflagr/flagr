@@ -60,7 +60,7 @@ type SummaryRow struct {
 	Enabled         bool       `json:"enabled"`
 	Description     string     `json:"description"`
 	TotalEvalCount  int64      `json:"totalEvalCount"`
-	LastEvaluatedAt *time.Time `json:"lastEvaluatedAt"`
+	LastEvaluatedAt string `json:"lastEvaluatedAt"`
 }
 
 // QuerySummary returns all flags with traffic totals in the given time range.

@@ -56,7 +56,6 @@ func HandleGetDatarSummary(params datar.GetDatarSummaryParams) middleware.Respon
 			datarError("query failed: %s", err),
 		)
 	}
-
 	flags := make([]*models.DatarSummaryFlag, len(rows))
 	for i, r := range rows {
 		flag := &models.DatarSummaryFlag{
@@ -66,8 +65,11 @@ func HandleGetDatarSummary(params datar.GetDatarSummaryParams) middleware.Respon
 			Description:    r.Description,
 			TotalEvalCount: r.TotalEvalCount,
 		}
-		if r.LastEvaluatedAt != nil {
-			flag.LastEvaluatedAt = strfmt.DateTime(*r.LastEvaluatedAt)
+		if r.LastEvaluatedAt != "" {
+			t, err := time.Parse(time.RFC3339, r.LastEvaluatedAt)
+			if err == nil {
+				flag.LastEvaluatedAt = strfmt.DateTime(t)
+			}
 		}
 		flags[i] = flag
 	}
