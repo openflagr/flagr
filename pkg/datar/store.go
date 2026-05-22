@@ -10,17 +10,17 @@ import (
 
 // Store handles DB operations for Datar aggregate data.
 type Store struct {
-	db        *gorm.DB
-	upsertRef string // dialect-specific upsert reference ("excluded.*" or "VALUES(*)")
+	db         *gorm.DB
+	flushQuery string // dialect-specific UPSERT SQL template
 }
 
-// initStore initializes a Store with dialect-aware upsert reference.
+// initStore initializes a Store with dialect-aware upsert query.
 func initStore(db *gorm.DB) *Store {
-	ref := "excluded.eval_count"
+	query := "INSERT INTO datar_hourly_events (flag_id, variant_id, segment_id, bucket_hour, eval_count) VALUES (?, ?, ?, ?, ?) ON CONFLICT(flag_id, variant_id, segment_id, bucket_hour) DO UPDATE SET eval_count = datar_hourly_events.eval_count + excluded.eval_count, updated_at = ?"
 	if db.Name() == "mysql" {
-		ref = "VALUES(eval_count)"
+		query = "INSERT INTO datar_hourly_events (flag_id, variant_id, segment_id, bucket_hour, eval_count) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE eval_count = datar_hourly_events.eval_count + VALUES(eval_count), updated_at = ?"
 	}
-	return &Store{db: db, upsertRef: ref}
+	return &Store{db: db, flushQuery: query}
 }
 
 // NewStore creates a Store using Flagr's main DB connection.
@@ -41,7 +41,7 @@ func (s *Store) FlushAggregates(agg map[FlushKey]int32) error {
 		return nil
 	}
 	now := time.Now()
-	query := "INSERT INTO datar_hourly_events (flag_id, variant_id, segment_id, bucket_hour, eval_count) VALUES (?, ?, ?, ?, ?) ON CONFLICT(flag_id, variant_id, segment_id, bucket_hour) DO UPDATE SET eval_count = datar_hourly_events.eval_count + " + s.upsertRef + ", updated_at = ?"
+	query := s.flushQuery
 
 	tx := s.db.Begin()
 	for k, count := range agg {
