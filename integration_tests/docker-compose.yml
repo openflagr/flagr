@@ -50,6 +50,8 @@ services:
     environment:
       FLAGR_DB_DBDRIVER: "sqlite3"
       FLAGR_DB_DBCONNECTIONSTR: "/tmp/flagr.sqlite3"
+      FLAGR_DATAR_ENABLED: "true"
+      FLAGR_DATAR_FLUSH_INTERVAL: "500ms"
     command: sh -c "sleep 15 && ./flagr"
     ports:
       - "18001:18000"

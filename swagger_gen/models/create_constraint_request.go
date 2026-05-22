@@ -21,7 +21,7 @@ type CreateConstraintRequest struct {
 	// Min Length: 1
 	Operator *string `json:"operator"`
 
-	// The property name from the entity context to evaluate. Supports nested field access: use dots (e.g., `user.name`)  for nested objects and brackets (e.g., `users[0]`) for array indices.
+	// The property name from the entity context to evaluate. Supports nested field access: use dots (e.g., `user.name`) for nested objects and brackets (e.g., `users[0]`) for array indices.
 	//
 	// Required: true
 	// Min Length: 1

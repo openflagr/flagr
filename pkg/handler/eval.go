@@ -1,12 +1,11 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"sync"
 	"time"
-
-	"encoding/json"
 
 	"github.com/openflagr/flagr/pkg/config"
 	"github.com/openflagr/flagr/pkg/entity"
@@ -265,6 +264,13 @@ var logEvalResult = func(r *models.EvalResult, dataRecordsEnabled bool) {
 
 	logEvalResultToDatadog(r)
 	logEvalResultToPrometheus(r)
+
+	// Datar: aggregate evaluation counts for dashboard analytics.
+	if dataRecordsEnabled {
+		if d := GetDatar(); d != nil {
+			d.Record(r)
+		}
+	}
 
 	if !config.Config.RecorderEnabled || !dataRecordsEnabled {
 		return

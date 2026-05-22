@@ -8,6 +8,8 @@ import (
 	"github.com/openflagr/flagr/swagger_gen/models"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/constraint"
+	datarapi "github.com/openflagr/flagr/swagger_gen/restapi/operations/datar"
+
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/distribution"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/evaluation"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/export"
@@ -22,6 +24,7 @@ var getDB = entity.GetDB
 
 // Setup initialize all the handler functions
 func Setup(api *operations.FlagrAPI) {
+
 	notification.ValidateConfig()
 
 	if config.Config.EvalOnlyMode {
@@ -34,6 +37,7 @@ func Setup(api *operations.FlagrAPI) {
 	setupEvaluation(api)
 	setupCRUD(api)
 	setupExport(api)
+	setupDatar(api)
 }
 
 func setupCRUD(api *operations.FlagrAPI) {
@@ -85,6 +89,38 @@ func setupEvaluation(api *operations.FlagrAPI) {
 	if config.Config.RecorderEnabled {
 		GetDataRecorder()
 	}
+}
+
+func setupDatar(api *operations.FlagrAPI) {
+	if !config.Config.DatarEnabled {
+		return
+	}
+
+	// Initialize the singleton (starts flush loop).
+	GetDatar()
+
+	// Register swagger-gen handlers for the generated routes.
+	api.DatarGetDatarSummaryHandler = datarapi.GetDatarSummaryHandlerFunc(
+		func(params datarapi.GetDatarSummaryParams) middleware.Responder {
+			return HandleGetDatarSummary(params)
+		},
+	)
+	api.DatarGetDatarFlagSummaryHandler = datarapi.GetDatarFlagSummaryHandlerFunc(
+		func(params datarapi.GetDatarFlagSummaryParams) middleware.Responder {
+			return HandleGetDatarFlagSummary(params)
+		},
+	)
+
+	// Register shutdown handler.
+	existingShutdown := api.ServerShutdown
+	api.ServerShutdown = func() {
+		_ = GetDatar().Shutdown()
+
+		if existingShutdown != nil {
+			existingShutdown()
+		}
+	}
+
 }
 
 func setupHealth(api *operations.FlagrAPI) {

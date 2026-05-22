@@ -1,0 +1,31 @@
+get:
+  tags:
+    - datar
+  operationId: getDatarFlagSummary
+  description: All-in-one analytics summary for a single flag
+  parameters:
+    - in: path
+      name: flagID
+      type: integer
+      format: int64
+      required: true
+      description: Flag ID
+    - in: query
+      name: from
+      type: string
+      format: date-time
+      description: Start time (RFC 3339, default 7 days ago)
+    - in: query
+      name: to
+      type: string
+      format: date-time
+      description: End time (RFC 3339, default now)
+  responses:
+    200:
+      description: flag analytics summary
+      schema:
+        $ref: "#/definitions/datarFlagSummaryResponse"
+    default:
+      description: generic error response
+      schema:
+        $ref: "#/definitions/error"

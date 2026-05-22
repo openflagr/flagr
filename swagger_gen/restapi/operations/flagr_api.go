@@ -16,6 +16,7 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag/cmdutils"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/constraint"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/datar"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/distribution"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/evaluation"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/export"
@@ -149,6 +150,18 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 			_ = params
 
 			return middleware.NotImplemented("operation variant.FindVariants has not yet been implemented")
+		}),
+
+		DatarGetDatarFlagSummaryHandler: datar.GetDatarFlagSummaryHandlerFunc(func(params datar.GetDatarFlagSummaryParams) middleware.Responder {
+			_ = params
+
+			return middleware.NotImplemented("operation datar.GetDatarFlagSummary has not yet been implemented")
+		}),
+
+		DatarGetDatarSummaryHandler: datar.GetDatarSummaryHandlerFunc(func(params datar.GetDatarSummaryParams) middleware.Responder {
+			_ = params
+
+			return middleware.NotImplemented("operation datar.GetDatarSummary has not yet been implemented")
 		}),
 
 		ExportGetExportEvalCacheJSONHandler: export.GetExportEvalCacheJSONHandlerFunc(func(params export.GetExportEvalCacheJSONParams) middleware.Responder {
@@ -326,6 +339,10 @@ type FlagrAPI struct {
 	TagFindTagsHandler tag.FindTagsHandler
 	// VariantFindVariantsHandler sets the operation handler for the find variants operation
 	VariantFindVariantsHandler variant.FindVariantsHandler
+	// DatarGetDatarFlagSummaryHandler sets the operation handler for the get datar flag summary operation
+	DatarGetDatarFlagSummaryHandler datar.GetDatarFlagSummaryHandler
+	// DatarGetDatarSummaryHandler sets the operation handler for the get datar summary operation
+	DatarGetDatarSummaryHandler datar.GetDatarSummaryHandler
 	// ExportGetExportEvalCacheJSONHandler sets the operation handler for the get export eval cache JSON operation
 	ExportGetExportEvalCacheJSONHandler export.GetExportEvalCacheJSONHandler
 	// ExportGetExportSqliteHandler sets the operation handler for the get export sqlite operation
@@ -490,6 +507,12 @@ func (o *FlagrAPI) Validate() error {
 	}
 	if o.VariantFindVariantsHandler == nil {
 		unregistered = append(unregistered, "variant.FindVariantsHandler")
+	}
+	if o.DatarGetDatarFlagSummaryHandler == nil {
+		unregistered = append(unregistered, "datar.GetDatarFlagSummaryHandler")
+	}
+	if o.DatarGetDatarSummaryHandler == nil {
+		unregistered = append(unregistered, "datar.GetDatarSummaryHandler")
 	}
 	if o.ExportGetExportEvalCacheJSONHandler == nil {
 		unregistered = append(unregistered, "export.GetExportEvalCacheJSONHandler")
@@ -703,6 +726,14 @@ func (o *FlagrAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/flags/{flagID}/variants"] = variant.NewFindVariants(o.context, o.VariantFindVariantsHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/datar/flags/{flagID}/summary"] = datar.NewGetDatarFlagSummary(o.context, o.DatarGetDatarFlagSummaryHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/datar/summary"] = datar.NewGetDatarSummary(o.context, o.DatarGetDatarSummaryHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}

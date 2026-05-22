@@ -82,3 +82,7 @@ NOTE: this doesn't prevent people from directly curling /api/v1/flags to update 
 FLAGR_BASIC_AUTH_WHITELIST_PATHS="/api/v1/flags,/api/v1/evaluation"
 FLAGR_BASIC_AUTH_EXACT_WHITELIST_PATHS=""
 ```
+
+## Datar
+
+Datar is an optional in-memory aggregate analytics engine. The relevant environment variables are `FLAGR_DATAR_ENABLED` and `FLAGR_DATAR_FLUSH_INTERVAL`. See [Datar](flagr_datar.md) for details.
