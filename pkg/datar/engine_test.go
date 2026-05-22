@@ -364,11 +364,10 @@ func TestQuerySummary_NilEngine(t *testing.T) {
 
 func TestQuerySummary_DBError(t *testing.T) {
 	db := newTestDB(t)
-	sqlDB, err := db.DB()
-	if err != nil {
+	// Drop the events table to cause a query error.
+	if err := db.Exec("DROP TABLE datar_hourly_events").Error; err != nil {
 		t.Fatal(err)
 	}
-	sqlDB.Close()
 
 	e := New(db, true, time.Hour)
 	if e == nil {
@@ -376,17 +375,15 @@ func TestQuerySummary_DBError(t *testing.T) {
 	}
 	defer e.Shutdown()
 
-	_, err = e.QuerySummary(time.Now(), time.Now(), 100, 0)
-	assert.Error(t, err, "should fail on closed DB")
+	_, err := e.QuerySummary(time.Now(), time.Now(), 100, 0)
+	assert.Error(t, err, "should fail with missing events table")
 }
 
 func TestQueryFlagSummary_DBError(t *testing.T) {
 	db := newTestDB(t)
-	sqlDB, err := db.DB()
-	if err != nil {
+	if err := db.Exec("DROP TABLE datar_hourly_events").Error; err != nil {
 		t.Fatal(err)
 	}
-	sqlDB.Close()
 
 	e := New(db, true, time.Hour)
 	if e == nil {
@@ -394,9 +391,51 @@ func TestQueryFlagSummary_DBError(t *testing.T) {
 	}
 	defer e.Shutdown()
 
-	_, err = e.QueryFlagSummary(1, time.Now(), time.Now())
-	assert.Error(t, err, "should fail on closed DB")
+	_, err := e.QueryFlagSummary(1, time.Now(), time.Now())
+	assert.Error(t, err, "should fail with missing events table")
 }
+
+func TestFlush_DBError(t *testing.T) {
+	db := newTestDB(t)
+	createFlag(t, db, 1, "f1", "test", true)
+
+	e := New(db, true, time.Hour)
+	if e == nil {
+		t.Fatal("expected non-nil engine")
+	}
+	defer e.Shutdown()
+
+	e.Record(1, 1, 1)
+
+	// Drop the events table — flushAggregates will now fail.
+	if err := db.Exec("DROP TABLE datar_hourly_events").Error; err != nil {
+		t.Fatal(err)
+	}
+
+	// Shutdown returns the flush error when it can't write to DB.
+	err := e.Shutdown()
+	assert.Error(t, err, "should fail flushing to dropped table")
+
+}
+
+func TestFlushLoop_TickerFires(t *testing.T) {
+	db := newTestDB(t)
+	createFlag(t, db, 1, "f1", "test", true)
+
+	e := New(db, true, 1*time.Millisecond)
+	if e == nil {
+		t.Fatal("expected non-nil engine")
+	}
+	defer e.Shutdown()
+
+	e.Record(1, 1, 1)
+
+	// Give the ticker time to fire at least once.
+	time.Sleep(10 * time.Millisecond)
+
+	assert.Equal(t, 0, e.Len(), "buffer should be drained by ticker-triggered flush")
+}
+
 
 
 // flush / flushAggregates / flushLoop
