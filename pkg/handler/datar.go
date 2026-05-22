@@ -5,7 +5,7 @@ import (
 
 	"github.com/openflagr/flagr/pkg/config"
 	"github.com/openflagr/flagr/pkg/datar"
-	"github.com/openflagr/flagr/pkg/entity"
+
 )
 
 var (
@@ -43,11 +43,3 @@ func ResetDatar() {
 	}
 }
 
-// DatarStoreExists is a no-op check used by unit tests.
-func DatarStoreExists() bool {
-	e := GetDatar()
-	if e == nil {
-		return false
-	}
-	return entity.GetDB().Migrator().HasTable("datar_hourly_events")
-}

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 	"time"
+	"github.com/go-openapi/strfmt"
 
 	"github.com/openflagr/flagr/pkg/config"
 	"github.com/openflagr/flagr/pkg/entity"
@@ -11,6 +12,50 @@ import (
 	"github.com/prashantv/gostub"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestParseTimeRange(t *testing.T) {
+	from := strfmt.DateTime(time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC))
+	to := strfmt.DateTime(time.Date(2024, 1, 10, 0, 0, 0, 0, time.UTC))
+
+	// Both nil → uses defaults.
+	s, e := parseTimeRange(nil, nil, 7)
+	assert.WithinDuration(t, time.Now().UTC(), e, time.Second)
+	assert.WithinDuration(t, time.Now().UTC().Add(-7*24*time.Hour), s, time.Second)
+
+	// With explicit from/to.
+	s, e = parseTimeRange(&from, &to, 7)
+	assert.Equal(t, time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC), s)
+	assert.Equal(t, time.Date(2024, 1, 10, 0, 0, 0, 0, time.UTC), e)
+}
+
+func TestDatarEndpoints_QueryError(t *testing.T) {
+	defer ResetDatar()
+
+	defer gostub.Stub(&config.Config.DatarEnabled, true).Reset()
+	defer gostub.Stub(&config.Config.DatarFlushInterval, 24*time.Hour).Reset()
+
+	db := entity.NewTestDB()
+	defer gostub.StubFunc(&getDB, db).Reset()
+	db.AutoMigrate(entity.AutoMigrateTables...)
+
+	// Initialize engine.
+	_ = GetDatar()
+
+	// Drop the hourly events table so queries fail.
+	if err := db.Exec("DROP TABLE datar_hourly_events").Error; err != nil {
+		t.Fatal(err)
+	}
+
+	// Summary endpoint should return 500.
+	resp := HandleGetDatarSummary(datar.GetDatarSummaryParams{})
+	_, ok := resp.(*datar.GetDatarSummaryDefault)
+	assert.True(t, ok, "expected 500 when query fails")
+
+	// Flag summary endpoint should return 500.
+	flagResp := HandleGetDatarFlagSummary(datar.GetDatarFlagSummaryParams{FlagID: 1})
+	_, ok = flagResp.(*datar.GetDatarFlagSummaryDefault)
+	assert.True(t, ok, "expected 500 when query fails")
+}
 
 func TestDatarEndpoints_Summary(t *testing.T) {
 	defer ResetDatar()
