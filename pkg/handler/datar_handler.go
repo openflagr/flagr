@@ -51,7 +51,7 @@ func HandleGetDatarSummary(params datar.GetDatarSummaryParams) middleware.Respon
 		offset = int(*params.Offset)
 	}
 
-	rows, err := d.Store().QuerySummary(from, to, limit, offset)
+	rows, err := d.QuerySummary(from, to, limit, offset)
 	if err != nil {
 		logrus.WithError(err).Error("Datar: QuerySummary failed")
 		return datar.NewGetDatarSummaryDefault(500).WithPayload(
@@ -67,8 +67,8 @@ func HandleGetDatarSummary(params datar.GetDatarSummaryParams) middleware.Respon
 			Description:    r.Description,
 			TotalEvalCount: r.TotalEvalCount,
 		}
-		if r.LastEvaluatedAt != "" {
-			t, err := time.Parse(time.RFC3339, r.LastEvaluatedAt)
+		if r.LastEvaluated != "" {
+			t, err := time.Parse(time.RFC3339, r.LastEvaluated)
 			if err == nil {
 				flag.LastEvaluatedAt = strfmt.DateTime(t)
 			}
@@ -92,7 +92,7 @@ func HandleGetDatarFlagSummary(params datar.GetDatarFlagSummaryParams) middlewar
 	from, to := parseTimeRange(params.From, params.To, 7)
 	flagID := params.FlagID
 
-	rows, err := d.Store().QueryFlagSummary(flagID, from, to)
+	rows, err := d.QueryFlagSummary(flagID, from, to)
 	if err != nil {
 		logrus.WithError(err).Error("Datar: QueryFlagSummary failed")
 		return datar.NewGetDatarFlagSummaryDefault(500).WithPayload(

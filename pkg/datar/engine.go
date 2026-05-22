@@ -1,0 +1,344 @@
+package datar
+
+import (
+	"sort"
+	"sync"
+	"sync/atomic"
+	"time"
+	"errors"
+
+	"github.com/sirupsen/logrus"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
+
+	"github.com/openflagr/flagr/pkg/entity"
+)
+
+var errNilEngine = errors.New("datar: engine is nil")
+
+// FlushKey identifies one aggregate dimension set for the in-memory buffer.
+type FlushKey struct {
+	FlagID    int64
+	VariantID int64
+	SegmentID int64
+	Hour      time.Time
+}
+
+// SummaryRow is a single flag's aggregate summary for the list view.
+type SummaryRow struct {
+	FlagID         int64
+	FlagKey        string
+	Enabled        bool
+	Description    string
+	TotalEvalCount int64
+	LastEvaluated  string
+}
+
+// RawEvent is a raw row from datar_hourly_events.
+type RawEvent struct {
+	VariantID  int64
+	SegmentID  int64
+	BucketHour string
+	EvalCount  int32
+}
+
+// Engine is the complete Datar analytics engine.
+// It aggregates evaluation counts in-memory, periodically flushes to the DB,
+// and serves aggregate queries — all in one self-contained struct.
+type Engine struct {
+	enabled bool
+
+	mu     sync.RWMutex
+	buffer map[FlushKey]*int32
+	closed atomic.Bool
+
+	db          *gorm.DB
+	addEvalExpr string
+
+	flushInterval time.Duration
+	closeCh       chan struct{}
+	wg            sync.WaitGroup
+	shutdownOnce  sync.Once
+}
+
+// New creates an Engine and starts its flush loop.
+// Returns nil when enabled is false — all methods are safe on nil.
+func New(db *gorm.DB, enabled bool, flushInterval time.Duration) *Engine {
+	if !enabled {
+		return nil
+	}
+
+	addEvalExpr := "datar_hourly_events.eval_count + EXCLUDED.eval_count"
+	if db.Name() == "mysql" {
+		addEvalExpr = "datar_hourly_events.eval_count + VALUES(eval_count)"
+	}
+
+	e := &Engine{
+		enabled:       true,
+		buffer:        make(map[FlushKey]*int32),
+		db:            db,
+		addEvalExpr:   addEvalExpr,
+		flushInterval: flushInterval,
+		closeCh:       make(chan struct{}),
+	}
+
+	e.wg.Add(1)
+	go e.flushLoop()
+	logrus.Info("Datar: started aggregate analytics")
+	return e
+}
+
+// Record increments the counter for the given EvalResult.
+// Safe to call from concurrent goroutines. Safe on nil receiver.
+func (e *Engine) Record(flagID, variantID, segmentID int64) {
+	if e == nil || e.closed.Load() {
+		return
+	}
+
+	key := FlushKey{
+		FlagID:    flagID,
+		VariantID: variantID,
+		SegmentID: segmentID,
+		Hour:      time.Now().Truncate(time.Hour),
+	}
+
+	// Fast path: existing key under RLock.
+	e.mu.RLock()
+	ptr, ok := e.buffer[key]
+	e.mu.RUnlock()
+	if ok {
+		atomic.AddInt32(ptr, 1)
+		return
+	}
+
+	// Slow path: new key under WLock with double-check.
+	e.mu.Lock()
+	if ptr, ok = e.buffer[key]; ok {
+		e.mu.Unlock()
+		atomic.AddInt32(ptr, 1)
+		return
+	}
+	var zero int32
+	e.buffer[key] = &zero
+	e.mu.Unlock()
+	atomic.AddInt32(&zero, 1)
+}
+
+// SnapshotAndReset swaps the buffer under lock and returns frozen counts.
+// After this call, the returned map is safe to read without holding the lock.
+func (e *Engine) SnapshotAndReset() map[FlushKey]int32 {
+	if e == nil {
+		return nil
+	}
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	old := e.buffer
+	e.buffer = make(map[FlushKey]*int32, len(old))
+
+	result := make(map[FlushKey]int32, len(old))
+	for k, ptr := range old {
+		result[k] = atomic.LoadInt32(ptr)
+	}
+	return result
+}
+
+// Len returns the number of distinct keys in the buffer.
+func (e *Engine) Len() int {
+	if e == nil {
+		return 0
+	}
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+	return len(e.buffer)
+}
+
+// QuerySummary returns all flags with traffic totals in the given time range.
+func (e *Engine) QuerySummary(from, to time.Time, limit, offset int) ([]SummaryRow, error) {
+	if e == nil {
+		return nil, errNilEngine
+	}
+	var rows []SummaryRow
+	err := e.db.Raw(`
+		SELECT f.id AS flag_id, f.key AS flag_key, f.enabled, f.description,
+			COALESCE(SUM(e.eval_count), 0) AS total_eval_count,
+			MAX(e.updated_at) AS last_evaluated_at
+		FROM flags f
+		LEFT JOIN datar_hourly_events e ON e.flag_id = f.id
+			AND e.bucket_hour >= ? AND e.bucket_hour < ?
+		WHERE f.deleted_at IS NULL
+		GROUP BY f.id
+		ORDER BY total_eval_count DESC
+		LIMIT ? OFFSET ?
+	`, from, to, limit, offset).Scan(&rows).Error
+	if err != nil {
+		logrus.WithError(err).Error("Datar: QuerySummary failed")
+		return nil, err
+	}
+	return rows, nil
+}
+
+// QueryFlagSummary returns raw event rows for a single flag.
+func (e *Engine) QueryFlagSummary(flagID int64, from, to time.Time) ([]RawEvent, error) {
+	if e == nil {
+		return nil, errNilEngine
+	}
+	var rows []RawEvent
+	err := e.db.Table("datar_hourly_events").
+		Select("variant_id, segment_id, bucket_hour, eval_count").
+		Where("flag_id = ? AND bucket_hour >= ? AND bucket_hour < ?", flagID, from, to).
+		Scan(&rows).Error
+	if err != nil {
+		logrus.WithError(err).Error("Datar: QueryFlagSummary failed")
+		return nil, err
+	}
+	return rows, nil
+}
+
+// Shutdown stops the flush loop and flushes remaining in-memory counts to the DB.
+func (e *Engine) Shutdown() error {
+	if e == nil {
+		return nil
+	}
+
+	var shutdownErr error
+	e.shutdownOnce.Do(func() {
+		logrus.Info("Datar: shutting down")
+		e.closed.Store(true)
+		close(e.closeCh)
+		e.wg.Wait()
+
+		agg := e.SnapshotAndReset()
+		if len(agg) > 0 {
+			logrus.WithField("keys", len(agg)).Info("Datar: flushing remaining aggregates on shutdown")
+			if err := e.flushAggregates(agg); err != nil {
+				logrus.WithError(err).Error("Datar: shutdown flush failed, data may be lost")
+				shutdownErr = err
+				return
+			}
+		}
+		logrus.Info("Datar: shutdown complete")
+	})
+	return shutdownErr
+}
+
+// flushLoop runs on a goroutine, flushing at the configured interval.
+func (e *Engine) flushLoop() {
+	defer e.wg.Done()
+	ticker := time.NewTicker(e.flushInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-e.closeCh:
+			return
+		case <-ticker.C:
+			e.flush()
+		}
+	}
+}
+
+func (e *Engine) flush() {
+	if e.Len() == 0 {
+		return
+	}
+	agg := e.SnapshotAndReset()
+	logrus.WithField("keys", len(agg)).Debug("Datar: flushing aggregates")
+	if err := e.flushAggregates(agg); err != nil {
+		logrus.WithError(err).Error("Datar: flush failed, data in this cycle may be lost")
+	}
+}
+
+// flushAggregates writes the snapshot to the DB using additive UPSERT.
+func (e *Engine) flushAggregates(agg map[FlushKey]int32) error {
+	if len(agg) == 0 {
+		return nil
+	}
+	now := time.Now()
+	records := make([]entity.HourlyEvent, 0, len(agg))
+	for k, count := range agg {
+		records = append(records, entity.HourlyEvent{
+			FlagID:     k.FlagID,
+			VariantID:  k.VariantID,
+			SegmentID:  k.SegmentID,
+			BucketHour: k.Hour,
+			EvalCount:  count,
+			UpdatedAt:  now,
+		})
+	}
+	return e.db.Clauses(clause.OnConflict{
+		Columns: []clause.Column{
+			{Name: "flag_id"},
+			{Name: "variant_id"},
+			{Name: "segment_id"},
+			{Name: "bucket_hour"},
+		},
+		DoUpdates: clause.Set{{
+			Column: clause.Column{Name: "eval_count"},
+			Value:  gorm.Expr(e.addEvalExpr),
+		}, {
+			Column: clause.Column{Name: "updated_at"},
+			Value:  gorm.Expr("CURRENT_TIMESTAMP"),
+		}},
+	}).Create(&records).Error
+}
+
+// aggregateFlagSummary takes raw events and produces sorted variant/segment/day buckets.
+func aggregateFlagSummary(rows []RawEvent) (variants, segs []struct {
+	ID    int64
+	Count int64
+}, days []struct {
+	Date  string
+	Count int64
+}) {
+	variantTotals := make(map[int64]int64)
+	segIDs := make(map[int64]int64)
+	dayCounts := make(map[string]int64)
+
+	for _, r := range rows {
+		variantTotals[r.VariantID] += int64(r.EvalCount)
+		if r.SegmentID > 0 {
+			segIDs[r.SegmentID] += int64(r.EvalCount)
+		}
+		if len(r.BucketHour) >= 10 {
+			dayCounts[r.BucketHour[:10]] += int64(r.EvalCount)
+		}
+	}
+
+	variants = make([]struct {
+		ID    int64
+		Count int64
+	}, 0, len(variantTotals))
+	for id, count := range variantTotals {
+		variants = append(variants, struct {
+			ID    int64
+			Count int64
+		}{id, count})
+	}
+	sort.Slice(variants, func(i, j int) bool { return variants[i].Count > variants[j].Count })
+
+	segs = make([]struct {
+		ID    int64
+		Count int64
+	}, 0, len(segIDs))
+	for id, count := range segIDs {
+		segs = append(segs, struct {
+			ID    int64
+			Count int64
+		}{id, count})
+	}
+	sort.Slice(segs, func(i, j int) bool { return segs[i].Count > segs[j].Count })
+
+	days = make([]struct {
+		Date  string
+		Count int64
+	}, 0, len(dayCounts))
+	for dateStr, count := range dayCounts {
+		days = append(days, struct {
+			Date  string
+			Count int64
+		}{dateStr, count})
+	}
+	sort.Slice(days, func(i, j int) bool { return days[i].Date < days[j].Date })
+	return
+}

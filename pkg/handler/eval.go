@@ -267,9 +267,7 @@ var logEvalResult = func(r *models.EvalResult, dataRecordsEnabled bool) {
 
 	// Datar: aggregate evaluation counts for dashboard analytics.
 	if dataRecordsEnabled {
-		if d := GetDatar(); d != nil {
-			d.Record(r)
-		}
+		GetDatar().Record(r.FlagID, r.VariantID, r.SegmentID)
 	}
 
 	if !config.Config.RecorderEnabled || !dataRecordsEnabled {

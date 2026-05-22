@@ -2,7 +2,6 @@ package handler
 
 import (
 	"fmt"
-	"sync"
 	"testing"
 	"time"
 
@@ -14,10 +13,7 @@ import (
 )
 
 func TestDatarEndpoints_Summary(t *testing.T) {
-	// Reset singleton for test isolation.
-	singletonDatarOnce = sync.Once{}
-	singletonDatar = nil
-	t.Cleanup(func() { singletonDatarOnce = sync.Once{}; singletonDatar = nil })
+	defer ResetDatar()
 
 	defer gostub.Stub(&config.Config.DatarEnabled, true).Reset()
 	defer gostub.Stub(&config.Config.DatarFlushInterval, 24*time.Hour).Reset()
@@ -65,10 +61,7 @@ func TestDatarEndpoints_Summary(t *testing.T) {
 }
 
 func TestDatarEndpoints_FlagSummary(t *testing.T) {
-	// Reset singleton for test isolation.
-	singletonDatarOnce = sync.Once{}
-	singletonDatar = nil
-	t.Cleanup(func() { singletonDatarOnce = sync.Once{}; singletonDatar = nil })
+	defer ResetDatar()
 
 	defer gostub.Stub(&config.Config.DatarEnabled, true).Reset()
 	defer gostub.Stub(&config.Config.DatarFlushInterval, 24*time.Hour).Reset()
@@ -117,10 +110,7 @@ func TestDatarEndpoints_FlagSummary(t *testing.T) {
 }
 
 func TestDatarEndpoints_NotEnabled(t *testing.T) {
-	// Reset singleton for test isolation.
-	singletonDatarOnce = sync.Once{}
-	singletonDatar = nil
-	t.Cleanup(func() { singletonDatarOnce = sync.Once{}; singletonDatar = nil })
+	defer ResetDatar()
 
 	defer gostub.Stub(&config.Config.DatarEnabled, false).Reset()
 
@@ -135,10 +125,7 @@ func TestDatarEndpoints_NotEnabled(t *testing.T) {
 }
 
 func TestDatarEndpoints_Pagination(t *testing.T) {
-	// Reset singleton for test isolation.
-	singletonDatarOnce = sync.Once{}
-	singletonDatar = nil
-	t.Cleanup(func() { singletonDatarOnce = sync.Once{}; singletonDatar = nil })
+	defer ResetDatar()
 
 	defer gostub.Stub(&config.Config.DatarEnabled, true).Reset()
 	defer gostub.Stub(&config.Config.DatarFlushInterval, 24*time.Hour).Reset()
