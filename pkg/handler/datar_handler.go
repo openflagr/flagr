@@ -101,8 +101,7 @@ func HandleGetDatarFlagSummary(params datar.GetDatarFlagSummaryParams) middlewar
 
 	// Aggregate raw rows into three bucket types in a single pass.
 	variantTotals := make(map[string]int64)
-	segCounts := make(map[int64]int64)
-	segDescs := make(map[int64]string)
+	segIDs := make(map[int64]int64) // segmentID → eval count (no description yet)
 	dayCounts := make(map[string]int64)
 
 	for _, r := range rows {
@@ -110,8 +109,7 @@ func HandleGetDatarFlagSummary(params datar.GetDatarFlagSummaryParams) middlewar
 		variantTotals[vk] += int64(r.EvalCount)
 
 		if r.SegmentID > 0 {
-			segCounts[r.SegmentID] += int64(r.EvalCount)
-			segDescs[r.SegmentID] = r.SegmentDescription
+			segIDs[r.SegmentID] += int64(r.EvalCount)
 		}
 
 		// BucketHour from the driver is RFC 3339; extract YYYY-MM-DD.
@@ -120,9 +118,22 @@ func HandleGetDatarFlagSummary(params datar.GetDatarFlagSummaryParams) middlewar
 		}
 	}
 
+	// Fetch descriptions for just the segments that have data.
+	descIDs := make([]int64, 0, len(segIDs))
+	for id := range segIDs {
+		descIDs = append(descIDs, id)
+	}
+	segDescs, err := d.Store().SegmentDescriptions(descIDs)
+	if err != nil {
+		logrus.WithError(err).Error("Datar: SegmentDescriptions failed")
+		return datar.NewGetDatarFlagSummaryDefault(500).WithPayload(
+			datarError("segment descriptions failed: %s", err),
+		)
+	}
+
 	// Segment entries sorted by eval count descending.
-	segs := make([]*models.DatarSegmentEntry, 0, len(segCounts))
-	for id, count := range segCounts {
+	segs := make([]*models.DatarSegmentEntry, 0, len(segIDs))
+	for id, count := range segIDs {
 		segs = append(segs, &models.DatarSegmentEntry{
 			SegmentID:   id,
 			Description: segDescs[id],

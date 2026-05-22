@@ -84,29 +84,46 @@ func (s *Store) QuerySummary(from, to time.Time, limit, offset int) ([]SummaryRo
 	}
 	return rows, nil
 }
-// RawEvent is one row from the datar_hourly_events join query for a flag.
-// Using string for BucketHour because the pure-Go SQLite driver returns
-// datetime values as strings regardless of how they were stored.
 type RawEvent struct {
-	VariantID          int64
-	SegmentID          int64
-	BucketHour         string
-	EvalCount          int32
-	SegmentDescription string
+	VariantID int64
+	SegmentID int64
+	BucketHour string
+	EvalCount  int32
 }
 
-// QueryFlagSummary returns all raw event rows for a flag in the time range.
-// The caller aggregates into variant/segment/day buckets in Go.
 func (s *Store) QueryFlagSummary(flagID int64, from, to time.Time) ([]RawEvent, error) {
 	var rows []RawEvent
 	err := s.db.Table("datar_hourly_events").
-		Select("datar_hourly_events.variant_id, datar_hourly_events.segment_id, datar_hourly_events.bucket_hour, datar_hourly_events.eval_count, COALESCE(segments.description, '') AS segment_description").
-		Joins("LEFT JOIN segments ON segments.id = datar_hourly_events.segment_id").
-		Where("datar_hourly_events.flag_id = ? AND datar_hourly_events.bucket_hour >= ? AND datar_hourly_events.bucket_hour < ?", flagID, from, to).
+		Select("variant_id, segment_id, bucket_hour, eval_count").
+		Where("flag_id = ? AND bucket_hour >= ? AND bucket_hour < ?", flagID, from, to).
 		Scan(&rows).Error
 	if err != nil {
 		logrus.WithError(err).Error("Datar: QueryFlagSummary failed")
 		return nil, err
 	}
 	return rows, nil
+}
+
+// SegmentDescriptions returns descriptions for the given segment IDs.
+func (s *Store) SegmentDescriptions(ids []int64) (map[int64]string, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	type segRow struct {
+		ID          int64
+		Description string
+	}
+	var rows []segRow
+	err := s.db.Table("segments").
+		Select("id, description").
+		Where("id IN ?", ids).
+		Scan(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+	descs := make(map[int64]string, len(rows))
+	for _, r := range rows {
+		descs[r.ID] = r.Description
+	}
+	return descs, nil
 }
