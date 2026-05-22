@@ -159,18 +159,14 @@ func (e *Engine) QuerySummary(from, to time.Time, limit, offset int) ([]SummaryR
 		return nil, errNilEngine
 	}
 	var rows []SummaryRow
-	err := e.db.Raw(`
-		SELECT f.id AS flag_id, f.key AS flag_key, f.enabled, f.description,
-			COALESCE(SUM(e.eval_count), 0) AS total_eval_count,
-			MAX(e.updated_at) AS last_evaluated_at
-		FROM flags f
-		LEFT JOIN datar_hourly_events e ON e.flag_id = f.id
-			AND e.bucket_hour >= ? AND e.bucket_hour < ?
-		WHERE f.deleted_at IS NULL
-		GROUP BY f.id
-		ORDER BY total_eval_count DESC
-		LIMIT ? OFFSET ?
-	`, from, to, limit, offset).Scan(&rows).Error
+	err := e.db.Model(&entity.Flag{}).
+		Select("flags.id AS flag_id, flags.key AS flag_key, flags.enabled, flags.description, COALESCE(SUM(datar_hourly_events.eval_count), 0) AS total_eval_count, MAX(datar_hourly_events.updated_at) AS last_evaluated_at").
+		Joins("LEFT JOIN datar_hourly_events ON datar_hourly_events.flag_id = flags.id AND datar_hourly_events.bucket_hour >= ? AND datar_hourly_events.bucket_hour < ?", from, to).
+		Group("flags.id").
+		Order("total_eval_count DESC").
+		Limit(limit).
+		Offset(offset).
+		Scan(&rows).Error
 	if err != nil {
 		logrus.WithError(err).Error("Datar: QuerySummary failed")
 		return nil, err
@@ -184,7 +180,7 @@ func (e *Engine) QueryFlagSummary(flagID int64, from, to time.Time) ([]RawEvent,
 		return nil, errNilEngine
 	}
 	var rows []RawEvent
-	err := e.db.Table("datar_hourly_events").
+	err := e.db.Model(&entity.HourlyEvent{}).
 		Select("variant_id, segment_id, bucket_hour, eval_count").
 		Where("flag_id = ? AND bucket_hour >= ? AND bucket_hour < ?", flagID, from, to).
 		Scan(&rows).Error
