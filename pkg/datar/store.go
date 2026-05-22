@@ -40,11 +40,12 @@ func (s *Store) FlushAggregates(agg map[FlushKey]int32) error {
 	if len(agg) == 0 {
 		return nil
 	}
-	query := "INSERT INTO datar_hourly_events (flag_id, variant_id, segment_id, bucket_hour, eval_count) VALUES (?, ?, ?, ?, ?) ON CONFLICT(flag_id, variant_id, segment_id, bucket_hour) DO UPDATE SET eval_count = datar_hourly_events.eval_count + " + s.upsertRef + ", updated_at = CURRENT_TIMESTAMP"
+	now := time.Now()
+	query := "INSERT INTO datar_hourly_events (flag_id, variant_id, segment_id, bucket_hour, eval_count) VALUES (?, ?, ?, ?, ?) ON CONFLICT(flag_id, variant_id, segment_id, bucket_hour) DO UPDATE SET eval_count = datar_hourly_events.eval_count + " + s.upsertRef + ", updated_at = ?"
 
 	tx := s.db.Begin()
 	for k, count := range agg {
-		if err := tx.Exec(query, k.FlagID, k.VariantID, k.SegmentID, k.Hour, count).Error; err != nil {
+		if err := tx.Exec(query, k.FlagID, k.VariantID, k.SegmentID, k.Hour, count, now).Error; err != nil {
 			tx.Rollback()
 			return err
 		}
