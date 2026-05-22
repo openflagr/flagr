@@ -6,21 +6,22 @@ import (
 	"github.com/openflagr/flagr/pkg/entity"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // Store handles DB operations for Datar aggregate data.
 type Store struct {
-	db         *gorm.DB
-	flushQuery string // dialect-specific UPSERT SQL template
+	db        *gorm.DB
+	upsertRef string // "EXCLUDED" for PG/SQLite, "VALUES" for MySQL
 }
 
-// initStore initializes a Store with dialect-aware upsert query.
+// initStore initializes a Store with dialect-aware upsert reference prefix.
 func initStore(db *gorm.DB) *Store {
-	query := "INSERT INTO datar_hourly_events (flag_id, variant_id, segment_id, bucket_hour, eval_count) VALUES (?, ?, ?, ?, ?) ON CONFLICT(flag_id, variant_id, segment_id, bucket_hour) DO UPDATE SET eval_count = datar_hourly_events.eval_count + excluded.eval_count, updated_at = ?"
+	ref := "EXCLUDED"
 	if db.Name() == "mysql" {
-		query = "INSERT INTO datar_hourly_events (flag_id, variant_id, segment_id, bucket_hour, eval_count) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE eval_count = datar_hourly_events.eval_count + VALUES(eval_count), updated_at = ?"
+		ref = "VALUES"
 	}
-	return &Store{db: db, flushQuery: query}
+	return &Store{db: db, upsertRef: ref}
 }
 
 // NewStore creates a Store using Flagr's main DB connection.
@@ -35,22 +36,38 @@ func NewTestStore(db *gorm.DB) *Store {
 
 // FlushAggregates writes the in-memory aggregate snapshot to the DB
 // using additive UPSERT. Multiple instances can flush concurrently.
-// All rows are written in a single transaction.
+// All rows are written in a single batch via GORM's Clauses + Create.
 func (s *Store) FlushAggregates(agg map[FlushKey]int32) error {
 	if len(agg) == 0 {
 		return nil
 	}
 	now := time.Now()
-	query := s.flushQuery
-
-	tx := s.db.Begin()
+	records := make([]entity.HourlyEvent, 0, len(agg))
 	for k, count := range agg {
-		if err := tx.Exec(query, k.FlagID, k.VariantID, k.SegmentID, k.Hour, count, now).Error; err != nil {
-			tx.Rollback()
-			return err
-		}
+		records = append(records, entity.HourlyEvent{
+			FlagID:     k.FlagID,
+			VariantID:  k.VariantID,
+			SegmentID:  k.SegmentID,
+			BucketHour: k.Hour,
+			EvalCount:  count,
+			UpdatedAt:  now,
+		})
 	}
-	return tx.Commit().Error
+	return s.db.Clauses(clause.OnConflict{
+		Columns: []clause.Column{
+			{Name: "flag_id"},
+			{Name: "variant_id"},
+			{Name: "segment_id"},
+			{Name: "bucket_hour"},
+		},
+		DoUpdates: clause.Set{{
+			Column: clause.Column{Name: "eval_count"},
+			Value:  gorm.Expr("datar_hourly_events.eval_count + " + s.upsertRef + ".eval_count"),
+		}, {
+			Column: clause.Column{Name: "updated_at"},
+			Value:  gorm.Expr(s.upsertRef + ".updated_at"),
+		}},
+	}).Create(&records).Error
 }
 
 // SummaryRow is a single flag's aggregate summary for the list page.
