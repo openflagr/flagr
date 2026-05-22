@@ -80,8 +80,7 @@ func TestDatarEndpoints_Summary(t *testing.T) {
 	assert.NoError(t, db.Exec(`INSERT INTO datar_hourly_events (flag_id, variant_id, segment_id, bucket_hour, eval_count) VALUES (1, 1, 10, ?, 100)`, now).Error)
 	assert.NoError(t, db.Exec(`INSERT INTO datar_hourly_events (flag_id, variant_id, segment_id, bucket_hour, eval_count) VALUES (1, 2, 10, ?, 50)`, now).Error)
 
-	// Flag 2 has no hourly data — should still appear with 0 total.
-
+	// Flag 2 has no hourly data — only flags with traffic appear.
 	resp := HandleGetDatarSummary(datar.GetDatarSummaryParams{})
 	assert.NotNil(t, resp)
 
@@ -90,19 +89,12 @@ func TestDatarEndpoints_Summary(t *testing.T) {
 		t.Fatalf("expected *datar.GetDatarSummaryOK, got %T", resp)
 	}
 
-	assert.Len(t, okResp.Payload.Flags, 2, "should return both flags")
-
-	// Flag 1 has data.
+	assert.Len(t, okResp.Payload.Flags, 1, "only flag 1 has traffic data")
 	f1 := okResp.Payload.Flags[0]
 	assert.Equal(t, int64(1), f1.FlagID)
 	assert.Equal(t, "test-flag", f1.FlagKey)
 	assert.Equal(t, int64(150), f1.TotalEvalCount)
 	assert.True(t, f1.Enabled)
-
-	// Flag 2 has no data — 0 count.
-	f2 := okResp.Payload.Flags[1]
-	assert.Equal(t, int64(2), f2.FlagID)
-	assert.Equal(t, int64(0), f2.TotalEvalCount)
 }
 
 func TestDatarEndpoints_FlagSummary(t *testing.T) {
@@ -187,7 +179,17 @@ func TestDatarEndpoints_Pagination(t *testing.T) {
 		assert.NoError(t, db.Exec(`INSERT INTO flags (id, key, enabled, description, created_at, updated_at) VALUES (?, ?, 1, 'flag', datetime('now'), datetime('now'))`, i, fmt.Sprintf("flag-%d", i)).Error)
 	}
 
-	// Pagination test: limit=2, offset=1 should return 2 flags (ids 2-3).
+	// Seed events for flags 1-4 with descending counts.
+	now := time.Now().UTC().Truncate(time.Hour)
+	for i := 1; i <= 4; i++ {
+		assert.NoError(t, db.Exec(
+			`INSERT INTO datar_hourly_events (flag_id, variant_id, segment_id, bucket_hour, eval_count) VALUES (?, 1, 1, ?, ?)`,
+			i, now, 100-i,
+		).Error)
+	}
+
+	// Page 2 (limit=2, offset=1): positions 1-2 by count desc.
+	// Flag 1(99), Flag 2(98), Flag 3(97), Flag 4(96) → [Flag 2(98), Flag 3(97)].
 	limit := int32(2)
 	offset := int32(1)
 
@@ -199,7 +201,11 @@ func TestDatarEndpoints_Pagination(t *testing.T) {
 		t.Fatalf("expected *datar.GetDatarSummaryOK, got %T", resp)
 	}
 
-	assert.Len(t, okResp.Payload.Flags, 2)
-	assert.Equal(t, int64(2), okResp.Payload.Flags[0].FlagID)
-	assert.Equal(t, int64(3), okResp.Payload.Flags[1].FlagID)
+	if assert.Len(t, okResp.Payload.Flags, 2) {
+		flags := okResp.Payload.Flags
+		assert.Equal(t, int64(2), flags[0].FlagID, "flag 2 has 98 count")
+		assert.Equal(t, int64(98), flags[0].TotalEvalCount)
+		assert.Equal(t, int64(3), flags[1].FlagID, "flag 3 has 97 count")
+		assert.Equal(t, int64(97), flags[1].TotalEvalCount)
+	}
 }

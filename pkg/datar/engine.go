@@ -154,14 +154,11 @@ func (e *Engine) Len() int {
 }
 
 // QuerySummary returns all flags with traffic totals in the given time range.
-// Aggregates events first (only touches flags with traffic), then LEFT JOINs
-// to the flags table — efficient when few flags have real traffic.
+// Only includes flags that have actual evaluation traffic in the window.
 func (e *Engine) QuerySummary(from, to time.Time, limit, offset int) ([]SummaryRow, error) {
 	if e == nil {
 		return nil, errNilEngine
 	}
-	// Subquery: aggregate hourly events per flag in the time window.
-	// This runs first, scanning only rows with traffic.
 	sub := e.db.Model(&entity.HourlyEvent{}).
 		Select("flag_id, SUM(eval_count) AS total_count, MAX(updated_at) AS last_evaluated_at").
 		Where("bucket_hour >= ? AND bucket_hour < ?", from, to).
@@ -169,9 +166,9 @@ func (e *Engine) QuerySummary(from, to time.Time, limit, offset int) ([]SummaryR
 
 	var rows []SummaryRow
 	err := e.db.Model(&entity.Flag{}).
-		Select("flags.id AS flag_id, flags.key AS flag_key, flags.enabled, flags.description, COALESCE(agg.total_count, 0) AS total_eval_count, agg.last_evaluated_at AS last_evaluated_at").
-		Joins("LEFT JOIN (?) AS agg ON agg.flag_id = flags.id", sub).
-		Order("total_eval_count DESC").
+		Select("flags.id AS flag_id, flags.key AS flag_key, flags.enabled, flags.description, agg.total_count AS total_eval_count, agg.last_evaluated_at AS last_evaluated_at").
+		Joins("JOIN (?) AS agg ON agg.flag_id = flags.id", sub).
+		Order("agg.total_count DESC").
 		Limit(limit).
 		Offset(offset).
 		Scan(&rows).Error

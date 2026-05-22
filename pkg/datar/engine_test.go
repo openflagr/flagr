@@ -302,17 +302,12 @@ func TestQuerySummary(t *testing.T) {
 
 	rows, err := e.QuerySummary(now.Add(-time.Hour), now.Add(time.Hour), 100, 0)
 	assert.NoError(t, err)
-	if len(rows) != 2 {
-		t.Fatalf("expected 2 rows, got %d", len(rows))
+	if len(rows) != 1 {
+		t.Fatalf("expected 1 row (only flags with traffic), got %d", len(rows))
 	}
-
 	assert.Equal(t, int64(1), rows[0].FlagID)
 	assert.Equal(t, int64(150), rows[0].TotalEvalCount)
 	assert.True(t, rows[0].Enabled)
-
-	assert.Equal(t, int64(2), rows[1].FlagID)
-	assert.Equal(t, int64(0), rows[1].TotalEvalCount)
-	assert.False(t, rows[1].Enabled)
 }
 
 func TestQuerySummary_NoData(t *testing.T) {
@@ -325,12 +320,10 @@ func TestQuerySummary_NoData(t *testing.T) {
 	}
 	defer e.Shutdown()
 
+	// No events for any flag → empty result (only flags with traffic are returned).
 	rows, err := e.QuerySummary(time.Now().Add(-7*24*time.Hour), time.Now(), 100, 0)
 	assert.NoError(t, err)
-	if len(rows) != 1 {
-		t.Fatalf("expected 1 row, got %d", len(rows))
-	}
-	assert.Equal(t, int64(0), rows[0].TotalEvalCount)
+	assert.Empty(t, rows)
 }
 
 func TestQuerySummary_Pagination(t *testing.T) {
@@ -346,13 +339,28 @@ func TestQuerySummary_Pagination(t *testing.T) {
 		createFlag(t, db, int64(i), fmt.Sprintf("f-%d", i), fmt.Sprintf("flag-%d", i), true)
 	}
 
-	rows, err := e.QuerySummary(time.Now().Add(-7*24*time.Hour), time.Now().Add(time.Hour), 2, 1)
+	// Seed events for flags 1-4 with descending counts.
+	now := time.Now().UTC().Truncate(time.Hour)
+	for i := 1; i <= 4; i++ {
+		if err := db.Exec(
+			`INSERT INTO datar_hourly_events (flag_id, variant_id, segment_id, bucket_hour, eval_count) VALUES (?, 1, 1, ?, ?)`,
+			i, now, 100-i,
+		).Error; err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// Page 2 (limit=2, offset=1): positions 1-2 sorted by count desc.
+	// Flag 1(99), Flag 2(98), Flag 3(97), Flag 4(96) → returns [Flag 2(98), Flag 3(97)].
+	rows, err := e.QuerySummary(now.Add(-time.Hour), now.Add(time.Hour), 2, 1)
 	assert.NoError(t, err)
 	if len(rows) != 2 {
 		t.Fatalf("expected 2 rows, got %d", len(rows))
 	}
-	// Flags are ordered by total_eval_count DESC — all are 0, so any order.
-	assert.Contains(t, []int64{2, 3, 4, 5}, rows[0].FlagID)
+	assert.Equal(t, int64(2), rows[0].FlagID, "flag 2 has 98 count")
+	assert.Equal(t, int64(98), rows[0].TotalEvalCount)
+	assert.Equal(t, int64(3), rows[1].FlagID, "flag 3 has 97 count")
+	assert.Equal(t, int64(97), rows[1].TotalEvalCount)
 }
 
 func TestQuerySummary_NilEngine(t *testing.T) {
