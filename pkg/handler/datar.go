@@ -5,7 +5,6 @@ import (
 
 	"github.com/openflagr/flagr/pkg/config"
 	"github.com/openflagr/flagr/pkg/datar"
-
 )
 
 var (
@@ -22,16 +21,28 @@ func GetDatar() *datar.Engine {
 	if singletonEngine != nil {
 		return singletonEngine
 	}
-	if !config.Config.DatarEnabled {
+	if !hasDatar(config.Config.RecorderType) {
+
 		return nil
 	}
 	singletonEngine = datar.New(
 		getDB(),
-		config.Config.DatarEnabled,
-		config.Config.DatarFlushInterval,
+		true,
+		config.Config.RecorderDatarFlushInterval,
 	)
 	return singletonEngine
 }
+
+// hasDatar returns true if the slice contains "datar".
+func hasDatar(types []string) bool {
+	for _, t := range types {
+		if t == "datar" {
+			return true
+		}
+	}
+	return false
+}
+
 
 // ResetDatar clears the singleton for test isolation.
 func ResetDatar() {

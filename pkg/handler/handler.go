@@ -1,6 +1,8 @@
 package handler
 
 import (
+
+
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/openflagr/flagr/pkg/config"
 	"github.com/openflagr/flagr/pkg/entity"
@@ -86,18 +88,16 @@ func setupEvaluation(api *operations.FlagrAPI) {
 	api.EvaluationPostEvaluationHandler = evaluation.PostEvaluationHandlerFunc(e.PostEvaluation)
 	api.EvaluationPostEvaluationBatchHandler = evaluation.PostEvaluationBatchHandlerFunc(e.PostEvaluationBatch)
 
-	if config.Config.RecorderEnabled {
-		GetDataRecorder()
-	}
+	// Force-init the data recorder (may be noop, external, Datar, or fan-out).
+	GetDataRecorder()
 }
 
 func setupDatar(api *operations.FlagrAPI) {
-	if !config.Config.DatarEnabled {
+	if !hasDatar(config.Config.RecorderType) {
 		return
 	}
 
-	// Initialize the singleton (starts flush loop).
-	GetDatar()
+	d := GetDatar()
 
 	// Register swagger-gen handlers for the generated routes.
 	api.DatarGetDatarSummaryHandler = datarapi.GetDatarSummaryHandlerFunc(
@@ -114,13 +114,11 @@ func setupDatar(api *operations.FlagrAPI) {
 	// Register shutdown handler.
 	existingShutdown := api.ServerShutdown
 	api.ServerShutdown = func() {
-		_ = GetDatar().Shutdown()
-
+		d.Shutdown()
 		if existingShutdown != nil {
 			existingShutdown()
 		}
 	}
-
 }
 
 func setupHealth(api *operations.FlagrAPI) {

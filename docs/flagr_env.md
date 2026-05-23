@@ -85,4 +85,4 @@ FLAGR_BASIC_AUTH_EXACT_WHITELIST_PATHS=""
 
 ## Datar
 
-Datar is an optional in-memory aggregate analytics engine. The relevant environment variables are `FLAGR_DATAR_ENABLED` and `FLAGR_DATAR_FLUSH_INTERVAL`. See [Datar](flagr_datar.md) for details.
+Datar is an optional in-memory aggregate analytics engine. List `datar` in `FLAGR_RECORDER_TYPE` to enable it along with `FLAGR_RECORDER_DATAR_FLUSH_INTERVAL`. See [Datar](flagr_datar.md) for details.

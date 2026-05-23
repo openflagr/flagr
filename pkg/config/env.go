@@ -119,8 +119,8 @@ var Config = struct {
 
 	// RecorderEnabled - enable data records logging
 	RecorderEnabled bool `env:"FLAGR_RECORDER_ENABLED" envDefault:"false"`
-	// RecorderType - the pipeline to log data records, e.g. Kafka
-	RecorderType string `env:"FLAGR_RECORDER_TYPE" envDefault:"kafka"`
+	// RecorderType - comma-separated list of recorders to enable, e.g. "kafka,datar"
+	RecorderType []string `env:"FLAGR_RECORDER_TYPE" envDefault:"kafka" envSeparator:","`
 
 	/**
 	RecorderFrameOutputMode - indicates which data record frame output mode should we use.
@@ -254,10 +254,9 @@ var Config = struct {
 	// e.g. FLAGR_WEB_PREFIX=/foo
 	// UI path  => localhost:18000/foo"
 	// API path => localhost:18000/foo/api/v1"
-	// DatarEnabled - enable Datar aggregate analytics
-	DatarEnabled bool `env:"FLAGR_DATAR_ENABLED" envDefault:"false"`
-	// DatarFlushInterval - how often to flush in-memory aggregates to DB
-	DatarFlushInterval time.Duration `env:"FLAGR_DATAR_FLUSH_INTERVAL" envDefault:"60s"`
+
+	// RecorderDatarFlushInterval - how often to flush in-memory aggregates to DB
+	RecorderDatarFlushInterval time.Duration `env:"FLAGR_RECORDER_DATAR_FLUSH_INTERVAL" envDefault:"60s"`
 
 	WebPrefix string `env:"FLAGR_WEB_PREFIX" envDefault:""`
 }{}

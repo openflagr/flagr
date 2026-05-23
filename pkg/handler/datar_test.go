@@ -31,8 +31,8 @@ func TestParseTimeRange(t *testing.T) {
 func TestDatarEndpoints_QueryError(t *testing.T) {
 	defer ResetDatar()
 
-	defer gostub.Stub(&config.Config.DatarEnabled, true).Reset()
-	defer gostub.Stub(&config.Config.DatarFlushInterval, 24*time.Hour).Reset()
+	defer gostub.Stub(&config.Config.RecorderType, []string{"datar"}).Reset()
+	defer gostub.Stub(&config.Config.RecorderDatarFlushInterval, 24*time.Hour).Reset()
 
 	db := entity.NewTestDB()
 	defer gostub.StubFunc(&getDB, db).Reset()
@@ -60,8 +60,8 @@ func TestDatarEndpoints_QueryError(t *testing.T) {
 func TestDatarEndpoints_Summary(t *testing.T) {
 	defer ResetDatar()
 
-	defer gostub.Stub(&config.Config.DatarEnabled, true).Reset()
-	defer gostub.Stub(&config.Config.DatarFlushInterval, 24*time.Hour).Reset()
+	defer gostub.Stub(&config.Config.RecorderType, []string{"datar"}).Reset()
+	defer gostub.Stub(&config.Config.RecorderDatarFlushInterval, 24*time.Hour).Reset()
 
 	db := entity.NewTestDB()
 	defer gostub.StubFunc(&getDB, db).Reset()
@@ -100,8 +100,8 @@ func TestDatarEndpoints_Summary(t *testing.T) {
 func TestDatarEndpoints_FlagSummary(t *testing.T) {
 	defer ResetDatar()
 
-	defer gostub.Stub(&config.Config.DatarEnabled, true).Reset()
-	defer gostub.Stub(&config.Config.DatarFlushInterval, 24*time.Hour).Reset()
+	defer gostub.Stub(&config.Config.RecorderType, []string{"datar"}).Reset()
+	defer gostub.Stub(&config.Config.RecorderDatarFlushInterval, 24*time.Hour).Reset()
 
 	db := entity.NewTestDB()
 	defer gostub.StubFunc(&getDB, db).Reset()
@@ -149,7 +149,7 @@ func TestDatarEndpoints_FlagSummary(t *testing.T) {
 func TestDatarEndpoints_NotEnabled(t *testing.T) {
 	defer ResetDatar()
 
-	defer gostub.Stub(&config.Config.DatarEnabled, false).Reset()
+	defer gostub.Stub(&config.Config.RecorderType, []string{"kafka"}).Reset()
 
 	// When Datar is not enabled, GetDatar() returns nil and handlers return 503.
 	resp := HandleGetDatarSummary(datar.GetDatarSummaryParams{})
@@ -164,8 +164,8 @@ func TestDatarEndpoints_NotEnabled(t *testing.T) {
 func TestDatarEndpoints_Pagination(t *testing.T) {
 	defer ResetDatar()
 
-	defer gostub.Stub(&config.Config.DatarEnabled, true).Reset()
-	defer gostub.Stub(&config.Config.DatarFlushInterval, 24*time.Hour).Reset()
+	defer gostub.Stub(&config.Config.RecorderType, []string{"datar"}).Reset()
+	defer gostub.Stub(&config.Config.RecorderDatarFlushInterval, 24*time.Hour).Reset()
 
 	db := entity.NewTestDB()
 	defer gostub.StubFunc(&getDB, db).Reset()
@@ -207,5 +207,30 @@ func TestDatarEndpoints_Pagination(t *testing.T) {
 		assert.Equal(t, int64(98), flags[0].TotalEvalCount)
 		assert.Equal(t, int64(3), flags[1].FlagID, "flag 3 has 97 count")
 		assert.Equal(t, int64(97), flags[1].TotalEvalCount)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// hasDatar helper
+// ---------------------------------------------------------------------------
+
+func TestHasDatar(t *testing.T) {
+	tests := []struct {
+		name  string
+		types []string
+		want  bool
+	}{
+		{"nil slice", nil, false},
+		{"empty slice", []string{}, false},
+		{"single datar", []string{"datar"}, true},
+		{"single kafka", []string{"kafka"}, false},
+		{"multiple with datar", []string{"kafka", "datar"}, true},
+		{"multiple without datar", []string{"kafka", "pubsub"}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := hasDatar(tt.types)
+			assert.Equal(t, tt.want, got)
+		})
 	}
 }

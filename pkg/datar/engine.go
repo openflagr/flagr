@@ -1,7 +1,6 @@
 package datar
 
 import (
-	"sort"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -284,62 +283,3 @@ func (e *Engine) flushAggregates(agg map[FlushKey]int32) error {
 	}).Create(&records).Error
 }
 
-// aggregateFlagSummary takes raw events and produces sorted variant/segment/day buckets.
-func aggregateFlagSummary(rows []RawEvent) (variants, segs []struct {
-	ID    int64
-	Count int64
-}, days []struct {
-	Date  string
-	Count int64
-}) {
-	variantTotals := make(map[int64]int64)
-	segIDs := make(map[int64]int64)
-	dayCounts := make(map[string]int64)
-
-	for _, r := range rows {
-		variantTotals[r.VariantID] += int64(r.EvalCount)
-		if r.SegmentID > 0 {
-			segIDs[r.SegmentID] += int64(r.EvalCount)
-		}
-		if len(r.BucketHour) >= 10 {
-			dayCounts[r.BucketHour[:10]] += int64(r.EvalCount)
-		}
-	}
-
-	variants = make([]struct {
-		ID    int64
-		Count int64
-	}, 0, len(variantTotals))
-	for id, count := range variantTotals {
-		variants = append(variants, struct {
-			ID    int64
-			Count int64
-		}{id, count})
-	}
-	sort.Slice(variants, func(i, j int) bool { return variants[i].Count > variants[j].Count })
-
-	segs = make([]struct {
-		ID    int64
-		Count int64
-	}, 0, len(segIDs))
-	for id, count := range segIDs {
-		segs = append(segs, struct {
-			ID    int64
-			Count int64
-		}{id, count})
-	}
-	sort.Slice(segs, func(i, j int) bool { return segs[i].Count > segs[j].Count })
-
-	days = make([]struct {
-		Date  string
-		Count int64
-	}, 0, len(dayCounts))
-	for dateStr, count := range dayCounts {
-		days = append(days, struct {
-			Date  string
-			Count int64
-		}{dateStr, count})
-	}
-	sort.Slice(days, func(i, j int) bool { return days[i].Date < days[j].Date })
-	return
-}

@@ -223,25 +223,10 @@ func TestQueryFlagSummary(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, rows, 3)
 
-	// Test aggregation helper directly.
-	variants, segs, days := aggregateFlagSummary(rows)
-	if len(variants) != 2 {
-		t.Fatalf("expected 2 variants, got %d", len(variants))
-	}
-	assert.Equal(t, int64(1), variants[0].ID)
-	assert.Equal(t, int64(125), variants[0].Count)
-	assert.Equal(t, int64(2), variants[1].ID)
-	assert.Equal(t, int64(50), variants[1].Count)
 
-	if len(segs) != 1 {
-		t.Fatalf("expected 1 segment, got %d", len(segs))
-	}
-	assert.Equal(t, int64(10), segs[0].ID)
-
-	if len(days) != 2 {
-		t.Fatalf("expected 2 days, got %d", len(days))
-	}
 }
+
+
 
 func TestQueryFlagSummary_NoData(t *testing.T) {
 	db := newTestDB(t)
@@ -477,90 +462,4 @@ func TestFlushAggregates_Empty(t *testing.T) {
 
 	assert.NoError(t, e.flushAggregates(nil))
 	assert.NoError(t, e.flushAggregates(map[FlushKey]int32{}))
-}
-// ---------------------------------------------------------------------------
-// aggregateFlagSummary
-// ---------------------------------------------------------------------------
-
-func TestAggregateFlagSummary_Empty(t *testing.T) {
-	variants, segs, days := aggregateFlagSummary(nil)
-	assert.Empty(t, variants)
-	assert.Empty(t, segs)
-	assert.Empty(t, days)
-
-	variants, segs, days = aggregateFlagSummary([]RawEvent{})
-	assert.Empty(t, variants)
-	assert.Empty(t, segs)
-	assert.Empty(t, days)
-}
-
-func TestAggregateFlagSummary_SortsCorrectly(t *testing.T) {
-	rows := []RawEvent{
-		{VariantID: 1, SegmentID: 10, BucketHour: "2024-01-01T01:00:00Z", EvalCount: 10},
-		{VariantID: 1, SegmentID: 10, BucketHour: "2024-01-01T02:00:00Z", EvalCount: 5},
-		{VariantID: 2, SegmentID: 10, BucketHour: "2024-01-01T01:00:00Z", EvalCount: 20},
-		{VariantID: 2, SegmentID: 20, BucketHour: "2024-01-01T01:00:00Z", EvalCount: 30},
-	}
-
-	variants, segs, days := aggregateFlagSummary(rows)
-
-	// variants sorted by count desc: 2(50), 1(15)
-	if len(variants) != 2 {
-		t.Fatalf("expected 2 variants, got %d", len(variants))
-	}
-	assert.Equal(t, int64(2), variants[0].ID)
-	assert.Equal(t, int64(50), variants[0].Count)
-	assert.Equal(t, int64(1), variants[1].ID)
-	assert.Equal(t, int64(15), variants[1].Count)
-
-	// segments sorted by count desc: 10(35), 20(30)
-	if len(segs) != 2 {
-		t.Fatalf("expected 2 segments, got %d", len(segs))
-	}
-	assert.Equal(t, int64(10), segs[0].ID)
-	assert.Equal(t, int64(35), segs[0].Count)
-	assert.Equal(t, int64(20), segs[1].ID)
-	assert.Equal(t, int64(30), segs[1].Count)
-
-	// days sorted by date asc
-	if len(days) != 1 {
-		t.Fatalf("expected 1 day, got %d", len(days))
-	}
-	assert.Equal(t, "2024-01-01", days[0].Date)
-	assert.Equal(t, int64(65), days[0].Count)
-}
-
-func TestAggregateFlagSummary_ZeroSegmentID(t *testing.T) {
-	rows := []RawEvent{
-		{VariantID: 1, SegmentID: 0, BucketHour: "2024-01-01T00:00:00Z", EvalCount: 10},
-		{VariantID: 1, SegmentID: 5, BucketHour: "2024-01-01T00:00:00Z", EvalCount: 20},
-	}
-	_, segs, _ := aggregateFlagSummary(rows)
-	if len(segs) != 1 {
-		t.Fatalf("expected 1 segment, got %d", len(segs))
-	}
-	assert.Equal(t, int64(5), segs[0].ID)
-}
-
-func TestAggregateFlagSummary_ShortBucketHour(t *testing.T) {
-	rows := []RawEvent{
-		{VariantID: 1, SegmentID: 1, BucketHour: "short", EvalCount: 10},
-	}
-	_, _, days := aggregateFlagSummary(rows)
-	assert.Empty(t, days)
-}
-
-func TestAggregateFlagSummary_DaySort(t *testing.T) {
-	rows := []RawEvent{
-		{VariantID: 1, SegmentID: 1, BucketHour: "2024-01-03T00:00:00Z", EvalCount: 10},
-		{VariantID: 1, SegmentID: 1, BucketHour: "2024-01-01T00:00:00Z", EvalCount: 20},
-		{VariantID: 1, SegmentID: 1, BucketHour: "2024-01-02T00:00:00Z", EvalCount: 30},
-	}
-	_, _, days := aggregateFlagSummary(rows)
-	if len(days) != 3 {
-		t.Fatalf("expected 3 days, got %d", len(days))
-	}
-	assert.Equal(t, "2024-01-01", days[0].Date)
-	assert.Equal(t, "2024-01-02", days[1].Date)
-	assert.Equal(t, "2024-01-03", days[2].Date)
 }

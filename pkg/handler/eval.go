@@ -249,7 +249,11 @@ var EvalFlagWithContext = func(flag *entity.Flag, evalContext models.EvalContext
 
 	logEvalResult(evalResult, flag.DataRecordsEnabled)
 	return evalResult
+
 }
+
+
+
 
 var logEvalResult = func(r *models.EvalResult, dataRecordsEnabled bool) {
 	if r == nil {
@@ -265,16 +269,11 @@ var logEvalResult = func(r *models.EvalResult, dataRecordsEnabled bool) {
 	logEvalResultToDatadog(r)
 	logEvalResultToPrometheus(r)
 
-	// Datar: aggregate evaluation counts for dashboard analytics.
-	if dataRecordsEnabled {
-		GetDatar().Record(r.FlagID, r.VariantID, r.SegmentID)
-	}
-
-	if !config.Config.RecorderEnabled || !dataRecordsEnabled {
+	if !dataRecordsEnabled {
 		return
 	}
-	rec := GetDataRecorder()
-	rec.AsyncRecord(*r)
+
+	GetDataRecorder().AsyncRecord(*r)
 }
 
 var logEvalResultToDatadog = func(r *models.EvalResult) {
