@@ -179,6 +179,9 @@ var Config = struct {
 	RecorderPubsubVerbose              bool          `env:"FLAGR_RECORDER_PUBSUB_VERBOSE" envDefault:"false"`
 	RecorderPubsubVerboseCancelTimeout time.Duration `env:"FLAGR_RECORDER_PUBSUB_VERBOSE_CANCEL_TIMEOUT" envDefault:"5s"`
 
+	// RecorderDatarFlushInterval - how often to flush in-memory aggregates to DB
+	RecorderDatarFlushInterval time.Duration `env:"FLAGR_RECORDER_DATAR_FLUSH_INTERVAL" envDefault:"60s"`
+
 	/**
 	JWTAuthEnabled enables the JWT Auth
 
@@ -255,8 +258,7 @@ var Config = struct {
 	// UI path  => localhost:18000/foo"
 	// API path => localhost:18000/foo/api/v1"
 
-	// RecorderDatarFlushInterval - how often to flush in-memory aggregates to DB
-	RecorderDatarFlushInterval time.Duration `env:"FLAGR_RECORDER_DATAR_FLUSH_INTERVAL" envDefault:"60s"`
+
 
 	WebPrefix string `env:"FLAGR_WEB_PREFIX" envDefault:""`
 }{}
