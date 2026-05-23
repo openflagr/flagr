@@ -8,9 +8,10 @@ A simple, zero-dependency solution for trivial aggregate analytics. Built direct
 
 ## How to enable
 
-Add `datar` to the comma-separated `FLAGR_RECORDER_TYPE` list:
+Requires both the master switch and listing `datar` in `RecorderType`:
 
 ```bash
+FLAGR_RECORDER_ENABLED=true
 FLAGR_RECORDER_TYPE=kafka,datar
 FLAGR_RECORDER_DATAR_FLUSH_INTERVAL=60s   # default; use shorter values in dev
 ```
@@ -35,18 +36,26 @@ Only flags with actual evaluation events appear in the summary (INNER JOIN, no C
 
 ```
 GetDataRecorder().AsyncRecord()
-  └─ fanOutRecorder
-       ├─ datarRecorder.AsyncRecord() → Engine.Record()
-       │                                  ↓ every FLAGR_RECORDER_DATAR_FLUSH_INTERVAL
-       │                              GORM Clauses.Create → datar_hourly_events
-       │                                  ↓
-       │                              GET /api/v1/datar/*
-       └─ (optional external recorder)
+  └─ fanOutRecorder(Datar, Kafka, …)
+       ├─ NewDatarRecorder()
+       │    └─ datarRecorder.AsyncRecord(r) → Engine.Record(flagID, variantID, segmentID)
+       │                                         │
+       │                                    Engine.flushLoop()
+       │                                         │ every FLAGR_RECORDER_DATAR_FLUSH_INTERVAL
+       │                                    [Buffer snapshot → GORM UPSERT]
+       │                                         │  datar_hourly_events
+       │                                         │
+       │                                    Engine.QuerySummary / QueryFlagSummaryBreakdown
+       │                                         │
+       │                                    HandleGetDatarSummary / HandleGetDatarFlagSummary
+       └─ NewKafkaRecorder() (etc.)
 ```
 
-- **Registered through `GetDataRecorder()`.** Datar is included in the fan-out recorder alongside the external DataRecorder (Kafka/Kinesis/Pubsub). No special case in `logEvalResult`.
+- **`NewDatarRecorder()`** — constructor matching `NewKafkaRecorder()` pattern. Registered in `GetDataRecorder()` switch.
+- **`RecorderEnabled` master switch** — `false` (default) disables all recorders including Datar.
 - **In-memory only.** No WAL, no files, no recovery. On crash, ≤1 flush interval of data is lost.
 - **Multi-instance.** Each instance flushes independently. Additive UPSERT sums correctly.
+- **Aggregation in Engine.** `QueryFlagSummaryBreakdown` pre-aggregates variant/segment/day buckets; handlers are thin pass-through.
 - **No coordination.** No sequence numbers, no flush-log table.
 - **Eval cache dependency.** Flags must be loaded by the eval cache (~3s refresh) before evaluations reach Datar.
 
@@ -61,12 +70,11 @@ pkg/handler/
 ├── datar.go               — GetDatar singleton, ResetDatar (test helper)
 ├── datar_handler.go       — go-swagger handler implementations
 ├── datar_test.go          — endpoint tests
-├── data_recorder_datar.go — datarRecorder adapter (DataRecorder impl)
-├── data_recorder.go       — GetDataRecorder: fan-out with Datar + external
+├── data_recorder_datar.go — NewDatarRecorder constructor, datarRecorder adapter
 
 pkg/entity/datar.go        — HourlyEvent GORM model
 pkg/entity/db.go           — AutoMigrateTables includes HourlyEvent
-pkg/config/env.go          — RecorderDatarFlushInterval, RecorderType
+pkg/config/env.go          — RecorderDatarFlushInterval, RecorderType, RecorderEnabled
 pkg/handler/eval.go        — logEvalResult: GetDataRecorder().AsyncRecord()
 pkg/handler/handler.go     — setupDatar: HTTP handlers + shutdown
 swagger/                   — datar_summary.yaml, datar_flag_summary.yaml
@@ -75,3 +83,4 @@ docs/flagr_datar.md        — user-facing docs
 integration_tests/
 ├── docker-compose.yml     — Datar enabled on all DB services
 ├── test.sh                — step_13_test_datar (real-data assertions)
+```

@@ -14,21 +14,24 @@ Prometheus covers rate-based metrics and variant-level time-series well, but it 
 
 ## Enabling
 
-Add `datar` to the comma-separated `FLAGR_RECORDER_TYPE` list:
+Requires `FLAGR_RECORDER_ENABLED=true`. With the master switch on, list `datar` in `RecorderType` to activate the in-memory aggregator:
 
 ```bash
+export FLAGR_RECORDER_ENABLED=true
 export FLAGR_RECORDER_TYPE=kafka,datar
 export FLAGR_RECORDER_DATAR_FLUSH_INTERVAL=60s    # default
 ```
 
 The `datar_hourly_events` table is created automatically by AutoMigrate on startup. No schema migration is needed.
 
+
 ## Recording
+Datar recording is gated on three conditions:
 
-Datar recording is gated on two conditions:
+1. `FLAGR_RECORDER_ENABLED=true` (master switch)
+2. Listing `datar` in `FLAGR_RECORDER_TYPE`
+3. The per-flag toggle `dataRecordsEnabled: true` (configurable via `PUT /api/v1/flags/{id}`)
 
-1. The server-level flag listing `datar` in `FLAGR_RECORDER_TYPE`
-2. The per-flag toggle `dataRecordsEnabled: true` (configurable via `PUT /api/v1/flags/{id}`)
 
 This means you can selectively enable recording per flag, even when Datar is globally enabled.
 
