@@ -93,7 +93,7 @@ func setupEvaluation(api *operations.FlagrAPI) {
 }
 
 func setupDatar(api *operations.FlagrAPI) {
-	if !hasDatar(config.Config.RecorderType) {
+	if !config.Config.RecorderEnabled || !hasDatar(config.Config.RecorderType) {
 		return
 	}
 

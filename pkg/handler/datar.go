@@ -21,7 +21,7 @@ func GetDatar() *datar.Engine {
 	if singletonEngine != nil {
 		return singletonEngine
 	}
-	if !hasDatar(config.Config.RecorderType) {
+	if !config.Config.RecorderEnabled || !hasDatar(config.Config.RecorderType) {
 
 		return nil
 	}

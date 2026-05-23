@@ -32,6 +32,7 @@ func TestDatarEndpoints_QueryError(t *testing.T) {
 	defer ResetDatar()
 
 	defer gostub.Stub(&config.Config.RecorderType, []string{"datar"}).Reset()
+	defer gostub.Stub(&config.Config.RecorderEnabled, true).Reset()
 	defer gostub.Stub(&config.Config.RecorderDatarFlushInterval, 24*time.Hour).Reset()
 
 	db := entity.NewTestDB()
@@ -61,6 +62,7 @@ func TestDatarEndpoints_Summary(t *testing.T) {
 	defer ResetDatar()
 
 	defer gostub.Stub(&config.Config.RecorderType, []string{"datar"}).Reset()
+	defer gostub.Stub(&config.Config.RecorderEnabled, true).Reset()
 	defer gostub.Stub(&config.Config.RecorderDatarFlushInterval, 24*time.Hour).Reset()
 
 	db := entity.NewTestDB()
@@ -101,6 +103,7 @@ func TestDatarEndpoints_FlagSummary(t *testing.T) {
 	defer ResetDatar()
 
 	defer gostub.Stub(&config.Config.RecorderType, []string{"datar"}).Reset()
+	defer gostub.Stub(&config.Config.RecorderEnabled, true).Reset()
 	defer gostub.Stub(&config.Config.RecorderDatarFlushInterval, 24*time.Hour).Reset()
 
 	db := entity.NewTestDB()
@@ -165,6 +168,7 @@ func TestDatarEndpoints_Pagination(t *testing.T) {
 	defer ResetDatar()
 
 	defer gostub.Stub(&config.Config.RecorderType, []string{"datar"}).Reset()
+	defer gostub.Stub(&config.Config.RecorderEnabled, true).Reset()
 	defer gostub.Stub(&config.Config.RecorderDatarFlushInterval, 24*time.Hour).Reset()
 
 	db := entity.NewTestDB()

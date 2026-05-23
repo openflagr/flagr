@@ -116,9 +116,9 @@ var Config = struct {
 	PrometheusPath string `env:"FLAGR_PROMETHEUS_PATH" envDefault:"/metrics"`
 	// PrometheusIncludeLatencyHistogram - set whether Prometheus should also export a histogram of request latencies (this increases cardinality significantly)
 	PrometheusIncludeLatencyHistogram bool `env:"FLAGR_PROMETHEUS_INCLUDE_LATENCY_HISTOGRAM" envDefault:"false"`
-
-	// RecorderEnabled - enable data records logging
+	// RecorderEnabled - master kill switch for all data recorders (including Datar)
 	RecorderEnabled bool `env:"FLAGR_RECORDER_ENABLED" envDefault:"false"`
+
 	// RecorderType - comma-separated list of recorders to enable, e.g. "kafka,datar"
 	RecorderType []string `env:"FLAGR_RECORDER_TYPE" envDefault:"kafka" envSeparator:","`
 

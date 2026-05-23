@@ -38,29 +38,26 @@ func (f fanOutRecorder) NewDataRecordFrame(_ models.EvalResult) DataRecordFrame 
 // GetDataRecorder gets the data recorder
 func GetDataRecorder() DataRecorder {
 	singletonDataRecorderOnce.Do(func() {
-		var recs []DataRecorder
+		if !config.Config.RecorderEnabled {
+			singletonDataRecorder = fanOutRecorder(nil)
+			return
+		}
 
+		var recs []DataRecorder
 		for _, rt := range config.Config.RecorderType {
 			switch rt {
 			case "kafka":
-				if config.Config.RecorderEnabled {
-					recs = append(recs, NewKafkaRecorder())
-				}
+				recs = append(recs, NewKafkaRecorder())
 			case "kinesis":
-				if config.Config.RecorderEnabled {
-					recs = append(recs, NewKinesisRecorder())
-				}
+				recs = append(recs, NewKinesisRecorder())
 			case "pubsub":
-				if config.Config.RecorderEnabled {
-					recs = append(recs, NewPubsubRecorder())
-				}
+				recs = append(recs, NewPubsubRecorder())
 			case "datar":
 				recs = append(recs, &datarRecorder{engine: GetDatar()})
 			default:
 				panic(fmt.Sprintf("recorderType %q not supported", rt))
 			}
 		}
-
 		singletonDataRecorder = fanOutRecorder(recs)
 	})
 

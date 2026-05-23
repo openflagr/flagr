@@ -47,6 +47,8 @@ func TestGetDataRecorderWhenPubsubIsSet(t *testing.T) {
 func TestGetDataRecorderPanicsWhenRecorderIsInvalid(t *testing.T) {
 	singletonDataRecorderOnce = sync.Once{}
 	config.Config.RecorderType = []string{"invalid"}
+	config.Config.RecorderEnabled = true
+
 
 	assert.Panics(t, func() {
 		GetDataRecorder()
@@ -122,11 +124,11 @@ func TestGetDataRecorderWithEmptyType(t *testing.T) {
 	})
 }
 
-func TestGetDataRecorderWithRecorderDisabled(t *testing.T) {
+func TestGetDataRecorderWithKafkaDefault(t *testing.T) {
 	singletonDataRecorderOnce = sync.Once{}
 	defer gostub.StubFunc(&NewKafkaRecorder, nil).Reset()
 
-	// RecorderEnabled is false by default → kafka is listed but not created.
+	// Default RecorderType is ["kafka"] → NewKafkaRecorder is called (returns nil).
 	assert.NotPanics(t, func() {
 		GetDataRecorder()
 	})
