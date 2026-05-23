@@ -5,6 +5,11 @@ import (
 	"github.com/openflagr/flagr/swagger_gen/models"
 )
 
+// NewDatarRecorder creates a DataRecorder that feeds evaluation results into the Datar engine.
+func NewDatarRecorder() DataRecorder {
+	return &datarRecorder{engine: GetDatar()}
+}
+
 // datarRecorder wraps a datar.Engine as a DataRecorder.
 // It feeds evaluation results into the in-memory aggregate buffer.
 // Unlike Kafka/Kinesis/Pubsub recorders, it does not produce serialized

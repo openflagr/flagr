@@ -53,7 +53,7 @@ func GetDataRecorder() DataRecorder {
 			case "pubsub":
 				recs = append(recs, NewPubsubRecorder())
 			case "datar":
-				recs = append(recs, &datarRecorder{engine: GetDatar()})
+				recs = append(recs, NewDatarRecorder())
 			default:
 				panic(fmt.Sprintf("recorderType %q not supported", rt))
 			}
