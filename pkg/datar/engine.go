@@ -1,6 +1,7 @@
 package datar
 
 import (
+	"sort"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -39,6 +40,32 @@ type RawEvent struct {
 	SegmentID  int64
 	BucketHour string
 	EvalCount  int32
+}
+
+// VariantEntry is one variant's aggregated count.
+type VariantEntry struct {
+	VariantID int64
+	Count     int64
+}
+
+// SegmentEntry is one segment's aggregated count.
+type SegmentEntry struct {
+	SegmentID int64
+	Count     int64
+}
+
+// DayEntry is one calendar day's aggregated count.
+type DayEntry struct {
+	Date  string // YYYY-MM-DD
+	Count int64
+}
+
+// FlagSummaryBreakdown is the pre-aggregated breakdown for a single flag.
+type FlagSummaryBreakdown struct {
+	FlagID   int64
+	Variants []VariantEntry
+	Segments []SegmentEntry
+	Days     []DayEntry
 }
 
 // Engine is the complete Datar analytics engine.
@@ -193,6 +220,67 @@ func (e *Engine) QueryFlagSummary(flagID int64, from, to time.Time) ([]RawEvent,
 		return nil, err
 	}
 	return rows, nil
+}
+// QueryFlagSummaryBreakdown returns the pre-aggregated breakdown for a single flag.
+// It aggregates the raw event rows into variant, segment, and day buckets,
+// sorted by count descending (variants, segments) or by date ascending (days).
+func (e *Engine) QueryFlagSummaryBreakdown(flagID int64, from, to time.Time) (*FlagSummaryBreakdown, error) {
+	rows, err := e.QueryFlagSummary(flagID, from, to)
+	if err != nil {
+		return nil, err
+	}
+
+	// Aggregate raw rows into three bucket types in a single pass.
+	variantTotals := make(map[int64]int64)
+	segIDs := make(map[int64]int64)
+	dayCounts := make(map[string]int64)
+
+	for _, r := range rows {
+		variantTotals[r.VariantID] += int64(r.EvalCount)
+
+		if r.SegmentID > 0 {
+			segIDs[r.SegmentID] += int64(r.EvalCount)
+		}
+
+		// BucketHour from the driver is RFC 3339; extract YYYY-MM-DD.
+		if len(r.BucketHour) >= 10 {
+			dayCounts[r.BucketHour[:10]] += int64(r.EvalCount)
+		}
+	}
+
+	// Variant entries sorted by count descending.
+	variants := make([]VariantEntry, 0, len(variantTotals))
+	for id, count := range variantTotals {
+		variants = append(variants, VariantEntry{VariantID: id, Count: count})
+	}
+	sort.Slice(variants, func(i, j int) bool {
+		return variants[i].Count > variants[j].Count
+	})
+
+	// Segment entries sorted by count descending.
+	segs := make([]SegmentEntry, 0, len(segIDs))
+	for id, count := range segIDs {
+		segs = append(segs, SegmentEntry{SegmentID: id, Count: count})
+	}
+	sort.Slice(segs, func(i, j int) bool {
+		return segs[i].Count > segs[j].Count
+	})
+
+	// Day entries sorted by date.
+	days := make([]DayEntry, 0, len(dayCounts))
+	for dateStr, count := range dayCounts {
+		days = append(days, DayEntry{Date: dateStr, Count: count})
+	}
+	sort.Slice(days, func(i, j int) bool {
+		return days[i].Date < days[j].Date
+	})
+
+	return &FlagSummaryBreakdown{
+		FlagID:   flagID,
+		Variants: variants,
+		Segments: segs,
+		Days:     days,
+	}, nil
 }
 
 // Shutdown stops the flush loop and flushes remaining in-memory counts to the DB.

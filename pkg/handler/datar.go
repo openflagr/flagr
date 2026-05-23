@@ -14,8 +14,8 @@ var (
 
 // GetDatar returns the singleton datar.Engine.
 // Creates the instance on first call, starting its flush loop.
-// Returns nil if Datar is not enabled — safe to call methods on nil.
 func GetDatar() *datar.Engine {
+
 	singletonEngineMu.Lock()
 	defer singletonEngineMu.Unlock()
 	if singletonEngine != nil {

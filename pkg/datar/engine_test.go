@@ -226,7 +226,49 @@ func TestQueryFlagSummary(t *testing.T) {
 
 }
 
+func TestQueryFlagSummaryBreakdown(t *testing.T) {
+	db := newTestDB(t)
+	createFlag(t, db, 1, "f1", "flag1", true)
 
+	e := New(db, true, time.Hour)
+	defer e.Shutdown()
+
+	now := time.Now().UTC().Truncate(time.Hour)
+	prev := now.Add(-48 * time.Hour)
+
+	assert.NoError(t, db.Exec(`INSERT INTO datar_hourly_events (flag_id, variant_id, segment_id, bucket_hour, eval_count) VALUES (1, 1, 10, ?, 100)`, now).Error)
+	assert.NoError(t, db.Exec(`INSERT INTO datar_hourly_events (flag_id, variant_id, segment_id, bucket_hour, eval_count) VALUES (1, 2, 10, ?, 50)`, now).Error)
+	assert.NoError(t, db.Exec(`INSERT INTO datar_hourly_events (flag_id, variant_id, segment_id, bucket_hour, eval_count) VALUES (1, 1, 10, ?, 25)`, prev).Error)
+
+	summary, err := e.QueryFlagSummaryBreakdown(1, prev.Add(-time.Hour), now.Add(time.Hour))
+	assert.NoError(t, err)
+	assert.NotNil(t, summary)
+
+
+	// Variant 1 (100+25=125) > variant 2 (50) → variant 1 first.
+	if assert.Len(t, summary.Variants, 2) {
+		assert.Equal(t, int64(1), summary.Variants[0].VariantID)
+		assert.Equal(t, int64(125), summary.Variants[0].Count)
+		assert.Equal(t, int64(2), summary.Variants[1].VariantID)
+		assert.Equal(t, int64(50), summary.Variants[1].Count)
+	}
+
+	// Single segment.
+	assert.Len(t, summary.Segments, 1)
+	assert.Equal(t, int64(10), summary.Segments[0].SegmentID)
+	assert.Equal(t, int64(175), summary.Segments[0].Count)
+
+	// Two unique days.
+	assert.Len(t, summary.Days, 2)
+	assert.Equal(t, now.Format("2006-01-02"), summary.Days[1].Date, "most recent day last")
+}
+
+func TestQueryFlagSummaryBreakdown_NilEngine(t *testing.T) {
+	var e *Engine
+	summary, err := e.QueryFlagSummaryBreakdown(1, time.Now(), time.Now())
+	assert.Error(t, err)
+	assert.Nil(t, summary)
+}
 
 func TestQueryFlagSummary_NoData(t *testing.T) {
 	db := newTestDB(t)

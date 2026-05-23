@@ -18,10 +18,6 @@ type DataRecorder interface {
 	AsyncRecord(models.EvalResult)
 	NewDataRecordFrame(models.EvalResult) DataRecordFrame
 }
-
-
-
-
 // fanOutRecorder broadcasts AsyncRecord to multiple DataRecorder implementations.
 type fanOutRecorder []DataRecorder
 

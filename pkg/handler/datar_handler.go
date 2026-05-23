@@ -2,8 +2,6 @@ package handler
 
 import (
 	"fmt"
-	"sort"
-
 	"time"
 
 	"github.com/go-openapi/runtime/middleware"
@@ -90,76 +88,47 @@ func HandleGetDatarFlagSummary(params datar.GetDatarFlagSummaryParams) middlewar
 	}
 
 	from, to := parseTimeRange(params.From, params.To, 7)
-	flagID := params.FlagID
 
-	rows, err := d.QueryFlagSummary(flagID, from, to)
+	summary, err := d.QueryFlagSummaryBreakdown(params.FlagID, from, to)
 	if err != nil {
-		logrus.WithError(err).Error("Datar: QueryFlagSummary failed")
+		logrus.WithError(err).Error("Datar: QueryFlagSummaryBreakdown failed")
 		return datar.NewGetDatarFlagSummaryDefault(500).WithPayload(
 			datarError("query failed: %s", err),
 		)
 	}
 
-	// Aggregate raw rows into three bucket types in a single pass.
-	variantTotals := make(map[int64]int64)
-	segIDs := make(map[int64]int64)
-	dayCounts := make(map[string]int64)
-
-	for _, r := range rows {
-		variantTotals[r.VariantID] += int64(r.EvalCount)
-
-		if r.SegmentID > 0 {
-			segIDs[r.SegmentID] += int64(r.EvalCount)
-		}
-
-		// BucketHour from the driver is RFC 3339; extract YYYY-MM-DD.
-		if len(r.BucketHour) >= 10 {
-			dayCounts[r.BucketHour[:10]] += int64(r.EvalCount)
+	// Convert engine types to swagger models.
+	variants := make([]*models.DatarVariantEntry, len(summary.Variants))
+	for i, v := range summary.Variants {
+		variants[i] = &models.DatarVariantEntry{
+			VariantID: v.VariantID,
+			Count:     v.Count,
 		}
 	}
 
-	// Variant entries sorted by count descending.
-	variants := make([]*models.DatarVariantEntry, 0, len(variantTotals))
-	for id, count := range variantTotals {
-		variants = append(variants, &models.DatarVariantEntry{
-			VariantID: id,
-			Count:     count,
-		})
+	segs := make([]*models.DatarSegmentEntry, len(summary.Segments))
+	for i, s := range summary.Segments {
+		segs[i] = &models.DatarSegmentEntry{
+			SegmentID: s.SegmentID,
+			Count:     s.Count,
+		}
 	}
-	sort.Slice(variants, func(i, j int) bool {
-		return variants[i].Count > variants[j].Count
-	})
 
-	// Segment entries sorted by count descending.
-	segs := make([]*models.DatarSegmentEntry, 0, len(segIDs))
-	for id, count := range segIDs {
-		segs = append(segs, &models.DatarSegmentEntry{
-			SegmentID: id,
-			Count:     count,
-		})
-	}
-	sort.Slice(segs, func(i, j int) bool {
-		return segs[i].Count > segs[j].Count
-	})
-	// Day entries sorted by date.
-	days := make([]*models.DatarDayEntry, 0, len(dayCounts))
-	for dateStr, count := range dayCounts {
-		t, err := time.Parse("2006-01-02", dateStr)
+	days := make([]*models.DatarDayEntry, 0, len(summary.Days))
+	for _, d := range summary.Days {
+		t, err := time.Parse("2006-01-02", d.Date)
 		if err != nil {
-			logrus.WithError(err).WithField("date", dateStr).Warn("Datar: invalid date in time bucket")
+			logrus.WithError(err).WithField("date", d.Date).Warn("Datar: invalid date in time bucket")
 			continue
 		}
 		days = append(days, &models.DatarDayEntry{
 			Date:  strfmt.Date(t),
-			Count: count,
+			Count: d.Count,
 		})
 	}
-	sort.Slice(days, func(i, j int) bool {
-		return time.Time(days[i].Date).Before(time.Time(days[j].Date))
-	})
 
 	resp := &models.DatarFlagSummaryResponse{
-		FlagID:           flagID,
+		FlagID:           summary.FlagID,
 		TrafficByVariant: variants,
 		TrafficBySegment: segs,
 		TrafficByDay:     days,
