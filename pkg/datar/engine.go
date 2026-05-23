@@ -88,7 +88,7 @@ type Engine struct {
 }
 
 // New creates an Engine and starts its flush loop.
-// Returns nil when enabled is false — all methods are safe on nil.
+// Returns nil when enabled is false.
 func New(db *gorm.DB, enabled bool, flushInterval time.Duration) *Engine {
 	if !enabled {
 		return nil

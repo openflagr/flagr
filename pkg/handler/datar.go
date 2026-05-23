@@ -14,15 +14,14 @@ var (
 
 // GetDatar returns the singleton datar.Engine.
 // Creates the instance on first call, starting its flush loop.
+// Returns nil if Datar is not enabled.
 func GetDatar() *datar.Engine {
-
 	singletonEngineMu.Lock()
 	defer singletonEngineMu.Unlock()
 	if singletonEngine != nil {
 		return singletonEngine
 	}
 	if !config.Config.RecorderEnabled || !hasDatar(config.Config.RecorderType) {
-
 		return nil
 	}
 	singletonEngine = datar.New(
@@ -42,7 +41,6 @@ func hasDatar(types []string) bool {
 	}
 	return false
 }
-
 
 // ResetDatar clears the singleton for test isolation.
 func ResetDatar() {
