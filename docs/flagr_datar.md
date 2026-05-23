@@ -26,15 +26,17 @@ The `datar_hourly_events` table is created automatically by AutoMigrate on start
 Datar recording is gated on two conditions:
 
 1. The server-level flag `FLAGR_DATAR_ENABLED=true`
-2. The per-flag toggle `dataRecordsEnabled: true` (configurable via PUT /api/v1/flags/{id})
+2. The per-flag toggle `dataRecordsEnabled: true` (configurable via `PUT /api/v1/flags/{id}`)
 
 This means you can selectively enable recording per flag, even when Datar is globally enabled.
+
+> **Note:** After creating or updating a flag, wait at least one eval cache refresh cycle (~3s by default) before sending evaluations. The eval cache needs to pick up the new flag's configuration, or evaluations will return "not found" and won't reach the Datar recorder.
 
 ## Endpoints
 
 ### GET /api/v1/datar/summary
 
-Returns all flags with aggregate totals over a time window.
+Returns flags with aggregate totals over a time window. **Only flags that have actual evaluation traffic in the window appear** — zero-traffic flags are excluded.
 
 | Param | Type | Default | Description |
 |-------|------|---------|-------------|
@@ -60,11 +62,9 @@ Response:
 }
 ```
 
-Flags with no evaluation data in the time window appear with `totalEvalCount: 0`.
-
 ### GET /api/v1/datar/flags/{flagID}/summary
 
-Detailed breakdown for a single flag.
+Detailed breakdown for a single flag. Returns traffic grouped by variant, segment, and day — all three arrays sorted (descending by count for variant/segment, ascending by date for day).
 
 | Param | Type | Default | Description |
 |-------|------|---------|-------------|
@@ -76,13 +76,13 @@ Response:
 ```json
 {
   "flagID": 1,
-  "trafficByVariant": {
-    "1": 30188,
-    "2": 15095
-  },
+  "trafficByVariant": [
+    { "variantID": 1, "count": 30188 },
+    { "variantID": 2, "count": 15095 }
+  ],
   "trafficBySegment": [
-    { "segmentID": 10, "description": "US users", "evalCount": 30188 },
-    { "segmentID": 20, "description": "EU users", "evalCount": 15095 }
+    { "segmentID": 10, "count": 30188 },
+    { "segmentID": 20, "count": 15095 }
   ],
   "trafficByDay": [
     { "date": "2026-05-21", "count": 22100 },
@@ -106,8 +106,7 @@ A unique index on `(flag_id, variant_id, segment_id, bucket_hour)` ensures addit
 
 - **CPU**: ~87ns per evaluation on the hot path (existing key), ~98ns for new keys; zero allocations
 - **RAM**: ~210 bytes per active (flag, variant, segment) tuple; ~2.1 MB for 10K keys
-
-- **DB writes**: One batch transaction every flush interval
+- **DB writes**: One batch transaction every flush interval (configurable, default 60s)
 - **Table growth**: ~2.4K rows/month per 100 flags (hourly buckets, no retention)
 
 ## Limitations

@@ -10,14 +10,17 @@ A simple, zero-dependency solution for trivial aggregate analytics. Built direct
 
 ```bash
 FLAGR_DATAR_ENABLED=true
+FLAGR_DATAR_FLUSH_INTERVAL=60s   # default; use shorter values in dev
 ```
 
 The table is always created by AutoMigrate. The kill switch only controls whether the in-memory aggregator runs.
 
 ## What you get
 
-- **`/api/v1/datar/summary`** — all flags with 7-day traffic totals
-- **`/api/v1/datar/flags/{flagID}/summary`** — variant split, segment breakdown, daily time-series
+- **`GET /api/v1/datar/summary`** — flags with traffic, sorted by count desc, top 100
+- **`GET /api/v1/datar/flags/{flagID}/summary`** — variant split, segment breakdown, daily time-series
+
+Only flags with actual evaluation events appear in the summary (INNER JOIN, no COALESCE zeros).
 
 ## Cost
 
@@ -26,44 +29,42 @@ The table is always created by AutoMigrate. The kill switch only controls whethe
 - One DB batch transaction every flush interval
 - Table grows ~2.4K rows/month per 100 flags (no retention)
 
-
 ## Architecture
 
 ```
-logEvalResult → Aggregator.Record() → in-memory map[FlushKey]int32
-                                          ↓ every 60s
-                                      UPSERT batch → datar_hourly_events
-                                          ↓
-                                      GET /api/v1/datar/*
+logEvalResult → Engine.Record() → in-memory map[FlushKey]int32
+                                       ↓ every FLAGR_DATAR_FLUSH_INTERVAL
+                                   GORM Clauses.Create → datar_hourly_events
+                                       ↓
+                                   GET /api/v1/datar/*
 ```
 
-- **In-memory only.** No WAL, no files, no recovery. On crash, ≤60s of aggregate data is lost.
+- **In-memory only.** No WAL, no files, no recovery. On crash, ≤1 flush interval of data is lost.
 - **Multi-instance.** Each instance flushes independently. Additive UPSERT sums correctly.
 - **No coordination.** No sequence numbers, no flush-log table.
+- **Eval cache dependency.** Flags must be loaded by the eval cache (~3s refresh) before evaluations reach Datar.
 
 ## Files
 
 ```
 pkg/datar/
-├── aggregator.go       — Aggregator (Record, SnapshotAndReset)
-├── models.go           — FlushKey DTO
-├── store.go            — FlushAggregates (raw SQL upsert), query helpers
-├── aggregator_test.go  — 10 tests
-├── store_test.go       — 10 tests
+├── engine.go              — Engine: buffer, flush loop, queries, nil-safe methods
+├── engine_test.go         — 27 tests, 95%+ coverage
 
 pkg/handler/
-├── datar.go            — Datar singleton lifecycle (GetDatar, Shutdown, flush loop)
-├── datar_handler.go    — go-swagger handler implementations
-├── datar_test.go       — 4 endpoint tests
+├── datar.go               — GetDatar singleton, ResetDatar (test helper)
+├── datar_handler.go       — go-swagger handler implementations
+├── datar_test.go          — 6 endpoint tests
 
-pkg/entity/datar.go     — HourlyEvent GORM model
-pkg/entity/db.go        — AutoMigrateTables includes HourlyEvent
-pkg/config/env.go       — FLAGR_DATAR_ENABLED, FLAGR_DATAR_FLUSH_INTERVAL
-pkg/handler/eval.go     — logEvalResult: GetDatar().Record(r)
-pkg/handler/handler.go  — setupDatar: handler assignment + shutdown hook
-swagger/                — datar_summary.yaml, datar_flag_summary.yaml
+pkg/entity/datar.go        — HourlyEvent GORM model
+pkg/entity/db.go           — AutoMigrateTables includes HourlyEvent
+pkg/config/env.go          — FLAGR_DATAR_ENABLED, FLAGR_DATAR_FLUSH_INTERVAL
+pkg/handler/eval.go        — logEvalResult: GetDatar().Record(r)
+pkg/handler/handler.go     — setupDatar: handler assignment + shutdown hook
+swagger/                   — datar_summary.yaml, datar_flag_summary.yaml
 
+docs/flagr_datar.md        — user-facing docs
 integration_tests/
-├── docker-compose.yml  — Datar enabled on flagr_with_sqlite
-├── test.sh             — step_13_test_datar (real-data assertions)
+├── docker-compose.yml     — Datar enabled on all DB services
+├── test.sh                — step_13_test_datar (real-data assertions)
 ```
