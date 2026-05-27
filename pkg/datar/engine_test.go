@@ -48,7 +48,6 @@ func TestNew_Enabled(t *testing.T) {
 	if e == nil {
 		t.Fatal("expected non-nil engine")
 	}
-	assert.True(t, e.enabled)
 	e.Shutdown()
 }
 
@@ -171,14 +170,19 @@ func TestShutdown_FlushesRemaining(t *testing.T) {
 	}
 
 	e.Record(1, 1, 10)
+	e.Record(1, 1, 10)
+	e.Record(1, 2, 10)
 	e.Record(1, 2, 10)
 
 	assert.NoError(t, e.Shutdown())
 
 	// Data should be in the DB now.
-	rows, err := e.QueryFlagSummary(1, time.Now().Add(-time.Hour), time.Now().Add(time.Hour))
+	summary, err := e.QueryFlagSummaryBreakdown(1, time.Now().Add(-time.Hour), time.Now().Add(time.Hour))
 	assert.NoError(t, err)
-	assert.Len(t, rows, 2)
+	if assert.Len(t, summary.Variants, 2) {
+		assert.Equal(t, int64(2), summary.Variants[0].Count)
+		assert.Equal(t, int64(2), summary.Variants[1].Count)
+	}
 }
 
 func TestShutdown_NilEngine(t *testing.T) {
@@ -187,10 +191,10 @@ func TestShutdown_NilEngine(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// Query flag summary
+// Query flag summary breakdown
 // ---------------------------------------------------------------------------
 
-func TestQueryFlagSummary(t *testing.T) {
+func TestQueryFlagSummaryBreakdown(t *testing.T) {
 	db := newTestDB(t)
 	createFlag(t, db, 1, "f1", "flag1", true)
 
@@ -203,39 +207,6 @@ func TestQueryFlagSummary(t *testing.T) {
 	now := time.Now().UTC().Truncate(time.Hour)
 	prev := now.Add(-48 * time.Hour)
 
-	if err := db.Exec(
-		`INSERT INTO datar_hourly_events (flag_id, variant_id, segment_id, bucket_hour, eval_count) VALUES (1, 1, 10, ?, 100)`, now,
-	).Error; err != nil {
-		t.Fatal(err)
-	}
-	if err := db.Exec(
-		`INSERT INTO datar_hourly_events (flag_id, variant_id, segment_id, bucket_hour, eval_count) VALUES (1, 2, 10, ?, 50)`, now,
-	).Error; err != nil {
-		t.Fatal(err)
-	}
-	if err := db.Exec(
-		`INSERT INTO datar_hourly_events (flag_id, variant_id, segment_id, bucket_hour, eval_count) VALUES (1, 1, 10, ?, 25)`, prev,
-	).Error; err != nil {
-		t.Fatal(err)
-	}
-
-	rows, err := e.QueryFlagSummary(1, prev.Add(-time.Hour), now.Add(time.Hour))
-	assert.NoError(t, err)
-	assert.Len(t, rows, 3)
-
-
-}
-
-func TestQueryFlagSummaryBreakdown(t *testing.T) {
-	db := newTestDB(t)
-	createFlag(t, db, 1, "f1", "flag1", true)
-
-	e := New(db, true, time.Hour)
-	defer e.Shutdown()
-
-	now := time.Now().UTC().Truncate(time.Hour)
-	prev := now.Add(-48 * time.Hour)
-
 	assert.NoError(t, db.Exec(`INSERT INTO datar_hourly_events (flag_id, variant_id, segment_id, bucket_hour, eval_count) VALUES (1, 1, 10, ?, 100)`, now).Error)
 	assert.NoError(t, db.Exec(`INSERT INTO datar_hourly_events (flag_id, variant_id, segment_id, bucket_hour, eval_count) VALUES (1, 2, 10, ?, 50)`, now).Error)
 	assert.NoError(t, db.Exec(`INSERT INTO datar_hourly_events (flag_id, variant_id, segment_id, bucket_hour, eval_count) VALUES (1, 1, 10, ?, 25)`, prev).Error)
@@ -243,7 +214,6 @@ func TestQueryFlagSummaryBreakdown(t *testing.T) {
 	summary, err := e.QueryFlagSummaryBreakdown(1, prev.Add(-time.Hour), now.Add(time.Hour))
 	assert.NoError(t, err)
 	assert.NotNil(t, summary)
-
 
 	// Variant 1 (100+25=125) > variant 2 (50) → variant 1 first.
 	if assert.Len(t, summary.Variants, 2) {
@@ -270,7 +240,7 @@ func TestQueryFlagSummaryBreakdown_NilEngine(t *testing.T) {
 	assert.Nil(t, summary)
 }
 
-func TestQueryFlagSummary_NoData(t *testing.T) {
+func TestQueryFlagSummaryBreakdown_NoData(t *testing.T) {
 	db := newTestDB(t)
 	createFlag(t, db, 1, "f1", "flag1", true)
 
@@ -280,12 +250,14 @@ func TestQueryFlagSummary_NoData(t *testing.T) {
 	}
 	defer e.Shutdown()
 
-	rows, err := e.QueryFlagSummary(1, time.Now().Add(-7*24*time.Hour), time.Now())
+	summary, err := e.QueryFlagSummaryBreakdown(1, time.Now().Add(-7*24*time.Hour), time.Now())
 	assert.NoError(t, err)
-	assert.Empty(t, rows)
+	assert.Empty(t, summary.Variants)
+	assert.Empty(t, summary.Segments)
+	assert.Empty(t, summary.Days)
 }
 
-func TestQueryFlagSummary_NonexistentFlag(t *testing.T) {
+func TestQueryFlagSummaryBreakdown_NonexistentFlag(t *testing.T) {
 	db := newTestDB(t)
 	createFlag(t, db, 1, "f1", "flag1", true)
 
@@ -295,9 +267,9 @@ func TestQueryFlagSummary_NonexistentFlag(t *testing.T) {
 	}
 	defer e.Shutdown()
 
-	rows, err := e.QueryFlagSummary(999, time.Now().Add(-7*24*time.Hour), time.Now())
+	summary, err := e.QueryFlagSummaryBreakdown(999, time.Now().Add(-7*24*time.Hour), time.Now())
 	assert.NoError(t, err)
-	assert.Empty(t, rows)
+	assert.Empty(t, summary.Variants)
 }
 
 // ---------------------------------------------------------------------------
@@ -414,7 +386,7 @@ func TestQuerySummary_DBError(t *testing.T) {
 	assert.Error(t, err, "should fail with missing events table")
 }
 
-func TestQueryFlagSummary_DBError(t *testing.T) {
+func TestQueryFlagSummaryBreakdown_DBError(t *testing.T) {
 	db := newTestDB(t)
 	if err := db.Exec("DROP TABLE datar_hourly_events").Error; err != nil {
 		t.Fatal(err)
@@ -426,7 +398,7 @@ func TestQueryFlagSummary_DBError(t *testing.T) {
 	}
 	defer e.Shutdown()
 
-	_, err := e.QueryFlagSummary(1, time.Now(), time.Now())
+	_, err := e.QueryFlagSummaryBreakdown(1, time.Now(), time.Now())
 	assert.Error(t, err, "should fail with missing events table")
 }
 
@@ -447,10 +419,9 @@ func TestFlush_DBError(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Shutdown returns the flush error when it can't write to DB.
+	// Shutdown returns the flush error when it can't write to DB (after retries).
 	err := e.Shutdown()
 	assert.Error(t, err, "should fail flushing to dropped table")
-
 }
 
 func TestFlushLoop_TickerFires(t *testing.T) {
@@ -471,8 +442,7 @@ func TestFlushLoop_TickerFires(t *testing.T) {
 	assert.Equal(t, 0, e.Len(), "buffer should be drained by ticker-triggered flush")
 }
 
-
-
+// ---------------------------------------------------------------------------
 // flush / flushAggregates / flushLoop
 // ---------------------------------------------------------------------------
 

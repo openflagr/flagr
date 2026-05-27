@@ -2,13 +2,14 @@ package handler
 
 import (
 	"fmt"
+	"slices"
 	"testing"
 	"time"
-	"github.com/go-openapi/strfmt"
 
+	"github.com/go-openapi/strfmt"
 	"github.com/openflagr/flagr/pkg/config"
 	"github.com/openflagr/flagr/pkg/entity"
-	"github.com/openflagr/flagr/swagger_gen/restapi/operations/datar"
+	datarapi "github.com/openflagr/flagr/swagger_gen/restapi/operations/datar"
 	"github.com/prashantv/gostub"
 	"github.com/stretchr/testify/assert"
 )
@@ -48,13 +49,13 @@ func TestDatarEndpoints_QueryError(t *testing.T) {
 	}
 
 	// Summary endpoint should return 500.
-	resp := HandleGetDatarSummary(datar.GetDatarSummaryParams{})
-	_, ok := resp.(*datar.GetDatarSummaryDefault)
+	resp := HandleGetDatarSummary(datarapi.GetDatarSummaryParams{})
+	_, ok := resp.(*datarapi.GetDatarSummaryDefault)
 	assert.True(t, ok, "expected 500 when query fails")
 
 	// Flag summary endpoint should return 500.
-	flagResp := HandleGetDatarFlagSummary(datar.GetDatarFlagSummaryParams{FlagID: 1})
-	_, ok = flagResp.(*datar.GetDatarFlagSummaryDefault)
+	flagResp := HandleGetDatarFlagSummary(datarapi.GetDatarFlagSummaryParams{FlagID: 1})
+	_, ok = flagResp.(*datarapi.GetDatarFlagSummaryDefault)
 	assert.True(t, ok, "expected 500 when query fails")
 }
 
@@ -83,12 +84,12 @@ func TestDatarEndpoints_Summary(t *testing.T) {
 	assert.NoError(t, db.Exec(`INSERT INTO datar_hourly_events (flag_id, variant_id, segment_id, bucket_hour, eval_count) VALUES (1, 2, 10, ?, 50)`, now).Error)
 
 	// Flag 2 has no hourly data — only flags with traffic appear.
-	resp := HandleGetDatarSummary(datar.GetDatarSummaryParams{})
+	resp := HandleGetDatarSummary(datarapi.GetDatarSummaryParams{})
 	assert.NotNil(t, resp)
 
-	okResp, ok := resp.(*datar.GetDatarSummaryOK)
+	okResp, ok := resp.(*datarapi.GetDatarSummaryOK)
 	if !ok {
-		t.Fatalf("expected *datar.GetDatarSummaryOK, got %T", resp)
+		t.Fatalf("expected *datarapi.GetDatarSummaryOK, got %T", resp)
 	}
 
 	assert.Len(t, okResp.Payload.Flags, 1, "only flag 1 has traffic data")
@@ -127,12 +128,12 @@ func TestDatarEndpoints_FlagSummary(t *testing.T) {
 	assert.NoError(t, db.Exec(`INSERT INTO datar_hourly_events (flag_id, variant_id, segment_id, bucket_hour, eval_count) VALUES (1, 2, 10, ?, 50)`, now).Error)
 	assert.NoError(t, db.Exec(`INSERT INTO datar_hourly_events (flag_id, variant_id, segment_id, bucket_hour, eval_count) VALUES (1, 1, 10, ?, 25)`, prev).Error)
 
-	resp := HandleGetDatarFlagSummary(datar.GetDatarFlagSummaryParams{FlagID: 1})
+	resp := HandleGetDatarFlagSummary(datarapi.GetDatarFlagSummaryParams{FlagID: 1})
 	assert.NotNil(t, resp)
 
-	okResp, ok := resp.(*datar.GetDatarFlagSummaryOK)
+	okResp, ok := resp.(*datarapi.GetDatarFlagSummaryOK)
 	if !ok {
-		t.Fatalf("expected *datar.GetDatarFlagSummaryOK, got %T", resp)
+		t.Fatalf("expected *datarapi.GetDatarFlagSummaryOK, got %T", resp)
 	}
 
 	assert.Equal(t, int64(1), okResp.Payload.FlagID)
@@ -155,12 +156,12 @@ func TestDatarEndpoints_NotEnabled(t *testing.T) {
 	defer gostub.Stub(&config.Config.RecorderType, []string{"kafka"}).Reset()
 
 	// When Datar is not enabled, GetDatar() returns nil and handlers return 503.
-	resp := HandleGetDatarSummary(datar.GetDatarSummaryParams{})
-	_, ok := resp.(*datar.GetDatarSummaryDefault)
+	resp := HandleGetDatarSummary(datarapi.GetDatarSummaryParams{})
+	_, ok := resp.(*datarapi.GetDatarSummaryDefault)
 	assert.True(t, ok, "expected 503 response when datar disabled")
 
-	flagResp := HandleGetDatarFlagSummary(datar.GetDatarFlagSummaryParams{FlagID: 1})
-	_, ok = flagResp.(*datar.GetDatarFlagSummaryDefault)
+	flagResp := HandleGetDatarFlagSummary(datarapi.GetDatarFlagSummaryParams{FlagID: 1})
+	_, ok = flagResp.(*datarapi.GetDatarFlagSummaryDefault)
 	assert.True(t, ok, "expected 503 response when datar disabled")
 }
 
@@ -197,12 +198,12 @@ func TestDatarEndpoints_Pagination(t *testing.T) {
 	limit := int32(2)
 	offset := int32(1)
 
-	resp := HandleGetDatarSummary(datar.GetDatarSummaryParams{Limit: &limit, Offset: &offset})
+	resp := HandleGetDatarSummary(datarapi.GetDatarSummaryParams{Limit: &limit, Offset: &offset})
 	assert.NotNil(t, resp)
 
-	okResp, ok := resp.(*datar.GetDatarSummaryOK)
+	okResp, ok := resp.(*datarapi.GetDatarSummaryOK)
 	if !ok {
-		t.Fatalf("expected *datar.GetDatarSummaryOK, got %T", resp)
+		t.Fatalf("expected *datarapi.GetDatarSummaryOK, got %T", resp)
 	}
 
 	if assert.Len(t, okResp.Payload.Flags, 2) {
@@ -215,10 +216,10 @@ func TestDatarEndpoints_Pagination(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// hasDatar helper
+// slices.Contains (replaces hasDatar)
 // ---------------------------------------------------------------------------
 
-func TestHasDatar(t *testing.T) {
+func TestSlicesContainsDatar(t *testing.T) {
 	tests := []struct {
 		name  string
 		types []string
@@ -233,7 +234,7 @@ func TestHasDatar(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := hasDatar(tt.types)
+			got := slices.Contains(tt.types, "datar")
 			assert.Equal(t, tt.want, got)
 		})
 	}

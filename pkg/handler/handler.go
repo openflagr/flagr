@@ -1,7 +1,7 @@
 package handler
 
 import (
-
+	"slices"
 
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/openflagr/flagr/pkg/config"
@@ -11,7 +11,6 @@ import (
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/constraint"
 	datarapi "github.com/openflagr/flagr/swagger_gen/restapi/operations/datar"
-
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/distribution"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/evaluation"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/export"
@@ -93,7 +92,7 @@ func setupEvaluation(api *operations.FlagrAPI) {
 }
 
 func setupDatar(api *operations.FlagrAPI) {
-	if !config.Config.RecorderEnabled || !hasDatar(config.Config.RecorderType) {
+	if !config.Config.RecorderEnabled || !slices.Contains(config.Config.RecorderType, "datar") {
 		return
 	}
 

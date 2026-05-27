@@ -1,11 +1,11 @@
 package datar
 
 import (
+	"errors"
 	"sort"
 	"sync"
 	"sync/atomic"
 	"time"
-	"errors"
 
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
@@ -14,6 +14,8 @@ import (
 	"github.com/openflagr/flagr/pkg/entity"
 )
 
+const flushRetries = 3
+
 var errNilEngine = errors.New("datar: engine is nil")
 
 // FlushKey identifies one aggregate dimension set for the in-memory buffer.
@@ -21,7 +23,7 @@ type FlushKey struct {
 	FlagID    int64
 	VariantID int64
 	SegmentID int64
-	Hour      time.Time
+	Hour      time.Time // Truncated to the hour so struct equality works as a sync.Map key.
 }
 
 // SummaryRow is a single flag's aggregate summary for the list view.
@@ -32,14 +34,6 @@ type SummaryRow struct {
 	Description    string
 	TotalEvalCount int64
 	LastEvaluated  string
-}
-
-// RawEvent is a raw row from datar_hourly_events.
-type RawEvent struct {
-	VariantID  int64
-	SegmentID  int64
-	BucketHour string
-	EvalCount  int32
 }
 
 // VariantEntry is one variant's aggregated count.
@@ -72,11 +66,7 @@ type FlagSummaryBreakdown struct {
 // It aggregates evaluation counts in-memory, periodically flushes to the DB,
 // and serves aggregate queries — all in one self-contained struct.
 type Engine struct {
-	enabled bool
-
-	mu     sync.RWMutex
-	buffer map[FlushKey]*int32
-	closed atomic.Bool
+	buffer sync.Map // FlushKey → *int32
 
 	db          *gorm.DB
 	addEvalExpr string
@@ -85,6 +75,7 @@ type Engine struct {
 	closeCh       chan struct{}
 	wg            sync.WaitGroup
 	shutdownOnce  sync.Once
+	closed        atomic.Bool
 }
 
 // New creates an Engine and starts its flush loop.
@@ -100,8 +91,6 @@ func New(db *gorm.DB, enabled bool, flushInterval time.Duration) *Engine {
 	}
 
 	e := &Engine{
-		enabled:       true,
-		buffer:        make(map[FlushKey]*int32),
 		db:            db,
 		addEvalExpr:   addEvalExpr,
 		flushInterval: flushInterval,
@@ -128,44 +117,22 @@ func (e *Engine) Record(flagID, variantID, segmentID int64) {
 		Hour:      time.Now().Truncate(time.Hour),
 	}
 
-	// Fast path: existing key under RLock.
-	e.mu.RLock()
-	ptr, ok := e.buffer[key]
-	e.mu.RUnlock()
-	if ok {
-		atomic.AddInt32(ptr, 1)
-		return
-	}
-
-	// Slow path: new key under WLock with double-check.
-	e.mu.Lock()
-	if ptr, ok = e.buffer[key]; ok {
-		e.mu.Unlock()
-		atomic.AddInt32(ptr, 1)
-		return
-	}
-	var zero int32
-	e.buffer[key] = &zero
-	e.mu.Unlock()
-	atomic.AddInt32(&zero, 1)
+	actual, _ := e.buffer.LoadOrStore(key, new(int32))
+	atomic.AddInt32(actual.(*int32), 1)
 }
 
-// SnapshotAndReset swaps the buffer under lock and returns frozen counts.
-// After this call, the returned map is safe to read without holding the lock.
+// SnapshotAndReset drains the buffer and returns frozen counts.
+// The returned map is safe to read without holding any lock.
 func (e *Engine) SnapshotAndReset() map[FlushKey]int32 {
 	if e == nil {
 		return nil
 	}
-	e.mu.Lock()
-	defer e.mu.Unlock()
-
-	old := e.buffer
-	e.buffer = make(map[FlushKey]*int32, len(old))
-
-	result := make(map[FlushKey]int32, len(old))
-	for k, ptr := range old {
-		result[k] = atomic.LoadInt32(ptr)
-	}
+	result := make(map[FlushKey]int32)
+	e.buffer.Range(func(k, v any) bool {
+		result[k.(FlushKey)] = atomic.LoadInt32(v.(*int32))
+		e.buffer.Delete(k)
+		return true
+	})
 	return result
 }
 
@@ -174,9 +141,12 @@ func (e *Engine) Len() int {
 	if e == nil {
 		return 0
 	}
-	e.mu.RLock()
-	defer e.mu.RUnlock()
-	return len(e.buffer)
+	n := 0
+	e.buffer.Range(func(_, _ any) bool {
+		n++
+		return true
+	})
+	return n
 }
 
 // QuerySummary returns all flags with traffic totals in the given time range.
@@ -205,50 +175,44 @@ func (e *Engine) QuerySummary(from, to time.Time, limit, offset int) ([]SummaryR
 	return rows, nil
 }
 
-// QueryFlagSummary returns raw event rows for a single flag.
-func (e *Engine) QueryFlagSummary(flagID int64, from, to time.Time) ([]RawEvent, error) {
+// QueryFlagSummaryBreakdown returns the pre-aggregated breakdown for a single flag.
+// It queries raw event rows and aggregates them into variant, segment, and day buckets,
+// sorted by count descending (variants, segments) or by date ascending (days).
+func (e *Engine) QueryFlagSummaryBreakdown(flagID int64, from, to time.Time) (*FlagSummaryBreakdown, error) {
 	if e == nil {
 		return nil, errNilEngine
 	}
-	var rows []RawEvent
+
+	var rawRows []struct {
+		VariantID  int64
+		SegmentID  int64
+		BucketHour string
+		EvalCount  int32
+	}
 	err := e.db.Model(&entity.HourlyEvent{}).
 		Select("variant_id, segment_id, bucket_hour, eval_count").
 		Where("flag_id = ? AND bucket_hour >= ? AND bucket_hour < ?", flagID, from, to).
-		Scan(&rows).Error
+		Scan(&rawRows).Error
 	if err != nil {
-		logrus.WithError(err).Error("Datar: QueryFlagSummary failed")
-		return nil, err
-	}
-	return rows, nil
-}
-// QueryFlagSummaryBreakdown returns the pre-aggregated breakdown for a single flag.
-// It aggregates the raw event rows into variant, segment, and day buckets,
-// sorted by count descending (variants, segments) or by date ascending (days).
-func (e *Engine) QueryFlagSummaryBreakdown(flagID int64, from, to time.Time) (*FlagSummaryBreakdown, error) {
-	rows, err := e.QueryFlagSummary(flagID, from, to)
-	if err != nil {
+		logrus.WithError(err).Error("Datar: QueryFlagSummaryBreakdown failed")
 		return nil, err
 	}
 
-	// Aggregate raw rows into three bucket types in a single pass.
+	// Aggregate into three bucket types in a single pass.
 	variantTotals := make(map[int64]int64)
 	segIDs := make(map[int64]int64)
 	dayCounts := make(map[string]int64)
 
-	for _, r := range rows {
+	for _, r := range rawRows {
 		variantTotals[r.VariantID] += int64(r.EvalCount)
-
 		if r.SegmentID > 0 {
 			segIDs[r.SegmentID] += int64(r.EvalCount)
 		}
-
-		// BucketHour from the driver is RFC 3339; extract YYYY-MM-DD.
 		if len(r.BucketHour) >= 10 {
 			dayCounts[r.BucketHour[:10]] += int64(r.EvalCount)
 		}
 	}
 
-	// Variant entries sorted by count descending.
 	variants := make([]VariantEntry, 0, len(variantTotals))
 	for id, count := range variantTotals {
 		variants = append(variants, VariantEntry{VariantID: id, Count: count})
@@ -257,7 +221,6 @@ func (e *Engine) QueryFlagSummaryBreakdown(flagID int64, from, to time.Time) (*F
 		return variants[i].Count > variants[j].Count
 	})
 
-	// Segment entries sorted by count descending.
 	segs := make([]SegmentEntry, 0, len(segIDs))
 	for id, count := range segIDs {
 		segs = append(segs, SegmentEntry{SegmentID: id, Count: count})
@@ -266,7 +229,6 @@ func (e *Engine) QueryFlagSummaryBreakdown(flagID int64, from, to time.Time) (*F
 		return segs[i].Count > segs[j].Count
 	})
 
-	// Day entries sorted by date.
 	days := make([]DayEntry, 0, len(dayCounts))
 	for dateStr, count := range dayCounts {
 		days = append(days, DayEntry{Date: dateStr, Count: count})
@@ -299,7 +261,7 @@ func (e *Engine) Shutdown() error {
 		agg := e.SnapshotAndReset()
 		if len(agg) > 0 {
 			logrus.WithField("keys", len(agg)).Info("Datar: flushing remaining aggregates on shutdown")
-			if err := e.flushAggregates(agg); err != nil {
+			if err := e.flushWithRetry(agg); err != nil {
 				logrus.WithError(err).Error("Datar: shutdown flush failed, data may be lost")
 				shutdownErr = err
 				return
@@ -327,14 +289,28 @@ func (e *Engine) flushLoop() {
 }
 
 func (e *Engine) flush() {
-	if e.Len() == 0 {
+	agg := e.SnapshotAndReset()
+	if len(agg) == 0 {
 		return
 	}
-	agg := e.SnapshotAndReset()
 	logrus.WithField("keys", len(agg)).Debug("Datar: flushing aggregates")
-	if err := e.flushAggregates(agg); err != nil {
-		logrus.WithError(err).Error("Datar: flush failed, data in this cycle may be lost")
+	if err := e.flushWithRetry(agg); err != nil {
+		logrus.WithError(err).Error("Datar: flush failed after retries, data in this cycle is lost")
 	}
+}
+
+// flushWithRetry attempts to flush aggregates up to flushRetries times
+// before giving up. This is best-effort: if the container restarts,
+// in-flight aggregates are lost regardless.
+func (e *Engine) flushWithRetry(agg map[FlushKey]int32) error {
+	var err error
+	for attempt := 1; attempt <= flushRetries; attempt++ {
+		if err = e.flushAggregates(agg); err == nil {
+			return nil
+		}
+		logrus.WithError(err).WithField("attempt", attempt).Warn("Datar: flush attempt failed")
+	}
+	return err
 }
 
 // flushAggregates writes the snapshot to the DB using additive UPSERT.
@@ -370,4 +346,3 @@ func (e *Engine) flushAggregates(agg map[FlushKey]int32) error {
 		}},
 	}).Create(&records).Error
 }
-

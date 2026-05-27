@@ -2,14 +2,63 @@ package handler
 
 import (
 	"fmt"
+	"slices"
+	"sync"
 	"time"
 
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
+	"github.com/openflagr/flagr/pkg/config"
+	"github.com/openflagr/flagr/pkg/datar"
 	"github.com/openflagr/flagr/swagger_gen/models"
-	"github.com/openflagr/flagr/swagger_gen/restapi/operations/datar"
+	datarapi "github.com/openflagr/flagr/swagger_gen/restapi/operations/datar"
 	"github.com/sirupsen/logrus"
 )
+
+// ---------------------------------------------------------------------------
+// Singleton engine lifecycle
+// ---------------------------------------------------------------------------
+
+var (
+	singletonEngine   *datar.Engine
+	singletonEngineMu sync.Mutex
+)
+
+// GetDatar returns the singleton datar.Engine.
+// Creates the instance on first call, starting its flush loop.
+// Returns nil if Datar is not enabled.
+func GetDatar() *datar.Engine {
+	singletonEngineMu.Lock()
+	defer singletonEngineMu.Unlock()
+	if singletonEngine != nil {
+		return singletonEngine
+	}
+	if !config.Config.RecorderEnabled || !slices.Contains(config.Config.RecorderType, "datar") {
+		return nil
+	}
+	singletonEngine = datar.New(
+		getDB(),
+		true,
+		config.Config.RecorderDatarFlushInterval,
+	)
+	return singletonEngine
+}
+
+// ResetDatar clears the singleton for test isolation.
+func ResetDatar() {
+	singletonEngineMu.Lock()
+	defer singletonEngineMu.Unlock()
+	if singletonEngine != nil {
+		singletonEngine.Shutdown()
+		singletonEngine = nil
+	}
+}
+
+const defaultLookbackDays = 7
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
 func datarError(msg string, args ...interface{}) *models.Error {
 	m := fmt.Sprintf(msg, args...)
@@ -29,16 +78,58 @@ func parseTimeRange(from, to *strfmt.DateTime, defaultDays int) (time.Time, time
 	return start, end
 }
 
+// toSwaggerSummaryFlag converts an engine SummaryRow to a swagger model.
+func toSwaggerSummaryFlag(r datar.SummaryRow) *models.DatarSummaryFlag {
+	f := &models.DatarSummaryFlag{
+		FlagID:         r.FlagID,
+		FlagKey:        r.FlagKey,
+		Enabled:        r.Enabled,
+		Description:    r.Description,
+		TotalEvalCount: r.TotalEvalCount,
+	}
+	if r.LastEvaluated != "" {
+		if t, err := time.Parse(time.RFC3339, r.LastEvaluated); err == nil {
+			f.LastEvaluatedAt = strfmt.DateTime(t)
+		}
+	}
+	return f
+}
+
+// toSwaggerVariant converts an engine VariantEntry to a swagger model.
+func toSwaggerVariant(v datar.VariantEntry) *models.DatarVariantEntry {
+	return &models.DatarVariantEntry{VariantID: v.VariantID, Count: v.Count}
+}
+
+// toSwaggerSegment converts an engine SegmentEntry to a swagger model.
+func toSwaggerSegment(s datar.SegmentEntry) *models.DatarSegmentEntry {
+	return &models.DatarSegmentEntry{SegmentID: s.SegmentID, Count: s.Count}
+}
+
+// toSwaggerDay converts an engine DayEntry to a swagger model.
+// Returns nil if the date string is unparseable.
+func toSwaggerDay(d datar.DayEntry) *models.DatarDayEntry {
+	t, err := time.Parse("2006-01-02", d.Date)
+	if err != nil {
+		logrus.WithError(err).WithField("date", d.Date).Warn("Datar: invalid date in time bucket")
+		return nil
+	}
+	return &models.DatarDayEntry{Date: strfmt.Date(t), Count: d.Count}
+}
+
+// ---------------------------------------------------------------------------
+// HTTP handlers
+// ---------------------------------------------------------------------------
+
 // HandleGetDatarSummary is the handler for GET /datar/summary.
-func HandleGetDatarSummary(params datar.GetDatarSummaryParams) middleware.Responder {
+func HandleGetDatarSummary(params datarapi.GetDatarSummaryParams) middleware.Responder {
 	d := GetDatar()
 	if d == nil {
-		return datar.NewGetDatarSummaryDefault(503).WithPayload(
+		return datarapi.NewGetDatarSummaryDefault(503).WithPayload(
 			datarError("Datar is not enabled"),
 		)
 	}
 
-	from, to := parseTimeRange(params.From, params.To, 7)
+	from, to := parseTimeRange(params.From, params.To, defaultLookbackDays)
 
 	limit := 100
 	if params.Limit != nil {
@@ -52,87 +143,61 @@ func HandleGetDatarSummary(params datar.GetDatarSummaryParams) middleware.Respon
 	rows, err := d.QuerySummary(from, to, limit, offset)
 	if err != nil {
 		logrus.WithError(err).Error("Datar: QuerySummary failed")
-		return datar.NewGetDatarSummaryDefault(500).WithPayload(
+		return datarapi.NewGetDatarSummaryDefault(500).WithPayload(
 			datarError("query failed: %s", err),
 		)
 	}
+
 	flags := make([]*models.DatarSummaryFlag, len(rows))
 	for i, r := range rows {
-		flag := &models.DatarSummaryFlag{
-			FlagID:         r.FlagID,
-			FlagKey:        r.FlagKey,
-			Enabled:        r.Enabled,
-			Description:    r.Description,
-			TotalEvalCount: r.TotalEvalCount,
-		}
-		if r.LastEvaluated != "" {
-			t, err := time.Parse(time.RFC3339, r.LastEvaluated)
-			if err == nil {
-				flag.LastEvaluatedAt = strfmt.DateTime(t)
-			}
-		}
-		flags[i] = flag
+		flags[i] = toSwaggerSummaryFlag(r)
 	}
 
-	return datar.NewGetDatarSummaryOK().WithPayload(
+	return datarapi.NewGetDatarSummaryOK().WithPayload(
 		&models.DatarSummaryResponse{Flags: flags},
 	)
 }
 
-func HandleGetDatarFlagSummary(params datar.GetDatarFlagSummaryParams) middleware.Responder {
+// HandleGetDatarFlagSummary is the handler for GET /datar/flags/{flagID}/summary.
+func HandleGetDatarFlagSummary(params datarapi.GetDatarFlagSummaryParams) middleware.Responder {
 	d := GetDatar()
 	if d == nil {
-		return datar.NewGetDatarFlagSummaryDefault(503).WithPayload(
+		return datarapi.NewGetDatarFlagSummaryDefault(503).WithPayload(
 			datarError("Datar is not enabled"),
 		)
 	}
 
-	from, to := parseTimeRange(params.From, params.To, 7)
+	from, to := parseTimeRange(params.From, params.To, defaultLookbackDays)
 
 	summary, err := d.QueryFlagSummaryBreakdown(params.FlagID, from, to)
 	if err != nil {
 		logrus.WithError(err).Error("Datar: QueryFlagSummaryBreakdown failed")
-		return datar.NewGetDatarFlagSummaryDefault(500).WithPayload(
+		return datarapi.NewGetDatarFlagSummaryDefault(500).WithPayload(
 			datarError("query failed: %s", err),
 		)
 	}
 
-	// Convert engine types to swagger models.
 	variants := make([]*models.DatarVariantEntry, len(summary.Variants))
 	for i, v := range summary.Variants {
-		variants[i] = &models.DatarVariantEntry{
-			VariantID: v.VariantID,
-			Count:     v.Count,
-		}
+		variants[i] = toSwaggerVariant(v)
 	}
 
 	segs := make([]*models.DatarSegmentEntry, len(summary.Segments))
 	for i, s := range summary.Segments {
-		segs[i] = &models.DatarSegmentEntry{
-			SegmentID: s.SegmentID,
-			Count:     s.Count,
-		}
+		segs[i] = toSwaggerSegment(s)
 	}
 
 	days := make([]*models.DatarDayEntry, 0, len(summary.Days))
 	for _, d := range summary.Days {
-		t, err := time.Parse("2006-01-02", d.Date)
-		if err != nil {
-			logrus.WithError(err).WithField("date", d.Date).Warn("Datar: invalid date in time bucket")
-			continue
+		if entry := toSwaggerDay(d); entry != nil {
+			days = append(days, entry)
 		}
-		days = append(days, &models.DatarDayEntry{
-			Date:  strfmt.Date(t),
-			Count: d.Count,
-		})
 	}
 
-	resp := &models.DatarFlagSummaryResponse{
+	return datarapi.NewGetDatarFlagSummaryOK().WithPayload(&models.DatarFlagSummaryResponse{
 		FlagID:           summary.FlagID,
 		TrafficByVariant: variants,
 		TrafficBySegment: segs,
 		TrafficByDay:     days,
-	}
-
-	return datar.NewGetDatarFlagSummaryOK().WithPayload(resp)
+	})
 }
