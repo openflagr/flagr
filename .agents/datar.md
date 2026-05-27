@@ -27,9 +27,9 @@ Only flags with actual evaluation events appear in the summary (INNER JOIN, no C
 
 ## Cost
 
-- ~87ns per evaluation on the hot path (existing key), ~98ns for new keys; zero allocations
+- ~8-12ns per evaluation on the hot path (sync.Map LoadOrStore + atomic.AddInt32); zero allocations
 - ~210 bytes per active (flag, variant, segment) tuple; ~2.1 MB for 10K keys
-- One DB batch transaction every flush interval
+- One DB batch transaction every flush interval (3 retries on failure)
 - Table grows ~2.4K rows/month per 100 flags (no retention)
 
 ## Architecture
@@ -42,7 +42,7 @@ GetDataRecorder().AsyncRecord()
        │                                         │
        │                                    Engine.flushLoop()
        │                                         │ every FLAGR_RECORDER_DATAR_FLUSH_INTERVAL
-       │                                    [Buffer snapshot → GORM UPSERT]
+       │                                    [Buffer snapshot → GORM UPSERT (3 retries)]
        │                                         │  datar_hourly_events
        │                                         │
        │                                    Engine.QuerySummary / QueryFlagSummaryBreakdown
@@ -53,9 +53,11 @@ GetDataRecorder().AsyncRecord()
 
 - **`NewDatarRecorder()`** — constructor matching `NewKafkaRecorder()` pattern. Registered in `GetDataRecorder()` switch.
 - **`RecorderEnabled` master switch** — `false` (default) disables all recorders including Datar.
+- **sync.Map buffer.** `Record()` is a single `LoadOrStore` + `atomic.AddInt32`. No RWMutex contention.
+- **Flush with retry.** `flushWithRetry` attempts 3 times before giving up. Best-effort semantics.
 - **In-memory only.** No WAL, no files, no recovery. On crash, ≤1 flush interval of data is lost.
 - **Multi-instance.** Each instance flushes independently. Additive UPSERT sums correctly.
-- **Aggregation in Engine.** `QueryFlagSummaryBreakdown` pre-aggregates variant/segment/day buckets; handlers are thin pass-through.
+- **Aggregation in Engine.** `QueryFlagSummaryBreakdown` pre-aggregates variant/segment/day buckets; handlers are thin pass-through with `toSwagger*` converters.
 - **No coordination.** No sequence numbers, no flush-log table.
 - **Eval cache dependency.** Flags must be loaded by the eval cache (~3s refresh) before evaluations reach Datar.
 
@@ -63,13 +65,12 @@ GetDataRecorder().AsyncRecord()
 
 ```
 pkg/datar/
-├── engine.go              — Engine: buffer, flush loop, queries, nil-safe methods
+├── engine.go              — Engine: sync.Map buffer, flush loop, flushWithRetry, queries, nil-safe methods
 ├── engine_test.go         — tests
 
 pkg/handler/
-├── datar.go               — GetDatar singleton, ResetDatar (test helper)
-├── datar_handler.go       — go-swagger handler implementations
-├── datar_test.go          — endpoint tests
+├── datar_handler.go       — GetDatar singleton, ResetDatar, HTTP handlers, toSwagger* converters, defaultLookbackDays
+├── datar_test.go          — endpoint tests, converter edge cases
 ├── data_recorder_datar.go — NewDatarRecorder constructor, datarRecorder adapter
 
 pkg/entity/datar.go        — HourlyEvent GORM model
