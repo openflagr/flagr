@@ -475,3 +475,33 @@ func TestFlushAggregates_Empty(t *testing.T) {
 	assert.NoError(t, e.flushAggregates(nil))
 	assert.NoError(t, e.flushAggregates(map[FlushKey]int32{}))
 }
+
+func TestQueryFlagSummaryBreakdown_MultipleSegments(t *testing.T) {
+	db := newTestDB(t)
+	createFlag(t, db, 1, "f1", "flag1", true)
+
+	e := New(db, true, time.Hour)
+	if e == nil {
+		t.Fatal("expected non-nil engine")
+	}
+	defer e.Shutdown()
+
+	now := time.Now().UTC().Truncate(time.Hour)
+
+	// Two segments with different counts — exercises segment sort path.
+	assert.NoError(t, db.Exec(`INSERT INTO datar_hourly_events (flag_id, variant_id, segment_id, bucket_hour, eval_count) VALUES (1, 1, 10, ?, 200)`, now).Error)
+	assert.NoError(t, db.Exec(`INSERT INTO datar_hourly_events (flag_id, variant_id, segment_id, bucket_hour, eval_count) VALUES (1, 1, 20, ?, 50)`, now).Error)
+
+	summary, err := e.QueryFlagSummaryBreakdown(1, now.Add(-time.Hour), now.Add(time.Hour))
+	assert.NoError(t, err)
+	assert.Len(t, summary.Variants, 1)
+	assert.Equal(t, int64(1), summary.Variants[0].VariantID)
+
+	// Segment 10 (200) > segment 20 (50) — sorted descending.
+	if assert.Len(t, summary.Segments, 2) {
+		assert.Equal(t, int64(10), summary.Segments[0].SegmentID)
+		assert.Equal(t, int64(200), summary.Segments[0].Count)
+		assert.Equal(t, int64(20), summary.Segments[1].SegmentID)
+		assert.Equal(t, int64(50), summary.Segments[1].Count)
+	}
+}

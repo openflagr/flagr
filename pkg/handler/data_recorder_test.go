@@ -3,8 +3,10 @@ package handler
 import (
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/openflagr/flagr/pkg/config"
+	"github.com/openflagr/flagr/pkg/entity"
 	"github.com/openflagr/flagr/swagger_gen/models"
 
 	"github.com/prashantv/gostub"
@@ -48,7 +50,6 @@ func TestGetDataRecorderPanicsWhenRecorderIsInvalid(t *testing.T) {
 	singletonDataRecorderOnce = sync.Once{}
 	config.Config.RecorderType = []string{"invalid"}
 	config.Config.RecorderEnabled = true
-
 
 	assert.Panics(t, func() {
 		GetDataRecorder()
@@ -132,4 +133,39 @@ func TestGetDataRecorderWithKafkaDefault(t *testing.T) {
 	assert.NotPanics(t, func() {
 		GetDataRecorder()
 	})
+}
+
+// ---------------------------------------------------------------------------
+// datarRecorder
+// ---------------------------------------------------------------------------
+
+func TestDatarRecorder_AsyncRecord(t *testing.T) {
+	defer ResetDatar()
+
+	defer gostub.Stub(&config.Config.RecorderType, []string{"datar"}).Reset()
+	defer gostub.Stub(&config.Config.RecorderEnabled, true).Reset()
+	defer gostub.Stub(&config.Config.RecorderDatarFlushInterval, 24*time.Hour).Reset()
+
+	db := entity.NewTestDB()
+	defer gostub.StubFunc(&getDB, db).Reset()
+	db.AutoMigrate(entity.AutoMigrateTables...)
+
+	r := NewDatarRecorder()
+	assert.NotNil(t, r)
+
+	// Record some events.
+	r.AsyncRecord(models.EvalResult{FlagID: 1, VariantID: 10, SegmentID: 20})
+	r.AsyncRecord(models.EvalResult{FlagID: 1, VariantID: 10, SegmentID: 20})
+	r.AsyncRecord(models.EvalResult{FlagID: 2, VariantID: 1, SegmentID: 5})
+
+	// Verify engine buffer has the right counts.
+	d := GetDatar()
+	assert.NotNil(t, d)
+	assert.Equal(t, 2, d.Len(), "2 distinct keys")
+}
+
+func TestDatarRecorder_NewDataRecordFrame(t *testing.T) {
+	r := NewDatarRecorder()
+	frame := r.NewDataRecordFrame(models.EvalResult{})
+	assert.Equal(t, DataRecordFrame{}, frame, "datar recorder returns empty frame")
 }

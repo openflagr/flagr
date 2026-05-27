@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-openapi/strfmt"
 	"github.com/openflagr/flagr/pkg/config"
+	"github.com/openflagr/flagr/pkg/datar"
 	"github.com/openflagr/flagr/pkg/entity"
 	datarapi "github.com/openflagr/flagr/swagger_gen/restapi/operations/datar"
 	"github.com/prashantv/gostub"
@@ -238,4 +239,42 @@ func TestSlicesContainsDatar(t *testing.T) {
 			assert.Equal(t, tt.want, got)
 		})
 	}
+}
+
+// ---------------------------------------------------------------------------
+// Converter edge cases
+// ---------------------------------------------------------------------------
+
+func TestToSwaggerSummaryFlag_WithValidLastEvaluated(t *testing.T) {
+	r := datar.SummaryRow{
+		FlagID:         42,
+		FlagKey:        "my-flag",
+		Enabled:        true,
+		TotalEvalCount: 1000,
+		LastEvaluated:  "2024-06-15T10:30:00Z",
+	}
+	f := toSwaggerSummaryFlag(r)
+	assert.Equal(t, int64(42), f.FlagID)
+	assert.Equal(t, "my-flag", f.FlagKey)
+	assert.Equal(t, int64(1000), f.TotalEvalCount)
+	assert.False(t, f.LastEvaluatedAt.IsZero(), "should parse RFC3339 date")
+}
+
+func TestToSwaggerSummaryFlag_EmptyLastEvaluated(t *testing.T) {
+	r := datar.SummaryRow{FlagID: 1, LastEvaluated: ""}
+	f := toSwaggerSummaryFlag(r)
+	assert.True(t, f.LastEvaluatedAt.IsZero(), "empty string should leave zero value")
+}
+
+func TestToSwaggerDay_InvalidDate(t *testing.T) {
+	d := datar.DayEntry{Date: "not-a-date", Count: 10}
+	entry := toSwaggerDay(d)
+	assert.Nil(t, entry, "unparseable date should return nil")
+}
+
+func TestToSwaggerDay_ValidDate(t *testing.T) {
+	d := datar.DayEntry{Date: "2024-01-15", Count: 42}
+	entry := toSwaggerDay(d)
+	assert.NotNil(t, entry)
+	assert.Equal(t, int64(42), entry.Count)
 }
