@@ -47,6 +47,7 @@ func setupCRUD(api *operations.FlagrAPI) {
 	api.FlagSetFlagEnabledHandler = flag.SetFlagEnabledHandlerFunc(c.SetFlagEnabledState)
 	api.FlagGetFlagSnapshotsHandler = flag.GetFlagSnapshotsHandlerFunc(c.GetFlagSnapshots)
 	api.FlagGetFlagEntityTypesHandler = flag.GetFlagEntityTypesHandlerFunc(c.GetFlagEntityTypes)
+	api.FlagGetFlagSnapshotMaxIDHandler = flag.GetFlagSnapshotMaxIDHandlerFunc(c.GetFlagSnapshotMaxID)
 
 	api.TagCreateTagHandler = tag.CreateTagHandlerFunc(c.CreateTag)
 	api.TagDeleteTagHandler = tag.DeleteTagHandlerFunc(c.DeleteTag)

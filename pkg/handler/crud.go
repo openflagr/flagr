@@ -16,6 +16,7 @@ import (
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/segment"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/tag"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/variant"
+	"github.com/openflagr/flagr/swagger_gen/models"
 
 	"github.com/go-openapi/runtime/middleware"
 	"gorm.io/gorm"
@@ -34,6 +35,7 @@ type CRUD interface {
 	SetFlagEnabledState(flag.SetFlagEnabledParams) middleware.Responder
 	GetFlagSnapshots(params flag.GetFlagSnapshotsParams) middleware.Responder
 	GetFlagEntityTypes(params flag.GetFlagEntityTypesParams) middleware.Responder
+	GetFlagSnapshotMaxID(params flag.GetFlagSnapshotMaxIDParams) middleware.Responder
 
 	//Tags
 	CreateTag(tag.CreateTagParams) middleware.Responder
@@ -220,6 +222,18 @@ func (c *crud) GetFlagEntityTypes(params flag.GetFlagEntityTypesParams) middlewa
 	}
 	resp := flag.NewGetFlagEntityTypesOK()
 	resp.SetPayload(payload)
+	return resp
+}
+
+func (c *crud) GetFlagSnapshotMaxID(params flag.GetFlagSnapshotMaxIDParams) middleware.Responder {
+	var maxID uint
+	if err := getDB().Model(&entity.FlagSnapshot{}).
+		Select("COALESCE(MAX(id), 0)").
+		Scan(&maxID).Error; err != nil {
+		maxID = 0
+	}
+	resp := flag.NewGetFlagSnapshotMaxIDOK()
+	resp.SetPayload(&models.FlagSnapshotMaxID{MaxID: int64(maxID)})
 	return resp
 }
 

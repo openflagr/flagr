@@ -820,6 +820,35 @@ paths:
           description: generic error response
           schema:
             $ref: '#/definitions/error'
+  /flags/snapshots/max_id:
+    get:
+      tags:
+        - flag
+      summary: Get the max flag snapshot ID (config change version)
+      description: >
+        Returns the highest (most recent) flag_snapshot id. flag_snapshot is an
+        append-only changelog — every flag configuration mutation (create,
+        update, delete, restore of flags, segments, variants, constraints,
+        distributions, or tags) inserts a new row with a monotonically
+        increasing id. This makes the max id a lightweight single source of
+        truth for detecting any configuration change.
+
+        Consumers can store this value and poll it periodically: if the value
+        changes, at least one flag's configuration has been modified and caches
+        should be invalidated. This is vastly more efficient than polling the
+        flags list or individual flags.
+      operationId: getFlagSnapshotMaxID
+      responses:
+        '200':
+          description: >-
+            returns the current max flag_snapshot id; poll this value to detect
+            flag configuration changes for cache invalidation
+          schema:
+            $ref: '#/definitions/flagSnapshotMaxID'
+        default:
+          description: generic error response
+          schema:
+            $ref: '#/definitions/error'
   /flags/entity_types:
     get:
       tags:
@@ -1090,6 +1119,12 @@ definitions:
       updatedAt:
         type: string
         minLength: 1
+  flagSnapshotMaxID:
+    type: object
+    properties:
+      maxID:
+        type: integer
+        format: int64
   tag:
     type: object
     required:

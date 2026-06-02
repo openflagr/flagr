@@ -64,7 +64,7 @@
         <div class="flag-field-block flag-tags-block">
           <label class="flag-label">Tags</label>
           <div class="flag-tags-row">
-            <el-tag v-for="tag in flag.tags" :key="tag.id" closable size="small" type="warning" @close="$emit('delete-tag', tag)">{{ tag.value }}</el-tag>
+            <el-tag v-for="tag in flag.tags" :key="tag.id" closable size="small" type="success" @close="$emit('delete-tag', tag)">{{ tag.value }}</el-tag>
             <el-autocomplete v-if="tagInputVisible" v-model="newTagValue" ref="saveTagInput" size="small"
               :trigger-on-focus="false" :fetch-suggestions="queryTags"
               @select="() => $emit('create-tag', { value: newTagValue })"

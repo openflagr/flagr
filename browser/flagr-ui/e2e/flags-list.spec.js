@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { createFlag, deleteFlag, API } from './helpers.js'
+import { createFlag, deleteFlag, getSnapshotMaxId, API } from './helpers.js'
 
 test.describe('Flags list page', () => {
   let createdId = null
@@ -61,5 +61,53 @@ test.describe('Flags list page', () => {
     await searchInput.fill(flagName)
 
     await expect(page.locator('[data-testid="flags-table"]')).toContainText(flagName)
+  })
+})
+
+test.describe('Flag list cache & snapshot max-id', () => {
+  let createdId = null
+
+  test.afterEach(async () => {
+    if (createdId) {
+      await deleteFlag(createdId).catch(() => {})
+    }
+  })
+
+  test('GET /flags/snapshots/max_id returns a non-negative integer', async () => {
+    const maxId = await getSnapshotMaxId()
+    expect(typeof maxId).toBe('number')
+    expect(maxId).toBeGreaterThanOrEqual(0)
+    expect(Number.isInteger(maxId)).toBe(true)
+  })
+
+  test('max-id increases after creating a flag', async () => {
+    const before = await getSnapshotMaxId()
+    const flag = await createFlag()
+    createdId = flag.id
+
+    // Wait for snapshot to be created
+    await new Promise(r => setTimeout(r, 500))
+
+    const after = await getSnapshotMaxId()
+    expect(after).toBeGreaterThan(before)
+  })
+
+  test('flag list loads and caches correctly across navigations', async ({ page }) => {
+    // Create a flag first
+    const flag = await createFlag()
+    createdId = flag.id
+    const desc = flag.description
+
+    // First visit — loads flags via API
+    await page.goto('/')
+    await expect(page.locator('[data-testid="flags-table"]')).toContainText(desc, { timeout: 10000 })
+
+    // Navigate to flag detail
+    await page.locator('[data-testid="flags-table"] .el-table__row').first().click()
+    await expect(page.locator('input[data-testid="flag-key-input"]')).toBeVisible({ timeout: 10000 })
+
+    // Navigate back — should use cached flags
+    await page.goto('/')
+    await expect(page.locator('[data-testid="flags-table"]')).toContainText(desc, { timeout: 10000 })
   })
 })

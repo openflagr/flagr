@@ -1,7 +1,5 @@
 <template>
-  <el-row justify="center">
-    <el-col :xs="22" :sm="20" :md="20" :lg="18" :xl="16">
-      <div class="container flag-container">
+  <div class="container flag-container">
         <el-dialog title="Delete feature flag" v-model="dialogDeleteFlagVisible">
           <span>Are you sure you want to delete this feature flag?</span>
           <template #footer>
@@ -104,8 +102,6 @@
           </el-tabs>
         </div>
       </div>
-    </el-col>
-  </el-row>
 </template>
 
 <script>

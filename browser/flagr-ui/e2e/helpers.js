@@ -70,3 +70,9 @@ export async function waitForSnapshot(flagId, { timeout = 3000 } = {}) {
 function sleep(ms) {
   return new Promise(r => setTimeout(r, ms))
 }
+export async function getSnapshotMaxId() {
+  const r = await fetch(`${API}/flags/snapshots/max_id`)
+  if (!r.ok) throw new Error(`getSnapshotMaxId failed: ${r.status}`)
+  const data = await r.json()
+  return data.maxID
+}

@@ -41,19 +41,19 @@ test-e2e: build
 	@echo "Running Flagr UI e2e tests..."
 	@cd ./browser/flagr-ui/; npx playwright test
 
-.PHONY: stop-ui
 stop-ui:
 	@-kill $$(lsof -ti:18000 2>/dev/null) 2>/dev/null; kill $$(lsof -ti:8080 2>/dev/null) 2>/dev/null; sleep 1; echo "Stopped UI services"
 
 rebuild-run: build stop-ui start
+
 start:
 	$(MAKE) -j run run_ui
 
 gen: api_docs swagger
 
 deps:
-	@CGO_ENABLED=0 go install github.com/go-swagger/go-swagger/cmd/swagger@v0.33.1
-	@CGO_ENABLED=0 go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.8.0
+	@CGO_ENABLED=0 go install github.com/go-swagger/go-swagger/cmd/swagger@v0.33.2
+	@CGO_ENABLED=0 go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
 
 serve_docs:
 	@npm install -g docsify-cli@4
