@@ -10,7 +10,8 @@ import (
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/jsonutils"
+	"github.com/go-openapi/swag/typeutils"
 	"github.com/go-openapi/validate"
 )
 
@@ -87,7 +88,7 @@ func (m *EvaluationBatchRequest) validateEntities(formats strfmt.Registry) error
 	}
 
 	for i := 0; i < len(m.Entities); i++ {
-		if swag.IsZero(m.Entities[i]) { // not required
+		if typeutils.IsZero(m.Entities[i]) { // not required
 			continue
 		}
 
@@ -112,7 +113,7 @@ func (m *EvaluationBatchRequest) validateEntities(formats strfmt.Registry) error
 }
 
 func (m *EvaluationBatchRequest) validateFlagIDs(formats strfmt.Registry) error {
-	if swag.IsZero(m.FlagIDs) { // not required
+	if typeutils.IsZero(m.FlagIDs) { // not required
 		return nil
 	}
 
@@ -134,7 +135,7 @@ func (m *EvaluationBatchRequest) validateFlagIDs(formats strfmt.Registry) error 
 }
 
 func (m *EvaluationBatchRequest) validateFlagKeys(formats strfmt.Registry) error {
-	if swag.IsZero(m.FlagKeys) { // not required
+	if typeutils.IsZero(m.FlagKeys) { // not required
 		return nil
 	}
 
@@ -156,7 +157,7 @@ func (m *EvaluationBatchRequest) validateFlagKeys(formats strfmt.Registry) error
 }
 
 func (m *EvaluationBatchRequest) validateFlagTags(formats strfmt.Registry) error {
-	if swag.IsZero(m.FlagTags) { // not required
+	if typeutils.IsZero(m.FlagTags) { // not required
 		return nil
 	}
 
@@ -207,7 +208,7 @@ func (m *EvaluationBatchRequest) validateFlagTagsOperatorEnum(path, location str
 }
 
 func (m *EvaluationBatchRequest) validateFlagTagsOperator(formats strfmt.Registry) error {
-	if swag.IsZero(m.FlagTagsOperator) { // not required
+	if typeutils.IsZero(m.FlagTagsOperator) { // not required
 		return nil
 	}
 
@@ -239,7 +240,7 @@ func (m *EvaluationBatchRequest) contextValidateEntities(ctx context.Context, fo
 
 		if m.Entities[i] != nil {
 
-			if swag.IsZero(m.Entities[i]) { // not required
+			if typeutils.IsZero(m.Entities[i]) { // not required
 				return nil
 			}
 
@@ -267,13 +268,13 @@ func (m *EvaluationBatchRequest) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	return swag.WriteJSON(m)
+	return jsonutils.WriteJSON(m)
 }
 
 // UnmarshalBinary interface implementation
 func (m *EvaluationBatchRequest) UnmarshalBinary(b []byte) error {
 	var res EvaluationBatchRequest
-	if err := swag.ReadJSON(b, &res); err != nil {
+	if err := jsonutils.ReadJSON(b, &res); err != nil {
 		return err
 	}
 	*m = res

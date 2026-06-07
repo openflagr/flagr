@@ -8,7 +8,7 @@ import (
 	golangswaggerpaths "path"
 	"strings"
 
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/conv"
 )
 
 // DeleteVariantURL generates an URL for the delete variant operation
@@ -42,14 +42,14 @@ func (o *DeleteVariantURL) Build() (*url.URL, error) {
 
 	var _path = "/flags/{flagID}/variants/{variantID}"
 
-	flagID := swag.FormatInt64(o.FlagID)
+	flagID := conv.FormatInteger(o.FlagID)
 	if flagID != "" {
 		_path = strings.ReplaceAll(_path, "{flagID}", flagID)
 	} else {
 		return nil, errors.New("flagId is required on DeleteVariantURL")
 	}
 
-	variantID := swag.FormatInt64(o.VariantID)
+	variantID := conv.FormatInteger(o.VariantID)
 	if variantID != "" {
 		_path = strings.ReplaceAll(_path, "{variantID}", variantID)
 	} else {

@@ -9,7 +9,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/conv"
 )
 
 // NewGetExportSqliteParams creates a new GetExportSqliteParams object
@@ -69,7 +69,7 @@ func (o *GetExportSqliteParams) bindExcludeSnapshots(rawData []string, hasKey bo
 		return nil
 	}
 
-	value, err := swag.ConvertBool(raw)
+	value, err := conv.ConvertBool(raw)
 	if err != nil {
 		return errors.InvalidType("exclude_snapshots", "query", "bool", raw)
 	}

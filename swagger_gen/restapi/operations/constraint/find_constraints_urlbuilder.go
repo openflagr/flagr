@@ -8,7 +8,7 @@ import (
 	golangswaggerpaths "path"
 	"strings"
 
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/conv"
 )
 
 // FindConstraintsURL generates an URL for the find constraints operation
@@ -42,14 +42,14 @@ func (o *FindConstraintsURL) Build() (*url.URL, error) {
 
 	var _path = "/flags/{flagID}/segments/{segmentID}/constraints"
 
-	flagID := swag.FormatInt64(o.FlagID)
+	flagID := conv.FormatInteger(o.FlagID)
 	if flagID != "" {
 		_path = strings.ReplaceAll(_path, "{flagID}", flagID)
 	} else {
 		return nil, errors.New("flagId is required on FindConstraintsURL")
 	}
 
-	segmentID := swag.FormatInt64(o.SegmentID)
+	segmentID := conv.FormatInteger(o.SegmentID)
 	if segmentID != "" {
 		_path = strings.ReplaceAll(_path, "{segmentID}", segmentID)
 	} else {

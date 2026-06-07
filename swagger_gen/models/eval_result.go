@@ -8,7 +8,8 @@ import (
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/jsonutils"
+	"github.com/go-openapi/swag/typeutils"
 )
 
 // EvalResult eval result
@@ -69,7 +70,7 @@ func (m *EvalResult) Validate(formats strfmt.Registry) error {
 }
 
 func (m *EvalResult) validateEvalContext(formats strfmt.Registry) error {
-	if swag.IsZero(m.EvalContext) { // not required
+	if typeutils.IsZero(m.EvalContext) { // not required
 		return nil
 	}
 
@@ -92,7 +93,7 @@ func (m *EvalResult) validateEvalContext(formats strfmt.Registry) error {
 }
 
 func (m *EvalResult) validateEvalDebugLog(formats strfmt.Registry) error {
-	if swag.IsZero(m.EvalDebugLog) { // not required
+	if typeutils.IsZero(m.EvalDebugLog) { // not required
 		return nil
 	}
 
@@ -136,7 +137,7 @@ func (m *EvalResult) contextValidateEvalContext(ctx context.Context, formats str
 
 	if m.EvalContext != nil {
 
-		if swag.IsZero(m.EvalContext) { // not required
+		if typeutils.IsZero(m.EvalContext) { // not required
 			return nil
 		}
 
@@ -161,7 +162,7 @@ func (m *EvalResult) contextValidateEvalDebugLog(ctx context.Context, formats st
 
 	if m.EvalDebugLog != nil {
 
-		if swag.IsZero(m.EvalDebugLog) { // not required
+		if typeutils.IsZero(m.EvalDebugLog) { // not required
 			return nil
 		}
 
@@ -187,13 +188,13 @@ func (m *EvalResult) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	return swag.WriteJSON(m)
+	return jsonutils.WriteJSON(m)
 }
 
 // UnmarshalBinary interface implementation
 func (m *EvalResult) UnmarshalBinary(b []byte) error {
 	var res EvalResult
-	if err := swag.ReadJSON(b, &res); err != nil {
+	if err := jsonutils.ReadJSON(b, &res); err != nil {
 		return err
 	}
 	*m = res

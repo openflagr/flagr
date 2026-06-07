@@ -8,7 +8,7 @@ import (
 	golangswaggerpaths "path"
 	"strings"
 
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/conv"
 )
 
 // DeleteConstraintURL generates an URL for the delete constraint operation
@@ -43,21 +43,21 @@ func (o *DeleteConstraintURL) Build() (*url.URL, error) {
 
 	var _path = "/flags/{flagID}/segments/{segmentID}/constraints/{constraintID}"
 
-	constraintID := swag.FormatInt64(o.ConstraintID)
+	constraintID := conv.FormatInteger(o.ConstraintID)
 	if constraintID != "" {
 		_path = strings.ReplaceAll(_path, "{constraintID}", constraintID)
 	} else {
 		return nil, errors.New("constraintId is required on DeleteConstraintURL")
 	}
 
-	flagID := swag.FormatInt64(o.FlagID)
+	flagID := conv.FormatInteger(o.FlagID)
 	if flagID != "" {
 		_path = strings.ReplaceAll(_path, "{flagID}", flagID)
 	} else {
 		return nil, errors.New("flagId is required on DeleteConstraintURL")
 	}
 
-	segmentID := swag.FormatInt64(o.SegmentID)
+	segmentID := conv.FormatInteger(o.SegmentID)
 	if segmentID != "" {
 		_path = strings.ReplaceAll(_path, "{segmentID}", segmentID)
 	} else {

@@ -9,7 +9,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/conv"
 )
 
 // NewFindFlagsParams creates a new FindFlagsParams object
@@ -148,7 +148,7 @@ func (o *FindFlagsParams) bindDeleted(rawData []string, hasKey bool, formats str
 		return nil
 	}
 
-	value, err := swag.ConvertBool(raw)
+	value, err := conv.ConvertBool(raw)
 	if err != nil {
 		return errors.InvalidType("deleted", "query", "bool", raw)
 	}
@@ -207,7 +207,7 @@ func (o *FindFlagsParams) bindEnabled(rawData []string, hasKey bool, formats str
 		return nil
 	}
 
-	value, err := swag.ConvertBool(raw)
+	value, err := conv.ConvertBool(raw)
 	if err != nil {
 		return errors.InvalidType("enabled", "query", "bool", raw)
 	}
@@ -248,7 +248,7 @@ func (o *FindFlagsParams) bindLimit(rawData []string, hasKey bool, formats strfm
 		return nil
 	}
 
-	value, err := swag.ConvertInt64(raw)
+	value, err := conv.ConvertInt64(raw)
 	if err != nil {
 		return errors.InvalidType("limit", "query", "int64", raw)
 	}
@@ -271,7 +271,7 @@ func (o *FindFlagsParams) bindOffset(rawData []string, hasKey bool, formats strf
 		return nil
 	}
 
-	value, err := swag.ConvertInt64(raw)
+	value, err := conv.ConvertInt64(raw)
 	if err != nil {
 		return errors.InvalidType("offset", "query", "int64", raw)
 	}
@@ -294,7 +294,7 @@ func (o *FindFlagsParams) bindPreload(rawData []string, hasKey bool, formats str
 		return nil
 	}
 
-	value, err := swag.ConvertBool(raw)
+	value, err := conv.ConvertBool(raw)
 	if err != nil {
 		return errors.InvalidType("preload", "query", "bool", raw)
 	}

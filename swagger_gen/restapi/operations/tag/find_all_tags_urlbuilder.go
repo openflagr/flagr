@@ -7,7 +7,7 @@ import (
 	"net/url"
 	golangswaggerpaths "path"
 
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/conv"
 )
 
 // FindAllTagsURL generates an URL for the find all tags operation
@@ -52,7 +52,7 @@ func (o *FindAllTagsURL) Build() (*url.URL, error) {
 
 	var limitQ string
 	if o.Limit != nil {
-		limitQ = swag.FormatInt64(*o.Limit)
+		limitQ = conv.FormatInteger(*o.Limit)
 	}
 	if limitQ != "" {
 		qs.Set("limit", limitQ)
@@ -60,7 +60,7 @@ func (o *FindAllTagsURL) Build() (*url.URL, error) {
 
 	var offsetQ string
 	if o.Offset != nil {
-		offsetQ = swag.FormatInt64(*o.Offset)
+		offsetQ = conv.FormatInteger(*o.Offset)
 	}
 	if offsetQ != "" {
 		qs.Set("offset", offsetQ)

@@ -8,7 +8,7 @@ import (
 	golangswaggerpaths "path"
 	"strings"
 
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/conv"
 )
 
 // FindVariantsURL generates an URL for the find variants operation
@@ -41,7 +41,7 @@ func (o *FindVariantsURL) Build() (*url.URL, error) {
 
 	var _path = "/flags/{flagID}/variants"
 
-	flagID := swag.FormatInt64(o.FlagID)
+	flagID := conv.FormatInteger(o.FlagID)
 	if flagID != "" {
 		_path = strings.ReplaceAll(_path, "{flagID}", flagID)
 	} else {

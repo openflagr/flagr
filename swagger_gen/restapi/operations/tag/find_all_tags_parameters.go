@@ -9,7 +9,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/conv"
 )
 
 // NewFindAllTagsParams creates a new FindAllTagsParams object
@@ -88,7 +88,7 @@ func (o *FindAllTagsParams) bindLimit(rawData []string, hasKey bool, formats str
 		return nil
 	}
 
-	value, err := swag.ConvertInt64(raw)
+	value, err := conv.ConvertInt64(raw)
 	if err != nil {
 		return errors.InvalidType("limit", "query", "int64", raw)
 	}
@@ -111,7 +111,7 @@ func (o *FindAllTagsParams) bindOffset(rawData []string, hasKey bool, formats st
 		return nil
 	}
 
-	value, err := swag.ConvertInt64(raw)
+	value, err := conv.ConvertInt64(raw)
 	if err != nil {
 		return errors.InvalidType("offset", "query", "int64", raw)
 	}
