@@ -1,15 +1,17 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
+import Flags from '@/components/Flags'
+import Flag from '@/components/Flag'
 
 const routes = [
   {
     path: '/',
     name: 'home',
-    component: () => import('@/components/Flags.vue')
+    component: Flags
   },
   {
     path: '/flags/:flagId',
     name: 'flag',
-    component: () => import('@/components/Flag.vue')
+    component: Flag
   }
 ]
 
