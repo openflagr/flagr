@@ -9,7 +9,8 @@ import (
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/jsonutils"
+	"github.com/go-openapi/swag/typeutils"
 	"github.com/go-openapi/validate"
 )
 
@@ -144,7 +145,7 @@ func (m *Flag) validateEnabled(formats strfmt.Registry) error {
 }
 
 func (m *Flag) validateID(formats strfmt.Registry) error {
-	if swag.IsZero(m.ID) { // not required
+	if typeutils.IsZero(m.ID) { // not required
 		return nil
 	}
 
@@ -156,7 +157,7 @@ func (m *Flag) validateID(formats strfmt.Registry) error {
 }
 
 func (m *Flag) validateKey(formats strfmt.Registry) error {
-	if swag.IsZero(m.Key) { // not required
+	if typeutils.IsZero(m.Key) { // not required
 		return nil
 	}
 
@@ -168,12 +169,12 @@ func (m *Flag) validateKey(formats strfmt.Registry) error {
 }
 
 func (m *Flag) validateSegments(formats strfmt.Registry) error {
-	if swag.IsZero(m.Segments) { // not required
+	if typeutils.IsZero(m.Segments) { // not required
 		return nil
 	}
 
 	for i := 0; i < len(m.Segments); i++ {
-		if swag.IsZero(m.Segments[i]) { // not required
+		if typeutils.IsZero(m.Segments[i]) { // not required
 			continue
 		}
 
@@ -198,12 +199,12 @@ func (m *Flag) validateSegments(formats strfmt.Registry) error {
 }
 
 func (m *Flag) validateTags(formats strfmt.Registry) error {
-	if swag.IsZero(m.Tags) { // not required
+	if typeutils.IsZero(m.Tags) { // not required
 		return nil
 	}
 
 	for i := 0; i < len(m.Tags); i++ {
-		if swag.IsZero(m.Tags[i]) { // not required
+		if typeutils.IsZero(m.Tags[i]) { // not required
 			continue
 		}
 
@@ -228,7 +229,7 @@ func (m *Flag) validateTags(formats strfmt.Registry) error {
 }
 
 func (m *Flag) validateUpdatedAt(formats strfmt.Registry) error {
-	if swag.IsZero(m.UpdatedAt) { // not required
+	if typeutils.IsZero(m.UpdatedAt) { // not required
 		return nil
 	}
 
@@ -240,12 +241,12 @@ func (m *Flag) validateUpdatedAt(formats strfmt.Registry) error {
 }
 
 func (m *Flag) validateVariants(formats strfmt.Registry) error {
-	if swag.IsZero(m.Variants) { // not required
+	if typeutils.IsZero(m.Variants) { // not required
 		return nil
 	}
 
 	for i := 0; i < len(m.Variants); i++ {
-		if swag.IsZero(m.Variants[i]) { // not required
+		if typeutils.IsZero(m.Variants[i]) { // not required
 			continue
 		}
 
@@ -310,7 +311,7 @@ func (m *Flag) contextValidateSegments(ctx context.Context, formats strfmt.Regis
 
 		if m.Segments[i] != nil {
 
-			if swag.IsZero(m.Segments[i]) { // not required
+			if typeutils.IsZero(m.Segments[i]) { // not required
 				return nil
 			}
 
@@ -339,7 +340,7 @@ func (m *Flag) contextValidateTags(ctx context.Context, formats strfmt.Registry)
 
 		if m.Tags[i] != nil {
 
-			if swag.IsZero(m.Tags[i]) { // not required
+			if typeutils.IsZero(m.Tags[i]) { // not required
 				return nil
 			}
 
@@ -368,7 +369,7 @@ func (m *Flag) contextValidateVariants(ctx context.Context, formats strfmt.Regis
 
 		if m.Variants[i] != nil {
 
-			if swag.IsZero(m.Variants[i]) { // not required
+			if typeutils.IsZero(m.Variants[i]) { // not required
 				return nil
 			}
 
@@ -396,13 +397,13 @@ func (m *Flag) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	return swag.WriteJSON(m)
+	return jsonutils.WriteJSON(m)
 }
 
 // UnmarshalBinary interface implementation
 func (m *Flag) UnmarshalBinary(b []byte) error {
 	var res Flag
-	if err := swag.ReadJSON(b, &res); err != nil {
+	if err := jsonutils.ReadJSON(b, &res); err != nil {
 		return err
 	}
 	*m = res

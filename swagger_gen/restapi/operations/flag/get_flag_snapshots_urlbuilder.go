@@ -8,7 +8,7 @@ import (
 	golangswaggerpaths "path"
 	"strings"
 
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/conv"
 )
 
 // GetFlagSnapshotsURL generates an URL for the get flag snapshots operation
@@ -45,7 +45,7 @@ func (o *GetFlagSnapshotsURL) Build() (*url.URL, error) {
 
 	var _path = "/flags/{flagID}/snapshots"
 
-	flagID := swag.FormatInt64(o.FlagID)
+	flagID := conv.FormatInteger(o.FlagID)
 	if flagID != "" {
 		_path = strings.ReplaceAll(_path, "{flagID}", flagID)
 	} else {
@@ -62,7 +62,7 @@ func (o *GetFlagSnapshotsURL) Build() (*url.URL, error) {
 
 	var limitQ string
 	if o.Limit != nil {
-		limitQ = swag.FormatInt64(*o.Limit)
+		limitQ = conv.FormatInteger(*o.Limit)
 	}
 	if limitQ != "" {
 		qs.Set("limit", limitQ)
@@ -70,7 +70,7 @@ func (o *GetFlagSnapshotsURL) Build() (*url.URL, error) {
 
 	var offsetQ string
 	if o.Offset != nil {
-		offsetQ = swag.FormatInt64(*o.Offset)
+		offsetQ = conv.FormatInteger(*o.Offset)
 	}
 	if offsetQ != "" {
 		qs.Set("offset", offsetQ)

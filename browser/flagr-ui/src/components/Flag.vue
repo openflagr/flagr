@@ -106,7 +106,6 @@
 
 <script>
 import Axios from "axios"
-import clone from "lodash.clone"
 import { Delete } from "@element-plus/icons-vue"
 
 import constants from "@/constants"
@@ -154,8 +153,8 @@ export default {
       allowCreateEntityType: true,
       tagInputVisible: false,
       flag: {},
-      newSegment: clone(DEFAULT_SEGMENT),
-      newTag: clone(DEFAULT_TAG),
+      newSegment: { ...DEFAULT_SEGMENT },
+      newTag: { ...DEFAULT_TAG },
       selectedSegment: null,
       distributionDraft: {},
       operatorOptions: operators,
@@ -211,7 +210,7 @@ export default {
       Axios.post(`${API_URL}/flags/${this.flagId}/tags`, { value }).then(
         response => {
           const tag = response.data
-          this.newTag = clone(DEFAULT_TAG)
+          this.newTag = { ...DEFAULT_TAG }
           if (!this.flag.tags.map(t => t.value).includes(tag.value)) {
             this.flag.tags.push(tag)
             this.$message.success("new tag created")
@@ -224,7 +223,7 @@ export default {
     },
 
     handleCancelCreateTag() {
-      this.newTag = clone(DEFAULT_TAG)
+      this.newTag = { ...DEFAULT_TAG }
       this.tagInputVisible = false
     },
 
@@ -312,7 +311,7 @@ export default {
         response => {
           const segment = response.data
           segment.constraints = []
-          this.newSegment = clone(DEFAULT_SEGMENT)
+          this.newSegment = { ...DEFAULT_SEGMENT }
           this.flag.segments = [...this.flag.segments, segment]
           this.dialogCreateSegmentOpen = false
           this.$message.success("new segment created")
@@ -430,7 +429,7 @@ export default {
       const distributions = Object.values(draft)
         .filter(d => d.percent !== 0)
         .map(d => {
-          const dist = clone(d)
+          const dist = { ...d }
           delete dist.id
           return dist
         })

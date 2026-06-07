@@ -1,60 +1,38 @@
 {
-  "name": "flagr-ui",
-  "version": "1.1.20",
-  "private": true,
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "lint": "eslint src --ext .js,.vue",
-    "test:e2e": "playwright test"
-  },
-  "dependencies": {
-    "@element-plus/icons-vue": "^2.3.1",
-    "@iktakahiro/markdown-it-katex": "^4.0.0",
-    "axios": "^1.13.5",
-    "diff": "^8.0.3",
-    "element-plus": "^2.10.0",
-    "lodash.clone": "^4.5.0",
-    "markdown-it": "^12.3.2",
-    "vue": "^3.5.0",
-    "vue-router": "^4.5.0",
-    "vue3-ts-jsoneditor": "^3.1.0",
-    "xss": "^1.0.9"
-  },
-  "devDependencies": {
-    "@babel/eslint-parser": "^7.27.0",
-    "@playwright/test": "^1.60.0",
-    "@vitejs/plugin-vue": "^5.2.4",
-    "eslint": "^8.57.0",
-    "eslint-plugin-vue": "^9.32.0",
-    "less": "^4.6.4",
-    "sass": "^1.99.0",
-    "vite": "^6.4.2"
-  },
-  "eslintConfig": {
-    "root": true,
-    "env": {
-      "node": true,
-      "browser": true
+    "name": "flagr-ui",
+    "version": "1.1.20",
+    "private": true,
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "preview": "vite preview",
+        "lint": "eslint src",
+        "test:e2e": "playwright test"
     },
-    "extends": [
-      "plugin:vue/vue3-essential",
-      "eslint:recommended"
-    ],
-    "rules": {
-      "vue/multi-word-component-names": "off",
-      "vue/no-reserved-component-names": "off"
+    "dependencies": {
+        "@element-plus/icons-vue": "^2.3.1",
+        "@vscode/markdown-it-katex": "^1.1.2",
+        "axios": "^1.16.1",
+        "diff": "^9.0.0",
+        "element-plus": "^2.14.0",
+        "markdown-it": "^14.2.0",
+        "vue": "^3.5.34",
+        "vue-router": "^5.1.0",
+        "vue3-ts-jsoneditor": "^3.1.0",
+        "xss": "^1.0.9"
     },
-    "parserOptions": {
-      "parser": "@babel/eslint-parser",
-      "requireConfigFile": false,
-      "ecmaVersion": "latest",
-      "sourceType": "module"
-    }
-  },
-  "browserslist": [
-    "> 1%",
-    "last 2 versions"
-  ]
+    "devDependencies": {
+        "@playwright/test": "^1.60.0",
+        "@vitejs/plugin-vue": "^6.0.7",
+        "eslint": "^9.39.4",
+        "eslint-plugin-vue": "^10.9.1",
+        "less": "^4.6.4",
+        "sass": "^1.99.0",
+        "vite": "^8.0.16",
+        "vue-eslint-parser": "^10.4.1"
+    },
+    "browserslist": [
+        "> 1%",
+        "last 2 versions"
+    ]
 }

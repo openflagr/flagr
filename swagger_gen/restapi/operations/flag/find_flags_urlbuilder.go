@@ -7,7 +7,7 @@ import (
 	"net/url"
 	golangswaggerpaths "path"
 
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/conv"
 )
 
 // FindFlagsURL generates an URL for the find flags operation
@@ -58,7 +58,7 @@ func (o *FindFlagsURL) Build() (*url.URL, error) {
 
 	var deletedQ string
 	if o.Deleted != nil {
-		deletedQ = swag.FormatBool(*o.Deleted)
+		deletedQ = conv.FormatBool(*o.Deleted)
 	}
 	if deletedQ != "" {
 		qs.Set("deleted", deletedQ)
@@ -82,7 +82,7 @@ func (o *FindFlagsURL) Build() (*url.URL, error) {
 
 	var enabledQ string
 	if o.Enabled != nil {
-		enabledQ = swag.FormatBool(*o.Enabled)
+		enabledQ = conv.FormatBool(*o.Enabled)
 	}
 	if enabledQ != "" {
 		qs.Set("enabled", enabledQ)
@@ -98,7 +98,7 @@ func (o *FindFlagsURL) Build() (*url.URL, error) {
 
 	var limitQ string
 	if o.Limit != nil {
-		limitQ = swag.FormatInt64(*o.Limit)
+		limitQ = conv.FormatInteger(*o.Limit)
 	}
 	if limitQ != "" {
 		qs.Set("limit", limitQ)
@@ -106,7 +106,7 @@ func (o *FindFlagsURL) Build() (*url.URL, error) {
 
 	var offsetQ string
 	if o.Offset != nil {
-		offsetQ = swag.FormatInt64(*o.Offset)
+		offsetQ = conv.FormatInteger(*o.Offset)
 	}
 	if offsetQ != "" {
 		qs.Set("offset", offsetQ)
@@ -114,7 +114,7 @@ func (o *FindFlagsURL) Build() (*url.URL, error) {
 
 	var preloadQ string
 	if o.Preload != nil {
-		preloadQ = swag.FormatBool(*o.Preload)
+		preloadQ = conv.FormatBool(*o.Preload)
 	}
 	if preloadQ != "" {
 		qs.Set("preload", preloadQ)

@@ -9,7 +9,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/conv"
 	"github.com/go-openapi/validate"
 )
 
@@ -97,7 +97,7 @@ func (o *GetFlagSnapshotsParams) bindFlagID(rawData []string, hasKey bool, forma
 	// Required: true
 	// Parameter is provided by construction from the route
 
-	value, err := swag.ConvertInt64(raw)
+	value, err := conv.ConvertInt64(raw)
 	if err != nil {
 		return errors.InvalidType("flagID", "path", "int64", raw)
 	}
@@ -134,7 +134,7 @@ func (o *GetFlagSnapshotsParams) bindLimit(rawData []string, hasKey bool, format
 		return nil
 	}
 
-	value, err := swag.ConvertInt64(raw)
+	value, err := conv.ConvertInt64(raw)
 	if err != nil {
 		return errors.InvalidType("limit", "query", "int64", raw)
 	}
@@ -157,7 +157,7 @@ func (o *GetFlagSnapshotsParams) bindOffset(rawData []string, hasKey bool, forma
 		return nil
 	}
 
-	value, err := swag.ConvertInt64(raw)
+	value, err := conv.ConvertInt64(raw)
 	if err != nil {
 		return errors.InvalidType("offset", "query", "int64", raw)
 	}

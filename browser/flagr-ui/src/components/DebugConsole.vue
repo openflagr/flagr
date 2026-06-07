@@ -70,13 +70,9 @@ export default {
     };
   },
   methods: {
-    // eslint-disable-next-line no-empty
     syncEvalContext(text) { try { this.evalContext = JSON.parse(text) } catch(e) {} },
-    // eslint-disable-next-line no-empty
     syncEvalResult(text) { try { this.evalResult = JSON.parse(text) } catch(e) {} },
-    // eslint-disable-next-line no-empty
     syncBatchEvalContext(text) { try { this.batchEvalContext = JSON.parse(text) } catch(e) {} },
-    // eslint-disable-next-line no-empty
     syncBatchEvalResult(text) { try { this.batchEvalResult = JSON.parse(text) } catch(e) {} },
 
     postEvaluation(evalContext) {

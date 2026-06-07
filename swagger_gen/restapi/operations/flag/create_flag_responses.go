@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/go-openapi/runtime"
-
 	"github.com/openflagr/flagr/swagger_gen/models"
 )
 

@@ -52,7 +52,7 @@ start:
 gen: api_docs swagger
 
 deps:
-	@CGO_ENABLED=0 go install github.com/go-swagger/go-swagger/cmd/swagger@v0.33.2
+	@CGO_ENABLED=0 go install github.com/go-swagger/go-swagger/cmd/swagger@v0.34.1
 	@CGO_ENABLED=0 go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
 
 serve_docs:

@@ -8,7 +8,7 @@ import (
 	golangswaggerpaths "path"
 	"strings"
 
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/conv"
 )
 
 // SetFlagEnabledURL generates an URL for the set flag enabled operation
@@ -41,7 +41,7 @@ func (o *SetFlagEnabledURL) Build() (*url.URL, error) {
 
 	var _path = "/flags/{flagID}/enabled"
 
-	flagID := swag.FormatInt64(o.FlagID)
+	flagID := conv.FormatInteger(o.FlagID)
 	if flagID != "" {
 		_path = strings.ReplaceAll(_path, "{flagID}", flagID)
 	} else {

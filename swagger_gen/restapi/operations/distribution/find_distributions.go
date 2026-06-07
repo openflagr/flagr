@@ -41,13 +41,13 @@ func (o *FindDistributions) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	if rCtx != nil {
 		*r = *rCtx
 	}
-	var Params = NewFindDistributionsParams()
-	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
+	params := NewFindDistributionsParams()
+	if err := o.Context.BindValidRequest(r, route, &params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params) // actually handle the request
+	res := o.Handler.Handle(params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

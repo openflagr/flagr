@@ -8,7 +8,7 @@ import (
 	golangswaggerpaths "path"
 	"strings"
 
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/conv"
 )
 
 // DeleteTagURL generates an URL for the delete tag operation
@@ -42,14 +42,14 @@ func (o *DeleteTagURL) Build() (*url.URL, error) {
 
 	var _path = "/flags/{flagID}/tags/{tagID}"
 
-	flagID := swag.FormatInt64(o.FlagID)
+	flagID := conv.FormatInteger(o.FlagID)
 	if flagID != "" {
 		_path = strings.ReplaceAll(_path, "{flagID}", flagID)
 	} else {
 		return nil, errors.New("flagId is required on DeleteTagURL")
 	}
 
-	tagID := swag.FormatInt64(o.TagID)
+	tagID := conv.FormatInteger(o.TagID)
 	if tagID != "" {
 		_path = strings.ReplaceAll(_path, "{tagID}", tagID)
 	} else {

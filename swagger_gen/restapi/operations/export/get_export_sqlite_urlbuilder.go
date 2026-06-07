@@ -7,7 +7,7 @@ import (
 	"net/url"
 	golangswaggerpaths "path"
 
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/conv"
 )
 
 // GetExportSqliteURL generates an URL for the get export sqlite operation
@@ -50,7 +50,7 @@ func (o *GetExportSqliteURL) Build() (*url.URL, error) {
 
 	var excludeSnapshotsQ string
 	if o.ExcludeSnapshots != nil {
-		excludeSnapshotsQ = swag.FormatBool(*o.ExcludeSnapshots)
+		excludeSnapshotsQ = conv.FormatBool(*o.ExcludeSnapshots)
 	}
 	if excludeSnapshotsQ != "" {
 		qs.Set("exclude_snapshots", excludeSnapshotsQ)

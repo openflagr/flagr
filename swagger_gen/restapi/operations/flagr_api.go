@@ -14,8 +14,7 @@ import (
 	"github.com/go-openapi/runtime/security"
 	"github.com/go-openapi/spec"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
-
+	"github.com/go-openapi/swag/cmdutils"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/constraint"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/distribution"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/evaluation"
@@ -375,7 +374,7 @@ type FlagrAPI struct {
 	ServerShutdown func()
 
 	// Custom command line argument groups with their descriptions
-	CommandLineOptionsGroups []swag.CommandLineOptionsGroup
+	CommandLineOptionsGroups []cmdutils.CommandLineOptionsGroup
 
 	// User defined logger function.
 	Logger func(string, ...any)

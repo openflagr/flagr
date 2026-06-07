@@ -8,7 +8,7 @@ import (
 	golangswaggerpaths "path"
 	"strings"
 
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/conv"
 )
 
 // RestoreFlagURL generates an URL for the restore flag operation
@@ -41,7 +41,7 @@ func (o *RestoreFlagURL) Build() (*url.URL, error) {
 
 	var _path = "/flags/{flagID}/restore"
 
-	flagID := swag.FormatInt64(o.FlagID)
+	flagID := conv.FormatInteger(o.FlagID)
 	if flagID != "" {
 		_path = strings.ReplaceAll(_path, "{flagID}", flagID)
 	} else {

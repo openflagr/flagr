@@ -87,6 +87,7 @@
             </el-button>
           </div>
           <markdown-editor
+            v-if="showMdEditor || flag.notes"
             :show-editor="showMdEditor"
             :markdown="flag.notes"
             @update:markdown="$emit('update-flag', { notes: $event })"
@@ -99,12 +100,15 @@
 </template>
 
 <script>
-import MarkdownEditor from "@/components/MarkdownEditor.vue"
+import { defineAsyncComponent } from "vue"
 import { InfoFilled, Edit, View } from "@element-plus/icons-vue"
 
 export default {
   name: "flag-config-card",
-  components: { MarkdownEditor, InfoFilled, Edit, View },
+  components: {
+    MarkdownEditor: defineAsyncComponent(() => import("@/components/MarkdownEditor.vue")),
+    InfoFilled, Edit, View
+  },
   props: {
     flag: { type: Object, required: true },
     showMdEditor: Boolean,

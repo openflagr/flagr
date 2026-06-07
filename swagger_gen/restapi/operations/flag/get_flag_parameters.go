@@ -8,7 +8,7 @@ import (
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/conv"
 	"github.com/go-openapi/validate"
 )
 
@@ -65,7 +65,7 @@ func (o *GetFlagParams) bindFlagID(rawData []string, hasKey bool, formats strfmt
 	// Required: true
 	// Parameter is provided by construction from the route
 
-	value, err := swag.ConvertInt64(raw)
+	value, err := conv.ConvertInt64(raw)
 	if err != nil {
 		return errors.InvalidType("flagID", "path", "int64", raw)
 	}

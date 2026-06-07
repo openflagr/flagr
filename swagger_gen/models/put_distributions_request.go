@@ -9,7 +9,8 @@ import (
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/jsonutils"
+	"github.com/go-openapi/swag/typeutils"
 	"github.com/go-openapi/validate"
 )
 
@@ -44,7 +45,7 @@ func (m *PutDistributionsRequest) validateDistributions(formats strfmt.Registry)
 	}
 
 	for i := 0; i < len(m.Distributions); i++ {
-		if swag.IsZero(m.Distributions[i]) { // not required
+		if typeutils.IsZero(m.Distributions[i]) { // not required
 			continue
 		}
 
@@ -88,7 +89,7 @@ func (m *PutDistributionsRequest) contextValidateDistributions(ctx context.Conte
 
 		if m.Distributions[i] != nil {
 
-			if swag.IsZero(m.Distributions[i]) { // not required
+			if typeutils.IsZero(m.Distributions[i]) { // not required
 				return nil
 			}
 
@@ -116,13 +117,13 @@ func (m *PutDistributionsRequest) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	return swag.WriteJSON(m)
+	return jsonutils.WriteJSON(m)
 }
 
 // UnmarshalBinary interface implementation
 func (m *PutDistributionsRequest) UnmarshalBinary(b []byte) error {
 	var res PutDistributionsRequest
-	if err := swag.ReadJSON(b, &res); err != nil {
+	if err := jsonutils.ReadJSON(b, &res); err != nil {
 		return err
 	}
 	*m = res

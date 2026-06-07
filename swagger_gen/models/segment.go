@@ -9,7 +9,8 @@ import (
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/jsonutils"
+	"github.com/go-openapi/swag/typeutils"
 	"github.com/go-openapi/validate"
 )
 
@@ -81,12 +82,12 @@ func (m *Segment) Validate(formats strfmt.Registry) error {
 }
 
 func (m *Segment) validateConstraints(formats strfmt.Registry) error {
-	if swag.IsZero(m.Constraints) { // not required
+	if typeutils.IsZero(m.Constraints) { // not required
 		return nil
 	}
 
 	for i := 0; i < len(m.Constraints); i++ {
-		if swag.IsZero(m.Constraints[i]) { // not required
+		if typeutils.IsZero(m.Constraints[i]) { // not required
 			continue
 		}
 
@@ -124,12 +125,12 @@ func (m *Segment) validateDescription(formats strfmt.Registry) error {
 }
 
 func (m *Segment) validateDistributions(formats strfmt.Registry) error {
-	if swag.IsZero(m.Distributions) { // not required
+	if typeutils.IsZero(m.Distributions) { // not required
 		return nil
 	}
 
 	for i := 0; i < len(m.Distributions); i++ {
-		if swag.IsZero(m.Distributions[i]) { // not required
+		if typeutils.IsZero(m.Distributions[i]) { // not required
 			continue
 		}
 
@@ -154,7 +155,7 @@ func (m *Segment) validateDistributions(formats strfmt.Registry) error {
 }
 
 func (m *Segment) validateID(formats strfmt.Registry) error {
-	if swag.IsZero(m.ID) { // not required
+	if typeutils.IsZero(m.ID) { // not required
 		return nil
 	}
 
@@ -223,7 +224,7 @@ func (m *Segment) contextValidateConstraints(ctx context.Context, formats strfmt
 
 		if m.Constraints[i] != nil {
 
-			if swag.IsZero(m.Constraints[i]) { // not required
+			if typeutils.IsZero(m.Constraints[i]) { // not required
 				return nil
 			}
 
@@ -252,7 +253,7 @@ func (m *Segment) contextValidateDistributions(ctx context.Context, formats strf
 
 		if m.Distributions[i] != nil {
 
-			if swag.IsZero(m.Distributions[i]) { // not required
+			if typeutils.IsZero(m.Distributions[i]) { // not required
 				return nil
 			}
 
@@ -289,13 +290,13 @@ func (m *Segment) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	return swag.WriteJSON(m)
+	return jsonutils.WriteJSON(m)
 }
 
 // UnmarshalBinary interface implementation
 func (m *Segment) UnmarshalBinary(b []byte) error {
 	var res Segment
-	if err := swag.ReadJSON(b, &res); err != nil {
+	if err := jsonutils.ReadJSON(b, &res); err != nil {
 		return err
 	}
 	*m = res
