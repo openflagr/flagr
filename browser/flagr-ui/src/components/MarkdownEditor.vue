@@ -6,7 +6,7 @@
     />
     <link
       rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css"
+      href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.47/katex.min.css"
     />
 
     <div v-if="showEditor" class="me-editor-section">
@@ -24,7 +24,7 @@
 
 <script>
 import MarkdownIt from "markdown-it";
-import mk from "@iktakahiro/markdown-it-katex";
+import mk from "@vscode/markdown-it-katex";
 import xss from "xss";
 
 let md = MarkdownIt("commonmark");
