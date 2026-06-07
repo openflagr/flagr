@@ -1,6 +1,5 @@
 import pluginVue from 'eslint-plugin-vue'
 import vueParser from 'vue-eslint-parser'
-import babelParser from '@babel/eslint-parser'
 
 export default [
   ...pluginVue.configs['flat/essential'],
@@ -8,8 +7,6 @@ export default [
     languageOptions: {
       parser: vueParser,
       parserOptions: {
-        parser: babelParser,
-        requireConfigFile: false,
         ecmaVersion: 'latest',
         sourceType: 'module',
       },

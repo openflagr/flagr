@@ -22,7 +22,6 @@
         "xss": "^1.0.9"
     },
     "devDependencies": {
-        "@babel/eslint-parser": "^7.27.0",
         "@playwright/test": "^1.60.0",
         "@vitejs/plugin-vue": "^6.0.7",
         "eslint": "^9.39.4",
