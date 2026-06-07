@@ -60,12 +60,11 @@ GOOGLE_APPLICATION_CREDENTIALS=/path/to/service/account.json
 > FYI: setting this env var will take over all Google's services on that environment.
 
 The best way to configure service account for Flagr to use pubsub only use:
-
 ```
 FLAGR_RECORDER_PUBSUB_PROJECT_ID=google-project-id
+FLAGR_RECORDER_PUBSUB_TOPIC_NAME=flagr-records
 FLAGR_RECORDER_PUBSUB_KEYFILE=/path/to/service/account.json
 ```
-
 Basic Authentication for web interface
 
 ```

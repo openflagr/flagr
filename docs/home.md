@@ -34,7 +34,7 @@ docker run -it -p 18000:18000 ghcr.io/openflagr/flagr
 
 Install Dependencies.
 
-- Go (1.24+)
+- Go (1.26+)
 - Make (for Makefile)
 - Node (20+) (for building UI)
 
@@ -46,18 +46,20 @@ git clone https://github.com/openflagr/flagr.git
 cd flagr
 
 # install dependencies, generate code, and start the service in
-# development mode
+# development mode (backend + frontend dev server)
 make build start
-```
 
-If you just want to run the pre-built backend (without the UI development service):
-
-```
+# Just run the pre-built backend (without UI dev server):
 make run
-```
 
-And alternatively to just run the UI service:
+# Just run the UI dev server (Vite on :8080, proxies API to :18000):
+cd browser/flagr-ui && npm run dev
 
-```
-make run_ui
-```
+# After backend changes, rebuild and restart in one step:
+make rebuild-run
+
+# Run e2e tests (builds Go binary, starts servers, runs Playwright):
+make test-e2e
+
+# Stop dev servers (port-based, safe for multi-project setups):
+make stop-ui
