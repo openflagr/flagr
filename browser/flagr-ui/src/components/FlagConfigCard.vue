@@ -87,6 +87,7 @@
             </el-button>
           </div>
           <markdown-editor
+            v-if="showMdEditor || flag.notes"
             :show-editor="showMdEditor"
             :markdown="flag.notes"
             @update:markdown="$emit('update-flag', { notes: $event })"
