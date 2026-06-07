@@ -4,10 +4,6 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/4.0.0/github-markdown.min.css"
     />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.47/katex.min.css"
-    />
 
     <div v-if="showEditor" class="me-editor-section">
       <el-input
@@ -26,6 +22,7 @@
 import MarkdownIt from "markdown-it";
 import mk from "@vscode/markdown-it-katex";
 import xss from "xss";
+import "katex/dist/katex.min.css"
 
 let md = MarkdownIt("commonmark");
 md.use(mk);
