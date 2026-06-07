@@ -1,11 +1,18 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import Components from 'unplugin-vue-components/vite'
+import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 import { fileURLToPath } from 'url'
 
 const srcDir = fileURLToPath(new URL('src', import.meta.url))
 
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [
+    vue(),
+    Components({
+      resolvers: [ElementPlusResolver()],
+    }),
+  ],
   resolve: {
     alias: {
       '@': srcDir
@@ -35,6 +42,7 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    assetsDir: 'static'
+    assetsDir: 'static',
+    chunkSizeWarningLimit: 1500,
   }
 })

@@ -1,7 +1,5 @@
 import { createApp } from 'vue'
 
-import ElementPlus from 'element-plus'
-import locale from 'element-plus/dist/locale/en.mjs'
 import './styles/element/index.scss'
 
 import App from './App.vue'
@@ -9,7 +7,6 @@ import router from './router'
 
 const app = createApp(App)
 
-app.use(ElementPlus, { locale })
 app.use(router)
 
 // Autofocus certain fields
