@@ -218,15 +218,7 @@ const { handleErr, debounce } = helpers;
 const { API_URL } = constants;
 
 
-const flagsCache = {
-  data: null, // { flags: [], maxSnapshotID: number }
-  get() {
-    return this.data;
-  },
-  set(data) {
-    this.data = data;
-  },
-};
+let flagsCache = null; // { flags: [], maxSnapshotID: number } | null
 
 export default {
   name: "flags",
@@ -237,7 +229,7 @@ export default {
     ArrowDown,
   },
   data() {
-    const cached = flagsCache.get();
+    const cached = flagsCache;
     return {
       loaded: !!cached,
       flags: cached ? cached.flags : [],
@@ -262,6 +254,9 @@ export default {
   },
 
   created() {
+    this._debouncedUpdate = debounce(() => {
+      this.debouncedSearchTerm = this.searchTerm;
+    }, 150);
     this.refreshFlags();
   },
   computed: {
@@ -285,38 +280,23 @@ export default {
   },
   watch: {
     searchTerm() {
-      this.debouncedFlags();
+      this._debouncedUpdate();
     },
   },
   methods: {
-    refreshFlags() {
-      const cached = flagsCache.get();
-      if (cached) {
-        Axios.get(`${API_URL}/flags/snapshots/max_id`).then(response => {
-          if (response.data.maxID !== cached.maxSnapshotID) {
-            Axios.get(`${API_URL}/flags`).then(r => {
-              let flags = r.data;
-              flags.reverse();
-              flagsCache.set({ flags, maxSnapshotID: response.data.maxID });
-              this.flags = flags;
-            }, handleErr.bind(this));
-          }
-        }, handleErr.bind(this));
-      } else {
-        Axios.get(`${API_URL}/flags/snapshots/max_id`).then(maxResp => {
-          Axios.get(`${API_URL}/flags`).then(r => {
-            let flags = r.data;
-            this.loaded = true;
-            flags.reverse();
-            flagsCache.set({ flags, maxSnapshotID: maxResp.data.maxID });
-            this.flags = flags;
-          }, handleErr.bind(this));
-        }, handleErr.bind(this));
+    async refreshFlags() {
+      try {
+        const { data: { maxID } } = await Axios.get(`${API_URL}/flags/snapshots/max_id`);
+        if (flagsCache && maxID === flagsCache.maxSnapshotID) return;
+        const { data } = await Axios.get(`${API_URL}/flags`);
+        const flags = [...data].reverse();
+        flagsCache = { flags, maxSnapshotID: maxID };
+        this.flags = flags;
+        this.loaded = true;
+      } catch (err) {
+        handleErr.call(this, err);
       }
     },
-    debouncedFlags: debounce(function () {
-      this.debouncedSearchTerm = this.searchTerm;
-    }, 150),
     datetimeFormatter(row, col, val) {
       return val ? val.split(".")[0] : "";
     },
@@ -336,9 +316,8 @@ export default {
         this.newFlag.description = "";
         this.showCreateModal = false;
         this.$message.success("Flag created");
-        // cache auto-invalidates via snapshot ID
-        flag._new = true;
         this.flags.unshift(flag);
+        if (flagsCache) flagsCache.flags.unshift(flag);
       }, handleErr.bind(this));
     },
     restoreFlag(row) {
@@ -351,6 +330,7 @@ export default {
           const flag = response.data;
           this.$message.success(`Flag restored`);
           this.flags.push(flag);
+          if (flagsCache) flagsCache.flags.push(flag);
           this.deletedFlags = this.deletedFlags.filter(el => el.id !== flag.id);
         }, handleErr.bind(this));
       });
@@ -358,9 +338,7 @@ export default {
     fetchDeletedFlags() {
       if (!this.deletedFlagsLoaded) {
         Axios.get(`${API_URL}/flags?deleted=true`).then(response => {
-          const flags = response.data;
-          flags.reverse();
-          this.deletedFlags = flags;
+          this.deletedFlags = [...response.data].reverse();
           this.deletedFlagsLoaded = true;
         }, handleErr.bind(this));
       }

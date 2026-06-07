@@ -96,8 +96,8 @@
               </div>
             </el-tab-pane>
 
-            <el-tab-pane label="History">
-              <flag-history v-if="historyLoaded" :flag-id="parseInt($route.params.flagId, 10)"></flag-history>
+            <el-tab-pane label="History" name="history">
+              <flag-history v-if="historyLoaded" :key="historyKey" :flag-id="parseInt($route.params.flagId, 10)"></flag-history>
             </el-tab-pane>
           </el-tabs>
         </div>
@@ -124,12 +124,7 @@ const { pluck, handleErr } = helpers
 const { API_URL, FLAGR_UI_POSSIBLE_ENTITY_TYPES } = constants
 
 const DEFAULT_SEGMENT = { description: "", rolloutPercent: 50 }
-const DEFAULT_CONSTRAINT = { operator: "EQ", property: "", value: "" }
 const DEFAULT_TAG = { value: "" }
-
-function processSegment(segment) {
-  segment._newConstraint = clone(DEFAULT_CONSTRAINT)
-}
 
 function processVariant(variant) {
   if (typeof variant.attachment === "string") {
@@ -165,7 +160,8 @@ export default {
       distributionDraft: {},
       operatorOptions: operators,
       showMdEditor: false,
-      historyLoaded: false
+      historyLoaded: false,
+      historyKey: 0
     }
   },
   computed: {
@@ -261,7 +257,7 @@ export default {
     handleCreateVariant({ key }) {
       Axios.post(`${API_URL}/flags/${this.flagId}/variants`, { key }).then(
         response => {
-          this.flag.variants.push(response.data)
+          this.flag.variants = [...this.flag.variants, response.data]
           this.$message.success("new variant created")
         },
         handleErr.bind(this)
@@ -309,19 +305,15 @@ export default {
       }).catch(() => {})
     },
 
-    handleVariantAttachmentChange({ variant, valid }) {
-      variant.attachmentValid = valid
-    },
 
     // --- Segments ---
     createSegment() {
       Axios.post(`${API_URL}/flags/${this.flagId}/segments`, this.newSegment).then(
         response => {
           const segment = response.data
-          processSegment(segment)
           segment.constraints = []
           this.newSegment = clone(DEFAULT_SEGMENT)
-          this.flag.segments.push(segment)
+          this.flag.segments = [...this.flag.segments, segment]
           this.dialogCreateSegmentOpen = false
           this.$message.success("new segment created")
         },
@@ -344,8 +336,7 @@ export default {
       }).then(() => {
         Axios.delete(`${API_URL}/flags/${this.flagId}/segments/${segment.id}`).then(
           () => {
-            const idx = this.flag.segments.findIndex(el => el.id === segment.id)
-            this.flag.segments.splice(idx, 1)
+            this.flag.segments = this.flag.segments.filter(el => el.id !== segment.id)
             this.$message.success("segment deleted")
           },
           handleErr.bind(this)
@@ -361,20 +352,21 @@ export default {
       }, handleErr.bind(this))
     },
 
-
     moveSegmentUp(_element, index) {
       if (index <= 0) return
-      const arr = this.flag.segments
+      const arr = [...this.flag.segments]
       const temp = arr[index - 1]
       arr[index - 1] = arr[index]
       arr[index] = temp
+      this.flag.segments = arr
     },
     moveSegmentDown(_element, index) {
       if (index >= this.flag.segments.length - 1) return
-      const arr = this.flag.segments
+      const arr = [...this.flag.segments]
       const temp = arr[index + 1]
       arr[index + 1] = arr[index]
       arr[index] = temp
+      this.flag.segments = arr
     },
 
 
@@ -383,16 +375,15 @@ export default {
     },
 
     // --- Constraints ---
-    createConstraint(segment) {
-      const c = segment._newConstraint
+    createConstraint({ segment, constraint }) {
+      const c = { ...constraint }
       c.property = c.property.trim()
       c.value = c.value.trim()
       Axios.post(
         `${API_URL}/flags/${this.flagId}/segments/${segment.id}/constraints`,
         c
       ).then(response => {
-        segment.constraints.push(response.data)
-        segment._newConstraint = clone(DEFAULT_CONSTRAINT)
+        segment.constraints = [...segment.constraints, response.data]
         this.$message.success("new constraint created")
       }, handleErr.bind(this))
     },
@@ -415,8 +406,7 @@ export default {
         Axios.delete(
           `${API_URL}/flags/${this.flagId}/segments/${segment.id}/constraints/${constraint.id}`
         ).then(() => {
-          const idx = segment.constraints.findIndex(c => c.id === constraint.id)
-          segment.constraints.splice(idx, 1)
+          segment.constraints = segment.constraints.filter(c => c.id !== constraint.id)
           this.$message.success("constraint deleted")
         }, handleErr.bind(this))
       }).catch(() => {})
@@ -456,9 +446,9 @@ export default {
 
     // --- Other ---
     handleHistoryTabClick(tab) {
-      const label = tab.props?.label || tab.label
-      if (label == "History" && !this.historyLoaded) {
+      if (tab.props?.name === 'history') {
         this.historyLoaded = true
+        this.historyKey++
       }
     },
 
@@ -466,7 +456,6 @@ export default {
     fetchFlag() {
       Axios.get(`${API_URL}/flags/${this.flagId}`).then(response => {
         const flag = response.data
-        flag.segments.forEach(s => processSegment(s))
         flag.variants.forEach(v => processVariant(v))
         this.flag = flag
         this.loaded = true

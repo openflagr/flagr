@@ -168,11 +168,17 @@ test.describe('Flag detail page', () => {
     flag = await createFlag()
     await page.goto(`/#/flags/${flag.id}`)
     await expect(page.locator('input[data-testid="flag-key-input"]')).toBeVisible({ timeout: 10000 })
+    const segDesc = `ui-created-${Date.now()}`
     await page.locator('[data-testid="open-new-segment-btn"]').click()
     await expect(page.locator('[data-testid="create-segment-btn"]')).toBeVisible({ timeout: 5000 })
-    await page.locator('[data-testid="new-segment-desc-input"]').fill(`ui-created-${Date.now()}`)
+    await page.locator('[data-testid="new-segment-desc-input"]').fill(segDesc)
     await page.locator('[data-testid="create-segment-btn"]').click()
-    await expect(page.locator('.el-message--success')).toBeVisible({ timeout: 5000 })
+    // Wait for dialog to close (indicates API call completed)
+    await expect(page.locator('.el-dialog')).not.toBeVisible({ timeout: 5000 })
+    // Verify the new segment rendered in the DOM (not just created server-side)
+    await expect(
+      page.locator('[data-testid="segment-desc-input"]').filter({ hasValue: segDesc })
+    ).toBeVisible({ timeout: 5000 })
   })
 
   test('can delete a segment via UI', async ({ page }) => {
@@ -345,5 +351,67 @@ test.describe('Flag detail page', () => {
     await expect(page.locator('input[data-testid="flag-key-input"]')).toBeVisible({ timeout: 10000 })
     await page.locator('.el-tabs__item').filter({ hasText: 'History' }).click()
     await expect(page.locator('.snapshot-container').first()).toBeVisible({ timeout: 5000 })
+  })
+  test('new constraint form clears after creation', async ({ page }) => {
+    flag = await createFlag()
+    await createSegment(flag.id, `cstr-clear-${Date.now()}`)
+    await page.goto(`/#/flags/${flag.id}`)
+    await expect(page.locator('input[data-testid="flag-key-input"]')).toBeVisible({ timeout: 10000 })
+    const propInput = page.locator('input[data-testid="new-constraint-prop-input"]').first()
+    const valueInput = page.locator('input[data-testid="new-constraint-value-input"]').first()
+    await propInput.fill('status')
+    await valueInput.fill('"active"')
+    await page.locator('[data-testid="add-constraint-btn"]').first().click()
+    await expect(page.locator('.el-message--success')).toBeVisible({ timeout: 5000 })
+    // Verify the new-constraint form fields cleared (F1 fix verification)
+    await expect(propInput).toHaveValue('')
+    await expect(valueInput).toHaveValue('')
+  })
+
+  test('can edit distribution via dialog', async ({ page }) => {
+    flag = await createFlagWithVariants()
+    await createSegment(flag.id, `dist-${Date.now()}`)
+    await page.goto(`/#/flags/${flag.id}`)
+    await expect(page.locator('input[data-testid="flag-key-input"]')).toBeVisible({ timeout: 10000 })
+    // Open the distribution edit dialog — use specific selector for the segment's Edit button
+    await page.locator('.seg-panel-dist button:has-text("Edit")').first().click()
+    await expect(page.locator('.el-dialog')).toBeVisible({ timeout: 5000 })
+    // Check the first variant checkbox
+    const checkbox = page.locator('.dist-variant-row .el-checkbox').first()
+    await checkbox.click()
+    // Set percentage to 100 via slider input
+    const sliderInput = page.locator('.dist-slider-row input[type="number"], .dist-slider-row .el-input__inner').first()
+    await sliderInput.fill('100')
+    // Save
+    await page.locator('.el-dialog .el-button--primary').click()
+    await expect(page.locator('.el-message--success')).toBeVisible({ timeout: 5000 })
+    // Verify distribution persisted via API
+    const r = await page.request.get(`${API}/flags/${flag.id}`)
+    expect(r.ok()).toBeTruthy()
+    const updated = await r.json()
+    expect(updated.segments[0].distributions.length).toBeGreaterThan(0)
+  })
+
+  test('can add and delete tags via UI', async ({ page }) => {
+    flag = await createFlag()
+    await page.goto(`/#/flags/${flag.id}`)
+    await expect(page.locator('input[data-testid="flag-key-input"]')).toBeVisible({ timeout: 10000 })
+    // Add a tag
+    await page.locator('button:has-text("+ Tag")').click()
+    const tagInput = page.locator('[data-testid="new-tag-input"]')
+    await expect(tagInput).toBeVisible({ timeout: 3000 })
+    const tagValue = `tag-${Date.now()}`
+    await tagInput.fill(tagValue)
+    await tagInput.press('Enter')
+    await expect(page.locator('.el-message--success')).toBeVisible({ timeout: 5000 })
+    // Verify tag appears in the UI
+    await expect(page.locator(`.el-tag:has-text("${tagValue}")`)).toBeVisible({ timeout: 3000 })
+    // Delete the tag via API (UI delete requires confirm dialog)
+    const r = await page.request.get(`${API}/flags/${flag.id}`)
+    const flagData = await r.json()
+    const tag = flagData.tags.find(t => t.value === tagValue)
+    expect(tag).toBeTruthy()
+    const delResp = await page.request.delete(`${API}/flags/${flag.id}/tags/${tag.id}`)
+    expect(delResp.ok()).toBeTruthy()
   })
 })

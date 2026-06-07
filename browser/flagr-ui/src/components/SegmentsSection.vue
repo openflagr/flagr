@@ -68,14 +68,14 @@
             <div class="constraint-row new-constraint-row">
               <span class="constraint-logic">AND</span>
               <div class="constraint-input-group">
-                <el-input size="small" placeholder="Property" v-model="element._newConstraint.property" data-testid="new-constraint-prop-input" />
-                <el-select size="small" v-model="element._newConstraint.operator" placeholder="OP" data-testid="new-constraint-op-select">
+                <el-input size="small" placeholder="Property" v-model="newConstraints[element.id].property" data-testid="new-constraint-prop-input" />
+                <el-select size="small" v-model="newConstraints[element.id].operator" placeholder="OP" data-testid="new-constraint-op-select">
                   <el-option v-for="item in operatorOptions" :key="item.value" :label="item.label" :value="item.value" />
                 </el-select>
-                <el-input size="small" v-model="element._newConstraint.value" placeholder="Value" data-testid="new-constraint-value-input" />
+                <el-input size="small" v-model="newConstraints[element.id].value" placeholder="Value" data-testid="new-constraint-value-input" />
               </div>
-              <el-button size="small" type="primary" plain :disabled="!element._newConstraint.property || !element._newConstraint.value"
-                @click.prevent="() => $emit('create-constraint', element)" data-testid="add-constraint-btn">Add</el-button>
+              <el-button size="small" type="primary" plain :disabled="!newConstraints[element.id]?.property || !newConstraints[element.id]?.value"
+                @click.prevent="handleCreateConstraint(element)" data-testid="add-constraint-btn">Add</el-button>
             </div>
           </div>
           <div class="seg-panel seg-panel-dist">
@@ -109,13 +109,30 @@ export default {
   components: { Delete, Edit, ArrowUp, ArrowDown },
   props: { segments: { type: Array, required: true }, operatorOptions: { type: Array, required: true } },
   emits: ["move-up","move-down","reorder","new-segment","save-segment","delete-segment","update-segment-field","update-constraint-field","save-constraint","delete-constraint","create-constraint","edit-distribution"],
-  data() { return { reorderDirty: false } },
+  data() { return { reorderDirty: false, newConstraints: {} } },
+  watch: {
+    segments: {
+      immediate: true,
+      handler(segs) {
+        for (const seg of segs) {
+          if (!(seg.id in this.newConstraints)) {
+            this.newConstraints[seg.id] = { operator: 'EQ', property: '', value: '' }
+          }
+        }
+      }
+    }
+  },
   methods: {
     handleMoveUp(element, index) { this.reorderDirty = true; this.$emit('move-up', element, index) },
     handleMoveDown(element, index) { this.reorderDirty = true; this.$emit('move-down', element, index) },
     handleReorder() { this.reorderDirty = false; this.$emit('reorder', this.segments) },
     onSegmentFieldChange(segment, field, value) { this.$emit("update-segment-field", { segment, field, value }) },
-    onConstraintFieldChange(segment, constraint, field, value) { this.$emit("update-constraint-field", { segment, constraint, field, value }) }
+    onConstraintFieldChange(segment, constraint, field, value) { this.$emit("update-constraint-field", { segment, constraint, field, value }) },
+    handleCreateConstraint(element) {
+      const c = this.newConstraints[element.id]
+      this.$emit('create-constraint', { segment: element, constraint: { operator: c.operator, property: c.property, value: c.value } })
+      this.newConstraints[element.id] = { operator: 'EQ', property: '', value: '' }
+    }
   }
 }
 </script>

@@ -31,3 +31,5 @@ coverage.txt
 # Tool caches
 /.codegraph/
 /.cursor/
+/.sem/
+progress.md
