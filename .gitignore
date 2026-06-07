@@ -28,3 +28,8 @@ _data
 coverage.txt
 /vendor
 .history
+# Tool caches
+/.codegraph/
+/.cursor/
+/.sem/
+progress.md

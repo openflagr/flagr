@@ -1,27 +1,23 @@
-// The Vue build version to load with the `import` command
-// (runtime-only or standalone) has been set in webpack.base.conf with an alias.
-import Vue from 'vue'
+import { createApp } from 'vue'
 
-import ElementUI from 'element-ui'
-import locale from 'element-ui/lib/locale/lang/en'
-import 'element-ui/lib/theme-chalk/index.css'
+import ElementPlus from 'element-plus'
+import locale from 'element-plus/dist/locale/en.mjs'
+import './styles/element/index.scss'
 
 import App from './App.vue'
 import router from './router'
 
-Vue.config.productionTip = false
-Vue.use(ElementUI, { locale })
+const app = createApp(App)
+
+app.use(ElementPlus, { locale })
+app.use(router)
 
 // Autofocus certain fields
-Vue.directive('focus', {
-  inserted: function (el) {
-    el.__vue__.focus()
+app.directive('focus', {
+  mounted(el) {
+    const input = el.querySelector('input') || el.querySelector('textarea')
+    if (input) input.focus()
   }
 })
 
-/* eslint-disable no-new */
-
-new Vue({
-  render: h => h(App),
-  router
-}).$mount('#app')
+app.mount('#app')

@@ -36,17 +36,17 @@ Install Dependencies.
 
 - Go (1.24+)
 - Make (for Makefile)
-- NPM (for building UI)
+- Node (20+) (for building UI)
 
 Build from source.
 
 ```bash
 # get the source
-go get -u github.com/openflagr/flagr
+git clone https://github.com/openflagr/flagr.git
+cd flagr
 
-# install dependencies, generated code, and start the service in
+# install dependencies, generate code, and start the service in
 # development mode
-cd $GOPATH/src/github.com/openflagr/flagr
 make build start
 ```
 

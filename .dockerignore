@@ -9,7 +9,6 @@ site/
 /.idea/
 **/access.log
 vendor/**/*.js
-vendor/**/*.json
 release
 .DS_Store
 *.syso

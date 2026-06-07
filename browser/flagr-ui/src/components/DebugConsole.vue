@@ -1,81 +1,48 @@
 <template>
   <el-card class="dc-container">
-    <div slot="header" class="el-card-header">
-      <h2>Debug Console</h2>
-    </div>
+    <template #header>
+      <div class="el-card-header"><h2>Debug Console</h2></div>
+    </template>
     <el-collapse>
-      <el-collapse-item title="Evaluation">
-        <el-row :gutter="10">
-          <el-col :span="5">
-            <span>Request</span>
-          </el-col>
-          <el-col :span="7" class="evaluation-button-col">
-            <el-button
-              size="mini"
-              @click="postEvaluation(evalContext)"
-              type="primary"
-              plain
-            >POST /api/v1/evaluation</el-button>
-          </el-col>
-          <el-col :span="6">
-            <span>Response</span>
-          </el-col>
-        </el-row>
-        <el-row :gutter="10">
-          <el-col :span="12">
-            <vue-json-editor
-              v-model="evalContext"
-              :showBtns="false"
-              ref="evalContextEditor"
-              class="json-editor"
-            ></vue-json-editor>
-          </el-col>
-          <el-col :span="12">
-            <vue-json-editor
-              v-model="evalResult"
-              :showBtns="false"
-              ref="evalResultEditor"
-              class="json-editor"
-            ></vue-json-editor>
-          </el-col>
-        </el-row>
+      <el-collapse-item title="Evaluation" class="dc-collapse-item">
+        <div class="dc-eval-header">
+          <span class="dc-label">Request</span>
+          <el-button size="small" @click="postEvaluation(evalContext)" type="primary" plain>POST /api/v1/evaluation</el-button>
+        </div>
+        <div class="dc-editor-row">
+          <json-editor :json="evalContext" @update:json="evalContext = $event" @update:jsonString="syncEvalContext" :main-menu-bar="false" :navigation-bar="false" :status-bar="false" mode="text" class="dc-json-editor" />
+          <div class="dc-response-col">
+            <json-editor :json="evalResult" @update:json="evalResult = $event" @update:jsonString="syncEvalResult" :main-menu-bar="false" :navigation-bar="false" :status-bar="false" mode="text" class="dc-json-editor" />
+          </div>
+        </div>
+        <div v-if="evalSummary" class="dc-summary">
+          <div class="dc-summary-header">Rendered Result</div>
+          <div class="dc-summary-body">
+            <div class="dc-result-variant">
+              <span class="dc-result-variant-label">Variant</span>
+              <span class="dc-result-variant-value">{{ evalSummary.variantKey }}</span>
+            </div>
+            <div class="dc-segment-log">
+              <div v-for="seg in evalSummary.segments" :key="seg.segmentID" class="dc-segment-log-item">
+                <div class="dc-segment-log-header">
+                  <span class="dc-seg-name">segment #{{ seg.segmentID }}</span>
+                </div>
+                <div v-if="seg.msg" class="dc-seg-msg">{{ seg.msg }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </el-collapse-item>
-
-      <el-collapse-item title="Batch Evaluation">
-        <el-row :gutter="10">
-          <el-col :span="5">
-            <span>Request</span>
-          </el-col>
-          <el-col :span="7" class="evaluation-button-col">
-            <el-button
-              size="mini"
-              @click="postEvaluationBatch(batchEvalContext)"
-              type="primary"
-              plain
-            >POST /api/v1/evaluation/batch</el-button>
-          </el-col>
-          <el-col :span="6">
-            <span>Response</span>
-          </el-col>
-        </el-row>
-        <el-row :gutter="10">
-          <el-col :span="12">
-            <vue-json-editor
-              v-model="batchEvalContext"
-              :showBtns="false"
-              ref="batchEvalContextEditor"
-              class="json-editor"
-            ></vue-json-editor>
-          </el-col>
-          <el-col :span="12">
-            <vue-json-editor
-              v-model="batchEvalResult"
-              :showBtns="false"
-              ref="batchEvalResultEditor"
-              class="json-editor"
-            ></vue-json-editor>
-          </el-col>
-        </el-row>
+      <el-collapse-item title="Batch Evaluation" class="dc-collapse-item">
+        <div class="dc-eval-header">
+          <span class="dc-label">Request</span>
+          <el-button size="small" @click="postEvaluationBatch(batchEvalContext)" type="primary" plain>POST /api/v1/evaluation/batch</el-button>
+          <span class="dc-label">Response</span>
+        </div>
+        <div class="dc-editor-row">
+          <json-editor :json="batchEvalContext" @update:json="batchEvalContext = $event" @update:jsonString="syncBatchEvalContext" :main-menu-bar="false" :navigation-bar="false" :status-bar="false" mode="text" class="dc-json-editor" />
+          <json-editor :json="batchEvalResult" @update:json="batchEvalResult = $event" @update:jsonString="syncBatchEvalResult" :main-menu-bar="false" :navigation-bar="false" :status-bar="false" mode="text" class="dc-json-editor" />
+        </div>
       </el-collapse-item>
     </el-collapse>
   </el-card>
@@ -83,95 +50,203 @@
 
 <script>
 import Axios from "axios";
-import vueJsonEditor from "vue-json-editor";
-
+import JsonEditor from "vue3-ts-jsoneditor";
 import constants from "@/constants";
-
 const { API_URL } = constants;
 
 export default {
   name: "debug-console",
+  components: { JsonEditor },
   props: ["flag"],
   data() {
+    const flagId = this.flag && this.flag.id;
+    const flagKey = this.flag && this.flag.key;
     return {
-      evalContext: {
-        entityID: "a1234",
-        entityType: "report",
-        entityContext: {
-          hello: "world"
-        },
-        enableDebug: true,
-        flagID: this.flag.id,
-        flagKey: this.flag.key
-      },
+      evalContext: { entityID: "a1234", entityType: "report", entityContext: { hello: "world" }, enableDebug: true, flagID: flagId, flagKey: flagKey },
       evalResult: {},
-      batchEvalContext: {
-        entities: [
-          {
-            entityID: "a1234",
-            entityType: "report",
-            entityContext: {
-              hello: "world"
-            }
-          },
-          {
-            entityID: "a5678",
-            entityType: "report",
-            entityContext: {
-              hello: "world"
-            }
-          }
-        ],
-        enableDebug: true,
-        flagIDs: [this.flag.id]
-      },
+      evalSummary: null,
+      batchEvalContext: { entities: [{ entityID: "a1234", entityType: "report", entityContext: { hello: "world" } }, { entityID: "a5678", entityType: "report", entityContext: { hello: "world" } }], enableDebug: true, flagIDs: [flagId] },
       batchEvalResult: {}
     };
   },
   methods: {
+    // eslint-disable-next-line no-empty
+    syncEvalContext(text) { try { this.evalContext = JSON.parse(text) } catch(e) {} },
+    // eslint-disable-next-line no-empty
+    syncEvalResult(text) { try { this.evalResult = JSON.parse(text) } catch(e) {} },
+    // eslint-disable-next-line no-empty
+    syncBatchEvalContext(text) { try { this.batchEvalContext = JSON.parse(text) } catch(e) {} },
+    // eslint-disable-next-line no-empty
+    syncBatchEvalResult(text) { try { this.batchEvalResult = JSON.parse(text) } catch(e) {} },
+
     postEvaluation(evalContext) {
-      Axios.post(`${API_URL}/evaluation`, evalContext).then(
-        response => {
-          this.$message.success(`evaluation success`);
-          this.evalResult = response.data;
-        },
-        () => {
-          this.$message.error(`evaluation error`);
-        }
-      );
+      Axios.post(`${API_URL}/evaluation`, evalContext).then(response => {
+        this.evalResult = response.data;
+        this.evalSummary = this.buildSummary(response.data);
+        this.$message.success("evaluation success");
+      }, err => { this.$message.error(err?.response?.data?.message || 'evaluation error') });
     },
     postEvaluationBatch(batchEvalContext) {
-      Axios.post(`${API_URL}/evaluation/batch`, batchEvalContext).then(
-        response => {
-          this.$message.success(`evaluation success`);
-          this.batchEvalResult = response.data;
-        },
-        () => {
-          this.$message.error(`evaluation error`);
-        }
-      );
+      Axios.post(`${API_URL}/evaluation/batch`, batchEvalContext).then(response => {
+        this.batchEvalResult = response.data;
+        this.$message.success("evaluation success");
+      }, err => { this.$message.error(err?.response?.data?.message || 'evaluation error') });
+    },
+    buildSummary(result) {
+      if (!result || !result.evalDebugLog) return null;
+      const log = result.evalDebugLog;
+      const segments = (log.segmentDebugLogs || []).map(s => ({
+        segmentID: s.segmentID,
+        description: s.description,
+        rolloutPercent: s.rolloutPercent,
+        matched: s.matched,
+        msg: s.msg,
+        constraints: (s.constraintDebugLogs || []).map(c => ({
+          constraintID: c.constraintID,
+          constraintProperty: c.constraintProperty,
+          constraintOperator: c.constraintOperator,
+          constraintValue: c.constraintValue,
+          matched: c.matched
+        }))
+      }));
+      return {
+        variantKey: result.variantKey || "—",
+        variantID: result.variantID,
+        segments
+      };
     }
   },
-  components: {
-    vueJsonEditor
-  },
-  mounted() {
-    this.$refs.evalContextEditor.editor.setMode("code");
-    this.$refs.evalResultEditor.editor.setMode("code");
-    this.$refs.batchEvalContextEditor.editor.setMode("code");
-    this.$refs.batchEvalResultEditor.editor.setMode("code");
+  watch: {
+    flag: {
+      immediate: true,
+      handler(f) {
+        if (f && f.id) {
+          this.evalContext.flagID = f.id;
+          this.evalContext.flagKey = f.key;
+          this.batchEvalContext.flagIDs = [f.id];
+        }
+      }
+    }
   }
 };
 </script>
 
 <style lang="less" scoped>
-.json-editor {
-  margin-top: 3px;
-  .jsoneditor {
-    height: 400px;
-  }
+.dc-eval-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
 }
-.evaluation-button-col {
-  text-align: right;
+.dc-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--el-text-color-regular);
 }
+.dc-editor-row {
+  display: flex;
+  gap: 12px;
+}
+.dc-json-editor {
+  flex: 1;
+  height: 280px;
+}
+.dc-collapse-item {
+  :deep(.el-collapse-item__content) { padding-bottom: 8px; }
+}
+
+// --- Summary ---
+.dc-summary {
+  margin-top: 12px;
+  border: 1px solid var(--el-border-color-light);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.dc-summary-header {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--el-text-color-primary);
+  padding: 10px 14px;
+  background: var(--el-fill-color-light);
+  border-bottom: 1px solid var(--el-border-color-light);
+}
+.dc-summary-body {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.dc-result-variant {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--el-color-primary-light-9);
+  border: 1px solid var(--el-color-primary-light-7);
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+.dc-result-variant-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--el-color-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: var(--el-color-primary-light-8);
+  border-radius: 4px;
+  padding: 2px 8px;
+  line-height: 1.5;
+}
+.dc-result-variant-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--el-text-color-primary);
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+}
+
+.dc-segment-log {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+
+.dc-segment-log-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--el-fill-color-light);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.dc-segment-log-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.dc-seg-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--el-text-color-primary);
+}
+
+.dc-seg-msg {
+  font-size: 11px;
+  color: var(--el-text-color-placeholder);
+  line-height: 1.4;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  word-break: break-all;
+}
+.dc-response-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.dc-response-col .dc-json-editor {
+  flex: 1;
+}
+
+
+
 </style>
