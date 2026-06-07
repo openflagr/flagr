@@ -25,7 +25,7 @@ import xss from "xss";
 import "katex/dist/katex.min.css"
 
 let md = MarkdownIt("commonmark");
-md.use(mk);
+md.use(mk, { output: "html" });
 
 export default {
   name: "editor",
