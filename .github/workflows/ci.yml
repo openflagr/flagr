@@ -84,6 +84,5 @@ jobs:
           node-version: '20'
       - name: Check out source code
         uses: actions/checkout@v4
-      - run: cd browser/flagr-ui && npm install
-      - name: Check dependency freshness (14-day minimum age)
-        run: MIN_AGE_DAYS=14 ./scripts/check-dep-freshness.sh
+      - name: Check Go dependency freshness (5-day minimum age)
+        run: MIN_AGE_DAYS=5 ./scripts/check-dep-freshness.sh

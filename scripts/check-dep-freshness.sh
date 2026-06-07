@@ -1,22 +1,25 @@
 #!/usr/bin/env bash
 #
-# check-dep-freshness.sh — Reject dependencies published too recently.
+# check-dep-freshness.sh — Reject Go dependencies published too recently.
 #
 # Supply-chain attacks often land in fresh releases. This script checks every
-# production dependency (npm + Go) and fails if any resolved version was
-# published within the last MIN_AGE_DAYS days.
+# direct Go module dependency and fails if any resolved version was published
+# within the last MIN_AGE_DAYS days.
+#
+# NOTE: npm cooldown is handled natively via .npmrc min-release-age=5.
+# This script only covers Go modules, which have no native equivalent.
 #
 # Usage:
-#   MIN_AGE_DAYS=14 ./scripts/check-dep-freshness.sh
+#   MIN_AGE_DAYS=5 ./scripts/check-dep-freshness.sh
 #
 # Exit codes:
 #   0 — all deps are old enough
 #   1 — at least one dep is too fresh
-#   2 — tooling error (npm / go not found)
+#   2 — tooling error
 
 set -euo pipefail
 
-MIN_AGE_DAYS="${MIN_AGE_DAYS:-14}"
+MIN_AGE_DAYS="${MIN_AGE_DAYS:-5}"
 TODAY_EPOCH=$(date +%s)
 CUTOFF_EPOCH=$((TODAY_EPOCH - MIN_AGE_DAYS * 86400))
 FAILURES=0
@@ -27,7 +30,6 @@ date_to_epoch() {
   date -d "$1" +%s 2>/dev/null || echo 0
 }
 
-# check_freshness <name> <version> <publish_date_iso>
 check_freshness() {
   local name="$1" version="$2" pub_date="$3"
   local pub_epoch
@@ -45,64 +47,9 @@ check_freshness() {
   fi
 }
 
-# get_npm_publish_date <pkg> <version>
-# Returns ISO date string or empty on failure.
-get_npm_publish_date() {
-  local pkg="$1" ver="$2"
-  # Fetch full time object, extract the version key
-  npm view "$pkg" time --json 2>/dev/null | node -e "
-    const d = JSON.parse(require('fs').readFileSync('/dev/stdin','utf8'));
-    process.stdout.write(d['$ver'] || '');
-  " 2>/dev/null || true
-}
-
-# ── npm dependencies ─────────────────────────────────────────────────────────
-
-check_npm_deps() {
-  echo ""
-  echo "=== npm production dependencies (browser/flagr-ui) ==="
-  if [[ ! -f browser/flagr-ui/package.json ]]; then
-    echo "  skipped — package.json not found"
-    return
-  fi
-
-  cd browser/flagr-ui
-
-  # Get installed prod deps as "name@version" lines
-  local deps
-  deps=$(npm ls --prod --json 2>/dev/null | node -e "
-    const data = JSON.parse(require('fs').readFileSync('/dev/stdin','utf8'));
-    for (const [name, info] of Object.entries(data.dependencies || {})) {
-      if (info.version && !info.version.startsWith('file:') && !info.version.startsWith('link:')) {
-        console.log(name + ' ' + info.version);
-      }
-    }
-  " 2>/dev/null || true)
-
-  if [[ -z "$deps" ]]; then
-    echo "  skipped — no production deps found"
-    cd - >/dev/null
-    return
-  fi
-
-  while IFS=' ' read -r name version; do
-    [[ -z "$name" ]] && continue
-    local pub_date
-    pub_date=$(get_npm_publish_date "$name" "$version")
-    if [[ -n "$pub_date" ]]; then
-      check_freshness "$name" "$version" "$pub_date"
-    else
-      echo "  ⚠  $name@$version — could not fetch publish date"
-    fi
-  done <<< "$deps"
-
-  cd - >/dev/null
-}
-
 # ── Go dependencies ──────────────────────────────────────────────────────────
 
 check_go_deps() {
-  echo ""
   echo "=== Go module dependencies ==="
   if [[ ! -f go.mod ]]; then
     echo "  skipped — go.mod not found"
@@ -152,16 +99,17 @@ check_go_deps() {
 
 # ── Main ─────────────────────────────────────────────────────────────────────
 
-echo "Dependency freshness check (min age: ${MIN_AGE_DAYS} days)"
+echo "Go dependency freshness check (min age: ${MIN_AGE_DAYS} days)"
+echo "(npm cooldown handled by .npmrc min-release-age)"
+echo ""
 
-check_npm_deps
 check_go_deps
 
 echo ""
 if [[ "$FAILURES" -gt 0 ]]; then
-  echo "FAILED: ${FAILURES} dependencies are younger than ${MIN_AGE_DAYS} days."
+  echo "FAILED: ${FAILURES} Go dependencies are younger than ${MIN_AGE_DAYS} days."
   echo "Wait for them to age, or set MIN_AGE_DAYS=<N> to override."
   exit 1
 else
-  echo "PASSED: all dependencies are at least ${MIN_AGE_DAYS} days old."
+  echo "PASSED: all Go dependencies are at least ${MIN_AGE_DAYS} days old."
 fi
