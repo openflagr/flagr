@@ -11,16 +11,19 @@
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
-    "@iktakahiro/markdown-it-katex": "^4.0.0",
-    "axios": "^1.13.5",
+    "@iktakahiro/markdown-it-katex": "^4.0.1",
+    "axios": "^1.16.1",
     "diff": "^8.0.3",
-    "element-plus": "^2.10.0",
+    "element-plus": "^2.14.0",
     "lodash.clone": "^4.5.0",
     "markdown-it": "^12.3.2",
-    "vue": "^3.5.0",
+    "vue": "^3.5.34",
     "vue-router": "^4.5.0",
     "vue3-ts-jsoneditor": "^3.1.0",
     "xss": "^1.0.9"
+  },
+  "overrides": {
+    "katex": "0.16.47"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.27.0",
