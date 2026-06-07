@@ -106,7 +106,6 @@
 
 <script>
 import Axios from "axios"
-import clone from "lodash.clone"
 import { Delete } from "@element-plus/icons-vue"
 
 import constants from "@/constants"
@@ -154,8 +153,8 @@ export default {
       allowCreateEntityType: true,
       tagInputVisible: false,
       flag: {},
-      newSegment: clone(DEFAULT_SEGMENT),
-      newTag: clone(DEFAULT_TAG),
+      newSegment: { ...DEFAULT_SEGMENT },
+      newTag: { ...DEFAULT_TAG },
       selectedSegment: null,
       distributionDraft: {},
       operatorOptions: operators,

@@ -15,7 +15,6 @@
         "axios": "^1.16.1",
         "diff": "^9.0.0",
         "element-plus": "^2.14.0",
-        "lodash.clone": "^4.5.0",
         "markdown-it": "^14.2.0",
         "vue": "^3.5.34",
         "vue-router": "^5.1.0",
