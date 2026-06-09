@@ -47,7 +47,7 @@ Flagr — Go feature flag service with Vue 3 UI.
 
 **E2E tests:** `make test-e2e` — single command. Uses `scripts/e2e-server.sh` (idempotent, port-safe) and Playwright's `webServer` lifecycle. Always works regardless of leftover processes.
 
-**Integration tests:** Two modes:
+**Integration tests:** Three modes:
 - **Local** (`make test-integration`): Auto-starts server on random port with SQLite `:memory:`. Run `go test -tags=integration ./integration_tests/` directly.
 - **Docker Compose** (`cd integration_tests && make test`): Builds Go test binary, loops over 6 flagr instances (sqlite, mysql, mysql8, postgres9, postgres13, checkr), runs suite against each.
 - **Benchmarks** (`make bench-integration`): HTTP eval benchmarks against auto-started server.

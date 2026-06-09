@@ -61,3 +61,61 @@ And alternatively to just run the UI service:
 ```
 make run_ui
 ```
+
+## Testing
+
+Flagr has three kinds of tests, each serving a different purpose.
+
+### Unit tests
+
+Run the Go unit tests (no external services required):
+
+```bash
+make test
+```
+
+Or directly:
+
+```bash
+go test ./pkg/...
+```
+
+### E2E tests (Flagr UI)
+
+Playwright-based end-to-end tests for the Vue 3 UI. Builds the Go
+server, starts the backend and UI servers, runs Playwright, then cleans up:
+
+```bash
+make test-e2e
+```
+
+### Integration tests (API, multi-DB)
+
+HTTP-level integration tests covering all CRUD and eval endpoints.
+Seeds ~50 realistic flags across all 12 constraint operators.
+
+**Local mode** — SQLite `:memory:`, auto-starts server on random port:
+
+```bash
+make test-integration
+```
+
+**Docker Compose mode** — runs the same test suite against 6 flagr
+instances (SQLite, MySQL, MySQL 8, PostgreSQL 9, PostgreSQL 13,
+checkr/flagr):
+
+```bash
+cd integration_tests && make test
+```
+
+**HTTP eval benchmarks** — measures end-to-end eval latency through HTTP:
+
+```bash
+make bench-integration
+```
+
+To run against a single Docker Compose instance:
+
+```bash
+cd integration_tests && make test-instance INSTANCE=flagr_with_mysql
+```

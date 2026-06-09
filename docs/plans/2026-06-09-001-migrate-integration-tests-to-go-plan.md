@@ -1,11 +1,11 @@
 # refactor: Migrate integration tests to Go with HTTP benchmarks
 
 **Date:** 2026-06-09
-**Status:** draft
+**Status:** implemented
 
 ## Summary
 
-Replace the shell/shakedown integration tests (`integration_tests/test.sh`) with a Go test suite that runs via `go test`, seeds ~50 realistic flags covering all 12 constraint types, and provides native Go `BenchmarkXxx` functions over HTTP eval endpoints. Supports three execution modes: local auto-start (SQLite), Docker Compose multi-instance (6 flagr instances with different DB backends), and CI. Shell tests remain as `make test-shell` fallback.
+Replace the shell/shakedown integration tests (`integration_tests/test.sh`) with a Go test suite that runs via `go test`, seeds ~50 realistic flags covering all 12 constraint types, and provides native Go `BenchmarkXxx` functions over HTTP eval endpoints. Supports three execution modes: local auto-start (SQLite), Docker Compose multi-instance (6 flagr instances with different DB backends), and CI.
 
 ## Problem Frame
 
@@ -19,7 +19,6 @@ Replace the shell/shakedown integration tests (`integration_tests/test.sh`) with
 3. `go test -tags=integration -bench=. ./integration_tests/` produces benchmark results for HTTP eval endpoints
 4. ~50 flags seeded covering all 12 constraint operators with diverse entity contexts
 5. CI `integration_test` job uses the Go suite
-6. `make test-shell` preserved unchanged
 
 ## Key Technical Decisions
 
@@ -40,10 +39,9 @@ Replace the shell/shakedown integration tests (`integration_tests/test.sh`) with
 
 ## Scope
 
-**In scope:** Go test file, TestMain, seed generator, 12 test functions ported from shell, 12 HTTP benchmarks, Docker Compose Makefile + alpine runner, root Makefile targets, CI workflow update.
+**In scope:** Go test file, TestMain, seed generator, 12 test functions ported from shell, 12 HTTP benchmarks, Docker Compose Makefile + alpine runner, root Makefile targets, CI workflow update, deletion of `test.sh`.
 
-**Out of scope:** Removing `test.sh`, UI e2e tests, in-process benchmarks.
-
+**Out of scope:** UI e2e tests, in-process benchmarks.
 **Deferred:** `-flagr.url` test flag, stress/soak benchmarks, parallel per-instance execution.
 
 ## Architecture
@@ -92,13 +90,15 @@ for instance in [sqlite, mysql, mysql8, postgres9, postgres13, checkr]:
 
 ```
 integration_tests/
-├── integration_test.go    # Build tag, TestMain, HTTP helpers, test functions, benchmarks
-├── seed.go                # Flag spec data (52 flag definitions covering all constraints)
-├── integration.test       # Pre-compiled binary (gitignored)
-├── docker-compose.yml     # Replaces shakedown with alpine integration-runner
-├── Makefile               # test (Go suite), test-shell (fallback), build-integration-test
-├── test.sh                # Unchanged shell fallback
-├── Dockerfile-Integration-Test  # Unchanged
+├── integration_test.go            # Build tag, test functions
+├── integration_server.go          # TestMain, server lifecycle, seed runner
+├── integration_client.go          # HTTP client helpers
+├── integration_benchmark_test.go  # HTTP benchmarks
+├── seed.go                        # Flag spec data (52 flag definitions)
+├── integration.test               # Pre-compiled binary (gitignored)
+├── docker-compose.yml             # Replaces shakedown with alpine integration-runner
+├── Makefile                       # build, test, bench targets
+├── Dockerfile-Integration-Test    # Unchanged
 └── ...
 ```
 
@@ -231,11 +231,9 @@ integration-runner:
       - flagr_with_postgres13
       - checkr_flagr_with_sqlite
 ```
-
 **Makefile targets:**
 - `build-integration-test` — `go test -tags=integration -c -o integration.test ./integration_tests/`
 - `test` (default) — Build image + binary, `up`, loop over 6 instances, `docker compose exec -T integration-runner` with `FLAGR_SERVER_URL` per instance. Track pass/total, exit non-zero for any failure.
-- `test-shell` — One-off `docker run` with `zhouzhuojie/docker-shakedown` image (isolated from compose, preserved behavior)
 - `test-instance INSTANCE=x` / `bench-instance INSTANCE=x` — Single-instance helpers
 - `retest` — `down test`
 
@@ -267,8 +265,6 @@ Update the `integration_test` job to:
 3. `make test` (now runs the Go suite against all 6 instances)
 4. `if: always()` log collection step
 
-Rollback: change `make test` to `make test-shell` in the CI file.
-
 ---
 
 ### U9. Documentation
@@ -279,9 +275,6 @@ Add entries:
 - `make test-integration` — Run Go integration tests (local auto-start)
 - `make bench-integration` — Run HTTP eval benchmarks
 - `cd integration_tests && make test` — Run against all 6 Docker Compose instances
-- `cd integration_tests && make test-shell` — Original shell test fallback
-
-Add file-level doc comment at top of `integration_test.go` explaining the three modes and build tag requirement.
 
 ## Risks
 
@@ -297,3 +290,13 @@ Add file-level doc comment at top of `integration_test.go` explaining the three 
 - Entity fixtures: `pkg/entity/fixture.go` — `GenFixtureFlag`
 - Constraint operators: `swagger_gen/models/constraint.go` — 12 enum values
 - CI workflow: `.github/workflows/ci.yml` — `integration_test` job
+
+## Delta from Plan
+
+Changes made during implementation that differ from the draft:
+
+- **File split:** `integration_test.go` was split into `integration_server.go`, `integration_client.go`, `integration_benchmark_test.go`, and the test-only `integration_test.go` — each under 260 lines vs the planned 929.
+- **Seed data flattened:** Replaced `opGroup` nested loop machinery with a flat `[]entry` literal — every flag spec visible at a glance.
+- **No test-shell fallback:** `test.sh` was deleted entirely; the `test-shell` Makefile target and docs were removed. The Go suite fully replaces the shell tests.
+- **Stale-binary guard removed:** `startLocalServer` always builds to a temp directory instead of checking for a pre-built `./flagr`.
+- **`init()` removed:** Seed data construction moved from `init()` side effect to an explicit `initFlagDefs()` call from `TestMain`.

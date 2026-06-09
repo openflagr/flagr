@@ -50,8 +50,7 @@ jobs:
         run: cd integration_tests && make test
       - name: Collect test output
         if: always()
-        run: docker compose exec -T integration-runner cat /app/integration.test.log 2>/dev/null || true
-        working-directory: integration_tests
+        run: cat integration_tests/integration.test.log 2>/dev/null || true
   e2e_test:
     runs-on: ubuntu-latest
     steps:

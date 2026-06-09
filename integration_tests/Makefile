@@ -12,38 +12,34 @@ up:
 	docker compose up -d
 
 # Run Go integration tests against all 6 Docker Compose instances
+# Output is also tee'd to integration.test.log for CI log collection.
 test: build-image build-integration-test up
-	@total=0; pass=0; \
+	@total=0; pass=0; rm -f integration.test.log; \
 	for instance in flagr_with_sqlite flagr_with_mysql flagr_with_mysql8 \
 	                flagr_with_postgres9 flagr_with_postgres13 \
 	                checkr_flagr_with_sqlite; do \
-		echo "=== $$instance ==="; \
+		echo "=== $$instance ===" | tee -a integration.test.log; \
 		total=$$((total+1)); \
 		if docker compose exec -T integration-runner \
-			sh -c "FLAGR_SERVER_URL=http://$$instance:18000 /app/integration.test -test.v -test.count=1"; then \
+			sh -c "FLAGR_SERVER_URL=http://$$instance:18000 /app/integration.test -test.v -test.count=1" >> integration.test.log 2>&1; then \
 			pass=$$((pass+1)); \
 		else \
-			echo "FAILED: $$instance"; \
+			echo "FAILED: $$instance" | tee -a integration.test.log; \
 		fi; \
 	done; \
-	echo "=== $$pass/$$total instances passed ==="; \
+	echo "=== $$pass/$$total instances passed ===" | tee -a integration.test.log; \
 	[ $$pass -eq $$total ]
-
-# Shell test fallback (original behavior)
-test-shell: build-image up
-	docker run --rm --network flagr_integration_tests \
-		-v $(PWD)/test.sh:/app/test.sh:ro \
-		zhouzhuojie/docker-shakedown \
-		sh /app/test.sh
 
 # Single-instance test
 test-instance: build-image build-integration-test up
 	docker compose exec -T integration-runner \
 		sh -c "FLAGR_SERVER_URL=http://$(INSTANCE):18000 /app/integration.test -test.v -test.count=1"
 
-# Benchmark against a single instance
+# Benchmark against a single instance (200ms per benchmark for faster feedback)
 bench-instance: build-image build-integration-test up
 	docker compose exec -T integration-runner \
-		sh -c "FLAGR_SERVER_URL=http://$(INSTANCE):18000 /app/integration.test -test.bench=. -test.benchmem -test.count=1 -test.run=^$$"
+		sh -c "FLAGR_SERVER_URL=http://$(INSTANCE):18000 /app/integration.test -test.bench=. -test.benchmem -test.benchtime=200ms -test.count=1 -test.run=^$$"
+
+INSTANCE ?= flagr_with_sqlite
 
 retest: down test

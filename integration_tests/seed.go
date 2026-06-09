@@ -2,6 +2,8 @@
 
 package flagr_integration
 
+import "fmt"
+
 // Flag spec definitions for seeding.
 // Each flag is created via HTTP API: flag → segment → constraints → variants → distributions → tags.
 
@@ -20,206 +22,100 @@ type flagDef struct {
 	Tags        []string
 }
 
-// matchingEntity returns entity context that makes all constraints of this flag match.
-func (f flagDef) matchingEntity() map[string]any {
-	m := map[string]any{}
-	_ = f // placeholder — used per-flag in eval tests
-	return m
-}
-
-var allFlagDefs []flagDef
-
-func init() {
-	type opGroup struct {
-		operator string
-		cases    []struct {
-			prop  string
-			value string
-		}
+// initFlagDefs returns all flag definitions to seed.
+// Called explicitly from seedFlags; no init() global side effects.
+func initFlagDefs() []flagDef {
+	// Flat list of (operator, property, value) entries — one per flag.
+	// This is intentionally flat: every entry is visible at a glance, no loop
+	// machinery to decode.
+	type entry struct {
+		op    string
+		prop  string
+		value string
+	}
+	entries := []entry{
+		// EQ
+		{"EQ", "region", `"us-west"`},
+		{"EQ", "tier", `"premium"`},
+		{"EQ", "status", `"active"`},
+		{"EQ", "color", `"blue"`},
+		// NEQ
+		{"NEQ", "region", `"us-east"`},
+		{"NEQ", "env", `"prod"`},
+		{"NEQ", "status", `"banned"`},
+		{"NEQ", "plan", `"free"`},
+		// LT
+		{"LT", "age", `18`},
+		{"LT", "score", `100`},
+		{"LT", "level", `5`},
+		{"LT", "attempts", `3`},
+		// LTE
+		{"LTE", "age", `65`},
+		{"LTE", "rating", `4.5`},
+		{"LTE", "max_retries", `10`},
+		{"LTE", "version", `2`},
+		// GT
+		{"GT", "age", `21`},
+		{"GT", "revenue", `1000`},
+		{"GT", "count", `100`},
+		{"GT", "priority", `3`},
+		// GTE
+		{"GTE", "age", `18`},
+		{"GTE", "score", `80`},
+		{"GTE", "years_exp", `2`},
+		{"GTE", "tier_num", `5`},
+		// EREG
+		{"EREG", "email", `".+@company\\.com"`},
+		{"EREG", "phone", `"^\\+1[0-9]{10}$"`},
+		{"EREG", "zip", `"^[0-9]{5}$"`},
+		{"EREG", "user_agent", `".*Mobile.*"`},
+		// NEREG
+		{"NEREG", "email", `".*@spam\\.com"`},
+		{"NEREG", "domain", `"^internal\\."`},
+		{"NEREG", "path", `"^/admin"`},
+		{"NEREG", "input", `"bad-word"`},
+		// IN
+		{"IN", "region", `["us-west","us-east"]`},
+		{"IN", "role", `["admin","editor"]`},
+		{"IN", "state", `["CA","NY","TX"]`},
+		{"IN", "category", `["a","b","c"]`},
+		// NOTIN
+		{"NOTIN", "blacklist", `["10.0.0.0/8","192.168.0.0/16"]`},
+		{"NOTIN", "banned_words", `["evil","spam"]`},
+		{"NOTIN", "excluded", `["internal"]`},
+		{"NOTIN", "blocked", `["v1","v2"]`},
+		// CONTAINS
+		{"CONTAINS", "tags", `"premium"`},
+		{"CONTAINS", "permissions", `"delete"`},
+		{"CONTAINS", "features", `"beta"`},
+		{"CONTAINS", "groups", `"engineering"`},
+		// NOTCONTAINS
+		{"NOTCONTAINS", "exclusions", `"banned"`},
+		{"NOTCONTAINS", "blocklist", `"deprecated"`},
+		{"NOTCONTAINS", "disabled", `"off"`},
+		{"NOTCONTAINS", "muted", `"silent"`},
 	}
 
-	groups := []opGroup{
-		{
-			operator: "EQ",
-			cases: []struct {
-				prop  string
-				value string
-			}{
-				{"region", `"us-west"`},
-				{"tier", `"premium"`},
-				{"status", `"active"`},
-				{"color", `"blue"`},
-			},
-		},
-		{
-			operator: "NEQ",
-			cases: []struct {
-				prop  string
-				value string
-			}{
-				{"region", `"us-east"`},
-				{"env", `"prod"`},
-				{"status", `"banned"`},
-				{"plan", `"free"`},
-			},
-		},
-		{
-			operator: "LT",
-			cases: []struct {
-				prop  string
-				value string
-			}{
-				{"age", `18`},
-				{"score", `100`},
-				{"level", `5`},
-				{"attempts", `3`},
-			},
-		},
-		{
-			operator: "LTE",
-			cases: []struct {
-				prop  string
-				value string
-			}{
-				{"age", `65`},
-				{"rating", `4.5`},
-				{"max_retries", `10`},
-				{"version", `2`},
-			},
-		},
-		{
-			operator: "GT",
-			cases: []struct {
-				prop  string
-				value string
-			}{
-				{"age", `21`},
-				{"revenue", `1000`},
-				{"count", `100`},
-				{"priority", `3`},
-			},
-		},
-		{
-			operator: "GTE",
-			cases: []struct {
-				prop  string
-				value string
-			}{
-				{"age", `18`},
-				{"score", `80`},
-				{"years_exp", `2`},
-				{"tier_num", `5`},
-			},
-		},
-		{
-			operator: "EREG",
-			cases: []struct {
-				prop  string
-				value string
-			}{
-				{"email", `".+@company\\.com"`},
-				{"phone", `"^\\+1[0-9]{10}$"`},
-				{"zip", `"^[0-9]{5}$"`},
-				{"user_agent", `".*Mobile.*"`},
-			},
-		},
-		{
-			operator: "NEREG",
-			cases: []struct {
-				prop  string
-				value string
-			}{
-				{"email", `".*@spam\\.com"`},
-				{"domain", `"^internal\\."`},
-				{"path", `"^/admin"`},
-				{"input", `"bad-word"`},
-			},
-		},
-		{
-			operator: "IN",
-			cases: []struct {
-				prop  string
-				value string
-			}{
-				{"region", `["us-west","us-east"]`},
-				{"role", `["admin","editor"]`},
-				{"state", `["CA","NY","TX"]`},
-				{"category", `["a","b","c"]`},
-			},
-		},
-		{
-			operator: "NOTIN",
-			cases: []struct {
-				prop  string
-				value string
-			}{
-				{"blacklist", `["10.0.0.0/8","192.168.0.0/16"]`},
-				{"banned_words", `["evil","spam"]`},
-				{"excluded", `["internal"]`},
-				{"blocked", `["v1","v2"]`},
-			},
-		},
-		{
-			operator: "CONTAINS",
-			cases: []struct {
-				prop  string
-				value string
-			}{
-				{"tags", `"premium"`},
-				{"permissions", `"delete"`},
-				{"features", `"beta"`},
-				{"groups", `"engineering"`},
-			},
-		},
-		{
-			operator: "NOTCONTAINS",
-			cases: []struct {
-				prop  string
-				value string
-			}{
-				{"exclusions", `"banned"`},
-				{"blocklist", `"deprecated"`},
-				{"disabled", `"off"`},
-				{"muted", `"silent"`},
-			},
-		},
-	}
-
-	idx := 0
-	for _, g := range groups {
-		for _, c := range g.cases {
-			idx++
-			allFlagDefs = append(allFlagDefs, flagDef{
-				Key:         "int_flag_" + g.operator + "_" + itoa(idx),
-				Description: "Integration test flag: " + g.operator + " on " + c.prop,
-				EntityType:  "user",
-				Enabled:     true,
-				Constraints: []constraintDef{
-					{
-						Property: c.prop,
-						Operator: g.operator,
-						Value:    c.value,
-					},
+	var defs []flagDef
+	for i, e := range entries {
+		defs = append(defs, flagDef{
+			Key:         "int_flag_" + e.op + "_" + fmt.Sprintf("%02d", i+1),
+			Description: "Integration test flag: " + e.op + " on " + e.prop,
+			EntityType:  "user",
+			Enabled:     true,
+			Constraints: []constraintDef{
+				{
+					Property: e.prop,
+					Operator: e.op,
+					Value:    e.value,
 				},
-				Tags: []string{"int_test", "constraint_" + g.operator},
-			})
-		}
+			},
+			Tags: []string{"int_test", "constraint_" + e.op},
+		})
 	}
 
 	// Extra flags
 	extras := []flagDef{
-		{
-			Key:         "int_flag_multi_segment",
-			Description: "Multi-segment flag with 3 segments at different rollout %",
-			EntityType:  "user",
-			Enabled:     true,
-			Constraints: []constraintDef{
-				{Property: "region", Operator: "EQ", Value: `"us-west"`},
-				{Property: "age", Operator: "GT", Value: `18`},
-				{Property: "tier", Operator: "IN", Value: `["premium","enterprise"]`},
-			},
-			Tags: []string{"int_test", "multi_segment"},
-		},
 		{
 			Key:         "int_flag_complex_and",
 			Description: "Complex AND constraints: EQ + GT + IN",
@@ -254,12 +150,5 @@ func init() {
 		},
 	}
 
-	allFlagDefs = append(allFlagDefs, extras...)
-}
-
-func itoa(n int) string {
-	if n < 10 {
-		return string(rune('0' + n))
-	}
-	return string(rune('0' + n/10)) + string(rune('0' + n%10))
+	return append(defs, extras...)
 }
