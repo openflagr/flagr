@@ -80,9 +80,12 @@ services:
     command: sh -c "sleep 15 && ./flagr"
 
   integration-runner:
-    image: alpine:3
+    image: golang:1.26-alpine
     container_name: flagr-integration-runner
+    working_dir: /src
     command: tail -f /dev/null  # stay alive for exec
+    volumes:
+      - ../.:/src
     depends_on:
       - flagr_with_sqlite
       - flagr_with_mysql

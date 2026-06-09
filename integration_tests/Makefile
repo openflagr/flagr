@@ -1,10 +1,6 @@
 build-image:
 	docker build -f ./Dockerfile-Integration-Test -t flagr_integration_tests ../
 
-build-integration-test:
-	rm -rf integration.test
-	go test -tags=integration -count=1 -c -o integration.test .
-
 down:
 	docker compose down -v
 
@@ -13,8 +9,7 @@ up:
 	docker compose up -d
 
 # Run Go integration tests against all 6 Docker Compose instances
-test: down build-image build-integration-test up
-	docker compose exec -T integration-runner sh -c 'cat > /tmp/integration.test && chmod +x /tmp/integration.test' < integration.test
+test: down build-image up
 	@total=0; pass=0; rm -f integration.test.log; \
 	for instance in flagr_with_sqlite flagr_with_mysql flagr_with_mysql8 \
 	                flagr_with_postgres9 flagr_with_postgres13 \
@@ -22,7 +17,7 @@ test: down build-image build-integration-test up
 		echo "=== $$instance ===" | tee -a integration.test.log; \
 		total=$$((total+1)); \
 		if docker compose exec -T integration-runner \
-			sh -c "FLAGR_SERVER_URL=http://$$instance:18000 /tmp/integration.test -test.v -test.count=1" >> integration.test.log 2>&1; then \
+			sh -c "FLAGR_SERVER_URL=http://$$instance:18000 go test -tags=integration -v -count=1 ./integration_tests/" >> integration.test.log 2>&1; then \
 			pass=$$((pass+1)); \
 		else \
 			echo "FAILED: $$instance" | tee -a integration.test.log; \
@@ -32,15 +27,14 @@ test: down build-image build-integration-test up
 	[ $$pass -eq $$total ]
 
 # Single-instance test
-test-instance: build-image build-integration-test up
-	docker compose exec -T integration-runner sh -c 'cat > /tmp/integration.test && chmod +x /tmp/integration.test' < integration.test
+test-instance: build-image up
 	docker compose exec -T integration-runner \
-		sh -c "FLAGR_SERVER_URL=http://$(INSTANCE):18000 /tmp/integration.test -test.v -test.count=1"
+		sh -c "FLAGR_SERVER_URL=http://$(INSTANCE):18000 go test -tags=integration -v -count=1 ./integration_tests/"
 
-bench-instance: build-image build-integration-test up
-	docker compose exec -T integration-runner sh -c 'cat > /tmp/integration.test && chmod +x /tmp/integration.test' < integration.test
+# Benchmark against a single instance (200ms per benchmark for faster feedback)
+bench-instance: build-image up
 	docker compose exec -T integration-runner \
-		sh -c "FLAGR_SERVER_URL=http://$(INSTANCE):18000 /tmp/integration.test -test.bench=. -test.benchmem -test.benchtime=200ms -test.count=1 -test.run=^$$"
+		sh -c "FLAGR_SERVER_URL=http://$(INSTANCE):18000 go test -tags=integration -bench=. -benchmem -benchtime=200ms -count=1 -run=^$$ ./integration_tests/"
 
 INSTANCE ?= flagr_with_sqlite
 

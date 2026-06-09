@@ -36,12 +36,7 @@ jobs:
   integration_test:
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: 1.26
-      - name: Check out source code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
       - name: Build and run Go integration tests against all instances
         run: cd integration_tests && make test
       - name: Collect test output

@@ -34,5 +34,4 @@ coverage.txt
 /.sem/
 progress.md
 integration-bench.txt
-integration.test
 integration.test.log
