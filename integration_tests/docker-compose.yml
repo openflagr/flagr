@@ -87,7 +87,7 @@ services:
     volumes:
       - ../.:/src
     environment:
-      FLAGR_SERVER_URLS: "flagr_with_sqlite:18000,flagr_with_mysql:18000,flagr_with_mysql8:18000,flagr_with_postgres9:18000,flagr_with_postgres13:18000,checkr_flagr_with_sqlite:18000"
+      - FLAGR_SERVER_URLS=flagr_with_sqlite:18000,flagr_with_mysql:18000,flagr_with_mysql8:18000,flagr_with_postgres9:18000,flagr_with_postgres13:18000,checkr_flagr_with_sqlite:18000
     depends_on:
       - flagr_with_sqlite
       - flagr_with_mysql
