@@ -2,7 +2,7 @@ build-image:
 	docker build -f ./Dockerfile-Integration-Test -t flagr_integration_tests ../
 
 build-integration-test:
-	rm -f integration.test
+	rm -rf integration.test
 	go test -tags=integration -count=1 -c -o integration.test .
 
 down:

@@ -42,10 +42,6 @@ jobs:
           go-version: 1.26
       - name: Check out source code
         uses: actions/checkout@v4
-      - name: Build Docker images
-        run: cd integration_tests && make build-image
-      - name: Start Docker Compose services
-        run: cd integration_tests && make down && make up
       - name: Build and run Go integration tests against all instances
         run: cd integration_tests && make test
       - name: Collect test output
