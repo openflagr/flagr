@@ -1,87 +1,80 @@
-# Server Config
+# Server Configuration
 
-Configuration of Flagr server is derived from the environment variables. Latest [env.go](https://github.com/openflagr/flagr/blob/master/pkg/config/env.go).
+Flagr is configured entirely through environment variables. See [env.go](https://github.com/openflagr/flagr/blob/master/pkg/config/env.go) for the full list.
 
 [env.go](https://raw.githubusercontent.com/openflagr/flagr/master/pkg/config/env.go ':include :type=code')
 
-For example
-
-```go
-// setting env variable
+```sh
+# Example: set the database driver
 export FLAGR_DB_DBDRIVER=mysql
-
-// results in
-Config.DBDriver = "mysql"
+# This sets Config.DBDriver = "mysql" at runtime
 ```
 
-## Kinesis Authentication
+## Database drivers
 
-In order to use Flagr with Kinesis, you need to authenticate with AWS.
-For that, you can use the standard AWS authentication methods:
+| Driver | Use case |
+|--------|----------|
+| `mysql` | Production MySQL/PostgreSQL |
+| `postgres` | Production PostgreSQL |
+| `sqlite3` | Development (default, no external deps) |
+| `json_file` | Load flags from a local JSON file ([format spec](flagr_json_flag_spec.md)) |
+| `json_http` | Load flags from a URL (CI artifact, S3, GCS) |
 
-### Environment
+For JSON-based workflows (GitOps, eval-only mode), see the [JSON Flag Source](flagr_json_flag_spec.md) guide.
 
-The most common way of authentication is over the environment, providing the `ACCESS_KEY_ID` and the `SECRET_ACCESS_KEY`. That way flagr can authenticate with AWS to connect to your Kinesis Stream.
-
-e.g.:
-```
-AWS_ACCESS_KEY_ID=example123
-AWS_SECRET_ACCESS_KEY=example123
-AWS_DEFAULT_REGION=eu-central-1
-```
-
-More info: https://docs.aws.amazon.com/cli/latest/userguide/cli-environment.html
-
-### Other Alternatives
-
-Alternatively, there are couple more options to provide authentication to your stream, such as credentials file, container credentials or instance profiles. Read more about that on the [official AWS documentation](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#config-settings-and-precedence).
-
-**Important**: Make sure the key is attached to a user that has permissions to push records into the stream.
-
-## Pubsub Authentication
-
-You need to authenticate to enable Flagr with Google Cloud Pubsub for data records.
-Here's a few ways:
-
-### Gcloud (for development).
+### Basic Auth (web interface)
 
 ```sh
-gcloud auth application-default login
-```
-
-### Environment
-
-Create and download a service account JSON key and point to it using:
-
-```
-GOOGLE_APPLICATION_CREDENTIALS=/path/to/service/account.json
-```
-
-> FYI: setting this env var will take over all Google's services on that environment.
-
-The best way to configure service account for Flagr to use pubsub only use:
-
-```
-FLAGR_RECORDER_PUBSUB_PROJECT_ID=google-project-id
-FLAGR_RECORDER_PUBSUB_KEYFILE=/path/to/service/account.json
-```
-
-Basic Authentication for web interface
-
-```
 FLAGR_BASIC_AUTH_ENABLED=true
 FLAGR_BASIC_AUTH_USERNAME=admin
 FLAGR_BASIC_AUTH_PASSWORD=password
 ```
 
-By default, UI access will prompt for a username/password login. Similar to JWT Auth, prefix and exact paths can be whitelisted to skip the username/password login. The default whitelist will allow api access to `/api/v1/flags` and `/api/v1/evaluation*`
+UI access prompts for username/password. API paths can be whitelisted to skip auth:
 
-NOTE: this doesn't prevent people from directly curling /api/v1/flags to update flags.
-
-```
+```sh
 FLAGR_BASIC_AUTH_WHITELIST_PATHS="/api/v1/flags,/api/v1/evaluation"
 FLAGR_BASIC_AUTH_EXACT_WHITELIST_PATHS=""
 ```
+
+Note: Basic auth protects the web UI. It does not prevent direct API calls to `/api/v1/flags`.
+
+### JWT Auth
+
+See [env.go](https://github.com/openflagr/flagr/blob/master/pkg/config/env.go) for JWT configuration options.
+
+## Data record destinations
+
+### Kinesis (AWS)
+
+Authenticate with standard AWS methods:
+
+```sh
+AWS_ACCESS_KEY_ID=example123
+AWS_SECRET_ACCESS_KEY=example123
+AWS_DEFAULT_REGION=eu-central-1
+```
+
+Other options include credentials files, container credentials, and instance profiles. See the [AWS documentation](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#config-settings-and-precedence).
+
+Make sure the IAM key has permissions to push records to the Kinesis stream.
+
+### Pub/Sub (Google Cloud)
+
+For development:
+
+```sh
+gcloud auth application-default login
+```
+
+For production, create a service account and point to the key file:
+
+```sh
+FLAGR_RECORDER_PUBSUB_PROJECT_ID=google-project-id
+FLAGR_RECORDER_PUBSUB_KEYFILE=/path/to/service/account.json
+```
+
+Alternatively, set `GOOGLE_APPLICATION_CREDENTIALS` (this affects all Google services in the environment).
 
 ## Datar
 

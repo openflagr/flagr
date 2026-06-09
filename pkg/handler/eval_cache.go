@@ -26,12 +26,34 @@ type cacheContainer struct {
 	tagCache map[string]map[uint]*entity.Flag
 }
 
+// getFetcher returns the flag data fetcher, creating and caching it on first
+// call. Subsequent calls reuse the cached instance across refresh cycles.
+// Tests calling reloadMapCache directly without going through Start() trigger
+// lazy init via newFetcher() on their first call; the cached instance persists
+// within the singleton, which is fine within a single test process.
+func (ec *EvalCache) getFetcher() evalCacheFetcher {
+	if ec.fetcher != nil {
+		return ec.fetcher
+	}
+	f, err := newFetcher()
+	if err != nil {
+		panic(err)
+	}
+	ec.fetcher = f
+	return f
+}
 // EvalCache is the in-memory cache just for evaluation
 type EvalCache struct {
 	cache           *cacheContainer
 	cacheMutex      sync.RWMutex
 	refreshTimeout  time.Duration
 	refreshInterval time.Duration
+
+	// fetcher is the source of flag data. It is created once in Start()
+	// and reused across refresh cycles. For DB mode it wraps *gorm.DB;
+	// for eval-only mode (json_file, json_http) it reads from the
+	// configured file or HTTP endpoint.
+	fetcher evalCacheFetcher
 
 	// lastSnapshotMaxID tracks the highest flag_snapshot ID seen on the last
 	// successful reload. The cache short-circuits when this hasn't changed,
@@ -53,8 +75,11 @@ var GetEvalCache = func() *EvalCache {
 	return singletonEvalCache
 }
 
-// Start starts the polling of EvalCache
 func (ec *EvalCache) Start() {
+	// Ensure a fresh fetcher — the singleton may carry a stale one from
+	// a previous test that set ec.fetcher directly. The fetcher is created
+	// lazily on the first reloadMapCache call and reused thereafter.
+	ec.fetcher = nil
 	err := ec.reloadMapCache()
 	if err != nil {
 		panic(err)
@@ -154,6 +179,12 @@ func (ec *EvalCache) GetByFlagKeyOrID(keyOrID any) *entity.Flag {
 // This is the lightweight change indicator used by the EvalCache to decide
 // whether a full reload is needed.
 func (ec *EvalCache) getSnapshotMaxID() uint {
+	// In eval-only mode (json_file, json_http), there is no database.
+	// Return 0 so shortCircuitReload never short-circuits, forcing a
+	// fresh fetch from the JSON source on every poll interval.
+	if config.Config.EvalOnlyMode {
+		return 0
+	}
 	var maxID uint
 	if err := getDB().Model(&entity.FlagSnapshot{}).
 		Select("COALESCE(MAX(id), 0)").
@@ -164,9 +195,6 @@ func (ec *EvalCache) getSnapshotMaxID() uint {
 	return maxID
 }
 
-// shortCircuitReload checks whether the cache is still fresh by comparing
-// the current flag_snapshot MAX(id) against the last known value.
-// Returns true when the reload can be skipped.
 // shortCircuitReload checks whether the cache is still fresh by comparing
 // snapshotMaxID (the current flag_snapshot MAX(id)) against the last known
 // value. Returns true when the reload can be skipped.
@@ -195,7 +223,7 @@ func (ec *EvalCache) reloadMapCache() error {
 	}
 
 	_, _, err := withtimeout.Do(ec.refreshTimeout, func() (any, error) {
-		idCache, keyCache, tagCache, err := ec.fetchAllFlags()
+		idCache, keyCache, tagCache, err := ec.loadAndBuildCaches()
 		if err != nil {
 			return nil, err
 		}
