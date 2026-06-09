@@ -15,8 +15,8 @@ test: down build-image up
 	                flagr_with_postgres9 flagr_with_postgres13 \
 	                checkr_flagr_with_sqlite; do \
 		echo "=== $$instance ==="; \
-		if docker compose exec -T -e FLAGR_SERVER_URL=http://$$instance:18000 integration-runner \
-			go test -tags=integration -v -count=1 ./integration_tests/; then \
+		if docker compose exec -T integration-runner \
+			sh -c "FLAGR_SERVER_URL=http://$$instance:18000 go test -tags=integration -v -count=1 ./integration_tests/"; then \
 			:; \
 		else \
 			echo "FAILED: $$instance"; \
@@ -27,8 +27,8 @@ test: down build-image up
 
 # Single-instance test (used by CI matrix)
 test-instance: up
-	docker compose exec -T -e FLAGR_SERVER_URL=http://$(INSTANCE):18000 integration-runner \
-		go test -tags=integration -v -count=1 ./integration_tests/
+	docker compose exec -T integration-runner \
+		sh -c "FLAGR_SERVER_URL=http://$(INSTANCE):18000 go test -tags=integration -v -count=1 ./integration_tests/"
 
 INSTANCE ?= flagr_with_sqlite
 
