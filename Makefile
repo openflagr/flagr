@@ -41,6 +41,18 @@ test-e2e: build
 	@echo "Running Flagr UI e2e tests..."
 	@cd ./browser/flagr-ui/; npx playwright test
 
+.PHONY: test-integration
+test-integration: build
+	@echo "Running Go integration tests (local auto-start mode)..."
+	@go test -tags=integration -count=1 -v ./integration_tests/
+
+.PHONY: bench-integration
+bench-integration: build
+	@echo "Running Go integration benchmarks (local auto-start mode)..."
+	@go test -tags=integration -bench=. -benchmem -count=1 -run=^$$ ./integration_tests/ > integration-bench.txt
+	@echo "Benchmarks saved to integration-bench.txt"
+
+
 stop-ui:
 	@-kill $$(lsof -ti:18000 2>/dev/null) 2>/dev/null; kill $$(lsof -ti:8080 2>/dev/null) 2>/dev/null; sleep 1; echo "Stopped UI services"
 

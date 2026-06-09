@@ -36,12 +36,22 @@ jobs:
   integration_test:
     runs-on: ubuntu-latest
     steps:
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.26
       - name: Check out source code
         uses: actions/checkout@v4
-      - run: cd integration_tests && make build-image
-      - run: cd integration_tests && make down
-      - run: cd integration_tests && make up
-      - run: cd integration_tests && make test
+      - name: Build Docker images
+        run: cd integration_tests && make build-image
+      - name: Start Docker Compose services
+        run: cd integration_tests && make down && make up
+      - name: Build and run Go integration tests against all instances
+        run: cd integration_tests && make test
+      - name: Collect test output
+        if: always()
+        run: docker compose exec -T integration-runner cat /app/integration.test.log 2>/dev/null || true
+        working-directory: integration_tests
   e2e_test:
     runs-on: ubuntu-latest
     steps:

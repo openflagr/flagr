@@ -14,6 +14,8 @@ Flagr — Go feature flag service with Vue 3 UI.
 | `make test` | Go unit tests |
 | `make test-e2e` | Build Go binary → start servers via `scripts/e2e-server.sh` → Playwright → cleanup |
 | `make swagger` | Regenerate `swagger_gen/` from OpenAPI spec |
+| `make test-integration` | Run Go integration tests (auto-starts local server, SQLite) |
+| `make bench-integration` | Run HTTP eval benchmarks against local server |
 
 **UI-only** (`browser/flagr-ui/`): `npm run dev` (Vite), `npm run build`, `npm run test:e2e` (needs servers running).
 
@@ -44,6 +46,11 @@ Flagr — Go feature flag service with Vue 3 UI.
 **Backend changes:** Frontend auto-reloads via Vite HMR. Backend needs rebuild: `make rebuild-run`.
 
 **E2E tests:** `make test-e2e` — single command. Uses `scripts/e2e-server.sh` (idempotent, port-safe) and Playwright's `webServer` lifecycle. Always works regardless of leftover processes.
+
+**Integration tests:** Two modes:
+- **Local** (`make test-integration`): Auto-starts server on random port with SQLite `:memory:`. Run `go test -tags=integration ./integration_tests/` directly.
+- **Docker Compose** (`cd integration_tests && make test`): Builds Go test binary, loops over 6 flagr instances (sqlite, mysql, mysql8, postgres9, postgres13, checkr), runs suite against each.
+- **Benchmarks** (`make bench-integration`): HTTP eval benchmarks against auto-started server.
 
 **Process management** uses `lsof -ti:<port>` not `pkill -f`, so it never touches processes from other projects.
 
