@@ -27,6 +27,9 @@ var (
 	serverCmd    *exec.Cmd
 	httpClient   = &http.Client{Timeout: 10 * time.Second}
 )
+func init() {
+	fmt.Println("=== INTEGRATION_SERVER.GO INIT ===")
+}
 
 // ---------------------------------------------------------------------------
 // TestMain — entry point
