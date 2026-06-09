@@ -32,8 +32,9 @@ var (
 // TestMain — entry point
 // ---------------------------------------------------------------------------
 func TestMain(m *testing.M) {
-	fmt.Println("DEBUG: FLAGR_SERVER_URLS=", os.Getenv("FLAGR_SERVER_URLS"))
-	fmt.Println("DEBUG: FLAGR_SERVER_URL=", os.Getenv("FLAGR_SERVER_URL"))
+	os.Stdout.WriteString("DEBUG: FLAGR_SERVER_URLS=" + os.Getenv("FLAGR_SERVER_URLS") + "\n")
+	os.Stdout.WriteString("DEBUG: FLAGR_SERVER_URL=" + os.Getenv("FLAGR_SERVER_URL") + "\n")
+	os.Stdout.Sync()
 	urlsStr := os.Getenv("FLAGR_SERVER_URLS")
 	if urlsStr == "" {
 		// Single-server mode — auto-start local or use FLAGR_SERVER_URL
@@ -77,7 +78,6 @@ func TestMain(m *testing.M) {
 	}
 	os.Exit(exitCode)
 }
-
 // ---------------------------------------------------------------------------
 // Local server lifecycle
 // ---------------------------------------------------------------------------
