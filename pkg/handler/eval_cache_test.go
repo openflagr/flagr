@@ -75,6 +75,17 @@ func TestGetByTags(t *testing.T) {
 	assert.Len(t, f, 0)
 }
 
+// countingFetcher wraps an evalCacheFetcher and counts fetch calls.
+type countingFetcher struct {
+	wrapped evalCacheFetcher
+	count   int
+}
+
+func (c *countingFetcher) fetch() ([]entity.Flag, error) {
+	c.count++
+	return c.wrapped.fetch()
+}
+
 func TestReloadMapCacheShortCircuit(t *testing.T) {
 	fixtureFlag := entity.GenFixtureFlag()
 	db := entity.PopulateTestDB(fixtureFlag)
@@ -94,25 +105,20 @@ func TestReloadMapCacheShortCircuit(t *testing.T) {
 	ec := GetEvalCache()
 	ec.lastSnapshotMaxID = 0
 
-	// Wrap fetchAllFlags to count how many times it's called.
-	fetchCount := 0
-	origFetch := fetchAllFlags
-	fetchAllFlags = func() ([]entity.Flag, error) {
-		fetchCount++
-		return origFetch()
-	}
-	defer func() { fetchAllFlags = origFetch }()
+	// Set a spy fetcher to count how many times fetch is called.
+	spy := &countingFetcher{wrapped: &dbFetcher{db: db}}
+	ec.fetcher = spy
 
 	// 1st call: must fetch (no prior MAX id tracked).
 	err := ec.reloadMapCache()
 	assert.NoError(t, err)
-	assert.Equal(t, 1, fetchCount, "first call should fetch full data")
+	assert.Equal(t, 1, spy.count, "first call should fetch full data")
 	assert.Greater(t, ec.lastSnapshotMaxID, uint(0), "should track snapshot max ID")
 
 	// 2nd call: must short-circuit (no new snapshot created).
 	err = ec.reloadMapCache()
 	assert.NoError(t, err)
-	assert.Equal(t, 1, fetchCount, "second call should short-circuit")
+	assert.Equal(t, 1, spy.count, "second call should short-circuit")
 	assert.Equal(t, ec.lastSnapshotMaxID, ec.lastSnapshotMaxID,
 		"snapshot max ID must not change when no new snapshot exists")
 
@@ -123,5 +129,5 @@ func TestReloadMapCacheShortCircuit(t *testing.T) {
 	// 3rd call: must fetch again (new snapshot invalidated the cache).
 	err = ec.reloadMapCache()
 	assert.NoError(t, err)
-	assert.Equal(t, 2, fetchCount, "third call should fetch (new snapshot)")
+	assert.Equal(t, 2, spy.count, "third call should fetch (new snapshot)")
 }
