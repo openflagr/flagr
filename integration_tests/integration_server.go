@@ -32,23 +32,33 @@ var (
 // TestMain — entry point
 // ---------------------------------------------------------------------------
 func TestMain(m *testing.M) {
-	os.Stdout.WriteString("DEBUG: FLAGR_SERVER_URLS=" + os.Getenv("FLAGR_SERVER_URLS") + "\n")
-	os.Stdout.WriteString("DEBUG: FLAGR_SERVER_URL=" + os.Getenv("FLAGR_SERVER_URL") + "\n")
-	os.Stdout.Sync()
-	urlsStr := os.Getenv("FLAGR_SERVER_URLS")
-	if urlsStr == "" {
-		// Single-server mode — auto-start local or use FLAGR_SERVER_URL
-		url := os.Getenv("FLAGR_SERVER_URL")
-		if url == "" {
-			url = startLocalServer()
-			defer func() {
-				if serverCmd != nil {
-					serverCmd.Process.Signal(os.Interrupt)
-					serverCmd.Wait()
-				}
-			}()
-		}
-		baseURL = url
+	// Default: all flagr instances in Docker Compose network
+	dockerURLs := []string{
+		"http://flagr_with_sqlite:18000",
+		"http://flagr_with_mysql:18000",
+		"http://flagr_with_mysql8:18000",
+		"http://flagr_with_postgres9:18000",
+		"http://flagr_with_postgres13:18000",
+		"http://checkr_flagr_with_sqlite:18000",
+	}
+
+	// Single-server mode: FLAGR_SERVER_URL or auto-start local
+	if os.Getenv("FLAGR_SERVER_URLS") == "" && os.Getenv("FLAGR_SERVER_URL") != "" {
+		baseURL = os.Getenv("FLAGR_SERVER_URL")
+		waitForServer(baseURL, 30*time.Second)
+		seedFlags(baseURL)
+		waitForEvalCache(baseURL, 5*time.Second)
+		os.Exit(m.Run())
+		return
+	}
+	if os.Getenv("FLAGR_SERVER_URLS") == "" && os.Getenv("FLAGR_SERVER_URL") == "" {
+		baseURL = startLocalServer()
+		defer func() {
+			if serverCmd != nil {
+				serverCmd.Process.Signal(os.Interrupt)
+				serverCmd.Wait()
+			}
+		}()
 		waitForServer(baseURL, 30*time.Second)
 		seedFlags(baseURL)
 		waitForEvalCache(baseURL, 5*time.Second)
@@ -56,14 +66,23 @@ func TestMain(m *testing.M) {
 		return
 	}
 
-	// Multi-server mode — test each URL in sequence
-	urls := strings.Split(urlsStr, ",")
+	// Multi-server mode
+	var urls []string
+	if urlsStr := os.Getenv("FLAGR_SERVER_URLS"); urlsStr != "" {
+		for _, u := range strings.Split(urlsStr, ",") {
+			u = strings.TrimSpace(u)
+			if !strings.HasPrefix(u, "http://") && !strings.HasPrefix(u, "https://") {
+				u = "http://" + u
+			}
+			urls = append(urls, u)
+		}
+	}
+	if len(urls) == 0 {
+		urls = dockerURLs
+	}
+
 	exitCode := 0
 	for _, u := range urls {
-		u = strings.TrimSpace(u)
-		if !strings.HasPrefix(u, "http://") && !strings.HasPrefix(u, "https://") {
-			u = "http://" + u
-		}
 		fmt.Printf("=== Testing %s ===\n", u)
 		baseURL = u
 		seedFlagIDs = nil
