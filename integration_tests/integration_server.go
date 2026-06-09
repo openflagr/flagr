@@ -32,6 +32,8 @@ var (
 // TestMain — entry point
 // ---------------------------------------------------------------------------
 func TestMain(m *testing.M) {
+	fmt.Fprintf(os.Stderr, "DEBUG: FLAGR_SERVER_URLS=%q\n", os.Getenv("FLAGR_SERVER_URLS"))
+	fmt.Fprintf(os.Stderr, "DEBUG: FLAGR_SERVER_URL=%q\n", os.Getenv("FLAGR_SERVER_URL"))
 	urlsStr := os.Getenv("FLAGR_SERVER_URLS")
 	if urlsStr == "" {
 		// Single-server mode — auto-start local or use FLAGR_SERVER_URL
