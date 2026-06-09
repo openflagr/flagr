@@ -525,3 +525,54 @@ func TestNormalizeIDs_SampleDataUnchanged(t *testing.T) {
 	assert.Equal(t, uint(2), flags[0].Segments[0].Distributions[1].ID)
 	assert.Equal(t, uint(3), flags[0].Segments[0].Distributions[1].VariantID)
 }
+
+func TestUnmarshalFlags_InvalidJSON(t *testing.T) {
+	_, err := unmarshalFlags([]byte(`{bad json`))
+	assert.Error(t, err)
+}
+
+func TestUnmarshalFlags_ValidationErrors(t *testing.T) {
+	// Valid JSON with validation errors must be rejected.
+	_, err := unmarshalFlags([]byte(`{"Flags": [{"Key": ""}]}`))
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "flag validation failed")
+}
+
+func TestUnmarshalFlags_WarningsAreAllowed(t *testing.T) {
+	// Warnings (e.g. no segments, no variants) should not prevent loading.
+	flags, err := unmarshalFlags([]byte(`{
+		"Flags": [{
+			"Key": "my-flag",
+			"Enabled": true,
+			"Variants": [{"Key": "a"}],
+			"Segments": []
+		}]
+	}`))
+	assert.NoError(t, err)
+	assert.Len(t, flags, 1)
+	assert.Equal(t, "my-flag", flags[0].Key)
+}
+
+func TestNormalizeIDs_UnknownVariantKey(t *testing.T) {
+	// Distribution VariantKey doesn't match any variant — should warn
+	// but not crash, and VariantID stays 0.
+	flags := []entity.Flag{
+		{
+			Key: "f", Enabled: true,
+			Variants: []entity.Variant{{Key: "a"}},
+			Segments: []entity.Segment{
+				{
+					Description: "all", Rank: 0, RolloutPercent: 100,
+					Distributions: []entity.Distribution{
+						{VariantKey: "nonexistent", Percent: 100},
+					},
+				},
+			},
+		},
+	}
+
+	normalizeIDs(flags)
+
+	// VariantID stays 0 (unknown key, nothing to resolve from)
+	assert.Equal(t, uint(0), flags[0].Segments[0].Distributions[0].VariantID)
+}
