@@ -82,10 +82,12 @@ services:
   integration-runner:
     image: golang:1.26-alpine
     container_name: flagr-integration-runner
-    working_dir: /src
+    working_dir: /src/integration_tests
     command: tail -f /dev/null
     volumes:
       - ../.:/src
+    environment:
+      FLAGR_SERVER_URLS: "flagr_with_sqlite:18000,flagr_with_mysql:18000,flagr_with_mysql8:18000,flagr_with_postgres9:18000,flagr_with_postgres13:18000,checkr_flagr_with_sqlite:18000"
     depends_on:
       - flagr_with_sqlite
       - flagr_with_mysql
