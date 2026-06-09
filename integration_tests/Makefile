@@ -13,6 +13,7 @@ up:
 # and runs the full suite against each one.
 test: down build-image up
 	FLAGR_SERVER_URLS="flagr_with_sqlite:18000,flagr_with_mysql:18000,flagr_with_mysql8:18000,flagr_with_postgres9:18000,flagr_with_postgres13:18000,checkr_flagr_with_sqlite:18000" \
-	go test -tags=integration -v -count=1 .
+	docker compose exec -T -e FLAGR_SERVER_URLS integration-runner \
+		go test -tags=integration -v -count=1 .
 
 retest: down test

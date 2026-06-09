@@ -79,3 +79,18 @@ services:
       FLAGR_DB_DBCONNECTIONSTR: "sslmode=disable host=postgres13 user=test password=test dbname=flagr"
     command: sh -c "sleep 15 && ./flagr"
 
+  integration-runner:
+    image: golang:1.26-alpine
+    container_name: flagr-integration-runner
+    working_dir: /src
+    command: tail -f /dev/null
+    volumes:
+      - ../.:/src
+    depends_on:
+      - flagr_with_sqlite
+      - flagr_with_mysql
+      - flagr_with_mysql8
+      - flagr_with_postgres9
+      - flagr_with_postgres13
+      - checkr_flagr_with_sqlite
+
