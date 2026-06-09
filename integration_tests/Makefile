@@ -16,8 +16,8 @@ test: down build-image up
 	                checkr_flagr_with_sqlite; do \
 		echo "=== $$instance ===" | tee -a integration.test.log; \
 		total=$$((total+1)); \
-		if docker compose exec -T integration-runner \
-			sh -c "FLAGR_SERVER_URL=http://$$instance:18000 go test -tags=integration -v -count=1 ./integration_tests/" >> integration.test.log 2>&1; then \
+		if docker compose exec -T -e FLAGR_SERVER_URL=http://$$instance:18000 integration-runner \
+			go test -tags=integration -v -count=1 ./integration_tests/ >> integration.test.log 2>&1; then \
 			pass=$$((pass+1)); \
 		else \
 			echo "FAILED: $$instance" | tee -a integration.test.log; \
@@ -26,15 +26,14 @@ test: down build-image up
 	echo "=== $$pass/$$total instances passed ===" | tee -a integration.test.log; \
 	[ $$pass -eq $$total ]
 
-# Single-instance test
-test-instance: build-image up
-	docker compose exec -T integration-runner \
-		sh -c "FLAGR_SERVER_URL=http://$(INSTANCE):18000 go test -tags=integration -v -count=1 ./integration_tests/"
-
-# Benchmark against a single instance (200ms per benchmark for faster feedback)
-bench-instance: build-image up
-	docker compose exec -T integration-runner \
-		sh -c "FLAGR_SERVER_URL=http://$(INSTANCE):18000 go test -tags=integration -bench=. -benchmem -benchtime=200ms -count=1 -run=^$$ ./integration_tests/"
+# Single-instance test (used by CI matrix)
+test-instance: up
+	@mkdir -p /tmp/flagr-integration && rm -f /tmp/flagr-integration/integration.test.log
+	docker compose exec -T -e FLAGR_SERVER_URL=http://$(INSTANCE):18000 integration-runner \
+		go test -tags=integration -v -count=1 ./integration_tests/ 2>&1 | tee /tmp/flagr-integration/integration.test.log; \
+		exit_code=$${PIPESTATUS[0]}; \
+		cat /tmp/flagr-integration/integration.test.log >> integration.test.log 2>/dev/null || true; \
+		exit $$exit_code
 
 INSTANCE ?= flagr_with_sqlite
 
