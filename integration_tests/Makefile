@@ -14,15 +14,14 @@ up:
 
 # Run Go integration tests against all 6 Docker Compose instances
 test: down build-image build-integration-test up
-	docker compose cp integration.test integration-runner:/app/integration.test
+	docker compose cp integration.test integration-runner:/tmp/integration.test
 	@total=0; pass=0; rm -f integration.test.log; \
 	for instance in flagr_with_sqlite flagr_with_mysql flagr_with_mysql8 \
 	                flagr_with_postgres9 flagr_with_postgres13 \
 	                checkr_flagr_with_sqlite; do \
 		echo "=== $$instance ===" | tee -a integration.test.log; \
-		total=$$((total+1)); \
 		if docker compose exec -T integration-runner \
-			sh -c "FLAGR_SERVER_URL=http://$$instance:18000 /app/integration.test -test.v -test.count=1" >> integration.test.log 2>&1; then \
+			sh -c "FLAGR_SERVER_URL=http://$$instance:18000 /tmp/integration.test -test.v -test.count=1" >> integration.test.log 2>&1; then \
 			pass=$$((pass+1)); \
 		else \
 			echo "FAILED: $$instance" | tee -a integration.test.log; \
