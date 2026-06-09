@@ -83,8 +83,6 @@ services:
     image: alpine:3
     container_name: flagr-integration-runner
     command: tail -f /dev/null  # stay alive for exec
-    volumes:
-      - ./integration.test:/app/integration.test:ro
     depends_on:
       - flagr_with_sqlite
       - flagr_with_mysql

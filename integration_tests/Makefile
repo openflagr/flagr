@@ -14,6 +14,7 @@ up:
 
 # Run Go integration tests against all 6 Docker Compose instances
 test: down build-image build-integration-test up
+	docker compose cp integration.test flagr-integration-runner:/app/integration.test
 	@total=0; pass=0; rm -f integration.test.log; \
 	for instance in flagr_with_sqlite flagr_with_mysql flagr_with_mysql8 \
 	                flagr_with_postgres9 flagr_with_postgres13 \
