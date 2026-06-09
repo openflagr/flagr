@@ -12,10 +12,10 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 )
-
 // ---------------------------------------------------------------------------
 // Package-level state — set by TestMain, read by tests and benchmarks
 // ---------------------------------------------------------------------------
@@ -32,23 +32,48 @@ var (
 // TestMain — entry point
 // ---------------------------------------------------------------------------
 func TestMain(m *testing.M) {
-	url := os.Getenv("FLAGR_SERVER_URL")
-	if url == "" {
-		url = startLocalServer()
-		defer func() {
-			if serverCmd != nil {
-				serverCmd.Process.Signal(os.Interrupt)
-				serverCmd.Wait()
-			}
-		}()
+	urlsStr := os.Getenv("FLAGR_SERVER_URLS")
+	if urlsStr == "" {
+		// Single-server mode — auto-start local or use FLAGR_SERVER_URL
+		url := os.Getenv("FLAGR_SERVER_URL")
+		if url == "" {
+			url = startLocalServer()
+			defer func() {
+				if serverCmd != nil {
+					serverCmd.Process.Signal(os.Interrupt)
+					serverCmd.Wait()
+				}
+			}()
+		}
+		baseURL = url
+		waitForServer(baseURL, 30*time.Second)
+		seedFlags(baseURL)
+		waitForEvalCache(baseURL, 5*time.Second)
+		os.Exit(m.Run())
+		return
 	}
-	baseURL = url
 
-	waitForServer(baseURL, 30*time.Second)
-	seedFlags(baseURL)
-	waitForEvalCache(baseURL, 5*time.Second)
-
-	os.Exit(m.Run())
+	// Multi-server mode — test each URL in sequence
+	urls := strings.Split(urlsStr, ",")
+	exitCode := 0
+	for _, u := range urls {
+		u = strings.TrimSpace(u)
+		if !strings.HasPrefix(u, "http://") && !strings.HasPrefix(u, "https://") {
+			u = "http://" + u + ":18000"
+		}
+		fmt.Printf("=== Testing %s ===\n", u)
+		baseURL = u
+		seedFlagIDs = nil
+		seedFlagKeys = nil
+		waitForServer(baseURL, 30*time.Second)
+		seedFlags(baseURL)
+		waitForEvalCache(baseURL, 5*time.Second)
+		if code := m.Run(); code != 0 {
+			fmt.Printf("FAILED: %s\n", u)
+			exitCode = code
+		}
+	}
+	os.Exit(exitCode)
 }
 
 // ---------------------------------------------------------------------------

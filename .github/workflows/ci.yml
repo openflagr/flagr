@@ -35,23 +35,13 @@ jobs:
       - run: cd browser/flagr-ui && npm run lint
   integration_test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        instance:
-          - flagr_with_sqlite
-          - flagr_with_mysql
-          - flagr_with_mysql8
-          - flagr_with_postgres9
-          - flagr_with_postgres13
-          - checkr_flagr_with_sqlite
-      max-parallel: 1
-      fail-fast: false
     steps:
       - uses: actions/checkout@v4
-      - name: Build images and start services
-        run: cd integration_tests && make build-image && make down && make up
-      - name: Run integration tests against ${{ matrix.instance }}
-        run: cd integration_tests && FLAGR_SERVER_URL=http://${{ matrix.instance }}:18000 make test-instance
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+      - name: Build and run Go integration tests against all instances
+        run: cd integration_tests && make test
   e2e_test:
     runs-on: ubuntu-latest
     steps:
