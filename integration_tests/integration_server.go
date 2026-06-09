@@ -36,6 +36,7 @@ func init() {
 func TestMain(m *testing.M) {
 	fmt.Printf("FLAGR_SERVER_URLS=%q\n", os.Getenv("FLAGR_SERVER_URLS"))
 	fmt.Printf("FLAGR_SERVER_URL=%q\n", os.Getenv("FLAGR_SERVER_URL"))
+	panic("TESTMAIN WAS CALLED")
 	// Multi-server mode: FLAGR_SERVER_URLS comma-separated
 	// Multi-server mode: FLAGR_SERVER_URLS comma-separated
 	if urlsStr := os.Getenv("FLAGR_SERVER_URLS"); urlsStr != "" {
