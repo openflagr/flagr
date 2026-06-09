@@ -52,9 +52,6 @@ jobs:
         run: cd integration_tests && make build-image && make down && make up
       - name: Run integration tests against ${{ matrix.instance }}
         run: cd integration_tests && make test-instance INSTANCE=${{ matrix.instance }}
-      - name: Collect test output
-        if: always()
-        run: cd integration_tests && cat integration.test.log 2>/dev/null || true
   e2e_test:
     runs-on: ubuntu-latest
     steps:
