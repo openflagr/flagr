@@ -43,6 +43,8 @@ services:
       FLAGR_DB_DBDRIVER: "sqlite3"
       FLAGR_DB_DBCONNECTIONSTR: "/tmp/flagr.sqlite3"
     command: sh -c "sleep 15 && ./flagr"
+    ports:
+      - "18006:18000"
 
   flagr_with_sqlite:
     image: flagr_integration_tests
@@ -50,6 +52,8 @@ services:
       FLAGR_DB_DBDRIVER: "sqlite3"
       FLAGR_DB_DBCONNECTIONSTR: "/tmp/flagr.sqlite3"
     command: sh -c "sleep 15 && ./flagr"
+    ports:
+      - "18001:18000"
 
   flagr_with_mysql:
     image: flagr_integration_tests
@@ -57,6 +61,8 @@ services:
       FLAGR_DB_DBDRIVER: "mysql"
       FLAGR_DB_DBCONNECTIONSTR: "root:@tcp(mysql:3306)/flagr?parseTime=true"
     command: sh -c "sleep 15 && ./flagr"
+    ports:
+      - "18002:18000"
 
   flagr_with_mysql8:
     image: flagr_integration_tests
@@ -64,6 +70,8 @@ services:
       FLAGR_DB_DBDRIVER: "mysql"
       FLAGR_DB_DBCONNECTIONSTR: "root:@tcp(mysql8:3306)/flagr?parseTime=true"
     command: sh -c "sleep 15 && ./flagr"
+    ports:
+      - "18003:18000"
 
   flagr_with_postgres9:
     image: flagr_integration_tests
@@ -71,6 +79,8 @@ services:
       FLAGR_DB_DBDRIVER: "postgres"
       FLAGR_DB_DBCONNECTIONSTR: "sslmode=disable host=postgres9 user=test password=test dbname=flagr"
     command: sh -c "sleep 15 && ./flagr"
+    ports:
+      - "18004:18000"
 
   flagr_with_postgres13:
     image: flagr_integration_tests
@@ -78,21 +88,5 @@ services:
       FLAGR_DB_DBDRIVER: "postgres"
       FLAGR_DB_DBCONNECTIONSTR: "sslmode=disable host=postgres13 user=test password=test dbname=flagr"
     command: sh -c "sleep 15 && ./flagr"
-
-  integration-runner:
-    image: golang:1.26-alpine
-    container_name: flagr-integration-runner
-    working_dir: /src/integration_tests
-    command: tail -f /dev/null
-    volumes:
-      - ../.:/src
-    environment:
-      - FLAGR_SERVER_URLS=flagr_with_sqlite:18000,flagr_with_mysql:18000,flagr_with_mysql8:18000,flagr_with_postgres9:18000,flagr_with_postgres13:18000,checkr_flagr_with_sqlite:18000
-    depends_on:
-      - flagr_with_sqlite
-      - flagr_with_mysql
-      - flagr_with_mysql8
-      - flagr_with_postgres9
-      - flagr_with_postgres13
-      - checkr_flagr_with_sqlite
-
+    ports:
+      - "18005:18000"

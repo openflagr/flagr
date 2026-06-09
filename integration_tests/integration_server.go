@@ -32,44 +32,9 @@ var (
 // TestMain — entry point
 // ---------------------------------------------------------------------------
 func TestMain(m *testing.M) {
-	fmt.Println("=== HELLO FROM TESTMAIN ===")
-	// Default: all flagr instances in Docker Compose network
-	dockerURLs := []string{
-		"http://flagr_with_sqlite:18000",
-		"http://flagr_with_mysql:18000",
-		"http://flagr_with_mysql8:18000",
-		"http://flagr_with_postgres9:18000",
-		"http://flagr_with_postgres13:18000",
-		"http://checkr_flagr_with_sqlite:18000",
-	}
-
-	// Single-server mode: FLAGR_SERVER_URL or auto-start local
-	if os.Getenv("FLAGR_SERVER_URLS") == "" && os.Getenv("FLAGR_SERVER_URL") != "" {
-		baseURL = os.Getenv("FLAGR_SERVER_URL")
-		waitForServer(baseURL, 30*time.Second)
-		seedFlags(baseURL)
-		waitForEvalCache(baseURL, 5*time.Second)
-		os.Exit(m.Run())
-		return
-	}
-	if os.Getenv("FLAGR_SERVER_URLS") == "" && os.Getenv("FLAGR_SERVER_URL") == "" {
-		baseURL = startLocalServer()
-		defer func() {
-			if serverCmd != nil {
-				serverCmd.Process.Signal(os.Interrupt)
-				serverCmd.Wait()
-			}
-		}()
-		waitForServer(baseURL, 30*time.Second)
-		seedFlags(baseURL)
-		waitForEvalCache(baseURL, 5*time.Second)
-		os.Exit(m.Run())
-		return
-	}
-
-	// Multi-server mode
-	var urls []string
+	// Multi-server mode: FLAGR_SERVER_URLS comma-separated
 	if urlsStr := os.Getenv("FLAGR_SERVER_URLS"); urlsStr != "" {
+		var urls []string
 		for _, u := range strings.Split(urlsStr, ",") {
 			u = strings.TrimSpace(u)
 			if !strings.HasPrefix(u, "http://") && !strings.HasPrefix(u, "https://") {
@@ -77,26 +42,40 @@ func TestMain(m *testing.M) {
 			}
 			urls = append(urls, u)
 		}
-	}
-	if len(urls) == 0 {
-		urls = dockerURLs
+		exitCode := 0
+		for _, u := range urls {
+			fmt.Printf("=== Testing %s ===\n", u)
+			baseURL = u
+			seedFlagIDs = nil
+			seedFlagKeys = nil
+			waitForServer(baseURL, 30*time.Second)
+			seedFlags(baseURL)
+			waitForEvalCache(baseURL, 5*time.Second)
+			if code := m.Run(); code != 0 {
+				fmt.Printf("FAILED: %s\n", u)
+				exitCode = code
+			}
+		}
+		os.Exit(exitCode)
+		return
 	}
 
-	exitCode := 0
-	for _, u := range urls {
-		fmt.Printf("=== Testing %s ===\n", u)
-		baseURL = u
-		seedFlagIDs = nil
-		seedFlagKeys = nil
-		waitForServer(baseURL, 30*time.Second)
-		seedFlags(baseURL)
-		waitForEvalCache(baseURL, 5*time.Second)
-		if code := m.Run(); code != 0 {
-			fmt.Printf("FAILED: %s\n", u)
-			exitCode = code
-		}
+	// Single-server mode: FLAGR_SERVER_URL or auto-start local
+	url := os.Getenv("FLAGR_SERVER_URL")
+	if url == "" {
+		url = startLocalServer()
+		defer func() {
+			if serverCmd != nil {
+				serverCmd.Process.Signal(os.Interrupt)
+				serverCmd.Wait()
+			}
+		}()
 	}
-	os.Exit(exitCode)
+	baseURL = url
+	waitForServer(baseURL, 30*time.Second)
+	seedFlags(baseURL)
+	waitForEvalCache(baseURL, 5*time.Second)
+	os.Exit(m.Run())
 }
 // ---------------------------------------------------------------------------
 // Local server lifecycle

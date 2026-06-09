@@ -9,9 +9,11 @@ up:
 	docker compose up -d
 
 # Run Go integration tests against all 6 Docker Compose instances.
-# The TestMain loop in integration_server.go iterates over FLAGR_SERVER_URLS
-# and runs the full suite against each one.
+# Tests run on the host (not inside Docker) and connect via port mappings.
 test: down build-image up
-	docker compose run --rm -T integration-runner go test -tags=integration -v -count=1 .
+	@echo "Waiting for flagr instances to start (20s)..."
+	@sleep 20
+	FLAGR_SERVER_URLS="localhost:18001,localhost:18002,localhost:18003,localhost:18004,localhost:18005,localhost:18006" \
+	go test -tags=integration -v -count=1 .
 
 retest: down test
