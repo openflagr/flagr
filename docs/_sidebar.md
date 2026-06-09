@@ -5,8 +5,9 @@
     - [Overview](flagr_overview.md)
     - [Use Cases](flagr_use_cases.md)
     - [Debug Console](flagr_debugging.md)
-- Server Configuration
-    - [Env](flagr_env.md)
+- Configuration
+    - [ENV](flagr_env.md)
+    - [JSON Flag Source](flagr_json_flag_spec.md)
     - [Notifications](flagr_notifications.md)
 - Client SDKs
     - [Ruby SDK 🔗](https://github.com/openflagr/rbflagr)

@@ -14,6 +14,7 @@ Flagr — Go feature flag service with Vue 3 UI.
 | `make test` | Go unit tests |
 | `make test-e2e` | Build Go binary → start servers via `scripts/e2e-server.sh` → Playwright → cleanup |
 | `make swagger` | Regenerate `swagger_gen/` from OpenAPI spec |
+| `go build -o flagr-validate ./cmd/flagr-validate/` | Build standalone JSON flag validator |
 
 **UI-only** (`browser/flagr-ui/`): `npm run dev` (Vite), `npm run build`, `npm run test:e2e` (needs servers running).
 

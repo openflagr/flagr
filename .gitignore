@@ -2,6 +2,7 @@
 *.out
 *~
 flagr
+flagr-validate
 flagr.sqlite
 !*/
 site/
