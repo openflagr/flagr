@@ -32,6 +32,7 @@ var (
 // TestMain — entry point
 // ---------------------------------------------------------------------------
 func TestMain(m *testing.M) {
+	fmt.Println("=== HELLO FROM TESTMAIN ===")
 	// Default: all flagr instances in Docker Compose network
 	dockerURLs := []string{
 		"http://flagr_with_sqlite:18000",
