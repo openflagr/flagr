@@ -51,7 +51,7 @@ jobs:
       - name: Build images and start services
         run: cd integration_tests && make build-image && make down && make up
       - name: Run integration tests against ${{ matrix.instance }}
-        run: cd integration_tests && make test-instance INSTANCE=${{ matrix.instance }}
+        run: cd integration_tests && FLAGR_SERVER_URL=http://${{ matrix.instance }}:18000 make test-instance
   e2e_test:
     runs-on: ubuntu-latest
     steps:
