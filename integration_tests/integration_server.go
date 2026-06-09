@@ -59,7 +59,7 @@ func TestMain(m *testing.M) {
 	for _, u := range urls {
 		u = strings.TrimSpace(u)
 		if !strings.HasPrefix(u, "http://") && !strings.HasPrefix(u, "https://") {
-			u = "http://" + u + ":18000"
+			u = "http://" + u
 		}
 		fmt.Printf("=== Testing %s ===\n", u)
 		baseURL = u

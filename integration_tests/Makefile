@@ -12,7 +12,6 @@ up:
 # The TestMain loop in integration_server.go iterates over FLAGR_SERVER_URLS
 # and runs the full suite against each one.
 test: down build-image up
-	docker compose exec -T integration-runner \
-		go test -tags=integration -v -count=1 .
+	docker compose exec -T integration-runner go test -tags=integration -v -count=1 .
 
 retest: down test
