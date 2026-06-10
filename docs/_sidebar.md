@@ -5,6 +5,8 @@
     - [Overview](flagr_overview.md)
     - [Use Cases](flagr_use_cases.md)
     - [Debug Console](flagr_debugging.md)
+- Development & Testing
+    - [Testing](home?id=testing)
 - Server Configuration
     - [Env](flagr_env.md)
     - [Notifications](flagr_notifications.md)
