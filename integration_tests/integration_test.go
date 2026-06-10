@@ -1,3 +1,8 @@
+// Tests run sequentially within this package (no t.Parallel) because they share
+// a single server instance and mutate seeded state. Each CRUD test uses
+// seedFlagIDs[0]; Evaluation uses seedFlagIDs[1]. Do not reorder or parallelize
+// without isolating per-test state.
+
 //go:build integration
 
 // Package flagr_integration provides HTTP-based integration tests for Flagr.

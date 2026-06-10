@@ -184,7 +184,7 @@ func BenchmarkEvalNestedContext(b *testing.B) {
 func benchEval(b *testing.B, path string, body any) {
 	b.Helper()
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		resp, err := doReq("POST", path, body)
 		if err != nil {
 			b.Fatal(err)

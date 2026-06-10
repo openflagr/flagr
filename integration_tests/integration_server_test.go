@@ -126,7 +126,12 @@ func startLocalServer() string {
 	if err != nil {
 		log.Fatalf("cannot find free port: %v", err)
 	}
-	port := lis.Addr().(*net.TCPAddr).Port
+	tcpAddr, ok := lis.Addr().(*net.TCPAddr)
+	if !ok {
+		lis.Close()
+		log.Fatalf("unexpected address type: %T", lis.Addr())
+	}
+	port := tcpAddr.Port
 	lis.Close()
 
 	// Start server subprocess

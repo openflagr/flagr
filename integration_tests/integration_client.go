@@ -52,6 +52,7 @@ func doReqAndDecode(method, path string, body, dst any, errorf func(string, ...a
 	if dst != nil {
 		if err := json.NewDecoder(resp.Body).Decode(dst); err != nil {
 			errorf("decode %s %s: %v", method, path, err)
+			return
 		}
 	}
 }
