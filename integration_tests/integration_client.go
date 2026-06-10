@@ -76,21 +76,35 @@ func deleteResource(t *testing.T, path string) {
 	doReqAndDecode("DELETE", path, nil, nil, t.Fatalf)
 }
 
+// doReqOK performs an HTTP request and verifies a 2xx status, discarding the body.
+func doReqOK(t *testing.T, method, path string, body any) {
+	t.Helper()
+	resp, err := doReq(method, path, body)
+	if err != nil {
+		t.Fatalf("%s %s: %v", method, path, err)
+	}
+	io.Copy(io.Discard, resp.Body)
+	resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		t.Fatalf("%s %s: expected 2xx, got %d", method, path, resp.StatusCode)
+	}
+}
+
 // ---------------------------------------------------------------------------
 // Polling helper
 // ---------------------------------------------------------------------------
 
 // pollUntil calls check every 500ms until it returns true or timeout expires.
-// On timeout, calls onTimeout (typically log.Fatal).
-func pollUntil(name, url string, timeout time.Duration, check func() bool, onTimeout func(string, ...any)) {
+// Returns an error on timeout.
+func pollUntil(name, url string, timeout time.Duration, check func() bool) error {
 	deadline := time.After(timeout)
 	for {
 		if check() {
-			return
+			return nil
 		}
 		select {
 		case <-deadline:
-			onTimeout("%s at %s not ready after %v", name, url, timeout)
+			return fmt.Errorf("%s at %s not ready after %v", name, url, timeout)
 		default:
 			time.Sleep(500 * time.Millisecond)
 		}

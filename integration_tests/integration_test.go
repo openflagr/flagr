@@ -12,8 +12,6 @@ package flagr_integration
 
 import (
 	"fmt"
-	"io"
-	"net/http"
 	"net/url"
 	"testing"
 	"time"
@@ -392,16 +390,8 @@ func TestIntegration_Preload(t *testing.T) {
 }
 
 func TestIntegration_Export(t *testing.T) {
-	// Export SQLite — drain body to avoid broken pipe panic on server side.
-	resp, err := doReq("GET", "/api/v1/export/sqlite", nil)
-	if err != nil {
-		t.Fatalf("GET /api/v1/export/sqlite: %v", err)
-	}
-	io.Copy(io.Discard, resp.Body)
-	resp.Body.Close()
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
-		t.Fatalf("export/sqlite: expected 200/204, got %d", resp.StatusCode)
-	}
+	// Export SQLite — doReqOK drains body to avoid broken pipe.
+	doReqOK(t, "GET", "/api/v1/export/sqlite", nil)
 
 	// Export eval cache json (returns {"Flags": [...]})
 	var cache struct {

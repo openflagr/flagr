@@ -4,8 +4,6 @@ package flagr_integration
 
 import (
 	"fmt"
-	"log"
-	"testing"
 )
 
 // Flag spec definitions for seeding.
@@ -116,6 +114,13 @@ func initFlagDefs() []flagDef {
 		})
 	}
 
+	// Ensure all defs have an EntityType — simplifies seedFlags condition.
+	for i := range defs {
+		if defs[i].EntityType == "" {
+			defs[i].EntityType = "user"
+		}
+	}
+
 	// Extra flags
 	extras := []flagDef{
 		{
@@ -156,83 +161,7 @@ func initFlagDefs() []flagDef {
 }
 
 // seedFlags creates all flag definitions via the HTTP API.
-// Uses t.Fatal for error reporting when called in test context.
-func seedFlags(t testing.TB) {
-	defs := initFlagDefs()
-	for _, f := range defs {
-		// Create flag
-		var flag flagResponse
-		doReqAndDecode("POST", "/api/v1/flags", map[string]any{
-			"description": f.Description,
-			"key":         f.Key,
-			"enabled":     f.Enabled,
-		}, &flag, t.Fatalf)
-		seedFlagIDs = append(seedFlagIDs, flag.ID)
-		seedFlagKeys = append(seedFlagKeys, flag.Key)
-
-		// Set entity type if custom
-		if f.EntityType != "" && f.EntityType != "user" {
-			doReqAndDecode("PUT", fmt.Sprintf("/api/v1/flags/%d", flag.ID), map[string]any{
-				"entityType": f.EntityType,
-			}, nil, t.Fatalf)
-		}
-
-		// Set enabled (POST creates flag as disabled by default)
-		if f.Enabled {
-			doReqAndDecode("PUT", fmt.Sprintf("/api/v1/flags/%d/enabled", flag.ID), map[string]any{
-				"enabled": true,
-			}, nil, t.Fatalf)
-		}
-
-		// Create segment (100% rollout)
-		var seg segmentResponse
-		doReqAndDecode("POST", fmt.Sprintf("/api/v1/flags/%d/segments", flag.ID), map[string]any{
-			"description":    "default segment",
-			"rolloutPercent": 100,
-		}, &seg, t.Fatalf)
-
-		// Create constraints
-		for _, c := range f.Constraints {
-			doReqAndDecode("POST", fmt.Sprintf("/api/v1/flags/%d/segments/%d/constraints", flag.ID, seg.ID), map[string]any{
-				"property": c.Property,
-				"operator": c.Operator,
-				"value":    c.Value,
-			}, nil, t.Fatalf)
-		}
-
-		// Create variants
-		var v1, v2 variantResponse
-		doReqAndDecode("POST", fmt.Sprintf("/api/v1/flags/%d/variants", flag.ID), map[string]any{
-			"key": "variant_control",
-		}, &v1, t.Fatalf)
-		doReqAndDecode("POST", fmt.Sprintf("/api/v1/flags/%d/variants", flag.ID), map[string]any{
-			"key": "variant_treatment",
-		}, &v2, t.Fatalf)
-
-		// Set distributions (100% to variant_control)
-		doReqAndDecode("PUT", fmt.Sprintf("/api/v1/flags/%d/segments/%d/distributions", flag.ID, seg.ID), map[string]any{
-			"distributions": []map[string]any{
-				{"percent": 100, "variantID": v1.ID, "variantKey": v1.Key},
-				{"percent": 0, "variantID": v2.ID, "variantKey": v2.Key},
-			},
-		}, nil, t.Fatalf)
-
-		// Create tags
-		for _, tag := range f.Tags {
-			doReqAndDecode("POST", fmt.Sprintf("/api/v1/flags/%d/tags", flag.ID), map[string]any{
-				"value": tag,
-			}, nil, t.Fatalf)
-		}
-	}
-
-	fmt.Printf("Seeded %d flags\n", len(seedFlagIDs))
-}
-
-// seedFlagsFromMain is a thin wrapper for use in TestMain where *testing.T is unavailable.
-// It uses log.Fatalf for errors, matching the original doReqOrDie behavior.
-func seedFlagsFromMain() {
-	// Adapt log.Fatalf to the func(string, ...any) signature expected by doReqAndDecode.
-	// log.Fatalf's signature is func(string, ...interface{}), which is identical in Go.
+func seedFlags(errorf func(string, ...any)) {
 	defs := initFlagDefs()
 	for _, f := range defs {
 		var flag flagResponse
@@ -240,55 +169,55 @@ func seedFlagsFromMain() {
 			"description": f.Description,
 			"key":         f.Key,
 			"enabled":     f.Enabled,
-		}, &flag, log.Fatalf)
+		}, &flag, errorf)
 		seedFlagIDs = append(seedFlagIDs, flag.ID)
 		seedFlagKeys = append(seedFlagKeys, flag.Key)
 
-		if f.EntityType != "" && f.EntityType != "user" {
+		if f.EntityType != "user" {
 			doReqAndDecode("PUT", fmt.Sprintf("/api/v1/flags/%d", flag.ID), map[string]any{
 				"entityType": f.EntityType,
-			}, nil, log.Fatalf)
+			}, nil, errorf)
 		}
 
 		if f.Enabled {
 			doReqAndDecode("PUT", fmt.Sprintf("/api/v1/flags/%d/enabled", flag.ID), map[string]any{
 				"enabled": true,
-			}, nil, log.Fatalf)
+			}, nil, errorf)
 		}
 
 		var seg segmentResponse
 		doReqAndDecode("POST", fmt.Sprintf("/api/v1/flags/%d/segments", flag.ID), map[string]any{
 			"description":    "default segment",
 			"rolloutPercent": 100,
-		}, &seg, log.Fatalf)
+		}, &seg, errorf)
 
 		for _, c := range f.Constraints {
 			doReqAndDecode("POST", fmt.Sprintf("/api/v1/flags/%d/segments/%d/constraints", flag.ID, seg.ID), map[string]any{
 				"property": c.Property,
 				"operator": c.Operator,
 				"value":    c.Value,
-			}, nil, log.Fatalf)
+			}, nil, errorf)
 		}
 
 		var v1, v2 variantResponse
 		doReqAndDecode("POST", fmt.Sprintf("/api/v1/flags/%d/variants", flag.ID), map[string]any{
 			"key": "variant_control",
-		}, &v1, log.Fatalf)
+		}, &v1, errorf)
 		doReqAndDecode("POST", fmt.Sprintf("/api/v1/flags/%d/variants", flag.ID), map[string]any{
 			"key": "variant_treatment",
-		}, &v2, log.Fatalf)
+		}, &v2, errorf)
 
 		doReqAndDecode("PUT", fmt.Sprintf("/api/v1/flags/%d/segments/%d/distributions", flag.ID, seg.ID), map[string]any{
 			"distributions": []map[string]any{
 				{"percent": 100, "variantID": v1.ID, "variantKey": v1.Key},
 				{"percent": 0, "variantID": v2.ID, "variantKey": v2.Key},
 			},
-		}, nil, log.Fatalf)
+		}, nil, errorf)
 
 		for _, tag := range f.Tags {
 			doReqAndDecode("POST", fmt.Sprintf("/api/v1/flags/%d/tags", flag.ID), map[string]any{
 				"value": tag,
-			}, nil, log.Fatalf)
+			}, nil, errorf)
 		}
 	}
 

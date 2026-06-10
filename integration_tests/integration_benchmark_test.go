@@ -3,7 +3,6 @@
 package flagr_integration
 
 import (
-	"encoding/json"
 	"fmt"
 	"testing"
 )
@@ -72,29 +71,46 @@ func BenchmarkEvalBatchByIDs(b *testing.B) {
 	if len(seedFlagIDs) < 5 {
 		b.Skip("need at least 5 seeded flags")
 	}
-	flagIDsJSON, _ := json.Marshal(seedFlagIDs[:5])
-	body := fmt.Sprintf(
-		`{"entities":[{"entityID":"bench","entityType":"user","entityContext":{"region":"us-west","age":30}}],"flagIDs":%s}`,
-		flagIDsJSON,
-	)
-	benchEvalRaw(b, "/api/v1/evaluation/batch", body)
+	body := map[string]any{
+		"entities": []map[string]any{
+			{"entityID": "bench", "entityType": "user", "entityContext": map[string]any{"region": "us-west", "age": 30}},
+		},
+		"flagIDs": seedFlagIDs[:5],
+	}
+	benchEval(b, "/api/v1/evaluation/batch", body)
 }
 
 func BenchmarkEvalBatchByTags(b *testing.B) {
-	body := `{"entities":[{"entityID":"bench","entityType":"user","entityContext":{"region":"us-west"}}],"flagTags":["int_test"],"flagTagsOperator":"ANY"}`
-	benchEvalRaw(b, "/api/v1/evaluation/batch", body)
+	body := map[string]any{
+		"entities": []map[string]any{
+			{"entityID": "bench", "entityType": "user", "entityContext": map[string]any{"region": "us-west"}},
+		},
+		"flagTags":         []string{"int_test"},
+		"flagTagsOperator": "ANY",
+	}
+	benchEval(b, "/api/v1/evaluation/batch", body)
 }
 
 func BenchmarkEvalBatchLarge(b *testing.B) {
 	if len(seedFlagIDs) < 10 {
 		b.Skip("need at least 10 seeded flags")
 	}
-	flagIDsJSON, _ := json.Marshal(seedFlagIDs[:10])
-	body := fmt.Sprintf(
-		`{"entities":[{"entityID":"bench0","entityType":"user","entityContext":{"region":"us-west"}},{"entityID":"bench1","entityType":"user","entityContext":{"region":"us-east"}},{"entityID":"bench2","entityType":"user","entityContext":{"region":"eu-west"}},{"entityID":"bench3","entityType":"user","entityContext":{"region":"ap-northeast"}},{"entityID":"bench4","entityType":"user","entityContext":{"region":"us-west"}}],"flagIDs":%s}`,
-		flagIDsJSON,
-	)
-	benchEvalRaw(b, "/api/v1/evaluation/batch", body)
+	entities := make([]map[string]any, 5)
+	regions := []string{"us-west", "us-east", "eu-west", "ap-northeast", "us-west"}
+	for i := range entities {
+		entities[i] = map[string]any{
+			"entityID":   fmt.Sprintf("bench%d", i),
+			"entityType": "user",
+			"entityContext": map[string]any{
+				"region": regions[i],
+			},
+		}
+	}
+	body := map[string]any{
+		"entities": entities,
+		"flagIDs":  seedFlagIDs[:10],
+	}
+	benchEval(b, "/api/v1/evaluation/batch", body)
 }
 
 func BenchmarkEvalEQ(b *testing.B) {

@@ -5,6 +5,7 @@ package flagr_integration
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -79,7 +80,7 @@ func TestMain(m *testing.M) {
 // prepareServer waits for a server to be healthy, seeds flags, and waits for eval cache.
 func prepareServer(url string) {
 	waitForServer(url, 30*time.Second)
-	seedFlagsFromMain()
+	seedFlags(log.Fatalf)
 	waitForEvalCache(url, 5*time.Second)
 }
 
@@ -154,20 +155,23 @@ func startLocalServer() string {
 }
 
 func waitForServer(url string, timeout time.Duration) {
-	pollUntil("server", url, timeout, func() bool {
-		resp, err := http.Get(url + "/api/v1/health")
-		if err == nil {
-			resp.Body.Close()
-			return resp.StatusCode == http.StatusOK
+	if err := pollUntil("server", url, timeout, func() bool {
+		resp, err := doReq("GET", "/api/v1/health", nil)
+		if err != nil {
+			return false
 		}
-		return false
-	}, log.Fatalf)
+		io.Copy(io.Discard, resp.Body)
+		resp.Body.Close()
+		return resp.StatusCode == http.StatusOK
+	}); err != nil {
+		log.Fatalf("%v", err)
+	}
 	fmt.Println("Server is healthy at", url)
 }
 
 func waitForEvalCache(url string, timeout time.Duration) {
-	pollUntil("eval cache", url, timeout, func() bool {
-		resp, err := http.Get(url + "/api/v1/export/eval_cache/json")
+	if err := pollUntil("eval cache", url, timeout, func() bool {
+		resp, err := doReq("GET", "/api/v1/export/eval_cache/json", nil)
 		if err != nil {
 			return false
 		}
@@ -182,5 +186,7 @@ func waitForEvalCache(url string, timeout time.Duration) {
 			return false
 		}
 		return len(cache.Flags) > 0
-	}, log.Fatalf)
+	}); err != nil {
+		log.Fatalf("%v", err)
+	}
 }
