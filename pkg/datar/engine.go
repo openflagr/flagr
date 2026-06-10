@@ -204,10 +204,12 @@ func (e *Engine) QueryFlagSummaryBreakdown(flagID int64, from, to time.Time) (*F
 	}
 
 	// Days, sorted by date ascending.
+	// DATE() returns a native DATE on MySQL which GORM can't scan into a Go string.
+	// GROUP BY and ORDER BY use the expression directly to avoid alias ambiguity.
 	var days []DayEntry
 	if err := e.db.Model(&entity.HourlyEvent{}).
-		Select("DATE(bucket_hour) AS day, SUM(eval_count) AS count").
-		Where(where, args...).Group("day").Order("day ASC").
+		Select("CAST(DATE(bucket_hour) AS CHAR) AS day, SUM(eval_count) AS count").
+		Where(where, args...).Group("DATE(bucket_hour)").Order("DATE(bucket_hour) ASC").
 		Scan(&days).Error; err != nil {
 		logrus.WithError(err).Error("Datar: QueryFlagSummaryBreakdown days failed")
 		return nil, err
