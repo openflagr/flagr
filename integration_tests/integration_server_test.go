@@ -77,10 +77,31 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-// prepareServer waits for a server to be healthy, seeds flags, and waits for eval cache.
+// prepareServer waits for a server to be healthy, seeds flags if needed, and waits for eval cache.
 func prepareServer(url string) {
 	waitForServer(url, 30*time.Second)
-	seedFlags(log.Fatalf)
+	// Check if flags already exist (idempotent for re-runs against same server).
+	var existing []flagResponse
+	getJSON := func(path string, dst any) {
+		resp, err := doReq("GET", path, nil)
+		if err != nil {
+			return
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode == http.StatusOK {
+			json.NewDecoder(resp.Body).Decode(dst)
+		}
+	}
+	getJSON("/api/v1/flags", &existing)
+	if len(existing) == 0 {
+		seedFlags(log.Fatalf)
+	} else {
+		fmt.Printf("Flags already exist at %s, skipping seed\n", url)
+		for _, f := range existing {
+			seedFlagIDs = append(seedFlagIDs, f.ID)
+			seedFlagKeys = append(seedFlagKeys, f.Key)
+		}
+	}
 	waitForEvalCache(url, 5*time.Second)
 }
 
