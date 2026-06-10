@@ -16,6 +16,7 @@ import (
 	"testing"
 	"time"
 )
+
 // ---------------------------------------------------------------------------
 // Package-level state — set by TestMain, read by tests and benchmarks
 // ---------------------------------------------------------------------------
@@ -31,6 +32,7 @@ var (
 // ---------------------------------------------------------------------------
 // TestMain — entry point
 // ---------------------------------------------------------------------------
+
 func TestMain(m *testing.M) {
 	// Multi-server mode: FLAGR_SERVER_URLS comma-separated
 	if urlsStr := os.Getenv("FLAGR_SERVER_URLS"); urlsStr != "" {
@@ -48,9 +50,7 @@ func TestMain(m *testing.M) {
 			baseURL = u
 			seedFlagIDs = nil
 			seedFlagKeys = nil
-			waitForServer(baseURL, 30*time.Second)
-			seedFlags(baseURL)
-			waitForEvalCache(baseURL, 5*time.Second)
+			prepareServer(u)
 			if code := m.Run(); code != 0 {
 				fmt.Printf("FAILED: %s\n", u)
 				exitCode = code
@@ -66,17 +66,23 @@ func TestMain(m *testing.M) {
 		url = startLocalServer()
 		defer func() {
 			if serverCmd != nil {
-				serverCmd.Process.Signal(os.Interrupt)
+				serverCmd.Process.Kill()
 				serverCmd.Wait()
 			}
 		}()
 	}
 	baseURL = url
-	waitForServer(baseURL, 30*time.Second)
-	seedFlags(baseURL)
-	waitForEvalCache(baseURL, 5*time.Second)
+	prepareServer(url)
 	os.Exit(m.Run())
 }
+
+// prepareServer waits for a server to be healthy, seeds flags, and waits for eval cache.
+func prepareServer(url string) {
+	waitForServer(url, 30*time.Second)
+	seedFlagsFromMain()
+	waitForEvalCache(url, 5*time.Second)
+}
+
 // ---------------------------------------------------------------------------
 // Local server lifecycle
 // ---------------------------------------------------------------------------
@@ -131,12 +137,15 @@ func startLocalServer() string {
 		"FLAGR_DB_DBDRIVER=sqlite3",
 		"FLAGR_DB_DBCONNECTIONSTR=file::memory:?cache=shared",
 	)
-	serverLog, err := os.Create(filepath.Join(os.TempDir(), "flagr-integration-server.log"))
+	// Redirect server output to a temp file to avoid "I/O incomplete" errors
+	// when the test binary kills the server process.
+	serverLog, err := os.CreateTemp("", "flagr-server-*.log")
 	if err != nil {
 		log.Fatalf("cannot create server log: %v", err)
 	}
 	serverCmd.Stdout = serverLog
 	serverCmd.Stderr = serverLog
+	serverCmd.WaitDelay = 5 * time.Second
 	if err := serverCmd.Start(); err != nil {
 		log.Fatalf("cannot start server: %v", err)
 	}
@@ -145,135 +154,33 @@ func startLocalServer() string {
 }
 
 func waitForServer(url string, timeout time.Duration) {
-	deadline := time.After(timeout)
-	healthURL := url + "/api/v1/health"
-	for {
-		resp, err := http.Get(healthURL)
-		if err == nil && resp.StatusCode == http.StatusOK {
+	pollUntil("server", url, timeout, func() bool {
+		resp, err := http.Get(url + "/api/v1/health")
+		if err == nil {
 			resp.Body.Close()
-			fmt.Println("Server is healthy at", url)
-			return
+			return resp.StatusCode == http.StatusOK
 		}
-		select {
-		case <-deadline:
-			log.Fatalf("server at %s not healthy after %v", url, timeout)
-		default:
-			time.Sleep(500 * time.Millisecond)
-		}
-	}
+		return false
+	}, log.Fatalf)
+	fmt.Println("Server is healthy at", url)
 }
 
 func waitForEvalCache(url string, timeout time.Duration) {
-	deadline := time.After(timeout)
-	evalURL := url + "/api/v1/export/eval_cache/json"
-	for {
-		resp, err := http.Get(evalURL)
-		if err == nil && resp.StatusCode == http.StatusOK {
-			// Decode response to check for non-empty flags
-			var cache struct {
-				Flags []any `json:"Flags"`
-			}
-			err := json.NewDecoder(resp.Body).Decode(&cache)
-			resp.Body.Close()
-			if err == nil && len(cache.Flags) > 0 {
-				fmt.Printf("Eval cache ready (%d flags)\n", len(cache.Flags))
-				return
-			}
-		} else if err == nil {
-			resp.Body.Close()
+	pollUntil("eval cache", url, timeout, func() bool {
+		resp, err := http.Get(url + "/api/v1/export/eval_cache/json")
+		if err != nil {
+			return false
 		}
-		select {
-		case <-deadline:
-			fmt.Println("Warning: eval cache not ready within timeout, continuing anyway")
-			return
-		default:
-			time.Sleep(500 * time.Millisecond)
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusOK {
+			return false
 		}
-	}
-}
-
-// ---------------------------------------------------------------------------
-// Flag seeding
-// ---------------------------------------------------------------------------
-
-func seedFlags(serverURL string) {
-	defs := initFlagDefs()
-	for _, f := range defs {
-		// Create flag
-		desc := f.Description
-		var flag struct {
-			ID         int64  `json:"id"`
-			Key        string `json:"key"`
-			EntityType string `json:"entityType"`
-			Enabled    bool   `json:"enabled"`
+		var cache struct {
+			Flags []any `json:"Flags"`
 		}
-		doReqOrDie("POST", "/api/v1/flags", map[string]any{
-			"description": desc,
-			"key":         f.Key,
-			"enabled":     f.Enabled,
-		}, &flag)
-		seedFlagIDs = append(seedFlagIDs, flag.ID)
-		seedFlagKeys = append(seedFlagKeys, flag.Key)
-
-		// Set entity type if custom
-		if f.EntityType != "" && f.EntityType != "user" {
-			doReqOrDie("PUT", fmt.Sprintf("/api/v1/flags/%d", flag.ID), map[string]any{
-				"entityType": f.EntityType,
-			}, nil)
+		if err := json.NewDecoder(resp.Body).Decode(&cache); err != nil {
+			return false
 		}
-
-		// Set enabled (POST creates flag as disabled by default)
-		if f.Enabled {
-			doReqOrDie("PUT", fmt.Sprintf("/api/v1/flags/%d/enabled", flag.ID), map[string]any{
-				"enabled": true,
-			}, nil)
-		}
-
-		// Create segment (100% rollout)
-		var seg struct {
-			ID int64 `json:"id"`
-		}
-		doReqOrDie("POST", fmt.Sprintf("/api/v1/flags/%d/segments", flag.ID), map[string]any{
-			"description":    "default segment",
-			"rolloutPercent": 100,
-		}, &seg)
-
-		// Create constraints
-		for _, c := range f.Constraints {
-			doReqOrDie("POST", fmt.Sprintf("/api/v1/flags/%d/segments/%d/constraints", flag.ID, seg.ID), map[string]any{
-				"property": c.Property,
-				"operator": c.Operator,
-				"value":    c.Value,
-			}, nil)
-		}
-
-		// Create variants
-		var v1, v2 struct {
-			ID  int64  `json:"id"`
-			Key string `json:"key"`
-		}
-		doReqOrDie("POST", fmt.Sprintf("/api/v1/flags/%d/variants", flag.ID), map[string]any{
-			"key": "variant_control",
-		}, &v1)
-		doReqOrDie("POST", fmt.Sprintf("/api/v1/flags/%d/variants", flag.ID), map[string]any{
-			"key": "variant_treatment",
-		}, &v2)
-
-		// Set distributions (100% to variant_control)
-		doReqOrDie("PUT", fmt.Sprintf("/api/v1/flags/%d/segments/%d/distributions", flag.ID, seg.ID), map[string]any{
-			"distributions": []map[string]any{
-				{"percent": 100, "variantID": v1.ID, "variantKey": v1.Key},
-				{"percent": 0, "variantID": v2.ID, "variantKey": v2.Key},
-			},
-		}, nil)
-
-		// Create tags
-		for _, tag := range f.Tags {
-			doReqOrDie("POST", fmt.Sprintf("/api/v1/flags/%d/tags", flag.ID), map[string]any{
-				"value": tag,
-			}, nil)
-		}
-	}
-
-	fmt.Printf("Seeded %d flags\n", len(seedFlagIDs))
+		return len(cache.Flags) > 0
+	}, log.Fatalf)
 }

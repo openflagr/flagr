@@ -7,11 +7,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
-	"strconv"
-	"strings"
 	"testing"
+	"time"
 )
 
 // ---------------------------------------------------------------------------
@@ -38,8 +36,7 @@ func doReq(method, path string, body any) (*http.Response, error) {
 	return httpClient.Do(req)
 }
 
-// doReqAndDecode performs an HTTP request, checks for 2xx, and optionally decodes JSON dst.
-// errorf is t.Fatalf for tests, log.Fatalf for seed.
+// doReqAndDecode performs an HTTP request, checks for 2xx, and optionally decodes JSON into dst.
 func doReqAndDecode(method, path string, body, dst any, errorf func(string, ...any)) {
 	resp, err := doReq(method, path, body)
 	if err != nil {
@@ -79,27 +76,81 @@ func deleteResource(t *testing.T, path string) {
 	doReqAndDecode("DELETE", path, nil, nil, t.Fatalf)
 }
 
-// doReqOrDie is identical to doReqAndDecode but uses log.Fatalf for use outside test context.
-func doReqOrDie(method, path string, body, dst any) {
-	doReqAndDecode(method, path, body, dst, log.Fatalf)
+// ---------------------------------------------------------------------------
+// Polling helper
+// ---------------------------------------------------------------------------
+
+// pollUntil calls check every 500ms until it returns true or timeout expires.
+// On timeout, calls onTimeout (typically log.Fatal).
+func pollUntil(name, url string, timeout time.Duration, check func() bool, onTimeout func(string, ...any)) {
+	deadline := time.After(timeout)
+	for {
+		if check() {
+			return
+		}
+		select {
+		case <-deadline:
+			onTimeout("%s at %s not ready after %v", name, url, timeout)
+		default:
+			time.Sleep(500 * time.Millisecond)
+		}
+	}
 }
 
 // ---------------------------------------------------------------------------
-// Utility helpers
+// API response types
 // ---------------------------------------------------------------------------
 
-func jsonInts(ids []int64) string {
-	if len(ids) == 0 {
-		return "[]"
-	}
-	var b strings.Builder
-	b.WriteByte('[')
-	for i, id := range ids {
-		if i > 0 {
-			b.WriteByte(',')
-		}
-		b.WriteString(strconv.FormatInt(id, 10))
-	}
-	b.WriteByte(']')
-	return b.String()
+type flagResponse struct {
+	ID                 int64              `json:"id"`
+	Key                string             `json:"key"`
+	Description        string             `json:"description"`
+	Enabled            bool               `json:"enabled"`
+	EntityType         string             `json:"entityType"`
+	DataRecordsEnabled bool               `json:"dataRecordsEnabled"`
+	Segments           []segmentResponse  `json:"segments"`
+	Variants           []variantResponse  `json:"variants"`
+}
+
+type segmentResponse struct {
+	ID             int64                  `json:"id"`
+	Description    string                 `json:"description"`
+	RolloutPercent int                    `json:"rolloutPercent"`
+	Rank           int                    `json:"rank"`
+	Distributions  []distributionResponse `json:"distributions"`
+}
+
+type variantResponse struct {
+	ID         int64          `json:"id"`
+	Key        string         `json:"key"`
+	Attachment map[string]any `json:"attachment"`
+}
+
+type constraintResponse struct {
+	ID       int64  `json:"id"`
+	Property string `json:"property"`
+	Operator string `json:"operator"`
+	Value    string `json:"value"`
+}
+
+type distributionResponse struct {
+	VariantID  int64   `json:"variantID"`
+	VariantKey string  `json:"variantKey"`
+	Percent    float64 `json:"percent"`
+}
+
+type tagResponse struct {
+	ID    int64  `json:"id"`
+	Value string `json:"value"`
+}
+
+type evalResponse struct {
+	FlagID      int64          `json:"flagID"`
+	FlagKey     string         `json:"flagKey"`
+	VariantKey  string         `json:"variantKey"`
+	EvalContext map[string]any `json:"evalContext"`
+}
+
+type batchEvalResponse struct {
+	EvaluationResults []evalResponse `json:"evaluationResults"`
 }
