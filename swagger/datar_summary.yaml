@@ -1,0 +1,35 @@
+get:
+  tags:
+    - datar
+  operationId: getDatarSummary
+  description: Aggregate traffic summary for all flags
+  parameters:
+    - in: query
+      name: from
+      type: string
+      format: date-time
+      description: Start time (RFC 3339, default 7 days ago)
+    - in: query
+      name: to
+      type: string
+      format: date-time
+      description: End time (RFC 3339, default now)
+    - in: query
+      name: limit
+      type: integer
+      format: int32
+      description: Max results (default 100)
+    - in: query
+      name: offset
+      type: integer
+      format: int32
+      description: Result offset (default 0)
+  responses:
+    200:
+      description: summary of all flag traffic
+      schema:
+        $ref: "#/definitions/datarSummaryResponse"
+    default:
+      description: generic error response
+      schema:
+        $ref: "#/definitions/error"

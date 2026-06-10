@@ -21,6 +21,8 @@ tags:
     description: Evaluation is the process of evaluating a flag given the entity context
   - name: health
     description: Check if Flagr is healthy
+  - name: datar
+    description: Datar aggregate analytics
 x-tagGroups:
   - name: Flag Management
     tags:
@@ -39,6 +41,9 @@ x-tagGroups:
   - name: Export
     tags:
       - export
+  - name: Datar
+    tags:
+      - datar
 consumes:
 - application/json
 produces:
@@ -93,7 +98,10 @@ paths:
     $ref: ./export_sqlite.yaml
   /export/eval_cache/json:
     $ref: ./export_eval_cache_json.yaml
-
+  /datar/summary:
+    $ref: ./datar_summary.yaml
+  /datar/flags/{flagID}/summary:
+    $ref: ./datar_flag_summary.yaml
 
 definitions:
 
@@ -378,7 +386,7 @@ definitions:
         minLength: 1
         description: >
           The property name from the entity context to evaluate.
-          Supports nested field access: use dots (e.g., `user.name`) 
+          Supports nested field access: use dots (e.g., `user.name`)
           for nested objects and brackets (e.g., `users[0]`) for array indices.
       operator:
         type: string
@@ -411,7 +419,7 @@ definitions:
         minLength: 1
         description: >
           The property name from the entity context to evaluate.
-          Supports nested field access: use dots (e.g., `user.name`) 
+          Supports nested field access: use dots (e.g., `user.name`)
           for nested objects and brackets (e.g., `users[0]`) for array indices.
       operator:
         type: string
@@ -625,3 +633,74 @@ definitions:
         type: string
         minLength: 1
 
+    # Datar Analytics
+  datarSummaryResponse:
+    type: object
+    properties:
+      flags:
+        type: array
+        items:
+          $ref: "#/definitions/datarSummaryFlag"
+  datarSummaryFlag:
+    type: object
+    properties:
+      flagID:
+        type: integer
+        format: int64
+      flagKey:
+        type: string
+      enabled:
+        type: boolean
+      description:
+        type: string
+      totalEvalCount:
+        type: integer
+        format: int64
+      lastEvaluatedAt:
+        type: string
+        format: date-time
+  datarVariantEntry:
+    type: object
+    properties:
+      variantID:
+        type: integer
+        format: int64
+      count:
+        type: integer
+        format: int64
+  datarSegmentEntry:
+    type: object
+    properties:
+      segmentID:
+        type: integer
+        format: int64
+      count:
+        type: integer
+        format: int64
+  datarDayEntry:
+    type: object
+    properties:
+      date:
+        type: string
+        format: date
+      count:
+        type: integer
+        format: int64
+  datarFlagSummaryResponse:
+    type: object
+    properties:
+      flagID:
+        type: integer
+        format: int64
+      trafficByVariant:
+        type: array
+        items:
+          $ref: "#/definitions/datarVariantEntry"
+      trafficBySegment:
+        type: array
+        items:
+          $ref: "#/definitions/datarSegmentEntry"
+      trafficByDay:
+        type: array
+        items:
+          $ref: "#/definitions/datarDayEntry"

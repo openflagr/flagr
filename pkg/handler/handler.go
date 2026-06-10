@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"slices"
+
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/openflagr/flagr/pkg/config"
 	"github.com/openflagr/flagr/pkg/entity"
@@ -8,6 +10,7 @@ import (
 	"github.com/openflagr/flagr/swagger_gen/models"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/constraint"
+	datarapi "github.com/openflagr/flagr/swagger_gen/restapi/operations/datar"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/distribution"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/evaluation"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/export"
@@ -31,6 +34,7 @@ func Setup(api *operations.FlagrAPI) {
 	}
 
 	setupHealth(api)
+	setupDatar(api)
 	setupEvaluation(api)
 	setupCRUD(api)
 	setupExport(api)
@@ -82,8 +86,27 @@ func setupEvaluation(api *operations.FlagrAPI) {
 	api.EvaluationPostEvaluationHandler = evaluation.PostEvaluationHandlerFunc(e.PostEvaluation)
 	api.EvaluationPostEvaluationBatchHandler = evaluation.PostEvaluationBatchHandlerFunc(e.PostEvaluationBatch)
 
-	if config.Config.RecorderEnabled {
-		GetDataRecorder()
+	// Force-init the data recorder (may be noop, external, Datar, or fan-out).
+	GetDataRecorder()
+}
+
+func setupDatar(api *operations.FlagrAPI) {
+	if !config.Config.RecorderEnabled || !slices.Contains(config.Config.RecorderType, "datar") {
+		return
+	}
+
+	d := GetDatar()
+
+	api.DatarGetDatarSummaryHandler = datarapi.GetDatarSummaryHandlerFunc(HandleGetDatarSummary)
+	api.DatarGetDatarFlagSummaryHandler = datarapi.GetDatarFlagSummaryHandlerFunc(HandleGetDatarFlagSummary)
+
+	// Register shutdown handler.
+	existingShutdown := api.ServerShutdown
+	api.ServerShutdown = func() {
+		d.Shutdown()
+		if existingShutdown != nil {
+			existingShutdown()
+		}
 	}
 }
 

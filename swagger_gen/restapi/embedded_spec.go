@@ -32,6 +32,106 @@ func init() {
   },
   "basePath": "/api/v1",
   "paths": {
+    "/datar/flags/{flagID}/summary": {
+      "get": {
+        "description": "All-in-one analytics summary for a single flag",
+        "tags": [
+          "datar"
+        ],
+        "operationId": "getDatarFlagSummary",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "Flag ID",
+            "name": "flagID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "format": "date-time",
+            "description": "Start time (RFC 3339, default 7 days ago)",
+            "name": "from",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "format": "date-time",
+            "description": "End time (RFC 3339, default now)",
+            "name": "to",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "flag analytics summary",
+            "schema": {
+              "$ref": "#/definitions/datarFlagSummaryResponse"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
+    "/datar/summary": {
+      "get": {
+        "description": "Aggregate traffic summary for all flags",
+        "tags": [
+          "datar"
+        ],
+        "operationId": "getDatarSummary",
+        "parameters": [
+          {
+            "type": "string",
+            "format": "date-time",
+            "description": "Start time (RFC 3339, default 7 days ago)",
+            "name": "from",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "format": "date-time",
+            "description": "End time (RFC 3339, default now)",
+            "name": "to",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int32",
+            "description": "Max results (default 100)",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int32",
+            "description": "Result offset (default 0)",
+            "name": "offset",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "summary of all flag traffic",
+            "schema": {
+              "$ref": "#/definitions/datarSummaryResponse"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
     "/evaluation": {
       "post": {
         "tags": [
@@ -1443,7 +1543,7 @@ func init() {
           ]
         },
         "property": {
-          "description": "The property name from the entity context to evaluate. Supports nested field access: use dots (e.g., ` + "`" + `user.name` + "`" + `)  for nested objects and brackets (e.g., ` + "`" + `users[0]` + "`" + `) for array indices.\n",
+          "description": "The property name from the entity context to evaluate. Supports nested field access: use dots (e.g., ` + "`" + `user.name` + "`" + `) for nested objects and brackets (e.g., ` + "`" + `users[0]` + "`" + `) for array indices.\n",
           "type": "string",
           "minLength": 1
         },
@@ -1466,7 +1566,7 @@ func init() {
           "minLength": 1
         },
         "property": {
-          "description": "The property name from the entity context to evaluate. Supports nested field access: use dots (e.g., ` + "`" + `user.name` + "`" + `)  for nested objects and brackets (e.g., ` + "`" + `users[0]` + "`" + `) for array indices.\n",
+          "description": "The property name from the entity context to evaluate. Supports nested field access: use dots (e.g., ` + "`" + `user.name` + "`" + `) for nested objects and brackets (e.g., ` + "`" + `users[0]` + "`" + `) for array indices.\n",
           "type": "string",
           "minLength": 1
         },
@@ -1538,6 +1638,109 @@ func init() {
         "key": {
           "type": "string",
           "minLength": 1
+        }
+      }
+    },
+    "datarDayEntry": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "date": {
+          "type": "string",
+          "format": "date"
+        }
+      }
+    },
+    "datarFlagSummaryResponse": {
+      "type": "object",
+      "properties": {
+        "flagID": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "trafficByDay": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/datarDayEntry"
+          }
+        },
+        "trafficBySegment": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/datarSegmentEntry"
+          }
+        },
+        "trafficByVariant": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/datarVariantEntry"
+          }
+        }
+      }
+    },
+    "datarSegmentEntry": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "segmentID": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "datarSummaryFlag": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "flagID": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "flagKey": {
+          "type": "string"
+        },
+        "lastEvaluatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "totalEvalCount": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "datarSummaryResponse": {
+      "type": "object",
+      "properties": {
+        "flags": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/datarSummaryFlag"
+          }
+        }
+      }
+    },
+    "datarVariantEntry": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "variantID": {
+          "type": "integer",
+          "format": "int64"
         }
       }
     },
@@ -2112,6 +2315,10 @@ func init() {
     {
       "description": "Check if Flagr is healthy",
       "name": "health"
+    },
+    {
+      "description": "Datar aggregate analytics",
+      "name": "datar"
     }
   ],
   "x-tagGroups": [
@@ -2142,6 +2349,12 @@ func init() {
       "name": "Export",
       "tags": [
         "export"
+      ]
+    },
+    {
+      "name": "Datar",
+      "tags": [
+        "datar"
       ]
     }
   ]
@@ -2164,6 +2377,106 @@ func init() {
   },
   "basePath": "/api/v1",
   "paths": {
+    "/datar/flags/{flagID}/summary": {
+      "get": {
+        "description": "All-in-one analytics summary for a single flag",
+        "tags": [
+          "datar"
+        ],
+        "operationId": "getDatarFlagSummary",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "Flag ID",
+            "name": "flagID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "format": "date-time",
+            "description": "Start time (RFC 3339, default 7 days ago)",
+            "name": "from",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "format": "date-time",
+            "description": "End time (RFC 3339, default now)",
+            "name": "to",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "flag analytics summary",
+            "schema": {
+              "$ref": "#/definitions/datarFlagSummaryResponse"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
+    "/datar/summary": {
+      "get": {
+        "description": "Aggregate traffic summary for all flags",
+        "tags": [
+          "datar"
+        ],
+        "operationId": "getDatarSummary",
+        "parameters": [
+          {
+            "type": "string",
+            "format": "date-time",
+            "description": "Start time (RFC 3339, default 7 days ago)",
+            "name": "from",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "format": "date-time",
+            "description": "End time (RFC 3339, default now)",
+            "name": "to",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int32",
+            "description": "Max results (default 100)",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int32",
+            "description": "Result offset (default 0)",
+            "name": "offset",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "summary of all flag traffic",
+            "schema": {
+              "$ref": "#/definitions/datarSummaryResponse"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
     "/evaluation": {
       "post": {
         "tags": [
@@ -3575,7 +3888,7 @@ func init() {
           ]
         },
         "property": {
-          "description": "The property name from the entity context to evaluate. Supports nested field access: use dots (e.g., ` + "`" + `user.name` + "`" + `)  for nested objects and brackets (e.g., ` + "`" + `users[0]` + "`" + `) for array indices.\n",
+          "description": "The property name from the entity context to evaluate. Supports nested field access: use dots (e.g., ` + "`" + `user.name` + "`" + `) for nested objects and brackets (e.g., ` + "`" + `users[0]` + "`" + `) for array indices.\n",
           "type": "string",
           "minLength": 1
         },
@@ -3598,7 +3911,7 @@ func init() {
           "minLength": 1
         },
         "property": {
-          "description": "The property name from the entity context to evaluate. Supports nested field access: use dots (e.g., ` + "`" + `user.name` + "`" + `)  for nested objects and brackets (e.g., ` + "`" + `users[0]` + "`" + `) for array indices.\n",
+          "description": "The property name from the entity context to evaluate. Supports nested field access: use dots (e.g., ` + "`" + `user.name` + "`" + `) for nested objects and brackets (e.g., ` + "`" + `users[0]` + "`" + `) for array indices.\n",
           "type": "string",
           "minLength": 1
         },
@@ -3671,6 +3984,109 @@ func init() {
         "key": {
           "type": "string",
           "minLength": 1
+        }
+      }
+    },
+    "datarDayEntry": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "date": {
+          "type": "string",
+          "format": "date"
+        }
+      }
+    },
+    "datarFlagSummaryResponse": {
+      "type": "object",
+      "properties": {
+        "flagID": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "trafficByDay": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/datarDayEntry"
+          }
+        },
+        "trafficBySegment": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/datarSegmentEntry"
+          }
+        },
+        "trafficByVariant": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/datarVariantEntry"
+          }
+        }
+      }
+    },
+    "datarSegmentEntry": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "segmentID": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "datarSummaryFlag": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "flagID": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "flagKey": {
+          "type": "string"
+        },
+        "lastEvaluatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "totalEvalCount": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "datarSummaryResponse": {
+      "type": "object",
+      "properties": {
+        "flags": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/datarSummaryFlag"
+          }
+        }
+      }
+    },
+    "datarVariantEntry": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "variantID": {
+          "type": "integer",
+          "format": "int64"
         }
       }
     },
@@ -4249,6 +4665,10 @@ func init() {
     {
       "description": "Check if Flagr is healthy",
       "name": "health"
+    },
+    {
+      "description": "Datar aggregate analytics",
+      "name": "datar"
     }
   ],
   "x-tagGroups": [
@@ -4279,6 +4699,12 @@ func init() {
       "name": "Export",
       "tags": [
         "export"
+      ]
+    },
+    {
+      "name": "Datar",
+      "tags": [
+        "datar"
       ]
     }
   ]
