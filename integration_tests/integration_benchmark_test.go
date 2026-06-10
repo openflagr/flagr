@@ -196,18 +196,3 @@ func benchEval(b *testing.B, path string, body any) {
 	}
 }
 
-// benchEvalRaw benchmarks an endpoint using a pre-serialized JSON string body.
-func benchEvalRaw(b *testing.B, path, body string) {
-	b.Helper()
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		resp, err := doReq("POST", path, body)
-		if err != nil {
-			b.Fatal(err)
-		}
-		resp.Body.Close()
-		if resp.StatusCode != 200 {
-			b.Fatalf("expected 200, got %d", resp.StatusCode)
-		}
-	}
-}

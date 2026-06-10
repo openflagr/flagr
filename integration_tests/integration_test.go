@@ -67,6 +67,16 @@ func TestIntegration_FlagCRUD(t *testing.T) {
 	// Get flag entity types (should include test_entity)
 	var types []string
 	getJSON(t, "/api/v1/flags/entity_types", &types)
+	found := false
+	for _, et := range types {
+		if et == "test_entity" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatal("expected test_entity in entity types")
+	}
 
 	// Query flags by description
 	var byDesc []flagResponse
@@ -92,6 +102,12 @@ func TestIntegration_FlagCRUD(t *testing.T) {
 	// Find flags with preload
 	var flags []flagResponse
 	getJSON(t, "/api/v1/flags?preload=true&limit=1", &flags)
+	if len(flags) == 0 {
+		t.Fatal("expected at least one flag with preload")
+	}
+	if len(flags[0].Segments) == 0 {
+		t.Fatal("expected segments on preloaded flag")
+	}
 
 	// Delete flag
 	deleteResource(t, fmt.Sprintf("/api/v1/flags/%d", created.ID))
@@ -370,7 +386,7 @@ func TestIntegration_Preload(t *testing.T) {
 	getJSON(t, "/api/v1/flags", &without)
 	for _, f := range without {
 		if len(f.Segments) > 0 {
-			t.Log("flag without preload unexpectedly has segments")
+			t.Errorf("flag %d without preload unexpectedly has %d segments", f.ID, len(f.Segments))
 		}
 	}
 
