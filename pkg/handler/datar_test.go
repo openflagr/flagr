@@ -267,13 +267,13 @@ func TestToSwaggerSummaryFlag_EmptyLastEvaluated(t *testing.T) {
 }
 
 func TestToSwaggerDay_InvalidDate(t *testing.T) {
-	d := datar.DayEntry{Date: "not-a-date", Count: 10}
+	d := datar.DayEntry{Day: "not-a-date", Count: 10}
 	entry := toSwaggerDay(d)
 	assert.Nil(t, entry, "unparseable date should return nil")
 }
 
 func TestToSwaggerDay_ValidDate(t *testing.T) {
-	d := datar.DayEntry{Date: "2024-01-15", Count: 42}
+	d := datar.DayEntry{Day: "2024-01-15", Count: 42}
 	entry := toSwaggerDay(d)
 	assert.NotNil(t, entry)
 	assert.Equal(t, int64(42), entry.Count)

@@ -49,7 +49,7 @@ type SegmentEntry struct {
 
 // DayEntry is one calendar day's aggregated count.
 type DayEntry struct {
-	Date  string // YYYY-MM-DD
+	Day   string // YYYY-MM-DD
 	Count int64
 }
 
@@ -206,8 +206,8 @@ func (e *Engine) QueryFlagSummaryBreakdown(flagID int64, from, to time.Time) (*F
 	// Days, sorted by date ascending.
 	var days []DayEntry
 	if err := e.db.Model(&entity.HourlyEvent{}).
-		Select("DATE(bucket_hour) AS date, SUM(eval_count) AS count").
-		Where(where, args...).Group("date").Order("date ASC").
+		Select("DATE(bucket_hour) AS day, SUM(eval_count) AS count").
+		Where(where, args...).Group("day").Order("day ASC").
 		Scan(&days).Error; err != nil {
 		logrus.WithError(err).Error("Datar: QueryFlagSummaryBreakdown days failed")
 		return nil, err

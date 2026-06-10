@@ -97,9 +97,9 @@ func toSwaggerSummaryFlag(r datar.SummaryRow) *models.DatarSummaryFlag {
 // toSwaggerDay converts an engine DayEntry to a swagger model.
 // Returns nil if the date string is unparseable.
 func toSwaggerDay(d datar.DayEntry) *models.DatarDayEntry {
-	t, err := time.Parse("2006-01-02", d.Date)
+	t, err := time.Parse("2006-01-02", d.Day)
 	if err != nil {
-		logrus.WithError(err).WithField("date", d.Date).Warn("Datar: invalid date in time bucket")
+		logrus.WithError(err).WithField("date", d.Day).Warn("Datar: invalid date in time bucket")
 		return nil
 	}
 	return &models.DatarDayEntry{Date: strfmt.Date(t), Count: d.Count}

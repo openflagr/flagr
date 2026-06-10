@@ -230,7 +230,7 @@ func TestQueryFlagSummaryBreakdown(t *testing.T) {
 
 	// Two unique days.
 	assert.Len(t, summary.Days, 2)
-	assert.Equal(t, now.Format("2006-01-02"), summary.Days[1].Date, "most recent day last")
+	assert.Equal(t, now.Format("2006-01-02"), summary.Days[1].Day, "most recent day last")
 }
 
 func TestQueryFlagSummaryBreakdown_NilEngine(t *testing.T) {
