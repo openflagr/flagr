@@ -249,11 +249,7 @@ var EvalFlagWithContext = func(flag *entity.Flag, evalContext models.EvalContext
 
 	logEvalResult(evalResult, flag.DataRecordsEnabled)
 	return evalResult
-
 }
-
-
-
 
 var logEvalResult = func(r *models.EvalResult, dataRecordsEnabled bool) {
 	if r == nil {

@@ -258,7 +258,5 @@ var Config = struct {
 	// UI path  => localhost:18000/foo"
 	// API path => localhost:18000/foo/api/v1"
 
-
-
 	WebPrefix string `env:"FLAGR_WEB_PREFIX" envDefault:""`
 }{}

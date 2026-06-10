@@ -94,17 +94,6 @@ func toSwaggerSummaryFlag(r datar.SummaryRow) *models.DatarSummaryFlag {
 	}
 	return f
 }
-
-// toSwaggerVariant converts an engine VariantEntry to a swagger model.
-func toSwaggerVariant(v datar.VariantEntry) *models.DatarVariantEntry {
-	return &models.DatarVariantEntry{VariantID: v.VariantID, Count: v.Count}
-}
-
-// toSwaggerSegment converts an engine SegmentEntry to a swagger model.
-func toSwaggerSegment(s datar.SegmentEntry) *models.DatarSegmentEntry {
-	return &models.DatarSegmentEntry{SegmentID: s.SegmentID, Count: s.Count}
-}
-
 // toSwaggerDay converts an engine DayEntry to a swagger model.
 // Returns nil if the date string is unparseable.
 func toSwaggerDay(d datar.DayEntry) *models.DatarDayEntry {
@@ -179,12 +168,12 @@ func HandleGetDatarFlagSummary(params datarapi.GetDatarFlagSummaryParams) middle
 
 	variants := make([]*models.DatarVariantEntry, len(summary.Variants))
 	for i, v := range summary.Variants {
-		variants[i] = toSwaggerVariant(v)
+		variants[i] = &models.DatarVariantEntry{VariantID: v.VariantID, Count: v.Count}
 	}
 
 	segs := make([]*models.DatarSegmentEntry, len(summary.Segments))
 	for i, s := range summary.Segments {
-		segs[i] = toSwaggerSegment(s)
+		segs[i] = &models.DatarSegmentEntry{SegmentID: s.SegmentID, Count: s.Count}
 	}
 
 	days := make([]*models.DatarDayEntry, 0, len(summary.Days))

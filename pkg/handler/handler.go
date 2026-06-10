@@ -25,7 +25,6 @@ var getDB = entity.GetDB
 
 // Setup initialize all the handler functions
 func Setup(api *operations.FlagrAPI) {
-
 	notification.ValidateConfig()
 
 	if config.Config.EvalOnlyMode {
@@ -35,10 +34,10 @@ func Setup(api *operations.FlagrAPI) {
 	}
 
 	setupHealth(api)
+	setupDatar(api)
 	setupEvaluation(api)
 	setupCRUD(api)
 	setupExport(api)
-	setupDatar(api)
 }
 
 func setupCRUD(api *operations.FlagrAPI) {
@@ -98,17 +97,8 @@ func setupDatar(api *operations.FlagrAPI) {
 
 	d := GetDatar()
 
-	// Register swagger-gen handlers for the generated routes.
-	api.DatarGetDatarSummaryHandler = datarapi.GetDatarSummaryHandlerFunc(
-		func(params datarapi.GetDatarSummaryParams) middleware.Responder {
-			return HandleGetDatarSummary(params)
-		},
-	)
-	api.DatarGetDatarFlagSummaryHandler = datarapi.GetDatarFlagSummaryHandlerFunc(
-		func(params datarapi.GetDatarFlagSummaryParams) middleware.Responder {
-			return HandleGetDatarFlagSummary(params)
-		},
-	)
+	api.DatarGetDatarSummaryHandler = datarapi.GetDatarSummaryHandlerFunc(HandleGetDatarSummary)
+	api.DatarGetDatarFlagSummaryHandler = datarapi.GetDatarFlagSummaryHandlerFunc(HandleGetDatarFlagSummary)
 
 	// Register shutdown handler.
 	existingShutdown := api.ServerShutdown

@@ -2,7 +2,6 @@ package datar
 
 import (
 	"errors"
-	"sort"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -176,66 +175,43 @@ func (e *Engine) QuerySummary(from, to time.Time, limit, offset int) ([]SummaryR
 }
 
 // QueryFlagSummaryBreakdown returns the pre-aggregated breakdown for a single flag.
-// It queries raw event rows and aggregates them into variant, segment, and day buckets,
-// sorted by count descending (variants, segments) or by date ascending (days).
+// Uses SQL GROUP BY for each dimension instead of loading raw rows into Go.
 func (e *Engine) QueryFlagSummaryBreakdown(flagID int64, from, to time.Time) (*FlagSummaryBreakdown, error) {
 	if e == nil {
 		return nil, errNilEngine
 	}
+	where := "flag_id = ? AND bucket_hour >= ? AND bucket_hour < ?"
+	args := []any{flagID, from, to}
 
-	var rawRows []struct {
-		VariantID  int64
-		SegmentID  int64
-		BucketHour string
-		EvalCount  int32
-	}
-	err := e.db.Model(&entity.HourlyEvent{}).
-		Select("variant_id, segment_id, bucket_hour, eval_count").
-		Where("flag_id = ? AND bucket_hour >= ? AND bucket_hour < ?", flagID, from, to).
-		Scan(&rawRows).Error
-	if err != nil {
-		logrus.WithError(err).Error("Datar: QueryFlagSummaryBreakdown failed")
+	// Variants, sorted by count descending.
+	var variants []VariantEntry
+	if err := e.db.Model(&entity.HourlyEvent{}).
+		Select("variant_id, SUM(eval_count) AS count").
+		Where(where, args...).Group("variant_id").Order("count DESC").
+		Scan(&variants).Error; err != nil {
+		logrus.WithError(err).Error("Datar: QueryFlagSummaryBreakdown variants failed")
 		return nil, err
 	}
 
-	// Aggregate into three bucket types in a single pass.
-	variantTotals := make(map[int64]int64)
-	segIDs := make(map[int64]int64)
-	dayCounts := make(map[string]int64)
-
-	for _, r := range rawRows {
-		variantTotals[r.VariantID] += int64(r.EvalCount)
-		if r.SegmentID > 0 {
-			segIDs[r.SegmentID] += int64(r.EvalCount)
-		}
-		if len(r.BucketHour) >= 10 {
-			dayCounts[r.BucketHour[:10]] += int64(r.EvalCount)
-		}
+	// Segments (exclude segment_id = 0), sorted by count descending.
+	var segs []SegmentEntry
+	if err := e.db.Model(&entity.HourlyEvent{}).
+		Select("segment_id, SUM(eval_count) AS count").
+		Where(where+" AND segment_id > 0", args...).Group("segment_id").Order("count DESC").
+		Scan(&segs).Error; err != nil {
+		logrus.WithError(err).Error("Datar: QueryFlagSummaryBreakdown segments failed")
+		return nil, err
 	}
 
-	variants := make([]VariantEntry, 0, len(variantTotals))
-	for id, count := range variantTotals {
-		variants = append(variants, VariantEntry{VariantID: id, Count: count})
+	// Days, sorted by date ascending.
+	var days []DayEntry
+	if err := e.db.Model(&entity.HourlyEvent{}).
+		Select("DATE(bucket_hour) AS date, SUM(eval_count) AS count").
+		Where(where, args...).Group("date").Order("date ASC").
+		Scan(&days).Error; err != nil {
+		logrus.WithError(err).Error("Datar: QueryFlagSummaryBreakdown days failed")
+		return nil, err
 	}
-	sort.Slice(variants, func(i, j int) bool {
-		return variants[i].Count > variants[j].Count
-	})
-
-	segs := make([]SegmentEntry, 0, len(segIDs))
-	for id, count := range segIDs {
-		segs = append(segs, SegmentEntry{SegmentID: id, Count: count})
-	}
-	sort.Slice(segs, func(i, j int) bool {
-		return segs[i].Count > segs[j].Count
-	})
-
-	days := make([]DayEntry, 0, len(dayCounts))
-	for dateStr, count := range dayCounts {
-		days = append(days, DayEntry{Date: dateStr, Count: count})
-	}
-	sort.Slice(days, func(i, j int) bool {
-		return days[i].Date < days[j].Date
-	})
 
 	return &FlagSummaryBreakdown{
 		FlagID:   flagID,
