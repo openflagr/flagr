@@ -40,8 +40,8 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: "1.26"
-      - name: Build and run Go integration tests against all instances
-        run: cd integration_tests && make test
+      - name: Build, run Go integration tests, and benchmarks against all instances
+        run: cd integration_tests && make test-and-bench
   e2e_test:
     runs-on: ubuntu-latest
     steps:
