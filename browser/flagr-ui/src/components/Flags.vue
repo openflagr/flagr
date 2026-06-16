@@ -317,7 +317,6 @@ export default {
         this.showCreateModal = false;
         this.$message.success("Flag created");
         this.flags.unshift(flag);
-        if (flagsCache) flagsCache.flags.unshift(flag);
       }, handleErr.bind(this));
     },
     restoreFlag(row) {
@@ -330,7 +329,6 @@ export default {
           const flag = response.data;
           this.$message.success(`Flag restored`);
           this.flags.push(flag);
-          if (flagsCache) flagsCache.flags.push(flag);
           this.deletedFlags = this.deletedFlags.filter(el => el.id !== flag.id);
         }, handleErr.bind(this));
       });
