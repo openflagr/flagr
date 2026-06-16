@@ -33,8 +33,9 @@ test.describe('Flags list page', () => {
 
     await expect(page.locator('.el-message--success')).toBeVisible({ timeout: 5000 })
 
-    // Verify the flag appears in the list
-    await expect(page.locator('[data-testid="flags-table"]')).toContainText(flagName)
+    // Verify the flag appears exactly once in the list (no duplicates)
+    const matchingRows = page.locator('[data-testid="flags-table"] .el-table__row', { hasText: flagName })
+    await expect(matchingRows).toHaveCount(1)
 
     // Capture the flag id for cleanup by reading it back from the API
     const r = await page.request.get(`${API}/flags?description=${encodeURIComponent(flagName)}`)
