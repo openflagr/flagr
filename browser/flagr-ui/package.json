@@ -34,5 +34,8 @@
     "browserslist": [
         "> 1%",
         "last 2 versions"
-    ]
+    ],
+    "overrides": {
+        "form-data": "4.0.6"
+    }
 }
