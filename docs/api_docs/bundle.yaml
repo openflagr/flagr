@@ -20,6 +20,8 @@ tags:
     description: Evaluation is the process of evaluating a flag given the entity context
   - name: health
     description: Check if Flagr is healthy
+  - name: datar
+    description: Datar aggregate analytics
 x-tagGroups:
   - name: Flag Management
     tags:
@@ -38,6 +40,9 @@ x-tagGroups:
   - name: Export
     tags:
       - export
+  - name: Datar
+    tags:
+      - datar
 consumes:
   - application/json
 produces:
@@ -999,6 +1004,74 @@ paths:
           description: generic error response
           schema:
             $ref: '#/definitions/error'
+  /datar/summary:
+    get:
+      tags:
+        - datar
+      operationId: getDatarSummary
+      description: Aggregate traffic summary for all flags
+      parameters:
+        - in: query
+          name: from
+          type: string
+          format: date-time
+          description: Start time (RFC 3339, default 7 days ago)
+        - in: query
+          name: to
+          type: string
+          format: date-time
+          description: End time (RFC 3339, default now)
+        - in: query
+          name: limit
+          type: integer
+          format: int32
+          description: Max results (default 100)
+        - in: query
+          name: offset
+          type: integer
+          format: int32
+          description: Result offset (default 0)
+      responses:
+        '200':
+          description: summary of all flag traffic
+          schema:
+            $ref: '#/definitions/datarSummaryResponse'
+        default:
+          description: generic error response
+          schema:
+            $ref: '#/definitions/error'
+  /datar/flags/{flagID}/summary:
+    get:
+      tags:
+        - datar
+      operationId: getDatarFlagSummary
+      description: All-in-one analytics summary for a single flag
+      parameters:
+        - in: path
+          name: flagID
+          type: integer
+          format: int64
+          required: true
+          description: Flag ID
+        - in: query
+          name: from
+          type: string
+          format: date-time
+          description: Start time (RFC 3339, default 7 days ago)
+        - in: query
+          name: to
+          type: string
+          format: date-time
+          description: End time (RFC 3339, default now)
+      responses:
+        '200':
+          description: flag analytics summary
+          schema:
+            $ref: '#/definitions/datarFlagSummaryResponse'
+        default:
+          description: generic error response
+          schema:
+            $ref: '#/definitions/error'
 definitions:
   flag:
     type: object
@@ -1270,7 +1343,7 @@ definitions:
         minLength: 1
         description: >
           The property name from the entity context to evaluate. Supports nested
-          field access: use dots (e.g., `user.name`)  for nested objects and
+          field access: use dots (e.g., `user.name`) for nested objects and
           brackets (e.g., `users[0]`) for array indices.
       operator:
         type: string
@@ -1303,7 +1376,7 @@ definitions:
         minLength: 1
         description: >
           The property name from the entity context to evaluate. Supports nested
-          field access: use dots (e.g., `user.name`)  for nested objects and
+          field access: use dots (e.g., `user.name`) for nested objects and
           brackets (e.g., `users[0]`) for array indices.
       operator:
         type: string
@@ -1516,3 +1589,73 @@ definitions:
       message:
         type: string
         minLength: 1
+  datarSummaryResponse:
+    type: object
+    properties:
+      flags:
+        type: array
+        items:
+          $ref: '#/definitions/datarSummaryFlag'
+  datarSummaryFlag:
+    type: object
+    properties:
+      flagID:
+        type: integer
+        format: int64
+      flagKey:
+        type: string
+      enabled:
+        type: boolean
+      description:
+        type: string
+      totalEvalCount:
+        type: integer
+        format: int64
+      lastEvaluatedAt:
+        type: string
+        format: date-time
+  datarVariantEntry:
+    type: object
+    properties:
+      variantID:
+        type: integer
+        format: int64
+      count:
+        type: integer
+        format: int64
+  datarSegmentEntry:
+    type: object
+    properties:
+      segmentID:
+        type: integer
+        format: int64
+      count:
+        type: integer
+        format: int64
+  datarDayEntry:
+    type: object
+    properties:
+      date:
+        type: string
+        format: date
+      count:
+        type: integer
+        format: int64
+  datarFlagSummaryResponse:
+    type: object
+    properties:
+      flagID:
+        type: integer
+        format: int64
+      trafficByVariant:
+        type: array
+        items:
+          $ref: '#/definitions/datarVariantEntry'
+      trafficBySegment:
+        type: array
+        items:
+          $ref: '#/definitions/datarSegmentEntry'
+      trafficByDay:
+        type: array
+        items:
+          $ref: '#/definitions/datarDayEntry'

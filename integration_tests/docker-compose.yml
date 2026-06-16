@@ -50,6 +50,9 @@ services:
     environment:
       FLAGR_DB_DBDRIVER: "sqlite3"
       FLAGR_DB_DBCONNECTIONSTR: "/tmp/flagr.sqlite3"
+      FLAGR_RECORDER_TYPE: "datar"
+      FLAGR_RECORDER_ENABLED: "true"
+      FLAGR_RECORDER_DATAR_FLUSH_INTERVAL: "500ms"
     command: sh -c "sleep 15 && ./flagr"
     ports:
       - "18001:18000"
@@ -59,6 +62,9 @@ services:
     environment:
       FLAGR_DB_DBDRIVER: "mysql"
       FLAGR_DB_DBCONNECTIONSTR: "root:@tcp(mysql:3306)/flagr?parseTime=true"
+      FLAGR_RECORDER_TYPE: "datar"
+      FLAGR_RECORDER_ENABLED: "true"
+      FLAGR_RECORDER_DATAR_FLUSH_INTERVAL: "500ms"
     command: sh -c "sleep 15 && ./flagr"
     ports:
       - "18002:18000"
@@ -68,6 +74,9 @@ services:
     environment:
       FLAGR_DB_DBDRIVER: "mysql"
       FLAGR_DB_DBCONNECTIONSTR: "root:@tcp(mysql8:3306)/flagr?parseTime=true"
+      FLAGR_RECORDER_TYPE: "datar"
+      FLAGR_RECORDER_ENABLED: "true"
+      FLAGR_RECORDER_DATAR_FLUSH_INTERVAL: "500ms"
     command: sh -c "sleep 15 && ./flagr"
     ports:
       - "18003:18000"
@@ -77,6 +86,9 @@ services:
     environment:
       FLAGR_DB_DBDRIVER: "postgres"
       FLAGR_DB_DBCONNECTIONSTR: "sslmode=disable host=postgres9 user=test password=test dbname=flagr"
+      FLAGR_RECORDER_TYPE: "datar"
+      FLAGR_RECORDER_ENABLED: "true"
+      FLAGR_RECORDER_DATAR_FLUSH_INTERVAL: "500ms"
     command: sh -c "sleep 15 && ./flagr"
     ports:
       - "18004:18000"
@@ -86,6 +98,14 @@ services:
     environment:
       FLAGR_DB_DBDRIVER: "postgres"
       FLAGR_DB_DBCONNECTIONSTR: "sslmode=disable host=postgres13 user=test password=test dbname=flagr"
+      FLAGR_RECORDER_TYPE: "datar"
+      FLAGR_RECORDER_ENABLED: "true"
+      FLAGR_RECORDER_DATAR_FLUSH_INTERVAL: "500ms"
     command: sh -c "sleep 15 && ./flagr"
     ports:
       - "18005:18000"
+
+  shakedown:
+    image: zhouzhuojie/docker-shakedown
+    container_name: flagr-shakedown
+    command: sh -c "tail -F /dev/null"

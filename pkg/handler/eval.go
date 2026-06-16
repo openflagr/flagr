@@ -1,12 +1,11 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"sync"
 	"time"
-
-	"encoding/json"
 
 	"github.com/openflagr/flagr/pkg/config"
 	"github.com/openflagr/flagr/pkg/entity"
@@ -266,11 +265,11 @@ var logEvalResult = func(r *models.EvalResult, dataRecordsEnabled bool) {
 	logEvalResultToDatadog(r)
 	logEvalResultToPrometheus(r)
 
-	if !config.Config.RecorderEnabled || !dataRecordsEnabled {
+	if !dataRecordsEnabled {
 		return
 	}
-	rec := GetDataRecorder()
-	rec.AsyncRecord(*r)
+
+	GetDataRecorder().AsyncRecord(*r)
 }
 
 var logEvalResultToDatadog = func(r *models.EvalResult) {

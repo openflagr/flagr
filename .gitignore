@@ -15,6 +15,7 @@ release
 .DS_Store
 *.syso
 coverage.txt
+*.cover
 .vscode/
 .snap
 *.tar.bz2

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/openflagr/flagr/pkg/config"
@@ -18,20 +19,43 @@ type DataRecorder interface {
 	NewDataRecordFrame(models.EvalResult) DataRecordFrame
 }
 
+// fanOutRecorder broadcasts AsyncRecord to multiple DataRecorder implementations.
+type fanOutRecorder []DataRecorder
+
+func (f fanOutRecorder) AsyncRecord(r models.EvalResult) {
+	for _, rec := range f {
+		rec.AsyncRecord(r)
+	}
+}
+
+func (f fanOutRecorder) NewDataRecordFrame(_ models.EvalResult) DataRecordFrame {
+	return DataRecordFrame{}
+}
+
 // GetDataRecorder gets the data recorder
 func GetDataRecorder() DataRecorder {
 	singletonDataRecorderOnce.Do(func() {
-		recorderType := config.Config.RecorderType
-		switch recorderType {
-		case "kafka":
-			singletonDataRecorder = NewKafkaRecorder()
-		case "kinesis":
-			singletonDataRecorder = NewKinesisRecorder()
-		case "pubsub":
-			singletonDataRecorder = NewPubsubRecorder()
-		default:
-			panic("recorderType not supported")
+		if !config.Config.RecorderEnabled {
+			singletonDataRecorder = fanOutRecorder(nil)
+			return
 		}
+
+		var recs []DataRecorder
+		for _, rt := range config.Config.RecorderType {
+			switch rt {
+			case "kafka":
+				recs = append(recs, NewKafkaRecorder())
+			case "kinesis":
+				recs = append(recs, NewKinesisRecorder())
+			case "pubsub":
+				recs = append(recs, NewPubsubRecorder())
+			case "datar":
+				recs = append(recs, NewDatarRecorder())
+			default:
+				panic(fmt.Sprintf("recorderType %q not supported", rt))
+			}
+		}
+		singletonDataRecorder = fanOutRecorder(recs)
 	})
 
 	return singletonDataRecorder

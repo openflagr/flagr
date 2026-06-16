@@ -116,11 +116,11 @@ var Config = struct {
 	PrometheusPath string `env:"FLAGR_PROMETHEUS_PATH" envDefault:"/metrics"`
 	// PrometheusIncludeLatencyHistogram - set whether Prometheus should also export a histogram of request latencies (this increases cardinality significantly)
 	PrometheusIncludeLatencyHistogram bool `env:"FLAGR_PROMETHEUS_INCLUDE_LATENCY_HISTOGRAM" envDefault:"false"`
-
-	// RecorderEnabled - enable data records logging
+	// RecorderEnabled - master kill switch for all data recorders (including Datar)
 	RecorderEnabled bool `env:"FLAGR_RECORDER_ENABLED" envDefault:"false"`
-	// RecorderType - the pipeline to log data records, e.g. Kafka
-	RecorderType string `env:"FLAGR_RECORDER_TYPE" envDefault:"kafka"`
+
+	// RecorderType - comma-separated list of recorders to enable, e.g. "kafka,datar"
+	RecorderType []string `env:"FLAGR_RECORDER_TYPE" envDefault:"kafka" envSeparator:","`
 
 	/**
 	RecorderFrameOutputMode - indicates which data record frame output mode should we use.
@@ -178,6 +178,9 @@ var Config = struct {
 	RecorderPubsubKeyFile              string        `env:"FLAGR_RECORDER_PUBSUB_KEYFILE" envDefault:""`
 	RecorderPubsubVerbose              bool          `env:"FLAGR_RECORDER_PUBSUB_VERBOSE" envDefault:"false"`
 	RecorderPubsubVerboseCancelTimeout time.Duration `env:"FLAGR_RECORDER_PUBSUB_VERBOSE_CANCEL_TIMEOUT" envDefault:"5s"`
+
+	// RecorderDatarFlushInterval - how often to flush in-memory aggregates to DB
+	RecorderDatarFlushInterval time.Duration `env:"FLAGR_RECORDER_DATAR_FLUSH_INTERVAL" envDefault:"60s"`
 
 	/**
 	JWTAuthEnabled enables the JWT Auth
@@ -254,5 +257,6 @@ var Config = struct {
 	// e.g. FLAGR_WEB_PREFIX=/foo
 	// UI path  => localhost:18000/foo"
 	// API path => localhost:18000/foo/api/v1"
+
 	WebPrefix string `env:"FLAGR_WEB_PREFIX" envDefault:""`
 }{}

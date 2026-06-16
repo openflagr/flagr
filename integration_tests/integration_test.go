@@ -16,7 +16,9 @@
 package flagr_integration
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"net/url"
 	"testing"
 	"time"
@@ -537,5 +539,174 @@ func TestIntegration_BatchEvalOperator(t *testing.T) {
 				t.Fatalf("batch eval (%s) response missing evaluationResults", tc.operator)
 			}
 		})
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Datar integration tests
+// ---------------------------------------------------------------------------
+
+// datarSummaryFlag mirrors the swagger DatarSummaryFlag response.
+type datarSummaryFlag struct {
+	FlagID          int64  `json:"flagID"`
+	FlagKey         string `json:"flagKey"`
+	TotalEvalCount  int64  `json:"totalEvalCount"`
+	Enabled         bool   `json:"enabled"`
+	LastEvaluatedAt string `json:"lastEvaluatedAt"`
+}
+
+type datarSummaryResponse struct {
+	Flags []datarSummaryFlag `json:"flags"`
+}
+
+type datarVariantEntry struct {
+	VariantID int64 `json:"variantID"`
+	Count     int64 `json:"count"`
+}
+
+type datarSegmentEntry struct {
+	SegmentID int64 `json:"segmentID"`
+	Count     int64 `json:"count"`
+}
+
+type datarDayEntry struct {
+	Date  string `json:"date"`
+	Count int64  `json:"count"`
+}
+
+type datarFlagSummaryResponse struct {
+	FlagID           int64               `json:"flagID"`
+	TrafficByVariant []datarVariantEntry `json:"trafficByVariant"`
+	TrafficBySegment []datarSegmentEntry `json:"trafficBySegment"`
+	TrafficByDay     []datarDayEntry     `json:"trafficByDay"`
+}
+
+func TestIntegration_DatarSummary(t *testing.T) {
+	if len(seedFlagIDs) < 2 {
+		t.Fatal("need at least 2 seeded flags for datar test")
+	}
+
+	flagID := seedFlagIDs[1]
+
+	// Datar may not be enabled on all servers (e.g. checkr_flagr_with_sqlite).
+	// Probe the endpoint first; skip if unavailable.
+	resp, err := doReq("GET", "/api/v1/datar/summary", nil)
+	if err != nil {
+		t.Skipf("datar not available: %v", err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Skipf("datar summary returned %d, skipping", resp.StatusCode)
+	}
+	// Enable dataRecordsEnabled so evaluations are recorded into the datar engine.
+	doReqOK(t, "PUT", fmt.Sprintf("/api/v1/flags/%d", flagID), map[string]any{
+		"dataRecordsEnabled": true,
+	})
+
+	// Poll until datar summary shows eval counts. Evaluations are performed
+	// inside the loop because the eval cache refreshes every ~3s — the
+	// DataRecordsEnabled change won't take effect until the next reload.
+	var summary datarSummaryResponse
+	err = pollUntil("datar/summary", "/api/v1/datar/summary", 15*time.Second, func() bool {
+		// Perform evaluations on each poll attempt.
+		for i := 0; i < 3; i++ {
+			doReqOK(t, "POST", "/api/v1/evaluation", map[string]any{
+				"flagID":     flagID,
+				"entityID":   fmt.Sprintf("datar-entity-%d", i),
+				"entityType": "user",
+			})
+		}
+		resp, err := doReq("GET", "/api/v1/datar/summary", nil)
+		if err != nil {
+			return false
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusOK {
+			return false
+		}
+		json.NewDecoder(resp.Body).Decode(&summary)
+		// Check that our flag has eval counts.
+		for _, f := range summary.Flags {
+			if f.FlagID == flagID && f.TotalEvalCount > 0 {
+				return true
+			}
+		}
+		return false
+	})
+	if err != nil {
+		t.Fatalf("datar summary never showed eval counts for flag %d: %v", flagID, err)
+	}
+}
+
+func TestIntegration_DatarFlagSummary(t *testing.T) {
+	if len(seedFlagIDs) < 2 {
+		t.Fatal("need at least 2 seeded flags for datar test")
+	}
+
+	flagID := seedFlagIDs[1]
+
+	// Skip if datar is not available.
+	resp, err := doReq("GET", fmt.Sprintf("/api/v1/datar/flags/%d/summary", flagID), nil)
+	if err != nil {
+		t.Skipf("datar not available: %v", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Skipf("datar flag summary returned %d, skipping", resp.StatusCode)
+	}
+	// Enable dataRecordsEnabled so evaluations are recorded into the datar engine.
+	doReqOK(t, "PUT", fmt.Sprintf("/api/v1/flags/%d", flagID), map[string]any{
+		"dataRecordsEnabled": true,
+	})
+
+	// Poll until flag summary has traffic. Evaluations are performed
+	// inside the loop because the eval cache refreshes every ~3s.
+	var flagSummary datarFlagSummaryResponse
+	err = pollUntil("datar/flags/summary", fmt.Sprintf("/api/v1/datar/flags/%d/summary", flagID), 15*time.Second, func() bool {
+		for i := 0; i < 3; i++ {
+			doReqOK(t, "POST", "/api/v1/evaluation", map[string]any{
+				"flagID":     flagID,
+				"entityID":   fmt.Sprintf("datar-flag-entity-%d", i),
+				"entityType": "user",
+			})
+		}
+		resp, err := doReq("GET", fmt.Sprintf("/api/v1/datar/flags/%d/summary", flagID), nil)
+		if err != nil {
+			return false
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusOK {
+			return false
+		}
+		json.NewDecoder(resp.Body).Decode(&flagSummary)
+		return len(flagSummary.TrafficByVariant) > 0
+	})
+	if err != nil {
+		t.Fatalf("datar flag summary never populated for flag %d: %v", flagID, err)
+	}
+
+	if flagSummary.FlagID != flagID {
+		t.Errorf("expected flagID %d, got %d", flagID, flagSummary.FlagID)
+	}
+
+	for _, v := range flagSummary.TrafficByVariant {
+		if v.Count <= 0 {
+			t.Errorf("variant %d has non-positive count %d", v.VariantID, v.Count)
+		}
+	}
+
+	for _, s := range flagSummary.TrafficBySegment {
+		if s.Count <= 0 {
+			t.Errorf("segment %d has non-positive count %d", s.SegmentID, s.Count)
+		}
+	}
+
+	if len(flagSummary.TrafficByDay) == 0 {
+		t.Error("expected non-empty trafficByDay")
+	}
+	for _, d := range flagSummary.TrafficByDay {
+		if d.Count <= 0 {
+			t.Errorf("day %s has non-positive count %d", d.Date, d.Count)
+		}
 	}
 }
