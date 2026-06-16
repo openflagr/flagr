@@ -11,6 +11,7 @@ import (
 	"github.com/openflagr/flagr/pkg/config"
 	"github.com/openflagr/flagr/pkg/entity"
 	"github.com/openflagr/flagr/pkg/util"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -32,8 +33,10 @@ func (ec *EvalCache) export() EvalCacheJSON {
 	return EvalCacheJSON{Flags: fs}
 }
 
-func (ec *EvalCache) fetchAllFlags() (idCache map[string]*entity.Flag, keyCache map[string]*entity.Flag, tagCache map[string]map[uint]*entity.Flag, err error) {
-	fs, err := fetchAllFlags()
+// loadAndBuildCaches fetches all flags from the configured fetcher and builds
+// the three lookup caches (idCache, keyCache, tagCache) used by the EvalCache.
+func (ec *EvalCache) loadAndBuildCaches() (idCache map[string]*entity.Flag, keyCache map[string]*entity.Flag, tagCache map[string]map[uint]*entity.Flag, err error) {
+	fs, err := ec.getFetcher().fetch()
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -99,24 +102,16 @@ var fetchAllFlags = func() ([]entity.Flag, error) {
 type jsonFileFetcher struct {
 	filePath string
 }
-
 func (ff *jsonFileFetcher) fetch() ([]entity.Flag, error) {
 	b, err := os.ReadFile(ff.filePath)
 	if err != nil {
 		return nil, err
 	}
-	ecj := &EvalCacheJSON{}
-	err = json.Unmarshal(b, ecj)
-	if err != nil {
-		return nil, err
-	}
-	return ecj.Flags, nil
+	return unmarshalFlags(b)
 }
-
 type jsonHTTPFetcher struct {
 	url string
 }
-
 func (hf *jsonHTTPFetcher) fetch() ([]entity.Flag, error) {
 	client := http.Client{Timeout: config.Config.EvalCacheRefreshTimeout}
 	res, err := client.Get(hf.url)
@@ -124,18 +119,141 @@ func (hf *jsonHTTPFetcher) fetch() ([]entity.Flag, error) {
 		return nil, err
 	}
 	defer res.Body.Close()
-
 	b, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
 	}
+	return unmarshalFlags(b)
+}
 
+// unmarshalFlags parses JSON bytes into EvalCacheJSON and returns the flags.
+// It auto-assigns IDs to any entities with zero IDs, which is essential for
+// hand-edited JSON files where picking unique IDs for every entity is impractical.
+//
+// Validation warnings are logged but do not prevent loading — the system is
+// lenient to allow incremental flag authoring. Validation errors, however,
+// DO prevent loading: a flag definition with broken references or missing
+// required fields would produce incorrect evaluation results.
+func unmarshalFlags(b []byte) ([]entity.Flag, error) {
 	ecj := &EvalCacheJSON{}
-	err = json.Unmarshal(b, ecj)
-	if err != nil {
+	if err := json.Unmarshal(b, ecj); err != nil {
 		return nil, err
 	}
+
+	// Validate after parsing — operates on entity structs directly,
+	// giving actionable warnings for hand-edited files.
+	result := ValidateFlags(ecj.Flags)
+	if !result.OK() {
+		for _, e := range result.Errors {
+			logrus.Errorf("flag validation error: %s", e)
+		}
+		return nil, fmt.Errorf("flag validation failed with %d error(s)", len(result.Errors))
+	}
+	for _, w := range result.Warnings {
+		logrus.Warnf("flag validation warning: %s", w)
+	}
+
+	normalizeIDs(ecj.Flags)
 	return ecj.Flags, nil
+}
+
+// setIfZeroAndBumpNext evaluates *target: if zero, sets it to next and
+// returns next+1 (to advance the counter); otherwise returns next unchanged.
+// Used by normalizeIDs to auto-assign sequential IDs to zero-valued entities.
+func setIfZeroAndBumpNext(target *uint, next uint) uint {
+	if *target == 0 {
+		*target = next
+		return next + 1
+	}
+	return next
+}
+
+// normalizeIDs assigns sequential IDs to any entities with zero IDs.
+// This allows hand-edited JSON files to omit IDs entirely — the system
+// auto-generates unique ones. Entities with explicit non-zero IDs are
+// left untouched.
+//
+// All entity types use global counters (not per-flag) to match the
+// behavior of a real database where every table has its own auto-increment.
+// This also means IDs are stable if a flag is later migrated to a DB backend.
+//
+// Invariants:
+//   - Every entity type has globally unique IDs
+//   - Distribution.VariantID matches a Variant.ID in the same flag
+//   - Segment.FlagID, Constraint.SegmentID, Distribution.SegmentID are set
+func normalizeIDs(flags []entity.Flag) {
+	// Pass 1: find the max existing ID per type so we never collide
+	var nextFlagID, nextVariantID, nextSegmentID, nextConstraintID, nextDistributionID, nextTagID uint = 1, 1, 1, 1, 1, 1
+	for i := range flags {
+		if flags[i].ID >= nextFlagID {
+			nextFlagID = flags[i].ID + 1
+		}
+		for _, v := range flags[i].Variants {
+			if v.ID >= nextVariantID {
+				nextVariantID = v.ID + 1
+			}
+		}
+		for _, s := range flags[i].Segments {
+			if s.ID >= nextSegmentID {
+				nextSegmentID = s.ID + 1
+			}
+			for _, c := range s.Constraints {
+				if c.ID >= nextConstraintID {
+					nextConstraintID = c.ID + 1
+				}
+			}
+			for _, d := range s.Distributions {
+				if d.ID >= nextDistributionID {
+					nextDistributionID = d.ID + 1
+				}
+			}
+		}
+		for _, t := range flags[i].Tags {
+			if t.ID >= nextTagID {
+				nextTagID = t.ID + 1
+			}
+		}
+	}
+
+	// Pass 2: assign IDs where missing and fix parent references
+	for i := range flags {
+		nextFlagID = setIfZeroAndBumpNext(&flags[i].ID, nextFlagID)
+		for j := range flags[i].Variants {
+			nextVariantID = setIfZeroAndBumpNext(&flags[i].Variants[j].ID, nextVariantID)
+		}
+		for j := range flags[i].Segments {
+			nextSegmentID = setIfZeroAndBumpNext(&flags[i].Segments[j].ID, nextSegmentID)
+			flags[i].Segments[j].FlagID = flags[i].ID
+			for k := range flags[i].Segments[j].Constraints {
+				nextConstraintID = setIfZeroAndBumpNext(&flags[i].Segments[j].Constraints[k].ID, nextConstraintID)
+				flags[i].Segments[j].Constraints[k].SegmentID = flags[i].Segments[j].ID
+			}
+			for k := range flags[i].Segments[j].Distributions {
+				d := &flags[i].Segments[j].Distributions[k]
+				nextDistributionID = setIfZeroAndBumpNext(&d.ID, nextDistributionID)
+				d.SegmentID = flags[i].Segments[j].ID
+				// Resolve VariantID from VariantKey when VariantID is missing.
+				// This lets hand-edited files omit numeric variant IDs entirely —
+				// just set "VariantKey": "control" and the link is resolved.
+				if d.VariantID == 0 && d.VariantKey != "" {
+					found := false
+					for _, v := range flags[i].Variants {
+						if v.Key == d.VariantKey {
+							d.VariantID = v.ID
+							found = true
+							break
+						}
+					}
+					if !found {
+						logrus.Warnf("flag %q: distribution references unknown variant key %q", flags[i].Key, d.VariantKey)
+					}
+				}
+			}
+		}
+		for j := range flags[i].Tags {
+			nextTagID = setIfZeroAndBumpNext(&flags[i].Tags[j].ID, nextTagID)
+		}
+	}
 }
 
 type dbFetcher struct {

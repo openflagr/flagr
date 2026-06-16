@@ -9,6 +9,7 @@
     - [Testing](home?id=testing)
 - Server Configuration
     - [Env](flagr_env.md)
+    - [JSON Flag Source](flagr_json_flag_spec.md)
     - [Notifications](flagr_notifications.md)
     - [Datar](flagr_datar.md)
 - Client SDKs
