@@ -1,13 +1,28 @@
 # Get Started
 
-Flagr is an open source Go service that delivers the right experience to the right entity and monitors the impact. It provides feature flags, experimentation (A/B testing), and dynamic configuration. It has clear swagger REST APIs for flags management and flag evaluation. For more details, see [Flagr Overview](flagr_overview)
+Flagr is an open source Go service that delivers the right experience to the right entity and monitors the impact. It provides **feature flags**, **experimentation (A/B testing)**, and **dynamic configuration** — all behind clear swagger REST APIs for flag management and evaluation.
 
-## Run
+For a deeper introduction, see the [Flagr Overview](flagr_overview).
 
-Run directly with docker.
+## What can Flagr do?
+
+| Capability | Highlights |
+|------------|------------|
+| **Feature flags** | Binary toggles, kill switches, targeted audience rollouts |
+| **A/B testing** | Multi-variant experiments with deterministic distribution |
+| **Dynamic configuration** | Per-variant JSON attachments for runtime config |
+| **GitOps / Flags-as-code** | Load flags from JSON files or HTTP URLs; manage in Git, validate in CI |
+| **Datar analytics** | Built-in aggregate analytics — no external pipeline needed |
+| **Webhook notifications** | HTTP POST on every flag change, with retry and backoff |
+| **Multi-database** | SQLite (dev), MySQL, PostgreSQL, JSON sources |
+
+See [Use Cases](flagr_use_cases) for practical examples of each pattern.
+
+## Quick demo
+
+Run Flagr with Docker — no dependencies required:
 
 ```bash
-# Start the docker container
 docker pull ghcr.io/openflagr/flagr
 docker run -it -p 18000:18000 ghcr.io/openflagr/flagr
 
@@ -15,52 +30,55 @@ docker run -it -p 18000:18000 ghcr.io/openflagr/flagr
 open localhost:18000
 ```
 
-## Deploy
-
-We recommend directly use the openflagr/flagr image, and configure everything in the env variables. See more in [Server Configuration](flagr_env).
+Or try the hosted demo at [https://try-flagr.onrender.com](https://try-flagr.onrender.com) (cold starts may take a moment):
 
 ```bash
-# Set env variables. For example,
-export HOST=0.0.0.0
-export PORT=18000
-export FLAGR_DB_DBDRIVER=mysql
-export FLAGR_DB_DBCONNECTIONSTR=root:@tcp(127.0.0.1:18100)/flagr?parseTime=true
-
-# Run the docker image. Ideally, the deployment will be handled by Kubernetes or Mesos.
-docker run -it -p 18000:18000 ghcr.io/openflagr/flagr
+curl --request POST \
+     --url https://try-flagr.onrender.com/api/v1/evaluation \
+     --header 'content-type: application/json' \
+     --data '{
+       "entityID": "127",
+       "entityType": "user",
+       "entityContext": { "state": "NY" },
+       "flagID": 1,
+       "enableDebug": true
+     }'
 ```
 
 ## Development
 
-Install Dependencies.
+### Prerequisites
 
-- Go (1.24+)
-- Make (for Makefile)
-- Node (20+) (for building UI)
+- **Go** 1.24+
+- **Node** 20+ (for UI development)
+- **Make**
 
-Build from source.
+### Build and run
 
 ```bash
-# get the source
 git clone https://github.com/openflagr/flagr.git
 cd flagr
 
-# install dependencies, generate code, and start the service in
-# development mode
-make build start
-```
+# Build the Go server binary
+make build
 
-If you just want to run the pre-built backend (without the UI development service):
+# Start backend (:18000) + frontend dev server (:8080) in parallel
+make start
 
-```
+# Or run just the pre-built backend
 make run
-```
 
-And alternatively to just run the UI service:
-
-```
+# Or run just the UI dev server (proxies /api/v1 to :18000)
 make run_ui
 ```
+
+After Go code changes, rebuild and restart in one step:
+
+```bash
+make rebuild-run    # build → stop-ui → start
+```
+
+Frontend-only development: run `npm run dev` in `browser/flagr-ui/` — Vite proxies `/api/v1` to `:18000` and hot-reloads on save.
 
 ## Testing
 
@@ -108,14 +126,31 @@ checkr/flagr):
 cd integration_tests && make test
 ```
 
+To run against a single Docker Compose instance:
+
+```bash
+cd integration_tests && make test-instance INSTANCE=flagr_with_mysql
+```
+
 **HTTP eval benchmarks** — measures end-to-end eval latency through HTTP:
 
 ```bash
 make bench-integration
 ```
 
-To run against a single Docker Compose instance:
+## Deploy
+
+We recommend using the `ghcr.io/openflagr/flagr` image directly and configuring everything through environment variables. See [Server Configuration](flagr_env) for the full list.
 
 ```bash
-cd integration_tests && make test-instance INSTANCE=flagr_with_mysql
+# Set env variables. For example,
+export HOST=0.0.0.0
+export PORT=18000
+export FLAGR_DB_DBDRIVER=mysql
+export FLAGR_DB_DBCONNECTIONSTR=root:@tcp(127.0.0.1:18100)/flagr?parseTime=true
+
+# Run the docker image. Ideally, the deployment will be handled by Kubernetes or Mesos.
+docker run -it -p 18000:18000 ghcr.io/openflagr/flagr
 ```
+
+For GitOps workflows (flags-as-code, eval-only mode), see the [JSON Flag Source](flagr_json_flag_spec) guide.

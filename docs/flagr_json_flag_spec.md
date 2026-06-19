@@ -44,6 +44,7 @@ go build -o flagr-validate ./cmd/flagr-validate/
 The validator checks: valid JSON, required fields, key uniqueness, distribution sums (must be 100), variant references, constraint expressions, and percentage ranges. It reports errors (must fix) and warnings (should fix) separately.
 
 You can also use `ValidateFlags()` from `pkg/handler` programmatically.
+
 ## GitOps with GitHub
 
 Host your `flags.json` in a Git repository and point Flagr at the raw file. This gives you full GitOps: PR review, audit trail, rollback via `git revert`, and CI validation before deploy.

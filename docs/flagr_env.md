@@ -14,13 +14,15 @@ export FLAGR_DB_DBDRIVER=mysql
 
 | Driver | Use case |
 |--------|----------|
-| `mysql` | Production MySQL/PostgreSQL |
+| `sqlite3` | Development and testing (default, no external deps) |
+| `mysql` | Production MySQL |
 | `postgres` | Production PostgreSQL |
-| `sqlite3` | Development (default, no external deps) |
 | `json_file` | Load flags from a local JSON file ([format spec](flagr_json_flag_spec.md)) |
 | `json_http` | Load flags from a URL (CI artifact, S3, GCS) |
 
 For JSON-based workflows (GitOps, eval-only mode), see the [JSON Flag Source](flagr_json_flag_spec.md) guide.
+
+## Authentication
 
 ### Basic Auth (web interface)
 
@@ -37,13 +39,26 @@ FLAGR_BASIC_AUTH_WHITELIST_PATHS="/api/v1/flags,/api/v1/evaluation"
 FLAGR_BASIC_AUTH_EXACT_WHITELIST_PATHS=""
 ```
 
-Note: Basic auth protects the web UI. It does not prevent direct API calls to `/api/v1/flags`.
+> **Note:** Basic auth protects the web UI. It does not prevent direct API calls to `/api/v1/flags`.
 
 ### JWT Auth
 
-See [env.go](https://github.com/openflagr/flagr/blob/master/pkg/config/env.go) for JWT configuration options.
+Flagr supports JWT-based authentication for API access. Configure the signing key and algorithm via environment variables — see [env.go](https://github.com/openflagr/flagr/blob/master/pkg/config/env.go) for the full list of `FLAGR_JWT_*` options.
 
 ## Data record destinations
+
+Flagr can send evaluation results to one or more destinations simultaneously. Set `FLAGR_RECORDER_ENABLED=true` and list the desired recorders in `FLAGR_RECORDER_TYPE` (comma-separated, e.g. `kafka,datar`).
+
+### Kafka (default)
+
+```sh
+FLAGR_RECORDER_ENABLED=true
+FLAGR_RECORDER_TYPE=kafka
+FLAGR_RECORDER_KAFKA_BROKERS=kafka1:9092,kafka2:9092
+FLAGR_RECORDER_KAFKA_TOPIC=flagr-records
+```
+
+Additional Kafka options include SSL/TLS (`FLAGR_RECORDER_KAFKA_CERTFILE`, `FLAGR_RECORDER_KAFKA_KEYFILE`, `FLAGR_RECORDER_KAFKA_CAFILE`), SASL authentication (`FLAGR_RECORDER_KAFKA_SASL_USERNAME`, `FLAGR_RECORDER_KAFKA_SASL_PASSWORD`), idempotent producers, and encryption. See [env.go](https://github.com/openflagr/flagr/blob/master/pkg/config/env.go) for the full list.
 
 ### Kinesis (AWS)
 
@@ -76,6 +91,14 @@ FLAGR_RECORDER_PUBSUB_KEYFILE=/path/to/service/account.json
 
 Alternatively, set `GOOGLE_APPLICATION_CREDENTIALS` (this affects all Google services in the environment).
 
-## Datar
+### Datar (built-in analytics)
 
-Datar is an optional in-memory aggregate analytics engine. Requires `FLAGR_RECORDER_ENABLED=true`. List `datar` in `FLAGR_RECORDER_TYPE` to enable it along with `FLAGR_RECORDER_DATAR_FLUSH_INTERVAL`. See [Datar](flagr_datar.md) for details.
+Datar is an optional in-memory aggregate analytics engine. List `datar` in `FLAGR_RECORDER_TYPE` alongside other recorders, or use it alone for a zero-dependency analytics setup:
+
+```sh
+FLAGR_RECORDER_ENABLED=true
+FLAGR_RECORDER_TYPE=datar
+FLAGR_RECORDER_DATAR_FLUSH_INTERVAL=60s
+```
+
+See [Datar Analytics](flagr_datar.md) for endpoint documentation, data model, and resource usage.
