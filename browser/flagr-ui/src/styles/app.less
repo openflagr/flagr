@@ -8,6 +8,19 @@ body {
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.5;
 }
+
+// --- Spacing scale (4px grid, scoped to flag workflows) ---
+// T-shirt sizes; 2px micro-tuning stays as literal where needed.
+:root {
+  --space-3xs: 4px;
+  --space-2xs: 8px;
+  --space-xs: 12px;
+  --space-sm: 16px;
+  --space-md: 20px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+}
+
 h1, h2 { font-weight: 600; }
 ol { margin: 0; padding-left: 20px; }
 .width--full { width: 100%; }
@@ -28,7 +41,7 @@ ol { margin: 0; padding-left: 20px; }
   .navbar-inner {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0 24px;
+    padding: 0 var(--space-lg);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -42,14 +55,14 @@ ol { margin: 0; padding-left: 20px; }
   }
   .navbar-nav {
     display: flex;
-    gap: 24px;
+    gap: var(--space-lg);
     a { color: inherit; text-decoration: none; font-size: 0.9em; font-weight: 500; opacity: 0.85; }
     a:hover { opacity: 1; }
   }
   .router-view-container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0 24px;
+    padding: 0 var(--space-lg);
   }
 
   // --- Flex helpers ---
@@ -57,12 +70,12 @@ ol { margin: 0; padding-left: 20px; }
     display: flex;
     align-items: center;
     justify-content: center;
-    &-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+    &-right { margin-left: auto; display: flex; align-items: center; gap: var(--space-xs); }
     &.equal-width > * { flex: 1; }
     &.align-items-top { align-items: flex-start; }
   }
 
-  .container { margin: 0 auto; margin-top: 24px; }
+  .container { margin: 0 auto; margin-top: var(--space-lg); }
   img { height: 60px; }
 
   // --- Notion-style cards ---
@@ -70,13 +83,13 @@ ol { margin: 0; padding-left: 20px; }
     border-radius: 12px;
     border: 1px solid var(--el-border-color);
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    margin-bottom: 20px;
+    margin-bottom: var(--space-md);
 
     .el-card__header {
       background: transparent;
       color: var(--el-text-color-primary);
       border-bottom: 1px solid var(--el-border-color-light);
-      padding: 14px 20px;
+      padding: var(--space-xs) var(--space-md);
       position: relative;
       &::before {
         content: '';
@@ -96,7 +109,30 @@ ol { margin: 0; padding-left: 20px; }
         letter-spacing: -0.01em;
       }
     }
-    .el-card__body { padding: 16px 20px; }
+    .el-card__body { padding: var(--space-sm) var(--space-md); }
+  }
+
+  // --- Card tier: secondary (demoted children of the primary card) ---
+  // Thinner accent bar (2px) + slightly smaller header (13px).
+  .el-card.is-card-secondary {
+    .el-card__header {
+      &::before { width: 2px; }
+      h2 { font-size: 13px; }
+    }
+  }
+
+  // --- Card tier: utility (muted accent, no primary color) ---
+  .el-card.is-card-utility {
+    .el-card__header {
+      &::before { background: var(--el-border-color); }
+    }
+  }
+
+  // --- Card tier: danger (danger accent, explicit danger zone) ---
+  .el-card.is-card-danger {
+    .el-card__header {
+      &::before { background: var(--el-color-danger); }
+    }
   }
 
   // --- Nested inner card (hover-shadow) ---
@@ -118,30 +154,53 @@ ol { margin: 0; padding-left: 20px; }
     &--error {
       box-sizing: border-box;
       background-color: var(--el-color-danger-light-9);
-      padding: 10px 14px;
+      padding: var(--space-2xs) var(--space-xs);
       text-align: center;
       color: var(--el-color-danger);
       border: 1px solid var(--el-color-danger-light-7);
       border-radius: 8px;
       width: 100%;
-      margin-bottom: 12px;
+      margin-bottom: var(--space-xs);
       font-size: 0.9em;
     }
     &--empty {
       box-sizing: border-box;
       background-color: var(--el-fill-color-light);
-      padding: 10px 14px;
+      padding: var(--space-2xs) var(--space-xs);
       text-align: center;
       color: var(--el-text-color-placeholder);
       border: 1px dashed var(--el-border-color);
       border-radius: 8px;
       width: 100%;
-      margin-bottom: 12px;
+      margin-bottom: var(--space-xs);
       font-size: 0.9em;
+    }
+    // Orientation cue: an empty-state hint with a heading + body.
+    // Extends card--empty vocabulary for creation→editing bridging.
+    &--cue {
+      box-sizing: border-box;
+      background-color: var(--el-fill-color-light);
+      border: 1px dashed var(--el-border-color);
+      border-radius: 8px;
+      width: 100%;
+      padding: var(--space-xs) var(--space-sm);
+      color: var(--el-text-color-placeholder);
+      text-align: left;
+      .card--cue-title {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--el-text-color-secondary);
+        margin: 0 0 var(--space-3xs);
+      }
+      .card--cue-body {
+        font-size: 12px;
+        line-height: 1.5;
+        margin: 0;
+      }
     }
   }
 
-  .el-breadcrumb { margin-bottom: 20px; }
+  .el-breadcrumb { margin-bottom: var(--space-md); }
 
   .el-input { margin-bottom: 2px; }
 
@@ -182,15 +241,15 @@ ol { margin: 0; padding-left: 20px; }
 }
 
   .el-tabs {
-    .el-tabs__header { margin-bottom: 20px; }
+    .el-tabs__header { margin-bottom: var(--space-md); }
     .el-tabs__item { font-size: 14px; font-weight: 500; }
   }
 
   .el-dialog {
     border-radius: 12px;
-    .el-dialog__header { margin-right: 0; padding: 20px 24px 0; font-weight: 600; }
-    .el-dialog__body { padding: 12px 24px; }
-    .el-dialog__footer { padding: 8px 24px 20px; }
+    .el-dialog__header { margin-right: 0; padding: var(--space-md) var(--space-lg) 0; font-weight: 600; }
+    .el-dialog__body { padding: var(--space-xs) var(--space-lg); }
+    .el-dialog__footer { padding: var(--space-2xs) var(--space-lg) var(--space-md); }
   }
   .el-button--small { font-size: 12px; }
   .el-button.is-disabled {
@@ -211,12 +270,12 @@ ol { margin: 0; padding-left: 20px; }
   // --- History / Snapshot page ---
   .snapshot-container {
     .el-card__body {
-      padding: 16px 20px;
+      padding: var(--space-sm) var(--space-md);
     }
     .diff-snapshot-id-change {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: var(--space-3xs);
       .el-tag {
         color: var(--el-color-primary);
         background-color: var(--el-color-primary-light-9);

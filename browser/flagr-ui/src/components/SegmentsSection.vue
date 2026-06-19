@@ -1,5 +1,5 @@
 <template>
-  <el-card class="segments-container">
+  <el-card class="segments-container is-card-secondary">
     <template #header>
       <div class="el-card-header">
         <div class="flex-row">
@@ -31,8 +31,14 @@
             </el-input>
           </div>
           <div class="seg-header-actions">
-            <el-tooltip content="Move up" placement="top"><el-button size="small" :disabled="index===0" @click="handleMoveUp(element,index)" data-testid="move-segment-up-btn"><el-icon><ArrowUp /></el-icon></el-button></el-tooltip>
-            <el-tooltip content="Move down" placement="top"><el-button size="small" :disabled="index===segments.length-1" @click="handleMoveDown(element,index)" data-testid="move-segment-down-btn"><el-icon><ArrowDown /></el-icon></el-button></el-tooltip>
+            <el-button-group class="seg-reorder-group">
+              <el-tooltip content="Move up" placement="top">
+                <el-button size="small" :disabled="index===0" @click="handleMoveUp(element,index)" data-testid="move-segment-up-btn"><el-icon><ArrowUp /></el-icon></el-button>
+              </el-tooltip>
+              <el-tooltip content="Move down" placement="top">
+                <el-button size="small" :disabled="index===segments.length-1" @click="handleMoveDown(element,index)" data-testid="move-segment-down-btn"><el-icon><ArrowDown /></el-icon></el-button>
+              </el-tooltip>
+            </el-button-group>
             <el-button size="small" plain @click="$emit('save-segment', element)" data-testid="save-segment-btn">Save</el-button>
             <el-button size="small" @click="$emit('delete-segment', element)" data-testid="delete-segment-btn"><el-icon><Delete /></el-icon></el-button>
           </div>
@@ -97,7 +103,10 @@
         </div>
       </div>
     </div>
-    <div class="card--error" v-else>No segments created for this feature flag yet</div>
+    <div class="card--cue" v-else>
+      <p class="card--cue-title">No segments yet</p>
+      <p class="card--cue-body">Segments are the targeting rules that decide which entities match. Each segment has constraints (e.g. <code>country EQ "US"</code>) and a distribution over variants. Add one to start targeting.</p>
+    </div>
   </el-card>
 </template>
 
@@ -142,16 +151,16 @@ export default {
   background: #fff;
   border: 1px solid var(--el-border-color);
   border-radius: 10px;
-  padding: 10px 12px;
-  margin-bottom: 10px;
+  padding: var(--space-2xs) var(--space-xs);
+  margin-bottom: var(--space-2xs);
   box-shadow: 0 1px 4px rgba(0,0,0,0.04);
 }
 .seg-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-  padding-bottom: 8px;
+  gap: var(--space-2xs);
+  margin-bottom: var(--space-2xs);
+  padding-bottom: var(--space-2xs);
   border-bottom: 1px solid var(--el-border-color-lighter);
 }
 .seg-id {
@@ -165,18 +174,23 @@ export default {
 
 .seg-header-fields {
   display: flex;
-  gap: 6px;
+  gap: var(--space-2xs);
   flex: 1;
   > * { flex: 1; }
 }
 .seg-header-actions {
   display: flex;
-  gap: 3px;
+  align-items: center;
+  gap: var(--space-2xs);
   flex-shrink: 0;
+}
+.seg-reorder-group {
+  // Connected up/down pair reads as a single "reorder" control.
+  :deep(.el-button) { padding-left: var(--space-2xs); padding-right: var(--space-2xs); }
 }
 .seg-panel-row {
   display: flex;
-  gap: 16px;
+  gap: var(--space-sm);
   align-items: flex-start;
 }
 .seg-panel {
@@ -184,22 +198,22 @@ export default {
   min-width: 0;
   background: var(--el-fill-color-light);
   border-radius: 8px;
-  padding: 10px 12px;
+  padding: var(--space-2xs) var(--space-xs);
 }
 .seg-panel-dist {
   flex: 0 0 220px;
   background: var(--el-fill-color-light);
   border-radius: 8px;
-  padding: 10px 12px;
+  padding: var(--space-2xs) var(--space-xs);
 }
 .seg-section-title {
   font-size: 11px;
   font-weight: 600;
   color: var(--el-text-color-secondary);
-  margin-bottom: 6px;
+  margin-bottom: var(--space-2xs);
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-2xs);
   letter-spacing: 0.02em;
   text-transform: uppercase;
 }
@@ -214,21 +228,21 @@ export default {
 .constraint-input-group {
   display: flex;
   flex: 1;
-  gap: 4px;
+  gap: var(--space-3xs);
 }
 
 .constraint-grid {
   display: grid;
-  gap: 4px;
+  gap: var(--space-3xs);
 }
 .constraint-row {
   display: grid;
   grid-template-columns: 36px 1fr auto;
-  gap: 6px;
+  gap: var(--space-2xs);
   align-items: center;
   background: var(--el-color-primary-light-9);
   border-radius: 6px;
-  padding: 4px 6px;
+  padding: var(--space-3xs) var(--space-2xs);
 }
 .constraint-logic {
   font-size: 10px;
@@ -242,12 +256,12 @@ export default {
 }
 .constraint-actions {
   display: flex;
-  gap: 3px;
+  gap: var(--space-3xs);
 }
 .new-constraint-row {
   .constraint-input-group { flex: 1; }
-  margin-top: 4px;
-  padding: 6px 6px 4px;
+  margin-top: var(--space-3xs);
+  padding: var(--space-2xs) var(--space-2xs) var(--space-3xs);
   border-top: 1px dashed var(--el-border-color);
   border-radius: 0 0 6px 6px;
   background: var(--el-color-primary-light-9);
@@ -259,7 +273,7 @@ export default {
 .dist-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-2xs);
 }
 .dist-item {
   padding: 0;
@@ -281,6 +295,34 @@ export default {
   font-weight: 600;
   color: var(--el-text-color-primary);
   font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 768px) {
+  .seg-header {
+    flex-wrap: wrap;
+    gap: var(--space-2xs);
+  }
+  .seg-header-fields {
+    flex: 1 1 100%;
+    order: 2;
+  }
+  .seg-header-actions {
+    order: 3;
+    margin-left: auto;
+  }
+  .seg-panel-row {
+    flex-direction: column;
+    gap: var(--space-2xs);
+  }
+  .seg-panel-dist {
+    flex: 0 0 auto;
+    width: 100%;
+  }
+}
+@media (max-width: 480px) {
+  .seg-header-fields {
+    flex-direction: column;
+  }
 }
 </style>
 
