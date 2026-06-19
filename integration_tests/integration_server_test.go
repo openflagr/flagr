@@ -135,7 +135,7 @@ func startLocalServer() string {
 		log.Fatalf("failed to create temp dir: %v", err)
 	}
 	binPath := filepath.Join(tmpDir, "flagr")
-	cmd := exec.Command("go", "build", "-o", binPath, "./swagger_gen/cmd/flagr-server/")
+	cmd := exec.Command("go", "build", "-o", binPath, "./cmd/flagr-server/")
 	cmd.Dir = projectRoot
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {

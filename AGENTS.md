@@ -17,6 +17,7 @@ Flagr — Go feature flag service with Vue 3 UI.
 | `make test-integration` | Run Go integration tests (auto-starts local server, SQLite) |
 | `make bench-integration` | Run HTTP eval benchmarks against local server |
 | `go build -o flagr-validate ./cmd/flagr-validate/` | Build standalone JSON flag validator |
+| `go build -o flagr ./cmd/flagr-server/` | Build server binary directly (same as `make build`) |
 | `make test-integration` | Run Go integration tests (auto-starts local server, SQLite) |
 | `make bench-integration` | Run HTTP eval benchmarks against local server |
 
