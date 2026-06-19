@@ -88,12 +88,22 @@
 
               <debug-console :flag="flag" />
 
-              <div style="margin-top: 8px;">
-                <el-button type="danger" plain size="small" @click="dialogDeleteFlagVisible = true" data-testid="delete-flag-btn">
-                  <el-icon><Delete /></el-icon>
-                  Delete Flag
-                </el-button>
-              </div>
+              <el-card class="danger-zone-card is-card-danger" style="margin-top: var(--space-xl);">
+                <template #header>
+                  <div class="el-card-header">
+                    <h2>Danger Zone</h2>
+                  </div>
+                </template>
+                <div class="danger-zone-body">
+                  <p class="danger-zone-text">
+                    Deleting a flag hides it from active evaluation. Its segments, variants, and distributions stay intact and come back when you restore the flag from the Deleted Flags section on the flags list page.
+                  </p>
+                  <el-button type="danger" plain size="small" @click="dialogDeleteFlagVisible = true" data-testid="delete-flag-btn">
+                    <el-icon><Delete /></el-icon>
+                    Delete Flag
+                  </el-button>
+                </div>
+              </el-card>
             </el-tab-pane>
 
             <el-tab-pane label="History" name="history">
@@ -266,6 +276,10 @@ export default {
 
     handleUpdateVariantKey({ variant, key }) {
       variant.key = key
+    },
+
+    handleVariantAttachmentChange({ variant, valid }) {
+      variant.attachmentValid = valid
     },
 
 
@@ -491,22 +505,22 @@ export default {
 }
 </script>
 
-<style lang="less">
+<style lang="scss">
 h5 {
   padding: 0;
-  margin: 8px 0 4px;
+  margin: var(--space-2xs) 0 var(--space-3xs);
   font-size: 13px;
 }
 
 .create-segment-dialog {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-sm);
 }
 .create-segment-slider {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-2xs);
 }
 .create-segment-label {
   font-size: 12px;
@@ -514,6 +528,24 @@ h5 {
   color: var(--el-text-color-secondary);
 }
 
+.danger-zone-card {
+  margin-bottom: 0;
+  .danger-zone-body {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-md);
+    flex-wrap: wrap;
+  }
+  .danger-zone-text {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--el-text-color-secondary);
+    flex: 1;
+    min-width: 200px;
+  }
+}
 
 .grabbable {
   cursor: move;

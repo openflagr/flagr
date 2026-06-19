@@ -61,3 +61,4 @@ Flagr — Go feature flag service with Vue 3 UI.
 - **Don't edit `swagger_gen/`** — regenerate with `make swagger`
 - Dev mode uses SQLite, no external deps needed
 - See [deepwiki.com/openflagr/flagr](https://deepwiki.com/openflagr/flagr) and `docs/`
+- When create PR, follow the PULL_REQUEST_TEMPLATE.md

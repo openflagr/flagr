@@ -1,5 +1,5 @@
 <template>
-  <el-card class="dc-container">
+  <el-card class="dc-container is-card-utility">
     <template #header>
       <div class="el-card-header"><h2>Debug Console</h2></div>
     </template>
@@ -127,12 +127,12 @@ export default {
 };
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 .dc-eval-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 8px;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-2xs);
 }
 .dc-label {
   font-size: 12px;
@@ -141,19 +141,19 @@ export default {
 }
 .dc-editor-row {
   display: flex;
-  gap: 12px;
+  gap: var(--space-xs);
 }
 .dc-json-editor {
   flex: 1;
   height: 280px;
 }
 .dc-collapse-item {
-  :deep(.el-collapse-item__content) { padding-bottom: 8px; }
+  :deep(.el-collapse-item__content) { padding-bottom: var(--space-2xs); }
 }
 
 // --- Summary ---
 .dc-summary {
-  margin-top: 12px;
+  margin-top: var(--space-xs);
   border: 1px solid var(--el-border-color-light);
   border-radius: 10px;
   overflow: hidden;
@@ -162,24 +162,24 @@ export default {
   font-size: 12px;
   font-weight: 700;
   color: var(--el-text-color-primary);
-  padding: 10px 14px;
+  padding: var(--space-2xs) var(--space-xs);
   background: var(--el-fill-color-light);
   border-bottom: 1px solid var(--el-border-color-light);
 }
 .dc-summary-body {
-  padding: 12px 14px;
+  padding: var(--space-xs) var(--space-xs);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-xs);
 }
 .dc-result-variant {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-2xs);
   background: var(--el-color-primary-light-9);
   border: 1px solid var(--el-color-primary-light-7);
   border-radius: 8px;
-  padding: 10px 14px;
+  padding: var(--space-2xs) var(--space-xs);
 }
 .dc-result-variant-label {
   font-size: 10px;
@@ -189,7 +189,7 @@ export default {
   letter-spacing: 0.06em;
   background: var(--el-color-primary-light-8);
   border-radius: 4px;
-  padding: 2px 8px;
+  padding: 2px var(--space-2xs);
   line-height: 1.5;
 }
 .dc-result-variant-value {
@@ -202,22 +202,22 @@ export default {
 .dc-segment-log {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-2xs);
 }
 
 
 .dc-segment-log-item {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-3xs);
   background: var(--el-fill-color-light);
   border-radius: 8px;
-  padding: 8px 10px;
+  padding: var(--space-2xs) var(--space-xs);
 }
 .dc-segment-log-header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2xs);
   flex-wrap: wrap;
 }
 .dc-seg-name {
@@ -237,12 +237,17 @@ export default {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-2xs);
 }
 .dc-response-col .dc-json-editor {
   flex: 1;
 }
-
-
-
+@media (max-width: 768px) {
+  .dc-editor-row {
+    flex-direction: column;
+  }
+  .dc-json-editor {
+    height: 200px;
+  }
+}
 </style>

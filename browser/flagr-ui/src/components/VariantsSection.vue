@@ -1,5 +1,5 @@
 <template>
-  <el-card class="variants-container">
+  <el-card class="variants-container is-card-secondary">
     <template #header>
       <div class="el-card-header"><h2>Variants</h2></div>
     </template>
@@ -36,7 +36,10 @@
         </el-collapse>
       </div>
     </div>
-    <div class="card--error" v-else>No variants created for this feature flag yet</div>
+    <div class="card--cue" v-else>
+      <p class="card--cue-title">No variants yet</p>
+      <p class="card--cue-body">Variants are the outcomes a flag can return — e.g. <code>on</code>/<code>off</code>, <code>control</code>/<code>test</code>. Add one to start defining what entities receive.</p>
+    </div>
 
     <div class="variant-add-row">
       <el-input size="small" placeholder="New Variant Key" v-model="newKey" data-testid="new-variant-input" />
@@ -77,11 +80,11 @@ export default {
 }
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 .variants-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-2xs);
 }
 .variant-item {
   flex: 1;
@@ -89,12 +92,12 @@ export default {
   background: #fff;
   border: 1px solid var(--el-border-color-light);
   border-radius: 8px;
-  padding: 8px 12px;
+  padding: var(--space-2xs) var(--space-xs);
 }
 .variant-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2xs);
 }
 .variant-id {
   font-size: 10px;
@@ -108,13 +111,13 @@ export default {
 .variant-key-field { flex: 1; }
 .variant-actions {
   display: flex;
-  gap: 4px;
+  gap: var(--space-3xs);
   flex-shrink: 0;
 }
 .variant-add-row {
   display: flex;
-  gap: 8px;
-  margin-top: 10px;
+  gap: var(--space-2xs);
+  margin-top: var(--space-2xs);
   > *:first-child { flex: 1; }
 }
 .variant-attachment-collapsable-title {
@@ -123,8 +126,20 @@ export default {
   color: var(--el-text-color-placeholder);
 }
 .variant-attachment-title {
-  margin: 0 0 4px;
+  margin: 0 0 var(--space-3xs);
   font-size: 11px;
   color: var(--el-text-color-placeholder);
+}
+@media (max-width: 640px) {
+  .variant-row {
+    flex-wrap: wrap;
+  }
+  .variant-key-field {
+    flex: 1 1 100%;
+    order: -1;
+  }
+  .variant-actions {
+    margin-left: auto;
+  }
 }
 </style>

@@ -137,18 +137,18 @@ export default {
 }
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 .flag-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  padding: 4px 0;
+  gap: var(--space-md);
+  padding: var(--space-3xs) 0;
 }
 
 .flag-left {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-2xs);
 }
 
 .flag-right {
@@ -158,7 +158,7 @@ export default {
 .flag-notes-panel {
   background: var(--el-fill-color-light);
   border-radius: 8px;
-  padding: 10px 12px;
+  padding: var(--space-2xs) var(--space-xs);
   min-height: 120px;
 }
 
@@ -169,7 +169,7 @@ export default {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   letter-spacing: 0.02em;
-  margin-left: 8px;
+  margin-left: var(--space-2xs);
 }
 
 .flag-field-block {
@@ -181,14 +181,14 @@ export default {
   font-size: 11px;
   font-weight: 600;
   color: var(--el-text-color-secondary);
-  margin-bottom: 3px;
+  margin-bottom: var(--space-3xs);
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
 
 .flag-compact-row {
   display: flex;
-  gap: 12px;
+  gap: var(--space-xs);
   align-items: flex-start;
 }
 
@@ -200,14 +200,14 @@ export default {
 .flag-inline-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-2xs);
 }
 
 .flag-section-header {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 6px;
+  gap: var(--space-2xs);
+  margin-bottom: var(--space-2xs);
 }
 
 .flag-tags-block {
@@ -218,6 +218,19 @@ export default {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-3xs);
+}
+@media (max-width: 768px) {
+  .flag-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-sm);
+  }
+  .flag-compact-row {
+    flex-direction: column;
+    gap: var(--space-2xs);
+  }
+  .flag-field-narrow {
+    min-width: 0;
+  }
 }
 </style>

@@ -2,25 +2,25 @@
   <div>
     <el-card v-for="diff in diffs" :key="diff.timestamp" class="snapshot-container">
       <template #header>
-        <div class="el-card-header">
-          <el-row>
-            <el-col :span="14">
-              <div class="diff-snapshot-id-change">
-                <el-tag>Snapshot ID: {{ diff.oldId }}</el-tag>
-                <el-icon><DArrowRight /></el-icon>
-                <el-tag>Snapshot ID: {{ diff.newId }}</el-tag>
-              </div>
-            </el-col>
-            <el-col :span="10" style="text-align: right; color: #2e4960">
-              <div :class="{ compact: diff.updatedBy }">
-                <span>{{ diff.timestamp }}</span>
-              </div>
-              <div class="compact" v-if="diff.updatedBy">
-                <span>UPDATED BY: {{ diff.updatedBy }}</span>
-              </div>
-            </el-col>
-          </el-row>
+      <div class="el-card-header">
+        <div class="snapshot-header">
+          <div class="snapshot-header-left">
+            <div class="diff-snapshot-id-change">
+              <el-tag>Snapshot ID: {{ diff.oldId }}</el-tag>
+              <el-icon><DArrowRight /></el-icon>
+              <el-tag>Snapshot ID: {{ diff.newId }}</el-tag>
+            </div>
+          </div>
+          <div class="snapshot-header-right">
+            <div :class="{ compact: diff.updatedBy }">
+              <span>{{ diff.timestamp }}</span>
+            </div>
+            <div class="compact" v-if="diff.updatedBy">
+              <span>UPDATED BY: {{ diff.updatedBy }}</span>
+            </div>
+          </div>
         </div>
+      </div>
       </template>
       <pre class="diff" v-html="diff.flagDiff"></pre>
     </el-card>
@@ -89,5 +89,25 @@ export default {
 };
 </script>
 
-<style lang="less">
+<style lang="scss" scoped>
+.snapshot-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2xs);
+  flex-wrap: wrap;
+}
+.snapshot-header-right {
+  text-align: right;
+  color: var(--el-text-color-secondary);
+}
+@media (max-width: 640px) {
+  .snapshot-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .snapshot-header-right {
+    text-align: left;
+  }
+}
 </style>

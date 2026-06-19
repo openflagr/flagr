@@ -177,38 +177,38 @@
         @keyup.enter="createFlag"
       />
       <p class="create-flag-hint">A short description of what this feature flag controls.</p>
+
+      <div class="create-flag-options">
+        <div class="create-flag-option">
+          <el-button
+            type="primary"
+            :disabled="!newFlag.description"
+            @click="createFlag"
+            data-testid="create-flag-submit-btn"
+          >Create Flag</el-button>
+          <span class="create-flag-option-sub">Blank flag — configure variants and segments yourself</span>
+        </div>
+        <div class="create-flag-option">
+          <el-button
+            type="primary"
+            plain
+            :disabled="!newFlag.description"
+            @click="createBooleanFlag"
+            data-testid="create-boolean-flag-btn"
+          >Create Boolean Flag</el-button>
+          <span class="create-flag-option-sub">Ready-to-use flag with on/off variants and a 100% rollout</span>
+        </div>
+      </div>
     </div>
     <template #footer>
       <el-button @click="showCreateModal = false">Cancel</el-button>
-      <el-button
-        type="primary"
-        :disabled="!newFlag.description"
-        @click="createFlag"
-      >Create Flag</el-button>
-      <el-dropdown
-        trigger="click"
-        @command="onCommandDropdown"
-        v-if="newFlag.description"
-      >
-        <el-button type="primary" :disabled="!newFlag.description">
-          <el-icon><ArrowDown /></el-icon>
-        </el-button>
-        <template #dropdown>
-          <el-dropdown-menu>
-            <el-dropdown-item
-              command="simple_boolean_flag"
-              data-testid="create-boolean-flag-btn"
-            >Create Simple Boolean Flag</el-dropdown-item>
-          </el-dropdown-menu>
-        </template>
-      </el-dropdown>
     </template>
   </el-dialog>
 </template>
 
 <script>
 import Axios from "axios";
-import { Plus, Search, ArrowDown } from "@element-plus/icons-vue";
+import { Plus, Search } from "@element-plus/icons-vue";
 
 import constants from "@/constants";
 import Spinner from "@/components/Spinner";
@@ -226,7 +226,6 @@ export default {
     spinner: Spinner,
     Plus,
     Search,
-    ArrowDown,
   },
   data() {
     const cached = flagsCache;
@@ -303,10 +302,8 @@ export default {
     goToFlag(row) {
       this.$router.push({ name: "flag", params: { flagId: row.id } });
     },
-    onCommandDropdown(command) {
-      if (command === "simple_boolean_flag") {
-        this.createFlag({ template: command });
-      }
+    createBooleanFlag() {
+      this.createFlag({ template: "simple_boolean_flag" });
     },
     createFlag(params) {
       if (!this.newFlag.description) return;
@@ -348,12 +345,12 @@ export default {
 };
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 .flags-toolbar {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-sm);
 }
 .flags-search-wrap {
   flex: 1;
@@ -363,7 +360,7 @@ export default {
 }
 .flags-search-icon {
   position: absolute;
-  left: 12px;
+  left: var(--space-xs);
   top: 50%;
   transform: translateY(-50%);
   z-index: 1;
@@ -407,7 +404,7 @@ export default {
 .flags-table-card :deep(.el-table) td.el-table__cell {
   border-bottom: 1px solid var(--el-border-color-lighter);
   white-space: nowrap;
-  padding: 6px 0;
+  padding: var(--space-2xs) 0;
 }
 .flags-table-card :deep(.el-table) .el-table__header-wrapper tr:first-child th:first-child {
   border-top-left-radius: 8px;
@@ -436,7 +433,7 @@ export default {
 .flag-tags-cell {
   display: flex;
   flex-wrap: wrap;
-  gap: 2px;
+  gap: var(--space-3xs);
 }
 .flags-empty-tag {
   color: var(--el-text-color-placeholder);
@@ -447,25 +444,54 @@ export default {
     font-size: 12px;
     font-weight: 500;
     color: var(--el-text-color-secondary);
-    padding: 4px 0;
+    padding: var(--space-3xs) 0;
   }
   :deep(.el-collapse-item__content) {
-    padding-bottom: 4px;
+    padding-bottom: var(--space-3xs);
   }
 }
 .create-flag-body {
-  padding: 8px 0;
+  padding: var(--space-2xs) 0;
 }
 .create-flag-label {
   display: block;
   font-size: 13px;
   font-weight: 600;
   color: var(--el-text-color-regular);
-  margin-bottom: 6px;
+  margin-bottom: var(--space-2xs);
 }
 .create-flag-hint {
-  margin: 6px 0 0;
+  margin: var(--space-2xs) 0 0;
   font-size: 12px;
   color: var(--el-text-color-placeholder);
+}
+.create-flag-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--el-border-color-light);
+}
+.create-flag-option {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3xs);
+  align-items: flex-start;
+}
+.create-flag-option-sub {
+  font-size: 12px;
+  color: var(--el-text-color-placeholder);
+  line-height: 1.4;
+}
+@media (max-width: 640px) {
+  .flags-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-2xs);
+  }
+  .flags-search-wrap {
+    width: 100%;
+  }
 }
 </style>

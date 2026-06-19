@@ -59,7 +59,7 @@ export default {
 };
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 .markdown-body {
   background-color: #f6f8fa;
   padding: 0.5rem;
