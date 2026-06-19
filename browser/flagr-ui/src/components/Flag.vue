@@ -505,7 +505,7 @@ export default {
 }
 </script>
 
-<style lang="less">
+<style lang="scss">
 h5 {
   padding: 0;
   margin: var(--space-2xs) 0 var(--space-3xs);

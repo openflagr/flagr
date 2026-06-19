@@ -87,7 +87,7 @@ export default {
 }
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 .dist-dialog-body {
   display: flex;
   flex-direction: column;

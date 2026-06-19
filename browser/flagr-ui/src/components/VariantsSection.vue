@@ -80,7 +80,7 @@ export default {
 }
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 .variants-row {
   display: flex;
   flex-wrap: wrap;

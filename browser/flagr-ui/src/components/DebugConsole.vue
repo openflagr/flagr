@@ -127,7 +127,7 @@ export default {
 };
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 .dc-eval-header {
   display: flex;
   align-items: center;

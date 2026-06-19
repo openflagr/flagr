@@ -137,7 +137,7 @@ export default {
 }
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 .flag-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

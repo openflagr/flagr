@@ -146,7 +146,7 @@ export default {
 }
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 .segment-card {
   background: #fff;
   border: 1px solid var(--el-border-color);

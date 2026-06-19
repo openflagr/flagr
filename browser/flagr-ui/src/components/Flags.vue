@@ -345,7 +345,7 @@ export default {
 };
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 .flags-toolbar {
   display: flex;
   align-items: center;
