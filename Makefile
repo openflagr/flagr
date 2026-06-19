@@ -25,7 +25,7 @@ vendor:
 
 build:
 	@echo "Building Flagr Server to $(PWD)/flagr ..."
-	@CGO_ENABLED=0 go build -o $(PWD)/flagr github.com/openflagr/flagr/swagger_gen/cmd/flagr-server
+	@CGO_ENABLED=0 go build -o $(PWD)/flagr github.com/openflagr/flagr/cmd/flagr-server
 
 build_ui:
 	@echo "Building Flagr UI ..."
@@ -107,3 +107,6 @@ swagger: verify_swagger
 	@mkdir $(PWD)/swagger_gen
 	@swagger generate server -t ./swagger_gen -f $(PWD)/docs/api_docs/bundle.yaml
 	@cp /tmp/configure_flagr.go $(PWD)/swagger_gen/restapi/configure_flagr.go 2>/dev/null || :
+	@mkdir -p $(PWD)/cmd/flagr-server
+	@cp $(PWD)/swagger_gen/cmd/flagr-server/main.go $(PWD)/cmd/flagr-server/main.go
+	@rm -rf $(PWD)/swagger_gen/cmd

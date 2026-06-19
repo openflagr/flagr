@@ -26,7 +26,7 @@ else
   echo "e2e-server: starting backend on $BACKEND_PORT..." >&2
   if [ ! -x "$ROOT_DIR/flagr" ]; then
     echo "e2e-server: building backend binary..." >&2
-    (cd "$ROOT_DIR" && go build -o flagr ./swagger_gen/cmd/flagr-server/) >&2
+    (cd "$ROOT_DIR" && go build -o flagr ./cmd/flagr-server/) >&2
   fi
   "$ROOT_DIR/flagr" --port "$BACKEND_PORT" &
   for i in $(seq 1 30); do
