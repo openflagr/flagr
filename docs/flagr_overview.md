@@ -50,6 +50,6 @@ There are three components in the flagr, Flagr Evaluator, Flagr Manager, and Fla
   The lightweight endpoint `GET /api/v1/flags/snapshots/max_id` exposes the current max `flag_snapshot` id — a monotonically increasing version counter for the entire flag configuration. External caching layers (CDN, sidecar proxies, application-level caches) can poll this single endpoint and compare the value with their last-known version: if the value changed, at least one flag's configuration was modified and cached evaluations should be invalidated. This is vastly more efficient than polling individual flag records.
 
 - **Flagr Manager**. Flagr manager is the CRUD gateway. All the mutations of flags happen here.
-- **Flagr Metrics**. Flagr metrics is the data pipeline to collect evaluation results. Currently Flagr only supports Kafka as the pipeline.
+- **Flagr Metrics**. Flagr metrics is the data pipeline to collect evaluation results. It supports Kafka (default), AWS Kinesis, Google Pub/Sub, and Datar — a built-in in-memory aggregate analytics engine that requires no external pipeline. Multiple recorders can run simultaneously via `FLAGR_RECORDER_TYPE`.
 
 ![Flagr Architecture](images/flagr_arch.png)

@@ -1,19 +1,18 @@
-- What's Flagr
-    - [Get started](home.md)
-    - [API 🔗](https://openflagr.github.io/flagr/api_docs)
-- Introduction
+- Getting Started
+    - [Home](home.md)
     - [Overview](flagr_overview.md)
     - [Use Cases](flagr_use_cases.md)
     - [Debug Console](flagr_debugging.md)
-- Development & Testing
-    - [Testing](home?id=testing)
-- Server Configuration
-    - [Env](flagr_env.md)
-    - [JSON Flag Source](flagr_json_flag_spec.md)
+- Configuration
+    - [Environment Variables](flagr_env.md)
+    - [JSON Flag Source (GitOps)](flagr_json_flag_spec.md)
     - [Notifications](flagr_notifications.md)
-    - [Datar](flagr_datar.md)
+    - [Datar Analytics](flagr_datar.md)
+- Development
+    - [Testing](home?id=testing)
+    - [API Reference 🔗](https://openflagr.github.io/flagr/api_docs)
 - Client SDKs
-    - [Ruby SDK 🔗](https://github.com/openflagr/rbflagr)
     - [Go SDK 🔗](https://github.com/openflagr/goflagr)
     - [JavaScript SDK 🔗](https://github.com/openflagr/jsflagr)
     - [Python SDK 🔗](https://github.com/openflagr/pyflagr)
+    - [Ruby SDK 🔗](https://github.com/openflagr/rbflagr)
