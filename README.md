@@ -25,6 +25,24 @@ Flagr is an open source Go service that delivers the right experience to the rig
 
 `openflagr/flagr` is the community-driven home of Flagr, advancing development beyond the original [`checkr/flagr`](https://github.com/checkr/flagr).
 
+---
+
+## 📖 Documentation
+
+**[https://openflagr.github.io/flagr](https://openflagr.github.io/flagr)**
+
+| Page | Content |
+|------|---------|
+| [Overview](https://openflagr.github.io/flagr/#/flagr_overview) | Concepts, running example, architecture |
+| [Use Cases](https://openflagr.github.io/flagr/#/flagr_use_cases) | Feature flagging, A/B testing, dynamic configuration patterns |
+| [Server Configuration](https://openflagr.github.io/flagr/#/flagr_env) | All environment variables, database drivers, auth, data recorders |
+| [JSON Flag Source](https://openflagr.github.io/flagr/#/flagr_json_flag_spec) | GitOps workflows, JSON format spec, validator, CI integration |
+| [Datar Analytics](https://openflagr.github.io/flagr/#/flagr_datar) | In-memory aggregate analytics engine |
+| [Notifications](https://openflagr.github.io/flagr/#/flagr_notifications) | Webhook configuration and payload format |
+| [API Reference](https://openflagr.github.io/flagr/api_docs) | Swagger/OpenAPI spec |
+
+---
+
 ## Features
 
 | Capability | Description |
@@ -69,20 +87,6 @@ curl --request POST \
 <p align="center">
     <img src="./docs/images/demo_readme.png" width="900">
 </p>
-
-## Documentation
-
-Full documentation lives at **[https://openflagr.github.io/flagr](https://openflagr.github.io/flagr)**:
-
-| Page | Content |
-|------|---------|
-| [Overview](https://openflagr.github.io/flagr/#/flagr_overview) | Concepts, running example, architecture |
-| [Use Cases](https://openflagr.github.io/flagr/#/flagr_use_cases) | Feature flagging, A/B testing, dynamic configuration patterns |
-| [Server Configuration](https://openflagr.github.io/flagr/#/flagr_env) | All environment variables, database drivers, auth, data recorders |
-| [JSON Flag Source](https://openflagr.github.io/flagr/#/flagr_json_flag_spec) | GitOps workflows, JSON format spec, validator, CI integration |
-| [Datar Analytics](https://openflagr.github.io/flagr/#/flagr_datar) | In-memory aggregate analytics engine |
-| [Notifications](https://openflagr.github.io/flagr/#/flagr_notifications) | Webhook configuration and payload format |
-| [API Reference](https://openflagr.github.io/flagr/api_docs) | Swagger/OpenAPI spec |
 
 ## Architecture
 
