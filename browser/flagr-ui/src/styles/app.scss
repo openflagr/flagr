@@ -19,6 +19,15 @@ body {
   --space-md: 20px;
   --space-lg: 24px;
   --space-xl: 32px;
+
+  // --- Domain colors (not covered by Element Plus tokens) ---
+  // These are the only colors outside the --el-* system; keep them here
+  // so a retheme only touches two files: this block + element/index.scss.
+  --navbar-text: #ffffff;
+  --warning-tag-text: #97700a;
+  --warning-tag-bg: #faf3e0;
+  --diff-del-bg: #ecc9c9;
+  --diff-ins-bg: #cce3d6;
 }
 
 h1, h2 { font-weight: 600; }
@@ -35,7 +44,7 @@ ol { margin: 0; padding-left: 20px; }
   // --- Navbar ---
   .navbar {
     background-color: var(--el-color-primary);
-    color: #fff;
+    color: var(--navbar-text);
     padding: 0;
   }
   .navbar-inner {
@@ -221,8 +230,8 @@ ol { margin: 0; padding-left: 20px; }
     border: none;
     font-weight: 500;
     &--warning {
-      color: #b8860b;
-      background-color: #fef7e7;
+      color: var(--warning-tag-text);
+      background-color: var(--warning-tag-bg);
     }
     &--primary {
       color: var(--el-color-primary);
@@ -289,11 +298,11 @@ ol { margin: 0; padding-left: 20px; }
       line-height: 1.6;
       overflow-x: auto;
       del {
-        background-color: #f7b3b3;
+        background-color: var(--diff-del-bg);
         text-decoration: none;
       }
       ins {
-        background-color: #b6ddc6;
+        background-color: var(--diff-ins-bg);
         text-decoration: none;
       }
     }

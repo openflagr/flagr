@@ -61,7 +61,7 @@ export default {
 
 <style lang="scss" scoped>
 .markdown-body {
-  background-color: #f6f8fa;
+  background-color: var(--el-fill-color-light);
   padding: 0.5rem;
 }
 </style>
