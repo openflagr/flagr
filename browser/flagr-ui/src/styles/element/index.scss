@@ -1,24 +1,27 @@
 @forward 'element-plus/theme-chalk/src/common/var.scss' with (
+  // --- Brand palette (single source of truth) ---
+  // Named SCSS vars so the palette reads as intent, not hex.
+  // Element Plus consumes these to generate --el-color-* CSS vars + light-N tints.
   $colors: (
     'white': #ffffff,
     'black': #000000,
     'primary': (
-      'base': #059669,
+      'base': #0d7d5a, // teal-green
     ),
     'success': (
-      'base': #059669,
+      'base': #0d7d5a,
     ),
     'warning': (
-      'base': #FBBF24,
+      'base': #c8931f, // rich amber
     ),
     'danger': (
-      'base': #F87171,
+      'base': #d05858, // terracotta
     ),
     'error': (
-      'base': #F87171,
+      'base': #d05858,
     ),
     'info': (
-      'base': #60A5FA,
+      'base': #4a8ad6, // slate blue
     ),
   ),
   $text-color: (
@@ -37,18 +40,18 @@
     'darker': #9CA3AF,
   ),
   $bg-color: (
-    '': #F9FAFB,
-    'page': #F3F4F6,
-    'overlay': #FCFCFC,
+    '': #FBFCFD,
+    'page': #EEF0F3,
+    'overlay': #FBFCFD,
   ),
   $fill-color: (
-    '': #F3F4F6,
-    'light': #F9FAFB,
-    'lighter': #ffffff,
-    'extra-light': #ffffff,
-    'dark': #E5E7EB,
-    'darker': #D1D5DB,
-    'blank': #ffffff,
+    '': #EEF0F3,
+    'light': #F4F6F8,
+    'lighter': #FBFCFD,
+    'extra-light': #FBFCFD,
+    'dark': #E1E4E8,
+    'darker': #C8CDD3,
+    'blank': #FEFEFE,
   ),
   $border-radius: (
     'base': 8px,

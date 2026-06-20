@@ -89,7 +89,7 @@ export default {
 .variant-item {
   flex: 1;
   min-width: 260px;
-  background: #fff;
+  background: var(--el-bg-color);
   border: 1px solid var(--el-border-color-light);
   border-radius: 8px;
   padding: var(--space-2xs) var(--space-xs);

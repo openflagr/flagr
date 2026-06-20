@@ -148,7 +148,7 @@ export default {
 
 <style lang="scss" scoped>
 .segment-card {
-  background: #fff;
+  background: var(--el-bg-color);
   border: 1px solid var(--el-border-color);
   border-radius: 10px;
   padding: var(--space-2xs) var(--space-xs);
