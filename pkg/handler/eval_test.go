@@ -20,17 +20,17 @@ import (
 func TestEvalSegment(t *testing.T) {
 	t.Run("test empty evalContext", func(t *testing.T) {
 		s := entity.GenFixtureSegment()
-		vID, log, evalNextSegment := evalSegment(100, models.EvalContext{}, s)
+		vID, log, evalNextSegment := evalSegment(models.EvalContext{}, s)
 
 		assert.Nil(t, vID)
-		assert.NotEmpty(t, log)
+		assert.Nil(t, log)
 		assert.True(t, evalNextSegment)
 	})
 
 	t.Run("test happy code path", func(t *testing.T) {
 		s := entity.GenFixtureSegment()
 		s.RolloutPercent = uint(100)
-		vID, log, evalNextSegment := evalSegment(100, models.EvalContext{
+		vID, log, evalNextSegment := evalSegment(models.EvalContext{
 			EnableDebug:   true,
 			EntityContext: map[string]any{"dl_state": "CA"},
 			EntityID:      "entityID1",
@@ -46,7 +46,7 @@ func TestEvalSegment(t *testing.T) {
 	t.Run("test constraint evaluation error", func(t *testing.T) {
 		s := entity.GenFixtureSegment()
 		s.RolloutPercent = uint(100)
-		vID, log, evalNextSegment := evalSegment(100, models.EvalContext{
+		vID, log, evalNextSegment := evalSegment(models.EvalContext{
 			EnableDebug:   true,
 			EntityContext: map[string]any{},
 			EntityID:      "entityID1",
@@ -62,7 +62,7 @@ func TestEvalSegment(t *testing.T) {
 	t.Run("test constraint not match", func(t *testing.T) {
 		s := entity.GenFixtureSegment()
 		s.RolloutPercent = uint(100)
-		vID, log, evalNextSegment := evalSegment(100, models.EvalContext{
+		vID, log, evalNextSegment := evalSegment(models.EvalContext{
 			EnableDebug:   true,
 			EntityContext: map[string]any{"dl_state": "NY"},
 			EntityID:      "entityID1",
@@ -78,7 +78,7 @@ func TestEvalSegment(t *testing.T) {
 	t.Run("test evalContext wrong format", func(t *testing.T) {
 		s := entity.GenFixtureSegment()
 		s.RolloutPercent = uint(100)
-		vID, log, evalNextSegment := evalSegment(100, models.EvalContext{
+		vID, log, evalNextSegment := evalSegment(models.EvalContext{
 			EnableDebug:   true,
 			EntityContext: nil,
 			EntityID:      "entityID1",
@@ -105,7 +105,7 @@ func TestEvalSegment(t *testing.T) {
 		}
 		s.PrepareEvaluation()
 
-		vID, log, evalNextSegment := evalSegment(100, models.EvalContext{
+		vID, log, evalNextSegment := evalSegment(models.EvalContext{
 			EnableDebug:   true,
 			EntityContext: map[string]any{"foo": float64(9990403)},
 			EntityID:      "entityID1",
@@ -132,7 +132,7 @@ func TestEvalSegment(t *testing.T) {
 		}
 		s.PrepareEvaluation()
 
-		vID, log, evalNextSegment := evalSegment(100, models.EvalContext{
+		vID, log, evalNextSegment := evalSegment(models.EvalContext{
 			EnableDebug:   true,
 			EntityContext: map[string]any{"foo": float64(9990404)},
 			EntityID:      "entityID1",
@@ -163,7 +163,7 @@ func TestEvalSegment_NestedEntityContext(t *testing.T) {
 		}
 		s.PrepareEvaluation()
 
-		vID, log, evalNextSegment := evalSegment(100, models.EvalContext{
+		vID, log, evalNextSegment := evalSegment(models.EvalContext{
 			EnableDebug: true,
 			EntityContext: map[string]any{
 				"user": map[string]any{
@@ -192,7 +192,7 @@ func TestEvalSegment_NestedEntityContext(t *testing.T) {
 		}
 		s.PrepareEvaluation()
 
-		vID, log, evalNextSegment := evalSegment(100, models.EvalContext{
+		vID, log, evalNextSegment := evalSegment(models.EvalContext{
 			EnableDebug:   true,
 			EntityContext: map[string]any{"user": map[string]any{"name": "Bob"}},
 			EntityID:      "entityID1",
@@ -216,7 +216,7 @@ func TestEvalSegment_NestedEntityContext(t *testing.T) {
 		}
 		s.PrepareEvaluation()
 
-		vID, log, evalNextSegment := evalSegment(100, models.EvalContext{
+		vID, log, evalNextSegment := evalSegment(models.EvalContext{
 			EnableDebug:   true,
 			EntityContext: map[string]any{"roles": []any{"admin", "editor"}},
 			EntityID:      "entityID1",
@@ -240,7 +240,7 @@ func TestEvalSegment_NestedEntityContext(t *testing.T) {
 		}
 		s.PrepareEvaluation()
 
-		vID, log, evalNextSegment := evalSegment(100, models.EvalContext{
+		vID, log, evalNextSegment := evalSegment(models.EvalContext{
 			EnableDebug: true,
 			EntityContext: map[string]any{
 				"users": []any{
@@ -270,7 +270,7 @@ func TestEvalSegment_NestedEntityContext(t *testing.T) {
 
 		// When a nested key is missing, the constraint evaluation should error
 		// and the segment should not match (evalNextSegment = true means try next)
-		vID, log, evalNextSegment := evalSegment(100, models.EvalContext{
+		vID, log, evalNextSegment := evalSegment(models.EvalContext{
 			EnableDebug:   true,
 			EntityContext: map[string]any{"user": map[string]any{"name": "Alice"}},
 			EntityID:      "entityID1",

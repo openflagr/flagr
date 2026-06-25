@@ -31,6 +31,7 @@ type Flag struct {
 // FlagEvaluation is a struct that holds the necessary info for evaluation
 type FlagEvaluation struct {
 	VariantsMap map[uint]*Variant
+	TagValues   []string // denormalized tag values for eval results
 }
 
 // Preloads just the tags
@@ -68,8 +69,13 @@ func (f *Flag) PreloadTags(db *gorm.DB) error {
 
 // PrepareEvaluation prepares the information for evaluation
 func (f *Flag) PrepareEvaluation() error {
+	tagValues := make([]string, 0, len(f.Tags))
+	for _, tag := range f.Tags {
+		tagValues = append(tagValues, tag.Value)
+	}
 	f.FlagEvaluation = FlagEvaluation{
 		VariantsMap: make(map[uint]*Variant),
+		TagValues:   tagValues,
 	}
 	for i := range f.Segments {
 		if err := f.Segments[i].PrepareEvaluation(); err != nil {
