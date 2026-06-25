@@ -17,6 +17,7 @@ package flagr_integration
 
 import (
 	"encoding/json"
+	"io"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -557,22 +558,37 @@ func TestIntegration_Exposures(t *testing.T) {
 			},
 		},
 	}
+
+	probe, err := doReq("POST", "/api/v1/exposures", body)
+	if err != nil {
+		t.Fatalf("POST /exposures: %v", err)
+	}
+	defer probe.Body.Close()
+	if probe.StatusCode == http.StatusNotFound {
+		t.Skip("POST /exposures not available on this server (e.g. checkr/flagr:1.1.12)")
+	}
+	if probe.StatusCode < 200 || probe.StatusCode >= 300 {
+		b, _ := io.ReadAll(probe.Body)
+		t.Fatalf("POST /exposures: expected 2xx, got %d: %s", probe.StatusCode, b)
+	}
+
 	var resp struct {
-		LoggedCount int64 `json:"loggedCount"`
+		LoggedCount int64  `json:"loggedCount"`
 		Message     string `json:"message"`
 		Errors      []struct {
 			Index   int64  `json:"index"`
 			Message string `json:"message"`
 		} `json:"errors"`
 	}
-	postJSON(t, "/api/v1/exposures", body, &resp)
+	if err := json.NewDecoder(probe.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode exposures response: %v", err)
+	}
 	if len(resp.Errors) != 1 {
 		t.Fatalf("expected 1 row error, got %d", len(resp.Errors))
 	}
 	if resp.Errors[0].Index != 1 {
 		t.Fatalf("expected error index 1, got %d", resp.Errors[0].Index)
 	}
-	// Integration server typically has recorder disabled; valid row still returns 200.
 	if resp.LoggedCount != 0 && resp.LoggedCount != 1 {
 		t.Fatalf("loggedCount want 0 or 1, got %d", resp.LoggedCount)
 	}

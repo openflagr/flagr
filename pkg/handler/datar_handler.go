@@ -117,7 +117,10 @@ func HandleGetDatarSummary(params datarapi.GetDatarSummaryParams) middleware.Res
 			datarError("Datar is not enabled"),
 		)
 	}
+	return respondDatarSummary(d, params)
+}
 
+func respondDatarSummary(d *datar.Engine, params datarapi.GetDatarSummaryParams) middleware.Responder {
 	from, to := parseTimeRange(params.From, params.To, defaultLookbackDays)
 
 	limit := 100
@@ -155,7 +158,10 @@ func HandleGetDatarFlagSummary(params datarapi.GetDatarFlagSummaryParams) middle
 			datarError("Datar is not enabled"),
 		)
 	}
+	return respondDatarFlagSummary(d, params)
+}
 
+func respondDatarFlagSummary(d *datar.Engine, params datarapi.GetDatarFlagSummaryParams) middleware.Responder {
 	from, to := parseTimeRange(params.From, params.To, defaultLookbackDays)
 
 	summary, err := d.QueryFlagSummaryBreakdown(params.FlagID, from, to)
@@ -177,8 +183,8 @@ func HandleGetDatarFlagSummary(params datarapi.GetDatarFlagSummaryParams) middle
 	}
 
 	days := make([]*models.DatarDayEntry, 0, len(summary.Days))
-	for _, d := range summary.Days {
-		if entry := toSwaggerDay(d); entry != nil {
+	for _, day := range summary.Days {
+		if entry := toSwaggerDay(day); entry != nil {
 			days = append(days, entry)
 		}
 	}

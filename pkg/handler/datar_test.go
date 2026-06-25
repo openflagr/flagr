@@ -41,23 +41,20 @@ func TestDatarEndpoints_QueryError(t *testing.T) {
 	defer gostub.StubFunc(&getDB, db).Reset()
 	db.AutoMigrate(entity.AutoMigrateTables...)
 
-	// Initialize engine.
-	_ = GetDatar()
+	engine := datar.New(db, true, 24*time.Hour)
+	defer engine.Shutdown()
 
-	// Drop the hourly events table so queries fail.
 	if err := db.Exec("DROP TABLE datar_hourly_events").Error; err != nil {
 		t.Fatal(err)
 	}
 
-	// Summary endpoint should return 500.
-	resp := HandleGetDatarSummary(datarapi.GetDatarSummaryParams{})
+	resp := respondDatarSummary(engine, datarapi.GetDatarSummaryParams{})
 	_, ok := resp.(*datarapi.GetDatarSummaryDefault)
-	assert.True(t, ok, "expected 500 when query fails")
+	assert.True(t, ok, "expected 500 when query fails, got %T", resp)
 
-	// Flag summary endpoint should return 500.
-	flagResp := HandleGetDatarFlagSummary(datarapi.GetDatarFlagSummaryParams{FlagID: 1})
+	flagResp := respondDatarFlagSummary(engine, datarapi.GetDatarFlagSummaryParams{FlagID: 1})
 	_, ok = flagResp.(*datarapi.GetDatarFlagSummaryDefault)
-	assert.True(t, ok, "expected 500 when query fails")
+	assert.True(t, ok, "expected 500 when query fails, got %T", flagResp)
 }
 
 func TestDatarEndpoints_Summary(t *testing.T) {

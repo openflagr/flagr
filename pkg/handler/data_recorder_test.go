@@ -200,6 +200,8 @@ func TestDatarRecorder_SkipsExposure(t *testing.T) {
 }
 
 func TestDatarRecorder_RecordsEvaluationSource(t *testing.T) {
+	defer ResetDatar()
+
 	defer gostub.Stub(&config.Config.RecorderType, []string{"datar"}).Reset()
 	defer gostub.Stub(&config.Config.RecorderEnabled, true).Reset()
 
