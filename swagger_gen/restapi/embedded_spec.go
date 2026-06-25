@@ -258,6 +258,46 @@ func init() {
         }
       }
     },
+    "/exposures": {
+      "post": {
+        "description": "Log when a user actually saw a flag or variant (impression), typically after POST /evaluation.\nIntegrates with the data recorder when FLAGR_RECORDER_ENABLED and per-flag dataRecordsEnabled are set.\n",
+        "tags": [
+          "exposure"
+        ],
+        "summary": "Log exposures (batch)",
+        "operationId": "postExposures",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/exposuresRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "exposures accepted (partial success possible)",
+            "schema": {
+              "$ref": "#/definitions/exposuresResponse"
+            }
+          },
+          "400": {
+            "description": "invalid request",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
     "/flags": {
       "get": {
         "tags": [
@@ -1873,6 +1913,14 @@ func init() {
           },
           "x-omitempty": true
         },
+        "recordSource": {
+          "description": "evaluation for eval API results; exposure for POST /exposures pipeline events",
+          "type": "string",
+          "enum": [
+            "evaluation",
+            "exposure"
+          ]
+        },
         "segmentID": {
           "type": "integer",
           "format": "int64"
@@ -1971,6 +2019,95 @@ func init() {
           "type": "string"
         },
         "entityType": {
+          "type": "string"
+        }
+      }
+    },
+    "exposure": {
+      "type": "object",
+      "required": [
+        "entityID"
+      ],
+      "properties": {
+        "entityContext": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "entityID": {
+          "type": "string"
+        },
+        "entityType": {
+          "type": "string"
+        },
+        "flagID": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "flagKey": {
+          "type": "string"
+        },
+        "flagSnapshotID": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "variantID": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "variantKey": {
+          "type": "string"
+        }
+      }
+    },
+    "exposureRowError": {
+      "type": "object",
+      "properties": {
+        "index": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "exposuresRequest": {
+      "type": "object",
+      "required": [
+        "exposures"
+      ],
+      "properties": {
+        "exposures": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/exposure"
+          }
+        }
+      }
+    },
+    "exposuresResponse": {
+      "type": "object",
+      "properties": {
+        "errors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/exposureRowError"
+          }
+        },
+        "loggedCount": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "message": {
           "type": "string"
         }
       }
@@ -2313,6 +2450,10 @@ func init() {
       "name": "evaluation"
     },
     {
+      "description": "Client-reported impressions when a user saw a flag or variant",
+      "name": "exposure"
+    },
+    {
       "description": "Check if Flagr is healthy",
       "name": "health"
     },
@@ -2336,7 +2477,8 @@ func init() {
     {
       "name": "Flag Evaluation",
       "tags": [
-        "evaluation"
+        "evaluation",
+        "exposure"
       ]
     },
     {
@@ -2603,6 +2745,46 @@ func init() {
         }
       }
     },
+    "/exposures": {
+      "post": {
+        "description": "Log when a user actually saw a flag or variant (impression), typically after POST /evaluation.\nIntegrates with the data recorder when FLAGR_RECORDER_ENABLED and per-flag dataRecordsEnabled are set.\n",
+        "tags": [
+          "exposure"
+        ],
+        "summary": "Log exposures (batch)",
+        "operationId": "postExposures",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/exposuresRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "exposures accepted (partial success possible)",
+            "schema": {
+              "$ref": "#/definitions/exposuresResponse"
+            }
+          },
+          "400": {
+            "description": "invalid request",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
     "/flags": {
       "get": {
         "tags": [
@@ -4220,6 +4402,14 @@ func init() {
           },
           "x-omitempty": true
         },
+        "recordSource": {
+          "description": "evaluation for eval API results; exposure for POST /exposures pipeline events",
+          "type": "string",
+          "enum": [
+            "evaluation",
+            "exposure"
+          ]
+        },
         "segmentID": {
           "type": "integer",
           "format": "int64"
@@ -4318,6 +4508,95 @@ func init() {
           "type": "string"
         },
         "entityType": {
+          "type": "string"
+        }
+      }
+    },
+    "exposure": {
+      "type": "object",
+      "required": [
+        "entityID"
+      ],
+      "properties": {
+        "entityContext": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "entityID": {
+          "type": "string"
+        },
+        "entityType": {
+          "type": "string"
+        },
+        "flagID": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "flagKey": {
+          "type": "string"
+        },
+        "flagSnapshotID": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "variantID": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "variantKey": {
+          "type": "string"
+        }
+      }
+    },
+    "exposureRowError": {
+      "type": "object",
+      "properties": {
+        "index": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "exposuresRequest": {
+      "type": "object",
+      "required": [
+        "exposures"
+      ],
+      "properties": {
+        "exposures": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/exposure"
+          }
+        }
+      }
+    },
+    "exposuresResponse": {
+      "type": "object",
+      "properties": {
+        "errors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/exposureRowError"
+          }
+        },
+        "loggedCount": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "message": {
           "type": "string"
         }
       }
@@ -4663,6 +4942,10 @@ func init() {
       "name": "evaluation"
     },
     {
+      "description": "Client-reported impressions when a user saw a flag or variant",
+      "name": "exposure"
+    },
+    {
       "description": "Check if Flagr is healthy",
       "name": "health"
     },
@@ -4686,7 +4969,8 @@ func init() {
     {
       "name": "Flag Evaluation",
       "tags": [
-        "evaluation"
+        "evaluation",
+        "exposure"
       ]
     },
     {

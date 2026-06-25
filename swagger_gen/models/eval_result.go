@@ -4,12 +4,14 @@ package models
 
 import (
 	"context"
+	"encoding/json"
 	stderrors "errors"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag/jsonutils"
 	"github.com/go-openapi/swag/typeutils"
+	"github.com/go-openapi/validate"
 )
 
 // EvalResult eval result
@@ -34,6 +36,10 @@ type EvalResult struct {
 
 	// flagTags. flagTags looks up flags by tag. Either works.
 	FlagTags []string `json:"flagTags,omitempty"`
+
+	// evaluation for eval API results; exposure for POST /exposures pipeline events
+	// Enum: ["evaluation","exposure"]
+	RecordSource string `json:"recordSource,omitempty"`
 
 	// segment ID
 	SegmentID int64 `json:"segmentID,omitempty"`
@@ -60,6 +66,10 @@ func (m *EvalResult) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateEvalDebugLog(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateRecordSource(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -110,6 +120,48 @@ func (m *EvalResult) validateEvalDebugLog(formats strfmt.Registry) error {
 
 			return err
 		}
+	}
+
+	return nil
+}
+
+var evalResultTypeRecordSourcePropEnum []any
+
+func init() {
+	var res []string
+	if err := json.Unmarshal([]byte(`["evaluation","exposure"]`), &res); err != nil {
+		panic(err)
+	}
+	for _, v := range res {
+		evalResultTypeRecordSourcePropEnum = append(evalResultTypeRecordSourcePropEnum, v)
+	}
+}
+
+const (
+
+	// EvalResultRecordSourceEvaluation captures enum value "evaluation"
+	EvalResultRecordSourceEvaluation string = "evaluation"
+
+	// EvalResultRecordSourceExposure captures enum value "exposure"
+	EvalResultRecordSourceExposure string = "exposure"
+)
+
+// prop value enum
+func (m *EvalResult) validateRecordSourceEnum(path, location string, value string) error {
+	if err := validate.EnumCase(path, location, value, evalResultTypeRecordSourcePropEnum, true); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *EvalResult) validateRecordSource(formats strfmt.Registry) error {
+	if typeutils.IsZero(m.RecordSource) { // not required
+		return nil
+	}
+
+	// value enum
+	if err := m.validateRecordSourceEnum("recordSource", "body", m.RecordSource); err != nil {
+		return err
 	}
 
 	return nil

@@ -1,0 +1,27 @@
+post:
+  tags:
+    - exposure
+  summary: Log exposures (batch)
+  description: |
+    Log when a user actually saw a flag or variant (impression), typically after POST /evaluation.
+    Integrates with the data recorder when FLAGR_RECORDER_ENABLED and per-flag dataRecordsEnabled are set.
+  operationId: postExposures
+  parameters:
+    - in: body
+      name: body
+      required: true
+      schema:
+        $ref: "#/definitions/exposuresRequest"
+  responses:
+    "200":
+      description: exposures accepted (partial success possible)
+      schema:
+        $ref: "#/definitions/exposuresResponse"
+    "400":
+      description: invalid request
+      schema:
+        $ref: "#/definitions/error"
+    default:
+      description: generic error response
+      schema:
+        $ref: "#/definitions/error"

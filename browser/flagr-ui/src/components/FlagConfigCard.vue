@@ -46,7 +46,7 @@
             <div class="flag-inline-row">
               <el-switch size="small" :model-value="flag.dataRecordsEnabled" :active-value="true" :inactive-value="false"
                 @update:model-value="$emit('update-flag', { dataRecordsEnabled: $event })" data-testid="data-records-switch" />
-              <el-tooltip content="Controls whether to log to data pipeline, e.g. Kafka, Kinesis, Pubsub" placement="top" effect="light">
+              <el-tooltip content="When enabled, evaluation and exposure events are sent to the data pipeline (e.g. Kafka, Kinesis, Pub/Sub)" placement="top" effect="light">
                 <el-icon style="color: var(--el-text-color-placeholder);"><InfoFilled /></el-icon>
               </el-tooltip>
             </div>

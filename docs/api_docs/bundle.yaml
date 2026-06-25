@@ -18,6 +18,8 @@ tags:
     description: Variants are the possible outcomes of flag evaluation
   - name: evaluation
     description: Evaluation is the process of evaluating a flag given the entity context
+  - name: exposure
+    description: Client-reported impressions when a user saw a flag or variant
   - name: health
     description: Check if Flagr is healthy
   - name: datar
@@ -34,6 +36,7 @@ x-tagGroups:
   - name: Flag Evaluation
     tags:
       - evaluation
+      - exposure
   - name: Health Check
     tags:
       - health
@@ -946,6 +949,37 @@ paths:
           description: generic error response
           schema:
             $ref: '#/definitions/error'
+  /exposures:
+    post:
+      tags:
+        - exposure
+      summary: Log exposures (batch)
+      description: >
+        Log when a user actually saw a flag or variant (impression), typically
+        after POST /evaluation.
+
+        Integrates with the data recorder when FLAGR_RECORDER_ENABLED and
+        per-flag dataRecordsEnabled are set.
+      operationId: postExposures
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/exposuresRequest'
+      responses:
+        '200':
+          description: exposures accepted (partial success possible)
+          schema:
+            $ref: '#/definitions/exposuresResponse'
+        '400':
+          description: invalid request
+          schema:
+            $ref: '#/definitions/error'
+        default:
+          description: generic error response
+          schema:
+            $ref: '#/definitions/error'
   /health:
     get:
       tags:
@@ -1483,6 +1517,14 @@ definitions:
         format: int64
       variantKey:
         type: string
+      recordSource:
+        type: string
+        description: >-
+          evaluation for eval API results; exposure for POST /exposures pipeline
+          events
+        enum:
+          - evaluation
+          - exposure
       variantAttachment:
         type: object
       evalContext:
@@ -1576,6 +1618,67 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/evalResult'
+  exposuresRequest:
+    type: object
+    required:
+      - exposures
+    properties:
+      exposures:
+        type: array
+        minItems: 1
+        items:
+          $ref: '#/definitions/exposure'
+  exposure:
+    type: object
+    required:
+      - entityID
+    properties:
+      flagID:
+        type: integer
+        format: int64
+      flagKey:
+        type: string
+      variantID:
+        type: integer
+        format: int64
+      variantKey:
+        type: string
+      entityID:
+        type: string
+      entityType:
+        type: string
+      entityContext:
+        type: object
+        additionalProperties: true
+      flagSnapshotID:
+        type: integer
+        format: int64
+      timestamp:
+        type: string
+        format: date-time
+      metadata:
+        type: object
+        additionalProperties: true
+  exposuresResponse:
+    type: object
+    properties:
+      loggedCount:
+        type: integer
+        format: int64
+      message:
+        type: string
+      errors:
+        type: array
+        items:
+          $ref: '#/definitions/exposureRowError'
+  exposureRowError:
+    type: object
+    properties:
+      index:
+        type: integer
+        format: int64
+      message:
+        type: string
   health:
     type: object
     properties:

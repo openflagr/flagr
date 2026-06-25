@@ -542,6 +542,31 @@ func TestIntegration_BatchEvalOperator(t *testing.T) {
 	}
 }
 
+
+func TestIntegration_Exposures(t *testing.T) {
+	flagID := seedFlagIDs[1]
+	eid := "exposure-test-entity"
+	body := map[string]any{
+		"exposures": []map[string]any{
+			{
+				"flagID":   flagID,
+				"entityID": eid,
+			},
+		},
+	}
+	var resp struct {
+		LoggedCount int64 `json:"loggedCount"`
+		Message     string `json:"message"`
+		Errors      []struct {
+			Index   int64  `json:"index"`
+			Message string `json:"message"`
+		} `json:"errors"`
+	}
+	postJSON(t, "/api/v1/exposures", body, &resp)
+	if resp.LoggedCount != 0 && resp.LoggedCount != 1 {
+		t.Fatalf("unexpected loggedCount %d", resp.LoggedCount)
+	}
+}
 // ---------------------------------------------------------------------------
 // Datar integration tests
 // ---------------------------------------------------------------------------

@@ -47,6 +47,8 @@ Flagr supports JWT-based authentication for API access. Configure the signing ke
 
 ## Data record destinations
 
+
+Evaluation results and client-reported **exposures** (`POST /api/v1/exposures`) share the same recorder gate when per-flag `dataRecordsEnabled` is on. Exposure events include `recordSource: "exposure"` in the pipeline payload. See [Exposure Logging](flagr_exposure.md).
 Flagr can send evaluation results to one or more destinations simultaneously. Set `FLAGR_RECORDER_ENABLED=true` and list the desired recorders in `FLAGR_RECORDER_TYPE` (comma-separated, e.g. `kafka,datar`).
 
 ### Kafka (default)
