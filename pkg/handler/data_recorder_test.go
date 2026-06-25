@@ -82,6 +82,18 @@ func TestFanOutRecorder_Empty(t *testing.T) {
 	})
 }
 
+func TestDataRecordEnabled(t *testing.T) {
+	defer gostub.Stub(&config.Config.RecorderEnabled, true).Reset()
+	f := &entity.Flag{DataRecordsEnabled: true}
+	assert.True(t, dataRecordEnabled(f))
+	assert.False(t, dataRecordEnabled(nil))
+	f.DataRecordsEnabled = false
+	assert.False(t, dataRecordEnabled(f))
+	defer gostub.Stub(&config.Config.RecorderEnabled, false).Reset()
+	f.DataRecordsEnabled = true
+	assert.False(t, dataRecordEnabled(f))
+}
+
 func TestFanOutRecorder_Single(t *testing.T) {
 	m := &mockRecorder{}
 	f := fanOutRecorder{m}

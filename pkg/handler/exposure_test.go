@@ -160,22 +160,22 @@ func TestBuildExposureDataRecord(t *testing.T) {
 
 	t.Run("requires entityID", func(t *testing.T) {
 		empty := ""
-		_, err := buildExposureDataRecord(&models.Exposure{EntityID: &empty, FlagID: int64(fixture.ID)})
+		_, _, err := buildExposureDataRecord(&models.Exposure{EntityID: &empty, FlagID: int64(fixture.ID)})
 		assert.Error(t, err)
 	})
 
 	t.Run("nil entityID", func(t *testing.T) {
-		_, err := buildExposureDataRecord(&models.Exposure{FlagID: int64(fixture.ID)})
+		_, _, err := buildExposureDataRecord(&models.Exposure{FlagID: int64(fixture.ID)})
 		assert.Error(t, err)
 	})
 
 	t.Run("flag not found", func(t *testing.T) {
-		_, err := buildExposureDataRecord(&models.Exposure{EntityID: &eid, FlagID: 999999})
+		_, _, err := buildExposureDataRecord(&models.Exposure{EntityID: &eid, FlagID: 999999})
 		assert.Error(t, err)
 	})
 
 	t.Run("flag key only", func(t *testing.T) {
-		r, err := buildExposureDataRecord(&models.Exposure{EntityID: &eid, FlagKey: fixture.Key})
+		r, _, err := buildExposureDataRecord(&models.Exposure{EntityID: &eid, FlagKey: fixture.Key})
 		if !assert.NoError(t, err) {
 			return
 		}
@@ -184,7 +184,7 @@ func TestBuildExposureDataRecord(t *testing.T) {
 
 	t.Run("client timestamp", func(t *testing.T) {
 		ts := time.Date(2024, 6, 1, 12, 0, 0, 0, time.UTC)
-		r, err := buildExposureDataRecord(&models.Exposure{
+		r, _, err := buildExposureDataRecord(&models.Exposure{
 			EntityID: &eid, FlagID: int64(fixture.ID), Timestamp: strfmt.DateTime(ts),
 		})
 		if !assert.NoError(t, err) {
@@ -194,7 +194,7 @@ func TestBuildExposureDataRecord(t *testing.T) {
 	})
 
 	t.Run("no context leaves evalContext empty", func(t *testing.T) {
-		r, err := buildExposureDataRecord(&models.Exposure{EntityID: &eid, FlagID: int64(fixture.ID)})
+		r, _, err := buildExposureDataRecord(&models.Exposure{EntityID: &eid, FlagID: int64(fixture.ID)})
 		if !assert.NoError(t, err) {
 			return
 		}
@@ -202,7 +202,7 @@ func TestBuildExposureDataRecord(t *testing.T) {
 	})
 
 	t.Run("by flag id", func(t *testing.T) {
-		r, err := buildExposureDataRecord(&models.Exposure{EntityID: &eid, FlagID: int64(fixture.ID)})
+		r, _, err := buildExposureDataRecord(&models.Exposure{EntityID: &eid, FlagID: int64(fixture.ID)})
 		if !assert.NoError(t, err) {
 			return
 		}
@@ -212,7 +212,7 @@ func TestBuildExposureDataRecord(t *testing.T) {
 	})
 
 	t.Run("by flag key", func(t *testing.T) {
-		r, err := buildExposureDataRecord(&models.Exposure{EntityID: &eid, FlagKey: fixture.Key})
+		r, _, err := buildExposureDataRecord(&models.Exposure{EntityID: &eid, FlagKey: fixture.Key})
 		if !assert.NoError(t, err) {
 			return
 		}
@@ -220,7 +220,7 @@ func TestBuildExposureDataRecord(t *testing.T) {
 	})
 
 	t.Run("missing flag ref", func(t *testing.T) {
-		_, err := buildExposureDataRecord(&models.Exposure{EntityID: &eid})
+		_, _, err := buildExposureDataRecord(&models.Exposure{EntityID: &eid})
 		assert.Error(t, err)
 	})
 
@@ -234,12 +234,12 @@ func TestBuildExposureDataRecord(t *testing.T) {
 			keyCache: map[string]*entity.Flag{f1.Key: &f1, f2.Key: &f2},
 		}}
 		defer gostub.StubFunc(&GetEvalCache, ec).Reset()
-		_, err := buildExposureDataRecord(&models.Exposure{EntityID: &eid, FlagID: int64(f1.ID), FlagKey: f2.Key})
+		_, _, err := buildExposureDataRecord(&models.Exposure{EntityID: &eid, FlagID: int64(f1.ID), FlagKey: f2.Key})
 		assert.Error(t, err)
 	})
 
 	t.Run("optional variant", func(t *testing.T) {
-		r, err := buildExposureDataRecord(&models.Exposure{EntityID: &eid, FlagID: int64(fixture.ID)})
+		r, _, err := buildExposureDataRecord(&models.Exposure{EntityID: &eid, FlagID: int64(fixture.ID)})
 		if !assert.NoError(t, err) {
 			return
 		}
@@ -247,7 +247,7 @@ func TestBuildExposureDataRecord(t *testing.T) {
 	})
 
 	t.Run("variant by id", func(t *testing.T) {
-		r, err := buildExposureDataRecord(&models.Exposure{
+		r, _, err := buildExposureDataRecord(&models.Exposure{
 			EntityID: &eid, FlagID: int64(fixture.ID), VariantID: 300,
 		})
 		if !assert.NoError(t, err) {
@@ -258,7 +258,7 @@ func TestBuildExposureDataRecord(t *testing.T) {
 	})
 
 	t.Run("variant by key", func(t *testing.T) {
-		r, err := buildExposureDataRecord(&models.Exposure{
+		r, _, err := buildExposureDataRecord(&models.Exposure{
 			EntityID: &eid, FlagKey: fixture.Key, VariantKey: "treatment",
 		})
 		if !assert.NoError(t, err) {
@@ -277,7 +277,7 @@ func TestBuildExposureDataRecord(t *testing.T) {
 		}}
 		defer gostub.StubFunc(&GetEvalCache, ec).Reset()
 		clientType := "client_type"
-		r, err := buildExposureDataRecord(&models.Exposure{
+		r, _, err := buildExposureDataRecord(&models.Exposure{
 			EntityID: &eid, FlagID: int64(f.ID), EntityType: clientType,
 		})
 		if !assert.NoError(t, err) {
@@ -287,7 +287,7 @@ func TestBuildExposureDataRecord(t *testing.T) {
 	})
 
 	t.Run("merges entityContext and metadata", func(t *testing.T) {
-		r, err := buildExposureDataRecord(&models.Exposure{
+		r, _, err := buildExposureDataRecord(&models.Exposure{
 			EntityID:       &eid,
 			FlagID:         int64(fixture.ID),
 			EntityContext:  map[string]any{"country": "US"},
@@ -305,7 +305,7 @@ func TestBuildExposureDataRecord(t *testing.T) {
 	})
 
 	t.Run("flagSnapshotID from client", func(t *testing.T) {
-		r, err := buildExposureDataRecord(&models.Exposure{
+		r, _, err := buildExposureDataRecord(&models.Exposure{
 			EntityID: &eid, FlagID: int64(fixture.ID), FlagSnapshotID: 4242,
 		})
 		if !assert.NoError(t, err) {
@@ -315,7 +315,7 @@ func TestBuildExposureDataRecord(t *testing.T) {
 	})
 
 	t.Run("flagSnapshotID defaults to cache", func(t *testing.T) {
-		r, err := buildExposureDataRecord(&models.Exposure{EntityID: &eid, FlagID: int64(fixture.ID)})
+		r, _, err := buildExposureDataRecord(&models.Exposure{EntityID: &eid, FlagID: int64(fixture.ID)})
 		if !assert.NoError(t, err) {
 			return
 		}
@@ -385,6 +385,32 @@ func TestResolveExposureVariant(t *testing.T) {
 		}
 		assert.Equal(t, int64(300), id)
 		assert.Equal(t, "control", key)
+	})
+}
+
+func TestResolveExposureFlag(t *testing.T) {
+	defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
+	ec := GenFixtureEvalCache()
+	fixture := ec.GetByFlagKeyOrID(int64(100))
+	if !assert.NotNil(t, fixture) {
+		return
+	}
+
+	t.Run("by id", func(t *testing.T) {
+		f, err := resolveExposureFlag(ec, &models.Exposure{FlagID: int64(fixture.ID)})
+		assert.NoError(t, err)
+		assert.Equal(t, fixture.ID, f.ID)
+	})
+
+	t.Run("by key", func(t *testing.T) {
+		f, err := resolveExposureFlag(ec, &models.Exposure{FlagKey: fixture.Key})
+		assert.NoError(t, err)
+		assert.Equal(t, fixture.ID, f.ID)
+	})
+
+	t.Run("missing ref", func(t *testing.T) {
+		_, err := resolveExposureFlag(ec, &models.Exposure{})
+		assert.Error(t, err)
 	})
 }
 

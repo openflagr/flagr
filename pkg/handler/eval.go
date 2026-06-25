@@ -248,11 +248,11 @@ var EvalFlagWithContext = func(flag *entity.Flag, evalContext models.EvalContext
 		evalResult.VariantKey = v.Key
 	}
 
-	logEvalResult(evalResult, flag.DataRecordsEnabled)
+	logEvalResult(evalResult, flag)
 	return evalResult
 }
 
-var logEvalResult = func(r *models.EvalResult, dataRecordsEnabled bool) {
+var logEvalResult = func(r *models.EvalResult, flag *entity.Flag) {
 	if r == nil {
 		// this is just a safety check, r is from BlankResult,
 		// and usually it cannot be nil
@@ -266,7 +266,7 @@ var logEvalResult = func(r *models.EvalResult, dataRecordsEnabled bool) {
 	logEvalResultToDatadog(r)
 	logEvalResultToPrometheus(r)
 
-	if dataRecordsEnabled && config.Config.RecorderEnabled {
+	if dataRecordEnabled(flag) {
 		GetDataRecorder().AsyncRecord(*r)
 	}
 }

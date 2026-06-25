@@ -46,17 +46,16 @@ func (h *exposureHandler) PostExposures(params exposureapi.PostExposuresParams) 
 			continue
 		}
 
-		dataRecord, err := buildExposureDataRecord(row)
+		dataRecord, flag, err := buildExposureDataRecord(row)
 		if err != nil {
-			logExposureStatsd("rejected", 0, "")
+			logExposureStatsd("rejected", row.FlagID, row.FlagKey)
 			rowErrors = append(rowErrors, &models.ExposureRowError{Index: int64(i), Message: err.Error()})
 			continue
 		}
 
 		logExposureStatsd("accepted", dataRecord.FlagID, dataRecord.FlagKey)
 
-		flag := GetEvalCache().GetByFlagKeyOrID(dataRecord.FlagID)
-		if config.Config.RecorderEnabled && flag != nil && flag.DataRecordsEnabled {
+		if dataRecordEnabled(flag) {
 			GetDataRecorder().AsyncRecord(dataRecord)
 			logExposureStatsd("recorded", dataRecord.FlagID, dataRecord.FlagKey)
 			logged++
@@ -73,42 +72,20 @@ func (h *exposureHandler) PostExposures(params exposureapi.PostExposuresParams) 
 }
 
 // buildExposureDataRecord validates an exposure row and returns the EvalResult
-// passed to DataRecorder.AsyncRecord (recordSource: exposure).
-func buildExposureDataRecord(row *models.Exposure) (models.EvalResult, error) {
+// passed to DataRecorder.AsyncRecord (recordSource: exposure) and the resolved flag.
+func buildExposureDataRecord(row *models.Exposure) (models.EvalResult, *entity.Flag, error) {
 	if row.EntityID == nil || *row.EntityID == "" {
-		return models.EvalResult{}, fmt.Errorf("entityID is required")
+		return models.EvalResult{}, nil, fmt.Errorf("entityID is required")
 	}
 
-	hasID := row.FlagID > 0
-	hasKey := row.FlagKey != ""
-	if !hasID && !hasKey {
-		return models.EvalResult{}, fmt.Errorf("flagID or flagKey is required")
-	}
-
-	ec := GetEvalCache()
-	var flag *entity.Flag
-	if hasID {
-		flag = ec.GetByFlagKeyOrID(row.FlagID)
-	}
-	if hasKey {
-		byKey := ec.GetByFlagKeyOrID(row.FlagKey)
-		switch {
-		case byKey == nil && flag == nil:
-			return models.EvalResult{}, fmt.Errorf("flag not found")
-		case byKey == nil:
-		case flag == nil:
-			flag = byKey
-		case flag.ID != byKey.ID:
-			return models.EvalResult{}, fmt.Errorf("flagID and flagKey refer to different flags")
-		}
-	}
-	if flag == nil {
-		return models.EvalResult{}, fmt.Errorf("flag not found")
+	flag, err := resolveExposureFlag(GetEvalCache(), row)
+	if err != nil {
+		return models.EvalResult{}, nil, err
 	}
 
 	variantID, variantKey, err := resolveExposureVariant(flag, row.VariantID, row.VariantKey)
 	if err != nil {
-		return models.EvalResult{}, err
+		return models.EvalResult{}, nil, err
 	}
 
 	snapshotID := int64(flag.SnapshotID)
@@ -150,36 +127,67 @@ func buildExposureDataRecord(row *models.Exposure) (models.EvalResult, error) {
 		Timestamp:      ts,
 		RecordSource:   models.EvalResultRecordSourceExposure,
 		EvalContext:    &evalCtx,
-	}, nil
+	}, flag, nil
+}
+
+func resolveExposureFlag(ec *EvalCache, row *models.Exposure) (*entity.Flag, error) {
+	hasID := row.FlagID > 0
+	hasKey := row.FlagKey != ""
+	if !hasID && !hasKey {
+		return nil, fmt.Errorf("flagID or flagKey is required")
+	}
+
+	var flag *entity.Flag
+	if hasID {
+		flag = ec.GetByFlagKeyOrID(row.FlagID)
+	}
+	if hasKey {
+		byKey := ec.GetByFlagKeyOrID(row.FlagKey)
+		switch {
+		case byKey == nil && flag == nil:
+			return nil, fmt.Errorf("flag not found")
+		case byKey == nil:
+			// ID resolved flag; key absent in cache — keep flag
+		case flag == nil:
+			flag = byKey
+		case flag.ID != byKey.ID:
+			return nil, fmt.Errorf("flagID and flagKey refer to different flags")
+		}
+	}
+	if flag == nil {
+		return nil, fmt.Errorf("flag not found")
+	}
+	return flag, nil
 }
 
 func resolveExposureVariant(flag *entity.Flag, variantID int64, variantKey string) (id int64, key string, err error) {
 	if variantID <= 0 && variantKey == "" {
 		return 0, "", nil
 	}
+
 	if variantID > 0 && variantKey != "" {
-		var matchID, matchKey bool
-		for _, v := range flag.Variants {
+		var byID, byKey *entity.Variant
+		for i := range flag.Variants {
+			v := &flag.Variants[i]
 			if v.ID == uint(variantID) {
-				matchID = true
+				byID = v
 			}
 			if v.Key == variantKey {
-				matchKey = true
+				byKey = v
 			}
 		}
-		if !matchID {
+		if byID == nil {
 			return 0, "", fmt.Errorf("variantID %d not found on flag", variantID)
 		}
-		if !matchKey {
+		if byKey == nil {
 			return 0, "", fmt.Errorf("variantKey %q not found on flag", variantKey)
 		}
-		for _, v := range flag.Variants {
-			if v.ID == uint(variantID) && v.Key == variantKey {
-				return int64(v.ID), v.Key, nil
-			}
+		if byID.ID != byKey.ID || byID.Key != byKey.Key {
+			return 0, "", fmt.Errorf("variantID and variantKey do not match")
 		}
-		return 0, "", fmt.Errorf("variantID and variantKey do not match")
+		return int64(byID.ID), byID.Key, nil
 	}
+
 	if variantID > 0 {
 		for _, v := range flag.Variants {
 			if v.ID == uint(variantID) {
@@ -188,6 +196,7 @@ func resolveExposureVariant(flag *entity.Flag, variantID int64, variantKey strin
 		}
 		return 0, "", fmt.Errorf("variantID %d not found on flag", variantID)
 	}
+
 	for _, v := range flag.Variants {
 		if v.Key == variantKey {
 			return int64(v.ID), v.Key, nil

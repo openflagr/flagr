@@ -67,7 +67,7 @@ Recorded rows use the same `evalResult` JSON shape as evaluations (same Kafka to
 
 Filter or branch on `recordSource`:
 
-- `evaluation` (or omitted) — assignment from `POST /evaluation`
+- `evaluation` — rows from the evaluation API path (`BlankResult`), including not-found/disabled responses; not necessarily a successful variant assignment
 - `exposure` — client-reported impression
 
 Do not treat exposure rows as assignments for experiment analysis.

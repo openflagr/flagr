@@ -42,7 +42,7 @@ Same as eval: `FLAGR_RECORDER_ENABLED` + `dataRecordsEnabled` on flag. Otherwise
 - **Datar** skips rows with `recordSource == "exposure"` (aggregate eval assignments only).
 - Build sparse **`EvalResult`** with `recordSource: "exposure"`, `segmentID: 0`, optional variant. Eval assignments use `recordSource: "evaluation"` from `BlankResult` (symmetric wire contract).
 - Exposure Statsd: `exposure.ingest` (tags: status, FlagID, …), `exposure.recorded` when written to the data recorder.
-- `GetDataRecorder().AsyncRecord(dataRecord)` when `dataRecordsEnabled && RecorderEnabled` (eval and exposure use the same inline gate).
+- `dataRecordEnabled(flag)` in `data_recorder.go` — shared gate for eval (`logEvalResult`) and exposure `AsyncRecord`.
 
 ## Auth
 
@@ -54,10 +54,10 @@ Same middleware as `POST /evaluation`. No dedicated rate limit v1.
 
 ## Implementation notes
 
-- Single `pkg/handler/exposure.go` (~230 lines): `PostExposures` loop, `buildExposureDataRecord`, `resolveExposureVariant`, `mergeJSONIntoMap`.
+- Single `pkg/handler/exposure.go`: `PostExposures`, `buildExposureDataRecord` (returns result + flag), `resolveExposureFlag`, `resolveExposureVariant`, `mergeJSONIntoMap`.
 - Naming: **`dataRecord`** / **`buildExposureDataRecord`** / “data recorders” (not “pipeline”).
 - No thin wrappers around `AsyncRecord`; exposures never call `logEvalResult`.
-- Ingest is **cache-only** for flags/variants (no re-segmentation, no snapshot DB lookup).
+- Ingest is **cache-only** for flags/variants (no re-segmentation, no snapshot DB lookup); **one cache lookup per accepted row** (no second `GetByFlagKeyOrID` in the loop).
 
 ## Files
 
@@ -68,7 +68,7 @@ pkg/config/env.go           — ExposureBatchSize
 pkg/handler/exposure.go
 pkg/handler/exposure_test.go
 pkg/handler/handler.go        — setupExposure
-pkg/handler/eval.go             — RecorderEnabled + dataRecordsEnabled gate on AsyncRecord
+pkg/handler/data_recorder.go   — dataRecordEnabled gate
 pkg/handler/data_recorder_datar.go — skip exposure
 pkg/handler/data_recorder_kafka.go — skip exposure on kafka Statsd only
 docs/flagr_exposure.md
@@ -87,19 +87,26 @@ Post-implementation:
 - Docs/tests aligned with data-recorder vocabulary; operator sections in `flagr_exposure.md`.
 - **`flagSnapshotID`**: pass-through only (removed `getDB` validation) — warehouse validates snapshot/flag pairing.
 
-## Code quality review (2026-06-25)
+## Code quality review (2026-06-25, updated post thermo-nuclear follow-up)
 
-**Verdict:** Approve. No file >1k lines; boundaries clean (impressions ≠ assignments).
+**Verdict:** Approve for merge after structural follow-up (applied on branch).
 
-**Strengths**
+**Addressed in follow-up**
+
+- `buildExposureDataRecord` returns `(EvalResult, *entity.Flag, error)` — removed duplicate eval-cache lookup in `PostExposures`.
+- `dataRecordEnabled(flag)` — single gate for eval and exposure recorder writes.
+- `resolveExposureFlag(ec, row)` — flag ID/key reconciliation extracted for readability.
+- `resolveExposureVariant` — single-pass when both ID and key are set.
+- Rejection Statsd uses client `flagID` / `flagKey` when present.
+- Eval assignments: `recordSource: "evaluation"` on `BlankResult` (symmetric Kafka contract).
+
+**Strengths (unchanged)**
 
 - Direct `AsyncRecord` — correct separation from eval metrics.
-- `recordSource` handled in canonical recorders (Datar skip, Kafka Statsd skip), not scattered in eval.
-- Helpers earn their keep (variant resolve, JSON merge); not pass-through wrappers.
+- `recordSource` policy in canonical recorders (Datar skip, Kafka Statsd skip).
+- No file >1k lines; impressions ≠ assignments.
 
-**Optional later (not v1 blockers)**
+**Optional later**
 
-- Split `buildExposureDataRecord` if exposure grows (tokens, assignment binding).
-- `resolveExposureFlag(ec, row)` only if a second caller appears.
 - Recorder-enabled integration test for Kafka payload / `recordSource`.
-- Tighten swagger `dataRecordsEnabled` “metrics pipeline” wording (pre-existing on flag models).
+- Tighten swagger `dataRecordsEnabled` “metrics pipeline” wording (pre-existing).

@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/openflagr/flagr/pkg/config"
+	"github.com/openflagr/flagr/pkg/entity"
 	"github.com/openflagr/flagr/swagger_gen/models"
 )
 
@@ -30,6 +31,11 @@ func (f fanOutRecorder) AsyncRecord(r models.EvalResult) {
 
 func (f fanOutRecorder) NewDataRecordFrame(_ models.EvalResult) DataRecordFrame {
 	return DataRecordFrame{}
+}
+
+// dataRecordEnabled is the shared gate for writing eval/exposure rows to data recorders.
+func dataRecordEnabled(flag *entity.Flag) bool {
+	return flag != nil && flag.DataRecordsEnabled && config.Config.RecorderEnabled
 }
 
 // GetDataRecorder gets the data recorder
