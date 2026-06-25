@@ -3,7 +3,9 @@ package handler
 import (
 	"fmt"
 	"testing"
+	"time"
 
+	"github.com/go-openapi/strfmt"
 	"github.com/openflagr/flagr/pkg/config"
 	"github.com/openflagr/flagr/pkg/entity"
 	"github.com/openflagr/flagr/swagger_gen/models"
@@ -162,6 +164,43 @@ func TestBuildExposureDataRecord(t *testing.T) {
 		assert.Error(t, err)
 	})
 
+	t.Run("nil entityID", func(t *testing.T) {
+		_, err := buildExposureDataRecord(&models.Exposure{FlagID: int64(fixture.ID)})
+		assert.Error(t, err)
+	})
+
+	t.Run("flag not found", func(t *testing.T) {
+		_, err := buildExposureDataRecord(&models.Exposure{EntityID: &eid, FlagID: 999999})
+		assert.Error(t, err)
+	})
+
+	t.Run("flag key only", func(t *testing.T) {
+		r, err := buildExposureDataRecord(&models.Exposure{EntityID: &eid, FlagKey: fixture.Key})
+		if !assert.NoError(t, err) {
+			return
+		}
+		assert.Equal(t, fixture.Key, r.FlagKey)
+	})
+
+	t.Run("client timestamp", func(t *testing.T) {
+		ts := time.Date(2024, 6, 1, 12, 0, 0, 0, time.UTC)
+		r, err := buildExposureDataRecord(&models.Exposure{
+			EntityID: &eid, FlagID: int64(fixture.ID), Timestamp: strfmt.DateTime(ts),
+		})
+		if !assert.NoError(t, err) {
+			return
+		}
+		assert.Equal(t, "2024-06-01T12:00:00Z", r.Timestamp)
+	})
+
+	t.Run("no context leaves evalContext empty", func(t *testing.T) {
+		r, err := buildExposureDataRecord(&models.Exposure{EntityID: &eid, FlagID: int64(fixture.ID)})
+		if !assert.NoError(t, err) {
+			return
+		}
+		assert.Nil(t, r.EvalContext.EntityContext)
+	})
+
 	t.Run("by flag id", func(t *testing.T) {
 		r, err := buildExposureDataRecord(&models.Exposure{EntityID: &eid, FlagID: int64(fixture.ID)})
 		if !assert.NoError(t, err) {
@@ -318,6 +357,35 @@ func TestResolveExposureVariant(t *testing.T) {
 		_, _, err := resolveExposureVariant(&flag, 300, "treatment")
 		assert.Error(t, err)
 	})
+
+	t.Run("invalid variant id", func(t *testing.T) {
+		_, _, err := resolveExposureVariant(&flag, 999, "")
+		assert.Error(t, err)
+	})
+
+	t.Run("invalid variant key", func(t *testing.T) {
+		_, _, err := resolveExposureVariant(&flag, 0, "missing")
+		assert.Error(t, err)
+	})
+
+	t.Run("id not found when both set", func(t *testing.T) {
+		_, _, err := resolveExposureVariant(&flag, 999, "control")
+		assert.Error(t, err)
+	})
+
+	t.Run("key not found when both set", func(t *testing.T) {
+		_, _, err := resolveExposureVariant(&flag, 300, "missing")
+		assert.Error(t, err)
+	})
+
+	t.Run("matching id and key", func(t *testing.T) {
+		id, key, err := resolveExposureVariant(&flag, 300, "control")
+		if !assert.NoError(t, err) {
+			return
+		}
+		assert.Equal(t, int64(300), id)
+		assert.Equal(t, "control", key)
+	})
 }
 
 func TestMergeJSONIntoMap(t *testing.T) {
@@ -326,6 +394,34 @@ func TestMergeJSONIntoMap(t *testing.T) {
 	mergeJSONIntoMap(dst, map[string]interface{}{"b": 2})
 	assert.Equal(t, float64(1), dst["a"])
 	assert.Equal(t, float64(2), dst["b"])
+
+	mergeJSONIntoMap(dst, nil)
+	mergeJSONIntoMap(dst, "not-json-object")
+	mergeJSONIntoMap(dst, map[string]any{})
+	assert.Len(t, dst, 2)
+}
+
+func TestLogExposureStatsd_Stubbed(t *testing.T) {
+	var lastStatus string
+	orig := logExposureStatsd
+	logExposureStatsd = func(status string, flagID int64, flagKey string) {
+		lastStatus = status
+		_ = flagID
+		_ = flagKey
+	}
+	defer func() { logExposureStatsd = orig }()
+
+	logExposureStatsd("accepted", 100, "k")
+	assert.Equal(t, "accepted", lastStatus)
+	logExposureStatsd("recorded", 100, "k")
+	assert.Equal(t, "recorded", lastStatus)
+}
+
+func TestLogExposureStatsd_NoClient(t *testing.T) {
+	orig := config.Global.StatsdClient
+	config.Global.StatsdClient = nil
+	defer func() { config.Global.StatsdClient = orig }()
+	assert.NotPanics(t, func() { logExposureStatsd("rejected", 0, "") })
 }
 
 func strPtr(s string) *string { return &s }
