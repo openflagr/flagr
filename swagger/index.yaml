@@ -532,7 +532,7 @@ definitions:
         type: string
       recordSource:
         type: string
-        description: evaluation for eval API results; exposure for POST /exposures pipeline events
+        description: evaluation for eval API results; exposure for client-reported impressions via POST /exposures (same data recorders as eval)
         enum:
           - evaluation
           - exposure

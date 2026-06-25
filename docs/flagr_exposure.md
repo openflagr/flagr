@@ -27,6 +27,13 @@ Request body:
 
 Single impressions use an array of one item. Maximum batch size: `FLAGR_EXPOSURE_BATCH_SIZE` (default **100**).
 
+### Typical client flow
+
+1. `POST /evaluation` — get variant assignment.
+2. Render the experiment surface in the UI.
+3. `POST /exposures` — report that the user saw it (batch on page unload if needed).
+
+
 ## Response
 
 - **200** with `loggedCount`, `message`, and optional `errors[]` (`index`, `message`) for per-row validation failures.
@@ -42,15 +49,32 @@ Same gate as evaluation data records:
 2. Recorder type configured (e.g. `kafka`)
 3. Per-flag `dataRecordsEnabled: true`
 
-Pipeline events are synthetic `evalResult` JSON on the **same topic** as evaluations, with `recordSource: "exposure"`. **Datar does not count exposures.** Exposure ingest uses separate Statsd metrics (`exposure.ingest`, `exposure.recorded`).
+Recorded rows use the same `evalResult` JSON shape as evaluations (same Kafka topic when Kafka is configured), with `recordSource: "exposure"`. **Datar does not count exposures.** Exposure ingest uses separate Statsd metrics (`exposure.ingest`, `exposure.recorded`).
 
 ## How this connects to evaluation and `AsyncRecord`
 
 **Evaluation** runs bucketing, then `logEvalResult` (eval Statsd/Prometheus). When `dataRecordsEnabled` and `FLAGR_RECORDER_ENABLED`, it calls `GetDataRecorder().AsyncRecord(evalResult)`.
 
-**Exposure** skips `logEvalResult`. For valid rows it builds a synthetic `evalResult` with `recordSource: "exposure"` and, when the same gates pass, calls `GetDataRecorder().AsyncRecord` directly.
+**Exposure** skips `logEvalResult`. For valid rows it builds an exposure `evalResult` with `recordSource: "exposure"` and, when the same gates pass, calls `GetDataRecorder().AsyncRecord` directly.
 
-`AsyncRecord` fans out to Kafka/Kinesis/Pub/Sub/Datar. **Datar** returns early when `recordSource == exposure`. Exposure uses Statsd `exposure.ingest` / `exposure.recorded`.
+`AsyncRecord` fans out to configured **data recorders** (Kafka, Kinesis, Pub/Sub, Datar). **Datar** ignores rows with `recordSource == exposure`. Exposure uses Statsd `exposure.ingest` / `exposure.recorded`.
+
+### Eval-only mode
+
+`json_file` / `json_http` nodes with eval-only setup register **evaluation** only; **`POST /exposures` is not available** on those deployments.
+
+### Kafka / warehouse consumers
+
+Filter or branch on `recordSource`:
+
+- `evaluation` (or omitted) — assignment from `POST /evaluation`
+- `exposure` — client-reported impression
+
+Do not treat exposure rows as assignments for experiment analysis.
+
+### Statsd (exposure ingest)
+
+Separate from eval `evaluation` metric: `exposure.ingest` (tags: `status=accepted|rejected|recorded`, `FlagID`, `FlagKey`) and `exposure.recorded` when a row is passed to `AsyncRecord`.
 
 ## Validation
 

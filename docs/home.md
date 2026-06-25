@@ -12,7 +12,7 @@ For a deeper introduction, see the [Flagr Overview](flagr_overview).
 | **A/B testing** | Multi-variant experiments with deterministic distribution |
 | **Dynamic configuration** | Per-variant JSON attachments for runtime config |
 | **GitOps / Flags-as-code** | Load flags from JSON files or HTTP URLs; manage in Git, validate in CI |
-| **Datar analytics** | Built-in aggregate analytics — no external pipeline needed |
+| **Exposure logging** | `POST /exposures` for impressions after assignment; shares data recorder gate with eval |
 | **Webhook notifications** | HTTP POST on every flag change, with retry and backoff |
 | **Multi-database** | SQLite (dev), MySQL, PostgreSQL, JSON sources |
 

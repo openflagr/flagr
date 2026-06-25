@@ -41,24 +41,24 @@ func (h *exposureHandler) PostExposures(params exposureapi.PostExposuresParams) 
 
 	for i, row := range exposures {
 		if row == nil {
-			logExposureIngestStatsd("rejected", 0, "")
+			logExposureStatsd("rejected", 0, "")
 			rowErrors = append(rowErrors, &models.ExposureRowError{Index: int64(i), Message: "exposure row is null"})
 			continue
 		}
 
-		synthetic, err := validateAndBuildExposure(row)
+		dataRecord, err := buildExposureDataRecord(row)
 		if err != nil {
-			logExposureIngestStatsd("rejected", 0, "")
+			logExposureStatsd("rejected", 0, "")
 			rowErrors = append(rowErrors, &models.ExposureRowError{Index: int64(i), Message: err.Error()})
 			continue
 		}
 
-		logExposureIngestStatsd("accepted", synthetic.FlagID, synthetic.FlagKey)
+		logExposureStatsd("accepted", dataRecord.FlagID, dataRecord.FlagKey)
 
-		flag := GetEvalCache().GetByFlagKeyOrID(synthetic.FlagID)
+		flag := GetEvalCache().GetByFlagKeyOrID(dataRecord.FlagID)
 		if config.Config.RecorderEnabled && flag != nil && flag.DataRecordsEnabled {
-			GetDataRecorder().AsyncRecord(synthetic)
-			logExposureIngestStatsd("recorded", synthetic.FlagID, synthetic.FlagKey)
+			GetDataRecorder().AsyncRecord(dataRecord)
+			logExposureStatsd("recorded", dataRecord.FlagID, dataRecord.FlagKey)
 			logged++
 		}
 	}
@@ -72,7 +72,9 @@ func (h *exposureHandler) PostExposures(params exposureapi.PostExposuresParams) 
 	return resp
 }
 
-func validateAndBuildExposure(row *models.Exposure) (models.EvalResult, error) {
+// buildExposureDataRecord validates an exposure row and returns the EvalResult
+// passed to DataRecorder.AsyncRecord (recordSource: exposure).
+func buildExposureDataRecord(row *models.Exposure) (models.EvalResult, error) {
 	if row.EntityID == nil || *row.EntityID == "" {
 		return models.EvalResult{}, fmt.Errorf("entityID is required")
 	}
@@ -104,7 +106,7 @@ func validateAndBuildExposure(row *models.Exposure) (models.EvalResult, error) {
 		return models.EvalResult{}, fmt.Errorf("flag not found")
 	}
 
-	variantID, variantKey, err := exposureVariant(flag, row.VariantID, row.VariantKey)
+	variantID, variantKey, err := resolveExposureVariant(flag, row.VariantID, row.VariantKey)
 	if err != nil {
 		return models.EvalResult{}, err
 	}
@@ -133,8 +135,8 @@ func validateAndBuildExposure(row *models.Exposure) (models.EvalResult, error) {
 	}
 
 	entityCtx := map[string]interface{}{}
-	exposureMergeJSONMap(entityCtx, row.EntityContext)
-	exposureMergeJSONMap(entityCtx, row.Metadata)
+	mergeJSONIntoMap(entityCtx, row.EntityContext)
+	mergeJSONIntoMap(entityCtx, row.Metadata)
 	var merged any
 	if len(entityCtx) > 0 {
 		merged = entityCtx
@@ -159,7 +161,7 @@ func validateAndBuildExposure(row *models.Exposure) (models.EvalResult, error) {
 	}, nil
 }
 
-func exposureVariant(flag *entity.Flag, variantID int64, variantKey string) (id int64, key string, err error) {
+func resolveExposureVariant(flag *entity.Flag, variantID int64, variantKey string) (id int64, key string, err error) {
 	if variantID <= 0 && variantKey == "" {
 		return 0, "", nil
 	}
@@ -202,7 +204,7 @@ func exposureVariant(flag *entity.Flag, variantID int64, variantKey string) (id 
 	return 0, "", fmt.Errorf("variantKey %q not found on flag", variantKey)
 }
 
-func exposureMergeJSONMap(dst map[string]interface{}, src any) {
+func mergeJSONIntoMap(dst map[string]interface{}, src any) {
 	if src == nil {
 		return
 	}
@@ -219,7 +221,7 @@ func exposureMergeJSONMap(dst map[string]interface{}, src any) {
 	}
 }
 
-var logExposureIngestStatsd = func(status string, flagID int64, flagKey string) {
+var logExposureStatsd = func(status string, flagID int64, flagKey string) {
 	if config.Global.StatsdClient == nil {
 		return
 	}

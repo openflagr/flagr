@@ -36,13 +36,13 @@ Explicit client-reported exposure (impression) logging complements `POST /evalua
 
 Same as eval: `FLAGR_RECORDER_ENABLED` + `dataRecordsEnabled` on flag. Otherwise **200** with `loggedCount: 0`.
 
-## Pipeline (not eval)
+## Data recorder (not eval metrics)
 
 - **Do not** call `logEvalResult` (no eval Prometheus / eval Statsd `evaluation` metric).
 - **Datar** skips rows with `recordSource == "exposure"`.
-- Build **synthetic sparse `EvalResult`** with `recordSource: "exposure"`, `segmentID: 0`, optional variant.
-- Exposure Statsd: `exposure.ingest` (tags: status, FlagID, …), `exposure.recorded` when written to pipeline.
-- `GetDataRecorder().AsyncRecord(synthetic)` when gates pass.
+- Build sparse **`EvalResult`** with `recordSource: "exposure"`, `segmentID: 0`, optional variant.
+- Exposure Statsd: `exposure.ingest` (tags: status, FlagID, …), `exposure.recorded` when written to the data recorder.
+- `GetDataRecorder().AsyncRecord(dataRecord)` when gates pass.
 
 ## Auth
 

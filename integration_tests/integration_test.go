@@ -572,9 +572,9 @@ func TestIntegration_Exposures(t *testing.T) {
 	if resp.Errors[0].Index != 1 {
 		t.Fatalf("expected error index 1, got %d", resp.Errors[0].Index)
 	}
-	// Valid row may record (loggedCount 1) or not depending on recorder + dataRecordsEnabled; invalid row never increments alone.
-	if resp.LoggedCount < 0 || resp.LoggedCount > 1 {
-		t.Fatalf("unexpected loggedCount %d", resp.LoggedCount)
+	// Integration server typically has recorder disabled; valid row still returns 200.
+	if resp.LoggedCount != 0 && resp.LoggedCount != 1 {
+		t.Fatalf("loggedCount want 0 or 1, got %d", resp.LoggedCount)
 	}
 }
 // ---------------------------------------------------------------------------

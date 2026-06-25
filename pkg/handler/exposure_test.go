@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/openflagr/flagr/pkg/config"
@@ -36,6 +37,23 @@ func TestPostExposures_BatchLimit(t *testing.T) {
 	assert.True(t, ok)
 }
 
+func TestPostExposures_NullRow(t *testing.T) {
+	defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
+	h := NewExposure()
+	body := &models.ExposuresRequest{
+		Exposures: []*models.Exposure{nil},
+	}
+	res := h.PostExposures(exposureapi.PostExposuresParams{Body: body})
+	okRes, ok := res.(*exposureapi.PostExposuresOK)
+	if !assert.True(t, ok) {
+		return
+	}
+	assert.Equal(t, int64(0), okRes.Payload.LoggedCount)
+	if assert.Len(t, okRes.Payload.Errors, 1) {
+		assert.Equal(t, int64(0), okRes.Payload.Errors[0].Index)
+	}
+}
+
 func TestPostExposures_PartialAccept(t *testing.T) {
 	defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
 	defer gostub.Stub(&config.Config.RecorderEnabled, false).Reset()
@@ -62,6 +80,40 @@ func TestPostExposures_PartialAccept(t *testing.T) {
 	assert.Len(t, okRes.Payload.Errors, 1)
 }
 
+func TestPostExposures_RecorderOn_DataRecordsOff(t *testing.T) {
+	cache := GenFixtureEvalCache()
+	flag := cache.GetByFlagKeyOrID(int64(100))
+	if !assert.NotNil(t, flag) {
+		return
+	}
+	flag.DataRecordsEnabled = false
+
+	defer gostub.StubFunc(&GetEvalCache, cache).Reset()
+	defer gostub.Stub(&config.Config.RecorderEnabled, true).Reset()
+	defer gostub.Stub(&config.Config.RecorderType, []string{}).Reset()
+	GetDataRecorder()
+
+	mock := &mockRecorder{}
+	prev := singletonDataRecorder
+	singletonDataRecorder = fanOutRecorder{mock}
+	defer func() { singletonDataRecorder = prev }()
+
+	h := NewExposure()
+	eid := "user-1"
+	body := &models.ExposuresRequest{
+		Exposures: []*models.Exposure{
+			{EntityID: &eid, FlagID: int64(flag.ID)},
+		},
+	}
+	res := h.PostExposures(exposureapi.PostExposuresParams{Body: body})
+	okRes, ok := res.(*exposureapi.PostExposuresOK)
+	if !assert.True(t, ok) {
+		return
+	}
+	assert.Equal(t, int64(0), okRes.Payload.LoggedCount)
+	assert.Empty(t, mock.calls)
+}
+
 func TestPostExposures_RecordsWhenEnabled(t *testing.T) {
 	cache := GenFixtureEvalCache()
 	flag := cache.GetByFlagKeyOrID(int64(100))
@@ -73,10 +125,13 @@ func TestPostExposures_RecordsWhenEnabled(t *testing.T) {
 	defer gostub.StubFunc(&GetEvalCache, cache).Reset()
 	defer gostub.Stub(&config.Config.RecorderEnabled, true).Reset()
 
+	defer gostub.Stub(&config.Config.RecorderType, []string{}).Reset()
+	GetDataRecorder()
 	mock := &mockRecorder{}
 	prev := singletonDataRecorder
 	singletonDataRecorder = fanOutRecorder{mock}
 	defer func() { singletonDataRecorder = prev }()
+
 	h := NewExposure()
 	eid := "user-1"
 	body := &models.ExposuresRequest{
@@ -92,24 +147,41 @@ func TestPostExposures_RecordsWhenEnabled(t *testing.T) {
 	assert.Equal(t, int64(1), okRes.Payload.LoggedCount)
 	if assert.Len(t, mock.calls, 1) {
 		assert.Equal(t, models.EvalResultRecordSourceExposure, mock.calls[0].RecordSource)
+		assert.Equal(t, int64(0), mock.calls[0].SegmentID)
 	}
 }
 
-func TestValidateAndBuildExposure_FlagResolution(t *testing.T) {
+func TestBuildExposureDataRecord(t *testing.T) {
 	defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
 	fixture := entity.GenFixtureFlag()
 	eid := "e1"
 
+	t.Run("requires entityID", func(t *testing.T) {
+		empty := ""
+		_, err := buildExposureDataRecord(&models.Exposure{EntityID: &empty, FlagID: int64(fixture.ID)})
+		assert.Error(t, err)
+	})
+
 	t.Run("by flag id", func(t *testing.T) {
-		r, err := validateAndBuildExposure(&models.Exposure{EntityID: &eid, FlagID: int64(fixture.ID)})
+		r, err := buildExposureDataRecord(&models.Exposure{EntityID: &eid, FlagID: int64(fixture.ID)})
 		if !assert.NoError(t, err) {
 			return
 		}
 		assert.Equal(t, int64(fixture.ID), r.FlagID)
+		assert.Equal(t, models.EvalResultRecordSourceExposure, r.RecordSource)
+		assert.Equal(t, int64(0), r.SegmentID)
+	})
+
+	t.Run("by flag key", func(t *testing.T) {
+		r, err := buildExposureDataRecord(&models.Exposure{EntityID: &eid, FlagKey: fixture.Key})
+		if !assert.NoError(t, err) {
+			return
+		}
+		assert.Equal(t, fixture.Key, r.FlagKey)
 	})
 
 	t.Run("missing flag ref", func(t *testing.T) {
-		_, err := validateAndBuildExposure(&models.Exposure{EntityID: &eid})
+		_, err := buildExposureDataRecord(&models.Exposure{EntityID: &eid})
 		assert.Error(t, err)
 	})
 
@@ -123,25 +195,168 @@ func TestValidateAndBuildExposure_FlagResolution(t *testing.T) {
 			keyCache: map[string]*entity.Flag{f1.Key: &f1, f2.Key: &f2},
 		}}
 		defer gostub.StubFunc(&GetEvalCache, ec).Reset()
-		_, err := validateAndBuildExposure(&models.Exposure{EntityID: &eid, FlagID: int64(f1.ID), FlagKey: f2.Key})
+		_, err := buildExposureDataRecord(&models.Exposure{EntityID: &eid, FlagID: int64(f1.ID), FlagKey: f2.Key})
+		assert.Error(t, err)
+	})
+
+	t.Run("optional variant", func(t *testing.T) {
+		r, err := buildExposureDataRecord(&models.Exposure{EntityID: &eid, FlagID: int64(fixture.ID)})
+		if !assert.NoError(t, err) {
+			return
+		}
+		assert.Equal(t, int64(0), r.VariantID)
+	})
+
+	t.Run("variant by id", func(t *testing.T) {
+		r, err := buildExposureDataRecord(&models.Exposure{
+			EntityID: &eid, FlagID: int64(fixture.ID), VariantID: 300,
+		})
+		if !assert.NoError(t, err) {
+			return
+		}
+		assert.Equal(t, int64(300), r.VariantID)
+		assert.Equal(t, "control", r.VariantKey)
+	})
+
+	t.Run("variant by key", func(t *testing.T) {
+		r, err := buildExposureDataRecord(&models.Exposure{
+			EntityID: &eid, FlagKey: fixture.Key, VariantKey: "treatment",
+		})
+		if !assert.NoError(t, err) {
+			return
+		}
+		assert.Equal(t, int64(301), r.VariantID)
+		assert.Equal(t, "treatment", r.VariantKey)
+	})
+
+	t.Run("entity type from flag overrides client", func(t *testing.T) {
+		f := entity.GenFixtureFlag()
+		f.EntityType = "from_flag"
+		ec := &EvalCache{cache: &cacheContainer{
+			idCache:  map[string]*entity.Flag{fmt.Sprintf("%d", f.ID): &f},
+			keyCache: map[string]*entity.Flag{f.Key: &f},
+		}}
+		defer gostub.StubFunc(&GetEvalCache, ec).Reset()
+		clientType := "client_type"
+		r, err := buildExposureDataRecord(&models.Exposure{
+			EntityID: &eid, FlagID: int64(f.ID), EntityType: clientType,
+		})
+		if !assert.NoError(t, err) {
+			return
+		}
+		assert.Equal(t, "from_flag", r.EvalContext.EntityType)
+	})
+
+	t.Run("merges entityContext and metadata", func(t *testing.T) {
+		r, err := buildExposureDataRecord(&models.Exposure{
+			EntityID:       &eid,
+			FlagID:         int64(fixture.ID),
+			EntityContext:  map[string]any{"country": "US"},
+			Metadata:       map[string]interface{}{"page": "/home"},
+		})
+		if !assert.NoError(t, err) {
+			return
+		}
+		ctx, ok := r.EvalContext.EntityContext.(map[string]interface{})
+		if !assert.True(t, ok) {
+			return
+		}
+		assert.Equal(t, "US", ctx["country"])
+		assert.Equal(t, "/home", ctx["page"])
+	})
+
+	t.Run("invalid flagSnapshotID", func(t *testing.T) {
+		f := entity.GenFixtureFlag()
+		db := entity.PopulateTestDB(f)
+		tmp, err := db.DB()
+		if !assert.NoError(t, err) {
+			return
+		}
+		defer tmp.Close()
+		defer gostub.StubFunc(&getDB, db).Reset()
+		defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
+		_, err = buildExposureDataRecord(&models.Exposure{
+			EntityID: &eid, FlagID: int64(f.ID), FlagSnapshotID: 999999,
+		})
+		assert.Error(t, err)
+	})
+
+	t.Run("valid flagSnapshotID", func(t *testing.T) {
+		f := entity.GenFixtureFlag()
+		db := entity.PopulateTestDB(f)
+		tmp, err := db.DB()
+		if !assert.NoError(t, err) {
+			return
+		}
+		defer tmp.Close()
+		defer gostub.StubFunc(&getDB, db).Reset()
+		fs := entity.FlagSnapshot{FlagID: f.ID, UpdatedBy: "test", Flag: []byte(`{}`)}
+		if !assert.NoError(t, db.Create(&fs).Error) {
+			return
+		}
+		ec := &EvalCache{cache: &cacheContainer{
+			idCache:  map[string]*entity.Flag{fmt.Sprintf("%d", f.ID): &f},
+			keyCache: map[string]*entity.Flag{f.Key: &f},
+		}}
+		defer gostub.StubFunc(&GetEvalCache, ec).Reset()
+		r, err := buildExposureDataRecord(&models.Exposure{
+			EntityID: &eid, FlagID: int64(f.ID), FlagSnapshotID: int64(fs.ID),
+		})
+		if !assert.NoError(t, err) {
+			return
+		}
+		assert.Equal(t, int64(fs.ID), r.FlagSnapshotID)
+	})
+
+	t.Run("flagSnapshotID rejected in eval only mode", func(t *testing.T) {
+		defer gostub.Stub(&config.Config.EvalOnlyMode, true).Reset()
+		_, err := buildExposureDataRecord(&models.Exposure{
+			EntityID: &eid, FlagID: int64(fixture.ID), FlagSnapshotID: 1,
+		})
 		assert.Error(t, err)
 	})
 }
 
-func TestExposureVariant(t *testing.T) {
+func TestResolveExposureVariant(t *testing.T) {
 	flag := entity.GenFixtureFlag()
-	id, key, err := exposureVariant(&flag, 300, "")
-	if !assert.NoError(t, err) {
-		return
-	}
-	assert.Equal(t, int64(300), id)
-	assert.Equal(t, "control", key)
+
+	t.Run("optional empty", func(t *testing.T) {
+		id, key, err := resolveExposureVariant(&flag, 0, "")
+		if !assert.NoError(t, err) {
+			return
+		}
+		assert.Equal(t, int64(0), id)
+		assert.Empty(t, key)
+	})
+
+	t.Run("by id", func(t *testing.T) {
+		id, key, err := resolveExposureVariant(&flag, 300, "")
+		if !assert.NoError(t, err) {
+			return
+		}
+		assert.Equal(t, int64(300), id)
+		assert.Equal(t, "control", key)
+	})
+
+	t.Run("by key", func(t *testing.T) {
+		id, key, err := resolveExposureVariant(&flag, 0, "treatment")
+		if !assert.NoError(t, err) {
+			return
+		}
+		assert.Equal(t, int64(301), id)
+		assert.Equal(t, "treatment", key)
+	})
+
+	t.Run("id and key mismatch", func(t *testing.T) {
+		_, _, err := resolveExposureVariant(&flag, 300, "treatment")
+		assert.Error(t, err)
+	})
 }
 
-func TestExposureMergeJSONMap(t *testing.T) {
+func TestMergeJSONIntoMap(t *testing.T) {
 	dst := map[string]interface{}{}
-	exposureMergeJSONMap(dst, map[string]any{"a": 1})
-	exposureMergeJSONMap(dst, map[string]interface{}{"b": 2})
+	mergeJSONIntoMap(dst, map[string]any{"a": 1})
+	mergeJSONIntoMap(dst, map[string]interface{}{"b": 2})
 	assert.Equal(t, float64(1), dst["a"])
 	assert.Equal(t, float64(2), dst["b"])
 }
