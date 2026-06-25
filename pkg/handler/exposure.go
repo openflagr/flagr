@@ -113,14 +113,6 @@ func buildExposureDataRecord(row *models.Exposure) (models.EvalResult, error) {
 
 	snapshotID := int64(flag.SnapshotID)
 	if row.FlagSnapshotID > 0 {
-		sid := uint(row.FlagSnapshotID)
-		if config.Config.EvalOnlyMode {
-			return models.EvalResult{}, fmt.Errorf("flagSnapshotID %d not found for flag", sid)
-		}
-		var fs entity.FlagSnapshot
-		if err := getDB().Where("id = ? AND flag_id = ?", sid, flag.ID).First(&fs).Error; err != nil {
-			return models.EvalResult{}, fmt.Errorf("flagSnapshotID %d not found for flag", sid)
-		}
 		snapshotID = row.FlagSnapshotID
 	}
 

@@ -265,55 +265,22 @@ func TestBuildExposureDataRecord(t *testing.T) {
 		assert.Equal(t, "/home", ctx["page"])
 	})
 
-	t.Run("invalid flagSnapshotID", func(t *testing.T) {
-		f := entity.GenFixtureFlag()
-		db := entity.PopulateTestDB(f)
-		tmp, err := db.DB()
-		if !assert.NoError(t, err) {
-			return
-		}
-		defer tmp.Close()
-		defer gostub.StubFunc(&getDB, db).Reset()
-		defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
-		_, err = buildExposureDataRecord(&models.Exposure{
-			EntityID: &eid, FlagID: int64(f.ID), FlagSnapshotID: 999999,
-		})
-		assert.Error(t, err)
-	})
-
-	t.Run("valid flagSnapshotID", func(t *testing.T) {
-		f := entity.GenFixtureFlag()
-		db := entity.PopulateTestDB(f)
-		tmp, err := db.DB()
-		if !assert.NoError(t, err) {
-			return
-		}
-		defer tmp.Close()
-		defer gostub.StubFunc(&getDB, db).Reset()
-		fs := entity.FlagSnapshot{FlagID: f.ID, UpdatedBy: "test", Flag: []byte(`{}`)}
-		if !assert.NoError(t, db.Create(&fs).Error) {
-			return
-		}
-		ec := &EvalCache{cache: &cacheContainer{
-			idCache:  map[string]*entity.Flag{fmt.Sprintf("%d", f.ID): &f},
-			keyCache: map[string]*entity.Flag{f.Key: &f},
-		}}
-		defer gostub.StubFunc(&GetEvalCache, ec).Reset()
+	t.Run("flagSnapshotID from client", func(t *testing.T) {
 		r, err := buildExposureDataRecord(&models.Exposure{
-			EntityID: &eid, FlagID: int64(f.ID), FlagSnapshotID: int64(fs.ID),
+			EntityID: &eid, FlagID: int64(fixture.ID), FlagSnapshotID: 4242,
 		})
 		if !assert.NoError(t, err) {
 			return
 		}
-		assert.Equal(t, int64(fs.ID), r.FlagSnapshotID)
+		assert.Equal(t, int64(4242), r.FlagSnapshotID)
 	})
 
-	t.Run("flagSnapshotID rejected in eval only mode", func(t *testing.T) {
-		defer gostub.Stub(&config.Config.EvalOnlyMode, true).Reset()
-		_, err := buildExposureDataRecord(&models.Exposure{
-			EntityID: &eid, FlagID: int64(fixture.ID), FlagSnapshotID: 1,
-		})
-		assert.Error(t, err)
+	t.Run("flagSnapshotID defaults to cache", func(t *testing.T) {
+		r, err := buildExposureDataRecord(&models.Exposure{EntityID: &eid, FlagID: int64(fixture.ID)})
+		if !assert.NoError(t, err) {
+			return
+		}
+		assert.Equal(t, int64(fixture.SnapshotID), r.FlagSnapshotID)
 	})
 }
 

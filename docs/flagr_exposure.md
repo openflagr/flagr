@@ -83,7 +83,7 @@ Separate from eval `evaluation` metric: `exposure.ingest` (tags: `status=accepte
 | `entityID` | Required |
 | `flagID` / `flagKey` | At least one; both must match the same flag |
 | `variantID` / `variantKey` | Optional; if set, must exist on the flag |
-| `flagSnapshotID` | If set, must exist for the flag (may be stale); else current cache snapshot is used |
+| `flagSnapshotID` | Optional; if set, recorded as sent (downstream can join to snapshots); if omitted, uses current eval-cache snapshot |
 | Disabled flags | Allowed |
 
 Auth matches `POST /evaluation`.
