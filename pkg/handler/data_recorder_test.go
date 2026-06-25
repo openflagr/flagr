@@ -164,6 +164,29 @@ func TestDatarRecorder_AsyncRecord(t *testing.T) {
 	assert.Equal(t, 2, d.Len(), "2 distinct keys")
 }
 
+func TestDatarRecorder_SkipsExposure(t *testing.T) {
+	defer ResetDatar()
+	defer gostub.Stub(&config.Config.RecorderType, []string{"datar"}).Reset()
+	defer gostub.Stub(&config.Config.RecorderEnabled, true).Reset()
+
+	db := entity.NewTestDB()
+	defer gostub.StubFunc(&getDB, db).Reset()
+	db.AutoMigrate(entity.AutoMigrateTables...)
+
+	_ = GetDatar()
+	r := NewDatarRecorder()
+	r.AsyncRecord(models.EvalResult{
+		FlagID:       1,
+		VariantID:    10,
+		SegmentID:    0,
+		RecordSource: models.EvalResultRecordSourceExposure,
+	})
+	assert.Equal(t, 0, GetDatar().Len())
+
+	r.AsyncRecord(models.EvalResult{FlagID: 1, VariantID: 10, SegmentID: 20})
+	assert.Equal(t, 1, GetDatar().Len())
+}
+
 func TestDatarRecorder_NewDataRecordFrame(t *testing.T) {
 	r := NewDatarRecorder()
 	frame := r.NewDataRecordFrame(models.EvalResult{})

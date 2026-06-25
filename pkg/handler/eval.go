@@ -269,7 +269,7 @@ var logEvalResult = func(r *models.EvalResult, dataRecordsEnabled bool) {
 		return
 	}
 
-	GetDataRecorder().AsyncRecord(*r)
+	recordPipelineEvent(*r)
 }
 
 var logEvalResultToDatadog = func(r *models.EvalResult) {

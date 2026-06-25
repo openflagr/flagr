@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/openflagr/flagr/pkg/config"
-	"github.com/openflagr/flagr/pkg/entity"
 	"github.com/openflagr/flagr/swagger_gen/models"
 	exposureapi "github.com/openflagr/flagr/swagger_gen/restapi/operations/exposure"
 	"github.com/prashantv/gostub"
@@ -62,27 +61,44 @@ func TestPostExposures_PartialAccept(t *testing.T) {
 	assert.Len(t, okRes.Payload.Errors, 1)
 }
 
-func TestDatarRecorder_SkipsExposure(t *testing.T) {
-	defer ResetDatar()
-	defer gostub.Stub(&config.Config.RecorderType, []string{"datar"}).Reset()
+func TestPostExposures_RecordsWhenEnabled(t *testing.T) {
+	cache := GenFixtureEvalCache()
+	flag := cache.GetByFlagKeyOrID(int64(100))
+	if !assert.NotNil(t, flag) {
+		return
+	}
+	flag.DataRecordsEnabled = true
+
+	defer gostub.StubFunc(&GetEvalCache, cache).Reset()
 	defer gostub.Stub(&config.Config.RecorderEnabled, true).Reset()
 
-	db := entity.NewTestDB()
-	defer gostub.StubFunc(&getDB, db).Reset()
-	db.AutoMigrate(entity.AutoMigrateTables...)
+	var recorded []models.EvalResult
+	defer gostub.Stub(&recordPipelineEvent, func(r models.EvalResult) {
+		recorded = append(recorded, r)
+	}).Reset()
 
-	_ = GetDatar()
-	r := NewDatarRecorder()
-	r.AsyncRecord(models.EvalResult{
-		FlagID:       1,
-		VariantID:    10,
-		SegmentID:    0,
-		RecordSource: models.EvalResultRecordSourceExposure,
-	})
-	assert.Equal(t, 0, GetDatar().Len())
+	h := NewExposure()
+	eid := "user-1"
+	body := &models.ExposuresRequest{
+		Exposures: []*models.Exposure{
+			{EntityID: &eid, FlagID: int64(flag.ID)},
+		},
+	}
+	res := h.PostExposures(exposureapi.PostExposuresParams{Body: body})
+	okRes, ok := res.(*exposureapi.PostExposuresOK)
+	if !assert.True(t, ok) {
+		return
+	}
+	assert.Equal(t, int64(1), okRes.Payload.LoggedCount)
+	if assert.Len(t, recorded, 1) {
+		assert.Equal(t, models.EvalResultRecordSourceExposure, recorded[0].RecordSource)
+	}
+}
 
-	r.AsyncRecord(models.EvalResult{FlagID: 1, VariantID: 10, SegmentID: 20})
-	assert.Equal(t, 1, GetDatar().Len())
+func TestProcessExposureRow_NullRow(t *testing.T) {
+	n, err := processExposureRow(0, nil)
+	assert.Equal(t, int64(0), n)
+	assert.NotNil(t, err)
 }
 
 func strPtr(s string) *string { return &s }

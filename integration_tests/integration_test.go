@@ -552,6 +552,9 @@ func TestIntegration_Exposures(t *testing.T) {
 				"flagID":   flagID,
 				"entityID": eid,
 			},
+			{
+				"entityID": "bad-row-no-flag",
+			},
 		},
 	}
 	var resp struct {
@@ -563,7 +566,14 @@ func TestIntegration_Exposures(t *testing.T) {
 		} `json:"errors"`
 	}
 	postJSON(t, "/api/v1/exposures", body, &resp)
-	if resp.LoggedCount != 0 && resp.LoggedCount != 1 {
+	if len(resp.Errors) != 1 {
+		t.Fatalf("expected 1 row error, got %d", len(resp.Errors))
+	}
+	if resp.Errors[0].Index != 1 {
+		t.Fatalf("expected error index 1, got %d", resp.Errors[0].Index)
+	}
+	// Valid row may record (loggedCount 1) or not depending on recorder + dataRecordsEnabled; invalid row never increments alone.
+	if resp.LoggedCount < 0 || resp.LoggedCount > 1 {
 		t.Fatalf("unexpected loggedCount %d", resp.LoggedCount)
 	}
 }

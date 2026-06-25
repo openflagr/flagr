@@ -19,7 +19,8 @@ type datarRecorder struct {
 }
 
 func (d *datarRecorder) AsyncRecord(r models.EvalResult) {
-	if r.RecordSource == models.EvalResultRecordSourceExposure {
+	// Datar aggregates evaluation assignments only; exposure rows use the same EvalResult wire shape.
+	if isExposurePipelineEvent(r) {
 		return
 	}
 	d.engine.Record(r.FlagID, r.VariantID, r.SegmentID)
