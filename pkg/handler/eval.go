@@ -265,11 +265,9 @@ var logEvalResult = func(r *models.EvalResult, dataRecordsEnabled bool) {
 	logEvalResultToDatadog(r)
 	logEvalResultToPrometheus(r)
 
-	if !dataRecordsEnabled {
-		return
+	if dataRecordsEnabled && config.Config.RecorderEnabled {
+		GetDataRecorder().AsyncRecord(*r)
 	}
-
-	recordPipelineEvent(*r)
 }
 
 var logEvalResultToDatadog = func(r *models.EvalResult) {

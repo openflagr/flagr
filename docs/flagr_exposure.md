@@ -46,11 +46,11 @@ Pipeline events are synthetic `evalResult` JSON on the **same topic** as evaluat
 
 ## How this connects to evaluation and `AsyncRecord`
 
-**Evaluation** (`POST /evaluation`) runs bucketing, then `logEvalResult`: eval Statsd/Prometheus, then—if `dataRecordsEnabled`—`GetDataRecorder().AsyncRecord(evalResult)`.
+**Evaluation** runs bucketing, then `logEvalResult` (eval Statsd/Prometheus). When `dataRecordsEnabled` and `FLAGR_RECORDER_ENABLED`, it calls `GetDataRecorder().AsyncRecord(evalResult)`.
 
-**Exposure** (`POST /exposures`) does **not** call `logEvalResult` (no eval counters). For valid rows it builds a synthetic `evalResult` with `recordSource: "exposure"` and, when the same gates pass (`FLAGR_RECORDER_ENABLED` + per-flag `dataRecordsEnabled`), calls the **same** `AsyncRecord` path via `recordPipelineEvent`.
+**Exposure** skips `logEvalResult`. For valid rows it builds a synthetic `evalResult` with `recordSource: "exposure"` and, when the same gates pass, calls `GetDataRecorder().AsyncRecord` directly.
 
-`AsyncRecord` fans out to every configured recorder (Kafka, Kinesis, Pub/Sub, Datar). Stream recorders emit the same JSON frame shape as evaluations. **Datar** ignores exposure rows (`recordSource: exposure`) so built-in analytics stay assignment-only. Exposure uses separate Statsd metrics (`exposure.ingest`, `exposure.recorded`).
+`AsyncRecord` fans out to Kafka/Kinesis/Pub/Sub/Datar. **Datar** returns early when `recordSource == exposure`. Exposure uses Statsd `exposure.ingest` / `exposure.recorded`.
 
 ## Validation
 

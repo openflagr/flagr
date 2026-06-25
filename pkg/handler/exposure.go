@@ -1,10 +1,13 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/openflagr/flagr/pkg/config"
+	"github.com/openflagr/flagr/pkg/entity"
 	"github.com/openflagr/flagr/swagger_gen/models"
 	exposureapi "github.com/openflagr/flagr/swagger_gen/restapi/operations/exposure"
 )
@@ -37,10 +40,26 @@ func (h *exposureHandler) PostExposures(params exposureapi.PostExposuresParams) 
 	var rowErrors []*models.ExposureRowError
 
 	for i, row := range exposures {
-		n, errRow := processExposureRow(int64(i), row)
-		logged += n
-		if errRow != nil {
-			rowErrors = append(rowErrors, errRow)
+		if row == nil {
+			logExposureIngestStatsd("rejected", 0, "")
+			rowErrors = append(rowErrors, &models.ExposureRowError{Index: int64(i), Message: "exposure row is null"})
+			continue
+		}
+
+		synthetic, err := validateAndBuildExposure(row)
+		if err != nil {
+			logExposureIngestStatsd("rejected", 0, "")
+			rowErrors = append(rowErrors, &models.ExposureRowError{Index: int64(i), Message: err.Error()})
+			continue
+		}
+
+		logExposureIngestStatsd("accepted", synthetic.FlagID, synthetic.FlagKey)
+
+		flag := GetEvalCache().GetByFlagKeyOrID(synthetic.FlagID)
+		if config.Config.RecorderEnabled && flag != nil && flag.DataRecordsEnabled {
+			GetDataRecorder().AsyncRecord(synthetic)
+			logExposureIngestStatsd("recorded", synthetic.FlagID, synthetic.FlagKey)
+			logged++
 		}
 	}
 
@@ -53,34 +72,151 @@ func (h *exposureHandler) PostExposures(params exposureapi.PostExposuresParams) 
 	return resp
 }
 
-// processExposureRow validates one exposure and optionally records it to the data pipeline.
-// Returns 1 if written to recorders, 0 otherwise, and a per-row error when validation fails.
-func processExposureRow(index int64, row *models.Exposure) (logged int64, rowErr *models.ExposureRowError) {
-	if row == nil {
-		logExposureIngestStatsd("rejected", 0, "")
-		return 0, exposureRowErr(index, "exposure row is null")
+func validateAndBuildExposure(row *models.Exposure) (models.EvalResult, error) {
+	if row.EntityID == nil || *row.EntityID == "" {
+		return models.EvalResult{}, fmt.Errorf("entityID is required")
 	}
 
-	synthetic, err := validateAndBuildExposure(row)
+	hasID := row.FlagID > 0
+	hasKey := row.FlagKey != ""
+	if !hasID && !hasKey {
+		return models.EvalResult{}, fmt.Errorf("flagID or flagKey is required")
+	}
+
+	ec := GetEvalCache()
+	var flag *entity.Flag
+	if hasID {
+		flag = ec.GetByFlagKeyOrID(row.FlagID)
+	}
+	if hasKey {
+		byKey := ec.GetByFlagKeyOrID(row.FlagKey)
+		switch {
+		case byKey == nil && flag == nil:
+			return models.EvalResult{}, fmt.Errorf("flag not found")
+		case byKey == nil:
+		case flag == nil:
+			flag = byKey
+		case flag.ID != byKey.ID:
+			return models.EvalResult{}, fmt.Errorf("flagID and flagKey refer to different flags")
+		}
+	}
+	if flag == nil {
+		return models.EvalResult{}, fmt.Errorf("flag not found")
+	}
+
+	variantID, variantKey, err := exposureVariant(flag, row.VariantID, row.VariantKey)
 	if err != nil {
-		logExposureIngestStatsd("rejected", 0, "")
-		return 0, exposureRowErr(index, err.Error())
+		return models.EvalResult{}, err
 	}
 
-	logExposureIngestStatsd("accepted", synthetic.FlagID, synthetic.FlagKey)
-
-	flag := GetEvalCache().GetByFlagKeyOrID(synthetic.FlagID)
-	if !shouldRecordPipelineEvent(flag) {
-		return 0, nil
+	snapshotID := int64(flag.SnapshotID)
+	if row.FlagSnapshotID > 0 {
+		sid := uint(row.FlagSnapshotID)
+		if config.Config.EvalOnlyMode {
+			return models.EvalResult{}, fmt.Errorf("flagSnapshotID %d not found for flag", sid)
+		}
+		var fs entity.FlagSnapshot
+		if err := getDB().Where("id = ? AND flag_id = ?", sid, flag.ID).First(&fs).Error; err != nil {
+			return models.EvalResult{}, fmt.Errorf("flagSnapshotID %d not found for flag", sid)
+		}
+		snapshotID = row.FlagSnapshotID
 	}
 
-	recordPipelineEvent(synthetic)
-	logExposureIngestStatsd("recorded", synthetic.FlagID, synthetic.FlagKey)
-	return 1, nil
+	entityType := row.EntityType
+	if flag.EntityType != "" {
+		entityType = flag.EntityType
+	}
+
+	ts := time.Now().UTC().Format(time.RFC3339)
+	if !time.Time(row.Timestamp).IsZero() {
+		ts = time.Time(row.Timestamp).UTC().Format(time.RFC3339)
+	}
+
+	entityCtx := map[string]interface{}{}
+	exposureMergeJSONMap(entityCtx, row.EntityContext)
+	exposureMergeJSONMap(entityCtx, row.Metadata)
+	var merged any
+	if len(entityCtx) > 0 {
+		merged = entityCtx
+	}
+
+	evalCtx := models.EvalContext{
+		EntityID:      *row.EntityID,
+		EntityType:    entityType,
+		EntityContext: merged,
+	}
+
+	return models.EvalResult{
+		FlagID:         int64(flag.ID),
+		FlagKey:        flag.Key,
+		FlagSnapshotID: snapshotID,
+		SegmentID:      0,
+		VariantID:      variantID,
+		VariantKey:     variantKey,
+		Timestamp:      ts,
+		RecordSource:   models.EvalResultRecordSourceExposure,
+		EvalContext:    &evalCtx,
+	}, nil
 }
 
-func exposureRowErr(index int64, message string) *models.ExposureRowError {
-	return &models.ExposureRowError{Index: index, Message: message}
+func exposureVariant(flag *entity.Flag, variantID int64, variantKey string) (id int64, key string, err error) {
+	if variantID <= 0 && variantKey == "" {
+		return 0, "", nil
+	}
+	if variantID > 0 && variantKey != "" {
+		var matchID, matchKey bool
+		for _, v := range flag.Variants {
+			if v.ID == uint(variantID) {
+				matchID = true
+			}
+			if v.Key == variantKey {
+				matchKey = true
+			}
+		}
+		if !matchID {
+			return 0, "", fmt.Errorf("variantID %d not found on flag", variantID)
+		}
+		if !matchKey {
+			return 0, "", fmt.Errorf("variantKey %q not found on flag", variantKey)
+		}
+		for _, v := range flag.Variants {
+			if v.ID == uint(variantID) && v.Key == variantKey {
+				return int64(v.ID), v.Key, nil
+			}
+		}
+		return 0, "", fmt.Errorf("variantID and variantKey do not match")
+	}
+	if variantID > 0 {
+		for _, v := range flag.Variants {
+			if v.ID == uint(variantID) {
+				return int64(v.ID), v.Key, nil
+			}
+		}
+		return 0, "", fmt.Errorf("variantID %d not found on flag", variantID)
+	}
+	for _, v := range flag.Variants {
+		if v.Key == variantKey {
+			return int64(v.ID), v.Key, nil
+		}
+	}
+	return 0, "", fmt.Errorf("variantKey %q not found on flag", variantKey)
+}
+
+func exposureMergeJSONMap(dst map[string]interface{}, src any) {
+	if src == nil {
+		return
+	}
+	b, err := json.Marshal(src)
+	if err != nil || len(b) == 0 || string(b) == "null" {
+		return
+	}
+	var m map[string]interface{}
+	if err := json.Unmarshal(b, &m); err != nil || len(m) == 0 {
+		return
+	}
+	for k, v := range m {
+		dst[k] = v
+	}
 }
 
 var logExposureIngestStatsd = func(status string, flagID int64, flagKey string) {
