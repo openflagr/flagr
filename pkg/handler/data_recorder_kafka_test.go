@@ -126,6 +126,25 @@ func TestLogKafkaAsyncRecordToDatadog_SkipsExposure(t *testing.T) {
 	})
 }
 
+
+func TestLogKafkaAsyncRecordToDatadog_EvaluationSource(t *testing.T) {
+	called := false
+	orig := logKafkaAsyncRecordToDatadog
+	logKafkaAsyncRecordToDatadog = func(r models.EvalResult) {
+		if r.RecordSource == models.EvalResultRecordSourceExposure {
+			return
+		}
+		called = true
+	}
+	defer func() { logKafkaAsyncRecordToDatadog = orig }()
+
+	logKafkaAsyncRecordToDatadog(models.EvalResult{
+		RecordSource: models.EvalResultRecordSourceEvaluation,
+		FlagID:       1,
+	})
+	assert.True(t, called)
+}
+
 func TestMustParseKafkaVersion(t *testing.T) {
 	assert.NotPanics(t, func() {
 		mustParseKafkaVersion("0.8.2.0")

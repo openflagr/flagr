@@ -187,6 +187,24 @@ func TestDatarRecorder_SkipsExposure(t *testing.T) {
 	assert.Equal(t, 1, GetDatar().Len())
 }
 
+func TestDatarRecorder_RecordsEvaluationSource(t *testing.T) {
+	defer gostub.Stub(&config.Config.RecorderType, []string{"datar"}).Reset()
+	defer gostub.Stub(&config.Config.RecorderEnabled, true).Reset()
+
+	db := entity.NewTestDB()
+	defer gostub.StubFunc(&getDB, db).Reset()
+	db.AutoMigrate(entity.AutoMigrateTables...)
+
+	r := NewDatarRecorder()
+	r.AsyncRecord(models.EvalResult{
+		FlagID:       1,
+		VariantID:    10,
+		SegmentID:    20,
+		RecordSource: models.EvalResultRecordSourceEvaluation,
+	})
+	assert.Equal(t, 1, GetDatar().Len())
+}
+
 func TestDatarRecorder_NewDataRecordFrame(t *testing.T) {
 	r := NewDatarRecorder()
 	frame := r.NewDataRecordFrame(models.EvalResult{})

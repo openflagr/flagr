@@ -166,6 +166,7 @@ func BlankResult(f *entity.Flag, evalContext models.EvalContext, msg string) *mo
 		FlagSnapshotID: int64(flagSnapshotID),
 		FlagTags:       flagTags,
 		Timestamp:      util.TimeNow(),
+		RecordSource:   models.EvalResultRecordSourceEvaluation,
 	}
 }
 

@@ -53,7 +53,7 @@ Recorded rows use the same `evalResult` JSON shape as evaluations (same Kafka to
 
 ## How this connects to evaluation and `AsyncRecord`
 
-**Evaluation** runs bucketing, then `logEvalResult` (eval Statsd/Prometheus). When `dataRecordsEnabled` and `FLAGR_RECORDER_ENABLED`, it calls `GetDataRecorder().AsyncRecord(evalResult)`.
+**Evaluation** runs bucketing, then `logEvalResult` (eval Statsd/Prometheus). Results use `recordSource: "evaluation"`. When `dataRecordsEnabled` and `FLAGR_RECORDER_ENABLED`, it calls `GetDataRecorder().AsyncRecord(evalResult)`.
 
 **Exposure** skips `logEvalResult`. For valid rows it builds an exposure `evalResult` with `recordSource: "exposure"` and, when the same gates pass, calls `GetDataRecorder().AsyncRecord` directly.
 

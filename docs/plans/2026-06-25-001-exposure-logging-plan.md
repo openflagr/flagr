@@ -40,8 +40,7 @@ Same as eval: `FLAGR_RECORDER_ENABLED` + `dataRecordsEnabled` on flag. Otherwise
 
 - **Do not** call `logEvalResult` (no eval Prometheus / eval Statsd `evaluation` metric).
 - **Datar** skips rows with `recordSource == "exposure"` (aggregate eval assignments only).
-- **Kafka** still produces exposure rows; Statsd `data_recorder.kafka` skips exposure (eval-oriented counter).
-- Build sparse **`EvalResult`** with `recordSource: "exposure"`, `segmentID: 0`, optional variant.
+- Build sparse **`EvalResult`** with `recordSource: "exposure"`, `segmentID: 0`, optional variant. Eval assignments use `recordSource: "evaluation"` from `BlankResult` (symmetric wire contract).
 - Exposure Statsd: `exposure.ingest` (tags: status, FlagID, …), `exposure.recorded` when written to the data recorder.
 - `GetDataRecorder().AsyncRecord(dataRecord)` when `dataRecordsEnabled && RecorderEnabled` (eval and exposure use the same inline gate).
 
