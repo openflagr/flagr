@@ -96,14 +96,14 @@ the code the same way and branch on the assigned variant:
 ```js
 evaluation_result = flagr.postEvaluation(entity)
 
-if (evaluation_result.variantKey == "treatment1") {
+if (evaluation_result.variantKey == "control") {
+    // Control: show the current production checkout (the baseline)
+} else if (evaluation_result.variantKey == "treatment1") {
     // Treatment 1: show the new single-page checkout
 } else if (evaluation_result.variantKey == "treatment2") {
     // Treatment 2: show the new accordion checkout
 } else if (evaluation_result.variantKey == "treatment3") {
     // Treatment 3: show the new one-click checkout
-} else {
-    // Control: show the current production checkout (the baseline)
 }
 ```
 
