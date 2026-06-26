@@ -13,6 +13,7 @@ import (
 	datarapi "github.com/openflagr/flagr/swagger_gen/restapi/operations/datar"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/distribution"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/evaluation"
+	exposureapi "github.com/openflagr/flagr/swagger_gen/restapi/operations/exposure"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/export"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/flag"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/health"
@@ -36,6 +37,7 @@ func Setup(api *operations.FlagrAPI) {
 	setupHealth(api)
 	setupDatar(api)
 	setupEvaluation(api)
+	setupExposure(api)
 	setupCRUD(api)
 	setupExport(api)
 }
@@ -88,6 +90,11 @@ func setupEvaluation(api *operations.FlagrAPI) {
 
 	// Force-init the data recorder (may be noop, external, Datar, or fan-out).
 	GetDataRecorder()
+}
+
+func setupExposure(api *operations.FlagrAPI) {
+	ex := NewExposure()
+	api.ExposurePostExposuresHandler = exposureapi.PostExposuresHandlerFunc(ex.PostExposures)
 }
 
 func setupDatar(api *operations.FlagrAPI) {

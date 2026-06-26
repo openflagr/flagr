@@ -7,6 +7,7 @@
     - [Environment Variables](flagr_env.md)
     - [JSON Flag Source (GitOps)](flagr_json_flag_spec.md)
     - [Notifications](flagr_notifications.md)
+    - [Exposure Logging](flagr_exposure.md)
     - [Datar Analytics](flagr_datar.md)
 - Development
     - [Testing](home?id=testing)

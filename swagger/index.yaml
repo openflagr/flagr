@@ -19,6 +19,8 @@ tags:
     description: Variants are the possible outcomes of flag evaluation
   - name: evaluation
     description: Evaluation is the process of evaluating a flag given the entity context
+  - name: exposure
+    description: Client-reported impressions when a user saw a flag or variant
   - name: health
     description: Check if Flagr is healthy
   - name: datar
@@ -35,6 +37,7 @@ x-tagGroups:
   - name: Flag Evaluation
     tags:
       - evaluation
+      - exposure
   - name: Health Check
     tags:
       - health
@@ -92,6 +95,8 @@ paths:
     $ref: ./evaluation.yaml
   /evaluation/batch:
     $ref: ./evaluation_batch.yaml
+  /exposures:
+    $ref: ./exposure.yaml
   /health:
     $ref: ./health.yaml
   /export/sqlite:
@@ -525,6 +530,12 @@ definitions:
         format: int64
       variantKey:
         type: string
+      recordSource:
+        type: string
+        description: evaluation for eval API results; exposure for client-reported impressions via POST /exposures (same data recorders as eval)
+        enum:
+          - evaluation
+          - exposure
       variantAttachment:
         type: object
       evalContext:
@@ -615,6 +626,69 @@ definitions:
         type: array
         items:
           $ref: "#/definitions/evalResult"
+
+  # Exposure logging
+  exposuresRequest:
+    type: object
+    required:
+      - exposures
+    properties:
+      exposures:
+        type: array
+        minItems: 1
+        items:
+          $ref: "#/definitions/exposure"
+  exposure:
+    type: object
+    required:
+      - entityID
+    properties:
+      flagID:
+        type: integer
+        format: int64
+      flagKey:
+        type: string
+      variantID:
+        type: integer
+        format: int64
+      variantKey:
+        type: string
+      entityID:
+        type: string
+      entityType:
+        type: string
+      entityContext:
+        type: object
+        additionalProperties: true
+      flagSnapshotID:
+        type: integer
+        format: int64
+      timestamp:
+        type: string
+        format: date-time
+      metadata:
+        type: object
+        additionalProperties: true
+  exposuresResponse:
+    type: object
+    properties:
+      loggedCount:
+        type: integer
+        format: int64
+      message:
+        type: string
+      errors:
+        type: array
+        items:
+          $ref: "#/definitions/exposureRowError"
+  exposureRowError:
+    type: object
+    properties:
+      index:
+        type: integer
+        format: int64
+      message:
+        type: string
 
   # Health check
   health:

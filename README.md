@@ -38,6 +38,7 @@ Flagr is an open source Go service that delivers the right experience to the rig
 | [Server Configuration](https://openflagr.github.io/flagr/#/flagr_env) | All environment variables, database drivers, auth, data recorders |
 | [JSON Flag Source](https://openflagr.github.io/flagr/#/flagr_json_flag_spec) | GitOps workflows, JSON format spec, validator, CI integration |
 | [Datar Analytics](https://openflagr.github.io/flagr/#/flagr_datar) | In-memory aggregate analytics engine |
+| [Exposure Logging](https://openflagr.github.io/flagr/#/flagr_exposure) | Client-reported impressions for A/B testing |
 | [Notifications](https://openflagr.github.io/flagr/#/flagr_notifications) | Webhook configuration and payload format |
 | [API Reference](https://openflagr.github.io/flagr/api_docs) | Swagger/OpenAPI spec |
 
@@ -52,6 +53,7 @@ Flagr is an open source Go service that delivers the right experience to the rig
 | **Dynamic configuration** | Per-variant JSON attachments for runtime config without redeploy |
 | **GitOps / Flags-as-code** | Load flags from JSON files or HTTP URLs. Manage flags in Git, validate in CI, rollback with `git revert` |
 | **Datar analytics** | Built-in in-memory aggregate analytics — evaluation counts by variant, segment, and day. No external pipeline required |
+| **Exposure logging** | `POST /exposures` for client-reported impressions; same **data recorders** as eval (`AsyncRecord`), with `recordSource: exposure` |
 | **Webhook notifications** | HTTP POST webhooks on every flag create/update/delete/restore with retry and exponential backoff |
 | **Multi-database** | SQLite (dev), MySQL, PostgreSQL, and JSON sources |
 | **Eval cache** | In-memory cache with short-circuit reload — only refreshes when flag snapshots change |
@@ -94,7 +96,7 @@ Flagr has three core components:
 
 - **Evaluator** — evaluates incoming requests against an in-memory `EvalCache` of all flags, segments, variants, constraints, and distributions. The cache refreshes periodically (default 3s) and short-circuits when no new snapshots exist.
 - **Manager** — CRUD gateway for all flag mutations.
-- **Metrics** — data pipeline for evaluation results. Supports Kafka, AWS Kinesis, Google Pub/Sub, and built-in Datar analytics.
+- **Metrics** — **Data recorders** for evaluation and exposure rows (`GetDataRecorder().AsyncRecord`). Kafka, AWS Kinesis, Google Pub/Sub, and built-in Datar. Exposures skip eval metrics and Datar aggregation.
 
 See the [architecture overview](https://openflagr.github.io/flagr/#/flagr_overview) for the full diagram and evaluation algorithm.
 

@@ -160,7 +160,7 @@ func (k *kafkaRecorder) AsyncRecord(r models.EvalResult) {
 }
 
 var logKafkaAsyncRecordToDatadog = func(r models.EvalResult) {
-	if config.Global.StatsdClient == nil {
+	if config.Global.StatsdClient == nil || r.RecordSource == models.EvalResultRecordSourceExposure {
 		return
 	}
 	config.Global.StatsdClient.Incr(

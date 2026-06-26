@@ -82,6 +82,18 @@ func TestFanOutRecorder_Empty(t *testing.T) {
 	})
 }
 
+func TestDataRecordEnabled(t *testing.T) {
+	defer gostub.Stub(&config.Config.RecorderEnabled, true).Reset()
+	f := &entity.Flag{DataRecordsEnabled: true}
+	assert.True(t, dataRecordEnabled(f))
+	assert.False(t, dataRecordEnabled(nil))
+	f.DataRecordsEnabled = false
+	assert.False(t, dataRecordEnabled(f))
+	defer gostub.Stub(&config.Config.RecorderEnabled, false).Reset()
+	f.DataRecordsEnabled = true
+	assert.False(t, dataRecordEnabled(f))
+}
+
 func TestFanOutRecorder_Single(t *testing.T) {
 	m := &mockRecorder{}
 	f := fanOutRecorder{m}
@@ -162,6 +174,49 @@ func TestDatarRecorder_AsyncRecord(t *testing.T) {
 	d := GetDatar()
 	assert.NotNil(t, d)
 	assert.Equal(t, 2, d.Len(), "2 distinct keys")
+}
+
+func TestDatarRecorder_SkipsExposure(t *testing.T) {
+	defer ResetDatar()
+	defer gostub.Stub(&config.Config.RecorderType, []string{"datar"}).Reset()
+	defer gostub.Stub(&config.Config.RecorderEnabled, true).Reset()
+
+	db := entity.NewTestDB()
+	defer gostub.StubFunc(&getDB, db).Reset()
+	db.AutoMigrate(entity.AutoMigrateTables...)
+
+	_ = GetDatar()
+	r := NewDatarRecorder()
+	r.AsyncRecord(models.EvalResult{
+		FlagID:       1,
+		VariantID:    10,
+		SegmentID:    0,
+		RecordSource: models.EvalResultRecordSourceExposure,
+	})
+	assert.Equal(t, 0, GetDatar().Len())
+
+	r.AsyncRecord(models.EvalResult{FlagID: 1, VariantID: 10, SegmentID: 20})
+	assert.Equal(t, 1, GetDatar().Len())
+}
+
+func TestDatarRecorder_RecordsEvaluationSource(t *testing.T) {
+	defer ResetDatar()
+
+	defer gostub.Stub(&config.Config.RecorderType, []string{"datar"}).Reset()
+	defer gostub.Stub(&config.Config.RecorderEnabled, true).Reset()
+
+	db := entity.NewTestDB()
+	defer gostub.StubFunc(&getDB, db).Reset()
+	db.AutoMigrate(entity.AutoMigrateTables...)
+
+	r := NewDatarRecorder()
+	r.AsyncRecord(models.EvalResult{
+		FlagID:       1,
+		VariantID:    10,
+		SegmentID:    20,
+		RecordSource: models.EvalResultRecordSourceEvaluation,
+	})
+	assert.Equal(t, 1, GetDatar().Len())
 }
 
 func TestDatarRecorder_NewDataRecordFrame(t *testing.T) {

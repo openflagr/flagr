@@ -170,6 +170,7 @@ func BlankResult(f *entity.Flag, evalContext models.EvalContext, msg string) *mo
 		FlagSnapshotID: int64(flagSnapshotID),
 		FlagTags:       flagTags,
 		Timestamp:      util.TimeNow(),
+		RecordSource:   models.EvalResultRecordSourceEvaluation,
 	}
 }
 
@@ -253,11 +254,11 @@ var EvalFlagWithContext = func(flag *entity.Flag, evalContext models.EvalContext
 		evalResult.VariantKey = v.Key
 	}
 
-	logEvalResult(evalResult, flag.DataRecordsEnabled)
+	logEvalResult(evalResult, flag)
 	return evalResult
 }
 
-var logEvalResult = func(r *models.EvalResult, dataRecordsEnabled bool) {
+var logEvalResult = func(r *models.EvalResult, flag *entity.Flag) {
 	if r == nil {
 		// this is just a safety check, r is from BlankResult,
 		// and usually it cannot be nil
@@ -271,11 +272,9 @@ var logEvalResult = func(r *models.EvalResult, dataRecordsEnabled bool) {
 	logEvalResultToDatadog(r)
 	logEvalResultToPrometheus(r)
 
-	if !dataRecordsEnabled {
-		return
+	if dataRecordEnabled(flag) {
+		GetDataRecorder().AsyncRecord(*r)
 	}
-
-	GetDataRecorder().AsyncRecord(*r)
 }
 
 var logEvalResultToDatadog = func(r *models.EvalResult) {

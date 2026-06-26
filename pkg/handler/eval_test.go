@@ -284,6 +284,43 @@ func TestEvalSegment_NestedEntityContext(t *testing.T) {
 	})
 }
 
+
+func TestBlankResult_RecordSource(t *testing.T) {
+	f := entity.GenFixtureFlag()
+	r := BlankResult(&f, models.EvalContext{EntityID: "e1"}, "msg")
+	assert.Equal(t, models.EvalResultRecordSourceEvaluation, r.RecordSource)
+}
+
+func TestLogEvalResult_AsyncRecordEvaluationSource(t *testing.T) {
+	defer gostub.Stub(&config.Config.RecorderEnabled, true).Reset()
+	defer gostub.Stub(&config.Config.RecorderType, []string{}).Reset()
+	GetDataRecorder()
+
+	mock := &mockRecorder{}
+	prev := singletonDataRecorder
+	singletonDataRecorder = fanOutRecorder{mock}
+	defer func() { singletonDataRecorder = prev }()
+
+	ec := GenFixtureEvalCache()
+	flag := ec.GetByFlagKeyOrID(int64(100))
+	flag.DataRecordsEnabled = true
+	defer gostub.StubFunc(&GetEvalCache, ec).Reset()
+
+	r := EvalFlag(models.EvalContext{
+		EntityID:      "e1",
+		FlagID:        int64(100),
+		EntityContext: map[string]any{"dl_state": "CA"},
+	})
+	if !assert.NotNil(t, r) {
+		return
+	}
+	assert.Equal(t, models.EvalResultRecordSourceEvaluation, r.RecordSource)
+
+	if assert.Len(t, mock.calls, 1) {
+		assert.Equal(t, models.EvalResultRecordSourceEvaluation, mock.calls[0].RecordSource)
+	}
+}
+
 func TestEvalFlag(t *testing.T) {
 	defer gostub.StubFunc(&logEvalResult).Reset()
 
@@ -310,6 +347,7 @@ func TestEvalFlag(t *testing.T) {
 		assert.Len(t, result.FlagTags, 2)
 		assert.Contains(t, result.FlagTags, "tag1")
 		assert.Contains(t, result.FlagTags, "tag2")
+		assert.Equal(t, models.EvalResultRecordSourceEvaluation, result.RecordSource)
 	})
 
 	t.Run("test happy code path with flagKey", func(t *testing.T) {

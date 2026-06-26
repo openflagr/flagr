@@ -54,6 +54,9 @@ var Config = struct {
 	// A reasonable limit might be 500-1000 for typical use cases.
 	EvalBatchSize int `env:"FLAGR_EVAL_BATCH_SIZE" envDefault:"0"`
 
+	// ExposureBatchSize - maximum exposures per POST /exposures request.
+	ExposureBatchSize int `env:"FLAGR_EXPOSURE_BATCH_SIZE" envDefault:"100"`
+
 	/**
 	DBDriver and DBConnectionStr define how we can write and read flags data.
 	For databases, flagr supports sqlite3, mysql and postgres.

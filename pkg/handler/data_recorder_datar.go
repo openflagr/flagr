@@ -19,6 +19,9 @@ type datarRecorder struct {
 }
 
 func (d *datarRecorder) AsyncRecord(r models.EvalResult) {
+	if r.RecordSource == models.EvalResultRecordSourceExposure {
+		return
+	}
 	d.engine.Record(r.FlagID, r.VariantID, r.SegmentID)
 }
 

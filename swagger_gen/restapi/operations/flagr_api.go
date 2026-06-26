@@ -20,6 +20,7 @@ import (
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/distribution"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/evaluation"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/export"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/exposure"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/flag"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/health"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/segment"
@@ -218,6 +219,12 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 			return middleware.NotImplemented("operation evaluation.PostEvaluationBatch has not yet been implemented")
 		}),
 
+		ExposurePostExposuresHandler: exposure.PostExposuresHandlerFunc(func(params exposure.PostExposuresParams) middleware.Responder {
+			_ = params
+
+			return middleware.NotImplemented("operation exposure.PostExposures has not yet been implemented")
+		}),
+
 		ConstraintPutConstraintHandler: constraint.PutConstraintHandlerFunc(func(params constraint.PutConstraintParams) middleware.Responder {
 			_ = params
 
@@ -361,6 +368,8 @@ type FlagrAPI struct {
 	EvaluationPostEvaluationHandler evaluation.PostEvaluationHandler
 	// EvaluationPostEvaluationBatchHandler sets the operation handler for the post evaluation batch operation
 	EvaluationPostEvaluationBatchHandler evaluation.PostEvaluationBatchHandler
+	// ExposurePostExposuresHandler sets the operation handler for the post exposures operation
+	ExposurePostExposuresHandler exposure.PostExposuresHandler
 	// ConstraintPutConstraintHandler sets the operation handler for the put constraint operation
 	ConstraintPutConstraintHandler constraint.PutConstraintHandler
 	// DistributionPutDistributionsHandler sets the operation handler for the put distributions operation
@@ -540,6 +549,9 @@ func (o *FlagrAPI) Validate() error {
 	}
 	if o.EvaluationPostEvaluationBatchHandler == nil {
 		unregistered = append(unregistered, "evaluation.PostEvaluationBatchHandler")
+	}
+	if o.ExposurePostExposuresHandler == nil {
+		unregistered = append(unregistered, "exposure.PostExposuresHandler")
 	}
 	if o.ConstraintPutConstraintHandler == nil {
 		unregistered = append(unregistered, "constraint.PutConstraintHandler")
@@ -770,6 +782,10 @@ func (o *FlagrAPI) initHandlerCache() {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
 	o.handlers["POST"]["/evaluation/batch"] = evaluation.NewPostEvaluationBatch(o.context, o.EvaluationPostEvaluationBatchHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/exposures"] = exposure.NewPostExposures(o.context, o.ExposurePostExposuresHandler)
 	if o.handlers["PUT"] == nil {
 		o.handlers["PUT"] = make(map[string]http.Handler)
 	}
