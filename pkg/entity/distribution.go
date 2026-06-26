@@ -42,8 +42,9 @@ type DistributionDebugLog struct {
 	RolloutPercent    uint
 }
 
-// Rollout rolls out the entity based on the rolloutPercent
-func (d DistributionArray) Rollout(entityID string, salt string, rolloutPercent uint) (variantID *uint, msg string) {
+// Rollout rolls out the entity based on rolloutPercent. When withDebug is false,
+// the returned message is empty and debug formatting is skipped (hot eval path).
+func (d DistributionArray) Rollout(entityID string, salt string, rolloutPercent uint, withDebug bool) (variantID *uint, msg string) {
 	if entityID == "" {
 		return nil, "rollout no. empty entityID"
 	}
@@ -58,17 +59,28 @@ func (d DistributionArray) Rollout(entityID string, salt string, rolloutPercent 
 
 	num := crc32Num(entityID, salt)
 	vID, index := d.bucketByNum(num)
-	log := fmt.Sprintf("%+v", DistributionDebugLog{
-		BucketNum:         num,
-		DistributionArray: d,
-		VariantID:         vID,
-		RolloutPercent:    rolloutPercent,
-	})
-
-	if d.rollout(num, rolloutPercent, index) {
+	if !d.rollout(num, rolloutPercent, index) {
+		if withDebug {
+			log := fmt.Sprintf("%+v", DistributionDebugLog{
+				BucketNum:         num,
+				DistributionArray: d,
+				VariantID:         vID,
+				RolloutPercent:    rolloutPercent,
+			})
+			return nil, "rollout no. " + log
+		}
+		return nil, ""
+	}
+	if withDebug {
+		log := fmt.Sprintf("%+v", DistributionDebugLog{
+			BucketNum:         num,
+			DistributionArray: d,
+			VariantID:         vID,
+			RolloutPercent:    rolloutPercent,
+		})
 		return &vID, "rollout yes. " + log
 	}
-	return nil, "rollout no. " + log
+	return &vID, ""
 }
 
 func (d DistributionArray) bucketByNum(bucketNum uint) (variantID uint, index int) {
@@ -99,5 +111,7 @@ func (d DistributionArray) rollout(bucketNum uint, rolloutPercent uint, index in
 func crc32Num(entityID string, salt string) uint {
 	// crc32 is good in terms of uniform distribution
 	// http://michiel.buddingh.eu/distribution-of-hash-values
-	return uint(crc32.ChecksumIEEE([]byte(salt+entityID))) % TotalBucketNum
+	sum := crc32.ChecksumIEEE([]byte(salt))
+	sum = crc32.Update(sum, crc32.IEEETable, []byte(entityID))
+	return uint(sum) % TotalBucketNum
 }

@@ -352,19 +352,12 @@ var evalSegment = func(
 	}
 
 	var debugMsg string
-	if debug {
-		vID, debugMsg = segment.SegmentEvaluation.DistributionArray.Rollout(
-			evalContext.EntityID,
-			segment.SegmentEvaluation.FlagIDStr,
-			segment.RolloutPercent,
-		)
-	} else {
-		vID, _ = segment.SegmentEvaluation.DistributionArray.Rollout(
-			evalContext.EntityID,
-			segment.SegmentEvaluation.FlagIDStr,
-			segment.RolloutPercent,
-		)
-	}
+	vID, debugMsg = segment.SegmentEvaluation.DistributionArray.Rollout(
+		evalContext.EntityID,
+		segment.SegmentEvaluation.FlagIDStr,
+		segment.RolloutPercent,
+		debug,
+	)
 
 	if debug {
 		log = &models.SegmentDebugLog{

@@ -147,19 +147,19 @@ func TestRolloutWithEntity(t *testing.T) {
 		var vID *uint
 		var msg string
 
-		vID, msg = d.Rollout("", "salt", uint(0))
+		vID, msg = d.Rollout("", "salt", uint(0), true)
 		assert.Nil(t, vID)
 		assert.Contains(t, msg, "no")
 
-		vID, msg = d.Rollout("entity123", "salt", uint(0))
+		vID, msg = d.Rollout("entity123", "salt", uint(0), true)
 		assert.Nil(t, vID)
 		assert.Contains(t, msg, "no")
 
-		vID, msg = d.Rollout("entity123", "salt", uint(100))
+		vID, msg = d.Rollout("entity123", "salt", uint(100), true)
 		assert.NotNil(t, vID)
 		assert.Contains(t, msg, "yes")
 
-		vID, msg = d.Rollout("entity123", "salt", uint(1))
+		vID, msg = d.Rollout("entity123", "salt", uint(1), true)
 		assert.Nil(t, vID)
 		assert.Contains(t, msg, "no")
 	})
@@ -172,7 +172,7 @@ func TestRolloutWithEntity(t *testing.T) {
 		var vID *uint
 		var msg string
 
-		vID, msg = d.Rollout("entity123", "salt", uint(100))
+		vID, msg = d.Rollout("entity123", "salt", uint(100), true)
 		assert.Nil(t, vID)
 		assert.Contains(t, msg, "no")
 	})
