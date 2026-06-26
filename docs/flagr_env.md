@@ -84,7 +84,7 @@ the full list):
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `FLAGR_JWT_AUTH_ENABLED` | `false` | Enable JWT auth |
-| `FLAGR_JWT_AUTH_SECRET` | — | Signing secret (HS256/HS512) |
+| `FLAGR_JWT_AUTH_SECRET` | — | HMAC signing secret (`HS256`/`HS512`) or PEM-encoded RSA public key (`RS256`) |
 | `FLAGR_JWT_AUTH_SIGNING_METHOD` | `HS256` | `HS256`, `HS512`, or `RS256` |
 | `FLAGR_JWT_AUTH_WHITELIST_PATHS` | `/api/v1/health,/api/v1/evaluation,/api/v1/exposures,/static` | Prefix-whitelisted paths (open when JWT auth is on) |
 | `FLAGR_JWT_AUTH_EXACT_WHITELIST_PATHS` | `/,` | Exact-whitelisted paths |
