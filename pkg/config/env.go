@@ -54,6 +54,9 @@ var Config = struct {
 	// A reasonable limit might be 500-1000 for typical use cases.
 	EvalBatchSize int `env:"FLAGR_EVAL_BATCH_SIZE" envDefault:"0"`
 
+	// EvalJSONCodec selects API JSON implementation: std or sonic.
+	EvalJSONCodec string `env:"FLAGR_EVAL_JSON_CODEC" envDefault:"std"`
+
 	// ExposureBatchSize - maximum exposures per POST /exposures request.
 	ExposureBatchSize int `env:"FLAGR_EXPOSURE_BATCH_SIZE" envDefault:"100"`
 

@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/base64"
-
 	"encoding/json"
 
 	"github.com/brandur/simplebox"
@@ -55,8 +54,13 @@ type DataRecordFrame struct {
 	options    DataRecordFrameOptions
 }
 
-// MarshalJSON defines the behavior of MarshalJSON for DataRecordFrame
+// MarshalJSON implements json.Marshaler for callers that still marshal the frame directly.
 func (drf *DataRecordFrame) MarshalJSON() ([]byte, error) {
+	return drf.frameBytes()
+}
+
+// frameBytes builds recorder wire JSON in one pass (eval result + wrapper).
+func (drf *DataRecordFrame) frameBytes() ([]byte, error) {
 	payload, err := drf.evalResult.MarshalBinary()
 	if err != nil {
 		return nil, err
@@ -93,7 +97,7 @@ func (drf *DataRecordFrame) GetPartitionKey() string {
 	return util.SafeString(drf.evalResult.EvalContext.EntityID)
 }
 
-// Output sets the payload using its input and returns the json marshal bytes
+// Output returns the json marshal bytes for data recorders.
 func (drf *DataRecordFrame) Output() ([]byte, error) {
-	return json.Marshal(drf)
+	return drf.frameBytes()
 }

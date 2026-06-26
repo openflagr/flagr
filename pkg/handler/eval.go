@@ -39,6 +39,10 @@ func (e *eval) PostEvaluation(params evaluation.PostEvaluationParams) middleware
 		return evaluation.NewPostEvaluationDefault(400).WithPayload(
 			ErrorMessage("empty body"))
 	}
+	if err := applyNormalizedEntityContext(evalContext); err != nil {
+		return evaluation.NewPostEvaluationDefault(400).WithPayload(
+			ErrorMessage("%s", err.Error()))
+	}
 
 	evalResult := EvalFlag(*evalContext)
 	resp := evaluation.NewPostEvaluationOK()
@@ -103,6 +107,14 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 
 	// TODO make it concurrent
 	for _, entity := range entities {
+		if entity != nil && entity.EntityContext != nil {
+			m, err := normalizeEntityContext(entity.EntityContext)
+			if err != nil {
+				return evaluation.NewPostEvaluationBatchDefault(400).WithPayload(
+					ErrorMessage("%s", err.Error()))
+			}
+			entity.EntityContext = m
+		}
 		if len(flagTags) > 0 {
 			evalContext := models.EvalContext{
 				EnableDebug:      params.Body.EnableDebug,

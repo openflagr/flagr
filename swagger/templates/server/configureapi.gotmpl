@@ -1,6 +1,8 @@
 // This file is safe to edit. Once it exists it will not be overwritten
 
-package restapi
+{{ if .Copyright -}}// {{ comment .Copyright -}}{{ end }}
+
+package {{ .APIPackage }}
 
 import (
 	"crypto/tls"
@@ -10,21 +12,22 @@ import (
 	"github.com/openflagr/flagr/pkg/config"
 	"github.com/openflagr/flagr/pkg/handler"
 	"github.com/openflagr/flagr/pkg/jsoncodec"
-	"github.com/sirupsen/logrus"
-
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations"
+	"github.com/sirupsen/logrus"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime"
 )
 
-//go:generate swagger generate server --target ../../swagger_gen --name Flagr --spec ../../docs/api_docs/bundle.yaml
+{{ with .GenOpts }}
+//go:generate swagger generate server --target {{ .TargetPath }} --name {{ .Name }} --spec {{ .SpecPath }}
+{{- end }}
 
-func configureFlags(api *operations.FlagrAPI) {
+func configureFlags(api *operations.{{ pascalize .Name }}API) {
 	// api.CommandLineOptionsGroups = []swag.CommandLineOptionsGroup{ ... }
 }
 
-func configureAPI(api *operations.FlagrAPI) http.Handler {
+func configureAPI(api *operations.{{ pascalize .Name }}API) http.Handler {
 	api.ServeError = errors.ServeError
 
 	// HTTP JSON: std encoding/json or sonic via FLAGR_EVAL_JSON_CODEC (see pkg/jsoncodec).
