@@ -33,8 +33,7 @@ jobs:
           node-version: '20'
       - name: Check out source code
         uses: actions/checkout@v4
-      - run: cd browser/flagr-ui && npm install
-      - run: cd browser/flagr-ui && npm run lint && npm run typecheck
+      - run: make deps_ui verify_ui
   integration_test:
     runs-on: ubuntu-latest
     steps:
@@ -59,7 +58,6 @@ jobs:
         uses: actions/checkout@v4
       - run: make build
       - run: make build_ui
-      - run: cd browser/flagr-ui && npx playwright install --with-deps chromium
       - name: Run e2e tests
         run: make test-e2e
   actionlint:

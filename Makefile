@@ -1,5 +1,6 @@
 PWD := $(shell pwd)
 GOPATH := $(shell go env GOPATH)
+FLAGR_UI_DIR := browser/flagr-ui
 
 ################################
 ### Public
@@ -27,19 +28,29 @@ build:
 	@echo "Building Flagr Server to $(PWD)/flagr ..."
 	@CGO_ENABLED=0 go build -o $(PWD)/flagr github.com/openflagr/flagr/cmd/flagr-server
 
-build_ui:
+.PHONY: deps_ui lint-ui typecheck-ui verify_ui build_ui run_ui test-e2e
+deps_ui:
+	@cd $(FLAGR_UI_DIR) && npm install
+
+lint-ui: deps_ui
+	@cd $(FLAGR_UI_DIR) && npm run lint
+
+typecheck-ui: deps_ui
+	@cd $(FLAGR_UI_DIR) && npm run typecheck
+
+verify_ui: deps_ui
+	@cd $(FLAGR_UI_DIR) && npm run lint && npm run typecheck
+
+build_ui: verify_ui
 	@echo "Building Flagr UI ..."
-	@cd ./browser/flagr-ui/; npm install && npm run build
+	@cd $(FLAGR_UI_DIR) && npm run build
 
-run_ui:
-	@cd ./browser/flagr-ui/; npm run dev
+run_ui: deps_ui
+	@cd $(FLAGR_UI_DIR) && npm run dev
 
-run:
-	@$(PWD)/flagr --port 18000
-
-test-e2e: build
+test-e2e: build verify_ui
 	@echo "Running Flagr UI e2e tests..."
-	@cd ./browser/flagr-ui/; npx playwright test
+	@cd $(FLAGR_UI_DIR) && npx playwright test
 
 .PHONY: test-integration
 test-integration: build
