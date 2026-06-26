@@ -102,7 +102,7 @@ func prepareServer(url string) {
 			seedFlagKeys = append(seedFlagKeys, f.Key)
 		}
 	}
-	waitForEvalCache(url, 5*time.Second)
+	waitForEvalReady(url, 20*time.Second)
 }
 
 // ---------------------------------------------------------------------------
@@ -196,9 +196,30 @@ func waitForServer(url string, timeout time.Duration) {
 	fmt.Println("Server is healthy at", url)
 }
 
-func waitForEvalCache(url string, timeout time.Duration) {
-	if err := pollUntil("eval cache", url, timeout, func() bool {
-		resp, err := doReq("GET", "/api/v1/export/eval_cache/json", nil)
+// waitForEvalReady blocks until the eval cache has reloaded seeded data and
+// evaluation endpoints return real results (not empty variantKey / batch results).
+// Export-only checks are insufficient: the in-memory cache can lag behind DB
+// commits on slower backends (e.g. postgres13 in CI).
+func waitForEvalReady(url string, timeout time.Duration) {
+	if len(seedFlagIDs) < 2 || len(seedFlagKeys) < 2 {
+		log.Fatalf("eval readiness: need at least 2 seeded flags, got ids=%d keys=%d", len(seedFlagIDs), len(seedFlagKeys))
+	}
+	flagID := seedFlagIDs[1]
+	flagKey := seedFlagKeys[1]
+
+	if err := pollUntil("eval readiness", url, timeout, func() bool {
+		var batch batchEvalResponse
+		resp, err := doReq("POST", "/api/v1/evaluation/batch", map[string]any{
+			"entities": []map[string]any{{
+				"entityID":   "eval-ready-probe",
+				"entityType": "user",
+				"entityContext": map[string]any{
+					"region": "us-west",
+				},
+			}},
+			"flagTags":         []string{"int_test"},
+			"flagTagsOperator": "ANY",
+		})
 		if err != nil {
 			return false
 		}
@@ -206,13 +227,65 @@ func waitForEvalCache(url string, timeout time.Duration) {
 		if resp.StatusCode != http.StatusOK {
 			return false
 		}
-		var cache struct {
-			Flags []any `json:"Flags"`
-		}
-		if err := json.NewDecoder(resp.Body).Decode(&cache); err != nil {
+		if err := json.NewDecoder(resp.Body).Decode(&batch); err != nil {
 			return false
 		}
-		return len(cache.Flags) > 0
+		if len(batch.EvaluationResults) == 0 {
+			return false
+		}
+		batchHasVariant := false
+		for _, r := range batch.EvaluationResults {
+			if r.VariantKey != "" {
+				batchHasVariant = true
+				break
+			}
+		}
+		if !batchHasVariant {
+			return false
+		}
+
+		var single evalResponse
+		resp2, err := doReq("POST", "/api/v1/evaluation", map[string]any{
+			"flagID":     flagID,
+			"entityID":   "eval-ready-probe",
+			"entityType": "user",
+			"entityContext": map[string]any{
+				"tier": "premium",
+			},
+		})
+		if err != nil {
+			return false
+		}
+		defer resp2.Body.Close()
+		if resp2.StatusCode != http.StatusOK {
+			return false
+		}
+		if err := json.NewDecoder(resp2.Body).Decode(&single); err != nil {
+			return false
+		}
+		if single.VariantKey == "" {
+			return false
+		}
+
+		resp3, err := doReq("POST", "/api/v1/evaluation", map[string]any{
+			"flagKey":    flagKey,
+			"entityID":   "eval-ready-probe",
+			"entityType": "user",
+			"entityContext": map[string]any{
+				"tier": "premium",
+			},
+		})
+		if err != nil {
+			return false
+		}
+		defer resp3.Body.Close()
+		if resp3.StatusCode != http.StatusOK {
+			return false
+		}
+		if err := json.NewDecoder(resp3.Body).Decode(&single); err != nil {
+			return false
+		}
+		return single.VariantKey != ""
 	}); err != nil {
 		log.Fatalf("%v", err)
 	}
