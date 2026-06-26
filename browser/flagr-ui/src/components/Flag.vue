@@ -141,6 +141,20 @@ function processVariant(variant) {
   }
 }
 
+function normalizeSegment(segment) {
+  if (!segment.constraints) segment.constraints = []
+  if (!segment.distributions) segment.distributions = []
+  return segment
+}
+
+function normalizeFlag(flag) {
+  flag.variants.forEach(v => processVariant(v))
+  for (const segment of flag.segments || []) {
+    normalizeSegment(segment)
+  }
+  return flag
+}
+
 export default {
   name: "flag",
   components: {
@@ -323,8 +337,7 @@ export default {
     createSegment() {
       Axios.post(`${API_URL}/flags/${this.flagId}/segments`, this.newSegment).then(
         response => {
-          const segment = response.data
-          segment.constraints = []
+          const segment = normalizeSegment(response.data)
           this.newSegment = { ...DEFAULT_SEGMENT }
           this.flag.segments = [...this.flag.segments, segment]
           this.dialogCreateSegmentOpen = false
@@ -432,10 +445,11 @@ export default {
     // --- Distributions ---
     handleEditDistribution(segment) {
       this.selectedSegment = segment
-      this.distributionDraft = {}
-      segment.distributions.forEach(d => {
-        this.distributionDraft[d.variantID] = clone(d)
-      })
+      const draft = {}
+      for (const d of segment.distributions) {
+        draft[d.variantID] = { ...d }
+      }
+      this.distributionDraft = draft
       this.dialogEditDistributionOpen = true
     },
 
@@ -468,9 +482,7 @@ export default {
     // --- Data fetching ---
     fetchFlag() {
       Axios.get(`${API_URL}/flags/${this.flagId}`).then(response => {
-        const flag = response.data
-        flag.variants.forEach(v => processVariant(v))
-        this.flag = flag
+        this.flag = normalizeFlag(response.data)
         this.loaded = true
       }, handleErr.bind(this))
       this.fetchEntityTypes()
