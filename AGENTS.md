@@ -29,12 +29,9 @@ Flagr — Go feature flag service with Vue 3 UI.
 - `entity/` — domain models (flag, segment, constraint, variant, distribution)
 - `config/env.go` — all environment variables (single source of truth)
 
-**Frontend (`browser/flagr-ui/src/`):**
-- `api/` — types, errors, http, Effect programs (`flags`, `evaluation`)
-- `helpers/` — `constants`, `runApi` (Vue↔Effect), `flagModel`, `router`, `helpers.ts`
-- `pages/` — `flagPage`, `flagsList` (orchestration, not Vue SFCs)
-- `components/` — Vue SFCs (`<script lang="ts">`)
-- Vite transpiles TS (no `tsc` emit); `npm run typecheck` = `vue-tsc --noEmit`
+**Frontend (`browser/flagr-ui/src/`):** `api/`, `pages/`, `components/`, `helpers/` — Vite compiles TS; `npm run typecheck` = `vue-tsc --noEmit`.
+- New REST: add functions in `api/flags.ts` or `api/evaluation.ts`; call from UI via `helpers/runApi` (not `fetch` in components).
+- Effect usage and conventions: **`docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md`** (§ Effect) and **`browser/flagr-ui/docs/EFFECT.md`**.
 
 ## Constraints
 

@@ -1,36 +1,23 @@
 # flagr-ui
 
-## Project setup
-```
-npm install
-```
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
+Vue 3 + Vite. TypeScript: Vite build + `npm run typecheck` (`vue-tsc --noEmit`).
 
-### Compiles and minifies for production
-```
-npm run build
-```
+## Commands
 
-### Run your tests
-```
-npm run test
-```
+| Command | Purpose |
+|---------|---------|
+| `npm install` | Dependencies |
+| `npm run dev` | Vite dev server (repo: `make start` for backend + UI) |
+| `npm run build` | Production → `dist/` |
+| `npm run typecheck` | Typecheck only |
+| `npm run lint` | ESLint |
+| `npm run test:e2e` | Playwright (repo: `make test-e2e`) |
 
-### Lints and fixes files
-```
-npm run lint
-```
+## Layout
 
-### Upgrade vue-cli
-```
-npm install -g @vue/cli
-vue --version
-vue upgrade
-```
+`api/` · `pages/` · `components/` · `helpers/`
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+## Config
+
+- `VITE_API_URL` (default `/api/v1`) — `helpers/constants.ts`

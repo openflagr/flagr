@@ -286,6 +286,32 @@ Add TypeScript to `browser/flagr-ui` with **Vite as the only compile path** (esb
 
 ---
 
+## Effect (developer reference)
+
+Effect is for **typed REST + errors** in the UI, not for rewriting Vue in functional style.
+
+**Where it lives (after migration):**
+
+| Layer | Files |
+|--------|--------|
+| Programs | `src/api/http.ts`, `flags.ts`, `evaluation.ts`, `errors.ts`, `types.ts` |
+| Vue edge | `helpers/runApi.ts` (`runApi`, `confirmAndRunApi`, toasts, 401) |
+| Orchestration | `pages/flagPage.ts`, `pages/flagsList.ts` — call `runApi`, not `Effect.runPromise` in `.vue` |
+
+**Rules for new code:**
+
+1. `api/*` exports `Effect.Effect<A, ApiError>` built on `requestJson` / `requestVoid` (`fetch`, no axios).
+2. Components and pages invoke **`runApi(vm, program, { successMessage?, onSuccess? })`** only.
+3. New failure modes → new `Data.TaggedError` in `api/errors.ts` + branch in `apiErrorUserMessage` (`Match.valueTags`).
+4. Multi-step server work → `Effect.gen` / `Effect.fn` in `api/`, not in SFCs.
+
+**Why Effect here:** one `ApiError` union, one UI interpreter (`runPromiseExit` + `Exit.match`), composable steps like `listFlagsIfStale` without axios/`handleErr`.
+
+**Deeper guide (power, extensions, tests, Layers):** [`browser/flagr-ui/docs/EFFECT.md`](../browser/flagr-ui/docs/EFFECT.md).
+
+**AGENTS.md** stays minimal (layout + `runApi`); this section + `EFFECT.md` are the teaching docs.
+
+---
 
 ## High-Level Technical Design
 
