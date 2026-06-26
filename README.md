@@ -101,18 +101,41 @@ curl --request POST \
 
 ## Architecture
 
-Flagr has three components:
+Flagr splits **read**, **write**, and **record** so evaluation stays fast:
 
-- **Evaluator** — serves evaluation from an in-memory cache of all flags. The
-  cache refreshes periodically (default 3s) and short-circuits when nothing
-  changed, so evaluation never touches the database on the request path.
-- **Manager** — the CRUD gateway; all flag mutations flow through here.
-- **Metrics** — fans evaluation and exposure events out to your data pipeline
-  (Kafka, Kinesis, Pub/Sub) or the built-in Datar aggregates. Recording is
-  asynchronous, so a slow backend never stalls an evaluation.
+```mermaid
+flowchart LR
+  subgraph eval [Evaluator]
+    EC[(EvalCache)]
+    E[POST /evaluation]
+    E --> EC
+  end
+  subgraph mgr [Manager]
+    CRUD[CRUD + snapshots]
+    DB[(DB)]
+    CRUD --> DB
+  end
+  subgraph met [Metrics]
+    R[AsyncRecord]
+    K[Stream + Datar]
+    R --> K
+  end
+  App[App] --> E
+  App --> X[POST /exposures]
+  X --> R
+  E --> R
+  DB -. reload .-> EC
+```
 
-See the [architecture overview](https://openflagr.github.io/flagr/#/flagr_overview)
-for the full diagram and the deterministic bucketing algorithm.
+| Component | Role |
+|-----------|------|
+| **Evaluator** | `POST /evaluation` from in-memory **EvalCache** (no DB on the hot path). Cache reloads every ~3s and skips work when `flag_snapshot` id is unchanged. |
+| **Manager** | CRUD for flags, segments, variants, constraints, distributions, tags. Mutations persist to the DB and bump snapshots for cache refresh. |
+| **Metrics** | Async **data recorders** (Kafka, Kinesis, Pub/Sub, Datar). Eval assignments and `POST /exposures` impressions share one wire format; Datar counts evals only. |
+
+**Eval-only mode** (`json_file` / `json_http`): evaluation API only — no CRUD or exposures. See [JSON flag source](https://openflagr.github.io/flagr/#/flagr_json_flag_spec).
+
+Full diagram, request flows, and bucketing: [architecture overview](https://openflagr.github.io/flagr/#/flagr_overview?id=architecture).
 
 ## Performance
 

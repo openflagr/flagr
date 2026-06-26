@@ -28,7 +28,7 @@ New to Flagr? Start with the [Overview](flagr_overview) for core concepts.
 
 | Goal | Read |
 |------|-----|
-| Learn concepts (flags, segments, rollout) | [Overview](flagr_overview) |
+| Learn concepts (flags, segments, rollout, architecture) | [Overview](flagr_overview) |
 | See code patterns for flags / A/B / config | [Use Cases](flagr_use_cases) |
 | Configure the server (DB, auth, recorders) | [Environment Variables](flagr_env) |
 | Run flags from Git (no DB) | [JSON Flag Source](flagr_json_flag_spec) |

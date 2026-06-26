@@ -427,7 +427,7 @@ active at impression time**, not today's config. Flagr passes the ID through;
 
 ## Related docs
 
+- [Overview — Architecture](flagr_overview.md#architecture) — Evaluator, Manager, Metrics, eval vs exposure paths
 - [Exposure Logging](flagr_exposure.md) — API, validation, Statsd
 - [Environment Variables](flagr_env.md) — Kafka, Kinesis, Pub/Sub, Datar settings
 - [Datar](flagr_datar.md) — in-process eval aggregates (not a substitute for exposure-based A/B)
-- [Overview](flagr_overview.md) — segments, rollout, distribution concepts
