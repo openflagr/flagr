@@ -6,23 +6,19 @@ Flagr — Go feature flag service with Vue 3 UI.
 
 | Command | What it does |
 |---|---|
-| `make build` | Build Go server binary (`./flagr`) |
-| `make build_ui` | `verify_ui` then Vite production build → `browser/flagr-ui/dist/` |
-| `make verify_ui` | `npm run lint` + `npm run typecheck` in `browser/flagr-ui` |
-| `make lint-ui` / `make typecheck-ui` | UI ESLint or `vue-tsc --noEmit` only |
-| `make deps_ui` | `npm install` in `browser/flagr-ui` |
-| `make start` | Backend (`:18000`) + frontend dev server (`:8080`) in parallel |
-| `make stop-ui` | Kill processes on `:18000` or `:8080` (port-based via `lsof`, not `pkill`) |
-| `make rebuild-run` | `build` → `stop-ui` → `start` — one step after Go changes |
+| `make build` | Go server → `./flagr` |
+| `make build-ui` | UI: lint, typecheck, Vite → `browser/flagr-ui/dist/` |
+| `make start` | Backend `:18000` + UI dev `:8080` |
+| `make stop-ui` | Free ports `:18000` / `:8080` (`lsof`, not `pkill`) |
+| `make rebuild-run` | `build` → `stop-ui` → `start` |
 | `make test` | Go unit tests |
-| `make test-e2e` | `build` + `verify_ui` → Playwright (starts servers via Playwright config) |
-| `make swagger` | Regenerate `swagger_gen/` from OpenAPI spec |
-| `make test-integration` | Go integration tests (auto-starts local server, SQLite `:memory:`) |
-| `make bench-integration` | HTTP eval benchmarks against local server |
-| `go build -o flagr-validate ./cmd/flagr-validate/` | Build standalone JSON flag validator |
-| `go build -o flagr ./cmd/flagr-server/` | Build server binary directly (same as `make build`) |
+| `make test-e2e` | `build` + UI lint/typecheck + Playwright |
+| `make swagger` | Regenerate `swagger_gen/` |
+| `make test-integration` | Go API integration tests (SQLite `:memory:`) |
+| `make bench-integration` | HTTP eval benchmarks |
+| `go build -o flagr ./cmd/flagr-server/` | Same as `make build` |
 
-**UI-only** (`browser/flagr-ui/`): `npm run dev`, `npm run build`, `npm run typecheck`, `npm run lint`, `npm run test:e2e` — or repo-root `make` targets above.
+**UI** (`browser/flagr-ui/`): `npm run dev` / `build` / `lint` / `typecheck` — or `make build-ui` / `make run-ui` from repo root.
 
 ## Key Code
 

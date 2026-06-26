@@ -6,7 +6,7 @@ FLAGR_UI_DIR := browser/flagr-ui
 ### Public
 ################################
 
-all: deps gen build build_ui run
+all: deps gen build build-ui run
 
 rebuild: gen build
 
@@ -28,27 +28,22 @@ build:
 	@echo "Building Flagr Server to $(PWD)/flagr ..."
 	@CGO_ENABLED=0 go build -o $(PWD)/flagr github.com/openflagr/flagr/cmd/flagr-server
 
-.PHONY: deps_ui lint-ui typecheck-ui verify_ui build_ui run_ui test-e2e
-deps_ui:
+.PHONY: build-ui run-ui test-e2e
+
+flagr-ui-npm:
 	@cd $(FLAGR_UI_DIR) && npm install
 
-lint-ui: deps_ui
-	@cd $(FLAGR_UI_DIR) && npm run lint
-
-typecheck-ui: deps_ui
-	@cd $(FLAGR_UI_DIR) && npm run typecheck
-
-verify_ui: deps_ui
+flagr-ui-check: flagr-ui-npm
 	@cd $(FLAGR_UI_DIR) && npm run lint && npm run typecheck
 
-build_ui: verify_ui
+build-ui: flagr-ui-check
 	@echo "Building Flagr UI ..."
 	@cd $(FLAGR_UI_DIR) && npm run build
 
-run_ui: deps_ui
+run-ui: flagr-ui-npm
 	@cd $(FLAGR_UI_DIR) && npm run dev
 
-test-e2e: build verify_ui
+test-e2e: build flagr-ui-check
 	@echo "Running Flagr UI e2e tests..."
 	@cd $(FLAGR_UI_DIR) && npx playwright test
 
@@ -70,7 +65,7 @@ stop-ui:
 rebuild-run: build stop-ui start
 
 start:
-	$(MAKE) -j run run_ui
+	$(MAKE) -j run run-ui
 
 gen: api_docs swagger
 

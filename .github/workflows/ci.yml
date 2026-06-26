@@ -33,7 +33,7 @@ jobs:
           node-version: '20'
       - name: Check out source code
         uses: actions/checkout@v4
-      - run: make deps_ui verify_ui
+      - run: make build-ui
   integration_test:
     runs-on: ubuntu-latest
     steps:
@@ -57,7 +57,6 @@ jobs:
       - name: Check out source code
         uses: actions/checkout@v4
       - run: make build
-      - run: make build_ui
       - name: Run e2e tests
         run: make test-e2e
   actionlint:

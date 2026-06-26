@@ -105,7 +105,7 @@ make build        # Build the Go server binary (./flagr)
 make start        # Backend (:18000) + frontend dev server (:8080) in parallel
 
 make run          # Run the pre-built backend only
-make run_ui       # Run the UI dev server only (proxies /api/v1 to :18000)
+make run-ui       # Run the UI dev server only (proxies /api/v1 to :18000)
 ```
 
 After Go code changes, rebuild and restart in one step:
