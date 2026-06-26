@@ -48,8 +48,8 @@
         <div class="seg-panel-row">
           <div class="seg-panel">
             <div class="seg-section-title">Constraints <span class="seg-section-subtitle">— match ALL</span></div>
-            <div v-if="element.constraints.length" class="constraint-grid">
-              <div v-for="(constraint, cIdx) in element.constraints" :key="constraint.id" class="constraint-row">
+            <div v-if="(element.constraints ?? []).length" class="constraint-grid">
+              <div v-for="(constraint, cIdx) in (element.constraints ?? [])" :key="constraint.id" class="constraint-row">
                 <span class="constraint-logic">{{ cIdx === 0 ? 'IF' : 'AND' }}</span>
                 <div class="constraint-input-group">
                   <el-input size="small" placeholder="Property" :model-value="constraint.property"
@@ -70,8 +70,8 @@
                 </div>
               </div>
             </div>
-            <div class="card--empty" v-if="!element.constraints.length">No constraints — all entities pass</div>
-            <div class="constraint-row new-constraint-row">
+            <div class="card--empty" v-if="!(element.constraints ?? []).length">No constraints — all entities pass</div>
+            <div v-if="element.id != null" class="constraint-row new-constraint-row">
               <span class="constraint-logic">AND</span>
               <div class="constraint-input-group">
                 <el-input size="small" placeholder="Property" v-model="newConstraints[element.id].property" data-testid="new-constraint-prop-input" />
@@ -89,8 +89,8 @@
               <span>Distribution</span>
               <el-button size="small" link type="primary" data-testid="edit-distribution-btn" @click="$emit('edit-distribution', element)"><el-icon><Edit /></el-icon> Edit</el-button>
             </div>
-            <div v-if="element.distributions.length" class="dist-list">
-              <div v-for="distribution in element.distributions" :key="distribution.id" class="dist-item">
+            <div v-if="(element.distributions ?? []).length" class="dist-list">
+              <div v-for="distribution in (element.distributions ?? [])" :key="distribution.id" class="dist-item">
                 <div class="dist-header">
                   <span class="dist-variant">{{ distribution.variantKey }}</span>
                   <span class="dist-pct">{{ distribution.percent }}%</span>
@@ -110,39 +110,95 @@
   </el-card>
 </template>
 
-<script>
-import { Delete, Edit, ArrowUp, ArrowDown } from "@element-plus/icons-vue"
+<script lang="ts">
+import { Delete, Edit, ArrowUp, ArrowDown } from '@element-plus/icons-vue'
+import type { PropType } from 'vue'
+import type { Segment } from '@/types'
+
+interface OperatorOption {
+  value: string
+  label: string
+}
+
+interface NewConstraintDraft {
+  operator: string
+  property: string
+  value: string
+}
 
 export default {
-  name: "segments-section",
+  name: 'segments-section',
   components: { Delete, Edit, ArrowUp, ArrowDown },
-  props: { segments: { type: Array, required: true }, operatorOptions: { type: Array, required: true } },
-  emits: ["move-up","move-down","reorder","new-segment","save-segment","delete-segment","update-segment-field","update-constraint-field","save-constraint","delete-constraint","create-constraint","edit-distribution"],
-  data() { return { reorderDirty: false, newConstraints: {} } },
+  props: {
+    segments: { type: Array as PropType<Segment[]>, required: true },
+    operatorOptions: { type: Array as PropType<OperatorOption[]>, required: true },
+  },
+  emits: [
+    'move-up',
+    'move-down',
+    'reorder',
+    'new-segment',
+    'save-segment',
+    'delete-segment',
+    'update-segment-field',
+    'update-constraint-field',
+    'save-constraint',
+    'delete-constraint',
+    'create-constraint',
+    'edit-distribution',
+  ],
+  data() {
+    return {
+      reorderDirty: false,
+      newConstraints: {} as Record<number, NewConstraintDraft>,
+    }
+  },
   watch: {
     segments: {
       immediate: true,
-      handler(segs) {
+      handler(segs: Segment[]) {
         for (const seg of segs) {
-          if (!(seg.id in this.newConstraints)) {
+          if (seg.id != null && !(seg.id in this.newConstraints)) {
             this.newConstraints[seg.id] = { operator: 'EQ', property: '', value: '' }
           }
         }
-      }
-    }
+      },
+    },
   },
   methods: {
-    handleMoveUp(element, index) { this.reorderDirty = true; this.$emit('move-up', element, index) },
-    handleMoveDown(element, index) { this.reorderDirty = true; this.$emit('move-down', element, index) },
-    handleReorder() { this.reorderDirty = false; this.$emit('reorder', this.segments) },
-    onSegmentFieldChange(segment, field, value) { this.$emit("update-segment-field", { segment, field, value }) },
-    onConstraintFieldChange(segment, constraint, field, value) { this.$emit("update-constraint-field", { segment, constraint, field, value }) },
-    handleCreateConstraint(element) {
-      const c = this.newConstraints[element.id]
-      this.$emit('create-constraint', { segment: element, constraint: { operator: c.operator, property: c.property, value: c.value } })
-      this.newConstraints[element.id] = { operator: 'EQ', property: '', value: '' }
+    handleMoveUp(element: Segment, index: number) {
+      this.reorderDirty = true
+      this.$emit('move-up', element, index)
     },
-  }
+    handleMoveDown(element: Segment, index: number) {
+      this.reorderDirty = true
+      this.$emit('move-down', element, index)
+    },
+    handleReorder() {
+      this.reorderDirty = false
+      this.$emit('reorder', this.segments)
+    },
+    onSegmentFieldChange(segment: Segment, field: string, value: unknown) {
+      this.$emit('update-segment-field', { segment, field, value })
+    },
+    onConstraintFieldChange(
+      segment: Segment,
+      constraint: { id?: number },
+      field: string,
+      value: unknown,
+    ) {
+      this.$emit('update-constraint-field', { segment, constraint, field, value })
+    },
+    handleCreateConstraint(element: Segment) {
+      const id = element.id!
+      const c = this.newConstraints[id]
+      this.$emit('create-constraint', {
+        segment: element,
+        constraint: { operator: c.operator, property: c.property, value: c.value },
+      })
+      this.newConstraints[id] = { operator: 'EQ', property: '', value: '' }
+    },
+  },
 }
 </script>
 

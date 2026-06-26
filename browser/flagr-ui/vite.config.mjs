@@ -10,7 +10,7 @@ export default defineConfig({
     alias: {
       '@': srcDir
     },
-    extensions: ['.mjs', '.js', '.vue', '.json']
+    extensions: ['.mjs', '.js', '.ts', '.vue', '.json']
   },
   css: {
     preprocessorOptions: {

@@ -99,41 +99,65 @@
   </el-card>
 </template>
 
-<script>
-import { defineAsyncComponent } from "vue"
-import { InfoFilled, Edit, View } from "@element-plus/icons-vue"
+<script lang="ts">
+import { defineAsyncComponent, type PropType } from 'vue'
+import { InfoFilled, Edit, View } from '@element-plus/icons-vue'
+import type { FlagView, Tag } from '@/types'
+
+interface EntityTypeOption {
+  label: string
+  value: string
+}
 
 export default {
-  name: "flag-config-card",
+  name: 'flag-config-card',
   components: {
-    MarkdownEditor: defineAsyncComponent(() => import("@/components/MarkdownEditor.vue")),
-    InfoFilled, Edit, View
+    MarkdownEditor: defineAsyncComponent(() => import('@/components/MarkdownEditor.vue')),
+    InfoFilled,
+    Edit,
+    View,
   },
   props: {
-    flag: { type: Object, required: true },
+    flag: { type: Object as PropType<FlagView>, required: true },
     showMdEditor: Boolean,
-    entityTypes: { type: Array, default: () => [] },
+    entityTypes: { type: Array as PropType<EntityTypeOption[]>, default: () => [] },
     allowCreateEntityType: { type: Boolean, default: true },
     tagInputVisible: { type: Boolean, default: false },
-    allTags: { type: Array, default: () => [] }
+    allTags: { type: Array as PropType<Tag[]>, default: () => [] },
   },
   emits: [
-    "toggle-enabled", "save-flag", "update-flag", "toggle-notes",
-    "delete-tag", "create-tag", "cancel-create-tag", "show-tag-input"
+    'toggle-enabled',
+    'save-flag',
+    'update-flag',
+    'toggle-notes',
+    'delete-tag',
+    'create-tag',
+    'cancel-create-tag',
+    'show-tag-input',
   ],
   data() {
-    return { newTagValue: "" }
+    return { newTagValue: '' }
   },
   methods: {
-    queryTags(queryString, cb) {
-      cb(this.allTags.filter(tag => tag.value.toLowerCase().includes(queryString.toLowerCase())))
+    queryTags(queryString: string, cb: (results: Tag[]) => void) {
+      cb(
+        this.allTags.filter((tag) =>
+          tag.value.toLowerCase().includes(queryString.toLowerCase()),
+        ),
+      )
     },
-    cancelCreateTag() { this.newTagValue = ""; this.$emit("cancel-create-tag") },
+    cancelCreateTag() {
+      this.newTagValue = ''
+      this.$emit('cancel-create-tag')
+    },
     showTagInput() {
-      this.$emit("show-tag-input")
-      this.$nextTick(() => { if (this.$refs.saveTagInput) this.$refs.saveTagInput.focus() })
-    }
-  }
+      this.$emit('show-tag-input')
+      this.$nextTick(() => {
+        const el = this.$refs.saveTagInput as { focus?: () => void } | undefined
+        el?.focus?.()
+      })
+    },
+  },
 }
 </script>
 

@@ -1,0 +1,13 @@
+export type OperatorValue =
+  | 'EQ'
+  | 'NEQ'
+  | 'LT'
+  | 'LTE'
+  | 'GT'
+  | 'GTE'
+  | 'EREG'
+  | 'NEREG'
+  | 'IN'
+  | 'NOTIN'
+  | 'CONTAINS'
+  | 'NOTCONTAINS'

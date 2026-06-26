@@ -19,7 +19,7 @@ Flagr — Go feature flag service with Vue 3 UI.
 | `go build -o flagr-validate ./cmd/flagr-validate/` | Build standalone JSON flag validator |
 | `go build -o flagr ./cmd/flagr-server/` | Build server binary directly (same as `make build`) |
 
-**UI-only** (`browser/flagr-ui/`): `npm run dev` (Vite), `npm run build`, `npm run test:e2e` (needs servers running).
+**UI-only** (`browser/flagr-ui/`): `npm run dev` (Vite), `npm run build`, `npm run typecheck` (`vue-tsc --noEmit`), `npm run lint`, `npm run test:e2e` (needs servers; repo root: `make test-e2e`).
 
 ## Key Code
 
@@ -30,9 +30,12 @@ Flagr — Go feature flag service with Vue 3 UI.
 - `config/env.go` — all environment variables (single source of truth)
 
 **Frontend (`browser/flagr-ui/src/`):**
-- `components/Flag.vue` — flag detail page (orchestrator); `components/Flags.vue` — flag list
-- `components/DebugConsole.vue` — inline eval tool; `components/SegmentsSection.vue` — segment/constraint/distribution display
-- `helpers/helpers.js`, `constants.js` — utilities and env-var-backed config
+- `api/` — Effect programs (`flags.ts`, `evaluation.ts`) + `http.ts`; errors as tagged `ApiError`
+- `ui/runApi.ts`, `ui/confirmAndRunApi.ts`, `ui/presentApiError.ts` — Vue boundary (`successMessage` for static toasts; `onSuccess` for state)
+- `flag/flagPageMethods.ts` — flag detail API orchestration (keep `Flag.vue` thin)
+- `types/` — domain types (mirror `swagger_gen/models/`, not imported from Go)
+- `components/Flag.vue`, `components/Flags.vue` — shells; leaf SFCs use `<script lang="ts">`
+- Vite transpiles TS (no `tsc` emit); do not add a separate TypeScript build step
 
 ## Constraints
 

@@ -10,9 +10,9 @@
           <el-button size="small" @click="postEvaluation(evalContext)" type="primary" plain>POST /api/v1/evaluation</el-button>
         </div>
         <div class="dc-editor-row">
-          <json-editor :json="evalContext" @update:json="evalContext = $event" @update:jsonString="syncEvalContext" :main-menu-bar="false" :navigation-bar="false" :status-bar="false" mode="text" class="dc-json-editor" />
+          <json-editor :json="evalContext" @update:json="onEvalContextJson" @update:jsonString="syncEvalContext" :main-menu-bar="false" :navigation-bar="false" :status-bar="false" mode="text" class="dc-json-editor" />
           <div class="dc-response-col">
-            <json-editor :json="evalResult" @update:json="evalResult = $event" @update:jsonString="syncEvalResult" :main-menu-bar="false" :navigation-bar="false" :status-bar="false" mode="text" class="dc-json-editor" />
+            <json-editor :json="evalResult" @update:json="onEvalResultJson" @update:jsonString="syncEvalResult" :main-menu-bar="false" :navigation-bar="false" :status-bar="false" mode="text" class="dc-json-editor" />
           </div>
         </div>
         <div v-if="evalSummary" class="dc-summary">
@@ -23,7 +23,7 @@
               <span class="dc-result-variant-value">{{ evalSummary.variantKey }}</span>
             </div>
             <div class="dc-segment-log">
-              <div v-for="seg in evalSummary.segments" :key="seg.segmentID" class="dc-segment-log-item">
+              <div v-for="seg in evalSummary.segments" :key="String(seg.segmentID)" class="dc-segment-log-item">
                 <div class="dc-segment-log-header">
                   <span class="dc-seg-name">segment #{{ seg.segmentID }}</span>
                 </div>
@@ -40,91 +40,152 @@
           <span class="dc-label">Response</span>
         </div>
         <div class="dc-editor-row">
-          <json-editor :json="batchEvalContext" @update:json="batchEvalContext = $event" @update:jsonString="syncBatchEvalContext" :main-menu-bar="false" :navigation-bar="false" :status-bar="false" mode="text" class="dc-json-editor" />
-          <json-editor :json="batchEvalResult" @update:json="batchEvalResult = $event" @update:jsonString="syncBatchEvalResult" :main-menu-bar="false" :navigation-bar="false" :status-bar="false" mode="text" class="dc-json-editor" />
+          <json-editor :json="batchEvalContext" @update:json="onBatchEvalContextJson" @update:jsonString="syncBatchEvalContext" :main-menu-bar="false" :navigation-bar="false" :status-bar="false" mode="text" class="dc-json-editor" />
+          <json-editor :json="batchEvalResult" @update:json="onBatchEvalResultJson" @update:jsonString="syncBatchEvalResult" :main-menu-bar="false" :navigation-bar="false" :status-bar="false" mode="text" class="dc-json-editor" />
         </div>
       </el-collapse-item>
     </el-collapse>
   </el-card>
 </template>
 
-<script>
-import Axios from "axios";
-import JsonEditor from "vue3-ts-jsoneditor";
-import constants from "@/constants";
-const { API_URL } = constants;
+<script lang="ts">
+import JsonEditor from 'vue3-ts-jsoneditor'
+import * as evalApi from '@/api/evaluation'
+import type { BatchEvalContext, EvalContext, EvalResult, EvalSummary, Flag } from '@/types'
+import { runApi } from '@/ui/runApi'
 
 export default {
-  name: "debug-console",
+  name: 'debug-console',
   components: { JsonEditor },
-  props: ["flag"],
+  props: ['flag'],
   data() {
-    const flagId = this.flag && this.flag.id;
-    const flagKey = this.flag && this.flag.key;
+    const flag = this.flag as Flag | undefined
+    const flagId = flag?.id
+    const flagKey = flag?.key
     return {
-      evalContext: { entityID: "a1234", entityType: "report", entityContext: { hello: "world" }, enableDebug: true, flagID: flagId, flagKey: flagKey },
-      evalResult: {},
-      evalSummary: null,
-      batchEvalContext: { entities: [{ entityID: "a1234", entityType: "report", entityContext: { hello: "world" } }, { entityID: "a5678", entityType: "report", entityContext: { hello: "world" } }], enableDebug: true, flagIDs: [flagId] },
-      batchEvalResult: {}
-    };
+      evalContext: {
+        entityID: 'a1234',
+        entityType: 'report',
+        entityContext: { hello: 'world' },
+        enableDebug: true,
+        flagID: flagId,
+        flagKey: flagKey,
+      } as EvalContext,
+      evalResult: {} as EvalResult,
+      evalSummary: null as EvalSummary | null,
+      batchEvalContext: {
+        entities: [
+          { entityID: 'a1234', entityType: 'report', entityContext: { hello: 'world' } },
+          { entityID: 'a5678', entityType: 'report', entityContext: { hello: 'world' } },
+        ],
+        enableDebug: true,
+        flagIDs: flagId ? [flagId] : [],
+      } as BatchEvalContext,
+      batchEvalResult: {} as Record<string, unknown>,
+    }
   },
   methods: {
-    syncEvalContext(text) { try { this.evalContext = JSON.parse(text) } catch(e) {} },
-    syncEvalResult(text) { try { this.evalResult = JSON.parse(text) } catch(e) {} },
-    syncBatchEvalContext(text) { try { this.batchEvalContext = JSON.parse(text) } catch(e) {} },
-    syncBatchEvalResult(text) { try { this.batchEvalResult = JSON.parse(text) } catch(e) {} },
+    onEvalContextJson(v: unknown) {
+      this.evalContext = v as EvalContext
+    },
+    onEvalResultJson(v: unknown) {
+      this.evalResult = v as EvalResult
+    },
+    onBatchEvalContextJson(v: unknown) {
+      this.batchEvalContext = v as BatchEvalContext
+    },
+    onBatchEvalResultJson(v: unknown) {
+      this.batchEvalResult = v as Record<string, unknown>
+    },
+    syncEvalContext(text: string) {
+      try {
+        this.evalContext = JSON.parse(text) as EvalContext
+      } catch {
+        /* ignore */
+      }
+    },
+    syncEvalResult(text: string) {
+      try {
+        this.evalResult = JSON.parse(text) as EvalResult
+      } catch {
+        /* ignore */
+      }
+    },
+    syncBatchEvalContext(text: string) {
+      try {
+        this.batchEvalContext = JSON.parse(text) as BatchEvalContext
+      } catch {
+        /* ignore */
+      }
+    },
+    syncBatchEvalResult(text: string) {
+      try {
+        this.batchEvalResult = JSON.parse(text) as Record<string, unknown>
+      } catch {
+        /* ignore */
+      }
+    },
 
-    postEvaluation(evalContext) {
-      Axios.post(`${API_URL}/evaluation`, evalContext).then(response => {
-        this.evalResult = response.data;
-        this.evalSummary = this.buildSummary(response.data);
-        this.$message.success("evaluation success");
-      }, err => { this.$message.error(err?.response?.data?.message || 'evaluation error') });
+    postEvaluation(evalContext: EvalContext) {
+      runApi(this, evalApi.postEvaluation(evalContext), {
+        successMessage: 'evaluation success',
+        onSuccess: (response) => {
+          this.evalResult = response
+          this.evalSummary = this.buildSummary(response)
+        },
+      })
     },
-    postEvaluationBatch(batchEvalContext) {
-      Axios.post(`${API_URL}/evaluation/batch`, batchEvalContext).then(response => {
-        this.batchEvalResult = response.data;
-        this.$message.success("evaluation success");
-      }, err => { this.$message.error(err?.response?.data?.message || 'evaluation error') });
+    postEvaluationBatch(batchEvalContext: BatchEvalContext) {
+      runApi(this, evalApi.postEvaluationBatch(batchEvalContext), {
+        successMessage: 'evaluation success',
+        onSuccess: (response) => {
+          this.batchEvalResult = response
+        },
+      })
     },
-    buildSummary(result) {
-      if (!result || !result.evalDebugLog) return null;
-      const log = result.evalDebugLog;
-      const segments = (log.segmentDebugLogs || []).map(s => ({
-        segmentID: s.segmentID,
-        description: s.description,
-        rolloutPercent: s.rolloutPercent,
-        matched: s.matched,
-        msg: s.msg,
-        constraints: (s.constraintDebugLogs || []).map(c => ({
-          constraintID: c.constraintID,
-          constraintProperty: c.constraintProperty,
-          constraintOperator: c.constraintOperator,
-          constraintValue: c.constraintValue,
-          matched: c.matched
-        }))
-      }));
+    buildSummary(result: EvalResult): EvalSummary | null {
+      if (!result || !result.evalDebugLog) return null
+      const log = result.evalDebugLog as Record<string, unknown>
+      const segments = ((log.segmentDebugLogs as unknown[]) || []).map((s) => {
+        const seg = s as Record<string, unknown>
+        return {
+          segmentID: seg.segmentID,
+          description: seg.description,
+          rolloutPercent: seg.rolloutPercent,
+          matched: seg.matched,
+          msg: seg.msg,
+          constraints: ((seg.constraintDebugLogs as unknown[]) || []).map((c) => {
+            const con = c as Record<string, unknown>
+            return {
+              constraintID: con.constraintID,
+              constraintProperty: con.constraintProperty,
+              constraintOperator: con.constraintOperator,
+              constraintValue: con.constraintValue,
+              matched: con.matched,
+            }
+          }),
+        }
+      })
       return {
-        variantKey: result.variantKey || "—",
+        variantKey: (result.variantKey as string) || '—',
         variantID: result.variantID,
-        segments
-      };
-    }
+        segments,
+      }
+    },
   },
   watch: {
     flag: {
       immediate: true,
-      handler(f) {
-        if (f && f.id) {
-          this.evalContext.flagID = f.id;
-          this.evalContext.flagKey = f.key;
-          this.batchEvalContext.flagIDs = [f.id];
+      handler(f: Flag) {
+        if (f?.id) {
+          this.evalContext.flagID = f.id
+          this.evalContext.flagKey = f.key
+          this.batchEvalContext.flagIDs = [f.id]
         }
-      }
-    }
-  }
-};
+      },
+    },
+  },
+}
 </script>
 
 <style lang="scss" scoped>

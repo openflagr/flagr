@@ -4,14 +4,14 @@
       <div v-for="variant in flag.variants" :key="'distribution-variant-' + variant.id" class="dist-variant-row">
         <div class="dist-variant-header">
           <el-checkbox
-            @change="(e) => selectVariant(e, variant)"
-            :checked="!!draft[variant.id]"
+            @change="(e: boolean) => selectVariant(e, variant)"
+            :checked="!!draft[String(variant.id)]"
           />
           <span class="dist-variant-key">{{ variant.key }}</span>
         </div>
-        <div v-if="!!draft[variant.id]">
+        <div v-if="!!draft[String(variant.id)]">
           <div class="dist-slider-row">
-            <el-slider v-model="draft[variant.id].percent" show-input :max="100" :step="1" />
+            <el-slider v-model="draft[String(variant.id)].percent" show-input :max="100" :step="1" />
           </div>
         </div>
         <div v-else class="dist-disabled-hint">
@@ -35,55 +35,63 @@
   </el-dialog>
 </template>
 
-<script>
-import helpers from "@/helpers/helpers"
+<script lang="ts">
+import helpers from '@/helpers/helpers'
+import type { PropType } from 'vue'
+import type { DistributionDraft, FlagView, Variant } from '@/types'
 
 export default {
-  name: "distribution-dialog",
+  name: 'distribution-dialog',
   props: {
     visible: Boolean,
-    flag: Object,
+    flag: { type: Object as PropType<FlagView | null>, default: null },
     initialDistributions: {
-      type: Object,
-      default: () => ({})
-    }
+      type: Object as PropType<Record<string, DistributionDraft>>,
+      default: () => ({}),
+    },
   },
-  emits: ["update:visible", "save"],
+  emits: ['update:visible', 'save'],
   data() {
     return {
-      draft: {}
+      draft: {} as Record<string, DistributionDraft>,
     }
   },
   computed: {
-    percentageSum() {
-      return helpers.sum(helpers.pluck(Object.values(this.draft), "percent"))
+    percentageSum(): number {
+      return helpers.sum(helpers.pluck(Object.values(this.draft), 'percent'))
     },
-    isValid() {
+    isValid(): boolean {
       return this.percentageSum === 100
-    }
+    },
   },
   methods: {
-    selectVariant($event, variant) {
+    selectVariant($event: boolean, variant: Variant) {
+      const key = String(variant.id)
       if ($event) {
-        this.draft[variant.id] = { variantKey: variant.key, variantID: variant.id, percent: 0, bitmap: "" }
+        this.draft[key] = {
+          variantKey: variant.key,
+          variantID: variant.id!,
+          percent: 0,
+          bitmap: '',
+        }
       } else {
-        delete this.draft[variant.id]
+        delete this.draft[key]
       }
-    }
+    },
   },
   watch: {
     visible: {
       immediate: true,
-      handler(open) {
+      handler(open: boolean) {
         if (open) {
           this.draft = {}
           for (const [id, dist] of Object.entries(this.initialDistributions)) {
             this.draft[id] = { ...dist }
           }
         }
-      }
-    }
-  }
+      },
+    },
+  },
 }
 </script>
 

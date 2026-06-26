@@ -12,7 +12,7 @@
             size="small"
             placeholder="Variant Key"
             :model-value="variant.key"
-            @update:model-value="(v) => $emit('update-variant-key', { variant, key: v })"
+            @update:model-value="(v: string) => $emit('update-variant-key', { variant, key: v })"
             data-testid="variant-key-input"
             class="variant-key-field"
           />
@@ -48,35 +48,48 @@
   </el-card>
 </template>
 
-<script>
-import JsonEditor from "vue3-ts-jsoneditor"
-import { Delete } from "@element-plus/icons-vue"
+<script lang="ts">
+import JsonEditor from 'vue3-ts-jsoneditor'
+import { Delete } from '@element-plus/icons-vue'
+import type { PropType } from 'vue'
+import type { Variant } from '@/types'
 
 export default {
-  name: "variants-section",
+  name: 'variants-section',
   components: { JsonEditor, Delete },
-  props: { variants: { type: Array, required: true } },
-  emits: ["update-variant-key", "save-variant", "delete-variant", "create-variant", "attachment-change"],
-  data() { return { newKey: "" } },
+  props: { variants: { type: Array as PropType<Variant[]>, required: true } },
+  emits: [
+    'update-variant-key',
+    'save-variant',
+    'delete-variant',
+    'create-variant',
+    'attachment-change',
+  ],
+  data() {
+    return { newKey: '' }
+  },
   methods: {
-    createVariant() { this.$emit("create-variant", { key: this.newKey }); this.newKey = "" },
-    onAttachmentChange(variant, val, valid) {
-      if (val !== null) variant.attachment = val;
-      variant.attachmentValid = valid;
-      this.$emit("attachment-change", { variant, valid });
+    createVariant() {
+      this.$emit('create-variant', { key: this.newKey })
+      this.newKey = ''
     },
-    onAttachmentTextChange(variant, text) {
+    onAttachmentChange(variant: Variant, val: unknown, valid: boolean) {
+      if (val !== null) variant.attachment = val as Record<string, unknown>
+      variant.attachmentValid = valid
+      this.$emit('attachment-change', { variant, valid })
+    },
+    onAttachmentTextChange(variant: Variant, text: string) {
       try {
-        const v = JSON.parse(text);
-        variant.attachment = v;
-        variant.attachmentValid = true;
-        this.$emit("attachment-change", { variant, valid: true });
-      } catch(e) {
-        variant.attachmentValid = false;
-        this.$emit("attachment-change", { variant, valid: false });
+        const v = JSON.parse(text) as Record<string, unknown>
+        variant.attachment = v
+        variant.attachmentValid = true
+        this.$emit('attachment-change', { variant, valid: true })
+      } catch {
+        variant.attachmentValid = false
+        this.$emit('attachment-change', { variant, valid: false })
       }
-    }
-  }
+    },
+  },
 }
 </script>
 

@@ -18,7 +18,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import MarkdownIt from "markdown-it";
 import mk from "@vscode/markdown-it-katex";
 import xss from "xss";
@@ -52,9 +52,9 @@ export default {
     }
   },
   methods: {
-    syncMarkdown(markdown) {
-      this.$emit("update:markdown", markdown);
-    }
+    syncMarkdown(markdown: string) {
+      this.$emit('update:markdown', markdown)
+    },
   }
 };
 </script>

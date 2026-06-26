@@ -6,13 +6,14 @@
         "dev": "vite",
         "build": "vite build",
         "preview": "vite preview",
-        "lint": "eslint src",
+        "lint": "eslint src e2e",
+        "typecheck": "vue-tsc --noEmit",
         "test:e2e": "playwright test"
     },
     "dependencies": {
         "@element-plus/icons-vue": "^2.3.1",
         "@vscode/markdown-it-katex": "^1.1.2",
-        "axios": "^1.18.0",
+        "effect": "^3.14.4",
         "diff": "^9.0.0",
         "element-plus": "^2.14.0",
         "markdown-it": "^14.2.0",
@@ -23,12 +24,18 @@
     },
     "devDependencies": {
         "@playwright/test": "^1.60.0",
+        "@types/node": "^22.15.0",
         "@vitejs/plugin-vue": "^6.0.7",
+        "@vue/tsconfig": "^0.7.0",
+        "@typescript-eslint/parser": "^8.32.0",
+        "@types/markdown-it": "^14.1.2",
         "eslint": "^9.39.4",
         "eslint-plugin-vue": "^10.9.1",
         "sass": "^1.101.0",
+        "typescript": "^5.8.3",
         "vite": "^8.0.16",
-        "vue-eslint-parser": "^10.4.1"
+        "vue-eslint-parser": "^10.4.1",
+        "vue-tsc": "^2.2.10"
     },
     "browserslist": [
         "> 1%",

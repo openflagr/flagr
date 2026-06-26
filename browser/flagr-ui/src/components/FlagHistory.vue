@@ -27,66 +27,61 @@
   </div>
 </template>
 
-<script>
-import Axios from "axios";
-import { diffJson, convertChangesToXML } from "diff";
-import { DArrowRight } from "@element-plus/icons-vue";
-
-import constants from "@/constants";
-
-const { API_URL } = constants;
+<script lang="ts">
+import { diffJson, convertChangesToXML } from 'diff'
+import { DArrowRight } from '@element-plus/icons-vue'
+import * as flagsApi from '@/api/flags'
+import type { Flag, FlagSnapshot } from '@/types'
+import { runApi } from '@/ui/runApi'
 
 export default {
-  name: "flag-history",
+  name: 'flag-history',
   components: { DArrowRight },
-  props: ["flagId"],
+  props: ['flagId'],
   data() {
     return {
-      flagSnapshots: []
-    };
+      flagSnapshots: [] as FlagSnapshot[],
+    }
   },
   computed: {
     diffs() {
-      let ret = [];
-      let snapshots = this.flagSnapshots.slice();
-      snapshots.push({ flag: {} });
+      const ret: Array<Record<string, unknown>> = []
+      const snapshots = this.flagSnapshots.slice()
+      snapshots.push({ flag: {} as Flag, id: 0 })
       for (let i = 0; i < snapshots.length - 1; i++) {
         ret.push({
-          timestamp: new Date(snapshots[i].updatedAt).toLocaleString(),
+          timestamp: new Date(snapshots[i].updatedAt ?? '').toLocaleString(),
           updatedBy: snapshots[i].updatedBy,
           newId: snapshots[i].id,
-          oldId: snapshots[i + 1].id || "NULL",
-          flagDiff: this.getDiff(snapshots[i].flag, snapshots[i + 1].flag)
-        });
+          oldId: snapshots[i + 1].id || 'NULL',
+          flagDiff: this.getDiff(snapshots[i].flag, snapshots[i + 1].flag),
+        })
       }
-      return ret;
-    }
+      return ret
+    },
   },
   methods: {
     getFlagSnapshots() {
-      Axios.get(`${API_URL}/flags/${this.$props.flagId}/snapshots`).then(
-        response => {
-          this.flagSnapshots = response.data;
+      runApi(this, flagsApi.listFlagSnapshots(this.$props.flagId), {
+        onSuccess: (data) => {
+          this.flagSnapshots = data
         },
-        () => {
-          this.$message.error(`failed to get flag snapshots`);
-        }
-      );
+      })
     },
-    getDiff(newFlag, oldFlag) {
-      const o = JSON.parse(JSON.stringify(oldFlag));
-      const n = JSON.parse(JSON.stringify(newFlag));
-      const d = diffJson(o, n);
+    getDiff(newFlag: Flag, oldFlag: Flag) {
+      const o = JSON.parse(JSON.stringify(oldFlag))
+      const n = JSON.parse(JSON.stringify(newFlag))
+      const d = diffJson(o, n)
       if (d.length === 1) {
-        return "No changes";
+        return 'No changes'
       }
-      return convertChangesToXML(d);
-    }
+      return convertChangesToXML(d)
+    },
   },
   mounted() {
-    this.getFlagSnapshots();
-  }
-};
+    this.getFlagSnapshots()
+  },
+}
 </script>
 
 <style lang="scss" scoped>

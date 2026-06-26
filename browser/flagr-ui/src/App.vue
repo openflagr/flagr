@@ -17,13 +17,15 @@
   </div>
 </template>
 
-<script>
-import pkg from "../package.json";
-const version = pkg.version || "1.0.0";
+<script lang="ts">
+import pkg from '../package.json'
+
+const version = pkg.version || '1.0.0'
+
 export default {
-  name: "app",
+  name: 'app',
   data: () => ({ version }),
-};
+}
 </script>
 
 <style lang="scss">

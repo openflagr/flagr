@@ -70,7 +70,7 @@
               />
 
               <segments-section
-                :segments="flag.segments"
+                :segments="flag.segments ?? []"
                 :operator-options="operatorOptions"
                 @reorder="handleReorderSegments"
                 @move-up="moveSegmentUp"
@@ -107,56 +107,30 @@
             </el-tab-pane>
 
             <el-tab-pane label="History" name="history">
-              <flag-history v-if="historyLoaded" :key="historyKey" :flag-id="parseInt($route.params.flagId, 10)"></flag-history>
+              <flag-history v-if="historyLoaded" :key="historyKey" :flag-id="flagId"></flag-history>
             </el-tab-pane>
           </el-tabs>
         </div>
       </div>
 </template>
 
-<script>
-import Axios from "axios"
-import { Delete } from "@element-plus/icons-vue"
-
-import constants from "@/constants"
-import helpers from "@/helpers/helpers"
-import DebugConsole from "@/components/DebugConsole"
-import FlagHistory from "@/components/FlagHistory"
-import DistributionDialog from "@/components/DistributionDialog"
-import FlagConfigCard from "@/components/FlagConfigCard"
-import VariantsSection from "@/components/VariantsSection"
-import SegmentsSection from "@/components/SegmentsSection"
-import operatorsData from "@/operators.json"
+<script lang="ts">
+import { Delete } from '@element-plus/icons-vue'
+import DebugConsole from '@/components/DebugConsole.vue'
+import DistributionDialog from '@/components/DistributionDialog.vue'
+import FlagConfigCard from '@/components/FlagConfigCard.vue'
+import FlagHistory from '@/components/FlagHistory.vue'
+import SegmentsSection from '@/components/SegmentsSection.vue'
+import VariantsSection from '@/components/VariantsSection.vue'
+import * as flagPage from '@/flag/flagPageMethods'
+import type { FlagPageVm } from '@/flag/flagPageMethods'
+import operatorsData from '@/operators.json'
+import type { DistributionDraft, FlagView, Segment, Tag } from '@/types'
 
 const operators = operatorsData.operators
-const { pluck, handleErr } = helpers
-const { API_URL, FLAGR_UI_POSSIBLE_ENTITY_TYPES } = constants
-
-const DEFAULT_SEGMENT = { description: "", rolloutPercent: 50 }
-const DEFAULT_TAG = { value: "" }
-
-function processVariant(variant) {
-  if (typeof variant.attachment === "string") {
-    variant.attachment = JSON.parse(variant.attachment)
-  }
-}
-
-function normalizeSegment(segment) {
-  if (!segment.constraints) segment.constraints = []
-  if (!segment.distributions) segment.distributions = []
-  return segment
-}
-
-function normalizeFlag(flag) {
-  flag.variants.forEach(v => processVariant(v))
-  for (const segment of flag.segments || []) {
-    normalizeSegment(segment)
-  }
-  return flag
-}
 
 export default {
-  name: "flag",
+  name: 'flag',
   components: {
     DebugConsole,
     FlagHistory,
@@ -164,7 +138,7 @@ export default {
     FlagConfigCard,
     VariantsSection,
     SegmentsSection,
-    Delete
+    Delete,
   },
   data() {
     return {
@@ -172,348 +146,115 @@ export default {
       dialogDeleteFlagVisible: false,
       dialogEditDistributionOpen: false,
       dialogCreateSegmentOpen: false,
-      entityTypes: [],
-      allTags: [],
+      entityTypes: [] as FlagPageVm['entityTypes'],
+      allTags: [] as Tag[],
       allowCreateEntityType: true,
       tagInputVisible: false,
-      flag: {},
-      newSegment: { ...DEFAULT_SEGMENT },
-      newTag: { ...DEFAULT_TAG },
-      selectedSegment: null,
-      distributionDraft: {},
+      flag: { description: '', variants: [], segments: [] } as FlagView,
+      newSegment: { ...flagPage.DEFAULT_SEGMENT },
+      newTag: { ...flagPage.DEFAULT_TAG },
+      selectedSegment: null as Segment | null,
+      distributionDraft: {} as Record<string, DistributionDraft>,
       operatorOptions: operators,
       showMdEditor: false,
       historyLoaded: false,
-      historyKey: 0
+      historyKey: 0,
     }
   },
   computed: {
-    flagId() {
-      return this.$route.params.flagId
-    }
+    flagId(): string {
+      return String(this.$route.params.flagId)
+    },
+    pageVm(): FlagPageVm {
+      return this as unknown as FlagPageVm
+    },
   },
   methods: {
-    // --- Flag CRUD ---
     deleteFlag() {
-      const id = this.flagId
-      Axios.delete(`${API_URL}/flags/${id}`).then(() => {
-        this.$router.replace({ name: "home" })
-        this.$message.success(`You deleted flag ${id}`)
-      }, handleErr.bind(this))
+      flagPage.deleteFlag(this.pageVm)
     },
-
     putFlag() {
-      const f = this.flag
-      Axios.put(`${API_URL}/flags/${this.flagId}`, {
-        description: f.description,
-        dataRecordsEnabled: f.dataRecordsEnabled,
-        key: f.key || "",
-        entityType: f.entityType || "",
-        notes: f.notes || ""
-      }).then(() => {
-        this.$message.success("Flag updated")
-      }, handleErr.bind(this))
+      flagPage.putFlag(this.pageVm)
     },
-
-    handleToggleEnabled(checked) {
-      Axios.put(`${API_URL}/flags/${this.flagId}/enabled`, {
-        enabled: checked
-      }).then(() => {
-        this.flag.enabled = checked
-        this.$message.success(`You turned ${checked ? "on" : "off"} this feature flag`)
-      }, handleErr.bind(this))
+    handleToggleEnabled(checked: boolean) {
+      flagPage.handleToggleEnabled(this.pageVm, checked)
     },
-
-    handleUpdateFlag(patch) {
-      Object.assign(this.flag, patch)
+    handleUpdateFlag(patch: Partial<FlagView>) {
+      flagPage.handleUpdateFlag(this.pageVm, patch)
     },
-
-    // --- Tags ---
-    handleCreateTag({ value }) {
-      this.newTag.value = value
-      Axios.post(`${API_URL}/flags/${this.flagId}/tags`, { value }).then(
-        response => {
-          const tag = response.data
-          this.newTag = { ...DEFAULT_TAG }
-          if (!this.flag.tags.map(t => t.value).includes(tag.value)) {
-            this.flag.tags.push(tag)
-            this.$message.success("new tag created")
-          }
-          this.tagInputVisible = false
-          this.loadAllTags()
-        },
-        handleErr.bind(this)
-      )
+    handleCreateTag(payload: { value: string }) {
+      flagPage.handleCreateTag(this.pageVm, payload)
     },
-
     handleCancelCreateTag() {
-      this.newTag = { ...DEFAULT_TAG }
-      this.tagInputVisible = false
+      flagPage.handleCancelCreateTag(this.pageVm)
     },
-
     handleShowTagInput() {
-      this.tagInputVisible = true
+      flagPage.handleShowTagInput(this.pageVm)
     },
-
-    deleteTag(tag) {
-      this.$confirm(`Are you sure you want to delete tag #${tag.value}`, "Warning", {
-        confirmButtonText: "OK", cancelButtonText: "Cancel", type: "warning"
-      }).then(() => {
-        Axios.delete(`${API_URL}/flags/${this.flagId}/tags/${tag.id}`).then(
-          () => {
-            this.$message.success("tag deleted")
-            this.fetchFlag()
-            this.loadAllTags()
-          },
-          handleErr.bind(this)
-        )
-      }).catch(() => {})
+    deleteTag(tag: Tag) {
+      flagPage.deleteTag(this.pageVm, tag)
     },
-
-    loadAllTags() {
-      Axios.get(`${API_URL}/tags`).then(response => {
-        this.allTags = response.data
-      }, handleErr.bind(this))
+    handleCreateVariant(payload: { key: string }) {
+      flagPage.handleCreateVariant(this.pageVm, payload)
     },
-
-    // --- Variants ---
-    handleCreateVariant({ key }) {
-      Axios.post(`${API_URL}/flags/${this.flagId}/variants`, { key }).then(
-        response => {
-          this.flag.variants = [...this.flag.variants, response.data]
-          this.$message.success("new variant created")
-        },
-        handleErr.bind(this)
-      )
+    handleUpdateVariantKey(payload: Parameters<typeof flagPage.handleUpdateVariantKey>[0]) {
+      flagPage.handleUpdateVariantKey(payload)
     },
-
-
-    handleUpdateVariantKey({ variant, key }) {
-      variant.key = key
+    handleVariantAttachmentChange(payload: Parameters<typeof flagPage.handleVariantAttachmentChange>[0]) {
+      flagPage.handleVariantAttachmentChange(payload)
     },
-
-    handleVariantAttachmentChange({ variant, valid }) {
-      variant.attachmentValid = valid
+    putVariant(variant: Parameters<typeof flagPage.putVariant>[1]) {
+      flagPage.putVariant(this.pageVm, variant)
     },
-
-
-    putVariant(variant) {
-      if (variant.attachmentValid === false) {
-        this.$message.error("variant attachment is not valid")
-        return
-      }
-      Axios.put(`${API_URL}/flags/${this.flagId}/variants/${variant.id}`, { key: variant.key, attachment: variant.attachment }).then(
-        () => this.$message.success("variant updated"),
-        handleErr.bind(this)
-      )
+    deleteVariant(variant: Parameters<typeof flagPage.deleteVariant>[1]) {
+      flagPage.deleteVariant(this.pageVm, variant)
     },
-
-    deleteVariant(variant) {
-      if (this.flag.segments.some(s =>
-        s.distributions.some(d => d.variantID === variant.id)
-      )) {
-        this.$message.warning(
-          "This variant is being used by a segment distribution. Please remove the segment or edit the distribution in order to remove this variant."
-        )
-        return
-      }
-      this.$confirm(
-        `Are you sure you want to delete variant #${variant.id} [${variant.key}]`,
-        "Warning",
-        { confirmButtonText: "OK", cancelButtonText: "Cancel", type: "warning" }
-      ).then(() => {
-        Axios.delete(`${API_URL}/flags/${this.flagId}/variants/${variant.id}`).then(
-          () => {
-            this.$message.success("variant deleted")
-            this.fetchFlag()
-          },
-          handleErr.bind(this)
-        )
-      }).catch(() => {})
-    },
-
-
-    // --- Segments ---
     createSegment() {
-      Axios.post(`${API_URL}/flags/${this.flagId}/segments`, this.newSegment).then(
-        response => {
-          const segment = normalizeSegment(response.data)
-          this.newSegment = { ...DEFAULT_SEGMENT }
-          this.flag.segments = [...this.flag.segments, segment]
-          this.dialogCreateSegmentOpen = false
-          this.$message.success("new segment created")
-        },
-        handleErr.bind(this)
-      )
+      flagPage.createSegment(this.pageVm)
     },
-
-    putSegment(segment) {
-      Axios.put(`${API_URL}/flags/${this.flagId}/segments/${segment.id}`, {
-        description: segment.description,
-        rolloutPercent: parseInt(segment.rolloutPercent, 10)
-      }).then(() => {
-        this.$message.success("segment updated")
-      }, handleErr.bind(this))
+    putSegment(segment: Segment) {
+      flagPage.putSegment(this.pageVm, segment)
     },
-
-    deleteSegment(segment) {
-      this.$confirm("Are you sure you want to delete this segment?", "Warning", {
-        confirmButtonText: "OK", cancelButtonText: "Cancel", type: "warning"
-      }).then(() => {
-        Axios.delete(`${API_URL}/flags/${this.flagId}/segments/${segment.id}`).then(
-          () => {
-            this.flag.segments = this.flag.segments.filter(el => el.id !== segment.id)
-            this.$message.success("segment deleted")
-          },
-          handleErr.bind(this)
-        )
-      }).catch(() => {})
+    deleteSegment(segment: Segment) {
+      flagPage.deleteSegment(this.pageVm, segment)
     },
-
-    handleReorderSegments(segments) {
-      Axios.put(`${API_URL}/flags/${this.flagId}/segments/reorder`, {
-        segmentIDs: pluck(segments, "id")
-      }).then(() => {
-        this.$message.success("segment reordered")
-      }, handleErr.bind(this))
+    handleReorderSegments(segments: Segment[]) {
+      flagPage.handleReorderSegments(this.pageVm, segments)
     },
-
-    moveSegmentUp(_element, index) {
-      if (index <= 0) return
-      const arr = [...this.flag.segments]
-      const temp = arr[index - 1]
-      arr[index - 1] = arr[index]
-      arr[index] = temp
-      this.flag.segments = arr
+    moveSegmentUp(element: Segment, index: number) {
+      flagPage.moveSegmentUp(this.pageVm, element, index)
     },
-    moveSegmentDown(_element, index) {
-      if (index >= this.flag.segments.length - 1) return
-      const arr = [...this.flag.segments]
-      const temp = arr[index + 1]
-      arr[index + 1] = arr[index]
-      arr[index] = temp
-      this.flag.segments = arr
+    moveSegmentDown(element: Segment, index: number) {
+      flagPage.moveSegmentDown(this.pageVm, element, index)
     },
-
-
-    handleUpdateSegmentField({ segment, field, value }) {
-      segment[field] = value
+    handleUpdateSegmentField(payload: Parameters<typeof flagPage.handleUpdateSegmentField>[0]) {
+      flagPage.handleUpdateSegmentField(payload)
     },
-
-    // --- Constraints ---
-    createConstraint({ segment, constraint }) {
-      const c = { ...constraint }
-      c.property = c.property.trim()
-      c.value = c.value.trim()
-      Axios.post(
-        `${API_URL}/flags/${this.flagId}/segments/${segment.id}/constraints`,
-        c
-      ).then(response => {
-        segment.constraints = [...segment.constraints, response.data]
-        this.$message.success("new constraint created")
-      }, handleErr.bind(this))
+    createConstraint(payload: Parameters<typeof flagPage.createConstraint>[1]) {
+      flagPage.createConstraint(this.pageVm, payload)
     },
-
-    putConstraint({ segment, constraint }) {
-      constraint.property = constraint.property.trim()
-      constraint.value = constraint.value.trim()
-      Axios.put(
-        `${API_URL}/flags/${this.flagId}/segments/${segment.id}/constraints/${constraint.id}`,
-        constraint
-      ).then(() => {
-        this.$message.success("constraint updated")
-      }, handleErr.bind(this))
+    putConstraint(payload: Parameters<typeof flagPage.putConstraint>[1]) {
+      flagPage.putConstraint(this.pageVm, payload)
     },
-
-    deleteConstraint({ segment, constraint }) {
-      this.$confirm("Are you sure you want to delete this constraint?", "Warning", {
-        confirmButtonText: "OK", cancelButtonText: "Cancel", type: "warning"
-      }).then(() => {
-        Axios.delete(
-          `${API_URL}/flags/${this.flagId}/segments/${segment.id}/constraints/${constraint.id}`
-        ).then(() => {
-          segment.constraints = segment.constraints.filter(c => c.id !== constraint.id)
-          this.$message.success("constraint deleted")
-        }, handleErr.bind(this))
-      }).catch(() => {})
+    deleteConstraint(payload: Parameters<typeof flagPage.deleteConstraint>[1]) {
+      flagPage.deleteConstraint(this.pageVm, payload)
     },
-
-    handleUpdateConstraintField({ constraint, field, value }) {
-      constraint[field] = value
+    handleUpdateConstraintField(payload: Parameters<typeof flagPage.handleUpdateConstraintField>[0]) {
+      flagPage.handleUpdateConstraintField(payload)
     },
-
-    // --- Distributions ---
-    handleEditDistribution(segment) {
-      this.selectedSegment = segment
-      const draft = {}
-      for (const d of segment.distributions) {
-        draft[d.variantID] = { ...d }
-      }
-      this.distributionDraft = draft
-      this.dialogEditDistributionOpen = true
+    handleEditDistribution(segment: Segment) {
+      flagPage.handleEditDistribution(this.pageVm, segment)
     },
-
-    handleSaveDistribution(draft) {
-      const distributions = Object.values(draft)
-        .filter(d => d.percent !== 0)
-        .map(d => {
-          const dist = { ...d }
-          delete dist.id
-          return dist
-        })
-      Axios.put(
-        `${API_URL}/flags/${this.flagId}/segments/${this.selectedSegment.id}/distributions`,
-        { distributions }
-      ).then(response => {
-        this.selectedSegment.distributions = response.data
-        this.dialogEditDistributionOpen = false
-        this.$message.success("distributions updated")
-      }, handleErr.bind(this))
+    handleSaveDistribution(draft: Record<string, DistributionDraft>) {
+      flagPage.handleSaveDistribution(this.pageVm, draft)
     },
-
-    // --- Other ---
-    handleHistoryTabClick(tab) {
-      if (tab.props?.name === 'history') {
-        this.historyLoaded = true
-        this.historyKey++
-      }
+    handleHistoryTabClick(tab: Parameters<typeof flagPage.handleHistoryTabClick>[1]) {
+      flagPage.handleHistoryTabClick(this.pageVm, tab)
     },
-
-    // --- Data fetching ---
-    fetchFlag() {
-      Axios.get(`${API_URL}/flags/${this.flagId}`).then(response => {
-        this.flag = normalizeFlag(response.data)
-        this.loaded = true
-      }, handleErr.bind(this))
-      this.fetchEntityTypes()
-    },
-
-    fetchEntityTypes() {
-      const prepareEntityTypes = (entityTypes) => {
-        const arr = entityTypes.map(key => ({
-          label: key === "" ? "<null>" : key,
-          value: key
-        }))
-        if (entityTypes.indexOf("") === -1) {
-          arr.unshift({ label: "<null>", value: "" })
-        }
-        return arr
-      }
-
-      if (FLAGR_UI_POSSIBLE_ENTITY_TYPES && FLAGR_UI_POSSIBLE_ENTITY_TYPES != "null") {
-        this.entityTypes = prepareEntityTypes(FLAGR_UI_POSSIBLE_ENTITY_TYPES.split(","))
-        this.allowCreateEntityType = false
-        return
-      }
-      Axios.get(`${API_URL}/flags/entity_types`).then(response => {
-        this.entityTypes = prepareEntityTypes(response.data)
-      }, handleErr.bind(this))
-    }
   },
   mounted() {
-    this.fetchFlag()
-    this.loadAllTags()
-  }
+    flagPage.mountFlagPage(this.pageVm)
+  },
 }
 </script>
 

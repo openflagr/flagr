@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { createFlagWithVariants, createFlag, deleteFlag, createSegment, createConstraint, createVariant, API, waitForSnapshot, getFlag, putSegmentDistributions } from './helpers.js'
+import { createFlagWithVariants, createFlag, deleteFlag, createSegment, createConstraint, createVariant, API, waitForSnapshot, getFlag, putSegmentDistributions } from './helpers'
 
 test.describe('Flag detail page', () => {
   /** Set by each test, cleaned up in afterEach. */

@@ -206,143 +206,149 @@
   </el-dialog>
 </template>
 
-<script>
-import Axios from "axios";
-import { Plus, Search } from "@element-plus/icons-vue";
+<script lang="ts">
+import { Plus, Search } from '@element-plus/icons-vue'
+import * as flagsApi from '@/api/flags'
+import Spinner from '@/components/Spinner.vue'
+import { getFlagsCache, setFlagsCache } from '@/flags/flagsListCache'
+import helpers from '@/helpers/helpers'
+import type { CreateFlagPayload, Flag } from '@/types'
+import { requireFlagId } from '@/types/flag'
+import { confirmAndRunApi } from '@/ui/confirmAndRunApi'
+import { runApi } from '@/ui/runApi'
 
-import constants from "@/constants";
-import Spinner from "@/components/Spinner";
-import helpers from "@/helpers/helpers";
-
-const { handleErr, debounce } = helpers;
-const { API_URL } = constants;
-
-
-let flagsCache = null; // { flags: [], maxSnapshotID: number } | null
+const { debounce } = helpers
 
 export default {
-  name: "flags",
+  name: 'flags',
   components: {
     spinner: Spinner,
     Plus,
     Search,
   },
   data() {
-    const cached = flagsCache;
+    const cached = getFlagsCache()
     return {
       loaded: !!cached,
-      flags: cached ? cached.flags : [],
+      flags: cached ? cached.flags : [] as Flag[],
       deletedFlagsLoaded: false,
-      deletedFlags: [],
-      searchTerm: "",
-      debouncedSearchTerm: "",
+      deletedFlags: [] as Flag[],
+      searchTerm: '',
+      debouncedSearchTerm: '',
       showCreateModal: false,
       newFlag: {
-        description: ""
-      }
-    };
+        description: '',
+      },
+      visHandler: null as (() => void) | null,
+      debouncedUpdate: null as (() => void) | null,
+    }
   },
 
   beforeUnmount() {
-    if (this._visHandler) document.removeEventListener('visibilitychange', this._visHandler);
+    if (this.visHandler) document.removeEventListener('visibilitychange', this.visHandler)
   },
 
   mounted() {
-    this._visHandler = () => { if (!document.hidden) this.refreshFlags(); };
-    document.addEventListener('visibilitychange', this._visHandler);
+    this.visHandler = () => {
+      if (!document.hidden) this.refreshFlags()
+    }
+    document.addEventListener('visibilitychange', this.visHandler)
   },
 
   created() {
-    this._debouncedUpdate = debounce(() => {
-      this.debouncedSearchTerm = this.searchTerm;
-    }, 150);
-    this.refreshFlags();
+    this.debouncedUpdate = debounce(() => {
+      this.debouncedSearchTerm = this.searchTerm
+    }, 150)
+    this.refreshFlags()
   },
   computed: {
-    filteredFlags() {
+    filteredFlags(): Flag[] {
       if (this.debouncedSearchTerm) {
-        const terms = this.debouncedSearchTerm.split(",");
+        const terms = this.debouncedSearchTerm.split(',')
         return this.flags.filter(({ id, key, description, tags }) =>
-          terms.every(term => {
-            const t = term.toLowerCase();
+          terms.every((term) => {
+            const t = term.toLowerCase()
             return (
-              id.toString().includes(t) ||
+              id?.toString().includes(t) ||
               (key && key.toLowerCase().includes(t)) ||
               (description && description.toLowerCase().includes(t)) ||
-              (tags && tags.some(tag => tag.value && tag.value.toLowerCase().includes(t)))
-            );
-          })
-        );
+              (tags && tags.some((tag) => tag.value && tag.value.toLowerCase().includes(t)))
+            )
+          }),
+        )
       }
-      return this.flags;
+      return this.flags
     },
   },
   watch: {
     searchTerm() {
-      this._debouncedUpdate();
+      this.debouncedUpdate?.()
     },
   },
   methods: {
-    async refreshFlags() {
-      try {
-        const { data: { maxID } } = await Axios.get(`${API_URL}/flags/snapshots/max_id`);
-        if (flagsCache && maxID === flagsCache.maxSnapshotID) return;
-        const { data } = await Axios.get(`${API_URL}/flags`);
-        const flags = [...data].reverse();
-        flagsCache = { flags, maxSnapshotID: maxID };
-        this.flags = flags;
-        this.loaded = true;
-      } catch (err) {
-        handleErr.call(this, err);
-      }
+    refreshFlags() {
+      const cachedId = getFlagsCache()?.maxSnapshotID
+      runApi(this, flagsApi.listFlagsIfStale(cachedId), {
+        onSuccess: (result) => {
+          if (!result) return
+          setFlagsCache(result)
+          this.flags = result.flags
+          this.loaded = true
+        },
+      })
     },
-    datetimeFormatter(row, col, val) {
-      return val ? val.split(".")[0] : "";
+    datetimeFormatter(_row: Flag, _col: unknown, val: string) {
+      return val ? val.split('.')[0] : ''
     },
-    goToFlag(row) {
-      this.$router.push({ name: "flag", params: { flagId: row.id } });
+    goToFlag(row: Flag) {
+      this.$router.push({ name: 'flag', params: { flagId: String(row.id) } })
     },
     createBooleanFlag() {
-      this.createFlag({ template: "simple_boolean_flag" });
+      this.createFlag({ template: 'simple_boolean_flag' })
     },
-    createFlag(params) {
-      if (!this.newFlag.description) return;
-      const payload = params ? { ...this.newFlag, ...params } : { ...this.newFlag };
-      Axios.post(`${API_URL}/flags`, payload).then(response => {
-        const flag = response.data;
-        this.newFlag.description = "";
-        this.showCreateModal = false;
-        this.$message.success("Flag created");
-        this.flags.unshift(flag);
-      }, handleErr.bind(this));
+    createFlag(params?: Partial<CreateFlagPayload>) {
+      if (!this.newFlag.description) return
+      const payload: CreateFlagPayload = params
+        ? { ...this.newFlag, ...params }
+        : { ...this.newFlag }
+      runApi(this, flagsApi.createFlag(payload), {
+        successMessage: 'Flag created',
+        onSuccess: (flag) => {
+          this.newFlag.description = ''
+          this.showCreateModal = false
+          this.flags.unshift(flag)
+        },
+      })
     },
-    restoreFlag(row) {
-      this.$confirm("This will recover the deleted flag. Continue?", "Warning", {
-        confirmButtonText: "OK",
-        cancelButtonText: "Cancel",
-        type: "warning"
-      }).then(() => {
-        Axios.put(`${API_URL}/flags/${row.id}/restore`).then(response => {
-          const flag = response.data;
-          this.$message.success(`Flag restored`);
-          this.flags.push(flag);
-          this.deletedFlags = this.deletedFlags.filter(el => el.id !== flag.id);
-        }, handleErr.bind(this));
-      });
+    restoreFlag(row: Flag) {
+      confirmAndRunApi(
+        this,
+        'This will recover the deleted flag. Continue?',
+        flagsApi.restoreFlag(requireFlagId(row)),
+        {
+          successMessage: 'Flag restored',
+          onSuccess: (flag) => {
+            this.flags.push(flag)
+            this.deletedFlags = this.deletedFlags.filter((el) => el.id !== flag.id)
+          },
+        },
+      )
     },
     fetchDeletedFlags() {
       if (!this.deletedFlagsLoaded) {
-        Axios.get(`${API_URL}/flags?deleted=true`).then(response => {
-          this.deletedFlags = [...response.data].reverse();
-          this.deletedFlagsLoaded = true;
-        }, handleErr.bind(this));
+        runApi(this, flagsApi.listDeletedFlags(), {
+          onSuccess: (data) => {
+            this.deletedFlags = [...data].reverse()
+            this.deletedFlagsLoaded = true
+          },
+        })
       }
     },
-    filterStatus(value, row) {
-      return row.enabled === value;
-    }
-  }
-};
+    filterStatus(value: boolean, row: Flag) {
+      return row.enabled === value
+    },
+  },
+}
 </script>
 
 <style lang="scss" scoped>
