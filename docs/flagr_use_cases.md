@@ -65,6 +65,31 @@ exposure half — deterministic, sticky assignment so the same user always sees
 the same treatment. The measurement half (conversion rates, significance) is
 yours; Flagr emits the events but does not compute the verdict.
 
+### Variants in experiments: control and treatment
+
+The names `control` and `treatment` are **convention, not a Flagr contract**.
+Flagr treats every variant the same — `control` is no more special than `on`,
+`green`, or `version_b`. The convention comes from experimentation methodology:
+
+- **Control** — the *baseline* experience. Usually the current production
+  behavior. This is what you compare against. If your experiment is "new
+  checkout button," control is the existing button.
+- **Treatment** — the *change* you are testing. There can be one or many:
+  `treatment1`, `treatment2`, `treatment3`. Each is a distinct alternative
+  you're measuring against the control.
+
+The distinction matters in your **analytics**, not in Flagr. When you group
+exposure rows by `variantKey` in your warehouse, the control group is your
+baseline conversion rate; each treatment's rate is compared against it to
+measure lift. If you have no control (e.g. testing two brand-new designs),
+pick one variant as the reference — but the convention of naming a baseline
+"control" makes the analysis self-documenting.
+
+> **Note:** Flagr does not enforce that a flag has a control variant. You can
+> run a flag with only treatments, or with no variant named "control" at all.
+> The names are for you and your analytics pipeline; Flagr only assigns and
+> records the `variantKey` you configured.
+
 To run an A/B test across several variants with a targeted audience, instrument
 the code the same way and branch on the assigned variant:
 

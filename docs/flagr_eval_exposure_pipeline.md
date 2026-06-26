@@ -347,6 +347,12 @@ flowchart LR
 
 **Exposure counts by variant** (denominator):
 
+The `variant_key` column groups exposures into the arms of your experiment.
+If you followed the `control` / `treatment` naming convention, each treatment's
+count is compared against the control count to measure relative lift. See
+[Use Cases](flagr_use_cases.md#variants-in-experiments-control-and-treatment)
+for the control/treatment definitions.
+
 ```sql
 SELECT
   variant_key,
