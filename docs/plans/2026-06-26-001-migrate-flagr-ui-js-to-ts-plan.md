@@ -9,8 +9,10 @@ Add TypeScript to `browser/flagr-ui` with **Vite as the only compile path** (esb
 
 ## Problem Frame
 
-- The UI is entirely JavaScript: four `src` modules, four e2e files, eleven Vue SFCs with plain `<script>`, and no `tsconfig`.
-- API payloads and normalization are implicit; failures are ad hoc axios callbacks and `handleErr.bind(this)`—no typed error channel.
+**Primary motivation:** Catch UI regressions **before runtime and e2e**, not only after users or Playwright hit them. Recent example: [#720](https://github.com/openflagr/flagr/pull/720) — Distribution **Edit** failed with a `ReferenceError` because `clone(d)` remained after the lodash removal; ASI risk around `{}` + `.forEach` was another foot-gun. In untyped JS those failures surface only when a segment already has distributions. **TypeScript** (`vue-tsc`, strict props/state) and **typed API/view models** (`api/types.ts`, `helpers/flagModel.ts`) push that class of bug to **edit/CI time** (`make build-ui`). The **Effect** layer adds a typed error channel so REST and composition mistakes are visible in signatures, not as silent axios/`handleErr` drift.
+
+- The UI was entirely JavaScript: four `src` modules, four e2e files, eleven Vue SFCs with plain `<script>`, and no `tsconfig`.
+- API payloads and normalization were implicit; failures were ad hoc axios callbacks and `handleErr.bind(this)`—no typed error channel.
 - `vue3-ts-jsoneditor` is already typed but consumed from untyped Options API components.
 
 **Success criteria:**
