@@ -17,7 +17,7 @@ import (
 // swagger:model exposure
 type Exposure struct {
 
-	// entity context
+	// Optional attributes recorded on evalContext.entityContext (same field as POST /evaluation). Include impression-specific keys here (e.g. page path); exposure does not re-run segment constraints.
 	EntityContext any `json:"entityContext,omitempty"`
 
 	// entity ID
@@ -35,9 +35,6 @@ type Exposure struct {
 
 	// flag snapshot ID
 	FlagSnapshotID int64 `json:"flagSnapshotID,omitempty"`
-
-	// metadata
-	Metadata any `json:"metadata,omitempty"`
 
 	// timestamp
 	// Format: date-time

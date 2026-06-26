@@ -17,7 +17,7 @@ import (
 // swagger:model putFlagRequest
 type PutFlagRequest struct {
 
-	// enabled data records will get data logging in the metrics pipeline, for example, kafka.
+	// when true and FLAGR_RECORDER_ENABLED is set, evaluation and exposure rows are written to configured data recorders (e.g. kafka).
 	DataRecordsEnabled *bool `json:"dataRecordsEnabled,omitempty"`
 
 	// description

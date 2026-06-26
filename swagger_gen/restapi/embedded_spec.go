@@ -1914,7 +1914,7 @@ func init() {
           "x-omitempty": true
         },
         "recordSource": {
-          "description": "evaluation for eval API results; exposure for POST /exposures pipeline events",
+          "description": "evaluation for eval API results; exposure for client-reported impressions via POST /exposures (same data recorders as eval)",
           "type": "string",
           "enum": [
             "evaluation",
@@ -2030,6 +2030,7 @@ func init() {
       ],
       "properties": {
         "entityContext": {
+          "description": "Optional attributes recorded on evalContext.entityContext (same field as POST /evaluation). Include impression-specific keys here (e.g. page path); exposure does not re-run segment constraints.",
           "type": "object",
           "additionalProperties": true
         },
@@ -2049,10 +2050,6 @@ func init() {
         "flagSnapshotID": {
           "type": "integer",
           "format": "int64"
-        },
-        "metadata": {
-          "type": "object",
-          "additionalProperties": true
         },
         "timestamp": {
           "type": "string",
@@ -2124,7 +2121,7 @@ func init() {
           "type": "string"
         },
         "dataRecordsEnabled": {
-          "description": "enabled data records will get data logging in the metrics pipeline, for example, kafka.",
+          "description": "when true and FLAGR_RECORDER_ENABLED is set, evaluation and exposure rows are written to configured data recorders (e.g. kafka).",
           "type": "boolean"
         },
         "description": {
@@ -2241,7 +2238,7 @@ func init() {
       "type": "object",
       "properties": {
         "dataRecordsEnabled": {
-          "description": "enabled data records will get data logging in the metrics pipeline, for example, kafka.",
+          "description": "when true and FLAGR_RECORDER_ENABLED is set, evaluation and exposure rows are written to configured data recorders (e.g. kafka).",
           "type": "boolean",
           "x-nullable": true
         },
@@ -4403,7 +4400,7 @@ func init() {
           "x-omitempty": true
         },
         "recordSource": {
-          "description": "evaluation for eval API results; exposure for POST /exposures pipeline events",
+          "description": "evaluation for eval API results; exposure for client-reported impressions via POST /exposures (same data recorders as eval)",
           "type": "string",
           "enum": [
             "evaluation",
@@ -4519,6 +4516,7 @@ func init() {
       ],
       "properties": {
         "entityContext": {
+          "description": "Optional attributes recorded on evalContext.entityContext (same field as POST /evaluation). Include impression-specific keys here (e.g. page path); exposure does not re-run segment constraints.",
           "type": "object",
           "additionalProperties": true
         },
@@ -4538,10 +4536,6 @@ func init() {
         "flagSnapshotID": {
           "type": "integer",
           "format": "int64"
-        },
-        "metadata": {
-          "type": "object",
-          "additionalProperties": true
         },
         "timestamp": {
           "type": "string",
@@ -4613,7 +4607,7 @@ func init() {
           "type": "string"
         },
         "dataRecordsEnabled": {
-          "description": "enabled data records will get data logging in the metrics pipeline, for example, kafka.",
+          "description": "when true and FLAGR_RECORDER_ENABLED is set, evaluation and exposure rows are written to configured data recorders (e.g. kafka).",
           "type": "boolean"
         },
         "description": {
@@ -4730,7 +4724,7 @@ func init() {
       "type": "object",
       "properties": {
         "dataRecordsEnabled": {
-          "description": "enabled data records will get data logging in the metrics pipeline, for example, kafka.",
+          "description": "when true and FLAGR_RECORDER_ENABLED is set, evaluation and exposure rows are written to configured data recorders (e.g. kafka).",
           "type": "boolean",
           "x-nullable": true
         },
