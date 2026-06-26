@@ -87,13 +87,3 @@ export function filterStatus(value: boolean, row: Flag): boolean {
 export function goToFlag(vm: FlagsListVm, row: Flag): void {
   vm.$router.push({ name: 'flag', params: { flagId: String(row.id) } })
 }
-
-export const flagsListVmHandlers = {
-  refreshFlags,
-  createFlag,
-  createBooleanFlag,
-  restoreFlag,
-  fetchDeletedFlags,
-  goToFlag,
-  mountFlagsList,
-} as const

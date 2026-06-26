@@ -83,7 +83,7 @@ Sequential logic reads like async/await but **stays in the error channel** (`Api
 - **`Match.valueTags`** — exhaustive user-facing messages per `ApiError` tag.
 - **`confirmAndRunApi`** — confirm dialog then `runApi` (still fire-and-forget from Vue’s perspective).
 
-Pages (`pages/flagPage.ts`, `Flags.vue`) only call **`runApi` / `confirmAndRunApi`** with programs from `api/*`.
+Pages (`pages/flagPage.ts`, `pages/flagsListPage.ts`) orchestrate API programs; Vue SFCs call `flagPage.*(pageVm)` / `flagsListPage.*(listVm)` in templates. Components only use **`runApi` / `confirmAndRunApi`** with programs from `api/*`.
 
 ### Flag page: after mutations (`pages/flagPage.ts`)
 

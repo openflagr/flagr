@@ -409,30 +409,3 @@ export function mountFlagPage(vm: FlagPageVm): void {
     },
   })
 }
-
-/** Handlers that take `(vm, …)` — bind once in `Flag.vue` via `bindPageHandlers`. */
-export const flagPageVmHandlers = {
-  deleteFlag,
-  putFlag,
-  handleToggleEnabled,
-  handleUpdateFlag,
-  handleCreateTag,
-  handleCancelCreateTag,
-  handleShowTagInput,
-  deleteTag,
-  handleCreateVariant,
-  putVariant,
-  deleteVariant,
-  createSegment,
-  putSegment,
-  deleteSegment,
-  handleReorderSegments,
-  moveSegmentUp,
-  moveSegmentDown,
-  createConstraint,
-  putConstraint,
-  deleteConstraint,
-  handleEditDistribution,
-  handleSaveDistribution,
-  handleHistoryTabClick,
-} as const
