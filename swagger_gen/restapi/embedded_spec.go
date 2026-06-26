@@ -2180,7 +2180,6 @@ func init() {
     "flagSnapshot": {
       "type": "object",
       "required": [
-        "id",
         "flag",
         "updatedAt"
       ],
@@ -4666,7 +4665,6 @@ func init() {
     "flagSnapshot": {
       "type": "object",
       "required": [
-        "id",
         "flag",
         "updatedAt"
       ],

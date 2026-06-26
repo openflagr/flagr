@@ -210,7 +210,6 @@ definitions:
   flagSnapshot:
     type: object
     required:
-      - id
       - flag
       - updatedAt
     properties:
