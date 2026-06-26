@@ -19,11 +19,19 @@
     </a>
 </p>
 
-## Introduction
+## What is Flagr?
 
-Flagr is an open source Go service that delivers the right experience to the right entity and monitors the impact. It provides feature flags, experimentation (A/B testing), and dynamic configuration — all behind clear swagger REST APIs for flag management and evaluation.
+Flagr is an open-source Go service for **feature flags**, **A/B testing**, and
+**dynamic configuration**. One primitive — the *flag* — covers all three: a
+decision point in your code that the evaluation engine resolves at runtime
+based on *who* is asking.
 
-`openflagr/flagr` is the community-driven home of Flagr, advancing development beyond the original [`checkr/flagr`](https://github.com/checkr/flagr).
+It exists to decouple *deploy* from *release* — turn a feature on for one user,
+a thousand, or nobody, without redeploying. Run experiments and trust the
+numbers. Change configuration without a code change or a restart.
+
+`openflagr/flagr` is the community-driven home of Flagr, advancing development
+beyond the original [`checkr/flagr`](https://github.com/checkr/flagr).
 
 ---
 
@@ -49,18 +57,14 @@ Flagr is an open source Go service that delivers the right experience to the rig
 
 ## Features
 
-| Capability | Description |
-|------------|-------------|
-| **Feature flags** | Binary on/off toggles, kill switches, targeted rollouts by audience segment |
-| **A/B testing** | Multi-variant experiments with deterministic distribution and rollout control |
-| **Dynamic configuration** | Per-variant JSON attachments for runtime config without redeploy |
-| **GitOps / Flags-as-code** | Load flags from JSON files or HTTP URLs. Manage flags in Git, validate in CI, rollback with `git revert` |
-| **Datar analytics** | Built-in in-memory aggregate analytics — evaluation counts by variant, segment, and day. No external pipeline required |
-| **Exposure logging** | `POST /exposures` for client-reported impressions; same **data recorders** as eval (`AsyncRecord`), with `recordSource: exposure` |
-| **Webhook notifications** | HTTP POST webhooks on every flag create/update/delete/restore with retry and exponential backoff |
-| **Multi-database** | SQLite (dev), MySQL, PostgreSQL, and JSON sources |
-| **Eval cache** | In-memory cache with short-circuit reload — only refreshes when flag snapshots change |
-| **Vue 3 UI** | Modern management UI built with Vite, Vue 3, and Element Plus |
+- **Feature flags** — binary on/off, kill switches, targeted rollouts by audience
+- **A/B testing** — multi-variant experiments with deterministic, sticky assignment
+- **Dynamic configuration** — per-variant JSON attachments, no redeploy or restart
+- **GitOps / Flags-as-code** — load flags from JSON or HTTP; manage in Git, validate in CI, rollback with `git revert`
+- **Exposure logging** — `POST /exposures` for client-reported impressions, the trustworthy A/B denominator
+- **Webhook notifications** — HTTP POST on every flag change, with retry and backoff
+- **Multi-database** — SQLite (dev), MySQL, PostgreSQL, and JSON sources
+- **Vue 3 UI** — modern management UI built with Vite, Vue 3, and Element Plus
 
 ## Quick start
 
@@ -72,7 +76,9 @@ docker run -it -p 18000:18000 ghcr.io/openflagr/flagr
 open localhost:18000
 ```
 
-Or try the hosted demo at [https://try-flagr.onrender.com](https://try-flagr.onrender.com) (cold starts may take a moment; every push to `main` triggers a redeploy):
+Or try the hosted demo at
+[https://try-flagr.onrender.com](https://try-flagr.onrender.com) (cold starts
+may take a moment):
 
 ```sh
 curl --request POST \
@@ -95,17 +101,23 @@ curl --request POST \
 
 ## Architecture
 
-Flagr has three core components:
+Flagr has three components:
 
-- **Evaluator** — evaluates incoming requests against an in-memory `EvalCache` of all flags, segments, variants, constraints, and distributions. The cache refreshes periodically (default 3s) and short-circuits when no new snapshots exist.
-- **Manager** — CRUD gateway for all flag mutations.
-- **Metrics** — **Data recorders** for evaluation and exposure rows (`GetDataRecorder().AsyncRecord`). Kafka, AWS Kinesis, Google Pub/Sub, and built-in Datar. Exposures skip eval metrics and Datar aggregation.
+- **Evaluator** — serves evaluation from an in-memory cache of all flags. The
+  cache refreshes periodically (default 3s) and short-circuits when nothing
+  changed, so evaluation never touches the database on the request path.
+- **Manager** — the CRUD gateway; all flag mutations flow through here.
+- **Metrics** — fans evaluation and exposure events out to your data pipeline
+  (Kafka, Kinesis, Pub/Sub) or the built-in Datar aggregates. Recording is
+  asynchronous, so a slow backend never stalls an evaluation.
 
-See the [architecture overview](https://openflagr.github.io/flagr/#/flagr_overview) for the full diagram and evaluation algorithm.
+See the [architecture overview](https://openflagr.github.io/flagr/#/flagr_overview)
+for the full diagram and the deterministic bucketing algorithm.
 
 ## Performance
 
-Tested with [`vegeta`](./benchmark) — 2,000 req/s sustained:
+Tested with [`vegeta`](./benchmark) — 2,000 req/s sustained, sub-millisecond
+median latency:
 
 ```
 Requests      [total, rate]            56521, 2000.04
@@ -117,12 +129,12 @@ Status Codes  [code:count]             200:56521
 
 ## Client Libraries
 
-| Language   | Client                                          |
-| ---------- | ----------------------------------------------- |
-| Go         | [goflagr](https://github.com/openflagr/goflagr) |
+| Language | Client |
+| -------- | ------ |
+| Go | [goflagr](https://github.com/openflagr/goflagr) |
 | JavaScript | [jsflagr](https://github.com/openflagr/jsflagr) |
-| Python     | [pyflagr](https://github.com/openflagr/pyflagr) |
-| Ruby       | [rbflagr](https://github.com/openflagr/rbflagr) |
+| Python | [pyflagr](https://github.com/openflagr/pyflagr) |
+| Ruby | [rbflagr](https://github.com/openflagr/rbflagr) |
 
 ## License and Credit
 
