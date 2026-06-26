@@ -156,8 +156,12 @@ credentials for impressions, remove `/api/v1/exposures` from
 > **Warning:** `/exposures` is a write endpoint — callers supply the variant
 > and entity, and Flagr records it as an impression. If you leave it open,
 > an unauthenticated caller can submit fabricated impressions and inflate
-> your experiment denominators. Consider requiring auth for deployments where
-> impression integrity matters.
+> your experiment denominators. Flagr does not ship an in-process rate limiter
+> for this endpoint; protect it at your edge (Cloudflare, AWS API Gateway, Kong,
+> or a similar reverse proxy with rate limiting) to bound volume from
+> untrusted sources. For deployments where impression integrity matters, also
+> remove `/api/v1/exposures` from `FLAGR_JWT_AUTH_WHITELIST_PATHS` /
+> `FLAGR_BASIC_AUTH_WHITELIST_PATHS` so impressions require credentials.
 
 Design notes are in the repo under
 `docs/plans/2026-06-25-001-exposure-logging-plan.md`
