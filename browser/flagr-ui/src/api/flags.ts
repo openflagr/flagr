@@ -1,3 +1,4 @@
+import constants from '@/helpers/constants'
 import { Effect } from 'effect'
 import type {
   Constraint,
@@ -141,9 +142,18 @@ export interface FlagPageLoad {
   entityTypesFromApi: string[]
 }
 
+const skipEntityTypesApi = !!constants.FLAGR_UI_POSSIBLE_ENTITY_TYPES
+
 export const loadFlagPageContext = Effect.fn('flags.loadFlagPageContext')(function* (
   flagId: FlagId,
 ) {
+  if (skipEntityTypesApi) {
+    const [flag, allTags] = yield* Effect.all(
+      [getFlag(flagId), listAllTags()],
+      { concurrency: 'unbounded' },
+    )
+    return { flag, allTags, entityTypesFromApi: [] } satisfies FlagPageLoad
+  }
   const [flag, allTags, entityTypesFromApi] = yield* Effect.all(
     [getFlag(flagId), listAllTags(), listEntityTypes()],
     { concurrency: 'unbounded' },

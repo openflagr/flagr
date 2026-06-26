@@ -5,7 +5,7 @@
           <template #footer>
             <span class="dialog-footer">
               <el-button @click="dialogDeleteFlagVisible = false">Cancel</el-button>
-              <el-button type="primary" @click.prevent="deleteFlag">Confirm</el-button>
+              <el-button type="primary" @click.prevent="flagPage.deleteFlag(pageVm)">Confirm</el-button>
             </span>
           </template>
         </el-dialog>
@@ -21,7 +21,7 @@
               class="width--full"
               type="primary"
               :disabled="!newSegment.description"
-              @click.prevent="createSegment"
+              @click.prevent="flagPage.createSegment(pageVm)"
               data-testid="create-segment-btn"
             >Create Segment</el-button>
           </div>
@@ -32,7 +32,7 @@
           :flag="flag"
           :initial-distributions="distributionDraft"
           @update:visible="dialogEditDistributionOpen = $event"
-          @save="handleSaveDistribution"
+          @save="(d) => flagPage.handleSaveDistribution(pageVm, d)"
         />
 
         <el-breadcrumb separator="/">
@@ -41,7 +41,7 @@
         </el-breadcrumb>
 
         <div v-if="loaded && flag">
-          <el-tabs @tab-click="handleHistoryTabClick">
+          <el-tabs @tab-click="onHistoryTab">
             <el-tab-pane label="Config">
               <flag-config-card
                 :flag="flag"
@@ -50,40 +50,40 @@
                 :allow-create-entity-type="allowCreateEntityType"
                 :tag-input-visible="tagInputVisible"
                 :all-tags="allTags"
-                @toggle-enabled="handleToggleEnabled"
-                @save-flag="putFlag"
-                @update-flag="handleUpdateFlag"
+                @toggle-enabled="(c) => flagPage.handleToggleEnabled(pageVm, c)"
+                @save-flag="flagPage.putFlag(pageVm)"
+                @update-flag="(p) => flagPage.handleUpdateFlag(pageVm, p)"
                 @toggle-notes="showMdEditor = !showMdEditor"
-                @delete-tag="deleteTag"
-                @create-tag="handleCreateTag"
-                @cancel-create-tag="handleCancelCreateTag"
-                @show-tag-input="handleShowTagInput"
+                @delete-tag="(tag) => flagPage.deleteTag(pageVm, tag)"
+                @create-tag="(p) => flagPage.handleCreateTag(pageVm, p)"
+                @cancel-create-tag="flagPage.handleCancelCreateTag(pageVm)"
+                @show-tag-input="flagPage.handleShowTagInput(pageVm)"
               />
 
               <variants-section
                 :variants="flag.variants"
-                @create-variant="handleCreateVariant"
+                @create-variant="(p) => flagPage.handleCreateVariant(pageVm, p)"
                 @update-variant-key="handleUpdateVariantKey"
-                @save-variant="putVariant"
-                @delete-variant="deleteVariant"
+                @save-variant="(v) => flagPage.putVariant(pageVm, v)"
+                @delete-variant="(v) => flagPage.deleteVariant(pageVm, v)"
                 @attachment-change="handleVariantAttachmentChange"
               />
 
               <segments-section
                 :segments="flag.segments ?? []"
                 :operator-options="operatorOptions"
-                @reorder="handleReorderSegments"
-                @move-up="moveSegmentUp"
-                @move-down="moveSegmentDown"
+                @reorder="(s) => flagPage.handleReorderSegments(pageVm, s)"
+                @move-up="(el, i) => flagPage.moveSegmentUp(pageVm, el, i)"
+                @move-down="(el, i) => flagPage.moveSegmentDown(pageVm, el, i)"
                 @new-segment="dialogCreateSegmentOpen = true"
-                @save-segment="putSegment"
-                @delete-segment="deleteSegment"
+                @save-segment="(s) => flagPage.putSegment(pageVm, s)"
+                @delete-segment="(s) => flagPage.deleteSegment(pageVm, s)"
                 @update-segment-field="handleUpdateSegmentField"
-                @create-constraint="createConstraint"
-                @save-constraint="putConstraint"
-                @delete-constraint="deleteConstraint"
+                @create-constraint="(p) => flagPage.createConstraint(pageVm, p)"
+                @save-constraint="(p) => flagPage.putConstraint(pageVm, p)"
+                @delete-constraint="(p) => flagPage.deleteConstraint(pageVm, p)"
                 @update-constraint-field="handleUpdateConstraintField"
-                @edit-distribution="handleEditDistribution"
+                @edit-distribution="(s) => flagPage.handleEditDistribution(pageVm, s)"
               />
 
               <debug-console :flag="flag" />
@@ -123,7 +123,15 @@ import FlagHistory from '@/components/FlagHistory.vue'
 import SegmentsSection from '@/components/SegmentsSection.vue'
 import VariantsSection from '@/components/VariantsSection.vue'
 import * as flagPage from '@/pages/flagPage'
-import type { FlagPageVm } from '@/pages/flagPage'
+import {
+  handleHistoryTabClick,
+  handleUpdateConstraintField,
+  handleUpdateSegmentField,
+  handleUpdateVariantKey,
+  handleVariantAttachmentChange,
+  mountFlagPage,
+  type FlagPageVm,
+} from '@/pages/flagPage'
 import operatorsData from '@/operators.json'
 import type { DistributionDraft, FlagView, Segment, Tag } from '@/api/types'
 
@@ -142,6 +150,7 @@ export default {
   },
   data() {
     return {
+      flagPage,
       loaded: false,
       dialogDeleteFlagVisible: false,
       dialogEditDistributionOpen: false,
@@ -170,90 +179,16 @@ export default {
     },
   },
   methods: {
-    deleteFlag() {
-      flagPage.deleteFlag(this.pageVm)
+    onHistoryTab(tab: { props?: { name?: string } }) {
+      handleHistoryTabClick(this.pageVm, tab)
     },
-    putFlag() {
-      flagPage.putFlag(this.pageVm)
-    },
-    handleToggleEnabled(checked: boolean) {
-      flagPage.handleToggleEnabled(this.pageVm, checked)
-    },
-    handleUpdateFlag(patch: Partial<FlagView>) {
-      flagPage.handleUpdateFlag(this.pageVm, patch)
-    },
-    handleCreateTag(payload: { value: string }) {
-      flagPage.handleCreateTag(this.pageVm, payload)
-    },
-    handleCancelCreateTag() {
-      flagPage.handleCancelCreateTag(this.pageVm)
-    },
-    handleShowTagInput() {
-      flagPage.handleShowTagInput(this.pageVm)
-    },
-    deleteTag(tag: Tag) {
-      flagPage.deleteTag(this.pageVm, tag)
-    },
-    handleCreateVariant(payload: { key: string }) {
-      flagPage.handleCreateVariant(this.pageVm, payload)
-    },
-    handleUpdateVariantKey(payload: Parameters<typeof flagPage.handleUpdateVariantKey>[0]) {
-      flagPage.handleUpdateVariantKey(payload)
-    },
-    handleVariantAttachmentChange(payload: Parameters<typeof flagPage.handleVariantAttachmentChange>[0]) {
-      flagPage.handleVariantAttachmentChange(payload)
-    },
-    putVariant(variant: Parameters<typeof flagPage.putVariant>[1]) {
-      flagPage.putVariant(this.pageVm, variant)
-    },
-    deleteVariant(variant: Parameters<typeof flagPage.deleteVariant>[1]) {
-      flagPage.deleteVariant(this.pageVm, variant)
-    },
-    createSegment() {
-      flagPage.createSegment(this.pageVm)
-    },
-    putSegment(segment: Segment) {
-      flagPage.putSegment(this.pageVm, segment)
-    },
-    deleteSegment(segment: Segment) {
-      flagPage.deleteSegment(this.pageVm, segment)
-    },
-    handleReorderSegments(segments: Segment[]) {
-      flagPage.handleReorderSegments(this.pageVm, segments)
-    },
-    moveSegmentUp(element: Segment, index: number) {
-      flagPage.moveSegmentUp(this.pageVm, element, index)
-    },
-    moveSegmentDown(element: Segment, index: number) {
-      flagPage.moveSegmentDown(this.pageVm, element, index)
-    },
-    handleUpdateSegmentField(payload: Parameters<typeof flagPage.handleUpdateSegmentField>[0]) {
-      flagPage.handleUpdateSegmentField(payload)
-    },
-    createConstraint(payload: Parameters<typeof flagPage.createConstraint>[1]) {
-      flagPage.createConstraint(this.pageVm, payload)
-    },
-    putConstraint(payload: Parameters<typeof flagPage.putConstraint>[1]) {
-      flagPage.putConstraint(this.pageVm, payload)
-    },
-    deleteConstraint(payload: Parameters<typeof flagPage.deleteConstraint>[1]) {
-      flagPage.deleteConstraint(this.pageVm, payload)
-    },
-    handleUpdateConstraintField(payload: Parameters<typeof flagPage.handleUpdateConstraintField>[0]) {
-      flagPage.handleUpdateConstraintField(payload)
-    },
-    handleEditDistribution(segment: Segment) {
-      flagPage.handleEditDistribution(this.pageVm, segment)
-    },
-    handleSaveDistribution(draft: Record<string, DistributionDraft>) {
-      flagPage.handleSaveDistribution(this.pageVm, draft)
-    },
-    handleHistoryTabClick(tab: Parameters<typeof flagPage.handleHistoryTabClick>[1]) {
-      flagPage.handleHistoryTabClick(this.pageVm, tab)
-    },
+    handleUpdateVariantKey,
+    handleVariantAttachmentChange,
+    handleUpdateSegmentField,
+    handleUpdateConstraintField,
   },
   mounted() {
-    flagPage.mountFlagPage(this.pageVm)
+    mountFlagPage(this.pageVm)
   },
 }
 </script>

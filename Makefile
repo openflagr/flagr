@@ -28,7 +28,7 @@ help:
 	@echo "  make rebuild           gen + build (server only)"
 	@echo ""
 	@echo "Run (dev)"
-	@echo "  make start             Backend :18000 + UI dev :8080 (parallel)"
+	@echo "  make start             run + run-ui in parallel (run make build first)"
 	@echo "  make run               Pre-built ./flagr on :18000"
 	@echo "  make run-ui            UI dev server on :8080"
 	@echo "  make stop-ui           Free :18000 and :8080 (lsof, not pkill)"
@@ -99,7 +99,8 @@ rebuild: gen build
 
 .PHONY: start run run-ui stop-ui rebuild-run serve-docs
 
-run: build
+run:
+	@test -x ./flagr || (echo "Run make build first" && exit 1)
 	@./flagr --port 18000
 
 run-ui: flagr-ui-npm

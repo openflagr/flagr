@@ -30,7 +30,7 @@
               :data="filteredFlags"
               :highlight-current-row="false"
               :default-sort="{ prop: 'id', order: 'descending' }"
-              @row-click="goToFlag"
+              @row-click="goToRow"
               virtual-scroll
               size="small"
               max-height="calc(100vh - 240px)"
@@ -100,7 +100,7 @@
                 </div>
               </div>
             </template>
-            <el-collapse class="deleted-flags-inner" @change="fetchDeletedFlags" data-testid="deleted-flags-section">
+            <el-collapse class="deleted-flags-inner" @change="flagsListPage.fetchDeletedFlags(listVm)" data-testid="deleted-flags-section">
               <el-collapse-item title="View deleted flags">
                 <div v-if="!deletedFlagsLoaded" class="card--empty">Loading...</div>
                 <div v-else-if="deletedFlags.length">
@@ -142,7 +142,7 @@
               >
                       <template #default="scope">
                         <el-button
-                          @click="restoreFlag(scope.row)"
+                          @click="flagsListPage.restoreFlag(listVm, scope.row)"
                           type="warning"
                           size="small"
                           plain
@@ -174,7 +174,7 @@
         placeholder="e.g. Enable new onboarding flow"
         data-testid="new-flag-input"
         size="large"
-        @keyup.enter="createFlag"
+        @keyup.enter="flagsListPage.createFlag(listVm)"
       />
       <p class="create-flag-hint">A short description of what this feature flag controls.</p>
 
@@ -183,7 +183,7 @@
           <el-button
             type="primary"
             :disabled="!newFlag.description"
-            @click="createFlag"
+            @click="flagsListPage.createFlag(listVm)"
             data-testid="create-flag-submit-btn"
           >Create Flag</el-button>
           <span class="create-flag-option-sub">Blank flag — configure variants and segments yourself</span>
@@ -193,7 +193,7 @@
             type="primary"
             plain
             :disabled="!newFlag.description"
-            @click="createBooleanFlag"
+            @click="flagsListPage.createBooleanFlag(listVm)"
             data-testid="create-boolean-flag-btn"
           >Create Boolean Flag</el-button>
           <span class="create-flag-option-sub">Ready-to-use flag with on/off variants and a 100% rollout</span>
@@ -206,16 +206,20 @@
   </el-dialog>
 </template>
 
+
 <script lang="ts">
 import { Plus, Search } from '@element-plus/icons-vue'
-import * as flagsApi from '@/api/flags'
 import Spinner from '@/components/Spinner.vue'
-import { getFlagsCache, setFlagsCache } from '@/pages/flagsList'
+import { getFlagsCache } from '@/pages/flagsList'
 import helpers from '@/helpers/helpers'
-import type { CreateFlagPayload, Flag } from '@/api/types'
-import { requireFlagId } from '@/api/types'
-import { confirmAndRunApi } from '@/helpers/runApi'
-import { runApi } from '@/helpers/runApi'
+import * as flagsListPage from '@/pages/flagsListPage'
+import {
+  datetimeFormatter,
+  filterStatus,
+  mountFlagsList,
+  type FlagsListVm,
+} from '@/pages/flagsListPage'
+import type { Flag } from '@/api/types'
 
 const { debounce } = helpers
 
@@ -229,6 +233,7 @@ export default {
   data() {
     const cached = getFlagsCache()
     return {
+      flagsListPage,
       loaded: !!cached,
       flags: cached ? cached.flags : [] as Flag[],
       deletedFlagsLoaded: false,
@@ -250,7 +255,7 @@ export default {
 
   mounted() {
     this.visHandler = () => {
-      if (!document.hidden) this.refreshFlags()
+      if (!document.hidden) flagsListPage.refreshFlags(this.listVm)
     }
     document.addEventListener('visibilitychange', this.visHandler)
   },
@@ -259,9 +264,12 @@ export default {
     this.debouncedUpdate = debounce(() => {
       this.debouncedSearchTerm = this.searchTerm
     }, 150)
-    this.refreshFlags()
+    mountFlagsList(this.listVm)
   },
   computed: {
+    listVm(): FlagsListVm {
+      return this as unknown as FlagsListVm
+    },
     filteredFlags(): Flag[] {
       if (this.debouncedSearchTerm) {
         const terms = this.debouncedSearchTerm.split(',')
@@ -286,67 +294,11 @@ export default {
     },
   },
   methods: {
-    refreshFlags() {
-      const cachedId = getFlagsCache()?.maxSnapshotID
-      runApi(this, flagsApi.listFlagsIfStale(cachedId), {
-        onSuccess: (result) => {
-          if (!result) return
-          setFlagsCache(result)
-          this.flags = result.flags
-          this.loaded = true
-        },
-      })
+    goToRow(row: Flag) {
+      flagsListPage.goToFlag(this.listVm, row)
     },
-    datetimeFormatter(_row: Flag, _col: unknown, val: string) {
-      return val ? val.split('.')[0] : ''
-    },
-    goToFlag(row: Flag) {
-      this.$router.push({ name: 'flag', params: { flagId: String(row.id) } })
-    },
-    createBooleanFlag() {
-      this.createFlag({ template: 'simple_boolean_flag' })
-    },
-    createFlag(params?: Partial<CreateFlagPayload>) {
-      if (!this.newFlag.description) return
-      const payload: CreateFlagPayload = params
-        ? { ...this.newFlag, ...params }
-        : { ...this.newFlag }
-      runApi(this, flagsApi.createFlag(payload), {
-        successMessage: 'Flag created',
-        onSuccess: (flag) => {
-          this.newFlag.description = ''
-          this.showCreateModal = false
-          this.flags.unshift(flag)
-        },
-      })
-    },
-    restoreFlag(row: Flag) {
-      confirmAndRunApi(
-        this,
-        'This will recover the deleted flag. Continue?',
-        flagsApi.restoreFlag(requireFlagId(row)),
-        {
-          successMessage: 'Flag restored',
-          onSuccess: (flag) => {
-            this.flags.push(flag)
-            this.deletedFlags = this.deletedFlags.filter((el) => el.id !== flag.id)
-          },
-        },
-      )
-    },
-    fetchDeletedFlags() {
-      if (!this.deletedFlagsLoaded) {
-        runApi(this, flagsApi.listDeletedFlags(), {
-          onSuccess: (data) => {
-            this.deletedFlags = [...data].reverse()
-            this.deletedFlagsLoaded = true
-          },
-        })
-      }
-    },
-    filterStatus(value: boolean, row: Flag) {
-      return row.enabled === value
-    },
+    datetimeFormatter,
+    filterStatus,
   },
 }
 </script>

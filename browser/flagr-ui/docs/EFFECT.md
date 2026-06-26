@@ -92,7 +92,7 @@ Pages (`pages/flagPage.ts`, `Flags.vue`) only call **`runApi` / `confirmAndRunAp
 | Create tag / variant / segment / constraint | Optimistic patch on `vm.flag` (create tag also refreshes `listAllTags` for autocomplete) |
 | Delete tag | One `Effect.gen`: `deleteTag` → `loadFlagAndAllTags` |
 | Delete variant / segment / constraint | `reloadFlag` |
-| Mount | `loadFlagPageContext` — parallel GETs; `FLAGR_UI_POSSIBLE_ENTITY_TYPES` overrides entity-type options in `applyEntityTypesToVm`, not in `api/` |
+| Mount | `loadFlagPageContext` — parallel GETs (skips `GET /flags/entity_types` when `VITE_FLAGR_UI_POSSIBLE_ENTITY_TYPES` is set); env overrides options in `applyEntityTypesToVm` |
 
 ---
 
@@ -166,7 +166,7 @@ Ordered by **value / effort** for flagr-ui:
 
 ### A. Parallel independent loads — **done for mount**
 
-`loadFlagPageContext(flagId)` runs `Effect.all` on flag, tags, and entity types. `mountFlagPage` uses one `runApi`. Entity-type env override lives in `applyEntityTypesToVm` in `flagPage.ts`, not in the API layer.
+`loadFlagPageContext(flagId)` runs `Effect.all` on flag + tags (+ entity types only when env does not pin the list). `mountFlagPage` uses one `runApi`. Entity-type env override lives in `applyEntityTypesToVm` in `flagPage.ts`.
 
 ### B. Retries on transient failures (medium value, medium effort)
 
