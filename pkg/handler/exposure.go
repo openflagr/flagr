@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -31,9 +30,9 @@ func (h *exposureHandler) PostExposures(params exposureapi.PostExposuresParams) 
 	}
 
 	exposures := params.Body.Exposures
-	if max := config.Config.ExposureBatchSize; max > 0 && len(exposures) > max {
+	if batchMax := config.Config.ExposureBatchSize; batchMax > 0 && len(exposures) > batchMax {
 		return exposureapi.NewPostExposuresDefault(400).WithPayload(
-			ErrorMessage("exposure batch size %d exceeds maximum allowed size of %d", len(exposures), max))
+			ErrorMessage("exposure batch size %d exceeds maximum allowed size of %d", len(exposures), batchMax))
 	}
 
 	var logged int64
@@ -103,18 +102,15 @@ func buildExposureDataRecord(row *models.Exposure) (models.EvalResult, *entity.F
 		ts = time.Time(row.Timestamp).UTC().Format(time.RFC3339)
 	}
 
-	entityCtx := map[string]interface{}{}
-	mergeJSONIntoMap(entityCtx, row.EntityContext)
-	mergeJSONIntoMap(entityCtx, row.Metadata)
-	var merged any
-	if len(entityCtx) > 0 {
-		merged = entityCtx
+	var entityContext any
+	if row.EntityContext != nil {
+		entityContext = row.EntityContext
 	}
 
 	evalCtx := models.EvalContext{
 		EntityID:      *row.EntityID,
 		EntityType:    entityType,
-		EntityContext: merged,
+		EntityContext: entityContext,
 	}
 
 	return models.EvalResult{
@@ -165,17 +161,18 @@ func resolveExposureVariant(flag *entity.Flag, variantID int64, variantKey strin
 		return 0, "", nil
 	}
 
-	if variantID > 0 && variantKey != "" {
-		var byID, byKey *entity.Variant
-		for i := range flag.Variants {
-			v := &flag.Variants[i]
-			if v.ID == uint(variantID) {
-				byID = v
-			}
-			if v.Key == variantKey {
-				byKey = v
-			}
+	var byID, byKey *entity.Variant
+	for i := range flag.Variants {
+		v := &flag.Variants[i]
+		if variantID > 0 && v.ID == uint(variantID) {
+			byID = v
 		}
+		if variantKey != "" && v.Key == variantKey {
+			byKey = v
+		}
+	}
+
+	if variantID > 0 && variantKey != "" {
 		if byID == nil {
 			return 0, "", fmt.Errorf("variantID %d not found on flag", variantID)
 		}
@@ -189,37 +186,16 @@ func resolveExposureVariant(flag *entity.Flag, variantID int64, variantKey strin
 	}
 
 	if variantID > 0 {
-		for _, v := range flag.Variants {
-			if v.ID == uint(variantID) {
-				return int64(v.ID), v.Key, nil
-			}
+		if byID == nil {
+			return 0, "", fmt.Errorf("variantID %d not found on flag", variantID)
 		}
-		return 0, "", fmt.Errorf("variantID %d not found on flag", variantID)
+		return int64(byID.ID), byID.Key, nil
 	}
 
-	for _, v := range flag.Variants {
-		if v.Key == variantKey {
-			return int64(v.ID), v.Key, nil
-		}
+	if byKey == nil {
+		return 0, "", fmt.Errorf("variantKey %q not found on flag", variantKey)
 	}
-	return 0, "", fmt.Errorf("variantKey %q not found on flag", variantKey)
-}
-
-func mergeJSONIntoMap(dst map[string]interface{}, src any) {
-	if src == nil {
-		return
-	}
-	b, err := json.Marshal(src)
-	if err != nil || len(b) == 0 || string(b) == "null" {
-		return
-	}
-	var m map[string]interface{}
-	if err := json.Unmarshal(b, &m); err != nil || len(m) == 0 {
-		return
-	}
-	for k, v := range m {
-		dst[k] = v
-	}
+	return int64(byKey.ID), byKey.Key, nil
 }
 
 var logExposureStatsd = func(status string, flagID int64, flagKey string) {
@@ -237,5 +213,5 @@ var logExposureStatsd = func(status string, flagID int64, flagKey string) {
 	if status == "recorded" {
 		metric = "exposure.recorded"
 	}
-	config.Global.StatsdClient.Incr(metric, tags, 1)
+	_ = config.Global.StatsdClient.Incr(metric, tags, 1)
 }

@@ -38,6 +38,16 @@ func dataRecordEnabled(flag *entity.Flag) bool {
 	return flag != nil && flag.DataRecordsEnabled && config.Config.RecorderEnabled
 }
 
+// recordSourcePolicy centralizes how client-reported exposure rows differ from
+// eval API rows on the same EvalResult wire shape.
+func recordCountsTowardDatar(r models.EvalResult) bool {
+	return r.RecordSource != models.EvalResultRecordSourceExposure
+}
+
+func recordCountsTowardEvalKafkaStatsd(r models.EvalResult) bool {
+	return r.RecordSource != models.EvalResultRecordSourceExposure
+}
+
 // GetDataRecorder gets the data recorder
 func GetDataRecorder() DataRecorder {
 	singletonDataRecorderOnce.Do(func() {

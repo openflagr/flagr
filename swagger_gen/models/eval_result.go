@@ -37,7 +37,7 @@ type EvalResult struct {
 	// flagTags. flagTags looks up flags by tag. Either works.
 	FlagTags []string `json:"flagTags,omitempty"`
 
-	// evaluation for eval API results; exposure for POST /exposures pipeline events
+	// evaluation for eval API results; exposure for client-reported impressions via POST /exposures (same data recorders as eval)
 	// Enum: ["evaluation","exposure"]
 	RecordSource string `json:"recordSource,omitempty"`
 

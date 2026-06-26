@@ -22,7 +22,7 @@ type Flag struct {
 	// created by
 	CreatedBy string `json:"createdBy,omitempty"`
 
-	// enabled data records will get data logging in the metrics pipeline, for example, kafka.
+	// when true and FLAGR_RECORDER_ENABLED is set, evaluation and exposure rows are written to configured data recorders (e.g. kafka).
 	// Required: true
 	DataRecordsEnabled *bool `json:"dataRecordsEnabled"`
 

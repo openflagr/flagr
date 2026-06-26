@@ -2,6 +2,8 @@
 
 The Debug Console is a built-in UI tool for testing flag evaluation without leaving the browser. It appears on each flag's detail page and wraps the evaluation API in an interactive JSON editor.
 
+The console exercises `POST /evaluation` only. For production **impression** logging after render, see [Exposure Logging](flagr_exposure.md). Concepts (segments, constraints, rollout) are in the [Overview](flagr_overview.md).
+
 ![Debug Console](/images/demo_debugging_console.png)
 
 ## What it does

@@ -145,7 +145,7 @@ definitions:
         items:
           $ref: "#/definitions/variant"
       dataRecordsEnabled:
-        description: enabled data records will get data logging in the metrics pipeline, for example, kafka.
+        description: when true and FLAGR_RECORDER_ENABLED is set, evaluation and exposure rows are written to configured data recorders (e.g. kafka).
         type: boolean
       entityType:
         description: it will override the entityType in the evaluation logs if it's not empty
@@ -183,7 +183,7 @@ definitions:
         x-nullable: true
       dataRecordsEnabled:
         type: boolean
-        description: enabled data records will get data logging in the metrics pipeline, for example, kafka.
+        description: when true and FLAGR_RECORDER_ENABLED is set, evaluation and exposure rows are written to configured data recorders (e.g. kafka).
         x-nullable: true
       entityType:
         description: it will overwrite entityType into evaluation logs if it's not empty
@@ -210,7 +210,6 @@ definitions:
   flagSnapshot:
     type: object
     required:
-      - id
       - flag
       - updatedAt
     properties:
@@ -660,15 +659,13 @@ definitions:
       entityContext:
         type: object
         additionalProperties: true
+        description: Optional attributes recorded on evalContext.entityContext (same field as POST /evaluation). Include impression-specific keys here (e.g. page path); exposure does not re-run segment constraints.
       flagSnapshotID:
         type: integer
         format: int64
       timestamp:
         type: string
         format: date-time
-      metadata:
-        type: object
-        additionalProperties: true
   exposuresResponse:
     type: object
     properties:

@@ -50,6 +50,14 @@ There are three components in the flagr, Flagr Evaluator, Flagr Manager, and Fla
   The lightweight endpoint `GET /api/v1/flags/snapshots/max_id` exposes the current max `flag_snapshot` id — a monotonically increasing version counter for the entire flag configuration. External caching layers (CDN, sidecar proxies, application-level caches) can poll this single endpoint and compare the value with their last-known version: if the value changed, at least one flag's configuration was modified and cached evaluations should be invalidated. This is vastly more efficient than polling individual flag records.
 
 - **Flagr Manager**. Flagr manager is the CRUD gateway. All the mutations of flags happen here.
-- **Flagr Metrics**. Evaluation results and client-reported exposures (`POST /api/v1/exposures`) flow through the same **data recorders** when per-flag `dataRecordsEnabled` is on. Supports Kafka (default), AWS Kinesis, Google Pub/Sub, and Datar. Exposures use `recordSource: exposure` and do not update Datar aggregates. Multiple recorders via `FLAGR_RECORDER_TYPE`.
+- **Flagr Metrics**. Evaluation results and client-reported exposures (`POST /api/v1/exposures`) flow through the same **data recorders** when per-flag `dataRecordsEnabled` is on. Streaming options: **Kafka**, **AWS Kinesis**, and **Google Pub/Sub** (same wire format for eval and exposure). **Datar** is eval-only and skips exposure rows. Combine recorders via `FLAGR_RECORDER_TYPE`. See [Data Recorders & A/B Analysis](flagr_eval_exposure_pipeline.md).
 
 ![Flagr Architecture](images/flagr_arch.png)
+
+## Related documentation
+
+- [Use Cases](flagr_use_cases.md) — how to instrument apps for flags, experiments, and dynamic config
+- [Exposure Logging](flagr_exposure.md) and [Data Recorders & A/B Analysis](flagr_eval_exposure_pipeline.md) — impressions and pipeline analytics
+- [Datar](flagr_datar.md) — optional built-in eval counters
+- [Environment Variables](flagr_env.md) — deployment and recorder configuration
+

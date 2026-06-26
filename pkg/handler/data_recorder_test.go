@@ -94,6 +94,24 @@ func TestDataRecordEnabled(t *testing.T) {
 	assert.False(t, dataRecordEnabled(f))
 }
 
+func TestRecordCountsTowardDatar(t *testing.T) {
+	assert.True(t, recordCountsTowardDatar(models.EvalResult{
+		RecordSource: models.EvalResultRecordSourceEvaluation,
+	}))
+	assert.False(t, recordCountsTowardDatar(models.EvalResult{
+		RecordSource: models.EvalResultRecordSourceExposure,
+	}))
+}
+
+func TestRecordCountsTowardEvalKafkaStatsd(t *testing.T) {
+	assert.True(t, recordCountsTowardEvalKafkaStatsd(models.EvalResult{
+		RecordSource: models.EvalResultRecordSourceEvaluation,
+	}))
+	assert.False(t, recordCountsTowardEvalKafkaStatsd(models.EvalResult{
+		RecordSource: models.EvalResultRecordSourceExposure,
+	}))
+}
+
 func TestFanOutRecorder_Single(t *testing.T) {
 	m := &mockRecorder{}
 	f := fanOutRecorder{m}
@@ -160,7 +178,7 @@ func TestDatarRecorder_AsyncRecord(t *testing.T) {
 
 	db := entity.NewTestDB()
 	defer gostub.StubFunc(&getDB, db).Reset()
-	db.AutoMigrate(entity.AutoMigrateTables...)
+	assert.NoError(t, db.AutoMigrate(entity.AutoMigrateTables...))
 
 	r := NewDatarRecorder()
 	assert.NotNil(t, r)
@@ -183,7 +201,7 @@ func TestDatarRecorder_SkipsExposure(t *testing.T) {
 
 	db := entity.NewTestDB()
 	defer gostub.StubFunc(&getDB, db).Reset()
-	db.AutoMigrate(entity.AutoMigrateTables...)
+	assert.NoError(t, db.AutoMigrate(entity.AutoMigrateTables...))
 
 	_ = GetDatar()
 	r := NewDatarRecorder()
@@ -207,7 +225,7 @@ func TestDatarRecorder_RecordsEvaluationSource(t *testing.T) {
 
 	db := entity.NewTestDB()
 	defer gostub.StubFunc(&getDB, db).Reset()
-	db.AutoMigrate(entity.AutoMigrateTables...)
+	assert.NoError(t, db.AutoMigrate(entity.AutoMigrateTables...))
 
 	r := NewDatarRecorder()
 	r.AsyncRecord(models.EvalResult{

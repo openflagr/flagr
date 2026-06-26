@@ -4,6 +4,24 @@ Flagr is an open source Go service that delivers the right experience to the rig
 
 For a deeper introduction, see the [Flagr Overview](flagr_overview).
 
+## Documentation map
+
+| If you want to… | Start here |
+|-----------------|------------|
+| Learn concepts (flags, segments, rollout) | [Overview](flagr_overview) |
+| See code patterns for flags / A/B / config | [Use Cases](flagr_use_cases) |
+| Configure the server (DB, auth, recorders) | [Environment Variables](flagr_env) |
+| Run flags from Git (no DB) | [JSON Flag Source](flagr_json_flag_spec) |
+| Log impressions after eval (`POST /exposures`) | [Exposure Logging](flagr_exposure) |
+| Ship eval + exposure to a data recorder and analyze A/B | [Data Recorders & A/B Analysis](flagr_eval_exposure_pipeline) |
+| Quick eval counts inside Flagr (no pipeline) | [Datar Analytics](flagr_datar) |
+| Test evaluation in the UI | [Debug Console](flagr_debugging) |
+| Webhooks on flag changes | [Notifications](flagr_notifications) |
+| REST API details | [API Reference](https://openflagr.github.io/flagr/api_docs) |
+
+**Event recording:** [Exposure](flagr_exposure) (API) → [Data Recorders & A/B Analysis](flagr_eval_exposure_pipeline) → [Datar](flagr_datar) (built-in eval-only aggregates). Env vars: [Data record destinations](flagr_env?id=data-record-destinations).
+
+
 ## What can Flagr do?
 
 | Capability | Highlights |
@@ -12,7 +30,7 @@ For a deeper introduction, see the [Flagr Overview](flagr_overview).
 | **A/B testing** | Multi-variant experiments with deterministic distribution |
 | **Dynamic configuration** | Per-variant JSON attachments for runtime config |
 | **GitOps / Flags-as-code** | Load flags from JSON files or HTTP URLs; manage in Git, validate in CI |
-| **Exposure logging** | `POST /exposures` for impressions after assignment; shares data recorder gate with eval |
+| **Exposure logging** | `POST /exposures` after the user sees the variant — [Exposure](flagr_exposure), [Data Recorders & A/B Analysis](flagr_eval_exposure_pipeline) |
 | **Webhook notifications** | HTTP POST on every flag change, with retry and backoff |
 | **Multi-database** | SQLite (dev), MySQL, PostgreSQL, JSON sources |
 

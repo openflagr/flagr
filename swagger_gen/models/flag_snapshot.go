@@ -9,6 +9,7 @@ import (
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag/jsonutils"
+	"github.com/go-openapi/swag/typeutils"
 	"github.com/go-openapi/validate"
 )
 
@@ -22,10 +23,9 @@ type FlagSnapshot struct {
 	Flag *Flag `json:"flag"`
 
 	// id
-	// Required: true
 	// Read Only: true
 	// Minimum: 1
-	ID int64 `json:"id"`
+	ID int64 `json:"id,omitempty"`
 
 	// updated at
 	// Required: true
@@ -83,9 +83,8 @@ func (m *FlagSnapshot) validateFlag(formats strfmt.Registry) error {
 }
 
 func (m *FlagSnapshot) validateID(formats strfmt.Registry) error {
-
-	if err := validate.Required("id", "body", m.ID); err != nil {
-		return err
+	if typeutils.IsZero(m.ID) { // not required
+		return nil
 	}
 
 	if err := validate.MinimumInt("id", "body", m.ID, 1, false); err != nil {

@@ -65,10 +65,10 @@ func datarError(msg string, args ...interface{}) *models.Error {
 	return &models.Error{Message: &m}
 }
 
-func parseTimeRange(from, to *strfmt.DateTime, defaultDays int) (time.Time, time.Time) {
+func parseTimeRange(from, to *strfmt.DateTime) (time.Time, time.Time) {
 	now := time.Now().UTC()
 	end := now
-	start := now.Add(-time.Duration(defaultDays) * 24 * time.Hour)
+	start := now.Add(-time.Duration(defaultLookbackDays) * 24 * time.Hour)
 	if from != nil {
 		start = time.Time(*from).UTC()
 	}
@@ -121,7 +121,7 @@ func HandleGetDatarSummary(params datarapi.GetDatarSummaryParams) middleware.Res
 }
 
 func respondDatarSummary(d *datar.Engine, params datarapi.GetDatarSummaryParams) middleware.Responder {
-	from, to := parseTimeRange(params.From, params.To, defaultLookbackDays)
+	from, to := parseTimeRange(params.From, params.To)
 
 	limit := 100
 	if params.Limit != nil {
@@ -162,7 +162,7 @@ func HandleGetDatarFlagSummary(params datarapi.GetDatarFlagSummaryParams) middle
 }
 
 func respondDatarFlagSummary(d *datar.Engine, params datarapi.GetDatarFlagSummaryParams) middleware.Responder {
-	from, to := parseTimeRange(params.From, params.To, defaultLookbackDays)
+	from, to := parseTimeRange(params.From, params.To)
 
 	summary, err := d.QueryFlagSummaryBreakdown(params.FlagID, from, to)
 	if err != nil {

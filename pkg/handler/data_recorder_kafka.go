@@ -145,7 +145,7 @@ func (k *kafkaRecorder) AsyncRecord(r models.EvalResult) {
 		logrus.WithField("err", err).Error("failed to generate data record frame for kafka recorder")
 		return
 	}
-	var partitionKey sarama.Encoder = nil
+	var partitionKey sarama.Encoder
 	if k.partitionKeyEnabled {
 		partitionKey = sarama.StringEncoder(frame.GetPartitionKey())
 	}
@@ -160,7 +160,7 @@ func (k *kafkaRecorder) AsyncRecord(r models.EvalResult) {
 }
 
 var logKafkaAsyncRecordToDatadog = func(r models.EvalResult) {
-	if config.Global.StatsdClient == nil || r.RecordSource == models.EvalResultRecordSourceExposure {
+	if config.Global.StatsdClient == nil || !recordCountsTowardEvalKafkaStatsd(r) {
 		return
 	}
 	config.Global.StatsdClient.Incr(

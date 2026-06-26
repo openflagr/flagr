@@ -47,11 +47,17 @@ Flagr supports JWT-based authentication for API access. Configure the signing ke
 
 ## Data record destinations
 
+Flagr can emit **evaluation** and **exposure** rows to one or more backends when `FLAGR_RECORDER_ENABLED=true` and the flag has `dataRecordsEnabled: true`.
 
-Evaluation results and client-reported **exposures** (`POST /api/v1/exposures`) share the same data recorder gate when per-flag `dataRecordsEnabled` is on. Exposure rows include `recordSource: "exposure"` in the recorded payload. See [Exposure Logging](flagr_exposure.md).
+| Goal | Doc |
+|------|-----|
+| Exposure API (`POST /exposures`) | [Exposure Logging](flagr_exposure.md) |
+| Stream eval + exposure to your pipeline (Kafka, Kinesis, or Pub/Sub) + A/B patterns | [Data Recorders & A/B Analysis](flagr_eval_exposure_pipeline.md) |
+| Built-in eval counts only (no stream, no exposures) | [Datar Analytics](flagr_datar.md) |
 
-`FLAGR_EXPOSURE_BATCH_SIZE` (default **100**) caps rows per `POST /api/v1/exposures` request.
-Flagr can send evaluation results to one or more destinations simultaneously. Set `FLAGR_RECORDER_ENABLED=true` and list the desired recorders in `FLAGR_RECORDER_TYPE` (comma-separated, e.g. `kafka,datar`).
+Exposure rows use `recordSource: "exposure"` on the same wire shape as evaluations. `FLAGR_EXPOSURE_BATCH_SIZE` (default **100**) caps rows per exposure request.
+
+Set `FLAGR_RECORDER_TYPE` to a comma-separated list (e.g. `kafka`, `kafka,datar`).
 
 ### Kafka (default)
 
@@ -63,6 +69,8 @@ FLAGR_RECORDER_KAFKA_TOPIC=flagr-records
 ```
 
 Additional Kafka options include SSL/TLS (`FLAGR_RECORDER_KAFKA_CERTFILE`, `FLAGR_RECORDER_KAFKA_KEYFILE`, `FLAGR_RECORDER_KAFKA_CAFILE`), SASL authentication (`FLAGR_RECORDER_KAFKA_SASL_USERNAME`, `FLAGR_RECORDER_KAFKA_SASL_PASSWORD`), idempotent producers, and encryption. See [env.go](https://github.com/openflagr/flagr/blob/master/pkg/config/env.go) for the full list.
+
+For consuming eval and exposure events (any streaming recorder) and A/B analysis, see [Data Recorders & A/B Analysis](flagr_eval_exposure_pipeline.md).
 
 ### Kinesis (AWS)
 
@@ -77,6 +85,8 @@ AWS_DEFAULT_REGION=eu-central-1
 Other options include credentials files, container credentials, and instance profiles. See the [AWS documentation](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#config-settings-and-precedence).
 
 Make sure the IAM key has permissions to push records to the Kinesis stream.
+
+Kinesis and Pub/Sub use the same **record frame** as Kafka for both evaluation and exposure rows. See [Data Recorders & A/B Analysis](flagr_eval_exposure_pipeline.md).
 
 ### Pub/Sub (Google Cloud)
 
