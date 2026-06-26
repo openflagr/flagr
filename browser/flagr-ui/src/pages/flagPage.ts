@@ -57,15 +57,7 @@ export function reloadFlag(vm: FlagPageVm): void {
   })
 }
 
-export function loadAllTags(vm: FlagPageVm): void {
-  runApi(vm, flagsApi.listAllTags(), {
-    onSuccess: (data) => {
-      vm.allTags = data
-    },
-  })
-}
-
-export function loadEntityTypes(vm: FlagPageVm): void {
+function applyEntityTypesToVm(vm: FlagPageVm, entityTypesFromApi: string[]): void {
   if (FLAGR_UI_POSSIBLE_ENTITY_TYPES) {
     vm.entityTypes = entityTypeOptionsFromKeys(
       FLAGR_UI_POSSIBLE_ENTITY_TYPES.split(','),
@@ -73,11 +65,8 @@ export function loadEntityTypes(vm: FlagPageVm): void {
     vm.allowCreateEntityType = false
     return
   }
-  runApi(vm, flagsApi.listEntityTypes(), {
-    onSuccess: (data) => {
-      vm.entityTypes = entityTypeOptionsFromKeys(data)
-    },
-  })
+  vm.entityTypes = entityTypeOptionsFromKeys(entityTypesFromApi)
+  vm.allowCreateEntityType = true
 }
 
 export function deleteFlag(vm: FlagPageVm): void {
@@ -128,7 +117,11 @@ export function handleCreateTag(vm: FlagPageVm, { value }: { value: string }): v
         vm.flag.tags!.push(tag)
       }
       vm.tagInputVisible = false
-      loadAllTags(vm)
+      runApi(vm, flagsApi.listAllTags(), {
+        onSuccess: (data) => {
+          vm.allTags = data
+        },
+      })
     },
   })
 }
@@ -392,20 +385,13 @@ export function handleHistoryTabClick(vm: FlagPageVm, tab: { props?: { name?: st
   }
 }
 
-function entityTypeKeysFromEnv(): readonly string[] | null {
-  if (!FLAGR_UI_POSSIBLE_ENTITY_TYPES) return null
-  return FLAGR_UI_POSSIBLE_ENTITY_TYPES.split(',')
-}
-
 export function mountFlagPage(vm: FlagPageVm): void {
-  const envKeys = entityTypeKeysFromEnv()
-  runApi(vm, flagsApi.loadFlagPageContext(vm.flagId, envKeys), {
+  runApi(vm, flagsApi.loadFlagPageContext(vm.flagId), {
     onSuccess: (load) => {
       vm.flag = normalizeFlag(load.flag)
       vm.loaded = true
       vm.allTags = load.allTags
-      vm.entityTypes = entityTypeOptionsFromKeys(load.entityTypeKeys)
-      vm.allowCreateEntityType = envKeys === null
+      applyEntityTypesToVm(vm, load.entityTypesFromApi)
     },
   })
 }

@@ -137,24 +137,18 @@ export const listEntityTypes = (): Effect.Effect<string[], ApiError> =>
 export interface FlagPageLoad {
   flag: Flag
   allTags: Tag[]
-  entityTypeKeys: string[]
+  /** From `GET /flags/entity_types` (page may override with env). */
+  entityTypesFromApi: string[]
 }
 
 export const loadFlagPageContext = Effect.fn('flags.loadFlagPageContext')(function* (
   flagId: FlagId,
-  entityTypeKeysFromEnv: readonly string[] | null,
 ) {
-  const [flag, allTags, entityTypeKeys] = yield* Effect.all(
-    [
-      getFlag(flagId),
-      listAllTags(),
-      entityTypeKeysFromEnv === null
-        ? listEntityTypes()
-        : Effect.succeed([...entityTypeKeysFromEnv]),
-    ],
+  const [flag, allTags, entityTypesFromApi] = yield* Effect.all(
+    [getFlag(flagId), listAllTags(), listEntityTypes()],
     { concurrency: 'unbounded' },
   )
-  return { flag, allTags, entityTypeKeys } satisfies FlagPageLoad
+  return { flag, allTags, entityTypesFromApi } satisfies FlagPageLoad
 })
 
 export const loadFlagAndAllTags = Effect.fn('flags.loadFlagAndAllTags')(function* (flagId: FlagId) {

@@ -85,6 +85,15 @@ Sequential logic reads like async/await but **stays in the error channel** (`Api
 
 Pages (`pages/flagPage.ts`, `Flags.vue`) only call **`runApi` / `confirmAndRunApi`** with programs from `api/*`.
 
+### Flag page: after mutations (`pages/flagPage.ts`)
+
+| Action | UI update |
+|--------|-----------|
+| Create tag / variant / segment / constraint | Optimistic patch on `vm.flag` (create tag also refreshes `listAllTags` for autocomplete) |
+| Delete tag | One `Effect.gen`: `deleteTag` → `loadFlagAndAllTags` |
+| Delete variant / segment / constraint | `reloadFlag` |
+| Mount | `loadFlagPageContext` — parallel GETs; `FLAGR_UI_POSSIBLE_ENTITY_TYPES` overrides entity-type options in `applyEntityTypesToVm`, not in `api/` |
+
 ---
 
 ## Why Effect is good *here* (not hype)
@@ -155,22 +164,9 @@ runApi(vm, flagsApi.archiveFlag(vm.flagId), { successMessage: 'Flag archived', o
 
 Ordered by **value / effort** for flagr-ui:
 
-### A. Parallel independent loads (medium value, low effort)
+### A. Parallel independent loads — **done for mount**
 
-Today `mountFlagPage` fires three separate `runApi` calls (flag, tags, entity types).  
-In `api/` you could expose **one** program:
-
-```ts
-const loadFlagPage = Effect.fn('flagPage.load')(function* (flagId: string) {
-  const [flag, tags, entityTypes] = yield* Effect.all(
-    [getFlag(flagId), listAllTags(), listEntityTypes()],
-    { concurrency: 'unbounded' },
-  )
-  return { flag, tags, entityTypes }
-})
-```
-
-Vue still calls **`runApi` once**; fewer races and one error surface.
+`loadFlagPageContext(flagId)` runs `Effect.all` on flag, tags, and entity types. `mountFlagPage` uses one `runApi`. Entity-type env override lives in `applyEntityTypesToVm` in `flagPage.ts`, not in the API layer.
 
 ### B. Retries on transient failures (medium value, medium effort)
 
