@@ -97,13 +97,13 @@ the code the same way and branch on the assigned variant:
 evaluation_result = flagr.postEvaluation(entity)
 
 if (evaluation_result.variantKey == "treatment1") {
-    // do the treatment 1 experience
+    // Treatment 1: show the new single-page checkout
 } else if (evaluation_result.variantKey == "treatment2") {
-    // do the treatment 2 experience
+    // Treatment 2: show the new accordion checkout
 } else if (evaluation_result.variantKey == "treatment3") {
-    // do the treatment 3 experience
+    // Treatment 3: show the new one-click checkout
 } else {
-    // do the control experience
+    // Control: show the current production checkout (the baseline)
 }
 ```
 
