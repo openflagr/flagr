@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 	"time"
@@ -153,6 +154,59 @@ func TestPostExposures_RecordsWhenEnabled(t *testing.T) {
 	}
 }
 
+func TestExposureEvalResult_WireContainsRecordSource(t *testing.T) {
+	defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
+	eid := "wire-test-entity"
+	r, _, err := buildExposureDataRecord(&models.Exposure{
+		EntityID: &eid,
+		FlagID:   100,
+	})
+	if !assert.NoError(t, err) {
+		return
+	}
+	raw, err := r.MarshalBinary()
+	if !assert.NoError(t, err) {
+		return
+	}
+	var payload map[string]any
+	if !assert.NoError(t, json.Unmarshal(raw, &payload)) {
+		return
+	}
+	assert.Equal(t, models.EvalResultRecordSourceExposure, payload["recordSource"])
+	assert.Equal(t, int64(0), r.SegmentID)
+}
+
+func TestExposureDataRecordFrame_OutputContainsRecordSource(t *testing.T) {
+	defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
+	eid := "frame-test-entity"
+	r, _, err := buildExposureDataRecord(&models.Exposure{
+		EntityID: &eid,
+		FlagID:   100,
+	})
+	if !assert.NoError(t, err) {
+		return
+	}
+	frame := DataRecordFrame{
+		evalResult: r,
+		options:    DataRecordFrameOptions{FrameOutputMode: frameOutputModePayloadRawJSON},
+	}
+	out, err := frame.Output()
+	if !assert.NoError(t, err) {
+		return
+	}
+	var outer struct {
+		Payload json.RawMessage `json:"payload"`
+	}
+	if !assert.NoError(t, json.Unmarshal(out, &outer)) {
+		return
+	}
+	var inner map[string]any
+	if !assert.NoError(t, json.Unmarshal(outer.Payload, &inner)) {
+		return
+	}
+	assert.Equal(t, models.EvalResultRecordSourceExposure, inner["recordSource"])
+}
+
 func TestBuildExposureDataRecord(t *testing.T) {
 	defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCache()).Reset()
 	fixture := entity.GenFixtureFlag()
@@ -296,7 +350,7 @@ func TestBuildExposureDataRecord(t *testing.T) {
 		if !assert.NoError(t, err) {
 			return
 		}
-		ctx, ok := r.EvalContext.EntityContext.(map[string]interface{})
+		ctx, ok := r.EvalContext.EntityContext.(map[string]any)
 		if !assert.True(t, ok) {
 			return
 		}
@@ -415,9 +469,9 @@ func TestResolveExposureFlag(t *testing.T) {
 }
 
 func TestMergeJSONIntoMap(t *testing.T) {
-	dst := map[string]interface{}{}
+	dst := map[string]any{}
 	mergeJSONIntoMap(dst, map[string]any{"a": 1})
-	mergeJSONIntoMap(dst, map[string]interface{}{"b": 2})
+	mergeJSONIntoMap(dst, map[string]any{"b": 2})
 	assert.Equal(t, float64(1), dst["a"])
 	assert.Equal(t, float64(2), dst["b"])
 

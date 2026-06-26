@@ -103,7 +103,7 @@ func buildExposureDataRecord(row *models.Exposure) (models.EvalResult, *entity.F
 		ts = time.Time(row.Timestamp).UTC().Format(time.RFC3339)
 	}
 
-	entityCtx := map[string]interface{}{}
+	entityCtx := map[string]any{}
 	mergeJSONIntoMap(entityCtx, row.EntityContext)
 	mergeJSONIntoMap(entityCtx, row.Metadata)
 	var merged any
@@ -165,17 +165,18 @@ func resolveExposureVariant(flag *entity.Flag, variantID int64, variantKey strin
 		return 0, "", nil
 	}
 
-	if variantID > 0 && variantKey != "" {
-		var byID, byKey *entity.Variant
-		for i := range flag.Variants {
-			v := &flag.Variants[i]
-			if v.ID == uint(variantID) {
-				byID = v
-			}
-			if v.Key == variantKey {
-				byKey = v
-			}
+	var byID, byKey *entity.Variant
+	for i := range flag.Variants {
+		v := &flag.Variants[i]
+		if variantID > 0 && v.ID == uint(variantID) {
+			byID = v
 		}
+		if variantKey != "" && v.Key == variantKey {
+			byKey = v
+		}
+	}
+
+	if variantID > 0 && variantKey != "" {
 		if byID == nil {
 			return 0, "", fmt.Errorf("variantID %d not found on flag", variantID)
 		}
@@ -189,23 +190,21 @@ func resolveExposureVariant(flag *entity.Flag, variantID int64, variantKey strin
 	}
 
 	if variantID > 0 {
-		for _, v := range flag.Variants {
-			if v.ID == uint(variantID) {
-				return int64(v.ID), v.Key, nil
-			}
+		if byID == nil {
+			return 0, "", fmt.Errorf("variantID %d not found on flag", variantID)
 		}
-		return 0, "", fmt.Errorf("variantID %d not found on flag", variantID)
+		return int64(byID.ID), byID.Key, nil
 	}
 
-	for _, v := range flag.Variants {
-		if v.Key == variantKey {
-			return int64(v.ID), v.Key, nil
-		}
+	if byKey == nil {
+		return 0, "", fmt.Errorf("variantKey %q not found on flag", variantKey)
 	}
-	return 0, "", fmt.Errorf("variantKey %q not found on flag", variantKey)
+	return int64(byKey.ID), byKey.Key, nil
 }
 
-func mergeJSONIntoMap(dst map[string]interface{}, src any) {
+// mergeJSONIntoMap copies top-level keys from arbitrary client JSON (swagger any)
+// into dst. Non-objects, null, and empty objects are intentionally ignored.
+func mergeJSONIntoMap(dst map[string]any, src any) {
 	if src == nil {
 		return
 	}
@@ -213,7 +212,7 @@ func mergeJSONIntoMap(dst map[string]interface{}, src any) {
 	if err != nil || len(b) == 0 || string(b) == "null" {
 		return
 	}
-	var m map[string]interface{}
+	var m map[string]any
 	if err := json.Unmarshal(b, &m); err != nil || len(m) == 0 {
 		return
 	}

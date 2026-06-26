@@ -65,6 +65,7 @@ func TestMain(m *testing.M) {
 	url := os.Getenv("FLAGR_SERVER_URL")
 	if url == "" {
 		url = startLocalServer()
+		_ = os.Setenv("FLAGR_RECORDER_ENABLED", "true")
 		defer func() {
 			if serverCmd != nil {
 				serverCmd.Process.Kill()
@@ -159,10 +160,11 @@ func startLocalServer() string {
 	serverCmd = exec.Command(binPath,
 		"--port", strconv.Itoa(port),
 	)
-	serverCmd.Dir = projectRoot
 	serverCmd.Env = append(os.Environ(),
 		"FLAGR_DB_DBDRIVER=sqlite3",
 		"FLAGR_DB_DBCONNECTIONSTR=file::memory:?cache=shared",
+		"FLAGR_RECORDER_ENABLED=true",
+		"FLAGR_RECORDER_TYPE=datar",
 	)
 	// Redirect server output to a temp file to avoid "I/O incomplete" errors
 	// when the test binary kills the server process.

@@ -12,6 +12,9 @@ Prometheus covers rate-based metrics and variant-level time-series well, but it 
 - **Historic totals** — cumulative counts (not just rates) over days or weeks
 - **Per-flag dashboards** — a simple summary view across all flags without setting up a separate analytics stack
 
+For **client-reported impressions** and warehouse-style A/B analysis, use [Exposure Logging](flagr_exposure.md) and [Data Recorders & A/B Analysis](flagr_eval_exposure_pipeline.md) (Kafka, Kinesis, or Pub/Sub). Datar does not ingest exposure rows.
+
+
 ## Enabling
 
 Requires `FLAGR_RECORDER_ENABLED=true`. With the master switch on, list `datar` in `RecorderType` to activate the in-memory aggregator:
@@ -119,3 +122,4 @@ A unique index on `(flag_id, variant_id, segment_id, bucket_hour)` ensures addit
 - Data is in-memory until the periodic flush. If the process crashes, up to one flush interval of aggregate data is lost (acceptable for dashboard analytics).
 - No data retention policy is built in — the table grows unbounded. Deploy a cron job or retention policy if needed.
 - No unique entity counting (HyperLogLog or similar). Each evaluation is counted once regardless of the entity identity.
+- **Evaluations only** — rows with `recordSource: exposure` from `POST /exposures` are not counted. Use a streaming recorder (Kafka, Kinesis, or Pub/Sub) and [Data Recorders & A/B Analysis](flagr_eval_exposure_pipeline.md) for impression-based experiments.

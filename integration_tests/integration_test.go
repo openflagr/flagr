@@ -17,10 +17,11 @@ package flagr_integration
 
 import (
 	"encoding/json"
-	"io"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"testing"
 	"time"
 )
@@ -543,9 +544,48 @@ func TestIntegration_BatchEvalOperator(t *testing.T) {
 	}
 }
 
-
 func TestIntegration_Exposures(t *testing.T) {
+	if len(seedFlagIDs) < 2 {
+		t.Fatal("need at least 2 seeded flags")
+	}
 	flagID := seedFlagIDs[1]
+	doReqOK(t, "PUT", fmt.Sprintf("/api/v1/flags/%d", flagID), map[string]any{
+		"dataRecordsEnabled": true,
+	})
+	var flag flagResponse
+	getJSON(t, fmt.Sprintf("/api/v1/flags/%d", flagID), &flag)
+	if !flag.DataRecordsEnabled {
+		t.Fatalf("expected dataRecordsEnabled=true on flag %d", flagID)
+	}
+
+	if os.Getenv("FLAGR_RECORDER_ENABLED") == "true" {
+		err := pollUntil("exposure recorder gate", "/api/v1/exposures", 15*time.Second, func() bool {
+			r, err := doReq("POST", "/api/v1/exposures", map[string]any{
+				"exposures": []map[string]any{{
+					"flagID":   flagID,
+					"entityID": "exposure-cache-warmup",
+				}},
+			})
+			if err != nil {
+				return false
+			}
+			defer r.Body.Close()
+			if r.StatusCode < 200 || r.StatusCode >= 300 {
+				return false
+			}
+			var warm struct {
+				LoggedCount int64 `json:"loggedCount"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&warm); err != nil {
+				return false
+			}
+			return warm.LoggedCount == 1
+		})
+		if err != nil {
+			t.Fatalf("exposure never recorded after enabling dataRecordsEnabled: %v", err)
+		}
+	}
+
 	eid := "exposure-test-entity"
 	body := map[string]any{
 		"exposures": []map[string]any{
@@ -589,8 +629,12 @@ func TestIntegration_Exposures(t *testing.T) {
 	if resp.Errors[0].Index != 1 {
 		t.Fatalf("expected error index 1, got %d", resp.Errors[0].Index)
 	}
-	if resp.LoggedCount != 0 && resp.LoggedCount != 1 {
-		t.Fatalf("loggedCount want 0 or 1, got %d", resp.LoggedCount)
+	wantLogged := int64(0)
+	if os.Getenv("FLAGR_RECORDER_ENABLED") == "true" {
+		wantLogged = 1
+	}
+	if resp.LoggedCount != wantLogged {
+		t.Fatalf("loggedCount want %d (recorder enabled=%v), got %d", wantLogged, wantLogged == 1, resp.LoggedCount)
 	}
 }
 // ---------------------------------------------------------------------------

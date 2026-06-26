@@ -91,6 +91,7 @@ UI setting example (frontend looks may iterate quickly):
 ![ab testing setting demo 1](/images/demo_exp1.png)
 ![ab testing setting demo 2](/images/demo_exp2.png)
 
+For **measuring experiment outcomes** (conversion rates, etc.), assignment from `POST /evaluation` is not enough—you need **impression** events. Use [Exposure Logging](flagr_exposure.md) when the user sees the treatment, then [Data Recorders & A/B Analysis](flagr_eval_exposure_pipeline.md) (or your own consumer on Kinesis/Pub/Sub) to build denominators and join to business metrics. For quick **eval volume** only, see [Datar](flagr_datar.md).
 
 ## Dynamic Configuration
 

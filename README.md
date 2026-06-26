@@ -33,13 +33,16 @@ Flagr is an open source Go service that delivers the right experience to the rig
 
 | Page | Content |
 |------|---------|
+| [Home](https://openflagr.github.io/flagr/) | Quick start, dev, testing, deploy |
 | [Overview](https://openflagr.github.io/flagr/#/flagr_overview) | Concepts, running example, architecture |
-| [Use Cases](https://openflagr.github.io/flagr/#/flagr_use_cases) | Feature flagging, A/B testing, dynamic configuration patterns |
-| [Server Configuration](https://openflagr.github.io/flagr/#/flagr_env) | All environment variables, database drivers, auth, data recorders |
-| [JSON Flag Source](https://openflagr.github.io/flagr/#/flagr_json_flag_spec) | GitOps workflows, JSON format spec, validator, CI integration |
-| [Datar Analytics](https://openflagr.github.io/flagr/#/flagr_datar) | In-memory aggregate analytics engine |
-| [Exposure Logging](https://openflagr.github.io/flagr/#/flagr_exposure) | Client-reported impressions for A/B testing |
-| [Notifications](https://openflagr.github.io/flagr/#/flagr_notifications) | Webhook configuration and payload format |
+| [Use Cases](https://openflagr.github.io/flagr/#/flagr_use_cases) | Feature flags, A/B testing, dynamic configuration |
+| [Debug Console](https://openflagr.github.io/flagr/#/flagr_debugging) | UI evaluation testing |
+| [Server Configuration](https://openflagr.github.io/flagr/#/flagr_env) | Environment variables, DB, auth, recorders |
+| [JSON Flag Source](https://openflagr.github.io/flagr/#/flagr_json_flag_spec) | GitOps, JSON format, validator |
+| [Notifications](https://openflagr.github.io/flagr/#/flagr_notifications) | Webhooks on flag changes |
+| [Exposure Logging](https://openflagr.github.io/flagr/#/flagr_exposure) | `POST /exposures` API |
+| [Data Recorders & A/B Analysis](https://openflagr.github.io/flagr/#/flagr_eval_exposure_pipeline) | Kafka, Kinesis, Pub/Sub; sample consumer; A/B analytics |
+| [Datar Analytics](https://openflagr.github.io/flagr/#/flagr_datar) | In-process eval aggregates |
 | [API Reference](https://openflagr.github.io/flagr/api_docs) | Swagger/OpenAPI spec |
 
 ---

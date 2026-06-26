@@ -2,6 +2,8 @@
 
 Exposure logging records when a user **actually saw** a flag or experiment surface, separate from `POST /evaluation` (assignment). Typical flow: evaluate to get a variant, cache the result client-side, then call `POST /exposures` when the UI renders.
 
+For data recorders (Kafka, Kinesis, Pub/Sub), wire format, a sample Kafka consumer, and A/B analysis, see [Data Recorders & A/B Analysis](flagr_eval_exposure_pipeline.md).
+
 ## Endpoint
 
 `POST /api/v1/exposures`
@@ -46,10 +48,10 @@ Single impressions use an array of one item. Maximum batch size: `FLAGR_EXPOSURE
 Same gate as evaluation data records:
 
 1. `FLAGR_RECORDER_ENABLED=true`
-2. Recorder type configured (e.g. `kafka`)
+2. At least one recorder in `FLAGR_RECORDER_TYPE` (e.g. `kafka`, `kinesis`, `pubsub` — not `datar` alone if you need a stream)
 3. Per-flag `dataRecordsEnabled: true`
 
-Recorded rows use the same `evalResult` JSON shape as evaluations (same Kafka topic when Kafka is configured), with `recordSource: "exposure"`. **Datar does not count exposures.** Exposure ingest uses separate Statsd metrics (`exposure.ingest`, `exposure.recorded`).
+Recorded rows use the same `evalResult` JSON shape as evaluations on **Kafka, Kinesis, and Pub/Sub**, with `recordSource: "exposure"`. **Datar does not count exposures.** Exposure ingest uses separate Statsd metrics (`exposure.ingest`, `exposure.recorded`).
 
 ## How this connects to evaluation and `AsyncRecord`
 
@@ -63,7 +65,7 @@ Recorded rows use the same `evalResult` JSON shape as evaluations (same Kafka to
 
 `json_file` / `json_http` nodes with eval-only setup register **evaluation** only; **`POST /exposures` is not available** on those deployments.
 
-### Kafka / warehouse consumers
+### Downstream consumers (Kafka, Kinesis, Pub/Sub)
 
 Filter or branch on `recordSource`:
 
@@ -88,4 +90,4 @@ Separate from eval `evaluation` metric: `exposure.ingest` (tags: `status=accepte
 
 Auth matches `POST /evaluation`.
 
-See [plan](../plans/2026-06-25-001-exposure-logging-plan.md) for design decisions.
+Design notes are in the repo under `docs/plans/2026-06-25-001-exposure-logging-plan.md` ([view on GitHub](https://github.com/openflagr/flagr/blob/master/docs/plans/2026-06-25-001-exposure-logging-plan.md)).

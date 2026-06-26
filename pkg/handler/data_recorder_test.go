@@ -94,6 +94,24 @@ func TestDataRecordEnabled(t *testing.T) {
 	assert.False(t, dataRecordEnabled(f))
 }
 
+func TestRecordCountsTowardDatar(t *testing.T) {
+	assert.True(t, recordCountsTowardDatar(models.EvalResult{
+		RecordSource: models.EvalResultRecordSourceEvaluation,
+	}))
+	assert.False(t, recordCountsTowardDatar(models.EvalResult{
+		RecordSource: models.EvalResultRecordSourceExposure,
+	}))
+}
+
+func TestRecordCountsTowardEvalKafkaStatsd(t *testing.T) {
+	assert.True(t, recordCountsTowardEvalKafkaStatsd(models.EvalResult{
+		RecordSource: models.EvalResultRecordSourceEvaluation,
+	}))
+	assert.False(t, recordCountsTowardEvalKafkaStatsd(models.EvalResult{
+		RecordSource: models.EvalResultRecordSourceExposure,
+	}))
+}
+
 func TestFanOutRecorder_Single(t *testing.T) {
 	m := &mockRecorder{}
 	f := fanOutRecorder{m}
