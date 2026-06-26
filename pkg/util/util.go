@@ -94,8 +94,6 @@ func Round(f float64) int {
 	return int(f + math.Copysign(0.5, f))
 }
 
-// TimeNow follows RFC3339 time format. Timestamps are cached per UTC second so
-// high-volume evaluation does not allocate a new RFC3339 string on every result.
 
 var (
 	timeNowMu     sync.RWMutex
