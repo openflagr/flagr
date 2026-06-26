@@ -17,7 +17,9 @@ is your trustworthy experiment denominator.
 
 For data recorders (Kafka, Kinesis, Pub/Sub), wire format, a sample Kafka
 consumer, and A/B analysis, see
-[Data Recorders & A/B Analysis](flagr_eval_exposure_pipeline.md).
+[Data Recorders & A/B Analysis](flagr_eval_exposure_pipeline.md). For where
+exposures sit in the server architecture (Evaluator vs Metrics), see
+[Overview — Architecture](flagr_overview.md#architecture).
 
 ## Endpoint
 

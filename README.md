@@ -111,8 +111,8 @@ Flagr has three components:
   (Kafka, Kinesis, Pub/Sub) or the built-in Datar aggregates. Recording is
   asynchronous, so a slow backend never stalls an evaluation.
 
-See the [architecture overview](https://openflagr.github.io/flagr/#/flagr_overview)
-for the full diagram and the deterministic bucketing algorithm.
+See the [architecture overview](https://openflagr.github.io/flagr/#/flagr_overview?id=architecture)
+for diagrams, request flows, and the deterministic bucketing algorithm.
 
 ## Performance
 

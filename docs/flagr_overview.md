@@ -65,32 +65,35 @@ indices are supported (`users[-1]` = last element).
 
 ## Running example
 
-The best way to see how the concepts compose is to follow one flag through its
-lifecycle — from a cautious rollout to a targeted experiment to a full launch.
-Suppose we want to ship a new button to US users, but we don't yet know which
-color works best. `green` / `blue` / `pink` are the three variants.
+The screenshots below walk one flag from a simple rollout to geo-targeted
+segments and a full launch. Each UI image maps to the concepts above: variants
+define outcomes, segments define *who*, constraints narrow the audience,
+distribution splits variants, and rollout limits what fraction of a matched
+segment actually receives a variant.
 
-![](images/flagr_running_example_1.png)
-![](images/flagr_running_example_4.png)
+**Setup** — three button-color variants (`green`, `blue`, `pink`) for a new
+checkout experience:
 
-Start by exposing the flag to a small audience, e.g. users in California:
+![Flag variants for the running example](images/flagr_running_example_1.png)
+![Flag detail with segments and distributions](images/flagr_running_example_4.png)
 
-![](images/flagr_running_example_2.png)
+**Step 1 — targeted rollout** — expose the flag to California users only
+(`state == "CA"`), with a partial rollout before going wide:
 
-Later, learn that CA users like green, NY users like pink, DC users like blue —
-so add three segments, each defined by `state == ?`. A segment can combine
-multiple constraints, e.g. `state == "NY" AND age >= 21`:
+![California segment with constraints](images/flagr_running_example_2.png)
 
-![](images/flagr_running_example_3.png)
-![](images/flagr_running_example_5.png)
+**Step 2 — geo-specific preferences** — add segments per state (and combine
+constraints, e.g. `state == "NY" AND age >= 21`):
 
-To A/B test, split `green`/`blue` `50%/50%` (distribution) on `20%` (rollout)
-of the CA segment. Raise rollout to `100%` later so every CA user gets green or
-blue. To ship `100%` green to `100%` of users, set distribution `100%/0%`
-green/blue and rollout `100%`.
+![Multiple state-based segments](images/flagr_running_example_3.png)
+![Per-segment distribution and rollout](images/flagr_running_example_5.png)
 
-![](images/flagr_running_example_7.png)
-![](images/flagr_running_example_6.png)
+**Step 3 — experiment then launch** — A/B within a segment (`50/50` green/blue
+at `20%` rollout), then raise rollout and distribution to ship `100%` green
+globally:
+
+![Raised rollout on a segment](images/flagr_running_example_7.png)
+![Full launch distribution](images/flagr_running_example_6.png)
 
 ## Rollout and deterministic bucketing
 
@@ -120,59 +123,122 @@ Given an entity context, evaluation works as follows:
 
 ## Architecture
 
-Flagr separates the three things that have different scaling and consistency
-needs: **reading** an evaluation (hot, frequent, must be fast and stale-tolerant),
-**writing** a flag mutation (cold, rare, must be consistent), and **recording**
-what happened (asynchronous, lossy-by-design, must not slow down the request).
-Each lives in its own component so evaluation is never blocked by a database
-write or a slow analytics pipeline.
+Flagr separates three concerns that scale differently:
 
-Flagr has three components: **Evaluator**, **Manager**, and **Metrics**.
+| Concern | Path | Consistency | Latency goal |
+|---------|------|-------------|--------------|
+| **Read** (evaluation) | `POST /evaluation` | Stale-tolerant (cache refresh) | Sub-ms hot path |
+| **Write** (configuration) | CRUD APIs + UI | Strong (database) | Rare, not on eval path |
+| **Record** (analytics) | `AsyncRecord` fan-out | Best-effort async | Must not block eval |
 
-### Flagr Evaluator
+The diagrams below cover **database-backed** deployments (default) and
+**eval-only** JSON sources. They are **maintainer diagrams** aligned with the
+Go implementation (not generated from the old `flagr_arch.png`). When the
+diagram and code disagree, **code wins** — update this page.
 
-The Evaluator is the hot path. It serves evaluation requests from an in-memory
-**`EvalCache`** of all flags, segments, variants, constraints, distributions,
-and tags — pre-parsed and ready for fast evaluation. Keeping the cache in
-memory means evaluation never touches the database on the request path; the
-database is only a source of truth for reloads.
+**Implementation map:** `pkg/handler` (`handler.go`, `eval.go`, `eval_cache.go`,
+`exposure.go`, `data_recorder*.go`), `pkg/entity/flag_snapshot.go`,
+`pkg/config/config.go` (eval-only drivers). **Tests that encode the contract:**
+`TestReloadMapCacheShortCircuit`, `TestRecordCountsTowardDatar`,
+`TestAllMutationHandlersCallSaveFlagSnapshot` in `pkg/handler/`.
 
+Three logical components implement the read / write / record split:
 
-- **Refresh** — the cache reloads periodically (default every **3s**, via
-  `FLAGR_EVALCACHE_REFRESHINTERVAL`).
-- **Snapshot short-circuit** — the reload skips work when no new
-  `flag_snapshot` rows exist, because every mutation handler that changes
-  evaluation data also creates a snapshot.
-- **Version endpoint** — `GET /api/v1/flags/snapshots/max_id` returns the
-  current max `flag_snapshot` id, a monotonically increasing version counter
-  for the entire flag configuration. External caches (CDN, sidecar proxies,
-  app-level caches) can poll this single endpoint and invalidate when the value
-  changes — far cheaper than polling individual flag records.
+```mermaid
+flowchart TB
+  subgraph clients [Clients]
+    App[App / SDK]
+    UI[Flagr UI]
+  end
 
-### Flagr Manager
+  subgraph evaluator [Evaluator — hot path]
+    Eval["POST /evaluation"]
+    Exp["POST /exposures"]
+    EC[(EvalCache)]
+    Eval --> EC
+    Exp --> EC
+  end
 
-The CRUD gateway. All flag mutations happen here — create a flag, edit a
-segment, reorder, change a distribution. Every mutation flows through the
-Manager, which writes to the database and appends a `flag_snapshot` row. That
-snapshot is what the Evaluator watches to know when to reload.
+  subgraph manager [Manager — cold path]
+    CRUD[CRUD APIs]
+    DB[(Database)]
+    FS[flag_snapshots]
+    WH[Webhooks]
+    UI --> CRUD
+    CRUD --> DB
+    CRUD --> FS
+    CRUD -. webhooks after snapshot commit .-> WH
+  end
 
-### Flagr Metrics
+  subgraph metrics [Metrics — async]
+    AR[AsyncRecord fan-out]
+    Stream[Kafka / Kinesis / Pub/Sub]
+    DT[Datar eval only]
+    AR --> Stream
+    AR --> DT
+  end
 
-Evaluation is only half the story — to measure impact you need to record *what
-happened*. Evaluation results and client-reported exposures
-(`POST /api/v1/exposures`) flow through the same **data recorders** when
-per-flag `dataRecordsEnabled` is on. Recording is **asynchronous** and
-fan-out, so a slow Kafka broker never stalls the eval response.
+  subgraph gitops [Eval-only optional]
+    JF[json_file]
+    JH[json_http]
+  end
 
-- **Streaming recorders** — Kafka, AWS Kinesis, Google Pub/Sub (same wire
-  format for eval and exposure rows).
-- **Datar** — built-in eval-only aggregate; skips exposure rows.
-- **Combine** — set `FLAGR_RECORDER_TYPE` to a comma-separated list
-  (e.g. `kafka,datar`).
+  App --> Eval
+  App --> Exp
+  Eval --> AR
+  Exp --> AR
+  FS -. MAX id poll .-> EC
+  DB -. reload on change .-> EC
+  JF -. every poll .-> EC
+  JH -. every poll .-> EC
+```
 
-See [Data Recorders & A/B Analysis](flagr_eval_exposure_pipeline.md).
+> **Eval-only** (`json_file` / `json_http`): no UI/CRUD path, no exposures, no
+> `flag_snapshots` — configuration flows only from JSON into **EvalCache**.
 
-![Flagr Architecture](images/flagr_arch.png)
+### How to read the diagram
+
+- **Clients / SDKs** call evaluation and (optionally) exposure APIs. Treat
+  evaluation as *assignment* and exposures as *impression* for experiments —
+  see [Exposure Logging](flagr_exposure.md).
+- **Evaluator** does not query the database per request; it uses in-memory
+  **EvalCache** (flags, segments, variants, constraints, distributions, tags).
+- **Manager** persists configuration changes and appends **`flag_snapshot`** rows
+  (webhooks may fire after commit).
+- **Metrics** receives `evalResult` asynchronously; streaming recorders accept
+  both `evaluation` and `exposure` rows; **Datar** counts evaluations only.
+
+### Request flows
+
+**Evaluation (hot path)** — `POST /api/v1/evaluation` → **EvalCache** → segments
+in rank order → variant response → optional `AsyncRecord` (`recordSource:
+evaluation`). No record when flag is missing, disabled, or has no segments.
+
+**Configuration (cold path)** — CRUD → DB → `SaveFlagSnapshot` → on next poll,
+**EvalCache** reloads if `MAX(flag_snapshot.id)` changed.
+
+**Exposure** — `POST /api/v1/exposures` after render; validates against
+**EvalCache** (no constraint re-eval) → `AsyncRecord` (`recordSource: exposure`).
+
+### Components
+
+**Evaluator** — `POST /evaluation`, batch eval, tag eval; refresh interval
+`FLAGR_EVALCACHE_REFRESHINTERVAL` (default 3s); version probe
+`GET /api/v1/flags/snapshots/max_id`.
+
+**Manager** — CRUD for flags, segments, variants, constraints, distributions,
+tags; not on the eval request path.
+
+**Metrics** — `FLAGR_RECORDER_ENABLED` + per-flag `dataRecordsEnabled`; combine
+backends via `FLAGR_RECORDER_TYPE` (e.g. `kafka,datar`). Details:
+[Data Recorders & A/B Analysis](flagr_eval_exposure_pipeline.md).
+
+### Eval-only mode (JSON flag sources)
+
+When `FLAGR_DB_DBDRIVER` is `json_file` or `json_http`, Flagr exposes health +
+evaluation only (no CRUD, exposures, Datar APIs, or eval-cache export). JSON is
+re-fetched every poll with no snapshot short-circuit. See
+[JSON Flag Source](flagr_json_flag_spec.md).
 
 ## Related documentation
 

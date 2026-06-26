@@ -9,11 +9,6 @@ evaluation counts by flag, variant, segment, and hour, then exposes the
 results through two REST endpoints. No external pipeline, no Kafka consumer,
 no separate analytics stack — just one more entry in `FLAGR_RECORDER_TYPE`.
 
-Datar is an optional in-memory aggregate analytics engine built into Flagr.
-It tallies evaluation counts by flag, variant, segment, and hour, then
-exposes the results through two REST endpoints — no external pipeline, no
-Kafka consumer, no separate analytics stack required.
-
 ## When to use
 
 Datar exists in the gap between "no analytics" and "full pipeline." If you
