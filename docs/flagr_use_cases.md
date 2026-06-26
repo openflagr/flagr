@@ -26,19 +26,6 @@ first, then a single region, then everyone. The key property is that *deploy*
 and *release* become independent — you can ship code to production hours
 before any user sees it.
 
-Given an entity (user, request, or cookie), Flagr evaluates it against the
-flag:
-
-```js
-evaluation_result = flagr.postEvaluation(entity)
-
-if (evaluation_result.variantKey == "on") {
-    // feature is on for this entity
-} else {
-    // feature is off (variantKey is empty, or the flag is disabled)
-}
-```
-
 ### The simple boolean flag (a starting template)
 
 A simple boolean flag is the template most teams start with: two variants
@@ -58,6 +45,19 @@ Segment
     - off: 0%
 ```
 
+Given an entity (user, request, or cookie), your application evaluates the
+flag and branches on the assigned variant:
+
+```js
+evaluation_result = flagr.postEvaluation(entity)
+
+if (evaluation_result.variantKey == "on") {
+    // feature is on for this entity
+} else {
+    // feature is off (variantKey is empty, or the flag is disabled)
+}
+```
+
 This is just a convention, not a special flag type. The same flag can grow
 richer as your needs evolve — without changing your application code:
 
@@ -65,19 +65,18 @@ richer as your needs evolve — without changing your application code:
   (`state == "CA"`, `tier == "beta"`). Now `on` reaches only California users.
 - **Roll out gradually** — lower the rollout percent to 10%, then 50%, then
   100%. Same flag, same variants, wider audience over time.
-- **Run an experiment** — add more variants (`treatment1`, `treatment2`) and
-  split the distribution (`33/33/34`). The boolean flag becomes an A/B test.
+- **Run an experiment** — add more variants and split the distribution
+  (`33/33/34`). The boolean flag becomes an A/B test.
 - **Serve dynamic config** — attach JSON to each variant
   (`{"color": "#42b983"}`). The flag now carries configuration, not just on/off.
 
-Every flag also has a top-level `enabled` toggle — the global kill switch.
-When `enabled` is `false`, the evaluator returns a blank result immediately,
-short-circuiting before any segment logic runs (`PUT /api/v1/flags/{id}/enabled`
-or the UI status switch). Use it to turn off the entire flag regardless of
-segments or distributions.
+Every flag also has a top-level `enabled` toggle — separate from the variant
+pattern above. When `enabled` is `false`, the evaluator returns a blank result
+immediately, short-circuiting before any segment logic runs
+(`PUT /api/v1/flags/{id}/enabled` or the UI status switch). Use it as a global
+kill switch to turn off the entire flag regardless of segments or distributions.
 
 ![feature flagging setting demo](/images/demo_ff.png)
-
 
 ## Experimenting — A/B testing
 
