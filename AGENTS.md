@@ -31,7 +31,8 @@ CI: `make ci`, `make ci-swagger`, `make ci-integration`, `make build-ui` — see
 - `config/env.go` — all environment variables (single source of truth)
 
 **Frontend (`browser/flagr-ui/src/`):**
-- `api/`, `pages/`, `components/`, `helpers/` — use **`make run-ui`** / **`make build-ui`** / **`make test-e2e`** from repo root (not raw `npm` in docs)
+- `api/`, `components/`, `helpers/` — Vite + TS; **`make run-ui`** / **`make build-ui`** from repo root
+- `pages/flagPage.ts`, `pages/flagsListPage.ts` — list/detail orchestration; SFCs call `flagPage.*(pageVm)` / `flagsListPage.*(listVm)`
 - New REST: `api/flags.ts` or `api/evaluation.ts`; UI calls via `helpers/runApi`
 - Effect: **`browser/flagr-ui/docs/EFFECT.md`**
 

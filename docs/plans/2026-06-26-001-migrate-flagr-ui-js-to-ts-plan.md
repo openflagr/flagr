@@ -1,7 +1,9 @@
 # refactor: Migrate Flagr UI from JavaScript to TypeScript
 
 **Date:** 2026-06-26  
-**Status:** implemented
+**Status:** implemented (merged path: `feat/flagr-ui-typescript-effect` / PR #721)
+
+**As-built:** Domain types in `src/api/types.ts`; normalization in `helpers/flagModel.ts`; orchestration in `pages/flagPage.ts` + `pages/flagsListPage.ts` (module cache in `pages/flagsList.ts`); `fetch` + Effect in `api/http.ts` (axios removed); repo commands via **`make help`** (`build-ui`, `test-e2e`). Deep Effect guide: `browser/flagr-ui/docs/EFFECT.md`.
 
 Add TypeScript to `browser/flagr-ui` with **Vite as the only compile path** (esbuild transpile; no `tsc` emit for builds). Rename application and e2e `.js` to `.ts`, type Vue SFCs for **real type safety** (domain types, branded IDs, typed API results), and replace scattered axios `.then` / `handleErr` with the **[Effect](https://effect.website)** library (`effect` on npm) for failures as typed, composable `Effect` programs. Options API stays; migration stays phased with green `build`, `typecheck`, and e2e after each unit.
 
@@ -296,7 +298,7 @@ Effect is for **typed REST + errors** in the UI, not for rewriting Vue in functi
 |--------|--------|
 | Programs | `src/api/http.ts`, `flags.ts`, `evaluation.ts`, `errors.ts`, `types.ts` |
 | Vue edge | `helpers/runApi.ts` (`runApi`, `confirmAndRunApi`, toasts, 401) |
-| Orchestration | `pages/flagPage.ts`, `pages/flagsList.ts` — call `runApi`, not `Effect.runPromise` in `.vue` |
+| Orchestration | `pages/flagPage.ts`, `pages/flagsListPage.ts`, `pages/flagsList.ts` (cache) — SFCs call page modules; pages use `runApi` only |
 
 **Rules for new code:**
 
@@ -371,4 +373,4 @@ Component method
 | After U3 | `npm run dev` + manual home route |
 | After U5–U6 | `npm run typecheck` |
 | After U7 | `make test-e2e` |
-| Release gate | `npm run lint && npm run typecheck && npm run build && make test-e2e` |
+| Release gate | `make build-ui` and `make test-e2e` (from repo root; see `make help`) |

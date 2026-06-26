@@ -66,7 +66,7 @@ beyond the original [`checkr/flagr`](https://github.com/checkr/flagr).
 - **Exposure logging** — `POST /exposures` for client-reported impressions, the trustworthy A/B denominator
 - **Webhook notifications** — HTTP POST on every flag change, with retry and backoff
 - **Multi-database** — SQLite (dev), MySQL, PostgreSQL, and JSON sources
-- **Vue 3 UI** — modern management UI built with Vite, Vue 3, and Element Plus
+- **Vue 3 UI** — TypeScript management UI (Vite, Effect-typed REST); see `make help` for `build-ui` / `test-e2e`
 
 ## Quick start
 
