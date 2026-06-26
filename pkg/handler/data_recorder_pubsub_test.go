@@ -17,7 +17,7 @@ import (
 func TestNewPubsubRecorder(t *testing.T) {
 	t.Run("no panics", func(t *testing.T) {
 		client := mockClient(t)
-		defer client.Close()
+		t.Cleanup(func() { _ = client.Close() })
 
 		defer gostub.StubFunc(
 			&pubsubClient,
@@ -32,7 +32,7 @@ func TestNewPubsubRecorder(t *testing.T) {
 func TestPubsubAsyncRecord(t *testing.T) {
 	t.Run("enabled and valid", func(t *testing.T) {
 		client := mockClient(t)
-		defer client.Close()
+		t.Cleanup(func() { _ = client.Close() })
 		publisher := client.Publisher("test")
 		assert.NotPanics(t, func() {
 			pr := &pubsubRecorder{
@@ -57,19 +57,18 @@ func TestPubsubAsyncRecord(t *testing.T) {
 }
 
 func mockClient(t *testing.T) *pubsub.Client {
+	t.Helper()
 	ctx := context.Background()
 	srv := pstest.NewServer()
-	defer srv.Close()
+	t.Cleanup(func() { _ = srv.Close() })
 	conn, err := grpc.NewClient(srv.Addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		t.Fatal("cannot connect to mocked server")
 	}
-	defer conn.Close()
+	t.Cleanup(func() { _ = conn.Close() })
 	client, err := pubsub.NewClient(ctx, "project", option.WithGRPCConn(conn))
-
 	if err != nil {
 		t.Fatal("failed creating mock client", err)
 	}
-
 	return client
 }

@@ -178,7 +178,7 @@ func TestDatarRecorder_AsyncRecord(t *testing.T) {
 
 	db := entity.NewTestDB()
 	defer gostub.StubFunc(&getDB, db).Reset()
-	db.AutoMigrate(entity.AutoMigrateTables...)
+	assert.NoError(t, db.AutoMigrate(entity.AutoMigrateTables...))
 
 	r := NewDatarRecorder()
 	assert.NotNil(t, r)
@@ -201,7 +201,7 @@ func TestDatarRecorder_SkipsExposure(t *testing.T) {
 
 	db := entity.NewTestDB()
 	defer gostub.StubFunc(&getDB, db).Reset()
-	db.AutoMigrate(entity.AutoMigrateTables...)
+	assert.NoError(t, db.AutoMigrate(entity.AutoMigrateTables...))
 
 	_ = GetDatar()
 	r := NewDatarRecorder()
@@ -225,7 +225,7 @@ func TestDatarRecorder_RecordsEvaluationSource(t *testing.T) {
 
 	db := entity.NewTestDB()
 	defer gostub.StubFunc(&getDB, db).Reset()
-	db.AutoMigrate(entity.AutoMigrateTables...)
+	assert.NoError(t, db.AutoMigrate(entity.AutoMigrateTables...))
 
 	r := NewDatarRecorder()
 	r.AsyncRecord(models.EvalResult{

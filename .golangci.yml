@@ -1,0 +1,9 @@
+# IDE golangci-lint extension; CI uses Makefile verify_lint flags on ./pkg/...
+version: "2"
+run:
+  timeout: 5m
+  build-tags:
+    - integration
+linters:
+  disable:
+    - errcheck

@@ -783,7 +783,7 @@ func TestPostEvaluationBatch(t *testing.T) {
 	t.Run("test duplicate flagKeys are deduplicated", func(t *testing.T) {
 		evalCount := 0
 		originalEvalFlag := EvalFlag
-		EvalFlag = func(evalContext models.EvalContext) *models.EvalResult {
+		EvalFlag = func(_ models.EvalContext) *models.EvalResult {
 			evalCount++
 			return &models.EvalResult{}
 		}
@@ -816,7 +816,7 @@ func TestPostEvaluationBatch(t *testing.T) {
 	t.Run("test duplicate flagIDs are deduplicated", func(t *testing.T) {
 		evalCount := 0
 		originalEvalFlag := EvalFlag
-		EvalFlag = func(evalContext models.EvalContext) *models.EvalResult {
+		EvalFlag = func(_ models.EvalContext) *models.EvalResult {
 			evalCount++
 			return &models.EvalResult{}
 		}
@@ -849,7 +849,7 @@ func TestPostEvaluationBatch(t *testing.T) {
 	t.Run("test mixed duplicates are deduplicated", func(t *testing.T) {
 		evalCount := 0
 		originalEvalFlag := EvalFlag
-		EvalFlag = func(evalContext models.EvalContext) *models.EvalResult {
+		EvalFlag = func(_ models.EvalContext) *models.EvalResult {
 			evalCount++
 			return &models.EvalResult{}
 		}
@@ -1114,7 +1114,8 @@ func BenchmarkPostEvaluationBatch(b *testing.B) {
 }
 
 // genBenchmarkEvalCacheWithConstraints creates a flag with multiple constraints for targeted benchmarks.
-func genBenchmarkEvalCacheWithConstraints(constraints []entity.Constraint, numFlags int) *EvalCache {
+func genBenchmarkEvalCacheWithConstraints(constraints []entity.Constraint) *EvalCache {
+	const numFlags = 1
 	idCache := make(map[string]*entity.Flag, numFlags)
 	keyCache := make(map[string]*entity.Flag, numFlags)
 
@@ -1226,7 +1227,7 @@ func BenchmarkEvalFlag_ShortCircuit(b *testing.B) {
 		{Model: gorm.Model{ID: 603}, SegmentID: 301, Property: "country", Operator: models.ConstraintOperatorEQ, Value: `"US"`},
 		{Model: gorm.Model{ID: 604}, SegmentID: 301, Property: "active", Operator: models.ConstraintOperatorEQ, Value: `"true"`},
 	}
-	evalCache := genBenchmarkEvalCacheWithConstraints(constraints, 1)
+	evalCache := genBenchmarkEvalCacheWithConstraints(constraints)
 	defer gostub.StubFunc(&GetEvalCache, evalCache).Reset()
 
 	b.StartTimer()
@@ -1253,7 +1254,7 @@ func BenchmarkEvalFlag_AllMatch(b *testing.B) {
 		{Model: gorm.Model{ID: 703}, SegmentID: 302, Property: "country", Operator: models.ConstraintOperatorEQ, Value: `"US"`},
 		{Model: gorm.Model{ID: 704}, SegmentID: 302, Property: "active", Operator: models.ConstraintOperatorEQ, Value: `"true"`},
 	}
-	evalCache := genBenchmarkEvalCacheWithConstraints(constraints, 1)
+	evalCache := genBenchmarkEvalCacheWithConstraints(constraints)
 	defer gostub.StubFunc(&GetEvalCache, evalCache).Reset()
 
 	b.StartTimer()
@@ -1282,7 +1283,7 @@ func BenchmarkEvalFlag_Regex(b *testing.B) {
 	constraints := []entity.Constraint{
 		{Model: gorm.Model{ID: 800}, SegmentID: 303, Property: "status", Operator: models.ConstraintOperatorEREG, Value: `"/^5[0-9][0-9]$/"`},
 	}
-	evalCache := genBenchmarkEvalCacheWithConstraints(constraints, 1)
+	evalCache := genBenchmarkEvalCacheWithConstraints(constraints)
 	defer gostub.StubFunc(&GetEvalCache, evalCache).Reset()
 
 	b.StartTimer()
@@ -1309,7 +1310,7 @@ func BenchmarkEvalFlag_Complex(b *testing.B) {
 		{Model: gorm.Model{ID: 903}, SegmentID: 304, Property: "email", Operator: models.ConstraintOperatorCONTAINS, Value: `"@company.com"`},
 		{Model: gorm.Model{ID: 904}, SegmentID: 304, Property: "status", Operator: models.ConstraintOperatorNEQ, Value: `"banned"`},
 	}
-	evalCache := genBenchmarkEvalCacheWithConstraints(constraints, 1)
+	evalCache := genBenchmarkEvalCacheWithConstraints(constraints)
 	defer gostub.StubFunc(&GetEvalCache, evalCache).Reset()
 
 	b.StartTimer()

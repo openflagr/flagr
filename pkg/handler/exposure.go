@@ -31,9 +31,9 @@ func (h *exposureHandler) PostExposures(params exposureapi.PostExposuresParams) 
 	}
 
 	exposures := params.Body.Exposures
-	if max := config.Config.ExposureBatchSize; max > 0 && len(exposures) > max {
+	if batchMax := config.Config.ExposureBatchSize; batchMax > 0 && len(exposures) > batchMax {
 		return exposureapi.NewPostExposuresDefault(400).WithPayload(
-			ErrorMessage("exposure batch size %d exceeds maximum allowed size of %d", len(exposures), max))
+			ErrorMessage("exposure batch size %d exceeds maximum allowed size of %d", len(exposures), batchMax))
 	}
 
 	var logged int64
@@ -236,5 +236,5 @@ var logExposureStatsd = func(status string, flagID int64, flagKey string) {
 	if status == "recorded" {
 		metric = "exposure.recorded"
 	}
-	config.Global.StatsdClient.Incr(metric, tags, 1)
+	_ = config.Global.StatsdClient.Incr(metric, tags, 1)
 }

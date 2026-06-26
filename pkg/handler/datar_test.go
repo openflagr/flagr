@@ -20,12 +20,12 @@ func TestParseTimeRange(t *testing.T) {
 	to := strfmt.DateTime(time.Date(2024, 1, 10, 0, 0, 0, 0, time.UTC))
 
 	// Both nil → uses defaults.
-	s, e := parseTimeRange(nil, nil, 7)
+	s, e := parseTimeRange(nil, nil)
 	assert.WithinDuration(t, time.Now().UTC(), e, time.Second)
 	assert.WithinDuration(t, time.Now().UTC().Add(-7*24*time.Hour), s, time.Second)
 
 	// With explicit from/to.
-	s, e = parseTimeRange(&from, &to, 7)
+	s, e = parseTimeRange(&from, &to)
 	assert.Equal(t, time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC), s)
 	assert.Equal(t, time.Date(2024, 1, 10, 0, 0, 0, 0, time.UTC), e)
 }
