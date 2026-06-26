@@ -52,7 +52,6 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 	flagKeys := params.Body.FlagKeys
 	flagTags := params.Body.FlagTags
 	flagTagsOperator := params.Body.FlagTagsOperator
-	results := &models.EvaluationBatchResponse{}
 
 	// Deduplicate flagKeys to prevent DoS via repeated keys
 	if len(flagKeys) > 1 {
@@ -92,6 +91,14 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 			return evaluation.NewPostEvaluationBatchDefault(400).WithPayload(
 				ErrorMessage("batch evaluation size %d exceeds maximum allowed size of %d", total, maxBatchSize))
 		}
+	}
+
+	est := len(entities) * (len(flagIDs) + len(flagKeys))
+	if len(flagTags) > 0 {
+		est += len(entities)
+	}
+	results := &models.EvaluationBatchResponse{
+		EvaluationResults: make([]*models.EvalResult, 0, est),
 	}
 
 	// TODO make it concurrent
@@ -144,19 +151,16 @@ func BlankResult(f *entity.Flag, evalContext models.EvalContext, msg string) *mo
 	flagID := uint(0)
 	flagKey := ""
 	flagSnapshotID := uint(0)
-	flagTags := []string{}
+	var flagTags []string
 	if f != nil {
 		flagID = f.ID
 		flagSnapshotID = f.SnapshotID
 		flagKey = f.Key
-		if len(f.Tags) > 0 {
-			for _, tag := range f.Tags {
-				flagTags = append(flagTags, tag.Value)
-			}
-		}
+		flagTags = f.FlagEvaluation.TagValues
 	}
+	ec := evalContext
 	return &models.EvalResult{
-		EvalContext: &evalContext,
+		EvalContext: &ec,
 		EvalDebugLog: &models.EvalDebugLog{
 			Msg:              msg,
 			SegmentDebugLogs: nil,
@@ -183,7 +187,7 @@ var LookupFlag = func(evalContext models.EvalContext) *entity.Flag {
 var EvalFlagsByTags = func(evalContext models.EvalContext) []*models.EvalResult {
 	cache := GetEvalCache()
 	fs := cache.GetByTags(evalContext.FlagTags, evalContext.FlagTagsOperator)
-	results := []*models.EvalResult{}
+	results := make([]*models.EvalResult, 0, len(fs))
 	for _, f := range fs {
 		results = append(results, EvalFlagWithContext(f, evalContext))
 	}
@@ -220,18 +224,20 @@ var EvalFlagWithContext = func(flag *entity.Flag, evalContext models.EvalContext
 		evalContext.EntityType = flag.EntityType
 	}
 
-	logs := []*models.SegmentDebugLog{}
 	var vID int64
 	var sID int64
-
+	var logs []*models.SegmentDebugLog
+	if config.Config.EvalDebugEnabled && evalContext.EnableDebug {
+		logs = make([]*models.SegmentDebugLog, 0, len(flag.Segments))
+	}
 	for _, segment := range flag.Segments {
 		sID = int64(segment.ID)
-		variantID, log, evalNextSegment := evalSegment(flag.ID, evalContext, segment)
-		if config.Config.EvalDebugEnabled && evalContext.EnableDebug {
-			logs = append(logs, log)
-		}
+		variantID, log, evalNextSegment := evalSegment(evalContext, segment)
 		if variantID != nil {
 			vID = int64(*variantID)
+		}
+		if config.Config.EvalDebugEnabled && evalContext.EnableDebug {
+			logs = append(logs, log)
 		}
 		if !evalNextSegment {
 			break
@@ -303,7 +309,6 @@ var logEvalResultToPrometheus = func(r *models.EvalResult) {
 }
 
 var evalSegment = func(
-	flagID uint,
 	evalContext models.EvalContext,
 	segment entity.Segment,
 ) (
@@ -311,12 +316,16 @@ var evalSegment = func(
 	log *models.SegmentDebugLog,
 	evalNextSegment bool,
 ) {
+	debug := config.Config.EvalDebugEnabled && evalContext.EnableDebug
+
 	if len(segment.Constraints) != 0 {
 		m, ok := evalContext.EntityContext.(map[string]any)
 		if !ok {
-			log = &models.SegmentDebugLog{
-				Msg:       fmt.Sprintf("constraints are present in the segment_id %v, but got invalid entity_context: %s.", segment.ID, spew.Sdump(evalContext.EntityContext)),
-				SegmentID: int64(segment.ID),
+			if debug {
+				log = &models.SegmentDebugLog{
+					Msg:       fmt.Sprintf("constraints are present in the segment_id %v, but got invalid entity_context: %s.", segment.ID, spew.Sdump(evalContext.EntityContext)),
+					SegmentID: int64(segment.ID),
+				}
 			}
 			return nil, log, true
 		}
@@ -324,7 +333,7 @@ var evalSegment = func(
 		expr := segment.SegmentEvaluation.ConditionsExpr
 		match, err := conditions.Evaluate(expr, m)
 		if err != nil {
-			if config.Config.EvalDebugEnabled && evalContext.EnableDebug {
+			if debug {
 				log = &models.SegmentDebugLog{
 					Msg:       err.Error(),
 					SegmentID: int64(segment.ID),
@@ -333,9 +342,9 @@ var evalSegment = func(
 			return nil, log, true
 		}
 		if !match {
-			if config.Config.EvalDebugEnabled && evalContext.EnableDebug {
+			if debug {
 				log = &models.SegmentDebugLog{
-					Msg:       debugConstraintMsg(evalContext.EnableDebug, expr, m),
+					Msg:       debugConstraintMsg(true, expr, m),
 					SegmentID: int64(segment.ID),
 				}
 			}
@@ -343,19 +352,28 @@ var evalSegment = func(
 		}
 	}
 
-	vID, debugMsg := segment.SegmentEvaluation.DistributionArray.Rollout(
-		evalContext.EntityID,
-		segment.SegmentEvaluation.FlagIDStr, // pre-formatted during PrepareEvaluation
-		segment.RolloutPercent,
-	)
-
-	log = &models.SegmentDebugLog{
-		Msg:       "matched all constraints. " + debugMsg,
-		SegmentID: int64(segment.ID),
+	var debugMsg string
+	if debug {
+		vID, debugMsg = segment.SegmentEvaluation.DistributionArray.Rollout(
+			evalContext.EntityID,
+			segment.SegmentEvaluation.FlagIDStr,
+			segment.RolloutPercent,
+		)
+	} else {
+		vID, _ = segment.SegmentEvaluation.DistributionArray.Rollout(
+			evalContext.EntityID,
+			segment.SegmentEvaluation.FlagIDStr,
+			segment.RolloutPercent,
+		)
 	}
 
-	// at this point, all constraints are matched, so we shouldn't go to next segment
-	// thus setting evalNextSegment = false
+	if debug {
+		log = &models.SegmentDebugLog{
+			Msg:       "matched all constraints. " + debugMsg,
+			SegmentID: int64(segment.ID),
+		}
+	}
+
 	return vID, log, false
 }
 

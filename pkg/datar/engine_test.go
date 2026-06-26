@@ -89,6 +89,7 @@ func TestRecord_AfterCloseIsNoop(t *testing.T) {
 	e := New(newTestDB(t), true, time.Hour)
 	if e == nil {
 		t.Fatal("expected non-nil engine")
+		return
 	}
 	defer e.Shutdown()
 
