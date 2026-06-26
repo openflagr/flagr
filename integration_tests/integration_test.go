@@ -9,10 +9,12 @@
 //
 // Execution modes:
 //   - Local:   go test -tags=integration ./integration_tests/
-//              (auto-starts server with SQLite :memory:)
+//              (auto-starts server with SQLite :memory:, recorder on)
 //   - BYO:     FLAGR_SERVER_URL=http://host:18000 go test -tags=integration ./integration_tests/
 //   - Docker:  cd integration_tests && make test
 //              (builds binary, runs against all 6 compose instances)
+//
+// TestIntegration_Exposures asserts POST /exposures recording via loggedCount (no test-process FLAGR_RECORDER_ENABLED).
 package flagr_integration
 
 import (
@@ -21,7 +23,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"os"
 	"testing"
 	"time"
 )
@@ -544,11 +545,56 @@ func TestIntegration_BatchEvalOperator(t *testing.T) {
 	}
 }
 
+// assertExposureRecorderGate polls until a valid exposure row is written (loggedCount==1).
+// The Flagr server must have FLAGR_RECORDER_ENABLED and per-flag dataRecordsEnabled.
+func assertExposureRecorderGate(t *testing.T, flagID int64) {
+	t.Helper()
+	err := pollUntil("exposure recorder gate", "/api/v1/exposures", 15*time.Second, func() bool {
+		r, err := doReq("POST", "/api/v1/exposures", map[string]any{
+			"exposures": []map[string]any{{
+				"flagID":   flagID,
+				"entityID": "exposure-cache-warmup",
+			}},
+		})
+		if err != nil {
+			return false
+		}
+		defer r.Body.Close()
+		if r.StatusCode < 200 || r.StatusCode >= 300 {
+			return false
+		}
+		var warm struct {
+			LoggedCount int64 `json:"loggedCount"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&warm); err != nil {
+			return false
+		}
+		return warm.LoggedCount == 1
+	})
+	if err != nil {
+		t.Fatalf("exposure logging not recording after dataRecordsEnabled (server needs FLAGR_RECORDER_ENABLED): %v", err)
+	}
+	t.Log("exposure recorder gate: loggedCount=1")
+}
+
 func TestIntegration_Exposures(t *testing.T) {
 	if len(seedFlagIDs) < 2 {
 		t.Fatal("need at least 2 seeded flags")
 	}
 	flagID := seedFlagIDs[1]
+
+	avail, err := doReq("POST", "/api/v1/exposures", map[string]any{
+		"exposures": []map[string]any{{"flagID": flagID, "entityID": "exposure-probe"}},
+	})
+	if err != nil {
+		t.Fatalf("POST /exposures probe: %v", err)
+	}
+	io.Copy(io.Discard, avail.Body)
+	avail.Body.Close()
+	if avail.StatusCode == http.StatusNotFound {
+		t.Skip("POST /exposures not available on this server (e.g. checkr/flagr:1.1.12)")
+	}
+
 	doReqOK(t, "PUT", fmt.Sprintf("/api/v1/flags/%d", flagID), map[string]any{
 		"dataRecordsEnabled": true,
 	})
@@ -558,63 +604,26 @@ func TestIntegration_Exposures(t *testing.T) {
 		t.Fatalf("expected dataRecordsEnabled=true on flag %d", flagID)
 	}
 
-	if os.Getenv("FLAGR_RECORDER_ENABLED") == "true" {
-		err := pollUntil("exposure recorder gate", "/api/v1/exposures", 15*time.Second, func() bool {
-			r, err := doReq("POST", "/api/v1/exposures", map[string]any{
-				"exposures": []map[string]any{{
-					"flagID":   flagID,
-					"entityID": "exposure-cache-warmup",
-				}},
-			})
-			if err != nil {
-				return false
-			}
-			defer r.Body.Close()
-			if r.StatusCode < 200 || r.StatusCode >= 300 {
-				return false
-			}
-			var warm struct {
-				LoggedCount int64 `json:"loggedCount"`
-			}
-			if err := json.NewDecoder(r.Body).Decode(&warm); err != nil {
-				return false
-			}
-			return warm.LoggedCount == 1
-		})
-		if err != nil {
-			t.Fatalf("exposure never recorded after enabling dataRecordsEnabled: %v", err)
-		}
-	}
+	assertExposureRecorderGate(t, flagID)
 
-	eid := "exposure-test-entity"
 	body := map[string]any{
 		"exposures": []map[string]any{
-			{
-				"flagID":   flagID,
-				"entityID": eid,
-			},
-			{
-				"entityID": "bad-row-no-flag",
-			},
+			{"flagID": flagID, "entityID": "exposure-test-entity"},
+			{"entityID": "bad-row-no-flag"},
 		},
 	}
-
 	probe, err := doReq("POST", "/api/v1/exposures", body)
 	if err != nil {
 		t.Fatalf("POST /exposures: %v", err)
 	}
 	defer probe.Body.Close()
-	if probe.StatusCode == http.StatusNotFound {
-		t.Skip("POST /exposures not available on this server (e.g. checkr/flagr:1.1.12)")
-	}
 	if probe.StatusCode < 200 || probe.StatusCode >= 300 {
 		b, _ := io.ReadAll(probe.Body)
 		t.Fatalf("POST /exposures: expected 2xx, got %d: %s", probe.StatusCode, b)
 	}
 
 	var resp struct {
-		LoggedCount int64  `json:"loggedCount"`
-		Message     string `json:"message"`
+		LoggedCount int64 `json:"loggedCount"`
 		Errors      []struct {
 			Index   int64  `json:"index"`
 			Message string `json:"message"`
@@ -629,14 +638,11 @@ func TestIntegration_Exposures(t *testing.T) {
 	if resp.Errors[0].Index != 1 {
 		t.Fatalf("expected error index 1, got %d", resp.Errors[0].Index)
 	}
-	wantLogged := int64(0)
-	if os.Getenv("FLAGR_RECORDER_ENABLED") == "true" {
-		wantLogged = 1
-	}
-	if resp.LoggedCount != wantLogged {
-		t.Fatalf("loggedCount want %d (recorder enabled=%v), got %d", wantLogged, wantLogged == 1, resp.LoggedCount)
+	if resp.LoggedCount != 1 {
+		t.Fatalf("loggedCount want 1 after recorder gate, got %d", resp.LoggedCount)
 	}
 }
+
 // ---------------------------------------------------------------------------
 // Datar integration tests
 // ---------------------------------------------------------------------------

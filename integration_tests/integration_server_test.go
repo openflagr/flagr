@@ -65,7 +65,6 @@ func TestMain(m *testing.M) {
 	url := os.Getenv("FLAGR_SERVER_URL")
 	if url == "" {
 		url = startLocalServer()
-		_ = os.Setenv("FLAGR_RECORDER_ENABLED", "true")
 		defer func() {
 			if serverCmd != nil {
 				serverCmd.Process.Kill()
