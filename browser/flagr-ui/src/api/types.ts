@@ -70,8 +70,8 @@ export interface Flag {
   segments?: Segment[]
 }
 
-/** Flag after `normalizeFlag` (empty arrays materialized). */
-export type FlagView = Flag
+/** Flag after `normalizeFlag` (empty arrays materialized; variants may carry UI validation state). */
+export type FlagView = Omit<Flag, 'variants'> & { variants: Variant[] }
 
 export interface CreateFlagPayload {
   description: string

@@ -133,3 +133,34 @@ export const listFlagSnapshots = (flagId: FlagId): Effect.Effect<FlagSnapshot[],
 
 export const listEntityTypes = (): Effect.Effect<string[], ApiError> =>
   get('/flags/entity_types')
+
+export interface FlagPageLoad {
+  flag: Flag
+  allTags: Tag[]
+  entityTypeKeys: string[]
+}
+
+export const loadFlagPageContext = Effect.fn('flags.loadFlagPageContext')(function* (
+  flagId: FlagId,
+  entityTypeKeysFromEnv: readonly string[] | null,
+) {
+  const [flag, allTags, entityTypeKeys] = yield* Effect.all(
+    [
+      getFlag(flagId),
+      listAllTags(),
+      entityTypeKeysFromEnv === null
+        ? listEntityTypes()
+        : Effect.succeed([...entityTypeKeysFromEnv]),
+    ],
+    { concurrency: 'unbounded' },
+  )
+  return { flag, allTags, entityTypeKeys } satisfies FlagPageLoad
+})
+
+export const loadFlagAndAllTags = Effect.fn('flags.loadFlagAndAllTags')(function* (flagId: FlagId) {
+  const [flag, allTags] = yield* Effect.all(
+    [getFlag(flagId), listAllTags()],
+    { concurrency: 'unbounded' },
+  )
+  return { flag, allTags }
+})

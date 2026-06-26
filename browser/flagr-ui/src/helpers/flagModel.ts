@@ -23,6 +23,9 @@ export function variantUsedInDistribution(flag: FlagView, variantId: number): bo
 }
 
 function processVariant(variant: Variant): void {
+  if (variant.attachmentValid === undefined) {
+    variant.attachmentValid = true
+  }
   if (typeof variant.attachment === 'string') {
     try {
       variant.attachment = JSON.parse(variant.attachment) as Record<string, unknown>

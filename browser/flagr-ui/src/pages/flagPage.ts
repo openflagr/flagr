@@ -1,3 +1,4 @@
+import { Effect } from 'effect'
 import type { Router } from 'vue-router'
 import * as flagsApi from '@/api/flags'
 import constants from '@/helpers/constants'
@@ -142,20 +143,24 @@ export function handleShowTagInput(vm: FlagPageVm): void {
 }
 
 export function deleteTag(vm: FlagPageVm, tag: Tag): void {
+  const tagId = requireTagId(tag)
+  const program = Effect.gen(function* () {
+    yield* flagsApi.deleteTag(vm.flagId, tagId)
+    return yield* flagsApi.loadFlagAndAllTags(vm.flagId)
+  })
   confirmAndRunApi(
     vm,
     `Are you sure you want to delete tag #${tag.value}`,
-    flagsApi.deleteTag(vm.flagId, requireTagId(tag)),
+    program,
     {
       successMessage: 'tag deleted',
-      onSuccess: () => {
-        reloadFlag(vm)
-        loadAllTags(vm)
+      onSuccess: ({ flag, allTags }) => {
+        vm.flag = normalizeFlag(flag)
+        vm.allTags = allTags
       },
     },
   )
 }
-
 export function handleCreateVariant(vm: FlagPageVm, { key }: { key: string }): void {
   runApi(vm, flagsApi.createVariant(vm.flagId, key), {
     successMessage: 'new variant created',
@@ -387,8 +392,20 @@ export function handleHistoryTabClick(vm: FlagPageVm, tab: { props?: { name?: st
   }
 }
 
+function entityTypeKeysFromEnv(): readonly string[] | null {
+  if (!FLAGR_UI_POSSIBLE_ENTITY_TYPES) return null
+  return FLAGR_UI_POSSIBLE_ENTITY_TYPES.split(',')
+}
+
 export function mountFlagPage(vm: FlagPageVm): void {
-  reloadFlag(vm)
-  loadAllTags(vm)
-  loadEntityTypes(vm)
+  const envKeys = entityTypeKeysFromEnv()
+  runApi(vm, flagsApi.loadFlagPageContext(vm.flagId, envKeys), {
+    onSuccess: (load) => {
+      vm.flag = normalizeFlag(load.flag)
+      vm.loaded = true
+      vm.allTags = load.allTags
+      vm.entityTypes = entityTypeOptionsFromKeys(load.entityTypeKeys)
+      vm.allowCreateEntityType = envKeys === null
+    },
+  })
 }
