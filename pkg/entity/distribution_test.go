@@ -147,19 +147,19 @@ func TestRolloutWithEntity(t *testing.T) {
 		var vID *uint
 		var msg string
 
-		vID, msg = d.Rollout("", "salt", uint(0))
+		vID, msg = d.Rollout("", "salt", uint(0), true)
 		assert.Nil(t, vID)
 		assert.Contains(t, msg, "no")
 
-		vID, msg = d.Rollout("entity123", "salt", uint(0))
+		vID, msg = d.Rollout("entity123", "salt", uint(0), true)
 		assert.Nil(t, vID)
 		assert.Contains(t, msg, "no")
 
-		vID, msg = d.Rollout("entity123", "salt", uint(100))
+		vID, msg = d.Rollout("entity123", "salt", uint(100), true)
 		assert.NotNil(t, vID)
 		assert.Contains(t, msg, "yes")
 
-		vID, msg = d.Rollout("entity123", "salt", uint(1))
+		vID, msg = d.Rollout("entity123", "salt", uint(1), true)
 		assert.Nil(t, vID)
 		assert.Contains(t, msg, "no")
 	})
@@ -172,8 +172,36 @@ func TestRolloutWithEntity(t *testing.T) {
 		var vID *uint
 		var msg string
 
-		vID, msg = d.Rollout("entity123", "salt", uint(100))
+		vID, msg = d.Rollout("entity123", "salt", uint(100), true)
 		assert.Nil(t, vID)
 		assert.Contains(t, msg, "no")
+	})
+
+	t.Run("withDebug false hot path", func(t *testing.T) {
+		d := DistributionArray{
+			VariantIDs:          []uint{1111, 2222},
+			PercentsAccumulated: []int{500, 1000},
+		}
+
+		vDebug, msgDebug := d.Rollout("entity123", "salt", uint(100), true)
+		vFast, msgFast := d.Rollout("entity123", "salt", uint(100), false)
+		if assert.NotNil(t, vDebug) && assert.NotNil(t, vFast) {
+			assert.Equal(t, *vDebug, *vFast)
+		}
+		assert.Contains(t, msgDebug, "yes")
+		assert.Empty(t, msgFast)
+
+		vDebug, msgDebug = d.Rollout("entity123", "salt", uint(1), true)
+		vFast, msgFast = d.Rollout("entity123", "salt", uint(1), false)
+		assert.Nil(t, vDebug)
+		assert.Nil(t, vFast)
+		assert.Contains(t, msgDebug, "no")
+		assert.Empty(t, msgFast)
+
+		// validation errors still return messages when withDebug is false
+		_, msg := d.Rollout("", "salt", uint(100), false)
+		assert.Contains(t, msg, "empty entityID")
+		_, msg = d.Rollout("entity123", "salt", uint(0), false)
+		assert.Contains(t, msg, "0% rolloutPercent")
 	})
 }

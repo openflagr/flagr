@@ -61,6 +61,12 @@ func TestTimeNow(t *testing.T) {
 	assert.Len(t, TimeNow(), 20)
 }
 
+func TestTimeNowCachedSameSecond(t *testing.T) {
+	a := TimeNow()
+	b := TimeNow()
+	assert.Equal(t, a, b)
+}
+
 func TestIsSafeKey(t *testing.T) {
 	var b bool
 	var msg string

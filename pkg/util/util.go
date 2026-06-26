@@ -6,6 +6,7 @@ import (
 	"path"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/dchest/uniuri"
@@ -93,9 +94,34 @@ func Round(f float64) int {
 	return int(f + math.Copysign(0.5, f))
 }
 
-// TimeNow follows RFC3339 time format
+
+var (
+	timeNowMu     sync.RWMutex
+	timeNowSec    int64
+	timeNowCached string
+)
+
+// TimeNow follows RFC3339 time format. Timestamps are cached per UTC second so
+// high-volume evaluation does not allocate a new RFC3339 string on every result.
 func TimeNow() string {
-	return time.Now().UTC().Format(time.RFC3339)
+	now := time.Now().UTC()
+	sec := now.Unix()
+	timeNowMu.RLock()
+	if sec == timeNowSec {
+		s := timeNowCached
+		timeNowMu.RUnlock()
+		return s
+	}
+	timeNowMu.RUnlock()
+
+	timeNowMu.Lock()
+	defer timeNowMu.Unlock()
+	if sec == timeNowSec {
+		return timeNowCached
+	}
+	timeNowSec = sec
+	timeNowCached = now.Format(time.RFC3339)
+	return timeNowCached
 }
 
 // ParseHeaders converts a comma-separated list of key-value pairs separated by colons into a map of strings.
