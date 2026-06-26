@@ -33,13 +33,34 @@ flag:
 evaluation_result = flagr.postEvaluation(entity)
 
 if (evaluation_result.variantKey == "on") {
-    // do something new and amazing here
+    // feature is on for this entity
 } else {
-    // do the current boring stuff
+    // feature is off (variantKey is empty, or the flag is disabled)
 }
 ```
 
-A typical feature flag in the Flagr UI:
+### The `enabled` toggle (simplest boolean flag)
+
+The simplest feature flag needs no variants at all. Every flag has a top-level
+`enabled` boolean, toggled from the UI's status switch or via
+`PUT /api/v1/flags/{flagID}/enabled`:
+
+```bash
+curl -X PUT "http://flagr:18000/api/v1/flags/1/enabled" \
+  -H 'Content-Type: application/json' \
+  -d '{"enabled": false}'
+```
+
+When `enabled` is `false`, the evaluator returns a **blank result** immediately —
+no `variantKey`, no segment matching, no rollout. It short-circuits before any
+segment logic runs. This is the kill switch: flip one boolean, and every
+evaluation of that flag returns nothing. No variants or segments to configure.
+
+### The `on`/`off` variant pattern (targeted rollouts)
+
+When you need *targeted* control — on for some users, off for others — use two
+variants (`on`/`off`) with a segment and distribution instead of the `enabled`
+toggle. The flag stays `enabled: true`; the distribution decides who gets `on`:
 
 ```
 Variants
@@ -55,6 +76,12 @@ Segment
 ```
 
 ![feature flagging setting demo](/images/demo_ff.png)
+
+| Pattern | When to use | How it works |
+|---------|-------------|--------------|
+| `enabled` toggle | Global kill switch — on or off for everyone | `PUT /flags/{id}/enabled` → evaluator returns blank when `false` |
+| `on`/`off` variants | Targeted rollout — on for a specific audience | Flag stays enabled; segment + distribution decide who gets `on` |
+
 
 ## Experimenting — A/B testing
 
