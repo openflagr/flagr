@@ -1,25 +1,45 @@
 # Flagr Use Cases
 
-**Feature flagging, A/B testing, and dynamic configuration** are all about delivering the experience to the right target audience,
-thus they share some components in the product design of Flagr. In fact, Flagr consolidates them together into the concept of
-a flag, and the code instrumentation looks similar among them.
+Feature flags, A/B tests, and dynamic configuration look like different
+problems — a kill switch, a marketing experiment, a runtime knob. But at the
+moment of decision, they all ask the same question: *given this entity, which
+experience should it get?* That is why Flagr consolidates them into one
+primitive — the **flag**. The difference between a feature flag and an
+experiment is not structural, it is operational: a feature flag cares about
+*who* is on, an experiment cares about *what they got* and *whether it
+mattered*. The instrumentation is identical; the analysis differs. This page
+shows the three patterns side by side so you can see how the same evaluation
+call serves all three.
 
+> **Note:** The pseudocode below uses the actual API response field names —
+> `variantID`, `variantKey`, and `variantAttachment` (camelCase), as returned
+> by `POST /evaluation`.
 
-## Feature Flagging
+## Feature flagging
 
-A common pattern for feature flagging is a binary on/off toggle. Most of them are kill switches, and sometimes one will have targeted audience of the feature flags. Following is a pseudocode example: given an entity (a user, a request, or a web cookie), Flagr evaluates the entity according to the flag setting.
+A feature flag is the simplest decision in software: should this code path
+run, or not? The most familiar shape is the **kill switch** — a globally
+visible "off" you can throw the instant a deploy goes wrong, without
+redeploying or paging an engineer to roll back. But the same mechanism
+generalizes to **targeted rollouts**: turn a feature on for internal users
+first, then a single region, then everyone. The key property is that *deploy*
+and *release* become independent — you can ship code to production hours
+before any user sees it.
 
-```
-evaluation_result = flagr.post_evaluation( entity )
+Given an entity (user, request, or cookie), Flagr evaluates it against the
+flag:
 
-if (evaluation_result.variant_id == new_feature_on) {
-    // do something new and amazing here.
+```js
+evaluation_result = flagr.postEvaluation(entity)
+
+if (evaluation_result.variantKey == "on") {
+    // do something new and amazing here
 } else {
-    // do the current boring stuff.
+    // do the current boring stuff
 }
 ```
 
-And a typical feature flag can be configured from Flagr UI like:
+A typical feature flag in the Flagr UI:
 
 ```
 Variants
@@ -27,40 +47,46 @@ Variants
   - off
 
 Segment
-  - Constraints (depends on your targeted audience, e.g. state == "CA")
+  - Constraints (targeted audience, e.g. state == "CA")
   - Rollout Percent: 100%
   - Distribution
     - on: 100%
     - off: 0%
 ```
 
-UI setting example (frontend looks may iterate quickly):
 ![feature flagging setting demo](/images/demo_ff.png)
 
+## Experimenting — A/B testing
 
-## Experimenting - A/B testing
+A feature flag answers *on or off?* An experiment answers a harder question:
+*which of these is better?* To answer it you expose different variants to
+different slices of your audience and measure outcomes. Flagr's job is the
+exposure half — deterministic, sticky assignment so the same user always sees
+the same treatment. The measurement half (conversion rates, significance) is
+yours; Flagr emits the events but does not compute the verdict.
 
-If we want to run A/B testing experiments on several variants with a targeted audience,
-we may want to instrument the code to Flagr like the following pseudocode:
+To run an A/B test across several variants with a targeted audience, instrument
+the code the same way and branch on the assigned variant:
 
-```
-evaluation_result = flagr.post_evaluation( entity )
+```js
+evaluation_result = flagr.postEvaluation(entity)
 
-if (evaluation_result.variant_id == treatment1) {
+if (evaluation_result.variantKey == "treatment1") {
     // do the treatment 1 experience
-} else if (evaluation_result.variant_id == treatment2) {
+} else if (evaluation_result.variantKey == "treatment2") {
     // do the treatment 2 experience
-} else if (evaluation_result.variant_id == treatment3) {
+} else if (evaluation_result.variantKey == "treatment3") {
     // do the treatment 3 experience
 } else {
     // do the control experience
 }
 ```
 
-And a typical A/B testing flag can be configured from Flagr UI like the following:
+> **Warning:** Segment order matters. An entity falls into the **first**
+> segment whose constraints **all** match. List targeted segments before broad
+> ones.
 
-!> Multiple segments' order is important! Entities will fall
-into the **first** segment that match **all** the constraints of it.
+A typical A/B test flag in the UI:
 
 ```
 Variants
@@ -69,47 +95,61 @@ Variants
   - treatment2
   - treatment3
 
-Segment
+Segment                         // state == "CA"
   - Constraints (state == "CA")
   - Rollout Percent: 20%
   - Distribution
-    - control: 25%
+    - control:    25%
     - treatment1: 25%
     - treatment2: 25%
     - treatment3: 25%
-Segment
+
+Segment                         // state == "NY" AND age >= 21
   - Constraints (state == "NY" AND age >= 21)
   - Rollout Percent: 100%
   - Distribution
-    - control: 50%
-    - treatment1: 0%
+    - control:    50%
+    - treatment1:  0%
     - treatment2: 25%
     - treatment3: 25%
 ```
 
-UI setting example (frontend looks may iterate quickly):
 ![ab testing setting demo 1](/images/demo_exp1.png)
 ![ab testing setting demo 2](/images/demo_exp2.png)
 
-For **measuring experiment outcomes** (conversion rates, etc.), assignment from `POST /evaluation` is not enough—you need **impression** events. Use [Exposure Logging](flagr_exposure.md) when the user sees the treatment, then [Data Recorders & A/B Analysis](flagr_eval_exposure_pipeline.md) (or your own consumer on Kinesis/Pub/Sub) to build denominators and join to business metrics. For quick **eval volume** only, see [Datar](flagr_datar.md).
+### Measuring experiment outcomes
 
-## Dynamic Configuration
+Assignment from `POST /evaluation` is **not** enough to measure conversion —
+you need **impression** events. Use
+[Exposure Logging](flagr_exposure.md) when the user actually sees the
+treatment, then
+[Data Recorders & A/B Analysis](flagr_eval_exposure_pipeline.md) (or your own
+consumer on Kafka/Kinesis/Pub/Sub) to build denominators and join to business
+metrics. For quick **eval volume** only, see [Datar](flagr_datar.md).
 
-One can also leverage the **Variant Attachment** to run dynamic configuration, by supplying a valid JSON object attachment.
+## Dynamic configuration
 
-!> Before [v1.1.3](https://github.com/openflagr/flagr/releases/tag/1.1.3), only **string:string** key:value pairs were supported inside the JSON object attachment.
+Sometimes the decision isn't *which experience* but *what value* — the
+threshold for a cache, the copy on a button, the timeout for a retry. You
+could redeploy for each change, or you can let the variant carry the value.
+A variant's **Attachment** is an arbitrary JSON object delivered alongside the
+`variantKey`, so your code reads a configuration value the same way it reads
+an assignment — no second fetch, no separate config service, no restart.
 
-For example, the color_hex of green variant can be dynamically configured:
+Use a variant's **Attachment** (an arbitrary JSON object) to carry dynamic
+configuration:
 
-```
-evaluation_result = flagr.post_evaluation( entity )
+```js
+evaluation_result = flagr.postEvaluation(entity)
 green_color_hex = evaluation_result.variantAttachment["color_hex"]
 ```
+
+A typical dynamic-config flag:
 
 ```
 Variants
   - green
-    - attachment: {"color_hex": "#42b983"} OR {"color_hex": "#008000"}
+    - attachment: {"color_hex": "#42b983"}   // or {"color_hex": "#008000"}
   - red
     - attachment: {"color_hex": "#ff0000"}
 
@@ -122,3 +162,9 @@ Segment
 ```
 
 ![dynamic configuration demo](/images/demo_dynamic_configuration.png)
+
+> **Note:** Prior to [v1.1.3](https://github.com/openflagr/flagr/releases/tag/1.1.3),
+> attachments supported only `string:string` key/value pairs. Current Flagr
+> stores attachments as `map[string]any`, so arbitrary JSON values are
+> supported. (The historical boundary is documented in the GitHub release
+> notes; the in-repo `CHANGELOG.md` links there.)
