@@ -1,23 +1,13 @@
 # flagr-ui
 
+Vue 3 + Vite + TypeScript. **Commands live in the repo root `Makefile`** — run `make help` there.
 
-Vue 3 + Vite. TypeScript: Vite build + `npm run typecheck` (`vue-tsc --noEmit`).
+| Goal | From repo root |
+|------|----------------|
+| Dev server (`:8080`) | `make run-ui` (or `make start` with backend) |
+| Production build | `make build-ui` |
+| Playwright e2e | `make test-e2e` |
 
-## Commands
+Layout: `src/api/` · `src/pages/` · `src/components/` · `src/helpers/`
 
-| Command | Purpose |
-|---------|---------|
-| `npm install` | Dependencies |
-| `npm run dev` | Vite dev server (repo: `make start` for backend + UI) |
-| `npm run build` | Production → `dist/` |
-| `npm run typecheck` | Typecheck only |
-| `npm run lint` | ESLint |
-| `npm run test:e2e` | Playwright (repo: `make test-e2e`) |
-
-## Layout
-
-`api/` · `pages/` · `components/` · `helpers/`
-
-## Config
-
-- `VITE_API_URL` (default `/api/v1`) — `helpers/constants.ts`
+Config: `VITE_API_URL` (default `/api/v1`) in `src/helpers/constants.ts`. Effect patterns: `docs/EFFECT.md`.

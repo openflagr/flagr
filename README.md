@@ -39,6 +39,8 @@ beyond the original [`checkr/flagr`](https://github.com/checkr/flagr).
 
 **[https://openflagr.github.io/flagr](https://openflagr.github.io/flagr)**
 
+**Developers:** clone the repo and run **`make help`** for build, test, and UI commands (single entrypoint for CI and local work).
+
 | Page | Content |
 |------|---------|
 | [Home](https://openflagr.github.io/flagr/) | Quick start, dev, testing, deploy |

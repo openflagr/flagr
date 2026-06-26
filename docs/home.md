@@ -97,82 +97,57 @@ curl --request POST \
 
 ### Build and run
 
+All commands run from the **repository root**. See **`make help`** for the full list.
+
 ```bash
 git clone https://github.com/openflagr/flagr.git
 cd flagr
 
-make build        # Build the Go server binary (./flagr)
-make start        # Backend (:18000) + frontend dev server (:8080) in parallel
-
-make run          # Run the pre-built backend only
-make run-ui       # Run the UI dev server only (proxies /api/v1 to :18000)
+make build          # Go server → ./flagr
+make start          # Backend :18000 + UI dev :8080
+make run            # Pre-built backend only
+make run-ui         # UI dev only (proxies /api/v1 to :18000)
 ```
 
-After Go code changes, rebuild and restart in one step:
+After Go code changes:
 
 ```bash
 make rebuild-run    # build → stop-ui → start
 ```
 
-> **Note:** `make stop-ui` kills processes bound to `:18000` and `:8080` (via
-> `lsof -ti:<port>`), so it never touches processes from other projects.
-
-Frontend-only development: run `npm run dev` in `browser/flagr-ui/` — Vite
-proxies `/api/v1` to `:18000` and hot-reloads on save.
+> **`make stop-ui`** frees `:18000` and `:8080` via `lsof -ti:<port>` (not `pkill`), so other projects are unaffected.
 
 ## Testing
 
-Flagr has three kinds of tests, each serving a different purpose.
+Three test layers — all via **`make`** from the repo root (`make help` → **Test**).
 
 ### Unit tests
 
-Go unit tests for `pkg/` — no external services required:
-
 ```bash
-make test
+make test           # golangci-lint + swagger validate + go test ./pkg/...
 ```
-
-Or directly:
-
-```bash
-go test ./pkg/...
-```
-
-> **Note:** `make test` also runs `verifiers` first (golangci-lint + Swagger
-> validation). `go test ./pkg/...` skips that prerequisite.
 
 ### E2E tests (UI)
 
-Playwright end-to-end tests for the Vue 3 UI. Builds the Go server, starts the
-backend and UI servers, runs Playwright, then cleans up:
-
 ```bash
-make test-e2e
+make test-e2e       # build server + UI lint/typecheck + Playwright
 ```
 
 ### Integration tests (API, multi-DB)
 
-HTTP-level integration tests covering all CRUD and eval endpoints. Seeds ~48
-realistic flags across all 12 constraint operators.
-
-**Local mode** — SQLite `:memory:`, auto-starts a server on a random port:
+**Local** — SQLite `:memory:`, auto-started server:
 
 ```bash
 make test-integration
 ```
 
-**Docker Compose mode** — runs the same suite against 6 Flagr instances
-(SQLite, MySQL, MySQL 8, PostgreSQL 9, PostgreSQL 13, checkr/flagr):
+**Docker Compose** — same suite against six instances (SQLite, MySQL, PostgreSQL, …):
 
 ```bash
-cd integration_tests && make test
+make test-integration-compose
 ```
 
-> **Note:** CI runs `make test-and-bench` (tests + benchmarks against the same
-> instances). Other compose targets: `make bench` (benchmarks only),
-> `make retest` (tear down then re-run).
-
-**HTTP eval benchmarks** — measures end-to-end eval latency through HTTP:
+CI runs **`make ci-integration`** (tests + benchmarks on Compose). Local benchmarks:
 
 ```bash
 make bench-integration

@@ -4,6 +4,8 @@ Flagr — Go feature flag service with Vue 3 UI.
 
 ## Commands
 
+Run **`make help`** from the repo root for the full catalog. Common targets:
+
 | Command | What it does |
 |---|---|
 | `make build` | Go server → `./flagr` |
@@ -11,14 +13,14 @@ Flagr — Go feature flag service with Vue 3 UI.
 | `make start` | Backend `:18000` + UI dev `:8080` |
 | `make stop-ui` | Free ports `:18000` / `:8080` (`lsof`, not `pkill`) |
 | `make rebuild-run` | `build` → `stop-ui` → `start` |
-| `make test` | Go unit tests |
+| `make test` | Lint + swagger validate + Go unit tests |
 | `make test-e2e` | `build` + UI lint/typecheck + Playwright |
+| `make test-integration` | API integration tests (SQLite, local server) |
+| `make test-integration-compose` | Same suite vs Docker Compose (6 DBs) |
+| `make bench-integration` | HTTP eval benchmarks (local) |
 | `make swagger` | Regenerate `swagger_gen/` |
-| `make test-integration` | Go API integration tests (SQLite `:memory:`) |
-| `make bench-integration` | HTTP eval benchmarks |
-| `go build -o flagr ./cmd/flagr-server/` | Same as `make build` |
 
-**UI** (`browser/flagr-ui/`): `npm run dev` / `build` / `lint` / `typecheck` — or `make build-ui` / `make run-ui` from repo root.
+CI: `make ci`, `make ci-swagger`, `make ci-integration`, `make build-ui` — see `Makefile` **CI** section.
 
 ## Key Code
 
@@ -28,13 +30,14 @@ Flagr — Go feature flag service with Vue 3 UI.
 - `entity/` — domain models (flag, segment, constraint, variant, distribution)
 - `config/env.go` — all environment variables (single source of truth)
 
-**Frontend (`browser/flagr-ui/src/`):** `api/`, `pages/`, `components/`, `helpers/` — Vite compiles TS; `npm run typecheck` = `vue-tsc --noEmit`.
-- New REST: add functions in `api/flags.ts` or `api/evaluation.ts`; call from UI via `helpers/runApi` (not `fetch` in components).
-- Effect usage and conventions: **`docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md`** (§ Effect) and **`browser/flagr-ui/docs/EFFECT.md`**.
+**Frontend (`browser/flagr-ui/src/`):**
+- `api/`, `pages/`, `components/`, `helpers/` — use **`make run-ui`** / **`make build-ui`** / **`make test-e2e`** from repo root (not raw `npm` in docs)
+- New REST: `api/flags.ts` or `api/evaluation.ts`; UI calls via `helpers/runApi`
+- Effect: **`browser/flagr-ui/docs/EFFECT.md`**
 
 ## Constraints
 
-- **Don't edit `swagger_gen/`** — regenerate with `make swagger`
+- **Don't edit `swagger_gen/`** — `make swagger`
 - Dev mode uses SQLite, no external deps needed
 - Process management uses `lsof -ti:<port>` not `pkill -f` — never touches other projects' processes
 - See [deepwiki.com/openflagr/flagr](https://deepwiki.com/openflagr/flagr) and `docs/`
