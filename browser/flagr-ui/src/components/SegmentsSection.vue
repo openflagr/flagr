@@ -85,9 +85,9 @@
             </div>
           </div>
           <div class="seg-panel seg-panel-dist">
-            <div class="seg-section-title">
+            <div class="seg-section-title seg-section-title--with-action">
               <span>Distribution</span>
-              <el-button size="small" link type="primary" @click="$emit('edit-distribution', element)"><el-icon><Edit /></el-icon> Edit</el-button>
+              <el-button size="small" link type="primary" data-testid="edit-distribution-btn" @click="$emit('edit-distribution', element)"><el-icon><Edit /></el-icon> Edit</el-button>
             </div>
             <div v-if="element.distributions.length" class="dist-list">
               <div v-for="distribution in element.distributions" :key="distribution.id" class="dist-item">
@@ -141,7 +141,7 @@ export default {
       const c = this.newConstraints[element.id]
       this.$emit('create-constraint', { segment: element, constraint: { operator: c.operator, property: c.property, value: c.value } })
       this.newConstraints[element.id] = { operator: 'EQ', property: '', value: '' }
-    }
+    },
   }
 }
 </script>
@@ -216,6 +216,13 @@ export default {
   gap: var(--space-2xs);
   letter-spacing: 0.02em;
   text-transform: uppercase;
+}
+.seg-section-title--with-action {
+  justify-content: space-between;
+  :deep(.el-button) {
+    text-transform: none;
+    letter-spacing: normal;
+  }
 }
 .seg-section-subtitle {
   font-weight: 400;

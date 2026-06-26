@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { createFlagWithVariants, createFlag, deleteFlag, createSegment, createConstraint, createVariant, API, waitForSnapshot } from './helpers.js'
+import { createFlagWithVariants, createFlag, deleteFlag, createSegment, createConstraint, createVariant, API, waitForSnapshot, getFlag, putSegmentDistributions } from './helpers.js'
 
 test.describe('Flag detail page', () => {
   /** Set by each test, cleaned up in afterEach. */
@@ -370,26 +370,26 @@ test.describe('Flag detail page', () => {
 
   test('can edit distribution via dialog', async ({ page }) => {
     flag = await createFlagWithVariants()
-    await createSegment(flag.id, `dist-${Date.now()}`)
+    const segment = await createSegment(flag.id, `dist-${Date.now()}`)
+    const flagData = await getFlag(flag.id)
+    const controlVariant = flagData.variants.find(v => v.key === 'control')
+    expect(controlVariant).toBeTruthy()
+    await putSegmentDistributions(flag.id, segment.id, [
+      { variantKey: 'control', variantID: controlVariant.id, percent: 100, bitmap: '' },
+    ])
     await page.goto(`/#/flags/${flag.id}`)
     await expect(page.locator('input[data-testid="flag-key-input"]')).toBeVisible({ timeout: 10000 })
-    // Open the distribution edit dialog — use specific selector for the segment's Edit button
-    await page.locator('.seg-panel-dist button:has-text("Edit")').first().click()
+    await page.locator('[data-testid="edit-distribution-btn"]').first().click()
     await expect(page.locator('.el-dialog')).toBeVisible({ timeout: 5000 })
-    // Check the first variant checkbox
-    const checkbox = page.locator('.dist-variant-row .el-checkbox').first()
-    await checkbox.click()
-    // Set percentage to 100 via slider input
+    await expect(page.getByRole('heading', { name: 'Edit Distribution' })).toBeVisible()
+    await expect(page.locator('.dist-variant-row .el-checkbox').first()).toBeChecked({ timeout: 3000 })
     const sliderInput = page.locator('.dist-slider-row input[type="number"], .dist-slider-row .el-input__inner').first()
     await sliderInput.fill('100')
-    // Save
     await page.locator('.el-dialog .el-button--primary').click()
     await expect(page.locator('.el-message--success')).toBeVisible({ timeout: 5000 })
-    // Verify distribution persisted via API
-    const r = await page.request.get(`${API}/flags/${flag.id}`)
-    expect(r.ok()).toBeTruthy()
-    const updated = await r.json()
+    const updated = await getFlag(flag.id)
     expect(updated.segments[0].distributions.length).toBeGreaterThan(0)
+    expect(updated.segments[0].distributions[0].percent).toBe(100)
   })
 
   test('can add and delete tags via UI', async ({ page }) => {

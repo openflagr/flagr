@@ -36,6 +36,22 @@ export async function createSegment(flagId, desc) {
   return r.json()
 }
 
+export async function getFlag(flagId) {
+  const r = await fetch(`${API}/flags/${flagId}`)
+  if (!r.ok) throw new Error(`getFlag(${flagId}) failed: ${r.status}`)
+  return r.json()
+}
+
+export async function putSegmentDistributions(flagId, segmentId, distributions) {
+  const r = await fetch(`${API}/flags/${flagId}/segments/${segmentId}/distributions`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ distributions }),
+  })
+  if (!r.ok) throw new Error(`putSegmentDistributions failed: ${r.status} ${await r.text()}`)
+  return r.json()
+}
+
 export async function createConstraint(flagId, segId) {
   const r = await fetch(`${API}/flags/${flagId}/segments/${segId}/constraints`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
