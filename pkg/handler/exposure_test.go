@@ -340,12 +340,11 @@ func TestBuildExposureDataRecord(t *testing.T) {
 		assert.Equal(t, "from_flag", r.EvalContext.EntityType)
 	})
 
-	t.Run("merges entityContext and metadata", func(t *testing.T) {
+	t.Run("entityContext on record", func(t *testing.T) {
 		r, _, err := buildExposureDataRecord(&models.Exposure{
-			EntityID:       &eid,
-			FlagID:         int64(fixture.ID),
-			EntityContext:  map[string]any{"country": "US"},
-			Metadata:       map[string]interface{}{"page": "/home"},
+			EntityID:      &eid,
+			FlagID:        int64(fixture.ID),
+			EntityContext: map[string]any{"country": "US", "page": "/home"},
 		})
 		if !assert.NoError(t, err) {
 			return
@@ -468,18 +467,6 @@ func TestResolveExposureFlag(t *testing.T) {
 	})
 }
 
-func TestMergeJSONIntoMap(t *testing.T) {
-	dst := map[string]any{}
-	mergeJSONIntoMap(dst, map[string]any{"a": 1})
-	mergeJSONIntoMap(dst, map[string]any{"b": 2})
-	assert.Equal(t, float64(1), dst["a"])
-	assert.Equal(t, float64(2), dst["b"])
-
-	mergeJSONIntoMap(dst, nil)
-	mergeJSONIntoMap(dst, "not-json-object")
-	mergeJSONIntoMap(dst, map[string]any{})
-	assert.Len(t, dst, 2)
-}
 
 func TestLogExposureStatsd_Stubbed(t *testing.T) {
 	var lastStatus string

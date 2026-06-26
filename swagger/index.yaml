@@ -660,15 +660,13 @@ definitions:
       entityContext:
         type: object
         additionalProperties: true
+        description: Optional attributes recorded on evalContext.entityContext (same field as POST /evaluation). Include impression-specific keys here (e.g. page path); exposure does not re-run segment constraints.
       flagSnapshotID:
         type: integer
         format: int64
       timestamp:
         type: string
         format: date-time
-      metadata:
-        type: object
-        additionalProperties: true
   exposuresResponse:
     type: object
     properties:

@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -103,18 +102,15 @@ func buildExposureDataRecord(row *models.Exposure) (models.EvalResult, *entity.F
 		ts = time.Time(row.Timestamp).UTC().Format(time.RFC3339)
 	}
 
-	entityCtx := map[string]any{}
-	mergeJSONIntoMap(entityCtx, row.EntityContext)
-	mergeJSONIntoMap(entityCtx, row.Metadata)
-	var merged any
-	if len(entityCtx) > 0 {
-		merged = entityCtx
+	var entityContext any
+	if row.EntityContext != nil {
+		entityContext = row.EntityContext
 	}
 
 	evalCtx := models.EvalContext{
 		EntityID:      *row.EntityID,
 		EntityType:    entityType,
-		EntityContext: merged,
+		EntityContext: entityContext,
 	}
 
 	return models.EvalResult{
@@ -200,25 +196,6 @@ func resolveExposureVariant(flag *entity.Flag, variantID int64, variantKey strin
 		return 0, "", fmt.Errorf("variantKey %q not found on flag", variantKey)
 	}
 	return int64(byKey.ID), byKey.Key, nil
-}
-
-// mergeJSONIntoMap copies top-level keys from arbitrary client JSON (swagger any)
-// into dst. Non-objects, null, and empty objects are intentionally ignored.
-func mergeJSONIntoMap(dst map[string]any, src any) {
-	if src == nil {
-		return
-	}
-	b, err := json.Marshal(src)
-	if err != nil || len(b) == 0 || string(b) == "null" {
-		return
-	}
-	var m map[string]any
-	if err := json.Unmarshal(b, &m); err != nil || len(m) == 0 {
-		return
-	}
-	for k, v := range m {
-		dst[k] = v
-	}
 }
 
 var logExposureStatsd = func(status string, flagID int64, flagKey string) {

@@ -24,7 +24,7 @@ Explicit client-reported exposure (impression) logging complements `POST /evalua
 | `flagSnapshotID` | Optional; if set, pass through on the record; if omitted, use flag `SnapshotID` from eval cache (no DB validation; downstream joins) |
 | Disabled flag | Allowed |
 | `timestamp` | Client RFC3339 if valid, else server now |
-| Context | Merge `entityContext` + `metadata` → `evalContext.entityContext` |
+| Context | Optional `entityContext` → `evalContext.entityContext` on the record (same as eval; no separate `metadata` field) |
 | `entityType` | Flag `entityType` overrides client (same as eval) |
 
 ### Response
@@ -54,7 +54,7 @@ Same middleware as `POST /evaluation`. No dedicated rate limit v1.
 
 ## Implementation notes
 
-- Single `pkg/handler/exposure.go`: `PostExposures`, `buildExposureDataRecord` (returns result + flag), `resolveExposureFlag`, `resolveExposureVariant`, `mergeJSONIntoMap`.
+- Single `pkg/handler/exposure.go`: `PostExposures`, `buildExposureDataRecord` (returns result + flag), `resolveExposureFlag`, `resolveExposureVariant`.
 - Naming: **`dataRecord`** / **`buildExposureDataRecord`** / “data recorders” (not “pipeline”).
 - No thin wrappers around `AsyncRecord`; exposures never call `logEvalResult`.
 - Ingest is **cache-only** for flags/variants (no re-segmentation, no snapshot DB lookup); **one cache lookup per accepted row** (no second `GetByFlagKeyOrID` in the loop).
@@ -86,6 +86,8 @@ Post-implementation:
 - Dropped `recordPipelineEvent` / shared validation modules; direct `AsyncRecord` in eval and exposure.
 - Docs/tests aligned with data-recorder vocabulary; operator sections in `flagr_exposure.md`.
 - **`flagSnapshotID`**: pass-through only (removed `getDB` validation) — warehouse validates snapshot/flag pairing.
+
+- **2026-06-26:** Dropped exposure `metadata`; clients use `entityContext` only (aligned with `POST /evaluation`).
 
 ## Code quality review (2026-06-25, updated post thermo-nuclear follow-up)
 

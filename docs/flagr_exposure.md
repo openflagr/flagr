@@ -18,14 +18,17 @@ Request body:
       "variantKey": "treatment",
       "entityID": "user-123",
       "entityType": "user",
-      "entityContext": { "country": "US" },
-      "metadata": { "page": "/checkout" },
+      "entityContext": { "country": "US", "page": "/checkout" },
       "flagSnapshotID": 42,
       "timestamp": "2026-06-25T12:00:00Z"
     }
   ]
 }
 ```
+
+### `entityContext`
+
+Use the same **`entityContext`** object as `POST /evaluation`: any optional JSON object is stored on the recorded row as `evalContext.entityContext` (for your warehouse or analytics). Put segment-style attributes (`country`, `tier`) and impression-specific attributes (`page`, `component`) in one map — there is no separate `metadata` field. Exposure ingest does **not** re-run segment constraints; context is only copied onto the data record.
 
 Single impressions use an array of one item. Maximum batch size: `FLAGR_EXPOSURE_BATCH_SIZE` (default **100**).
 

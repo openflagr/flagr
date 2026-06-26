@@ -158,8 +158,7 @@ curl -X POST "http://flagr:18000/api/v1/exposures" \
       "entityID": "user-123",
       "entityType": "user",
       "flagSnapshotID": 42,
-      "entityContext": { "country": "US" },
-      "metadata": { "page": "/checkout" }
+      "entityContext": { "country": "US", "page": "/checkout" }
     }]
   }'
 ```
@@ -274,7 +273,7 @@ flowchart LR
 ```
 
 1. **Assignment table** (optional): from `evaluation` rows — who was bucketed into which variant and segment at eval time. Useful for debugging bucketing and `flagSnapshotID` alignment.
-2. **Exposure fact table** (recommended denominator): from `exposure` rows — `entity_id`, `flag_id`, `variant_id`, `flag_snapshot_id`, `timestamp`, context/metadata.
+2. **Exposure fact table** (recommended denominator): from `exposure` rows — `entity_id`, `flag_id`, `variant_id`, `flag_snapshot_id`, `timestamp`, and `evalContext.entityContext` (one JSON object per row).
 3. **Outcome events**: purchases, signups, clicks — from your app analytics, **not** from Flagr.
 4. **Join** outcomes to **exposures** on `entity_id` (and flag/experiment id), with a **time window** (e.g. outcome within 7 days after first exposure). Use **first exposure per entity per experiment** for classic A/B unless you intentionally analyze repeated views.
 
