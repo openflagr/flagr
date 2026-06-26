@@ -34,7 +34,7 @@ jobs:
       - name: Check out source code
         uses: actions/checkout@v4
       - run: cd browser/flagr-ui && npm install
-      - run: cd browser/flagr-ui && npm run lint
+      - run: cd browser/flagr-ui && npm run lint && npm run typecheck
   integration_test:
     runs-on: ubuntu-latest
     steps:
