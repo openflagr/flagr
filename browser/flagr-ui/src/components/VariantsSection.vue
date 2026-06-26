@@ -52,7 +52,7 @@
 import JsonEditor from 'vue3-ts-jsoneditor'
 import { Delete } from '@element-plus/icons-vue'
 import type { PropType } from 'vue'
-import type { Variant } from '@/types'
+import type { Variant } from '@/api/types'
 
 export default {
   name: 'variants-section',

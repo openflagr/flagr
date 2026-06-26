@@ -122,10 +122,10 @@ import FlagConfigCard from '@/components/FlagConfigCard.vue'
 import FlagHistory from '@/components/FlagHistory.vue'
 import SegmentsSection from '@/components/SegmentsSection.vue'
 import VariantsSection from '@/components/VariantsSection.vue'
-import * as flagPage from '@/flag/flagPageMethods'
-import type { FlagPageVm } from '@/flag/flagPageMethods'
+import * as flagPage from '@/pages/flagPage'
+import type { FlagPageVm } from '@/pages/flagPage'
 import operatorsData from '@/operators.json'
-import type { DistributionDraft, FlagView, Segment, Tag } from '@/types'
+import type { DistributionDraft, FlagView, Segment, Tag } from '@/api/types'
 
 const operators = operatorsData.operators
 

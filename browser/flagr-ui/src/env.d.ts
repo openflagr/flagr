@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 
-import type { ElementMessageApi } from '@/ui/runApi'
+import type { ElementMessageApi } from '@/helpers/runApi'
 
 interface ImportMetaEnv {
   readonly VITE_API_URL?: string

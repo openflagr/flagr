@@ -1,5 +1,5 @@
 import { Effect } from 'effect'
-import constants from '@/constants'
+import constants from '@/helpers/constants'
 import {
   ApiDecodeError,
   ApiHttpError,

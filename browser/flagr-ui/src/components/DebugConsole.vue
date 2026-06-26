@@ -51,8 +51,8 @@
 <script lang="ts">
 import JsonEditor from 'vue3-ts-jsoneditor'
 import * as evalApi from '@/api/evaluation'
-import type { BatchEvalContext, EvalContext, EvalResult, EvalSummary, Flag } from '@/types'
-import { runApi } from '@/ui/runApi'
+import type { BatchEvalContext, EvalContext, EvalResult, EvalSummary, Flag } from '@/api/types'
+import { runApi } from '@/helpers/runApi'
 
 export default {
   name: 'debug-console',

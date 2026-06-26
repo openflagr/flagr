@@ -1,9 +1,9 @@
 import type { Router } from 'vue-router'
 import * as flagsApi from '@/api/flags'
-import constants from '@/constants'
-import { entityTypeOptionsFromKeys } from '@/lib/entityTypes'
-import { variantUsedInDistribution } from '@/lib/flagGuards'
-import { normalizeFlag, normalizeSegment } from '@/lib/normalizeFlag'
+import constants from '@/helpers/constants'
+import { entityTypeOptionsFromKeys } from '@/helpers/flagModel'
+import { variantUsedInDistribution } from '@/helpers/flagModel'
+import { normalizeFlag, normalizeSegment } from '@/helpers/flagModel'
 import type {
   Constraint,
   Distribution,
@@ -12,16 +12,16 @@ import type {
   Segment,
   Tag,
   Variant,
-} from '@/types'
+} from '@/api/types'
 import {
   pluckSegmentIds,
   requireConstraintId,
   requireSegmentId,
   requireTagId,
   requireVariantId,
-} from '@/types/flag'
-import { confirmAndRunApi, type ConfirmVm } from '@/ui/confirmAndRunApi'
-import { runApi } from '@/ui/runApi'
+} from '@/api/types'
+import { confirmAndRunApi, type ConfirmVm } from '@/helpers/runApi'
+import { runApi } from '@/helpers/runApi'
 
 const { FLAGR_UI_POSSIBLE_ENTITY_TYPES } = constants
 

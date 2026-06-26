@@ -30,12 +30,11 @@ Flagr — Go feature flag service with Vue 3 UI.
 - `config/env.go` — all environment variables (single source of truth)
 
 **Frontend (`browser/flagr-ui/src/`):**
-- `api/` — Effect programs (`flags.ts`, `evaluation.ts`) + `http.ts`; errors as tagged `ApiError`
-- `ui/runApi.ts`, `ui/confirmAndRunApi.ts`, `ui/presentApiError.ts` — Vue boundary (`successMessage` for static toasts; `onSuccess` for state)
-- `flag/flagPageMethods.ts` — flag detail API orchestration (keep `Flag.vue` thin)
-- `types/` — domain types (mirror `swagger_gen/models/`, not imported from Go)
-- `components/Flag.vue`, `components/Flags.vue` — shells; leaf SFCs use `<script lang="ts">`
-- Vite transpiles TS (no `tsc` emit); do not add a separate TypeScript build step
+- `api/` — types, errors, http, Effect programs (`flags`, `evaluation`)
+- `helpers/` — `constants`, `runApi` (Vue↔Effect), `flagModel`, `router`, `helpers.ts`
+- `pages/` — `flagPage`, `flagsList` (orchestration, not Vue SFCs)
+- `components/` — Vue SFCs (`<script lang="ts">`)
+- Vite transpiles TS (no `tsc` emit); `npm run typecheck` = `vue-tsc --noEmit`
 
 ## Constraints
 

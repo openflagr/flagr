@@ -1,4 +1,26 @@
-import type { Flag, FlagView, Segment, Variant } from '@/types'
+import type { Flag, FlagView, Segment, Variant } from '@/api/types'
+
+export interface EntityTypeOption {
+  label: string
+  value: string
+}
+
+export function entityTypeOptionsFromKeys(keys: string[]): EntityTypeOption[] {
+  const arr = keys.map((key) => ({
+    label: key === '' ? '<null>' : key,
+    value: key,
+  }))
+  if (!keys.includes('')) {
+    arr.unshift({ label: '<null>', value: '' })
+  }
+  return arr
+}
+
+export function variantUsedInDistribution(flag: FlagView, variantId: number): boolean {
+  return (flag.segments ?? []).some((s) =>
+    (s.distributions ?? []).some((d) => d.variantID === variantId),
+  )
+}
 
 function processVariant(variant: Variant): void {
   if (typeof variant.attachment === 'string') {

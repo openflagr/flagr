@@ -1,4 +1,4 @@
-import type { Flag } from '@/types'
+import type { Flag } from '@/api/types'
 
 export interface FlagsCache {
   flags: Flag[]

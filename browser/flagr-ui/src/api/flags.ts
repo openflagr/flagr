@@ -10,7 +10,7 @@ import type {
   Tag,
   UpdateFlagPayload,
   Variant,
-} from '@/types'
+} from './types'
 import type { ApiError } from './errors'
 import { requestJson, requestVoid } from './http'
 

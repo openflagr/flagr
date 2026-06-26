@@ -113,7 +113,7 @@
 <script lang="ts">
 import { Delete, Edit, ArrowUp, ArrowDown } from '@element-plus/icons-vue'
 import type { PropType } from 'vue'
-import type { Segment } from '@/types'
+import type { Segment } from '@/api/types'
 
 interface OperatorOption {
   value: string

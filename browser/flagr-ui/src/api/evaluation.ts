@@ -1,5 +1,5 @@
 import { Effect } from 'effect'
-import type { BatchEvalContext, BatchEvalResult, EvalContext, EvalResult } from '@/types'
+import type { BatchEvalContext, BatchEvalResult, EvalContext, EvalResult } from './types'
 import type { ApiError } from './errors'
 import { requestJson } from './http'
 

@@ -38,7 +38,7 @@
 <script lang="ts">
 import helpers from '@/helpers/helpers'
 import type { PropType } from 'vue'
-import type { DistributionDraft, FlagView, Variant } from '@/types'
+import type { DistributionDraft, FlagView, Variant } from '@/api/types'
 
 export default {
   name: 'distribution-dialog',

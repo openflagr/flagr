@@ -2,7 +2,7 @@ import { createApp } from 'vue'
 import ElementPlus from 'element-plus'
 import './styles/element/index.scss'
 import App from './App.vue'
-import router from './router'
+import router from '@/helpers/router'
 
 const app = createApp(App)
 

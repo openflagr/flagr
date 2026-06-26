@@ -210,12 +210,12 @@
 import { Plus, Search } from '@element-plus/icons-vue'
 import * as flagsApi from '@/api/flags'
 import Spinner from '@/components/Spinner.vue'
-import { getFlagsCache, setFlagsCache } from '@/flags/flagsListCache'
+import { getFlagsCache, setFlagsCache } from '@/pages/flagsList'
 import helpers from '@/helpers/helpers'
-import type { CreateFlagPayload, Flag } from '@/types'
-import { requireFlagId } from '@/types/flag'
-import { confirmAndRunApi } from '@/ui/confirmAndRunApi'
-import { runApi } from '@/ui/runApi'
+import type { CreateFlagPayload, Flag } from '@/api/types'
+import { requireFlagId } from '@/api/types'
+import { confirmAndRunApi } from '@/helpers/runApi'
+import { runApi } from '@/helpers/runApi'
 
 const { debounce } = helpers
 

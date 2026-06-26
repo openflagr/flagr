@@ -31,8 +31,8 @@
 import { diffJson, convertChangesToXML } from 'diff'
 import { DArrowRight } from '@element-plus/icons-vue'
 import * as flagsApi from '@/api/flags'
-import type { Flag, FlagSnapshot } from '@/types'
-import { runApi } from '@/ui/runApi'
+import type { Flag, FlagSnapshot } from '@/api/types'
+import { runApi } from '@/helpers/runApi'
 
 export default {
   name: 'flag-history',

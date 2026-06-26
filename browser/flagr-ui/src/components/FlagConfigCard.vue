@@ -102,7 +102,7 @@
 <script lang="ts">
 import { defineAsyncComponent, type PropType } from 'vue'
 import { InfoFilled, Edit, View } from '@element-plus/icons-vue'
-import type { FlagView, Tag } from '@/types'
+import type { FlagView, Tag } from '@/api/types'
 
 interface EntityTypeOption {
   label: string
