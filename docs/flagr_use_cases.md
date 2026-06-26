@@ -39,28 +39,11 @@ if (evaluation_result.variantKey == "on") {
 }
 ```
 
-### The `enabled` toggle (simplest boolean flag)
+### The simple boolean flag (a starting template)
 
-The simplest feature flag needs no variants at all. Every flag has a top-level
-`enabled` boolean, toggled from the UI's status switch or via
-`PUT /api/v1/flags/{flagID}/enabled`:
-
-```bash
-curl -X PUT "http://flagr:18000/api/v1/flags/1/enabled" \
-  -H 'Content-Type: application/json' \
-  -d '{"enabled": false}'
-```
-
-When `enabled` is `false`, the evaluator returns a **blank result** immediately —
-no `variantKey`, no segment matching, no rollout. It short-circuits before any
-segment logic runs. This is the kill switch: flip one boolean, and every
-evaluation of that flag returns nothing. No variants or segments to configure.
-
-### The `on`/`off` variant pattern (targeted rollouts)
-
-When you need *targeted* control — on for some users, off for others — use two
-variants (`on`/`off`) with a segment and distribution instead of the `enabled`
-toggle. The flag stays `enabled: true`; the distribution decides who gets `on`:
+A simple boolean flag is the template most teams start with: two variants
+(`on`/`off`) and a single segment distributing 100% to `on`. It answers the
+question "is this feature on?" — nothing more.
 
 ```
 Variants
@@ -68,19 +51,32 @@ Variants
   - off
 
 Segment
-  - Constraints (targeted audience, e.g. state == "CA")
+  - Constraints: none (everyone)
   - Rollout Percent: 100%
   - Distribution
     - on: 100%
     - off: 0%
 ```
 
-![feature flagging setting demo](/images/demo_ff.png)
+This is just a convention, not a special flag type. The same flag can grow
+richer as your needs evolve — without changing your application code:
 
-| Pattern | When to use | How it works |
-|---------|-------------|--------------|
-| `enabled` toggle | Global kill switch — on or off for everyone | `PUT /flags/{id}/enabled` → evaluator returns blank when `false` |
-| `on`/`off` variants | Targeted rollout — on for a specific audience | Flag stays enabled; segment + distribution decide who gets `on` |
+- **Target a specific audience** — add constraints to the segment
+  (`state == "CA"`, `tier == "beta"`). Now `on` reaches only California users.
+- **Roll out gradually** — lower the rollout percent to 10%, then 50%, then
+  100%. Same flag, same variants, wider audience over time.
+- **Run an experiment** — add more variants (`treatment1`, `treatment2`) and
+  split the distribution (`33/33/34`). The boolean flag becomes an A/B test.
+- **Serve dynamic config** — attach JSON to each variant
+  (`{"color": "#42b983"}`). The flag now carries configuration, not just on/off.
+
+Every flag also has a top-level `enabled` toggle — the global kill switch.
+When `enabled` is `false`, the evaluator returns a blank result immediately,
+short-circuiting before any segment logic runs (`PUT /api/v1/flags/{id}/enabled`
+or the UI status switch). Use it to turn off the entire flag regardless of
+segments or distributions.
+
+![feature flagging setting demo](/images/demo_ff.png)
 
 
 ## Experimenting — A/B testing
