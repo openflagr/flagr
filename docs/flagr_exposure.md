@@ -148,12 +148,16 @@ Separate from the eval `evaluation` metric:
 
 ### Authentication
 
-> **Warning:** `/exposures` is **not** on the default auth whitelist. When JWT
-> or Basic auth is enabled, `POST /exposures` requires credentials, unlike
-> `POST /evaluation` (which is whitelisted open by default via
-> `FLAGR_JWT_AUTH_WHITELIST_PATHS` / `FLAGR_BASIC_AUTH_WHITELIST_PATHS`). To
-> expose `/exposures` without auth, add `/api/v1/exposures` to the relevant
-> whitelist env var.
+`/exposures` is on the default auth whitelist alongside `/evaluation`, so
+both are open by default when JWT or Basic auth is enabled. To require
+credentials for impressions, remove `/api/v1/exposures` from
+`FLAGR_JWT_AUTH_WHITELIST_PATHS` / `FLAGR_BASIC_AUTH_WHITELIST_PATHS`.
+
+> **Warning:** `/exposures` is a write endpoint — callers supply the variant
+> and entity, and Flagr records it as an impression. If you leave it open,
+> an unauthenticated caller can submit fabricated impressions and inflate
+> your experiment denominators. Consider requiring auth for deployments where
+> impression integrity matters.
 
 Design notes are in the repo under
 `docs/plans/2026-06-25-001-exposure-logging-plan.md`

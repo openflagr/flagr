@@ -69,10 +69,10 @@ FLAGR_BASIC_AUTH_EXACT_WHITELIST_PATHS=""
 - `EXACT_WHITELIST_PATHS` uses exact path equality.
 
 > **Note:** The **default** `FLAGR_BASIC_AUTH_WHITELIST_PATHS` is
-> `/api/v1/health,/api/v1/flags,/api/v1/evaluation`, so by default the API flag
-> and evaluation endpoints bypass basic auth. Basic auth is not a web-UI-only
-> mechanism — it applies to **every** path; only whitelisted paths skip it.
-> Remove `/api/v1/flags` from the whitelist to require credentials on the API.
+> `/api/v1/health,/api/v1/flags,/api/v1/evaluation,/api/v1/exposures`, so by
+> default the flag, evaluation, and exposure endpoints bypass basic auth.
+> Basic auth applies to **every** path; only whitelisted paths skip it.
+> Remove entries from the whitelist to require credentials on those API paths.
 
 ### JWT Auth
 
@@ -86,7 +86,7 @@ the full list):
 | `FLAGR_JWT_AUTH_ENABLED` | `false` | Enable JWT auth |
 | `FLAGR_JWT_AUTH_SECRET` | — | Signing secret (HS256/HS512) |
 | `FLAGR_JWT_AUTH_SIGNING_METHOD` | `HS256` | `HS256`, `HS512`, or `RS256` |
-| `FLAGR_JWT_AUTH_WHITELIST_PATHS` | `/api/v1/health,/api/v1/evaluation,/static` | Prefix-whitelisted paths (open when JWT auth is on) |
+| `FLAGR_JWT_AUTH_WHITELIST_PATHS` | `/api/v1/health,/api/v1/evaluation,/api/v1/exposures,/static` | Prefix-whitelisted paths (open when JWT auth is on) |
 | `FLAGR_JWT_AUTH_EXACT_WHITELIST_PATHS` | `/,` | Exact-whitelisted paths |
 | `FLAGR_JWT_AUTH_NO_TOKEN_STATUS_CODE` | `307` | Status when no token is present |
 | `FLAGR_JWT_AUTH_NO_TOKEN_REDIRECT_URL` | — | Optional redirect URL |
