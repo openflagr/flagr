@@ -8,24 +8,31 @@
             <span class="flag-id">#{{ flag.id }}</span>
           </div>
           <div class="flex-row-right">
-            <el-tooltip :content="SAVE_DIRTY_TOOLTIP" placement="top" effect="light" :disabled="!flagDirty">
+            <el-tooltip
+              :content="SAVE_DIRTY_TOOLTIP"
+              placement="top"
+              effect="light"
+              :disabled="!flagDirty"
+            >
               <el-button
                 size="small"
                 :plain="!flagDirty"
                 :type="saveButtonType(flagDirty)"
-                @click="handleSaveFlag"
                 data-testid="save-flag-btn"
-              >{{ saveButtonLabel(flagDirty) }}</el-button>
+                @click="handleSaveFlag"
+              >
+                {{ saveButtonLabel(flagDirty) }}
+              </el-button>
             </el-tooltip>
             <el-switch
               :model-value="flag.enabled"
-              @update:model-value="$emit('toggle-enabled', $event)"
               :active-value="true"
               :inactive-value="false"
               inline-prompt
               active-text="Live"
               inactive-text="Off"
               data-testid="flag-enable-switch"
+              @update:model-value="$emit('toggle-enabled', $event)"
             />
           </div>
         </div>
@@ -38,13 +45,25 @@
         <!-- Key -->
         <div class="flag-field-block">
           <label class="flag-label">Flag Key</label>
-          <el-input size="small" placeholder="Key" :model-value="flag.key" @update:model-value="onUpdateFlag({ key: $event })" data-testid="flag-key-input" />
+          <el-input
+            size="small"
+            placeholder="Key"
+            :model-value="flag.key"
+            data-testid="flag-key-input"
+            @update:model-value="onUpdateFlag({ key: $event })"
+          />
         </div>
 
         <!-- Description -->
         <div class="flag-field-block">
           <label class="flag-label">Description</label>
-          <el-input size="small" placeholder="Description" :model-value="flag.description" @update:model-value="onUpdateFlag({ description: $event })" data-testid="flag-desc-input" />
+          <el-input
+            size="small"
+            placeholder="Description"
+            :model-value="flag.description"
+            data-testid="flag-desc-input"
+            @update:model-value="onUpdateFlag({ description: $event })"
+          />
         </div>
 
         <!-- Data Records + Entity Type in a compact row -->
@@ -52,18 +71,46 @@
           <div class="flag-field-block flag-field-narrow">
             <label class="flag-label">Data Records</label>
             <div class="flag-inline-row">
-              <el-switch size="small" :model-value="flag.dataRecordsEnabled" :active-value="true" :inactive-value="false"
-                @update:model-value="onUpdateFlag({ dataRecordsEnabled: $event })" data-testid="data-records-switch" />
-              <el-tooltip content="When enabled, evaluation and exposure events are sent to the data pipeline (e.g. Kafka, Kinesis, Pub/Sub)" placement="top" effect="light">
-                <el-icon style="color: var(--el-text-color-placeholder);"><InfoFilled /></el-icon>
+              <el-switch
+                size="small"
+                :model-value="flag.dataRecordsEnabled"
+                :active-value="true"
+                :inactive-value="false"
+                data-testid="data-records-switch"
+                @update:model-value="onUpdateFlag({ dataRecordsEnabled: $event })"
+              />
+              <el-tooltip
+                content="When enabled, evaluation and exposure events are sent to the data pipeline (e.g. Kafka, Kinesis, Pub/Sub)"
+                placement="top"
+                effect="light"
+              >
+                <el-icon style="color: var(--el-text-color-placeholder);">
+                  <InfoFilled />
+                </el-icon>
               </el-tooltip>
             </div>
           </div>
-          <div class="flag-field-block" v-show="!!flag.dataRecordsEnabled">
+          <div
+            v-show="!!flag.dataRecordsEnabled"
+            class="flag-field-block"
+          >
             <label class="flag-label">Entity Type</label>
-            <el-select :model-value="flag.entityType" @update:model-value="onUpdateFlag({ entityType: $event })"
-              size="small" filterable :allow-create="allowCreateEntityType" default-first-option placeholder="Entity Type" style="width: 100%;">
-              <el-option v-for="item in entityTypes" :key="item.value" :label="item.label" :value="item.value" />
+            <el-select
+              :model-value="flag.entityType"
+              size="small"
+              filterable
+              :allow-create="allowCreateEntityType"
+              default-first-option
+              placeholder="Entity Type"
+              style="width: 100%;"
+              @update:model-value="onUpdateFlag({ entityType: $event })"
+            >
+              <el-option
+                v-for="item in entityTypes"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              />
             </el-select>
           </div>
         </div>
@@ -72,13 +119,38 @@
         <div class="flag-field-block flag-tags-block">
           <label class="flag-label">Tags</label>
           <div class="flag-tags-row">
-            <el-tag v-for="tag in flag.tags" :key="tag.id" closable size="small" type="success" @close="$emit('delete-tag', tag)">{{ tag.value }}</el-tag>
-            <el-autocomplete v-if="tagInputVisible" v-model="newTagValue" ref="saveTagInput" size="small"
-              :trigger-on-focus="false" :fetch-suggestions="queryTags"
+            <el-tag
+              v-for="tag in flag.tags"
+              :key="tag.id"
+              closable
+              size="small"
+              type="success"
+              @close="$emit('delete-tag', tag)"
+            >
+              {{ tag.value }}
+            </el-tag>
+            <el-autocomplete
+              v-if="tagInputVisible"
+              ref="saveTagInput"
+              v-model="newTagValue"
+              size="small"
+              :trigger-on-focus="false"
+              :fetch-suggestions="queryTags"
+              style="width: 150px;"
+              data-testid="new-tag-input"
               @select="() => $emit('create-tag', { value: newTagValue })"
               @keyup.enter="() => $emit('create-tag', { value: newTagValue })"
-              @keyup.esc="cancelCreateTag" style="width: 150px;" data-testid="new-tag-input" />
-            <el-button v-else size="small" link type="primary" @click="showTagInput">+ Tag</el-button>
+              @keyup.esc="cancelCreateTag"
+            />
+            <el-button
+              v-else
+              size="small"
+              link
+              type="primary"
+              @click="showTagInput"
+            >
+              + Tag
+            </el-button>
           </div>
         </div>
       </div>
@@ -88,9 +160,18 @@
         <div class="flag-notes-panel">
           <div class="flag-section-header">
             <label class="flag-label">Notes</label>
-            <el-button size="small" link type="primary" @click="$emit('toggle-notes')">
-              <el-icon v-if="!showMdEditor"><Edit /></el-icon>
-              <el-icon v-else><View /></el-icon>
+            <el-button
+              size="small"
+              link
+              type="primary"
+              @click="$emit('toggle-notes')"
+            >
+              <el-icon v-if="!showMdEditor">
+                <Edit />
+              </el-icon>
+              <el-icon v-else>
+                <View />
+              </el-icon>
               {{ showMdEditor ? "view" : "edit" }}
             </el-button>
           </div>
@@ -123,7 +204,7 @@ interface EntityTypeOption {
 }
 
 export default {
-  name: 'flag-config-card',
+  name: 'FlagConfigCard',
   components: {
     MarkdownEditor: defineAsyncComponent(() => import('@/components/MarkdownEditor.vue')),
     InfoFilled,

@@ -1,129 +1,166 @@
 <template>
   <div class="container flag-container">
-        <el-dialog title="Delete feature flag" v-model="dialogDeleteFlagVisible">
-          <span>Are you sure you want to delete this feature flag?</span>
-          <template #footer>
-            <span class="dialog-footer">
-              <el-button @click="dialogDeleteFlagVisible = false">Cancel</el-button>
-              <el-button type="primary" @click.prevent="flagPage.deleteFlag(page)">Confirm</el-button>
-            </span>
-          </template>
-        </el-dialog>
+    <el-dialog
+      v-model="dialogDeleteFlagVisible"
+      title="Delete feature flag"
+    >
+      <span>Are you sure you want to delete this feature flag?</span>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="dialogDeleteFlagVisible = false">Cancel</el-button>
+          <el-button
+            type="primary"
+            @click.prevent="flagPage.deleteFlag(page)"
+          >Confirm</el-button>
+        </span>
+      </template>
+    </el-dialog>
 
-        <el-dialog title="Create segment" v-model="dialogCreateSegmentOpen">
-          <div class="create-segment-dialog">
-            <el-input placeholder="Segment description" v-model="newSegment.description" data-testid="new-segment-desc-input" />
-            <div class="create-segment-slider">
-              <label class="create-segment-label">Rollout %</label>
-              <el-slider v-model="newSegment.rolloutPercent" show-input :max="100" />
-            </div>
-            <el-button
-              class="width--full"
-              type="primary"
-              :disabled="!newSegment.description"
-              @click.prevent="flagPage.createSegment(page)"
-              data-testid="create-segment-btn"
-            >Create Segment</el-button>
-          </div>
-        </el-dialog>
-
-        <distribution-dialog
-          :visible="dialogEditDistributionOpen"
-          :flag="flag"
-          :initial-distributions="distributionDraft"
-          @update:visible="dialogEditDistributionOpen = $event"
-          @save="(d) => flagPage.handleSaveDistribution(page, d)"
+    <el-dialog
+      v-model="dialogCreateSegmentOpen"
+      title="Create segment"
+    >
+      <div class="create-segment-dialog">
+        <el-input
+          v-model="newSegment.description"
+          placeholder="Segment description"
+          data-testid="new-segment-desc-input"
         />
-
-        <el-breadcrumb separator="/">
-          <el-breadcrumb-item :to="{ name: 'home' }">Home page</el-breadcrumb-item>
-          <el-breadcrumb-item>Flag ID: {{ $route.params.flagId }}</el-breadcrumb-item>
-        </el-breadcrumb>
-
-        <div v-if="loaded && flag">
-          <el-tabs @tab-click="onHistoryTabClick">
-            <el-tab-pane label="Config">
-              <flag-config-card
-                :flag="flag"
-                :show-md-editor="showMdEditor"
-                :entity-types="entityTypes"
-                :allow-create-entity-type="allowCreateEntityType"
-                :tag-input-visible="tagInputVisible"
-                :all-tags="allTags"
-                @toggle-enabled="(c) => flagPage.handleToggleEnabled(page, c)"
-                @save-flag="flagPage.putFlag(page)"
-                @update-flag="(p) => flagPage.handleUpdateFlag(page, p)"
-                @toggle-notes="showMdEditor = !showMdEditor"
-                @delete-tag="(tag) => flagPage.deleteTag(page, tag)"
-                @create-tag="(p) => flagPage.handleCreateTag(page, p)"
-                @cancel-create-tag="flagPage.handleCancelCreateTag(page)"
-                @show-tag-input="flagPage.handleShowTagInput(page)"
-              />
-
-              <variants-section
-                :variants="flag.variants"
-                @create-variant="(p) => flagPage.handleCreateVariant(page, p)"
-                @update-variant-key="(p) => flagPage.handleUpdateVariantKey(page, p)"
-                @save-variant="(v) => flagPage.putVariant(page, v)"
-                @delete-variant="(v) => flagPage.deleteVariant(page, v)"
-                @attachment-change="(p) => flagPage.handleVariantAttachmentChange(page, p)"
-              />
-
-              <segments-section
-                :segments="flag.segments ?? []"
-                :operator-options="operatorOptions"
-                @reorder="(s) => flagPage.handleReorderSegments(page, s)"
-                @move-up="(el, i) => flagPage.moveSegmentUp(page, el, i)"
-                @move-down="(el, i) => flagPage.moveSegmentDown(page, el, i)"
-                @new-segment="dialogCreateSegmentOpen = true"
-                @save-segment="(s) => flagPage.putSegment(page, s)"
-                @delete-segment="(s) => flagPage.deleteSegment(page, s)"
-                @update-segment-field="(p) => flagPage.handleUpdateSegmentField(page, p)"
-                @create-constraint="(p) => flagPage.createConstraint(page, p)"
-                @save-constraint="(p) => flagPage.putConstraint(page, p)"
-                @delete-constraint="(p) => flagPage.deleteConstraint(page, p)"
-                @update-constraint-field="(p) => flagPage.handleUpdateConstraintField(page, p)"
-                @edit-distribution="(s) => flagPage.handleEditDistribution(page, s)"
-              />
-
-              <debug-console
-                :eval-context="evalContext"
-                :eval-result="evalResult"
-                :eval-summary="evalSummary"
-                :batch-eval-context="batchEvalContext"
-                :batch-eval-result="batchEvalResult"
-                @update:eval-context="evalContext = $event"
-                @update:eval-result="evalResult = $event"
-                @update:batch-eval-context="batchEvalContext = $event"
-                @update:batch-eval-result="batchEvalResult = $event"
-                @post-evaluation="(ctx) => flagPage.postEvaluation(page, ctx)"
-                @post-evaluation-batch="(ctx) => flagPage.postEvaluationBatch(page, ctx)"
-              />
-
-              <el-card class="danger-zone-card is-card-danger" style="margin-top: var(--space-xl);">
-                <template #header>
-                  <div class="el-card-header">
-                    <h2>Danger Zone</h2>
-                  </div>
-                </template>
-                <div class="danger-zone-body">
-                  <p class="danger-zone-text">
-                    Deleting a flag hides it from active evaluation. Its segments, variants, and distributions stay intact and come back when you restore the flag from the Deleted Flags section on the flags list page.
-                  </p>
-                  <el-button type="danger" plain size="small" @click="dialogDeleteFlagVisible = true" data-testid="delete-flag-btn">
-                    <el-icon><Delete /></el-icon>
-                    Delete Flag
-                  </el-button>
-                </div>
-              </el-card>
-            </el-tab-pane>
-
-            <el-tab-pane label="History" name="history">
-              <flag-history v-if="historyLoaded" :key="historyKey" :snapshots="flagSnapshots" />
-            </el-tab-pane>
-          </el-tabs>
+        <div class="create-segment-slider">
+          <label class="create-segment-label">Rollout %</label>
+          <el-slider
+            v-model="newSegment.rolloutPercent"
+            show-input
+            :max="100"
+          />
         </div>
+        <el-button
+          class="width--full"
+          type="primary"
+          :disabled="!newSegment.description"
+          data-testid="create-segment-btn"
+          @click.prevent="flagPage.createSegment(page)"
+        >
+          Create Segment
+        </el-button>
       </div>
+    </el-dialog>
+
+    <distribution-dialog
+      :visible="dialogEditDistributionOpen"
+      :flag="flag"
+      :initial-distributions="distributionDraft"
+      @update:visible="dialogEditDistributionOpen = $event"
+      @save="(d) => flagPage.handleSaveDistribution(page, d)"
+    />
+
+    <el-breadcrumb separator="/">
+      <el-breadcrumb-item :to="{ name: 'home' }">
+        Home page
+      </el-breadcrumb-item>
+      <el-breadcrumb-item>Flag ID: {{ $route.params.flagId }}</el-breadcrumb-item>
+    </el-breadcrumb>
+
+    <div v-if="loaded && flag">
+      <el-tabs @tab-click="onHistoryTabClick">
+        <el-tab-pane label="Config">
+          <flag-config-card
+            :flag="flag"
+            :show-md-editor="showMdEditor"
+            :entity-types="entityTypes"
+            :allow-create-entity-type="allowCreateEntityType"
+            :tag-input-visible="tagInputVisible"
+            :all-tags="allTags"
+            @toggle-enabled="(c) => flagPage.handleToggleEnabled(page, c)"
+            @save-flag="flagPage.putFlag(page)"
+            @update-flag="(p) => flagPage.handleUpdateFlag(page, p)"
+            @toggle-notes="showMdEditor = !showMdEditor"
+            @delete-tag="(tag) => flagPage.deleteTag(page, tag)"
+            @create-tag="(p) => flagPage.handleCreateTag(page, p)"
+            @cancel-create-tag="flagPage.handleCancelCreateTag(page)"
+            @show-tag-input="flagPage.handleShowTagInput(page)"
+          />
+
+          <variants-section
+            :variants="flag.variants"
+            @create-variant="(p) => flagPage.handleCreateVariant(page, p)"
+            @update-variant-key="(p) => flagPage.handleUpdateVariantKey(page, p)"
+            @save-variant="(v) => flagPage.putVariant(page, v)"
+            @delete-variant="(v) => flagPage.deleteVariant(page, v)"
+            @attachment-change="(p) => flagPage.handleVariantAttachmentChange(page, p)"
+          />
+
+          <segments-section
+            :segments="flag.segments ?? []"
+            :operator-options="operatorOptions"
+            @reorder="(s) => flagPage.handleReorderSegments(page, s)"
+            @move-up="(el, i) => flagPage.moveSegmentUp(page, el, i)"
+            @move-down="(el, i) => flagPage.moveSegmentDown(page, el, i)"
+            @new-segment="dialogCreateSegmentOpen = true"
+            @save-segment="(s) => flagPage.putSegment(page, s)"
+            @delete-segment="(s) => flagPage.deleteSegment(page, s)"
+            @update-segment-field="(p) => flagPage.handleUpdateSegmentField(page, p)"
+            @create-constraint="(p) => flagPage.createConstraint(page, p)"
+            @save-constraint="(p) => flagPage.putConstraint(page, p)"
+            @delete-constraint="(p) => flagPage.deleteConstraint(page, p)"
+            @update-constraint-field="(p) => flagPage.handleUpdateConstraintField(page, p)"
+            @edit-distribution="(s) => flagPage.handleEditDistribution(page, s)"
+          />
+
+          <debug-console
+            :eval-context="evalContext"
+            :eval-result="evalResult"
+            :eval-summary="evalSummary"
+            :batch-eval-context="batchEvalContext"
+            :batch-eval-result="batchEvalResult"
+            @update:eval-context="evalContext = $event"
+            @update:eval-result="evalResult = $event"
+            @update:batch-eval-context="batchEvalContext = $event"
+            @update:batch-eval-result="batchEvalResult = $event"
+            @post-evaluation="(ctx) => flagPage.postEvaluation(page, ctx)"
+            @post-evaluation-batch="(ctx) => flagPage.postEvaluationBatch(page, ctx)"
+          />
+
+          <el-card
+            class="danger-zone-card is-card-danger"
+            style="margin-top: var(--space-xl);"
+          >
+            <template #header>
+              <div class="el-card-header">
+                <h2>Danger Zone</h2>
+              </div>
+            </template>
+            <div class="danger-zone-body">
+              <p class="danger-zone-text">
+                Deleting a flag hides it from active evaluation. Its segments, variants, and distributions stay intact and come back when you restore the flag from the Deleted Flags section on the flags list page.
+              </p>
+              <el-button
+                type="danger"
+                plain
+                size="small"
+                data-testid="delete-flag-btn"
+                @click="dialogDeleteFlagVisible = true"
+              >
+                <el-icon><Delete /></el-icon>
+                Delete Flag
+              </el-button>
+            </div>
+          </el-card>
+        </el-tab-pane>
+
+        <el-tab-pane
+          label="History"
+          name="history"
+        >
+          <flag-history
+            v-if="historyLoaded"
+            :key="historyKey"
+            :snapshots="flagSnapshots"
+          />
+        </el-tab-pane>
+      </el-tabs>
+    </div>
+  </div>
 </template>
 
 <script lang="ts">
@@ -164,7 +201,7 @@ function defaultBatchEvalContext(): BatchEvalContext {
 }
 
 export default {
-  name: 'flag',
+  name: 'Flag',
   components: {
     DebugConsole,
     FlagHistory,
@@ -203,6 +240,11 @@ export default {
       batchEvalResult: {} as Record<string, unknown>,
     }
   },
+  computed: {
+    page() {
+      return castFlagPage(this)
+    },
+  },
 
   watch: {
     '$route.params.flagId': {
@@ -218,18 +260,13 @@ export default {
       },
     },
   },
-  computed: {
-    page() {
-      return castFlagPage(this)
-    },
+  mounted() {
+    mountFlagPage(this.page)
   },
   methods: {
     onHistoryTabClick(tab: { props?: { name?: string } }) {
       handleHistoryTabClick(this.page, tab)
     },
-  },
-  mounted() {
-    mountFlagPage(this.page)
   },
 }
 </script>

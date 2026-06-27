@@ -3,125 +3,303 @@
     <template #header>
       <div class="el-card-header">
         <div class="flex-row">
-          <div class="flex-row-left"><h2>Segments</h2></div>
+          <div class="flex-row-left">
+            <h2>Segments</h2>
+          </div>
           <div class="flex-row-right">
-            <el-tooltip :content="reorderDirty ? 'Unsaved reorder — click to persist' : 'Use buttons to reorder, then click to persist'" placement="top" effect="light">
-              <el-button size="small" :type="reorderDirty ? 'warning' : undefined" @click="handleReorder">Reorder{{ reorderDirty ? ' *' : '' }}</el-button>
+            <el-tooltip
+              :content="reorderDirty ? 'Unsaved reorder — click to persist' : 'Use buttons to reorder, then click to persist'"
+              placement="top"
+              effect="light"
+            >
+              <el-button
+                size="small"
+                :type="reorderDirty ? 'warning' : undefined"
+                @click="handleReorder"
+              >
+                Reorder{{ reorderDirty ? ' *' : '' }}
+              </el-button>
             </el-tooltip>
-            <el-button size="small" @click="$emit('new-segment')" data-testid="open-new-segment-btn">New Segment</el-button>
+            <el-button
+              size="small"
+              data-testid="open-new-segment-btn"
+              @click="$emit('new-segment')"
+            >
+              New Segment
+            </el-button>
           </div>
         </div>
       </div>
     </template>
 
     <div v-if="segments.length">
-      <div v-for="(element, index) in segments" :key="element.id" class="segment-card">
+      <div
+        v-for="(element, index) in segments"
+        :key="element.id"
+        class="segment-card"
+      >
         <!-- Header row -->
         <div class="seg-header">
           <span class="seg-id">#{{ element.id }}</span>
           <div class="seg-header-fields">
-            <el-input size="small" placeholder="Description" :model-value="element.description"
+            <el-input
+              size="small"
+              placeholder="Description"
+              :model-value="element.description"
+              data-testid="segment-desc-input"
               @update:model-value="onSegmentFieldChange(element, 'description', $event)"
-              data-testid="segment-desc-input" />
-            <el-input class="segment-rollout-percent" size="small" placeholder="0" :model-value="element.rolloutPercent"
+            />
+            <el-input
+              class="segment-rollout-percent"
+              size="small"
+              placeholder="0"
+              :model-value="element.rolloutPercent"
+              data-testid="segment-rollout-input"
+              :min="0"
+              :max="100"
               @update:model-value="onSegmentFieldChange(element, 'rolloutPercent', $event)"
-              data-testid="segment-rollout-input" :min="0" :max="100">
-              <template #prepend>rollout</template>
-              <template #append>%</template>
+            >
+              <template #prepend>
+                rollout
+              </template>
+              <template #append>
+                %
+              </template>
             </el-input>
           </div>
           <div class="seg-header-actions">
             <el-button-group class="seg-reorder-group">
-              <el-tooltip content="Move up" placement="top">
-                <el-button size="small" :disabled="index===0" @click="handleMoveUp(element,index)" data-testid="move-segment-up-btn"><el-icon><ArrowUp /></el-icon></el-button>
+              <el-tooltip
+                content="Move up"
+                placement="top"
+              >
+                <el-button
+                  size="small"
+                  :disabled="index===0"
+                  data-testid="move-segment-up-btn"
+                  @click="handleMoveUp(element,index)"
+                >
+                  <el-icon><ArrowUp /></el-icon>
+                </el-button>
               </el-tooltip>
-              <el-tooltip content="Move down" placement="top">
-                <el-button size="small" :disabled="index===segments.length-1" @click="handleMoveDown(element,index)" data-testid="move-segment-down-btn"><el-icon><ArrowDown /></el-icon></el-button>
+              <el-tooltip
+                content="Move down"
+                placement="top"
+              >
+                <el-button
+                  size="small"
+                  :disabled="index===segments.length-1"
+                  data-testid="move-segment-down-btn"
+                  @click="handleMoveDown(element,index)"
+                >
+                  <el-icon><ArrowDown /></el-icon>
+                </el-button>
               </el-tooltip>
             </el-button-group>
-            <el-tooltip :content="SAVE_DIRTY_TOOLTIP" placement="top" effect="light" :disabled="!isSegmentDirty(element)">
+            <el-tooltip
+              :content="SAVE_DIRTY_TOOLTIP"
+              placement="top"
+              effect="light"
+              :disabled="!isSegmentDirty(element)"
+            >
               <el-button
                 size="small"
                 :plain="!isSegmentDirty(element)"
                 :type="saveButtonType(isSegmentDirty(element))"
-                @click="handleSaveSegment(element)"
                 data-testid="save-segment-btn"
-              >{{ saveButtonLabel(isSegmentDirty(element)) }}</el-button>
+                @click="handleSaveSegment(element)"
+              >
+                {{ saveButtonLabel(isSegmentDirty(element)) }}
+              </el-button>
             </el-tooltip>
-            <el-button size="small" @click="$emit('delete-segment', element)" data-testid="delete-segment-btn"><el-icon><Delete /></el-icon></el-button>
+            <el-button
+              size="small"
+              data-testid="delete-segment-btn"
+              @click="$emit('delete-segment', element)"
+            >
+              <el-icon><Delete /></el-icon>
+            </el-button>
           </div>
         </div>
 
         <!-- Constraints + Distribution -->
         <div class="seg-panel-row">
           <div class="seg-panel">
-            <div class="seg-section-title">Constraints <span class="seg-section-subtitle">— match ALL</span></div>
-            <div v-if="(element.constraints ?? []).length" class="constraint-grid">
-              <div v-for="(constraint, cIdx) in (element.constraints ?? [])" :key="constraint.id" class="constraint-row">
+            <div class="seg-section-title">
+              Constraints <span class="seg-section-subtitle">— match ALL</span>
+            </div>
+            <div
+              v-if="(element.constraints ?? []).length"
+              class="constraint-grid"
+            >
+              <div
+                v-for="(constraint, cIdx) in (element.constraints ?? [])"
+                :key="constraint.id"
+                class="constraint-row"
+              >
                 <span class="constraint-logic">{{ cIdx === 0 ? 'IF' : 'AND' }}</span>
                 <div class="constraint-input-group">
-                  <el-input size="small" placeholder="Property" :model-value="constraint.property"
+                  <el-input
+                    size="small"
+                    placeholder="Property"
+                    :model-value="constraint.property"
+                    data-testid="constraint-prop-input"
                     @update:model-value="onConstraintFieldChange(element, constraint, 'property', $event)"
-                    data-testid="constraint-prop-input" />
-                  <el-select class="width--full" size="small" :model-value="constraint.operator"
+                  />
+                  <el-select
+                    class="width--full"
+                    size="small"
+                    :model-value="constraint.operator"
+                    placeholder="OP"
+                    data-testid="constraint-op-select"
                     @update:model-value="onConstraintFieldChange(element, constraint, 'operator', $event)"
-                    placeholder="OP" data-testid="constraint-op-select">
-                    <el-option v-for="item in operatorOptions" :key="item.value" :label="item.label" :value="item.value" />
+                  >
+                    <el-option
+                      v-for="item in operatorOptions"
+                      :key="item.value"
+                      :label="item.label"
+                      :value="item.value"
+                    />
                   </el-select>
-                  <el-input size="small" :model-value="constraint.value"
+                  <el-input
+                    size="small"
+                    :model-value="constraint.value"
+                    data-testid="constraint-value-input"
                     @update:model-value="onConstraintFieldChange(element, constraint, 'value', $event)"
-                    data-testid="constraint-value-input" />
+                  />
                 </div>
                 <div class="constraint-actions">
-                  <el-tooltip :content="SAVE_DIRTY_TOOLTIP" placement="top" effect="light" :disabled="!isConstraintDirty(element, constraint)">
+                  <el-tooltip
+                    :content="SAVE_DIRTY_TOOLTIP"
+                    placement="top"
+                    effect="light"
+                    :disabled="!isConstraintDirty(element, constraint)"
+                  >
                     <el-button
                       size="small"
                       :plain="!isConstraintDirty(element, constraint)"
                       :type="saveButtonType(isConstraintDirty(element, constraint))"
-                      @click="handleSaveConstraint(element, constraint)"
                       data-testid="save-constraint-btn"
-                    >{{ saveButtonLabel(isConstraintDirty(element, constraint)) }}</el-button>
+                      @click="handleSaveConstraint(element, constraint)"
+                    >
+                      {{ saveButtonLabel(isConstraintDirty(element, constraint)) }}
+                    </el-button>
                   </el-tooltip>
-                  <el-button size="small" plain @click="() => $emit('delete-constraint', { segment: element, constraint })" data-testid="delete-constraint-btn"><el-icon><Delete /></el-icon></el-button>
+                  <el-button
+                    size="small"
+                    plain
+                    data-testid="delete-constraint-btn"
+                    @click="() => $emit('delete-constraint', { segment: element, constraint })"
+                  >
+                    <el-icon><Delete /></el-icon>
+                  </el-button>
                 </div>
               </div>
             </div>
-            <div class="card--empty" v-if="!(element.constraints ?? []).length">No constraints — all entities pass</div>
-            <div v-if="element.id != null" class="constraint-row new-constraint-row">
+            <div
+              v-if="!(element.constraints ?? []).length"
+              class="card--empty"
+            >
+              No constraints — all entities pass
+            </div>
+            <div
+              v-if="element.id != null"
+              class="constraint-row new-constraint-row"
+            >
               <span class="constraint-logic">AND</span>
               <div class="constraint-input-group">
-                <el-input size="small" placeholder="Property" v-model="newConstraints[element.id].property" data-testid="new-constraint-prop-input" />
-                <el-select size="small" v-model="newConstraints[element.id].operator" placeholder="OP" data-testid="new-constraint-op-select">
-                  <el-option v-for="item in operatorOptions" :key="item.value" :label="item.label" :value="item.value" />
+                <el-input
+                  v-model="newConstraints[element.id].property"
+                  size="small"
+                  placeholder="Property"
+                  data-testid="new-constraint-prop-input"
+                />
+                <el-select
+                  v-model="newConstraints[element.id].operator"
+                  size="small"
+                  placeholder="OP"
+                  data-testid="new-constraint-op-select"
+                >
+                  <el-option
+                    v-for="item in operatorOptions"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  />
                 </el-select>
-                <el-input size="small" v-model="newConstraints[element.id].value" placeholder="Value" data-testid="new-constraint-value-input" />
+                <el-input
+                  v-model="newConstraints[element.id].value"
+                  size="small"
+                  placeholder="Value"
+                  data-testid="new-constraint-value-input"
+                />
               </div>
-              <el-button size="small" type="primary" plain :disabled="!newConstraints[element.id]?.property || !newConstraints[element.id]?.value"
-                @click.prevent="handleCreateConstraint(element)" data-testid="add-constraint-btn">Add</el-button>
+              <el-button
+                size="small"
+                type="primary"
+                plain
+                :disabled="!newConstraints[element.id]?.property || !newConstraints[element.id]?.value"
+                data-testid="add-constraint-btn"
+                @click.prevent="handleCreateConstraint(element)"
+              >
+                Add
+              </el-button>
             </div>
           </div>
           <div class="seg-panel seg-panel-dist">
             <div class="seg-section-title seg-section-title--with-action">
               <span>Distribution</span>
-              <el-button size="small" link type="primary" data-testid="edit-distribution-btn" @click="$emit('edit-distribution', element)"><el-icon><Edit /></el-icon> Edit</el-button>
+              <el-button
+                size="small"
+                link
+                type="primary"
+                data-testid="edit-distribution-btn"
+                @click="$emit('edit-distribution', element)"
+              >
+                <el-icon><Edit /></el-icon> Edit
+              </el-button>
             </div>
-            <div v-if="(element.distributions ?? []).length" class="dist-list">
-              <div v-for="distribution in (element.distributions ?? [])" :key="distribution.id" class="dist-item">
+            <div
+              v-if="(element.distributions ?? []).length"
+              class="dist-list"
+            >
+              <div
+                v-for="distribution in (element.distributions ?? [])"
+                :key="distribution.id"
+                class="dist-item"
+              >
                 <div class="dist-header">
                   <span class="dist-variant">{{ distribution.variantKey }}</span>
                   <span class="dist-pct">{{ distribution.percent }}%</span>
                 </div>
-                <el-progress :percentage="distribution.percent" color="var(--el-color-primary)" :show-text="false" :stroke-width="6" />
+                <el-progress
+                  :percentage="distribution.percent"
+                  color="var(--el-color-primary)"
+                  :show-text="false"
+                  :stroke-width="6"
+                />
               </div>
             </div>
-            <div class="card--empty" v-else>No distribution</div>
+            <div
+              v-else
+              class="card--empty"
+            >
+              No distribution
+            </div>
           </div>
         </div>
       </div>
     </div>
-    <div class="card--cue" v-else>
-      <p class="card--cue-title">No segments yet</p>
-      <p class="card--cue-body">Segments are the targeting rules that decide which entities match. Each segment has constraints (e.g. <code>country EQ "US"</code>) and a distribution over variants. Add one to start targeting.</p>
+    <div
+      v-else
+      class="card--cue"
+    >
+      <p class="card--cue-title">
+        No segments yet
+      </p>
+      <p class="card--cue-body">
+        Segments are the targeting rules that decide which entities match. Each segment has constraints (e.g. <code>country EQ "US"</code>) and a distribution over variants. Add one to start targeting.
+      </p>
     </div>
   </el-card>
 </template>
@@ -149,7 +327,7 @@ interface NewConstraintDraft {
 }
 
 export default {
-  name: 'segments-section',
+  name: 'SegmentsSection',
   components: { Delete, Edit, ArrowUp, ArrowDown },
   props: {
     segments: { type: Array as PropType<Segment[]>, required: true },

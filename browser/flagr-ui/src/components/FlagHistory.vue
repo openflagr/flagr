@@ -1,28 +1,38 @@
 <template>
   <div>
-    <el-card v-for="diff in diffs" :key="diff.timestamp" class="snapshot-container">
+    <el-card
+      v-for="diff in diffs"
+      :key="diff.timestamp"
+      class="snapshot-container"
+    >
       <template #header>
-      <div class="el-card-header">
-        <div class="snapshot-header">
-          <div class="snapshot-header-left">
-            <div class="diff-snapshot-id-change">
-              <el-tag>Snapshot ID: {{ diff.oldId }}</el-tag>
-              <el-icon><DArrowRight /></el-icon>
-              <el-tag>Snapshot ID: {{ diff.newId }}</el-tag>
+        <div class="el-card-header">
+          <div class="snapshot-header">
+            <div class="snapshot-header-left">
+              <div class="diff-snapshot-id-change">
+                <el-tag>Snapshot ID: {{ diff.oldId }}</el-tag>
+                <el-icon><DArrowRight /></el-icon>
+                <el-tag>Snapshot ID: {{ diff.newId }}</el-tag>
+              </div>
             </div>
-          </div>
-          <div class="snapshot-header-right">
-            <div :class="{ compact: diff.updatedBy }">
-              <span>{{ diff.timestamp }}</span>
-            </div>
-            <div class="compact" v-if="diff.updatedBy">
-              <span>UPDATED BY: {{ diff.updatedBy }}</span>
+            <div class="snapshot-header-right">
+              <div :class="{ compact: diff.updatedBy }">
+                <span>{{ diff.timestamp }}</span>
+              </div>
+              <div
+                v-if="diff.updatedBy"
+                class="compact"
+              >
+                <span>UPDATED BY: {{ diff.updatedBy }}</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
       </template>
-      <pre class="diff" v-html="diff.flagDiff"></pre>
+      <pre
+        class="diff"
+        v-html="diff.flagDiff"
+      />
     </el-card>
   </div>
 </template>
@@ -33,7 +43,7 @@ import { DArrowRight } from '@element-plus/icons-vue'
 import type { Flag, FlagSnapshot } from '@/api/types'
 
 export default {
-  name: 'flag-history',
+  name: 'FlagHistory',
   components: { DArrowRight },
   props: {
     snapshots: {

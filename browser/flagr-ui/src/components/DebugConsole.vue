@@ -1,47 +1,119 @@
 <template>
   <el-card class="dc-container is-card-utility">
     <template #header>
-      <div class="el-card-header"><h2>Debug Console</h2></div>
+      <div class="el-card-header">
+        <h2>Debug Console</h2>
+      </div>
     </template>
     <el-collapse>
-      <el-collapse-item title="Evaluation" class="dc-collapse-item">
+      <el-collapse-item
+        title="Evaluation"
+        class="dc-collapse-item"
+      >
         <div class="dc-eval-header">
           <span class="dc-label">Request</span>
-          <el-button size="small" @click="$emit('post-evaluation', evalContext)" type="primary" plain>POST /api/v1/evaluation</el-button>
+          <el-button
+            size="small"
+            type="primary"
+            plain
+            @click="$emit('post-evaluation', evalContext)"
+          >
+            POST /api/v1/evaluation
+          </el-button>
         </div>
         <div class="dc-editor-row">
-          <json-editor :json="evalContext" @update:json="onEvalContextJson" @update:jsonString="syncEvalContext" :main-menu-bar="false" :navigation-bar="false" :status-bar="false" mode="text" class="dc-json-editor" />
+          <json-editor
+            :json="evalContext"
+            :main-menu-bar="false"
+            :navigation-bar="false"
+            :status-bar="false"
+            mode="text"
+            class="dc-json-editor"
+            @update:json="onEvalContextJson"
+            @update:json-string="syncEvalContext"
+          />
           <div class="dc-response-col">
-            <json-editor :json="evalResult" @update:json="onEvalResultJson" @update:jsonString="syncEvalResult" :main-menu-bar="false" :navigation-bar="false" :status-bar="false" mode="text" class="dc-json-editor" />
+            <json-editor
+              :json="evalResult"
+              :main-menu-bar="false"
+              :navigation-bar="false"
+              :status-bar="false"
+              mode="text"
+              class="dc-json-editor"
+              @update:json="onEvalResultJson"
+              @update:json-string="syncEvalResult"
+            />
           </div>
         </div>
-        <div v-if="evalSummary" class="dc-summary">
-          <div class="dc-summary-header">Rendered Result</div>
+        <div
+          v-if="evalSummary"
+          class="dc-summary"
+        >
+          <div class="dc-summary-header">
+            Rendered Result
+          </div>
           <div class="dc-summary-body">
             <div class="dc-result-variant">
               <span class="dc-result-variant-label">Variant</span>
               <span class="dc-result-variant-value">{{ evalSummary.variantKey }}</span>
             </div>
             <div class="dc-segment-log">
-              <div v-for="seg in evalSummary.segments" :key="String(seg.segmentID)" class="dc-segment-log-item">
+              <div
+                v-for="seg in evalSummary.segments"
+                :key="String(seg.segmentID)"
+                class="dc-segment-log-item"
+              >
                 <div class="dc-segment-log-header">
                   <span class="dc-seg-name">segment #{{ seg.segmentID }}</span>
                 </div>
-                <div v-if="seg.msg" class="dc-seg-msg">{{ seg.msg }}</div>
+                <div
+                  v-if="seg.msg"
+                  class="dc-seg-msg"
+                >
+                  {{ seg.msg }}
+                </div>
               </div>
             </div>
           </div>
         </div>
       </el-collapse-item>
-      <el-collapse-item title="Batch Evaluation" class="dc-collapse-item">
+      <el-collapse-item
+        title="Batch Evaluation"
+        class="dc-collapse-item"
+      >
         <div class="dc-eval-header">
           <span class="dc-label">Request</span>
-          <el-button size="small" @click="$emit('post-evaluation-batch', batchEvalContext)" type="primary" plain>POST /api/v1/evaluation/batch</el-button>
+          <el-button
+            size="small"
+            type="primary"
+            plain
+            @click="$emit('post-evaluation-batch', batchEvalContext)"
+          >
+            POST /api/v1/evaluation/batch
+          </el-button>
           <span class="dc-label">Response</span>
         </div>
         <div class="dc-editor-row">
-          <json-editor :json="batchEvalContext" @update:json="onBatchEvalContextJson" @update:jsonString="syncBatchEvalContext" :main-menu-bar="false" :navigation-bar="false" :status-bar="false" mode="text" class="dc-json-editor" />
-          <json-editor :json="batchEvalResult" @update:json="onBatchEvalResultJson" @update:jsonString="syncBatchEvalResult" :main-menu-bar="false" :navigation-bar="false" :status-bar="false" mode="text" class="dc-json-editor" />
+          <json-editor
+            :json="batchEvalContext"
+            :main-menu-bar="false"
+            :navigation-bar="false"
+            :status-bar="false"
+            mode="text"
+            class="dc-json-editor"
+            @update:json="onBatchEvalContextJson"
+            @update:json-string="syncBatchEvalContext"
+          />
+          <json-editor
+            :json="batchEvalResult"
+            :main-menu-bar="false"
+            :navigation-bar="false"
+            :status-bar="false"
+            mode="text"
+            class="dc-json-editor"
+            @update:json="onBatchEvalResultJson"
+            @update:json-string="syncBatchEvalResult"
+          />
         </div>
       </el-collapse-item>
     </el-collapse>
@@ -53,7 +125,7 @@ import JsonEditor from 'vue3-ts-jsoneditor'
 import type { BatchEvalContext, BatchEvalResult, EvalContext, EvalResult, EvalSummary } from '@/api/types'
 
 export default {
-  name: 'debug-console',
+  name: 'DebugConsole',
   components: { JsonEditor },
   props: {
     evalContext: { type: Object as () => EvalContext, required: true },

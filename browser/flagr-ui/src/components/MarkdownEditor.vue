@@ -1,20 +1,29 @@
 <template>
-  <div id="editor" v-if="showEditor || markdown">
+  <div
+    v-if="showEditor || markdown"
+    id="editor"
+  >
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/4.0.0/github-markdown.min.css"
-    />
+    >
 
-    <div v-if="showEditor" class="me-editor-section">
+    <div
+      v-if="showEditor"
+      class="me-editor-section"
+    >
       <el-input
+        v-model="input"
         type="textarea"
         :rows="5"
         placeholder="Please input"
-        v-model="input"
         @change="syncMarkdown"
-      ></el-input>
+      />
     </div>
-    <div class="markdown-body" v-html="compiledMarkdown"></div>
+    <div
+      class="markdown-body"
+      v-html="compiledMarkdown"
+    />
   </div>
 </template>
 
@@ -28,7 +37,7 @@ let md = MarkdownIt("commonmark");
 md.use(mk, { output: "html" });
 
 export default {
-  name: "editor",
+  name: "Editor",
   props: {
     showEditor: Boolean,
     markdown: {

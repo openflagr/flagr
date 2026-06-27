@@ -7,6 +7,7 @@
         "build": "vite build",
         "preview": "vite preview",
         "lint": "eslint src e2e",
+        "lint:fix": "eslint src e2e --fix",
         "typecheck": "vue-tsc --noEmit",
         "test": "vitest run",
         "test:e2e": "playwright test"
@@ -24,19 +25,20 @@
     },
     "devDependencies": {
         "@playwright/test": "^1.60.0",
+        "@types/markdown-it": "^14.1.2",
         "@types/node": "^22.15.0",
+        "@typescript-eslint/eslint-plugin": "^8.62.0",
+        "@typescript-eslint/parser": "^8.32.0",
         "@vitejs/plugin-vue": "^6.0.7",
         "@vue/tsconfig": "^0.7.0",
-        "@typescript-eslint/parser": "^8.32.0",
-        "@types/markdown-it": "^14.1.2",
         "eslint": "^9.39.4",
         "eslint-plugin-vue": "^10.9.1",
         "sass": "^1.101.0",
         "typescript": "^5.8.3",
         "vite": "^8.0.16",
+        "vitest": "^3.2.4",
         "vue-eslint-parser": "^10.4.1",
-        "vue-tsc": "^2.2.10",
-        "vitest": "^3.2.4"
+        "vue-tsc": "^2.2.10"
     },
     "browserslist": [
         "> 1%",
