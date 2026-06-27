@@ -115,7 +115,7 @@ stop-ui:
 rebuild-run: build stop-ui start
 
 serve-docs:
-	@npm install -g docsify-cli@4
+	@npm install -g docsify-cli@4.4.4
 	@docsify serve $(PWD)/docs
 
 # ------------------------------------------------------------------------------
