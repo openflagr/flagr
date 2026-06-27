@@ -20,10 +20,12 @@
         @change="syncMarkdown"
       />
     </div>
+    <!-- eslint-disable vue/no-v-html -- sanitized via xss() in compiledMarkdown -->
     <div
       class="markdown-body"
       v-html="compiledMarkdown"
     />
+    <!-- eslint-enable vue/no-v-html -->
   </div>
 </template>
 
@@ -42,9 +44,10 @@ export default {
     showEditor: Boolean,
     markdown: {
       type: String,
-      default: "",
+      default: '',
     },
   },
+  emits: ['update:markdown', 'save'],
   data() {
     return {
       input: this.markdown,

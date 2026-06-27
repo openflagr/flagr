@@ -1,4 +1,4 @@
-import type { Constraint, Distribution, Flag, FlagSnapshot } from '../src/types'
+import type { Constraint, Distribution, Flag, FlagSnapshot, Segment, Variant } from '../src/api/types'
 
 export const API = process.env.API_URL || 'http://localhost:18000/api/v1'
 
@@ -34,14 +34,14 @@ export async function deleteFlag(flagId: number): Promise<void> {
   if (!r.ok) throw new Error(`deleteFlag(${flagId}) failed: ${r.status}`)
 }
 
-export async function createSegment(flagId: number, desc: string): Promise<unknown> {
+export async function createSegment(flagId: number, desc: string): Promise<Segment> {
   const r = await fetch(`${API}/flags/${flagId}/segments`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ description: desc, rolloutPercent: 100 }),
   })
   if (!r.ok) throw new Error(`createSegment failed: ${r.status}`)
-  return r.json()
+  return r.json() as Promise<Segment>
 }
 
 export async function getFlag(flagId: number): Promise<Flag> {
@@ -74,14 +74,14 @@ export async function createConstraint(flagId: number, segId: number): Promise<C
   return r.json() as Promise<Constraint>
 }
 
-export async function createVariant(flagId: number, key: string): Promise<unknown> {
+export async function createVariant(flagId: number, key: string): Promise<Variant> {
   const r = await fetch(`${API}/flags/${flagId}/variants`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ key }),
   })
   if (!r.ok) throw new Error(`createVariant(${key}) failed: ${r.status}`)
-  return r.json()
+  return r.json() as Promise<Variant>
 }
 
 function sleep(ms: number): Promise<void> {

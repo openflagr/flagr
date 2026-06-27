@@ -1,5 +1,5 @@
 import constants from '@/helpers/constants'
-import type { Flag, FlagView, Segment, Variant } from '@/api/types'
+import type { Flag, FlagView, Segment, Variant, VariantAttachment } from '@/api/types'
 
 export interface EntityTypeOption {
   label: string
@@ -45,7 +45,7 @@ function processVariant(variant: Variant): void {
   }
   if (typeof variant.attachment === 'string') {
     try {
-      variant.attachment = JSON.parse(variant.attachment) as Record<string, unknown>
+      variant.attachment = JSON.parse(variant.attachment) as VariantAttachment
     } catch {
       /* keep string */
     }

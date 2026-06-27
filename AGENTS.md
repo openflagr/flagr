@@ -31,10 +31,10 @@ CI: `make ci`, `make ci-swagger`, `make ci-integration`, `make build-ui` — see
 - `config/env.go` — all environment variables (single source of truth)
 
 **Frontend (`browser/flagr-ui/src/`):**
-- `api/`, `components/`, `helpers/` — Vite + TS; **`make run-ui`** / **`make build-ui`** from repo root
+- `api/types.ts` — UI DTOs aligned with `docs/api_docs/bundle.yaml`; `api/flags.ts`, `api/evaluation.ts`, `http.ts`
 - `pages/flagPage.ts`, `pages/flagsListPage.ts` — orchestration; templates call `flagPage.*(page)` with computed `page` = `castFlagPage(this)` / `castFlagsList(this)`
-- New REST: `api/flags.ts` or `api/evaluation.ts`; multi-step calls composed in `api/*`; UI via `helpers/runApi`
-- UI architecture: **`docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md`** (As-built)
+- New REST: extend `api/*`; multi-step calls in `api/flags.ts`; UI via `helpers/runApi`
+- UI architecture: **`docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md`** (As-built); reviewer guide **`docs/review/feat-flagr-ui-typescript-effect.md`**
 
 ## Constraints
 

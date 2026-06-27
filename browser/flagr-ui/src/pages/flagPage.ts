@@ -1,24 +1,26 @@
 import type { Router } from 'vue-router'
 import * as evalApi from '@/api/evaluation'
 import * as flagsApi from '@/api/flags'
-import { variantUsedInDistribution } from '@/helpers/flagModel'
+import { variantUsedInDistribution, normalizeFlag, normalizeSegment } from '@/helpers/flagModel'
 import { evalSummaryFromResult } from '@/helpers/evalDebugLog'
 import type { EntityTypeOption } from '@/helpers/flagModel'
-import { normalizeFlag, normalizeSegment } from '@/helpers/flagModel'
 import type {
-  Constraint,
-  Distribution,
-  DistributionDraft,
-  FlagView,
-  Segment,
-  Tag,
-  Variant,
   BatchEvalContext,
   BatchEvalResult,
+  Constraint,
+  ConstraintFieldKey,
+  Distribution,
+  DistributionDraft,
   EvalContext,
   EvalResult,
   EvalSummary,
   FlagSnapshot,
+  FlagView,
+  PutVariantBody,
+  Segment,
+  SegmentFieldKey,
+  Tag,
+  Variant,
 } from '@/api/types'
 import {
   pluckSegmentIds,
@@ -175,11 +177,20 @@ export function putVariant(vm: FlagPageVm, variant: Variant): void {
     vm.$message.error('variant attachment is not valid')
     return
   }
+  let attachment: PutVariantBody['attachment']
+  const raw = variant.attachment
+  if (raw === undefined) {
+    attachment = undefined
+  } else if (typeof raw === 'string') {
+    attachment = undefined
+  } else {
+    attachment = raw
+  }
   runApi(
     vm,
     flagsApi.updateVariant(vm.flagId, requireVariantId(variant), {
       key: variant.key,
-      attachment: variant.attachment,
+      attachment,
     }),
     { successMessage: 'variant updated' },
   )
@@ -267,8 +278,8 @@ export function handleUpdateSegmentField(
     value,
   }: {
     segment: Segment
-    field: keyof Segment
-    value: Segment[keyof Segment]
+    field: SegmentFieldKey
+    value: string | number
   },
 ): void {
   if (field === 'description' && typeof value === 'string') segment.description = value
@@ -333,13 +344,13 @@ export function handleUpdateConstraintField(
     value,
   }: {
     constraint: Constraint
-    field: keyof Constraint
-    value: Constraint[keyof Constraint]
+    field: ConstraintFieldKey
+    value: string
   },
 ): void {
-  if (field === 'property' && typeof value === 'string') constraint.property = value
-  else if (field === 'operator' && typeof value === 'string') constraint.operator = value
-  else if (field === 'value' && typeof value === 'string') constraint.value = value
+  if (field === 'property') constraint.property = value
+  else if (field === 'operator') constraint.operator = value
+  else if (field === 'value') constraint.value = value
 }
 
 export function handleEditDistribution(vm: FlagPageVm, segment: Segment): void {

@@ -116,7 +116,7 @@ import {
 import JsonEditor from 'vue3-ts-jsoneditor'
 import { Delete } from '@element-plus/icons-vue'
 import type { PropType } from 'vue'
-import type { Variant } from '@/api/types'
+import type { Variant, VariantAttachment } from '@/api/types'
 
 export default {
   name: 'VariantsSection',
@@ -166,14 +166,16 @@ export default {
     },
     onAttachmentChange(variant: Variant, val: unknown, valid: boolean) {
       this.markVariantDirty(variant)
-      if (val !== null) variant.attachment = val as Record<string, unknown>
+      if (valid && val !== null && typeof val === 'object' && !Array.isArray(val)) {
+        variant.attachment = val as VariantAttachment
+      }
       variant.attachmentValid = valid
       this.$emit('attachment-change', { variant, valid })
     },
     onAttachmentTextChange(variant: Variant, text: string) {
       this.markVariantDirty(variant)
       try {
-        const v = JSON.parse(text) as Record<string, unknown>
+        const v = JSON.parse(text) as VariantAttachment
         variant.attachment = v
         variant.attachmentValid = true
         this.$emit('attachment-change', { variant, valid: true })

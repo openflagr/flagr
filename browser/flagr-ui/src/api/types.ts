@@ -48,11 +48,19 @@ export function isIdentifiedSegment(segment: Segment | null | undefined): segmen
   return segment != null && segment.id != null
 }
 
+/** Swagger variantAttachment / putVariantRequest.attachment. */
+export type VariantAttachment = Record<string, unknown>
+
 export interface Variant {
   id?: number
   key: string
-  attachment?: Record<string, unknown> | string
+  attachment?: VariantAttachment | string
   attachmentValid?: boolean
+}
+
+export interface PutVariantBody {
+  key: string
+  attachment?: VariantAttachment
 }
 
 export interface IdentifiedVariant extends Variant {
@@ -135,6 +143,7 @@ export function requireFlagId(flag: Flag): number {
 export function pluckSegmentIds(segments: Segment[]): number[] {
   return segments.map((s) => requireSegmentId(s))
 }
+
 export interface EvalContext {
   entityID?: string
   entityType?: string
@@ -150,31 +159,79 @@ export interface BatchEvalContext {
   flagIDs?: number[]
 }
 
-export type EvalResult = Record<string, unknown>
-export type BatchEvalResult = Record<string, unknown>
+export type EvalRecordSource = 'evaluation' | 'exposure'
 
-export interface EvalSummaryConstraint {
-  constraintID: unknown
-  constraintProperty: unknown
-  constraintOperator: unknown
-  constraintValue: unknown
-  matched: unknown
+/** swagger: segmentDebugLog */
+export interface SegmentDebugLog {
+  segmentID?: number
+  msg?: string
 }
 
+/** swagger: evalDebugLog */
+export interface EvalDebugLog {
+  segmentDebugLogs?: SegmentDebugLog[]
+  msg?: string
+}
+
+/** swagger: evalResult */
+export interface EvalResult {
+  flagID?: number
+  flagKey?: string
+  flagSnapshotID?: number
+  flagTags?: string[]
+  segmentID?: number
+  variantID?: number
+  variantKey?: string
+  recordSource?: EvalRecordSource
+  variantAttachment?: VariantAttachment
+  evalContext?: EvalContext
+  timestamp?: string
+  evalDebugLog?: EvalDebugLog
+}
+
+/** swagger: evaluationBatchResponse */
+export interface BatchEvalResult {
+  evaluationResults: EvalResult[]
+}
+
+export interface EvalSummaryConstraint {
+  constraintID?: number
+  constraintProperty?: string
+  constraintOperator?: string
+  constraintValue?: string
+  matched?: boolean
+}
+
+/** UI table derived from evalDebugLog.segmentDebugLogs. */
 export interface EvalSummarySegment {
-  segmentID: unknown
-  description: unknown
-  rolloutPercent: unknown
-  matched: unknown
-  msg: unknown
+  segmentID?: number
+  description?: string
+  rolloutPercent?: number
+  matched?: boolean
+  msg?: string
   constraints: EvalSummaryConstraint[]
 }
 
 export interface EvalSummary {
   variantKey: string
-  variantID: unknown
+  variantID?: number
   segments: EvalSummarySegment[]
 }
+
 export type OperatorValue =
   | 'EQ' | 'NEQ' | 'LT' | 'LTE' | 'GT' | 'GTE'
   | 'EREG' | 'NEREG' | 'IN' | 'NOTIN' | 'CONTAINS' | 'NOTCONTAINS'
+
+/** Editable segment fields in SegmentsSection. */
+export type SegmentFieldKey = 'description' | 'rolloutPercent'
+
+/** Editable constraint fields in SegmentsSection. */
+export type ConstraintFieldKey = 'property' | 'operator' | 'value'
+
+export interface FlagHistoryDiffRow {
+  timestamp: string
+  updatedBy?: string
+  newId: number
+  oldId: number | 'NULL'
+  flagDiff: string
+}

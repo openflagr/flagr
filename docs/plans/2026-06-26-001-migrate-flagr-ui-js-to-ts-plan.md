@@ -13,8 +13,7 @@
 - **TypeScript** across `browser/flagr-ui/src/` and `e2e/`; **Vite** compiles; **`vue-tsc --noEmit`** is the type gate (`make flagr-ui-check`).
 - **axios removed**; REST via **`fetch`** in `src/api/http.ts`.
 - **Typed errors:** `ApiError` classes + **`ApiResult<T>`** (`src/api/result.ts`). No Effect runtime (dependency removed).
-- **UI boundary:** `helpers/runApi.ts` — `runApi(vm, promise, options)`, `confirmAndRunApi`, toasts, 401 redirect from `WWW-Authenticate`.
-- **Domain:** `src/api/types.ts`, normalization `helpers/flagModel.ts`.
+- **Domain:** `src/api/types.ts` (swagger-aligned: `EvalResult`, `BatchEvalResult`, `PutVariantBody`, `VariantAttachment`, field keys for segments/constraints), normalization `helpers/flagModel.ts`, eval UI `helpers/evalDebugLog.ts` + `helpers/evalParse.ts`, JsonEditor narrowing `helpers/jsonEditorValue.ts`.
 - **Orchestration:** `pages/flagPage.ts` (~430 lines, monolithic by choice), `pages/flagsListPage.ts`, list cache `pages/flagsList.ts`.
 - **Vue:** Options API + `lang="ts"`. Templates call **`flagPage.*(page)`** / **`flagsListPage.*(page)`**; computed **`page`** = `castFlagPage(this)` / `castFlagsList(this)` (`helpers/vuePageCast.ts`). Presentational: `FlagHistory`, `DebugConsole`.
 - **Tests:** Vitest `src/api/http.test.ts`, `flags.test.ts`; Playwright `e2e/*.spec.ts` (`make test-e2e`).
@@ -29,9 +28,9 @@ Flag.vue / Flags.vue  →  pages/flagPage.ts | flagsListPage.ts  →  api/*  →
 
 ### Rules for new code
 
-1. **`api/*`** — functions return `Promise<ApiResult<T>>`; use `requestJson` / `requestVoid`. Multi-step flows (e.g. `listFlagsIfStale`, `loadFlagPageContext`, `createTagAndRefreshAllTags`, `deleteTagAndReload`) live in `api/flags.ts`.
+1. **`api/*`** — functions return `Promise<ApiResult<T>>`; use `requestJson` / `requestVoid`. DTOs live in **`api/types.ts`** (keep in sync with `docs/api_docs/bundle.yaml` / `swagger_gen/models`). Multi-step flows (e.g. `listFlagsIfStale`, `loadFlagPageContext`, `createTagAndRefreshAllTags`, `deleteTagAndReload`) live in `api/flags.ts`.
 2. **Pages** — take `FlagPageVm` / `FlagsListVm`; every exported handler starts with `vm` (local-only edits may use `_vm`); call `runApi` / `confirmAndRunApi` only; no `fetch` in `.vue` files.
-3. **SFCs** — expose `flagPage` / `flagsListPage` on `data`; use computed `page`; no pass-through wrapper methods for every handler.
+3. **SFCs** — expose `flagPage` / `flagsListPage` on `data`; use computed `page`; no pass-through wrapper methods for every handler. JsonEditor emits `unknown` — narrow at the edge (`asJsonObject`, `asBatchEvalResult`, attachment guards in `VariantsSection`).
 4. **New endpoints** — add to `api/flags.ts` or `api/evaluation.ts` → page handler → template wire.
 5. **Do not** split `flagPage.ts` into submodules unless explicitly requested.
 

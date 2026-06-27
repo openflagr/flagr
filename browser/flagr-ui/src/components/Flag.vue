@@ -171,7 +171,7 @@ import FlagConfigCard from '@/components/FlagConfigCard.vue'
 import FlagHistory from '@/components/FlagHistory.vue'
 import SegmentsSection from '@/components/SegmentsSection.vue'
 import VariantsSection from '@/components/VariantsSection.vue'
-import type { BatchEvalContext, DistributionDraft, EvalContext, EvalResult, EvalSummary, FlagView, Segment, Tag } from '@/api/types'
+import type { BatchEvalContext, BatchEvalResult, DistributionDraft, EvalContext, EvalResult, EvalSummary, FlagView, Segment, Tag } from '@/api/types'
 import type { EntityTypeOption } from '@/helpers/flagModel'
 import { castFlagPage } from '@/helpers/vuePageCast'
 import * as flagPage from '@/pages/flagPage'
@@ -237,7 +237,7 @@ export default {
       evalResult: {} as EvalResult,
       evalSummary: null as EvalSummary | null,
       batchEvalContext: defaultBatchEvalContext(),
-      batchEvalResult: {} as Record<string, unknown>,
+      batchEvalResult: { evaluationResults: [] } as BatchEvalResult,
     }
   },
   computed: {

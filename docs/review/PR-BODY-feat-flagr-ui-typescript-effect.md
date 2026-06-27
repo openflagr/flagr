@@ -15,6 +15,8 @@ Migrate **`browser/flagr-ui`** from JavaScript to **TypeScript** (Vite transpile
 | UX | `helpers/saveDirtyUi.ts` — dirty state on flag / variant / segment / constraint / distribution Save (cleared on click, like Reorder) |
 | Docs | Canonical: [`docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md`](docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md) (**As-built**). No Effect runtime (removed). |
 
+**Typing pass (swagger-aligned):** `api/types.ts` mirrors eval/variant/batch DTOs; `PutVariantBody` on variant save; segment/constraint field keys in `SegmentsSection` / `flagPage`; `e2e/helpers.ts` returns `Promise<Flag | Segment | Variant | …>`; Debug Console batch JSON via `asBatchEvalResult`; **`evalSummaryFromResult`** renders `.dc-summary` for successful evals (including disabled flags with no variant — shows `—`).
+
 
 **Repo ergonomics:** Root **`Makefile`** (`make help`): `flagr-ui-check`, `build-ui`, `run-ui`, `start`, `test-e2e`. CI uses `build-ui` and `test-e2e`. E2e: `scripts/e2e-server.sh` → `make build` + `make run-ui`.
 
@@ -41,11 +43,11 @@ make test-e2e         # above + go build + Playwright (e2e/*.spec.ts)
 | Unit | `npm run test` | HTTP decode/errors, `listFlagsIfStale`, `saveDirtyUi` |
 | Browser | Playwright | Smoke, flags list, flag detail (CRUD, segments, distributions) |
 
-**Verification (re-run before merge):**
+**Verification (re-run before merge, 2026-06-27):**
 
 ```text
 make flagr-ui-check  # lint + vue-tsc + Vitest 9/9
-make test-e2e        # Playwright 30 passed
+make test-e2e        # Playwright 30/30 passed
 ```
 
 **E2e environment:** Flagr `:18000`, Vite UI `:8080` (same as `make start`).
@@ -75,3 +77,4 @@ make test-e2e        # Playwright 30 passed
 3. `pages/flagPage.ts` — single orchestration file (by design); uniform `flagPage.*(page, …)` handlers
 4. `playwright.config.mjs` — `testDir: 'e2e'`
 5. `helpers/saveDirtyUi.ts` + Save buttons — dirty UX only (no API change)
+6. `api/types.ts` + `helpers/evalDebugLog.ts` — swagger DTOs; Debug Console summary when eval returns a flag (e2e: disabled flag → variant `—`)

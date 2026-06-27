@@ -313,7 +313,7 @@ import {
 
 import { Delete, Edit, ArrowUp, ArrowDown } from '@element-plus/icons-vue'
 import type { PropType } from 'vue'
-import type { Constraint, Segment } from '@/api/types'
+import type { Constraint, ConstraintFieldKey, Segment, SegmentFieldKey } from '@/api/types'
 
 interface OperatorOption {
   value: string
@@ -417,15 +417,19 @@ export default {
       this.reorderDirty = false
       this.$emit('reorder', this.segments)
     },
-    onSegmentFieldChange(segment: Segment, field: string, value: unknown) {
+    onSegmentFieldChange(
+      segment: Segment,
+      field: SegmentFieldKey,
+      value: string | number,
+    ) {
       this.markSegmentDirty(segment)
       this.$emit('update-segment-field', { segment, field, value })
     },
     onConstraintFieldChange(
       segment: Segment,
       constraint: { id?: number },
-      field: string,
-      value: unknown,
+      field: ConstraintFieldKey,
+      value: string,
     ) {
       this.markConstraintDirty(segment, constraint)
       this.$emit('update-constraint-field', { segment, constraint, field, value })

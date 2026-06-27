@@ -29,18 +29,21 @@
           </div>
         </div>
       </template>
+      <!-- eslint-disable vue/no-v-html -- sanitized via xss() in getDiff -->
       <pre
         class="diff"
         v-html="diff.flagDiff"
       />
+      <!-- eslint-enable vue/no-v-html -->
     </el-card>
   </div>
 </template>
 
 <script lang="ts">
+import xss from 'xss'
 import { diffJson, convertChangesToXML } from 'diff'
 import { DArrowRight } from '@element-plus/icons-vue'
-import type { Flag, FlagSnapshot } from '@/api/types'
+import type { Flag, FlagHistoryDiffRow, FlagSnapshot } from '@/api/types'
 
 export default {
   name: 'FlagHistory',
@@ -53,7 +56,7 @@ export default {
   },
   computed: {
     diffs() {
-      const ret: Array<Record<string, unknown>> = []
+      const ret: FlagHistoryDiffRow[] = []
       const snapshots = this.snapshots.slice()
       snapshots.push({ flag: {} as Flag, id: 0 })
       for (let i = 0; i < snapshots.length - 1; i++) {
@@ -76,7 +79,7 @@ export default {
       if (d.length === 1) {
         return 'No changes'
       }
-      return convertChangesToXML(d)
+      return xss(convertChangesToXML(d))
     },
   },
 }

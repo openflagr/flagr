@@ -44,7 +44,7 @@ Specs live in `browser/flagr-ui/e2e/`:
 |------|----------------|
 | `smoke.spec.ts` | App shell, nav, title |
 | `flags-list.spec.ts` | List load, search, create flag / boolean flag |
-| `flag-detail.spec.ts` | Flag config, variants, segments (incl. reorder), constraints, distributions, delete guards |
+| `flag-detail.spec.ts` | Flag config, variants, segments (incl. reorder), constraints, distributions, **debug console eval** (`.dc-summary` after POST; disabled flags show variant `—`), delete guards |
 
 E2e uses the same stack as dev: `scripts/e2e-server.sh` → `make build` (if needed) + `flagr` + `make run-ui`.
 
@@ -55,9 +55,10 @@ Vue template `flagPage.*(page)`  →  pages/*  →  runApi(promise)  →  api/*
 ```
 
 - **Stack** — plan **As-built**: `docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md` (`ApiResult`, no Effect).
+- **Types** — single module `src/api/types.ts`; e2e helpers import from `../src/api/types`.
 - **`page`** — computed `castFlagPage(this)` / `castFlagsList(this)`; templates use `flagPage.*(page, …)` (one `vm`-first contract; tab click is the only thin `methods` wrapper).
 - **API composition** — multi-step REST in `api/flags.ts` (`loadFlagPageContext`, `createTagAndRefreshAllTags`, `deleteTagAndReload`, …), not nested `runApi` in pages.
-- **Presentational** `FlagHistory` / `DebugConsole` — I/O in `flagPage.ts`.
+- **Presentational** `FlagHistory` / `DebugConsole` — I/O in `flagPage.ts`; `evalSummaryFromResult` shows rendered result whenever eval identifies a flag (not only when `segmentDebugLogs` is non-empty).
 
 ## Suggested review order (60 min → 15 min)
 

@@ -6,6 +6,7 @@ import type {
   Distribution,
   Flag,
   FlagSnapshot,
+  PutVariantBody,
   Segment,
   SnapshotMaxId,
   Tag,
@@ -90,7 +91,7 @@ export const createVariant = (flagId: FlagId, key: string): Promise<ApiResult<Va
 export const updateVariant = (
   flagId: FlagId,
   variantId: number,
-  body: { key: string; attachment?: unknown },
+  body: PutVariantBody,
 ): Promise<ApiResult<void>> => putVoid(`${flag(flagId)}/variants/${variantId}`, body)
 
 export const deleteVariant = (flagId: FlagId, variantId: number): Promise<ApiResult<void>> =>

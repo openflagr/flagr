@@ -122,6 +122,13 @@
 
 <script lang="ts">
 import JsonEditor from 'vue3-ts-jsoneditor'
+import {
+  parseBatchEvalContextJson,
+  parseBatchEvalResultJson,
+  parseEvalContextJson,
+  parseEvalResultJson,
+} from '@/helpers/evalParse'
+import { asBatchEvalResult, asJsonObject } from '@/helpers/jsonEditorValue'
 import type { BatchEvalContext, BatchEvalResult, EvalContext, EvalResult, EvalSummary } from '@/api/types'
 
 export default {
@@ -144,44 +151,36 @@ export default {
   ],
   methods: {
     onEvalContextJson(v: unknown) {
-      this.$emit('update:evalContext', v as EvalContext)
+      const o = asJsonObject(v)
+      if (o) this.$emit('update:evalContext', o as EvalContext)
     },
     onEvalResultJson(v: unknown) {
-      this.$emit('update:evalResult', v as EvalResult)
+      const o = asJsonObject(v)
+      if (o) this.$emit('update:evalResult', o as EvalResult)
     },
     onBatchEvalContextJson(v: unknown) {
-      this.$emit('update:batchEvalContext', v as BatchEvalContext)
+      const o = asJsonObject(v)
+      if (o) this.$emit('update:batchEvalContext', o as BatchEvalContext)
     },
     onBatchEvalResultJson(v: unknown) {
-      this.$emit('update:batchEvalResult', v as BatchEvalResult)
+      const parsed = asBatchEvalResult(v)
+      if (parsed) this.$emit('update:batchEvalResult', parsed)
     },
     syncEvalContext(text: string) {
-      try {
-        this.$emit('update:evalContext', JSON.parse(text) as EvalContext)
-      } catch {
-        /* ignore */
-      }
+      const parsed = parseEvalContextJson(text)
+      if (parsed) this.$emit('update:evalContext', parsed)
     },
     syncEvalResult(text: string) {
-      try {
-        this.$emit('update:evalResult', JSON.parse(text) as EvalResult)
-      } catch {
-        /* ignore */
-      }
+      const parsed = parseEvalResultJson(text)
+      if (parsed) this.$emit('update:evalResult', parsed)
     },
     syncBatchEvalContext(text: string) {
-      try {
-        this.$emit('update:batchEvalContext', JSON.parse(text) as BatchEvalContext)
-      } catch {
-        /* ignore */
-      }
+      const parsed = parseBatchEvalContextJson(text)
+      if (parsed) this.$emit('update:batchEvalContext', parsed)
     },
     syncBatchEvalResult(text: string) {
-      try {
-        this.$emit('update:batchEvalResult', JSON.parse(text) as BatchEvalResult)
-      } catch {
-        /* ignore */
-      }
+      const parsed = parseBatchEvalResultJson(text)
+      if (parsed) this.$emit('update:batchEvalResult', parsed)
     },
   },
 }
