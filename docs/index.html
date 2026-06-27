@@ -7,35 +7,30 @@
     <meta name="description" content="Flagr — open source feature flagging, A/B testing, and dynamic configuration in Go." />
     <meta
       name="viewport"
-      content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
+      content="width=device-width, initial-scale=1.0, minimum-scale=1.0"
     />
     <link rel="icon" href="images/favicon.png" />
-    <link rel="stylesheet" href="//unpkg.com/docsify/lib/themes/vue.css" />
+    <link
+      rel="stylesheet"
+      href="//cdn.jsdelivr.net/npm/docsify@4.13.1/lib/themes/vue.css"
+    />
     <style>
       :root {
         --theme-color: #2e4960;
       }
 
-      code {
-        font-size: 15px !important;
-      }
-      p {
-        line-height: 1.2rem !important;
-      }
-      p code {
-        padding: 0px !important;
-      }
       img {
         margin-top: 1rem;
       }
     </style>
   </head>
   <body>
-    <script src="//unpkg.com/docsify-edit-on-github@1.0.1/index.js"></script>
+    <div id="app">Loading …</div>
+    <script src="//cdn.jsdelivr.net/npm/docsify-edit-on-github@1.0.1/index.js"></script>
 
-    <div id="app"></div>
     <script>
       window.$docsify = {
+        auto2top: true,
         loadSidebar: true,
         maxLevel: 4,
         subMaxLevel: 2,
@@ -61,11 +56,11 @@
       };
     </script>
 
-    <script src="//unpkg.com/mermaid@10/dist/mermaid.min.js"></script>
-    <script src="//unpkg.com/docsify/lib/docsify.min.js"></script>
-    <script src="//unpkg.com/docsify-mermaid@2/dist/docsify-mermaid.js"></script>
-    <script src="//unpkg.com/docsify/lib/plugins/search.min.js"></script>
-    <script src="//unpkg.com/prismjs/components/prism-bash.min.js"></script>
-    <script src="//unpkg.com/prismjs/components/prism-go.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/docsify@4.13.1/lib/docsify.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/docsify-mermaid@2.0.1/dist/docsify-mermaid.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/docsify@4.13.1/lib/plugins/search.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-bash.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-go.min.js"></script>
   </body>
 </html>
