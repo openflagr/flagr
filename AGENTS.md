@@ -20,7 +20,29 @@ Run **`make help`** from the repo root for the full catalog. Common targets:
 | `make bench-integration` | HTTP eval benchmarks (local) |
 | `make swagger` | Regenerate `swagger_gen/` |
 
-CI: `make ci`, `make ci-swagger`, `make ci-integration`, `make build-ui` — see `Makefile` **CI** section.
+## Before commit / push (PR)
+
+Run from **repo root**. Match what [`.github/workflows/ci.yml`](.github/workflows/ci.yml) enforces so PR checks stay green.
+
+| You changed | Run before commit | Run before push (recommended) |
+|-------------|-------------------|-------------------------------|
+| **`browser/flagr-ui/`** only | `make flagr-ui-check` | `make test-e2e` |
+| **`pkg/`** or Go tests | `make test` | `make test` (+ `make test-integration` if handler/API behavior) |
+| **Swagger** (`swagger/`, handlers → OpenAPI) | `make swagger` then commit `swagger_gen/` + `cmd/flagr-server/main.go` | `make ci-swagger` (regen + `git diff --exit-code`) |
+| **UI + Go** or unsure | `make test` **and** `make flagr-ui-check` | `make test` + `make test-e2e` |
+
+**CI mapping (same commands):**
+
+| GitHub Actions job | Makefile |
+|--------------------|----------|
+| `unit_test` | `make ci-swagger` then `make ci` (= `make test`: **golangci-lint** + swagger validate + `go test ./pkg/...`) |
+| `ui_lint` | `make build-ui` (= `flagr-ui-check` + Vite production build) |
+| `e2e_test` | `make test-e2e` (= `make build` + `flagr-ui-check` + Playwright) |
+| `integration_test` | `make ci-integration` (Docker Compose; usually not every UI PR) |
+
+**Fast UI loop:** `make flagr-ui-check` ≈ ESLint + `vue-tsc` + Vitest (~10s). **Do not** rely on `make run-ui` alone — it does not lint.
+
+**PR hygiene:** Follow [`PULL_REQUEST_TEMPLATE.md`](PULL_REQUEST_TEMPLATE.md). For large UI work, point reviewers at **`docs/review/feat-flagr-ui-typescript-effect.md`** and plan **As-built** in `docs/plans/`.
 
 ## Key Code
 
