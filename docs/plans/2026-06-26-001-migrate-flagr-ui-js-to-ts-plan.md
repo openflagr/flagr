@@ -1,8 +1,8 @@
 # refactor: Migrate Flagr UI from JavaScript to TypeScript
 
 **Date:** 2026-06-26  
-**Status:** implemented on branch `feat/flagr-ui-typescript-effect` (PR #721)  
-**Canonical context:** Use **this plan** for what the PR changed and how flagr-ui is structured today. `AGENTS.md` stays a short pointer here.
+**Status:** **Implemented** (2026-06-27). Shipped on branch `feat/flagr-ui-typescript-effect` ([PR #721](https://github.com/openflagr/flagr/pull/721)).  
+**Canonical context:** Use **this plan** (As-built section) for how flagr-ui is structured today. `AGENTS.md` points here.
 
 ---
 
@@ -44,8 +44,7 @@ Flag.vue / Flags.vue  →  pages/flagPage.ts | flagsListPage.ts  →  api/*  →
 
 ### Related docs
 
-- Reviewer checklist: `docs/review/feat-flagr-ui-typescript-effect.md`
-- Short repo pointer: `AGENTS.md` (Frontend section)
+- Short repo pointer: `AGENTS.md` (Frontend section, pre-commit gates)
 
 ---
 

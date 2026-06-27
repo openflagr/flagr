@@ -42,7 +42,7 @@ Run from **repo root**. Match what [`.github/workflows/ci.yml`](.github/workflow
 
 **Fast UI loop:** `make flagr-ui-check` ≈ ESLint + `vue-tsc` + Vitest (~10s). **Do not** rely on `make run-ui` alone — it does not lint.
 
-**PR hygiene:** Follow [`PULL_REQUEST_TEMPLATE.md`](PULL_REQUEST_TEMPLATE.md). For large UI work, point reviewers at **`docs/review/feat-flagr-ui-typescript-effect.md`** and plan **As-built** in `docs/plans/`.
+**PR hygiene:** Follow [`PULL_REQUEST_TEMPLATE.md`](PULL_REQUEST_TEMPLATE.md). For UI work, use plan **As-built** in `docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md`.
 
 ## Key Code
 
@@ -56,7 +56,7 @@ Run from **repo root**. Match what [`.github/workflows/ci.yml`](.github/workflow
 - `api/types.ts` — UI DTOs aligned with `docs/api_docs/bundle.yaml`; `api/flags.ts`, `api/evaluation.ts`, `http.ts`
 - `pages/flagPage.ts`, `pages/flagsListPage.ts` — orchestration; templates call `flagPage.*(page)` with computed `page` = `castFlagPage(this)` / `castFlagsList(this)`
 - New REST: extend `api/*`; multi-step calls in `api/flags.ts`; UI via `helpers/runApi`
-- UI architecture: **`docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md`** (As-built); reviewer guide **`docs/review/feat-flagr-ui-typescript-effect.md`**
+- UI architecture: **`docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md`** (As-built)
 
 ## Constraints
 
