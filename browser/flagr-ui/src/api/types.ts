@@ -43,6 +43,11 @@ export interface IdentifiedSegment extends Segment {
   id: number
 }
 
+/** Segment selected for distribution edit (persisted rows only). */
+export function isIdentifiedSegment(segment: Segment | null | undefined): segment is IdentifiedSegment {
+  return segment != null && segment.id != null
+}
+
 export interface Variant {
   id?: number
   key: string
@@ -71,7 +76,11 @@ export interface Flag {
 }
 
 /** Flag after `normalizeFlag` (empty arrays materialized; variants may carry UI validation state). */
-export type FlagView = Omit<Flag, 'variants'> & { variants: Variant[] }
+export type FlagView = Omit<Flag, 'tags' | 'variants' | 'segments'> & {
+  tags: Tag[]
+  variants: Variant[]
+  segments: Segment[]
+}
 
 export interface CreateFlagPayload {
   description: string

@@ -1,6 +1,6 @@
-import { Cause, Effect, Exit, Match } from 'effect'
 import type { ApiError } from '@/api/errors'
 import { ensureApiError } from '@/api/errors'
+import type { ApiResult } from '@/api/result'
 
 export interface MessageApi {
   error: (msg: string) => void
@@ -25,12 +25,18 @@ export interface RunApiOptions<A> {
 }
 
 export function apiErrorUserMessage(error: ApiError): string {
-  return Match.valueTags(error, {
-    ApiHttpError: (e) => e.message,
-    ApiUnauthorized: () => 'request error',
-    ApiNetworkError: () => 'request error',
-    ApiDecodeError: () => 'request error',
-  })
+  switch (error._tag) {
+    case 'ApiHttpError':
+      return error.message
+    case 'ApiUnauthorized':
+    case 'ApiNetworkError':
+    case 'ApiDecodeError':
+      return 'request error'
+    default: {
+      const _exhaustive: never = error
+      return _exhaustive
+    }
+  }
 }
 
 export function presentApiError(error: ApiError, message: MessageApi): void {
@@ -46,23 +52,20 @@ export function presentUnknownFailure(cause: unknown, message: MessageApi): void
   presentApiError(ensureApiError(cause), message)
 }
 
-export function runApi<A, E extends ApiError>(
+export function runApi<A>(
   vm: RunApiVm,
-  program: Effect.Effect<A, E>,
+  promise: Promise<ApiResult<A>>,
   options: RunApiOptions<A> = {},
 ): void {
-  void Effect.runPromiseExit(program).then((exit) => {
-    Exit.match(exit, {
-      onSuccess: (value) => {
-        if (options.successMessage) {
-          vm.$message.success(options.successMessage)
-        }
-        options.onSuccess?.(value)
-      },
-      onFailure: (cause) => {
-        presentUnknownFailure(Cause.squash(cause), vm.$message)
-      },
-    })
+  void promise.then((result) => {
+    if (!result.ok) {
+      presentApiError(result.error, vm.$message)
+      return
+    }
+    if (options.successMessage) {
+      vm.$message.success(options.successMessage)
+    }
+    options.onSuccess?.(result.value)
   })
 }
 
@@ -78,10 +81,10 @@ export interface ConfirmVm extends RunApiVm {
   ) => Promise<void>
 }
 
-export function confirmAndRunApi<A, E extends ApiError>(
+export function confirmAndRunApi<A>(
   vm: ConfirmVm,
   confirmMessage: string,
-  program: Effect.Effect<A, E>,
+  promise: Promise<ApiResult<A>>,
   options: RunApiOptions<A> = {},
 ): void {
   vm.$confirm(confirmMessage, 'Warning', {
@@ -89,6 +92,6 @@ export function confirmAndRunApi<A, E extends ApiError>(
     cancelButtonText: 'Cancel',
     type: 'warning',
   })
-    .then(() => runApi(vm, program, options))
+    .then(() => runApi(vm, promise, options))
     .catch(() => {})
 }

@@ -1,72 +1,66 @@
 # refactor: Migrate Flagr UI from JavaScript to TypeScript
 
 **Date:** 2026-06-26  
-**Status:** implemented (merged path: `feat/flagr-ui-typescript-effect` / PR #721)
-
-**As-built:** Domain types in `src/api/types.ts`; normalization in `helpers/flagModel.ts`; orchestration in `pages/flagPage.ts` + `pages/flagsListPage.ts` (module cache in `pages/flagsList.ts`); `fetch` + Effect in `api/http.ts` (axios removed); repo commands via **`make help`** (`build-ui`, `test-e2e`). Deep Effect guide: `browser/flagr-ui/docs/EFFECT.md`.
-
-Add TypeScript to `browser/flagr-ui` with **Vite as the only compile path** (esbuild transpile; no `tsc` emit for builds). Rename application and e2e `.js` to `.ts`, type Vue SFCs for **real type safety** (domain types, branded IDs, typed API results), and replace scattered axios `.then` / `handleErr` with the **[Effect](https://effect.website)** library (`effect` on npm) for failures as typed, composable `Effect` programs. Options API stays; migration stays phased with green `build`, `typecheck`, and e2e after each unit.
-
-## Problem Frame
-
-**Primary motivation:** Catch UI regressions **before runtime and e2e**, not only after users or Playwright hit them. Recent example: [#720](https://github.com/openflagr/flagr/pull/720) — Distribution **Edit** failed with a `ReferenceError` because `clone(d)` remained after the lodash removal; ASI risk around `{}` + `.forEach` was another foot-gun. In untyped JS those failures surface only when a segment already has distributions. **TypeScript** (`vue-tsc`, strict props/state) and **typed API/view models** (`api/types.ts`, `helpers/flagModel.ts`) push that class of bug to **edit/CI time** (`make build-ui`). The **Effect** layer adds a typed error channel so REST and composition mistakes are visible in signatures, not as silent axios/`handleErr` drift.
-
-- The UI was entirely JavaScript: four `src` modules, four e2e files, eleven Vue SFCs with plain `<script>`, and no `tsconfig`.
-- API payloads and normalization were implicit; failures were ad hoc axios callbacks and `handleErr.bind(this)`—no typed error channel.
-- `vue3-ts-jsoneditor` is already typed but consumed from untyped Options API components.
-
-**Success criteria:**
-
-1. No `.js` files remain under `browser/flagr-ui/src/` or `browser/flagr-ui/e2e/` (configs may stay `.mjs`).
-2. `npm run dev` / `npm run build` use Vite only; TypeScript is stripped/transpiled by Vite (no parallel `tsc` build).
-3. `npm run typecheck` (`vue-tsc --noEmit`) is the separate correctness gate—not part of the Vite bundle pipeline.
-4. `make test-e2e` passes with unchanged UX (toasts, 401 redirect, validation messages).
-5. REST calls go through a typed **`src/api/` Effect layer**; components do not call `axios` directly after migration.
-6. Exported domain types cover API + UI view models; JSON boundaries use narrow types or Schema decode where high value.
-
-## Key Technical Decisions
-
-1. **Vite owns compilation** — `vite build` / `vite dev` transpile `.ts` and `<script lang="ts">` via esbuild. `tsconfig.json` exists for the editor and `vue-tsc --noEmit` only: set `"noEmit": true`, use `@vue/tsconfig` with `"moduleResolution": "bundler"`, and avoid a second emit step or `tsc`-based bundler plugins unless a concrete gap appears. Keep `vite.config.mjs` minimal: `@` alias, `.ts` in `resolve.extensions`, Vue plugin—no custom TS prebuild.
-
-2. **Type safety is the product of the migration** — Renaming files is not enough. Invest in `src/types/` (API vs UI view models), `RouteRecordRaw` + route name unions, typed props/emits on components that cross boundaries, and **typed API return types** wired from the Effect layer so `Flag.vue` / `Flags.vue` cannot treat arbitrary `response.data` as a flag without going through decoders or declared generics.
-
-3. **Effect for errors and async API work** — Add dependency `effect` (Effect-TS). Model API failures as a **tagged error union** (e.g. `ApiHttpError`, `ApiUnauthorized`, `ApiDecodeError`, `ApiNetworkError`) via `Data.TaggedError`. Expose flag CRUD and evaluation as `Effect.Effect<Success, ApiError>` (or `Effect.gen` programs) built on a thin HTTP client (`@effect/platform` `HttpClient` + `FetchHttpClient`, or `Effect.tryPromise` wrapping existing axios during a short bridge—prefer moving to `fetch` + Effect to drop axios from hot paths once stable). UI boundary: `runPromise(program)` plus a single **`presentApiError(error, message)`** that preserves today’s toast text and 401 `www-authenticate` redirect. No more `handleErr.bind(this)` or per-call axios rejection callbacks.
-
-4. **Options API + `lang="ts"`** — Keep component structure; bridge Effect in `methods` with small helpers (`runFlagApi(this, effect, { onSuccess })`). `<script setup>` and full Composition API rewrite remain out of scope.
-
-5. **Hand-maintained UI types** — Mirror `swagger_gen/models/` in `src/types/` (no importing Go swagger into Vite). Optionally add **`effect/Schema`** (or `@effect/schema`) for decoding high-risk JSON (variant `attachment`, evaluation payloads) in the API layer—not in every component.
-
-6. **E2e stays simple** — Playwright helpers can remain `fetch` + thrown `Error` or a **minimal** Effect `runPromise` for consistency; sharing **types-only** imports from `src/types` is required; pulling full `api/` Effect stack into e2e is optional to keep test startup light.
-
-7. **Strict TypeScript** — `"strict": true`; no global `any` in `src/api` or `src/types`. Third-party gaps (`vue3-ts-jsoneditor`) get narrow assertions at the component edge only.
-
-## Scope Boundaries
-
-**In scope:**
-
-- `typescript`, `vue-tsc`, `@vue/tsconfig`, `@types/node`
-- `effect`, `@effect/platform` (HTTP client + fetch layer for API programs)
-- `tsconfig.json` with **`noEmit: true`**, `src/env.d.ts`, `src/vite-env.d.ts` patterns per [Vite TS guide](https://vite.dev/guide/features#typescript)
-- `src/types/`, **`src/api/`** (Effect programs, errors, client)
-- Rename/type core modules; all Vue SFCs `lang="ts"`
-- E2e `.ts`; Vite `resolve.extensions`; `index.html` → `main.ts`
-- `package.json` scripts: `build` = vite only, `typecheck` = vue-tsc
-
-**Out of scope:**
-
-- `<script setup>` migration
-- OpenAPI → TS code generation in the frontend build
-- Running `tsc` to emit `dist/` (Vite only)
-- Replacing Element Plus or vue-router
-
-**Deferred:**
-
-- Removing `axios` entirely if a short axios-backed `Effect.tryPromise` bridge is used first
-- ESLint type-aware `recommendedTypeChecked`
-- `@effect/schema` on every endpoint (start with flags list/detail + evaluation)
-- Makefile `typecheck` before e2e (document then wire)
+**Status:** implemented on branch `feat/flagr-ui-typescript-effect` (PR #721)  
+**Canonical context:** Use **this plan** for what the PR changed and how flagr-ui is structured today. `AGENTS.md` stays a short pointer here.
 
 ---
+
+## As-built (current stack)
+
+### What shipped
+
+- **TypeScript** across `browser/flagr-ui/src/` and `e2e/`; **Vite** compiles; **`vue-tsc --noEmit`** is the type gate (`make flagr-ui-check`).
+- **axios removed**; REST via **`fetch`** in `src/api/http.ts`.
+- **Typed errors:** `ApiError` classes + **`ApiResult<T>`** (`src/api/result.ts`). No Effect runtime (dependency removed).
+- **UI boundary:** `helpers/runApi.ts` — `runApi(vm, promise, options)`, `confirmAndRunApi`, toasts, 401 redirect from `WWW-Authenticate`.
+- **Domain:** `src/api/types.ts`, normalization `helpers/flagModel.ts`.
+- **Orchestration:** `pages/flagPage.ts` (~430 lines, monolithic by choice), `pages/flagsListPage.ts`, list cache `pages/flagsList.ts`.
+- **Vue:** Options API + `lang="ts"`. Templates call **`flagPage.*(page)`** / **`flagsListPage.*(page)`**; computed **`page`** = `castFlagPage(this)` / `castFlagsList(this)` (`helpers/vuePageCast.ts`). Presentational: `FlagHistory`, `DebugConsole`.
+- **Tests:** Vitest `src/api/http.test.ts`, `flags.test.ts`; Playwright `e2e/*.spec.ts` (`make test-e2e`).
+
+### Layer diagram
+
+```text
+Flag.vue / Flags.vue  →  pages/flagPage.ts | flagsListPage.ts  →  api/*  →  http.ts
+         ↓ runApi(promise)                                              ↓
+    helpers/runApi.ts                                              ApiResult<T>
+```
+
+### Rules for new code
+
+1. **`api/*`** — functions return `Promise<ApiResult<T>>`; use `requestJson` / `requestVoid`. Multi-step flows (e.g. `listFlagsIfStale`, `loadFlagPageContext`, `createTagAndRefreshAllTags`, `deleteTagAndReload`) live in `api/flags.ts`.
+2. **Pages** — take `FlagPageVm` / `FlagsListVm`; every exported handler starts with `vm` (local-only edits may use `_vm`); call `runApi` / `confirmAndRunApi` only; no `fetch` in `.vue` files.
+3. **SFCs** — expose `flagPage` / `flagsListPage` on `data`; use computed `page`; no pass-through wrapper methods for every handler.
+4. **New endpoints** — add to `api/flags.ts` or `api/evaluation.ts` → page handler → template wire.
+5. **Do not** split `flagPage.ts` into submodules unless explicitly requested.
+
+### Verification
+
+| Gate | Command |
+|------|---------|
+| Lint + types + unit | `make flagr-ui-check` |
+| Browser regression | `make test-e2e` |
+| Production UI bundle | `make build-ui` |
+
+### Related docs
+
+- Reviewer checklist: `docs/review/feat-flagr-ui-typescript-effect.md`
+- Short repo pointer: `AGENTS.md` (Frontend section)
+
+---
+
+## Problem frame (why we migrated)
+
+Catch UI regressions at **typecheck** time, not only in e2e/runtime ([#720](https://github.com/openflagr/flagr/pull/720)-class bugs). Replace axios + `handleErr` with one typed error channel and typed view models (`FlagView`, `require*Id` guards).
+
+**Success criteria (met):** no `.js` under `src/` / `e2e/`; Vite-only build; `make test-e2e` unchanged UX; REST only through `src/api/`; `vue-tsc` strict on app code.
+
+---
+
+## Historical note
+
+The sections below describe the **original 2026-06-26 phased plan**, including a short-lived **Effect-TS** experiment in the PR branch. **As-built** supersedes them: Effect was removed in favor of `ApiResult` + async `fetch`. Keep the units for archaeology only.
 
 ## Implementation Units
 
@@ -290,39 +284,12 @@ Add TypeScript to `browser/flagr-ui` with **Vite as the only compile path** (esb
 
 ---
 
-## Effect (developer reference)
-
-Effect is for **typed REST + errors** in the UI, not for rewriting Vue in functional style.
-
-**Where it lives (after migration):**
-
-| Layer | Files |
-|--------|--------|
-| Programs | `src/api/http.ts`, `flags.ts`, `evaluation.ts`, `errors.ts`, `types.ts` |
-| Vue edge | `helpers/runApi.ts` (`runApi`, `confirmAndRunApi`, toasts, 401) |
-| Orchestration | `pages/flagPage.ts`, `pages/flagsListPage.ts`, `pages/flagsList.ts` (cache) — SFCs call page modules; pages use `runApi` only |
-
-**Rules for new code:**
-
-1. `api/*` exports `Effect.Effect<A, ApiError>` built on `requestJson` / `requestVoid` (`fetch`, no axios).
-2. Components and pages invoke **`runApi(vm, program, { successMessage?, onSuccess? })`** only.
-3. New failure modes → new `Data.TaggedError` in `api/errors.ts` + branch in `apiErrorUserMessage` (`Match.valueTags`).
-4. Multi-step server work → `Effect.gen` / `Effect.fn` in `api/`, not in SFCs.
-
-**Why Effect here:** one `ApiError` union, one UI interpreter (`runPromiseExit` + `Exit.match`), composable steps like `listFlagsIfStale` without axios/`handleErr`.
-
-**Deeper guide (power, extensions, tests, Layers):** [`browser/flagr-ui/docs/EFFECT.md`](../browser/flagr-ui/docs/EFFECT.md).
-
-**AGENTS.md** stays minimal (layout + `runApi`); this section + `EFFECT.md` are the teaching docs.
-
----
-
 ## High-Level Technical Design
 
 ```mermaid
 flowchart TD
   U1[U1 Vite + tsconfig noEmit] --> U2[U2 Domain types]
-  U2 --> U3[U3 Effect api layer]
+  U2 --> U3[U3 api layer]
   U1 --> U4[U4 Core .ts modules]
   U2 --> U4
   U3 --> U5[U5 Leaf Vue + runApi]
@@ -333,14 +300,13 @@ flowchart TD
   U7 --> U8
 ```
 
-**UI ↔ API boundary (Effect):**
+**UI ↔ API boundary:**
 
 ```
-Component method
-  → runApi(vm, flagsApi.updateFlag(...), { onSuccess })
-       → Effect.runPromise(program)
-            → success: onSuccess / toast
-            → failure: presentApiError(ApiError, vm.$message)
+Component / template
+  → flagPage.putFlag(page) in pages/flagPage.ts
+       → runApi(vm, flagsApi.updateFlag(...), { onSuccess })
+            → promise → ApiResult → toast or presentApiError
 ```
 
 **Suggested commit order:** U1 → U2 → U3 → U4 → U5 → U6 → U7 → U8 (U3 before U5 so `runApi` exists when SFCs migrate).
@@ -353,13 +319,11 @@ Component method
 | Element Plus `$message` typing in Options API | Use `ComponentPublicInstance` helpers or thin `methods.onApiError` |
 | JsonEditor / attachment `any` | Narrow over time; document in types |
 | Drift vs `swagger_gen/models` | Comment in `types/flag.ts` pointing to swagger models; update on API changes |
-| Effect + platform bundle size | Import only used modules; verify `vite build` chunk report after U3 |
-| Options API + `runPromise` ergonomics | Single `runApi` helper; keep programs in `api/*`, not in SFCs |
 | E2e imports pulling Vue into tsc | Keep `types/*.ts` free of Vue imports |
 
 ## Open Questions
 
-- Axios bridge vs fetch-first for U3? (Default: fetch + `@effect/platform`; axios bridge only if schedule-critical.)
+- Fetch-only API layer (done).
 - `npm run typecheck` in Makefile before e2e? (Recommended after U8.)
 
 ## Sources & Research

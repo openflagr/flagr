@@ -1,10 +1,9 @@
-import { Effect } from 'effect'
-import type { ApiError } from '@/api/errors'
 import type { Router } from 'vue-router'
+import * as evalApi from '@/api/evaluation'
 import * as flagsApi from '@/api/flags'
-import constants from '@/helpers/constants'
-import { entityTypeOptionsFromKeys } from '@/helpers/flagModel'
 import { variantUsedInDistribution } from '@/helpers/flagModel'
+import { evalSummaryFromResult } from '@/helpers/evalDebugLog'
+import type { EntityTypeOption } from '@/helpers/flagModel'
 import { normalizeFlag, normalizeSegment } from '@/helpers/flagModel'
 import type {
   Constraint,
@@ -14,6 +13,12 @@ import type {
   Segment,
   Tag,
   Variant,
+  BatchEvalContext,
+  BatchEvalResult,
+  EvalContext,
+  EvalResult,
+  EvalSummary,
+  FlagSnapshot,
 } from '@/api/types'
 import {
   pluckSegmentIds,
@@ -21,11 +26,11 @@ import {
   requireSegmentId,
   requireTagId,
   requireVariantId,
+  isIdentifiedSegment,
 } from '@/api/types'
-import { confirmAndRunApi, type ConfirmVm, type RunApiOptions } from '@/helpers/runApi'
+import { confirmAndRunApi, type ConfirmVm } from '@/helpers/runApi'
 import { runApi } from '@/helpers/runApi'
 
-const { FLAGR_UI_POSSIBLE_ENTITY_TYPES } = constants
 
 export interface FlagPageVm extends ConfirmVm {
   $router: Router
@@ -35,7 +40,7 @@ export interface FlagPageVm extends ConfirmVm {
   newTag: { value: string }
   tagInputVisible: boolean
   allTags: Tag[]
-  entityTypes: { label: string; value: string }[]
+  entityTypes: EntityTypeOption[]
   allowCreateEntityType: boolean
   dialogCreateSegmentOpen: boolean
   dialogEditDistributionOpen: boolean
@@ -44,30 +49,20 @@ export interface FlagPageVm extends ConfirmVm {
   loaded: boolean
   historyLoaded: boolean
   historyKey: number
+  flagSnapshots: FlagSnapshot[]
+  evalContext: EvalContext
+  evalResult: EvalResult
+  evalSummary: EvalSummary | null
+  batchEvalContext: BatchEvalContext
+  batchEvalResult: BatchEvalResult
 }
 
 export const DEFAULT_SEGMENT = { description: '', rolloutPercent: 50 }
 export const DEFAULT_TAG = { value: '' }
 
-function runMutation<A>(
-  vm: FlagPageVm,
-  program: Effect.Effect<A, ApiError>,
-  options: RunApiOptions<A>,
-): void {
-  runApi(vm, program, options)
-}
-
-function confirmMutation<A>(
-  vm: FlagPageVm,
-  message: string,
-  program: Effect.Effect<A, ApiError>,
-  options: RunApiOptions<A>,
-): void {
-  confirmAndRunApi(vm, message, program, options)
-}
 
 export function reloadFlag(vm: FlagPageVm): void {
-  runMutation(vm, flagsApi.getFlag(vm.flagId), {
+  runApi(vm, flagsApi.getFlag(vm.flagId), {
     onSuccess: (data) => {
       vm.flag = normalizeFlag(data)
       vm.loaded = true
@@ -75,21 +70,10 @@ export function reloadFlag(vm: FlagPageVm): void {
   })
 }
 
-function applyEntityTypesToVm(vm: FlagPageVm, entityTypesFromApi: string[]): void {
-  if (FLAGR_UI_POSSIBLE_ENTITY_TYPES) {
-    vm.entityTypes = entityTypeOptionsFromKeys(
-      FLAGR_UI_POSSIBLE_ENTITY_TYPES.split(','),
-    )
-    vm.allowCreateEntityType = false
-    return
-  }
-  vm.entityTypes = entityTypeOptionsFromKeys(entityTypesFromApi)
-  vm.allowCreateEntityType = true
-}
 
 export function deleteFlag(vm: FlagPageVm): void {
   const id = vm.flagId
-  runMutation(vm, flagsApi.deleteFlag(id), {
+  runApi(vm, flagsApi.deleteFlag(id), {
     onSuccess: () => {
       vm.$router.replace({ name: 'home' })
       vm.$message.success(`You deleted flag ${id}`)
@@ -99,7 +83,7 @@ export function deleteFlag(vm: FlagPageVm): void {
 
 export function putFlag(vm: FlagPageVm): void {
   const f = vm.flag
-  runMutation(
+  runApi(
     vm,
     flagsApi.updateFlag(vm.flagId, {
       description: f.description,
@@ -113,7 +97,7 @@ export function putFlag(vm: FlagPageVm): void {
 }
 
 export function handleToggleEnabled(vm: FlagPageVm, checked: boolean): void {
-  runMutation(vm, flagsApi.setFlagEnabled(vm.flagId, checked), {
+  runApi(vm, flagsApi.setFlagEnabled(vm.flagId, checked), {
     successMessage: `You turned ${checked ? 'on' : 'off'} this feature flag`,
     onSuccess: () => {
       vm.flag.enabled = checked
@@ -127,19 +111,15 @@ export function handleUpdateFlag(vm: FlagPageVm, patch: Partial<FlagView>): void
 
 export function handleCreateTag(vm: FlagPageVm, { value }: { value: string }): void {
   vm.newTag.value = value
-  runMutation(vm, flagsApi.createTag(vm.flagId, value), {
+  runApi(vm, flagsApi.createTagAndRefreshAllTags(vm.flagId, value), {
     successMessage: 'new tag created',
-    onSuccess: (tag) => {
+    onSuccess: ({ tag, allTags }) => {
       vm.newTag = { ...DEFAULT_TAG }
-      if (!vm.flag.tags!.some((t) => t.value === tag.value)) {
-        vm.flag.tags!.push(tag)
+      if (!vm.flag.tags.some((t) => t.value === tag.value)) {
+        vm.flag.tags.push(tag)
       }
       vm.tagInputVisible = false
-      runMutation(vm, flagsApi.listAllTags(), {
-        onSuccess: (data) => {
-          vm.allTags = data
-        },
-      })
+      vm.allTags = allTags
     },
   })
 }
@@ -155,11 +135,10 @@ export function handleShowTagInput(vm: FlagPageVm): void {
 
 export function deleteTag(vm: FlagPageVm, tag: Tag): void {
   const tagId = requireTagId(tag)
-  const program = Effect.gen(function* () {
-    yield* flagsApi.deleteTag(vm.flagId, tagId)
-    return yield* flagsApi.loadFlagAndAllTags(vm.flagId)
-  })
-  confirmMutation(vm, `Are you sure you want to delete tag #${tag.value}`, program, {
+  confirmAndRunApi(
+    vm,
+    `Are you sure you want to delete tag #${tag.value}`,
+    flagsApi.deleteTagAndReload(vm.flagId, tagId), {
     successMessage: 'tag deleted',
     onSuccess: ({ flag, allTags }) => {
       vm.flag = normalizeFlag(flag)
@@ -169,7 +148,7 @@ export function deleteTag(vm: FlagPageVm, tag: Tag): void {
 }
 
 export function handleCreateVariant(vm: FlagPageVm, { key }: { key: string }): void {
-  runMutation(vm, flagsApi.createVariant(vm.flagId, key), {
+  runApi(vm, flagsApi.createVariant(vm.flagId, key), {
     successMessage: 'new variant created',
     onSuccess: (variant) => {
       vm.flag.variants = [...vm.flag.variants, variant]
@@ -177,23 +156,17 @@ export function handleCreateVariant(vm: FlagPageVm, { key }: { key: string }): v
   })
 }
 
-export function handleUpdateVariantKey({
-  variant,
-  key,
-}: {
-  variant: Variant
-  key: string
-}): void {
+export function handleUpdateVariantKey(
+  _vm: FlagPageVm,
+  { variant, key }: { variant: Variant; key: string },
+): void {
   variant.key = key
 }
 
-export function handleVariantAttachmentChange({
-  variant,
-  valid,
-}: {
-  variant: Variant
-  valid: boolean
-}): void {
+export function handleVariantAttachmentChange(
+  _vm: FlagPageVm,
+  { variant, valid }: { variant: Variant; valid: boolean },
+): void {
   variant.attachmentValid = valid
 }
 
@@ -202,7 +175,7 @@ export function putVariant(vm: FlagPageVm, variant: Variant): void {
     vm.$message.error('variant attachment is not valid')
     return
   }
-  runMutation(
+  runApi(
     vm,
     flagsApi.updateVariant(vm.flagId, requireVariantId(variant), {
       key: variant.key,
@@ -220,7 +193,7 @@ export function deleteVariant(vm: FlagPageVm, variant: Variant): void {
     )
     return
   }
-  confirmMutation(
+  confirmAndRunApi(
     vm,
     `Are you sure you want to delete variant #${variant.id} [${variant.key}]`,
     flagsApi.deleteVariant(vm.flagId, variantId),
@@ -232,7 +205,7 @@ export function deleteVariant(vm: FlagPageVm, variant: Variant): void {
 }
 
 export function createSegment(vm: FlagPageVm): void {
-  runMutation(vm, flagsApi.createSegment(vm.flagId, vm.newSegment), {
+  runApi(vm, flagsApi.createSegment(vm.flagId, vm.newSegment), {
     successMessage: 'new segment created',
     onSuccess: (segment) => {
       const normalized = normalizeSegment(segment)
@@ -244,7 +217,7 @@ export function createSegment(vm: FlagPageVm): void {
 }
 
 export function putSegment(vm: FlagPageVm, segment: Segment): void {
-  runMutation(
+  runApi(
     vm,
     flagsApi.updateSegment(vm.flagId, requireSegmentId(segment), {
       description: segment.description,
@@ -255,7 +228,7 @@ export function putSegment(vm: FlagPageVm, segment: Segment): void {
 }
 
 export function deleteSegment(vm: FlagPageVm, segment: Segment): void {
-  confirmMutation(
+  confirmAndRunApi(
     vm,
     'Are you sure you want to delete this segment?',
     flagsApi.deleteSegment(vm.flagId, requireSegmentId(segment)),
@@ -267,7 +240,7 @@ export function deleteSegment(vm: FlagPageVm, segment: Segment): void {
 }
 
 export function handleReorderSegments(vm: FlagPageVm, segments: Segment[]): void {
-  runMutation(vm, flagsApi.reorderSegments(vm.flagId, pluckSegmentIds(segments)), {
+  runApi(vm, flagsApi.reorderSegments(vm.flagId, pluckSegmentIds(segments)), {
     successMessage: 'segment reordered',
   })
 }
@@ -286,15 +259,18 @@ export function moveSegmentDown(vm: FlagPageVm, _element: Segment, index: number
   vm.flag.segments = arr
 }
 
-export function handleUpdateSegmentField({
-  segment,
-  field,
-  value,
-}: {
-  segment: Segment
-  field: keyof Segment
-  value: Segment[keyof Segment]
-}): void {
+export function handleUpdateSegmentField(
+  _vm: FlagPageVm,
+  {
+    segment,
+    field,
+    value,
+  }: {
+    segment: Segment
+    field: keyof Segment
+    value: Segment[keyof Segment]
+  },
+): void {
   if (field === 'description' && typeof value === 'string') segment.description = value
   else if (field === 'rolloutPercent') segment.rolloutPercent = Number(value)
 }
@@ -304,7 +280,7 @@ export function createConstraint(
   { segment, constraint }: { segment: Segment; constraint: Constraint },
 ): void {
   const c = { ...constraint, property: constraint.property.trim(), value: constraint.value.trim() }
-  runMutation(vm, flagsApi.createConstraint(vm.flagId, requireSegmentId(segment), c), {
+  runApi(vm, flagsApi.createConstraint(vm.flagId, requireSegmentId(segment), c), {
     successMessage: 'new constraint created',
     onSuccess: (created) => {
       segment.constraints = [...(segment.constraints ?? []), created]
@@ -318,7 +294,7 @@ export function putConstraint(
 ): void {
   constraint.property = constraint.property.trim()
   constraint.value = constraint.value.trim()
-  runMutation(
+  runApi(
     vm,
     flagsApi.updateConstraint(
       vm.flagId,
@@ -334,7 +310,7 @@ export function deleteConstraint(
   vm: FlagPageVm,
   { segment, constraint }: { segment: Segment; constraint: Constraint },
 ): void {
-  confirmMutation(
+  confirmAndRunApi(
     vm,
     'Are you sure you want to delete this constraint?',
     flagsApi.deleteConstraint(
@@ -349,15 +325,18 @@ export function deleteConstraint(
   )
 }
 
-export function handleUpdateConstraintField({
-  constraint,
-  field,
-  value,
-}: {
-  constraint: Constraint
-  field: keyof Constraint
-  value: Constraint[keyof Constraint]
-}): void {
+export function handleUpdateConstraintField(
+  _vm: FlagPageVm,
+  {
+    constraint,
+    field,
+    value,
+  }: {
+    constraint: Constraint
+    field: keyof Constraint
+    value: Constraint[keyof Constraint]
+  },
+): void {
   if (field === 'property' && typeof value === 'string') constraint.property = value
   else if (field === 'operator' && typeof value === 'string') constraint.operator = value
   else if (field === 'value' && typeof value === 'string') constraint.value = value
@@ -382,8 +361,8 @@ export function handleSaveDistribution(
     .filter((d) => d.percent !== 0)
     .map((d) => ({ percent: d.percent, variantID: d.variantID, variantKey: d.variantKey }))
   const segment = vm.selectedSegment
-  if (!segment?.id) return
-  runMutation(vm, flagsApi.putSegmentDistributions(vm.flagId, segment.id, distributions), {
+  if (!isIdentifiedSegment(segment)) return
+  runApi(vm, flagsApi.putSegmentDistributions(vm.flagId, segment.id, distributions), {
     successMessage: 'distributions updated',
     onSuccess: (data) => {
       segment.distributions = data
@@ -396,16 +375,53 @@ export function handleHistoryTabClick(vm: FlagPageVm, tab: { props?: { name?: st
   if (tab.props?.name === 'history') {
     vm.historyLoaded = true
     vm.historyKey++
+    loadFlagSnapshots(vm)
   }
 }
 
+export function loadFlagSnapshots(vm: FlagPageVm): void {
+  runApi(vm, flagsApi.listFlagSnapshots(vm.flagId), {
+    onSuccess: (data) => {
+      vm.flagSnapshots = data
+    },
+  })
+}
+
+export function postEvaluation(vm: FlagPageVm, evalContext: EvalContext): void {
+  runApi(vm, evalApi.postEvaluation(evalContext), {
+    successMessage: 'evaluation success',
+    onSuccess: (response) => {
+      vm.evalResult = response
+      vm.evalSummary = evalSummaryFromResult(response)
+    },
+  })
+}
+
+export function postEvaluationBatch(vm: FlagPageVm, batchEvalContext: BatchEvalContext): void {
+  runApi(vm, evalApi.postEvaluationBatch(batchEvalContext), {
+    successMessage: 'evaluation success',
+    onSuccess: (response) => {
+      vm.batchEvalResult = response
+    },
+  })
+}
+
+export function syncEvalContextFromFlag(vm: FlagPageVm): void {
+  const id = vm.flag.id
+  if (id == null) return
+  vm.evalContext.flagID = id
+  vm.evalContext.flagKey = vm.flag.key
+  vm.batchEvalContext.flagIDs = [id]
+}
 export function mountFlagPage(vm: FlagPageVm): void {
-  runMutation(vm, flagsApi.loadFlagPageContext(vm.flagId), {
+  runApi(vm, flagsApi.loadFlagPageContext(vm.flagId), {
     onSuccess: (load) => {
       vm.flag = normalizeFlag(load.flag)
       vm.loaded = true
       vm.allTags = load.allTags
-      applyEntityTypesToVm(vm, load.entityTypesFromApi)
+      vm.entityTypes = load.entityTypes
+      vm.allowCreateEntityType = load.allowCreateEntityType
+      syncEvalContextFromFlag(vm)
     },
   })
 }

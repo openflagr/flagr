@@ -1,14 +1,11 @@
-import { Effect } from 'effect'
 import type { BatchEvalContext, BatchEvalResult, EvalContext, EvalResult } from './types'
-import type { ApiError } from './errors'
+import type { ApiResult } from './result'
 import { requestJson } from './http'
 
-export const postEvaluation = (
-  body: EvalContext,
-): Effect.Effect<EvalResult, ApiError> =>
+export const postEvaluation = (body: EvalContext): Promise<ApiResult<EvalResult>> =>
   requestJson<EvalResult>({ method: 'POST', path: '/evaluation', body })
 
 export const postEvaluationBatch = (
   body: BatchEvalContext,
-): Effect.Effect<BatchEvalResult, ApiError> =>
+): Promise<ApiResult<BatchEvalResult>> =>
   requestJson<BatchEvalResult>({ method: 'POST', path: '/evaluation/batch', body })

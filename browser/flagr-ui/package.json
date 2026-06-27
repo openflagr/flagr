@@ -8,12 +8,12 @@
         "preview": "vite preview",
         "lint": "eslint src e2e",
         "typecheck": "vue-tsc --noEmit",
+        "test": "vitest run",
         "test:e2e": "playwright test"
     },
     "dependencies": {
         "@element-plus/icons-vue": "^2.3.1",
         "@vscode/markdown-it-katex": "^1.1.2",
-        "effect": "^3.14.4",
         "diff": "^9.0.0",
         "element-plus": "^2.14.0",
         "markdown-it": "^14.2.0",
@@ -35,7 +35,8 @@
         "typescript": "^5.8.3",
         "vite": "^8.0.16",
         "vue-eslint-parser": "^10.4.1",
-        "vue-tsc": "^2.2.10"
+        "vue-tsc": "^2.2.10",
+        "vitest": "^3.2.4"
     },
     "browserslist": [
         "> 1%",

@@ -133,6 +133,8 @@ make test           # golangci-lint + swagger validate + go test ./pkg/...
 make test-e2e       # build server + UI lint/typecheck + Playwright
 ```
 
+Flagr UI is **TypeScript** (`browser/flagr-ui`); architecture and patterns: [`docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md`](plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md) (As-built).
+
 ### Integration tests (API, multi-DB)
 
 **Local** — SQLite `:memory:`, auto-started server:

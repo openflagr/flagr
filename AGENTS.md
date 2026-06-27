@@ -32,9 +32,9 @@ CI: `make ci`, `make ci-swagger`, `make ci-integration`, `make build-ui` — see
 
 **Frontend (`browser/flagr-ui/src/`):**
 - `api/`, `components/`, `helpers/` — Vite + TS; **`make run-ui`** / **`make build-ui`** from repo root
-- `pages/flagPage.ts`, `pages/flagsListPage.ts` — list/detail orchestration; SFCs call `flagPage.*(pageVm)` / `flagsListPage.*(listVm)`
-- New REST: `api/flags.ts` or `api/evaluation.ts`; UI calls via `helpers/runApi`
-- Effect: **`browser/flagr-ui/docs/EFFECT.md`**
+- `pages/flagPage.ts`, `pages/flagsListPage.ts` — orchestration; templates call `flagPage.*(page)` with computed `page` = `castFlagPage(this)` / `castFlagsList(this)`
+- New REST: `api/flags.ts` or `api/evaluation.ts`; multi-step calls composed in `api/*`; UI via `helpers/runApi`
+- UI architecture: **`docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md`** (As-built)
 
 ## Constraints
 

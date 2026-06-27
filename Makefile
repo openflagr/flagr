@@ -85,7 +85,7 @@ flagr-ui-npm:
 	@cd $(FLAGR_UI_DIR) && npm install
 
 flagr-ui-check: flagr-ui-npm
-	@cd $(FLAGR_UI_DIR) && npm run lint && npm run typecheck
+	@cd $(FLAGR_UI_DIR) && npm run lint && npm run typecheck && npm run test
 
 build-ui: flagr-ui-check
 	@echo "Building Flagr UI ..."

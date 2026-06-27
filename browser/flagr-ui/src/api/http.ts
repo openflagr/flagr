@@ -1,4 +1,3 @@
-import { Effect } from 'effect'
 import constants from '@/helpers/constants'
 import {
   ApiDecodeError,
@@ -6,8 +5,10 @@ import {
   ApiNetworkError,
   ApiUnauthorized,
   ensureApiError,
-  type ApiError,
 } from './errors'
+import type { ApiError } from './errors'
+import type { ApiResult } from './result'
+import { err, ok } from './result'
 
 const { API_URL } = constants
 
@@ -29,34 +30,37 @@ async function parseErrorMessage(res: Response): Promise<string> {
   return 'request error'
 }
 
+/** Map non-OK responses; 401 uses first quoted URL in WWW-Authenticate (Flagr JWT middleware). */
 function mapResponseError(res: Response, message: string): ApiError {
   if (res.status === 401) {
     const auth = res.headers.get('www-authenticate') ?? ''
     const match = auth.split('"')[1]
-    return new ApiUnauthorized({ redirectURL: match })
+    return new ApiUnauthorized(match)
   }
-  return new ApiHttpError({ status: res.status, message })
+  return new ApiHttpError(res.status, message)
 }
 
-const decodeJsonBody = Effect.fn('flagr.decodeJsonBody')(function* <T>(res: Response) {
+async function decodeJsonBody<T>(res: Response): Promise<ApiResult<T>> {
   if (res.status === 204 || res.status === 205) {
-    return undefined as T
+    return ok(undefined as T)
   }
-  const text = yield* Effect.tryPromise({
-    try: () => res.text(),
-    catch: (cause) => new ApiNetworkError({ cause }),
-  })
+  let text: string
+  try {
+    text = await res.text()
+  } catch (cause) {
+    return err(new ApiNetworkError(cause))
+  }
   if (!text) {
-    return undefined as T
+    return ok(undefined as T)
   }
   try {
-    return JSON.parse(text) as T
+    return ok(JSON.parse(text) as T)
   } catch (cause) {
-    return yield* Effect.fail(new ApiDecodeError({ cause }))
+    return err(new ApiDecodeError(cause))
   }
-})
+}
 
-export const requestJson = Effect.fn('flagr.requestJson')(function* <T>(opts: RequestOptions) {
+export async function requestJson<T>(opts: RequestOptions): Promise<ApiResult<T>> {
   const url = `${API_URL}${opts.path}`
   const init: RequestInit = {
     method: opts.method,
@@ -64,22 +68,27 @@ export const requestJson = Effect.fn('flagr.requestJson')(function* <T>(opts: Re
     body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
   }
 
-  const res = yield* Effect.tryPromise({
-    try: () => fetch(url, init),
-    catch: (cause) => ensureApiError(cause),
-  })
-
-  if (!res.ok) {
-    const message = yield* Effect.tryPromise({
-      try: () => parseErrorMessage(res),
-      catch: (cause) => new ApiNetworkError({ cause }),
-    })
-    return yield* Effect.fail(mapResponseError(res, message))
+  let res: Response
+  try {
+    res = await fetch(url, init)
+  } catch (cause) {
+    return err(ensureApiError(cause))
   }
 
-  return yield* decodeJsonBody<T>(res)
-})
+  if (!res.ok) {
+    let message: string
+    try {
+      message = await parseErrorMessage(res)
+    } catch (cause) {
+      return err(new ApiNetworkError(cause))
+    }
+    return err(mapResponseError(res, message))
+  }
+
+  return decodeJsonBody<T>(res)
+}
 
 /** Mutations with empty or omitted JSON bodies. */
-export const requestVoid = (opts: RequestOptions): Effect.Effect<void, ApiError> =>
-  requestJson<void>(opts)
+export async function requestVoid(opts: RequestOptions): Promise<ApiResult<void>> {
+  return requestJson<void>(opts)
+}

@@ -100,7 +100,7 @@
                 </div>
               </div>
             </template>
-            <el-collapse class="deleted-flags-inner" @change="flagsListPage.fetchDeletedFlags(listVm)" data-testid="deleted-flags-section">
+            <el-collapse class="deleted-flags-inner" @change="flagsListPage.fetchDeletedFlags(page)" data-testid="deleted-flags-section">
               <el-collapse-item title="View deleted flags">
                 <div v-if="!deletedFlagsLoaded" class="card--empty">Loading...</div>
                 <div v-else-if="deletedFlags.length">
@@ -142,7 +142,7 @@
               >
                       <template #default="scope">
                         <el-button
-                          @click="flagsListPage.restoreFlag(listVm, scope.row)"
+                          @click="flagsListPage.restoreFlag(page, scope.row)"
                           type="warning"
                           size="small"
                           plain
@@ -174,7 +174,7 @@
         placeholder="e.g. Enable new onboarding flow"
         data-testid="new-flag-input"
         size="large"
-        @keyup.enter="flagsListPage.createFlag(listVm)"
+        @keyup.enter="flagsListPage.createFlag(page)"
       />
       <p class="create-flag-hint">A short description of what this feature flag controls.</p>
 
@@ -183,7 +183,7 @@
           <el-button
             type="primary"
             :disabled="!newFlag.description"
-            @click="flagsListPage.createFlag(listVm)"
+            @click="flagsListPage.createFlag(page)"
             data-testid="create-flag-submit-btn"
           >Create Flag</el-button>
           <span class="create-flag-option-sub">Blank flag — configure variants and segments yourself</span>
@@ -193,7 +193,7 @@
             type="primary"
             plain
             :disabled="!newFlag.description"
-            @click="flagsListPage.createBooleanFlag(listVm)"
+            @click="flagsListPage.createBooleanFlag(page)"
             data-testid="create-boolean-flag-btn"
           >Create Boolean Flag</el-button>
           <span class="create-flag-option-sub">Ready-to-use flag with on/off variants and a 100% rollout</span>
@@ -212,12 +212,12 @@ import { Plus, Search } from '@element-plus/icons-vue'
 import Spinner from '@/components/Spinner.vue'
 import { getFlagsCache } from '@/pages/flagsList'
 import helpers from '@/helpers/helpers'
+import { castFlagsList } from '@/helpers/vuePageCast'
 import * as flagsListPage from '@/pages/flagsListPage'
 import {
   datetimeFormatter,
   filterStatus,
   mountFlagsList,
-  type FlagsListVm,
 } from '@/pages/flagsListPage'
 import type { Flag } from '@/api/types'
 
@@ -255,7 +255,7 @@ export default {
 
   mounted() {
     this.visHandler = () => {
-      if (!document.hidden) flagsListPage.refreshFlags(this.listVm)
+      if (!document.hidden) flagsListPage.refreshFlags(this.page)
     }
     document.addEventListener('visibilitychange', this.visHandler)
   },
@@ -264,11 +264,16 @@ export default {
     this.debouncedUpdate = debounce(() => {
       this.debouncedSearchTerm = this.searchTerm
     }, 150)
-    mountFlagsList(this.listVm)
+    mountFlagsList(this.page)
+  },
+  watch: {
+    searchTerm() {
+      this.debouncedUpdate?.()
+    },
   },
   computed: {
-    listVm(): FlagsListVm {
-      return this as unknown as FlagsListVm
+    page() {
+      return castFlagsList(this)
     },
     filteredFlags(): Flag[] {
       if (this.debouncedSearchTerm) {
@@ -288,14 +293,9 @@ export default {
       return this.flags
     },
   },
-  watch: {
-    searchTerm() {
-      this.debouncedUpdate?.()
-    },
-  },
   methods: {
     goToRow(row: Flag) {
-      flagsListPage.goToFlag(this.listVm, row)
+      flagsListPage.goToFlag(this.page, row)
     },
     datetimeFormatter,
     filterStatus,

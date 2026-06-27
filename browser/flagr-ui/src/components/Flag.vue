@@ -5,7 +5,7 @@
           <template #footer>
             <span class="dialog-footer">
               <el-button @click="dialogDeleteFlagVisible = false">Cancel</el-button>
-              <el-button type="primary" @click.prevent="flagPage.deleteFlag(pageVm)">Confirm</el-button>
+              <el-button type="primary" @click.prevent="flagPage.deleteFlag(page)">Confirm</el-button>
             </span>
           </template>
         </el-dialog>
@@ -21,7 +21,7 @@
               class="width--full"
               type="primary"
               :disabled="!newSegment.description"
-              @click.prevent="flagPage.createSegment(pageVm)"
+              @click.prevent="flagPage.createSegment(page)"
               data-testid="create-segment-btn"
             >Create Segment</el-button>
           </div>
@@ -32,7 +32,7 @@
           :flag="flag"
           :initial-distributions="distributionDraft"
           @update:visible="dialogEditDistributionOpen = $event"
-          @save="(d) => flagPage.handleSaveDistribution(pageVm, d)"
+          @save="(d) => flagPage.handleSaveDistribution(page, d)"
         />
 
         <el-breadcrumb separator="/">
@@ -41,7 +41,7 @@
         </el-breadcrumb>
 
         <div v-if="loaded && flag">
-          <el-tabs @tab-click="onHistoryTab">
+          <el-tabs @tab-click="onHistoryTabClick">
             <el-tab-pane label="Config">
               <flag-config-card
                 :flag="flag"
@@ -50,43 +50,55 @@
                 :allow-create-entity-type="allowCreateEntityType"
                 :tag-input-visible="tagInputVisible"
                 :all-tags="allTags"
-                @toggle-enabled="(c) => flagPage.handleToggleEnabled(pageVm, c)"
-                @save-flag="flagPage.putFlag(pageVm)"
-                @update-flag="(p) => flagPage.handleUpdateFlag(pageVm, p)"
+                @toggle-enabled="(c) => flagPage.handleToggleEnabled(page, c)"
+                @save-flag="flagPage.putFlag(page)"
+                @update-flag="(p) => flagPage.handleUpdateFlag(page, p)"
                 @toggle-notes="showMdEditor = !showMdEditor"
-                @delete-tag="(tag) => flagPage.deleteTag(pageVm, tag)"
-                @create-tag="(p) => flagPage.handleCreateTag(pageVm, p)"
-                @cancel-create-tag="flagPage.handleCancelCreateTag(pageVm)"
-                @show-tag-input="flagPage.handleShowTagInput(pageVm)"
+                @delete-tag="(tag) => flagPage.deleteTag(page, tag)"
+                @create-tag="(p) => flagPage.handleCreateTag(page, p)"
+                @cancel-create-tag="flagPage.handleCancelCreateTag(page)"
+                @show-tag-input="flagPage.handleShowTagInput(page)"
               />
 
               <variants-section
                 :variants="flag.variants"
-                @create-variant="(p) => flagPage.handleCreateVariant(pageVm, p)"
-                @update-variant-key="handleUpdateVariantKey"
-                @save-variant="(v) => flagPage.putVariant(pageVm, v)"
-                @delete-variant="(v) => flagPage.deleteVariant(pageVm, v)"
-                @attachment-change="handleVariantAttachmentChange"
+                @create-variant="(p) => flagPage.handleCreateVariant(page, p)"
+                @update-variant-key="(p) => flagPage.handleUpdateVariantKey(page, p)"
+                @save-variant="(v) => flagPage.putVariant(page, v)"
+                @delete-variant="(v) => flagPage.deleteVariant(page, v)"
+                @attachment-change="(p) => flagPage.handleVariantAttachmentChange(page, p)"
               />
 
               <segments-section
                 :segments="flag.segments ?? []"
                 :operator-options="operatorOptions"
-                @reorder="(s) => flagPage.handleReorderSegments(pageVm, s)"
-                @move-up="(el, i) => flagPage.moveSegmentUp(pageVm, el, i)"
-                @move-down="(el, i) => flagPage.moveSegmentDown(pageVm, el, i)"
+                @reorder="(s) => flagPage.handleReorderSegments(page, s)"
+                @move-up="(el, i) => flagPage.moveSegmentUp(page, el, i)"
+                @move-down="(el, i) => flagPage.moveSegmentDown(page, el, i)"
                 @new-segment="dialogCreateSegmentOpen = true"
-                @save-segment="(s) => flagPage.putSegment(pageVm, s)"
-                @delete-segment="(s) => flagPage.deleteSegment(pageVm, s)"
-                @update-segment-field="handleUpdateSegmentField"
-                @create-constraint="(p) => flagPage.createConstraint(pageVm, p)"
-                @save-constraint="(p) => flagPage.putConstraint(pageVm, p)"
-                @delete-constraint="(p) => flagPage.deleteConstraint(pageVm, p)"
-                @update-constraint-field="handleUpdateConstraintField"
-                @edit-distribution="(s) => flagPage.handleEditDistribution(pageVm, s)"
+                @save-segment="(s) => flagPage.putSegment(page, s)"
+                @delete-segment="(s) => flagPage.deleteSegment(page, s)"
+                @update-segment-field="(p) => flagPage.handleUpdateSegmentField(page, p)"
+                @create-constraint="(p) => flagPage.createConstraint(page, p)"
+                @save-constraint="(p) => flagPage.putConstraint(page, p)"
+                @delete-constraint="(p) => flagPage.deleteConstraint(page, p)"
+                @update-constraint-field="(p) => flagPage.handleUpdateConstraintField(page, p)"
+                @edit-distribution="(s) => flagPage.handleEditDistribution(page, s)"
               />
 
-              <debug-console :flag="flag" />
+              <debug-console
+                :eval-context="evalContext"
+                :eval-result="evalResult"
+                :eval-summary="evalSummary"
+                :batch-eval-context="batchEvalContext"
+                :batch-eval-result="batchEvalResult"
+                @update:eval-context="evalContext = $event"
+                @update:eval-result="evalResult = $event"
+                @update:batch-eval-context="batchEvalContext = $event"
+                @update:batch-eval-result="batchEvalResult = $event"
+                @post-evaluation="(ctx) => flagPage.postEvaluation(page, ctx)"
+                @post-evaluation-batch="(ctx) => flagPage.postEvaluationBatch(page, ctx)"
+              />
 
               <el-card class="danger-zone-card is-card-danger" style="margin-top: var(--space-xl);">
                 <template #header>
@@ -107,7 +119,7 @@
             </el-tab-pane>
 
             <el-tab-pane label="History" name="history">
-              <flag-history v-if="historyLoaded" :key="historyKey" :flag-id="flagId"></flag-history>
+              <flag-history v-if="historyLoaded" :key="historyKey" :snapshots="flagSnapshots" />
             </el-tab-pane>
           </el-tabs>
         </div>
@@ -122,20 +134,34 @@ import FlagConfigCard from '@/components/FlagConfigCard.vue'
 import FlagHistory from '@/components/FlagHistory.vue'
 import SegmentsSection from '@/components/SegmentsSection.vue'
 import VariantsSection from '@/components/VariantsSection.vue'
+import type { BatchEvalContext, DistributionDraft, EvalContext, EvalResult, EvalSummary, FlagView, Segment, Tag } from '@/api/types'
+import type { EntityTypeOption } from '@/helpers/flagModel'
+import { castFlagPage } from '@/helpers/vuePageCast'
 import * as flagPage from '@/pages/flagPage'
-import {
-  handleHistoryTabClick,
-  handleUpdateConstraintField,
-  handleUpdateSegmentField,
-  handleUpdateVariantKey,
-  handleVariantAttachmentChange,
-  mountFlagPage,
-  type FlagPageVm,
-} from '@/pages/flagPage'
+import { handleHistoryTabClick, mountFlagPage, syncEvalContextFromFlag } from '@/pages/flagPage'
 import operatorsData from '@/operators.json'
-import type { DistributionDraft, FlagView, Segment, Tag } from '@/api/types'
 
 const operators = operatorsData.operators
+
+function defaultEvalContext(): EvalContext {
+  return {
+    entityID: 'a1234',
+    entityType: 'report',
+    entityContext: { hello: 'world' },
+    enableDebug: true,
+  }
+}
+
+function defaultBatchEvalContext(): BatchEvalContext {
+  return {
+    entities: [
+      { entityID: 'a1234', entityType: 'report', entityContext: { hello: 'world' } },
+      { entityID: 'a5678', entityType: 'report', entityContext: { hello: 'world' } },
+    ],
+    enableDebug: true,
+    flagIDs: [],
+  }
+}
 
 export default {
   name: 'flag',
@@ -150,16 +176,17 @@ export default {
   },
   data() {
     return {
-      flagPage,
       loaded: false,
+      flagId: '',
       dialogDeleteFlagVisible: false,
       dialogEditDistributionOpen: false,
       dialogCreateSegmentOpen: false,
-      entityTypes: [] as FlagPageVm['entityTypes'],
+      flagPage,
+      entityTypes: [] as EntityTypeOption[],
       allTags: [] as Tag[],
       allowCreateEntityType: true,
       tagInputVisible: false,
-      flag: { description: '', variants: [], segments: [] } as FlagView,
+      flag: { description: '', tags: [], variants: [], segments: [] } as FlagView,
       newSegment: { ...flagPage.DEFAULT_SEGMENT },
       newTag: { ...flagPage.DEFAULT_TAG },
       selectedSegment: null as Segment | null,
@@ -168,27 +195,41 @@ export default {
       showMdEditor: false,
       historyLoaded: false,
       historyKey: 0,
+      flagSnapshots: [],
+      evalContext: defaultEvalContext(),
+      evalResult: {} as EvalResult,
+      evalSummary: null as EvalSummary | null,
+      batchEvalContext: defaultBatchEvalContext(),
+      batchEvalResult: {} as Record<string, unknown>,
     }
   },
-  computed: {
-    flagId(): string {
-      return String(this.$route.params.flagId)
+
+  watch: {
+    '$route.params.flagId': {
+      immediate: true,
+      handler(id: string | string[] | undefined) {
+        this.flagId = String(id ?? '')
+      },
     },
-    pageVm(): FlagPageVm {
-      return this as unknown as FlagPageVm
+    flag: {
+      deep: true,
+      handler() {
+        syncEvalContextFromFlag(this.page)
+      },
+    },
+  },
+  computed: {
+    page() {
+      return castFlagPage(this)
     },
   },
   methods: {
-    onHistoryTab(tab: { props?: { name?: string } }) {
-      handleHistoryTabClick(this.pageVm, tab)
+    onHistoryTabClick(tab: { props?: { name?: string } }) {
+      handleHistoryTabClick(this.page, tab)
     },
-    handleUpdateVariantKey,
-    handleVariantAttachmentChange,
-    handleUpdateSegmentField,
-    handleUpdateConstraintField,
   },
   mounted() {
-    mountFlagPage(this.pageVm)
+    mountFlagPage(this.page)
   },
 }
 </script>

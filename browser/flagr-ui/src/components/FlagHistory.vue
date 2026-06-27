@@ -30,23 +30,21 @@
 <script lang="ts">
 import { diffJson, convertChangesToXML } from 'diff'
 import { DArrowRight } from '@element-plus/icons-vue'
-import * as flagsApi from '@/api/flags'
 import type { Flag, FlagSnapshot } from '@/api/types'
-import { runApi } from '@/helpers/runApi'
 
 export default {
   name: 'flag-history',
   components: { DArrowRight },
-  props: ['flagId'],
-  data() {
-    return {
-      flagSnapshots: [] as FlagSnapshot[],
-    }
+  props: {
+    snapshots: {
+      type: Array as () => FlagSnapshot[],
+      required: true,
+    },
   },
   computed: {
     diffs() {
       const ret: Array<Record<string, unknown>> = []
-      const snapshots = this.flagSnapshots.slice()
+      const snapshots = this.snapshots.slice()
       snapshots.push({ flag: {} as Flag, id: 0 })
       for (let i = 0; i < snapshots.length - 1; i++) {
         ret.push({
@@ -61,13 +59,6 @@ export default {
     },
   },
   methods: {
-    getFlagSnapshots() {
-      runApi(this, flagsApi.listFlagSnapshots(this.$props.flagId), {
-        onSuccess: (data) => {
-          this.flagSnapshots = data
-        },
-      })
-    },
     getDiff(newFlag: Flag, oldFlag: Flag) {
       const o = JSON.parse(JSON.stringify(oldFlag))
       const n = JSON.parse(JSON.stringify(newFlag))
@@ -77,9 +68,6 @@ export default {
       }
       return convertChangesToXML(d)
     },
-  },
-  mounted() {
-    this.getFlagSnapshots()
   },
 }
 </script>

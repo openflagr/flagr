@@ -1,21 +1,25 @@
-import { Data } from 'effect'
+export class ApiHttpError {
+  readonly _tag = 'ApiHttpError' as const
+  constructor(
+    readonly status: number,
+    readonly message: string,
+  ) {}
+}
 
-export class ApiHttpError extends Data.TaggedError('ApiHttpError')<{
-  readonly status: number
-  readonly message: string
-}> {}
+export class ApiUnauthorized {
+  readonly _tag = 'ApiUnauthorized' as const
+  constructor(readonly redirectURL?: string) {}
+}
 
-export class ApiUnauthorized extends Data.TaggedError('ApiUnauthorized')<{
-  readonly redirectURL?: string
-}> {}
+export class ApiNetworkError {
+  readonly _tag = 'ApiNetworkError' as const
+  constructor(readonly cause: unknown) {}
+}
 
-export class ApiNetworkError extends Data.TaggedError('ApiNetworkError')<{
-  readonly cause: unknown
-}> {}
-
-export class ApiDecodeError extends Data.TaggedError('ApiDecodeError')<{
-  readonly cause: unknown
-}> {}
+export class ApiDecodeError {
+  readonly _tag = 'ApiDecodeError' as const
+  constructor(readonly cause: unknown) {}
+}
 
 export type ApiError =
   | ApiHttpError
@@ -23,7 +27,6 @@ export type ApiError =
   | ApiNetworkError
   | ApiDecodeError
 
-/** Narrow unknown failures from `Cause.squash` / `tryPromise` to the API error union. */
 export function isApiError(u: unknown): u is ApiError {
   return (
     u instanceof ApiHttpError ||
@@ -34,5 +37,5 @@ export function isApiError(u: unknown): u is ApiError {
 }
 
 export function ensureApiError(cause: unknown): ApiError {
-  return isApiError(cause) ? cause : new ApiNetworkError({ cause })
+  return isApiError(cause) ? cause : new ApiNetworkError(cause)
 }

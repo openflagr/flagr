@@ -1,3 +1,4 @@
+import constants from '@/helpers/constants'
 import type { Flag, FlagView, Segment, Variant } from '@/api/types'
 
 export interface EntityTypeOption {
@@ -14,6 +15,22 @@ export function entityTypeOptionsFromKeys(keys: string[]): EntityTypeOption[] {
     arr.unshift({ label: '<null>', value: '' })
   }
   return arr
+}
+
+export function setEntityTypeOptionsFromApiKeys(
+  keysFromApi: string[],
+): { entityTypes: EntityTypeOption[]; allowCreateEntityType: boolean } {
+  const pinned = constants.FLAGR_UI_POSSIBLE_ENTITY_TYPES
+  if (pinned) {
+    return {
+      entityTypes: entityTypeOptionsFromKeys(pinned.split(',')),
+      allowCreateEntityType: false,
+    }
+  }
+  return {
+    entityTypes: entityTypeOptionsFromKeys(keysFromApi),
+    allowCreateEntityType: true,
+  }
 }
 
 export function variantUsedInDistribution(flag: FlagView, variantId: number): boolean {
@@ -47,8 +64,8 @@ export function normalizeFlag(flag: Flag): FlagView {
   if (!f.variants) f.variants = []
   if (!f.segments) f.segments = []
   f.variants.forEach((v) => processVariant(v))
-  for (const segment of f.segments ?? []) {
+  for (const segment of f.segments) {
     normalizeSegment(segment)
   }
-  return f
+  return f as FlagView
 }
