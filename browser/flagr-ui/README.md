@@ -9,7 +9,7 @@ Vue 3 + Vite + TypeScript. **Commands live in the repo root `Makefile`** — run
 | Lint + types + unit | `make flagr-ui-check` |
 | Playwright e2e | `make test-e2e` |
 
-Layout: `src/api/` · `src/pages/` · `src/components/` · `src/helpers/`
+Layout: `src/api/` (`crud.ts`, `eval.ts`, `types.ts`) · `src/pages/` · `src/components/` · `src/helpers/` (`evaluation.ts` for debug console)
 
 DTOs: `src/api/types.ts` (aligned with `docs/api_docs/bundle.yaml`).
 

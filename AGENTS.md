@@ -53,10 +53,10 @@ Run from **repo root**. Match what [`.github/workflows/ci.yml`](.github/workflow
 - `config/env.go` — all environment variables (single source of truth)
 
 **Frontend (`browser/flagr-ui/src/`):**
-- `api/types.ts` — UI DTOs aligned with `docs/api_docs/bundle.yaml`; `api/flags.ts`, `api/evaluation.ts`, `http.ts`
-- `pages/flagPage.ts`, `pages/flagsListPage.ts` — orchestration; templates call `flagPage.*(page)` with computed `page` = `castFlagPage(this)` / `castFlagsList(this)`
-- New REST: extend `api/*`; multi-step calls in `api/flags.ts`; UI via `helpers/runApi`
-- UI architecture: **`docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md`** (As-built)
+- `api/types.ts` — DTOs; `api/crud.ts` (flag CRUD + tags/variants/segments), `api/eval.ts` (POST /evaluation), `http.ts`
+- `pages/flagPage.ts`, `pages/flagsListPage.ts` (incl. list snapshot cache) — orchestration; `flagPage.*(page)` / `flagsListPage.*(page)` via `castFlagPage` / `castFlagsList`
+- Composed REST in `api/crud.ts`; UI via `helpers/runApi`; eval UI helpers in `helpers/evaluation.ts`
+- Architecture: **`docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md`** (As-built)
 
 ## Constraints
 

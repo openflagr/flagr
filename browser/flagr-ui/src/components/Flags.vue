@@ -297,7 +297,7 @@
 <script lang="ts">
 import { Plus, Search } from '@element-plus/icons-vue'
 import Spinner from '@/components/Spinner.vue'
-import { getFlagsCache } from '@/pages/flagsList'
+import { getFlagsCache } from '@/pages/flagsListPage'
 import helpers from '@/helpers/helpers'
 import { castFlagsList } from '@/helpers/vuePageCast'
 import * as flagsListPage from '@/pages/flagsListPage'

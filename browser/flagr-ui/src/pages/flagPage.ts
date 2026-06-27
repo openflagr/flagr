@@ -1,8 +1,8 @@
 import type { Router } from 'vue-router'
-import * as evalApi from '@/api/evaluation'
-import * as flagsApi from '@/api/flags'
+import * as evalApi from '@/api/eval'
+import * as crudApi from '@/api/crud'
 import { variantUsedInDistribution, normalizeFlag, normalizeSegment } from '@/helpers/flagModel'
-import { evalSummaryFromResult } from '@/helpers/evalDebugLog'
+import { evalSummaryFromResult } from '@/helpers/evaluation'
 import type { EntityTypeOption } from '@/helpers/flagModel'
 import type {
   BatchEvalContext,
@@ -64,7 +64,7 @@ export const DEFAULT_TAG = { value: '' }
 
 
 export function reloadFlag(vm: FlagPageVm): void {
-  runApi(vm, flagsApi.getFlag(vm.flagId), {
+  runApi(vm, crudApi.getFlag(vm.flagId), {
     onSuccess: (data) => {
       vm.flag = normalizeFlag(data)
       vm.loaded = true
@@ -75,7 +75,7 @@ export function reloadFlag(vm: FlagPageVm): void {
 
 export function deleteFlag(vm: FlagPageVm): void {
   const id = vm.flagId
-  runApi(vm, flagsApi.deleteFlag(id), {
+  runApi(vm, crudApi.deleteFlag(id), {
     onSuccess: () => {
       vm.$router.replace({ name: 'home' })
       vm.$message.success(`You deleted flag ${id}`)
@@ -87,7 +87,7 @@ export function putFlag(vm: FlagPageVm): void {
   const f = vm.flag
   runApi(
     vm,
-    flagsApi.updateFlag(vm.flagId, {
+    crudApi.updateFlag(vm.flagId, {
       description: f.description,
       dataRecordsEnabled: f.dataRecordsEnabled,
       key: f.key || '',
@@ -99,7 +99,7 @@ export function putFlag(vm: FlagPageVm): void {
 }
 
 export function handleToggleEnabled(vm: FlagPageVm, checked: boolean): void {
-  runApi(vm, flagsApi.setFlagEnabled(vm.flagId, checked), {
+  runApi(vm, crudApi.setFlagEnabled(vm.flagId, checked), {
     successMessage: `You turned ${checked ? 'on' : 'off'} this feature flag`,
     onSuccess: () => {
       vm.flag.enabled = checked
@@ -113,7 +113,7 @@ export function handleUpdateFlag(vm: FlagPageVm, patch: Partial<FlagView>): void
 
 export function handleCreateTag(vm: FlagPageVm, { value }: { value: string }): void {
   vm.newTag.value = value
-  runApi(vm, flagsApi.createTagAndRefreshAllTags(vm.flagId, value), {
+  runApi(vm, crudApi.createTagAndRefreshAllTags(vm.flagId, value), {
     successMessage: 'new tag created',
     onSuccess: ({ tag, allTags }) => {
       vm.newTag = { ...DEFAULT_TAG }
@@ -140,7 +140,7 @@ export function deleteTag(vm: FlagPageVm, tag: Tag): void {
   confirmAndRunApi(
     vm,
     `Are you sure you want to delete tag #${tag.value}`,
-    flagsApi.deleteTagAndReload(vm.flagId, tagId), {
+    crudApi.deleteTagAndReload(vm.flagId, tagId), {
     successMessage: 'tag deleted',
     onSuccess: ({ flag, allTags }) => {
       vm.flag = normalizeFlag(flag)
@@ -150,7 +150,7 @@ export function deleteTag(vm: FlagPageVm, tag: Tag): void {
 }
 
 export function handleCreateVariant(vm: FlagPageVm, { key }: { key: string }): void {
-  runApi(vm, flagsApi.createVariant(vm.flagId, key), {
+  runApi(vm, crudApi.createVariant(vm.flagId, key), {
     successMessage: 'new variant created',
     onSuccess: (variant) => {
       vm.flag.variants = [...vm.flag.variants, variant]
@@ -188,7 +188,7 @@ export function putVariant(vm: FlagPageVm, variant: Variant): void {
   }
   runApi(
     vm,
-    flagsApi.updateVariant(vm.flagId, requireVariantId(variant), {
+    crudApi.updateVariant(vm.flagId, requireVariantId(variant), {
       key: variant.key,
       attachment,
     }),
@@ -207,7 +207,7 @@ export function deleteVariant(vm: FlagPageVm, variant: Variant): void {
   confirmAndRunApi(
     vm,
     `Are you sure you want to delete variant #${variant.id} [${variant.key}]`,
-    flagsApi.deleteVariant(vm.flagId, variantId),
+    crudApi.deleteVariant(vm.flagId, variantId),
     {
       successMessage: 'variant deleted',
       onSuccess: () => reloadFlag(vm),
@@ -216,7 +216,7 @@ export function deleteVariant(vm: FlagPageVm, variant: Variant): void {
 }
 
 export function createSegment(vm: FlagPageVm): void {
-  runApi(vm, flagsApi.createSegment(vm.flagId, vm.newSegment), {
+  runApi(vm, crudApi.createSegment(vm.flagId, vm.newSegment), {
     successMessage: 'new segment created',
     onSuccess: (segment) => {
       const normalized = normalizeSegment(segment)
@@ -230,7 +230,7 @@ export function createSegment(vm: FlagPageVm): void {
 export function putSegment(vm: FlagPageVm, segment: Segment): void {
   runApi(
     vm,
-    flagsApi.updateSegment(vm.flagId, requireSegmentId(segment), {
+    crudApi.updateSegment(vm.flagId, requireSegmentId(segment), {
       description: segment.description,
       rolloutPercent: parseInt(String(segment.rolloutPercent), 10),
     }),
@@ -242,7 +242,7 @@ export function deleteSegment(vm: FlagPageVm, segment: Segment): void {
   confirmAndRunApi(
     vm,
     'Are you sure you want to delete this segment?',
-    flagsApi.deleteSegment(vm.flagId, requireSegmentId(segment)),
+    crudApi.deleteSegment(vm.flagId, requireSegmentId(segment)),
     {
       successMessage: 'segment deleted',
       onSuccess: () => reloadFlag(vm),
@@ -251,7 +251,7 @@ export function deleteSegment(vm: FlagPageVm, segment: Segment): void {
 }
 
 export function handleReorderSegments(vm: FlagPageVm, segments: Segment[]): void {
-  runApi(vm, flagsApi.reorderSegments(vm.flagId, pluckSegmentIds(segments)), {
+  runApi(vm, crudApi.reorderSegments(vm.flagId, pluckSegmentIds(segments)), {
     successMessage: 'segment reordered',
   })
 }
@@ -291,7 +291,7 @@ export function createConstraint(
   { segment, constraint }: { segment: Segment; constraint: Constraint },
 ): void {
   const c = { ...constraint, property: constraint.property.trim(), value: constraint.value.trim() }
-  runApi(vm, flagsApi.createConstraint(vm.flagId, requireSegmentId(segment), c), {
+  runApi(vm, crudApi.createConstraint(vm.flagId, requireSegmentId(segment), c), {
     successMessage: 'new constraint created',
     onSuccess: (created) => {
       segment.constraints = [...(segment.constraints ?? []), created]
@@ -307,7 +307,7 @@ export function putConstraint(
   constraint.value = constraint.value.trim()
   runApi(
     vm,
-    flagsApi.updateConstraint(
+    crudApi.updateConstraint(
       vm.flagId,
       requireSegmentId(segment),
       requireConstraintId(constraint),
@@ -324,7 +324,7 @@ export function deleteConstraint(
   confirmAndRunApi(
     vm,
     'Are you sure you want to delete this constraint?',
-    flagsApi.deleteConstraint(
+    crudApi.deleteConstraint(
       vm.flagId,
       requireSegmentId(segment),
       requireConstraintId(constraint),
@@ -373,7 +373,7 @@ export function handleSaveDistribution(
     .map((d) => ({ percent: d.percent, variantID: d.variantID, variantKey: d.variantKey }))
   const segment = vm.selectedSegment
   if (!isIdentifiedSegment(segment)) return
-  runApi(vm, flagsApi.putSegmentDistributions(vm.flagId, segment.id, distributions), {
+  runApi(vm, crudApi.putSegmentDistributions(vm.flagId, segment.id, distributions), {
     successMessage: 'distributions updated',
     onSuccess: (data) => {
       segment.distributions = data
@@ -391,7 +391,7 @@ export function handleHistoryTabClick(vm: FlagPageVm, tab: { props?: { name?: st
 }
 
 export function loadFlagSnapshots(vm: FlagPageVm): void {
-  runApi(vm, flagsApi.listFlagSnapshots(vm.flagId), {
+  runApi(vm, crudApi.listFlagSnapshots(vm.flagId), {
     onSuccess: (data) => {
       vm.flagSnapshots = data
     },
@@ -425,7 +425,7 @@ export function syncEvalContextFromFlag(vm: FlagPageVm): void {
   vm.batchEvalContext.flagIDs = [id]
 }
 export function mountFlagPage(vm: FlagPageVm): void {
-  runApi(vm, flagsApi.loadFlagPageContext(vm.flagId), {
+  runApi(vm, crudApi.loadFlagPageContext(vm.flagId), {
     onSuccess: (load) => {
       vm.flag = normalizeFlag(load.flag)
       vm.loaded = true

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { listFlagsIfStale } from './flags'
+import { listFlagsIfStale } from './crud'
 
 describe('listFlagsIfStale', () => {
   const originalFetch = globalThis.fetch

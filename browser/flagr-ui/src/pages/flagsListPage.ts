@@ -1,10 +1,24 @@
-import * as flagsApi from '@/api/flags'
+import * as crudApi from '@/api/crud'
 import type { Router } from 'vue-router'
 import type { CreateFlagPayload, Flag } from '@/api/types'
 import { requireFlagId } from '@/api/types'
-import { getFlagsCache, setFlagsCache } from '@/pages/flagsList'
 import { confirmAndRunApi, type ConfirmVm } from '@/helpers/runApi'
 import { runApi } from '@/helpers/runApi'
+
+export interface FlagsCache {
+  flags: Flag[]
+  maxSnapshotID: number
+}
+
+let flagsCache: FlagsCache | null = null
+
+export function getFlagsCache(): FlagsCache | null {
+  return flagsCache
+}
+
+export function setFlagsCache(cache: FlagsCache): void {
+  flagsCache = cache
+}
 
 export interface FlagsListVm extends ConfirmVm {
   $router: Router
@@ -18,7 +32,7 @@ export interface FlagsListVm extends ConfirmVm {
 
 export function refreshFlags(vm: FlagsListVm): void {
   const cachedId = getFlagsCache()?.maxSnapshotID
-  runApi(vm, flagsApi.listFlagsIfStale(cachedId), {
+  runApi(vm, crudApi.listFlagsIfStale(cachedId), {
     onSuccess: (result) => {
       if (!result) return
       setFlagsCache(result)
@@ -37,7 +51,7 @@ export function createFlag(vm: FlagsListVm, params?: Partial<CreateFlagPayload>)
   const payload: CreateFlagPayload = params
     ? { ...vm.newFlag, ...params }
     : { ...vm.newFlag }
-  runApi(vm, flagsApi.createFlag(payload), {
+  runApi(vm, crudApi.createFlag(payload), {
     successMessage: 'Flag created',
     onSuccess: (flag) => {
       vm.newFlag.description = ''
@@ -55,7 +69,7 @@ export function restoreFlag(vm: FlagsListVm, row: Flag): void {
   confirmAndRunApi(
     vm,
     'This will recover the deleted flag. Continue?',
-    flagsApi.restoreFlag(requireFlagId(row)),
+    crudApi.restoreFlag(requireFlagId(row)),
     {
       successMessage: 'Flag restored',
       onSuccess: (flag) => {
@@ -68,7 +82,7 @@ export function restoreFlag(vm: FlagsListVm, row: Flag): void {
 
 export function fetchDeletedFlags(vm: FlagsListVm): void {
   if (vm.deletedFlagsLoaded) return
-  runApi(vm, flagsApi.listDeletedFlags(), {
+  runApi(vm, crudApi.listDeletedFlags(), {
     onSuccess: (data) => {
       vm.deletedFlags = [...data].reverse()
       vm.deletedFlagsLoaded = true

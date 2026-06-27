@@ -123,12 +123,13 @@
 <script lang="ts">
 import JsonEditor from 'vue3-ts-jsoneditor'
 import {
+  asBatchEvalResult,
+  asJsonObject,
   parseBatchEvalContextJson,
   parseBatchEvalResultJson,
   parseEvalContextJson,
   parseEvalResultJson,
-} from '@/helpers/evalParse'
-import { asBatchEvalResult, asJsonObject } from '@/helpers/jsonEditorValue'
+} from '@/helpers/evaluation'
 import type { BatchEvalContext, BatchEvalResult, EvalContext, EvalResult, EvalSummary } from '@/api/types'
 
 export default {
