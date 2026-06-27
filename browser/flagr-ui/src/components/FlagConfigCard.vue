@@ -8,7 +8,15 @@
             <span class="flag-id">#{{ flag.id }}</span>
           </div>
           <div class="flex-row-right">
-            <el-button size="small" plain @click="$emit('save-flag')" data-testid="save-flag-btn">Save</el-button>
+            <el-tooltip :content="SAVE_DIRTY_TOOLTIP" placement="top" effect="light" :disabled="!flagDirty">
+              <el-button
+                size="small"
+                :plain="!flagDirty"
+                :type="saveButtonType(flagDirty)"
+                @click="handleSaveFlag"
+                data-testid="save-flag-btn"
+              >{{ saveButtonLabel(flagDirty) }}</el-button>
+            </el-tooltip>
             <el-switch
               :model-value="flag.enabled"
               @update:model-value="$emit('toggle-enabled', $event)"
@@ -30,13 +38,13 @@
         <!-- Key -->
         <div class="flag-field-block">
           <label class="flag-label">Flag Key</label>
-          <el-input size="small" placeholder="Key" :model-value="flag.key" @update:model-value="$emit('update-flag', { key: $event })" data-testid="flag-key-input" />
+          <el-input size="small" placeholder="Key" :model-value="flag.key" @update:model-value="onUpdateFlag({ key: $event })" data-testid="flag-key-input" />
         </div>
 
         <!-- Description -->
         <div class="flag-field-block">
           <label class="flag-label">Description</label>
-          <el-input size="small" placeholder="Description" :model-value="flag.description" @update:model-value="$emit('update-flag', { description: $event })" data-testid="flag-desc-input" />
+          <el-input size="small" placeholder="Description" :model-value="flag.description" @update:model-value="onUpdateFlag({ description: $event })" data-testid="flag-desc-input" />
         </div>
 
         <!-- Data Records + Entity Type in a compact row -->
@@ -45,7 +53,7 @@
             <label class="flag-label">Data Records</label>
             <div class="flag-inline-row">
               <el-switch size="small" :model-value="flag.dataRecordsEnabled" :active-value="true" :inactive-value="false"
-                @update:model-value="$emit('update-flag', { dataRecordsEnabled: $event })" data-testid="data-records-switch" />
+                @update:model-value="onUpdateFlag({ dataRecordsEnabled: $event })" data-testid="data-records-switch" />
               <el-tooltip content="When enabled, evaluation and exposure events are sent to the data pipeline (e.g. Kafka, Kinesis, Pub/Sub)" placement="top" effect="light">
                 <el-icon style="color: var(--el-text-color-placeholder);"><InfoFilled /></el-icon>
               </el-tooltip>
@@ -53,7 +61,7 @@
           </div>
           <div class="flag-field-block" v-show="!!flag.dataRecordsEnabled">
             <label class="flag-label">Entity Type</label>
-            <el-select :model-value="flag.entityType" @update:model-value="$emit('update-flag', { entityType: $event })"
+            <el-select :model-value="flag.entityType" @update:model-value="onUpdateFlag({ entityType: $event })"
               size="small" filterable :allow-create="allowCreateEntityType" default-first-option placeholder="Entity Type" style="width: 100%;">
               <el-option v-for="item in entityTypes" :key="item.value" :label="item.label" :value="item.value" />
             </el-select>
@@ -90,8 +98,8 @@
             v-if="showMdEditor || flag.notes"
             :show-editor="showMdEditor"
             :markdown="flag.notes"
-            @update:markdown="$emit('update-flag', { notes: $event })"
-            @save="$emit('save-flag')"
+            @update:markdown="onUpdateFlag({ notes: $event })"
+            @save="handleSaveFlag"
           />
         </div>
       </div>
@@ -100,6 +108,11 @@
 </template>
 
 <script lang="ts">
+import {
+  SAVE_DIRTY_TOOLTIP,
+  saveButtonLabel as fmtSaveLabel,
+  saveButtonType as fmtSaveType,
+} from '@/helpers/saveDirtyUi'
 import { defineAsyncComponent, type PropType } from 'vue'
 import { InfoFilled, Edit, View } from '@element-plus/icons-vue'
 import type { FlagView, Tag } from '@/api/types'
@@ -136,9 +149,30 @@ export default {
     'show-tag-input',
   ],
   data() {
-    return { newTagValue: '' }
+    return {
+      SAVE_DIRTY_TOOLTIP,
+      newTagValue: '',
+      flagDirty: false,
+    }
   },
   methods: {
+    saveButtonLabel(dirty: boolean) {
+      return fmtSaveLabel(dirty)
+    },
+    saveButtonType(dirty: boolean) {
+      return fmtSaveType(dirty)
+    },
+    markFlagDirty() {
+      this.flagDirty = true
+    },
+    handleSaveFlag() {
+      this.$emit('save-flag')
+      this.flagDirty = false
+    },
+    onUpdateFlag(patch: Partial<FlagView>) {
+      this.markFlagDirty()
+      this.$emit('update-flag', patch)
+    },
     queryTags(queryString: string, cb: (results: Tag[]) => void) {
       cb(
         this.allTags.filter((tag) =>

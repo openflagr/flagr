@@ -39,7 +39,15 @@
                 <el-button size="small" :disabled="index===segments.length-1" @click="handleMoveDown(element,index)" data-testid="move-segment-down-btn"><el-icon><ArrowDown /></el-icon></el-button>
               </el-tooltip>
             </el-button-group>
-            <el-button size="small" plain @click="$emit('save-segment', element)" data-testid="save-segment-btn">Save</el-button>
+            <el-tooltip :content="SAVE_DIRTY_TOOLTIP" placement="top" effect="light" :disabled="!isSegmentDirty(element)">
+              <el-button
+                size="small"
+                :plain="!isSegmentDirty(element)"
+                :type="saveButtonType(isSegmentDirty(element))"
+                @click="handleSaveSegment(element)"
+                data-testid="save-segment-btn"
+              >{{ saveButtonLabel(isSegmentDirty(element)) }}</el-button>
+            </el-tooltip>
             <el-button size="small" @click="$emit('delete-segment', element)" data-testid="delete-segment-btn"><el-icon><Delete /></el-icon></el-button>
           </div>
         </div>
@@ -65,7 +73,15 @@
                     data-testid="constraint-value-input" />
                 </div>
                 <div class="constraint-actions">
-                  <el-button size="small" plain @click="$emit('save-constraint', { segment: element, constraint })" data-testid="save-constraint-btn">Save</el-button>
+                  <el-tooltip :content="SAVE_DIRTY_TOOLTIP" placement="top" effect="light" :disabled="!isConstraintDirty(element, constraint)">
+                    <el-button
+                      size="small"
+                      :plain="!isConstraintDirty(element, constraint)"
+                      :type="saveButtonType(isConstraintDirty(element, constraint))"
+                      @click="handleSaveConstraint(element, constraint)"
+                      data-testid="save-constraint-btn"
+                    >{{ saveButtonLabel(isConstraintDirty(element, constraint)) }}</el-button>
+                  </el-tooltip>
                   <el-button size="small" plain @click="() => $emit('delete-constraint', { segment: element, constraint })" data-testid="delete-constraint-btn"><el-icon><Delete /></el-icon></el-button>
                 </div>
               </div>
@@ -111,9 +127,15 @@
 </template>
 
 <script lang="ts">
+import {
+  SAVE_DIRTY_TOOLTIP,
+  saveButtonLabel as fmtSaveLabel,
+  saveButtonType as fmtSaveType,
+} from '@/helpers/saveDirtyUi'
+
 import { Delete, Edit, ArrowUp, ArrowDown } from '@element-plus/icons-vue'
 import type { PropType } from 'vue'
-import type { Segment } from '@/api/types'
+import type { Constraint, Segment } from '@/api/types'
 
 interface OperatorOption {
   value: string
@@ -149,7 +171,10 @@ export default {
   ],
   data() {
     return {
+      SAVE_DIRTY_TOOLTIP,
       reorderDirty: false,
+      segmentDirtyIds: {} as Record<number, boolean>,
+      constraintDirtyKeys: {} as Record<string, boolean>,
       newConstraints: {} as Record<number, NewConstraintDraft>,
     }
   },
@@ -166,6 +191,42 @@ export default {
     },
   },
   methods: {
+    saveButtonLabel(dirty: boolean) {
+      return fmtSaveLabel(dirty)
+    },
+    saveButtonType(dirty: boolean) {
+      return fmtSaveType(dirty)
+    },
+    constraintDirtyKey(segment: Segment, constraint: { id?: number }): string {
+      return `${segment.id ?? 'x'}:${constraint.id ?? 'x'}`
+    },
+    isSegmentDirty(segment: Segment): boolean {
+      return segment.id != null && !!this.segmentDirtyIds[segment.id]
+    },
+    isConstraintDirty(segment: Segment, constraint: { id?: number }): boolean {
+      return !!this.constraintDirtyKeys[this.constraintDirtyKey(segment, constraint)]
+    },
+    markSegmentDirty(segment: Segment): void {
+      if (segment.id != null) this.segmentDirtyIds[segment.id] = true
+    },
+    markConstraintDirty(segment: Segment, constraint: { id?: number }): void {
+      this.constraintDirtyKeys[this.constraintDirtyKey(segment, constraint)] = true
+    },
+    clearSegmentDirty(segment: Segment): void {
+      if (segment.id != null) delete this.segmentDirtyIds[segment.id]
+    },
+    clearConstraintDirty(segment: Segment, constraint: { id?: number }): void {
+      delete this.constraintDirtyKeys[this.constraintDirtyKey(segment, constraint)]
+    },
+    handleSaveSegment(segment: Segment): void {
+      this.$emit('save-segment', segment)
+      this.clearSegmentDirty(segment)
+    },
+    handleSaveConstraint(segment: Segment, constraint: Constraint): void {
+      this.$emit('save-constraint', { segment, constraint })
+      this.clearConstraintDirty(segment, constraint)
+    },
+
     handleMoveUp(element: Segment, index: number) {
       this.reorderDirty = true
       this.$emit('move-up', element, index)
@@ -179,6 +240,7 @@ export default {
       this.$emit('reorder', this.segments)
     },
     onSegmentFieldChange(segment: Segment, field: string, value: unknown) {
+      this.markSegmentDirty(segment)
       this.$emit('update-segment-field', { segment, field, value })
     },
     onConstraintFieldChange(
@@ -187,6 +249,7 @@ export default {
       field: string,
       value: unknown,
     ) {
+      this.markConstraintDirty(segment, constraint)
       this.$emit('update-constraint-field', { segment, constraint, field, value })
     },
     handleCreateConstraint(element: Segment) {

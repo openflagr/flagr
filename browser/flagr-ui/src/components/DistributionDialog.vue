@@ -11,7 +11,7 @@
         </div>
         <div v-if="!!draft[String(variant.id)]">
           <div class="dist-slider-row">
-            <el-slider v-model="draft[String(variant.id)].percent" show-input :max="100" :step="1" />
+            <el-slider v-model="draft[String(variant.id)].percent" show-input :max="100" :step="1" @change="markDraftDirty" @input="markDraftDirty" />
           </div>
         </div>
         <div v-else class="dist-disabled-hint">
@@ -30,15 +30,24 @@
 
     <template #footer>
       <el-button @click="$emit('update:visible', false)">Cancel</el-button>
-      <el-button type="primary" :disabled="!isValid" @click.prevent="$emit('save', draft)">Save</el-button>
+      <el-tooltip :content="SAVE_DIRTY_TOOLTIP" placement="top" effect="light" :disabled="!draftDirty">
+        <el-button
+          :type="draftDirty ? 'warning' : 'primary'"
+          :disabled="!isValid"
+          :plain="!draftDirty"
+          @click.prevent="handleSave"
+        >{{ saveButtonLabel(draftDirty) }}</el-button>
+      </el-tooltip>
     </template>
   </el-dialog>
 </template>
 
 <script lang="ts">
+import { SAVE_DIRTY_TOOLTIP, saveButtonLabel as fmtSaveLabel } from '@/helpers/saveDirtyUi'
 import helpers from '@/helpers/helpers'
 import type { PropType } from 'vue'
 import type { DistributionDraft, FlagView, Variant } from '@/api/types'
+
 
 export default {
   name: 'distribution-dialog',
@@ -53,7 +62,9 @@ export default {
   emits: ['update:visible', 'save'],
   data() {
     return {
+      SAVE_DIRTY_TOOLTIP,
       draft: {} as Record<string, DistributionDraft>,
+      draftDirty: false,
     }
   },
   computed: {
@@ -65,7 +76,18 @@ export default {
     },
   },
   methods: {
+    saveButtonLabel(dirty: boolean) {
+      return fmtSaveLabel(dirty)
+    },
+    markDraftDirty() {
+      this.draftDirty = true
+    },
+    handleSave() {
+      this.$emit('save', this.draft)
+      this.draftDirty = false
+    },
     selectVariant($event: boolean, variant: Variant) {
+      this.markDraftDirty()
       const key = String(variant.id)
       if ($event) {
         this.draft[key] = {
@@ -85,6 +107,7 @@ export default {
       handler(open: boolean) {
         if (open) {
           this.draft = {}
+          this.draftDirty = false
           for (const [id, dist] of Object.entries(this.initialDistributions)) {
             this.draft[id] = { ...dist }
           }

@@ -12,12 +12,20 @@
             size="small"
             placeholder="Variant Key"
             :model-value="variant.key"
-            @update:model-value="(v: string) => $emit('update-variant-key', { variant, key: v })"
+            @update:model-value="onVariantKeyInput(variant, $event)"
             data-testid="variant-key-input"
             class="variant-key-field"
           />
           <div class="variant-actions">
-            <el-button size="small" plain @click="$emit('save-variant', variant)" data-testid="save-variant-btn">Save</el-button>
+            <el-tooltip :content="SAVE_DIRTY_TOOLTIP" placement="top" effect="light" :disabled="!isVariantDirty(variant)">
+              <el-button
+                size="small"
+                :plain="!isVariantDirty(variant)"
+                :type="saveButtonType(isVariantDirty(variant))"
+                @click="handleSaveVariant(variant)"
+                data-testid="save-variant-btn"
+              >{{ saveButtonLabel(isVariantDirty(variant)) }}</el-button>
+            </el-tooltip>
             <el-button size="small" plain @click="$emit('delete-variant', variant)" data-testid="delete-variant-btn"><el-icon><Delete /></el-icon></el-button>
           </div>
         </div>
@@ -48,7 +56,13 @@
   </el-card>
 </template>
 
+
 <script lang="ts">
+import {
+  SAVE_DIRTY_TOOLTIP,
+  saveButtonLabel as fmtSaveLabel,
+  saveButtonType as fmtSaveType,
+} from '@/helpers/saveDirtyUi'
 import JsonEditor from 'vue3-ts-jsoneditor'
 import { Delete } from '@element-plus/icons-vue'
 import type { PropType } from 'vue'
@@ -66,19 +80,48 @@ export default {
     'attachment-change',
   ],
   data() {
-    return { newKey: '' }
+    return {
+      SAVE_DIRTY_TOOLTIP,
+      newKey: '',
+      variantDirtyIds: {} as Record<number, boolean>,
+    }
   },
   methods: {
+    saveButtonLabel(dirty: boolean) {
+      return fmtSaveLabel(dirty)
+    },
+    saveButtonType(dirty: boolean) {
+      return fmtSaveType(dirty)
+    },
+    isVariantDirty(variant: Variant): boolean {
+      return variant.id != null && !!this.variantDirtyIds[variant.id]
+    },
+    markVariantDirty(variant: Variant): void {
+      if (variant.id != null) this.variantDirtyIds[variant.id] = true
+    },
+    clearVariantDirty(variant: Variant): void {
+      if (variant.id != null) delete this.variantDirtyIds[variant.id]
+    },
+    handleSaveVariant(variant: Variant): void {
+      this.$emit('save-variant', variant)
+      this.clearVariantDirty(variant)
+    },
     createVariant() {
       this.$emit('create-variant', { key: this.newKey })
       this.newKey = ''
     },
+    onVariantKeyInput(variant: Variant, key: string) {
+      this.markVariantDirty(variant)
+      this.$emit('update-variant-key', { variant, key })
+    },
     onAttachmentChange(variant: Variant, val: unknown, valid: boolean) {
+      this.markVariantDirty(variant)
       if (val !== null) variant.attachment = val as Record<string, unknown>
       variant.attachmentValid = valid
       this.$emit('attachment-change', { variant, valid })
     },
     onAttachmentTextChange(variant: Variant, text: string) {
+      this.markVariantDirty(variant)
       try {
         const v = JSON.parse(text) as Record<string, unknown>
         variant.attachment = v
