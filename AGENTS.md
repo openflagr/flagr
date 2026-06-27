@@ -4,22 +4,45 @@ Flagr — Go feature flag service with Vue 3 UI.
 
 ## Commands
 
+Run **`make help`** from the repo root for the full catalog. Common targets:
+
 | Command | What it does |
 |---|---|
-| `make build` | Build Go server binary (`./flagr`) |
-| `make build_ui` | Build UI for production (`browser/flagr-ui/dist/`) |
-| `make start` | Backend (`:18000`) + frontend dev server (`:8080`) in parallel |
-| `make stop-ui` | Kill processes on `:18000` or `:8080` (port-based via `lsof`, not `pkill`) |
-| `make rebuild-run` | `build` → `stop-ui` → `start` — one step after Go changes |
-| `make test` | Go unit tests |
-| `make test-e2e` | Build Go binary → start servers → Playwright → cleanup |
-| `make swagger` | Regenerate `swagger_gen/` from OpenAPI spec |
-| `make test-integration` | Go integration tests (auto-starts local server, SQLite `:memory:`) |
-| `make bench-integration` | HTTP eval benchmarks against local server |
-| `go build -o flagr-validate ./cmd/flagr-validate/` | Build standalone JSON flag validator |
-| `go build -o flagr ./cmd/flagr-server/` | Build server binary directly (same as `make build`) |
+| `make build` | Go server → `./flagr` |
+| `make build-ui` | UI: lint, typecheck, Vite → `browser/flagr-ui/dist/` |
+| `make start` | Backend `:18000` + UI dev `:8080` |
+| `make stop-ui` | Free ports `:18000` / `:8080` (`lsof`, not `pkill`) |
+| `make rebuild-run` | `build` → `stop-ui` → `start` |
+| `make test` | Lint + swagger validate + Go unit tests |
+| `make test-e2e` | `build` + UI lint/typecheck + Playwright |
+| `make test-integration` | API integration tests (SQLite, local server) |
+| `make test-integration-compose` | Same suite vs Docker Compose (6 DBs) |
+| `make bench-integration` | HTTP eval benchmarks (local) |
+| `make swagger` | Regenerate `swagger_gen/` |
 
-**UI-only** (`browser/flagr-ui/`): `npm run dev` (Vite), `npm run build`, `npm run test:e2e` (needs servers running).
+## Before commit / push (PR)
+
+Run from **repo root**. Match what [`.github/workflows/ci.yml`](.github/workflows/ci.yml) enforces so PR checks stay green.
+
+| You changed | Run before commit | Run before push (recommended) |
+|-------------|-------------------|-------------------------------|
+| **`browser/flagr-ui/`** only | `make flagr-ui-check` | `make test-e2e` |
+| **`pkg/`** or Go tests | `make test` | `make test` (+ `make test-integration` if handler/API behavior) |
+| **Swagger** (`swagger/`, handlers → OpenAPI) | `make swagger` then commit `swagger_gen/` + `cmd/flagr-server/main.go` | `make ci-swagger` (regen + `git diff --exit-code`) |
+| **UI + Go** or unsure | `make test` **and** `make flagr-ui-check` | `make test` + `make test-e2e` |
+
+**CI mapping (same commands):**
+
+| GitHub Actions job | Makefile |
+|--------------------|----------|
+| `unit_test` | `make ci-swagger` then `make ci` (= `make test`: **golangci-lint** + swagger validate + `go test ./pkg/...`) |
+| `ui_lint` | `make build-ui` (= `flagr-ui-check` + Vite production build) |
+| `e2e_test` | `make test-e2e` (= `make build` + `flagr-ui-check` + Playwright) |
+| `integration_test` | `make ci-integration` (Docker Compose; usually not every UI PR) |
+
+**Fast UI loop:** `make flagr-ui-check` ≈ ESLint + `vue-tsc` + Vitest (~10s). **Do not** rely on `make run-ui` alone — it does not lint.
+
+**PR hygiene:** Follow [`PULL_REQUEST_TEMPLATE.md`](PULL_REQUEST_TEMPLATE.md). For UI work, use plan **As-built** in `docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md`.
 
 ## Key Code
 
@@ -30,13 +53,14 @@ Flagr — Go feature flag service with Vue 3 UI.
 - `config/env.go` — all environment variables (single source of truth)
 
 **Frontend (`browser/flagr-ui/src/`):**
-- `components/Flag.vue` — flag detail page (orchestrator); `components/Flags.vue` — flag list
-- `components/DebugConsole.vue` — inline eval tool; `components/SegmentsSection.vue` — segment/constraint/distribution display
-- `helpers/helpers.js`, `constants.js` — utilities and env-var-backed config
+- `api/types.ts` — DTOs; `api/crud.ts` (flag CRUD + tags/variants/segments), `api/eval.ts` (POST /evaluation), `http.ts`
+- `pages/flagPage.ts`, `pages/flagsListPage.ts` (incl. list snapshot cache) — orchestration; `flagPage.*(page)` / `flagsListPage.*(page)` via `castFlagPage` / `castFlagsList`
+- Composed REST in `api/crud.ts`; UI via `helpers/runApi`; eval UI helpers in `helpers/evaluation.ts`
+- Architecture: **`docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md`** (As-built)
 
 ## Constraints
 
-- **Don't edit `swagger_gen/`** — regenerate with `make swagger`
+- **Don't edit `swagger_gen/`** — `make swagger`
 - Dev mode uses SQLite, no external deps needed
 - Process management uses `lsof -ti:<port>` not `pkill -f` — never touches other projects' processes
 - See [deepwiki.com/openflagr/flagr](https://deepwiki.com/openflagr/flagr) and `docs/`

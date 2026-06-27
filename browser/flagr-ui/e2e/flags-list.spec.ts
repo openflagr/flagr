@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { createFlag, deleteFlag, getSnapshotMaxId, API } from './helpers.js'
+import { createFlag, deleteFlag, getSnapshotMaxId, API } from './helpers'
 
 test.describe('Flags list page', () => {
   let createdId = null

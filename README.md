@@ -39,6 +39,8 @@ beyond the original [`checkr/flagr`](https://github.com/checkr/flagr).
 
 **[https://openflagr.github.io/flagr](https://openflagr.github.io/flagr)**
 
+**Developers:** clone the repo and run **`make help`** for build, test, and UI commands (single entrypoint for CI and local work).
+
 | Page | Content |
 |------|---------|
 | [Home](https://openflagr.github.io/flagr/) | Quick start, dev, testing, deploy |
@@ -64,7 +66,7 @@ beyond the original [`checkr/flagr`](https://github.com/checkr/flagr).
 - **Exposure logging** — `POST /exposures` for client-reported impressions, the trustworthy A/B denominator
 - **Webhook notifications** — HTTP POST on every flag change, with retry and backoff
 - **Multi-database** — SQLite (dev), MySQL, PostgreSQL, and JSON sources
-- **Vue 3 UI** — modern management UI built with Vite, Vue 3, and Element Plus
+- **Vue 3 UI** — TypeScript management UI (Vite, typed REST via `ApiResult`); see `make help` for `build-ui` / `test-e2e`
 
 ## Quick start
 

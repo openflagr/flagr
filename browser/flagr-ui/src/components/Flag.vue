@@ -1,162 +1,207 @@
 <template>
   <div class="container flag-container">
-        <el-dialog title="Delete feature flag" v-model="dialogDeleteFlagVisible">
-          <span>Are you sure you want to delete this feature flag?</span>
-          <template #footer>
-            <span class="dialog-footer">
-              <el-button @click="dialogDeleteFlagVisible = false">Cancel</el-button>
-              <el-button type="primary" @click.prevent="deleteFlag">Confirm</el-button>
-            </span>
-          </template>
-        </el-dialog>
+    <el-dialog
+      v-model="dialogDeleteFlagVisible"
+      title="Delete feature flag"
+    >
+      <span>Are you sure you want to delete this feature flag?</span>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="dialogDeleteFlagVisible = false">Cancel</el-button>
+          <el-button
+            type="primary"
+            @click.prevent="flagPage.deleteFlag(page)"
+          >Confirm</el-button>
+        </span>
+      </template>
+    </el-dialog>
 
-        <el-dialog title="Create segment" v-model="dialogCreateSegmentOpen">
-          <div class="create-segment-dialog">
-            <el-input placeholder="Segment description" v-model="newSegment.description" data-testid="new-segment-desc-input" />
-            <div class="create-segment-slider">
-              <label class="create-segment-label">Rollout %</label>
-              <el-slider v-model="newSegment.rolloutPercent" show-input :max="100" />
-            </div>
-            <el-button
-              class="width--full"
-              type="primary"
-              :disabled="!newSegment.description"
-              @click.prevent="createSegment"
-              data-testid="create-segment-btn"
-            >Create Segment</el-button>
-          </div>
-        </el-dialog>
-
-        <distribution-dialog
-          :visible="dialogEditDistributionOpen"
-          :flag="flag"
-          :initial-distributions="distributionDraft"
-          @update:visible="dialogEditDistributionOpen = $event"
-          @save="handleSaveDistribution"
+    <el-dialog
+      v-model="dialogCreateSegmentOpen"
+      title="Create segment"
+    >
+      <div class="create-segment-dialog">
+        <el-input
+          v-model="newSegment.description"
+          placeholder="Segment description"
+          data-testid="new-segment-desc-input"
         />
-
-        <el-breadcrumb separator="/">
-          <el-breadcrumb-item :to="{ name: 'home' }">Home page</el-breadcrumb-item>
-          <el-breadcrumb-item>Flag ID: {{ $route.params.flagId }}</el-breadcrumb-item>
-        </el-breadcrumb>
-
-        <div v-if="loaded && flag">
-          <el-tabs @tab-click="handleHistoryTabClick">
-            <el-tab-pane label="Config">
-              <flag-config-card
-                :flag="flag"
-                :show-md-editor="showMdEditor"
-                :entity-types="entityTypes"
-                :allow-create-entity-type="allowCreateEntityType"
-                :tag-input-visible="tagInputVisible"
-                :all-tags="allTags"
-                @toggle-enabled="handleToggleEnabled"
-                @save-flag="putFlag"
-                @update-flag="handleUpdateFlag"
-                @toggle-notes="showMdEditor = !showMdEditor"
-                @delete-tag="deleteTag"
-                @create-tag="handleCreateTag"
-                @cancel-create-tag="handleCancelCreateTag"
-                @show-tag-input="handleShowTagInput"
-              />
-
-              <variants-section
-                :variants="flag.variants"
-                @create-variant="handleCreateVariant"
-                @update-variant-key="handleUpdateVariantKey"
-                @save-variant="putVariant"
-                @delete-variant="deleteVariant"
-                @attachment-change="handleVariantAttachmentChange"
-              />
-
-              <segments-section
-                :segments="flag.segments"
-                :operator-options="operatorOptions"
-                @reorder="handleReorderSegments"
-                @move-up="moveSegmentUp"
-                @move-down="moveSegmentDown"
-                @new-segment="dialogCreateSegmentOpen = true"
-                @save-segment="putSegment"
-                @delete-segment="deleteSegment"
-                @update-segment-field="handleUpdateSegmentField"
-                @create-constraint="createConstraint"
-                @save-constraint="putConstraint"
-                @delete-constraint="deleteConstraint"
-                @update-constraint-field="handleUpdateConstraintField"
-                @edit-distribution="handleEditDistribution"
-              />
-
-              <debug-console :flag="flag" />
-
-              <el-card class="danger-zone-card is-card-danger" style="margin-top: var(--space-xl);">
-                <template #header>
-                  <div class="el-card-header">
-                    <h2>Danger Zone</h2>
-                  </div>
-                </template>
-                <div class="danger-zone-body">
-                  <p class="danger-zone-text">
-                    Deleting a flag hides it from active evaluation. Its segments, variants, and distributions stay intact and come back when you restore the flag from the Deleted Flags section on the flags list page.
-                  </p>
-                  <el-button type="danger" plain size="small" @click="dialogDeleteFlagVisible = true" data-testid="delete-flag-btn">
-                    <el-icon><Delete /></el-icon>
-                    Delete Flag
-                  </el-button>
-                </div>
-              </el-card>
-            </el-tab-pane>
-
-            <el-tab-pane label="History" name="history">
-              <flag-history v-if="historyLoaded" :key="historyKey" :flag-id="parseInt($route.params.flagId, 10)"></flag-history>
-            </el-tab-pane>
-          </el-tabs>
+        <div class="create-segment-slider">
+          <label class="create-segment-label">Rollout %</label>
+          <el-slider
+            v-model="newSegment.rolloutPercent"
+            show-input
+            :max="100"
+          />
         </div>
+        <el-button
+          class="width--full"
+          type="primary"
+          :disabled="!newSegment.description"
+          data-testid="create-segment-btn"
+          @click.prevent="flagPage.createSegment(page)"
+        >
+          Create Segment
+        </el-button>
       </div>
+    </el-dialog>
+
+    <distribution-dialog
+      :visible="dialogEditDistributionOpen"
+      :flag="flag"
+      :initial-distributions="distributionDraft"
+      @update:visible="dialogEditDistributionOpen = $event"
+      @save="(d) => flagPage.handleSaveDistribution(page, d)"
+    />
+
+    <el-breadcrumb separator="/">
+      <el-breadcrumb-item :to="{ name: 'home' }">
+        Home page
+      </el-breadcrumb-item>
+      <el-breadcrumb-item>Flag ID: {{ $route.params.flagId }}</el-breadcrumb-item>
+    </el-breadcrumb>
+
+    <div v-if="loaded && flag">
+      <el-tabs @tab-click="onHistoryTabClick">
+        <el-tab-pane label="Config">
+          <flag-config-card
+            :flag="flag"
+            :show-md-editor="showMdEditor"
+            :entity-types="entityTypes"
+            :allow-create-entity-type="allowCreateEntityType"
+            :tag-input-visible="tagInputVisible"
+            :all-tags="allTags"
+            @toggle-enabled="(c) => flagPage.handleToggleEnabled(page, c)"
+            @save-flag="flagPage.putFlag(page)"
+            @update-flag="(p) => flagPage.handleUpdateFlag(page, p)"
+            @toggle-notes="showMdEditor = !showMdEditor"
+            @delete-tag="(tag) => flagPage.deleteTag(page, tag)"
+            @create-tag="(p) => flagPage.handleCreateTag(page, p)"
+            @cancel-create-tag="flagPage.handleCancelCreateTag(page)"
+            @show-tag-input="flagPage.handleShowTagInput(page)"
+          />
+
+          <variants-section
+            :variants="flag.variants"
+            @create-variant="(p) => flagPage.handleCreateVariant(page, p)"
+            @update-variant-key="(p) => flagPage.handleUpdateVariantKey(page, p)"
+            @save-variant="(v) => flagPage.putVariant(page, v)"
+            @delete-variant="(v) => flagPage.deleteVariant(page, v)"
+            @attachment-change="(p) => flagPage.handleVariantAttachmentChange(page, p)"
+          />
+
+          <segments-section
+            :segments="flag.segments ?? []"
+            :operator-options="operatorOptions"
+            @reorder="(s) => flagPage.handleReorderSegments(page, s)"
+            @move-up="(el, i) => flagPage.moveSegmentUp(page, el, i)"
+            @move-down="(el, i) => flagPage.moveSegmentDown(page, el, i)"
+            @new-segment="dialogCreateSegmentOpen = true"
+            @save-segment="(s) => flagPage.putSegment(page, s)"
+            @delete-segment="(s) => flagPage.deleteSegment(page, s)"
+            @update-segment-field="(p) => flagPage.handleUpdateSegmentField(page, p)"
+            @create-constraint="(p) => flagPage.createConstraint(page, p)"
+            @save-constraint="(p) => flagPage.putConstraint(page, p)"
+            @delete-constraint="(p) => flagPage.deleteConstraint(page, p)"
+            @update-constraint-field="(p) => flagPage.handleUpdateConstraintField(page, p)"
+            @edit-distribution="(s) => flagPage.handleEditDistribution(page, s)"
+          />
+
+          <debug-console
+            :eval-context="evalContext"
+            :eval-result="evalResult"
+            :eval-summary="evalSummary"
+            :batch-eval-context="batchEvalContext"
+            :batch-eval-result="batchEvalResult"
+            @update:eval-context="evalContext = $event"
+            @update:eval-result="evalResult = $event"
+            @update:batch-eval-context="batchEvalContext = $event"
+            @update:batch-eval-result="batchEvalResult = $event"
+            @post-evaluation="(ctx) => flagPage.postEvaluation(page, ctx)"
+            @post-evaluation-batch="(ctx) => flagPage.postEvaluationBatch(page, ctx)"
+          />
+
+          <el-card
+            class="danger-zone-card is-card-danger"
+            style="margin-top: var(--space-xl);"
+          >
+            <template #header>
+              <div class="el-card-header">
+                <h2>Danger Zone</h2>
+              </div>
+            </template>
+            <div class="danger-zone-body">
+              <p class="danger-zone-text">
+                Deleting a flag hides it from active evaluation. Its segments, variants, and distributions stay intact and come back when you restore the flag from the Deleted Flags section on the flags list page.
+              </p>
+              <el-button
+                type="danger"
+                plain
+                size="small"
+                data-testid="delete-flag-btn"
+                @click="dialogDeleteFlagVisible = true"
+              >
+                <el-icon><Delete /></el-icon>
+                Delete Flag
+              </el-button>
+            </div>
+          </el-card>
+        </el-tab-pane>
+
+        <el-tab-pane
+          label="History"
+          name="history"
+        >
+          <flag-history
+            v-if="historyLoaded"
+            :key="historyKey"
+            :snapshots="flagSnapshots"
+          />
+        </el-tab-pane>
+      </el-tabs>
+    </div>
+  </div>
 </template>
 
-<script>
-import Axios from "axios"
-import { Delete } from "@element-plus/icons-vue"
-
-import constants from "@/constants"
-import helpers from "@/helpers/helpers"
-import DebugConsole from "@/components/DebugConsole"
-import FlagHistory from "@/components/FlagHistory"
-import DistributionDialog from "@/components/DistributionDialog"
-import FlagConfigCard from "@/components/FlagConfigCard"
-import VariantsSection from "@/components/VariantsSection"
-import SegmentsSection from "@/components/SegmentsSection"
-import operatorsData from "@/operators.json"
+<script lang="ts">
+import { Delete } from '@element-plus/icons-vue'
+import DebugConsole from '@/components/DebugConsole.vue'
+import DistributionDialog from '@/components/DistributionDialog.vue'
+import FlagConfigCard from '@/components/FlagConfigCard.vue'
+import FlagHistory from '@/components/FlagHistory.vue'
+import SegmentsSection from '@/components/SegmentsSection.vue'
+import VariantsSection from '@/components/VariantsSection.vue'
+import type { BatchEvalContext, BatchEvalResult, DistributionDraft, EvalContext, EvalResult, EvalSummary, FlagView, Segment, Tag } from '@/api/types'
+import type { EntityTypeOption } from '@/helpers/flagModel'
+import { castFlagPage } from '@/helpers/vuePageCast'
+import * as flagPage from '@/pages/flagPage'
+import { handleHistoryTabClick, mountFlagPage, syncEvalContextFromFlag } from '@/pages/flagPage'
+import operatorsData from '@/operators.json'
 
 const operators = operatorsData.operators
-const { pluck, handleErr } = helpers
-const { API_URL, FLAGR_UI_POSSIBLE_ENTITY_TYPES } = constants
 
-const DEFAULT_SEGMENT = { description: "", rolloutPercent: 50 }
-const DEFAULT_TAG = { value: "" }
-
-function processVariant(variant) {
-  if (typeof variant.attachment === "string") {
-    variant.attachment = JSON.parse(variant.attachment)
+function defaultEvalContext(): EvalContext {
+  return {
+    entityID: 'a1234',
+    entityType: 'report',
+    entityContext: { hello: 'world' },
+    enableDebug: true,
   }
 }
 
-function normalizeSegment(segment) {
-  if (!segment.constraints) segment.constraints = []
-  if (!segment.distributions) segment.distributions = []
-  return segment
-}
-
-function normalizeFlag(flag) {
-  flag.variants.forEach(v => processVariant(v))
-  for (const segment of flag.segments || []) {
-    normalizeSegment(segment)
+function defaultBatchEvalContext(): BatchEvalContext {
+  return {
+    entities: [
+      { entityID: 'a1234', entityType: 'report', entityContext: { hello: 'world' } },
+      { entityID: 'a5678', entityType: 'report', entityContext: { hello: 'world' } },
+    ],
+    enableDebug: true,
+    flagIDs: [],
   }
-  return flag
 }
 
 export default {
-  name: "flag",
+  name: 'Flag',
   components: {
     DebugConsole,
     FlagHistory,
@@ -164,356 +209,65 @@ export default {
     FlagConfigCard,
     VariantsSection,
     SegmentsSection,
-    Delete
+    Delete,
   },
   data() {
     return {
       loaded: false,
+      flagId: '',
       dialogDeleteFlagVisible: false,
       dialogEditDistributionOpen: false,
       dialogCreateSegmentOpen: false,
-      entityTypes: [],
-      allTags: [],
+      flagPage,
+      entityTypes: [] as EntityTypeOption[],
+      allTags: [] as Tag[],
       allowCreateEntityType: true,
       tagInputVisible: false,
-      flag: {},
-      newSegment: { ...DEFAULT_SEGMENT },
-      newTag: { ...DEFAULT_TAG },
-      selectedSegment: null,
-      distributionDraft: {},
+      flag: { description: '', tags: [], variants: [], segments: [] } as FlagView,
+      newSegment: { ...flagPage.DEFAULT_SEGMENT },
+      newTag: { ...flagPage.DEFAULT_TAG },
+      selectedSegment: null as Segment | null,
+      distributionDraft: {} as Record<string, DistributionDraft>,
       operatorOptions: operators,
       showMdEditor: false,
       historyLoaded: false,
-      historyKey: 0
+      historyKey: 0,
+      flagSnapshots: [],
+      evalContext: defaultEvalContext(),
+      evalResult: {} as EvalResult,
+      evalSummary: null as EvalSummary | null,
+      batchEvalContext: defaultBatchEvalContext(),
+      batchEvalResult: { evaluationResults: [] } as BatchEvalResult,
     }
   },
   computed: {
-    flagId() {
-      return this.$route.params.flagId
-    }
+    page() {
+      return castFlagPage(this)
+    },
   },
-  methods: {
-    // --- Flag CRUD ---
-    deleteFlag() {
-      const id = this.flagId
-      Axios.delete(`${API_URL}/flags/${id}`).then(() => {
-        this.$router.replace({ name: "home" })
-        this.$message.success(`You deleted flag ${id}`)
-      }, handleErr.bind(this))
+
+  watch: {
+    '$route.params.flagId': {
+      immediate: true,
+      handler(id: string | string[] | undefined) {
+        this.flagId = String(id ?? '')
+      },
     },
-
-    putFlag() {
-      const f = this.flag
-      Axios.put(`${API_URL}/flags/${this.flagId}`, {
-        description: f.description,
-        dataRecordsEnabled: f.dataRecordsEnabled,
-        key: f.key || "",
-        entityType: f.entityType || "",
-        notes: f.notes || ""
-      }).then(() => {
-        this.$message.success("Flag updated")
-      }, handleErr.bind(this))
+    flag: {
+      deep: true,
+      handler() {
+        syncEvalContextFromFlag(this.page)
+      },
     },
-
-    handleToggleEnabled(checked) {
-      Axios.put(`${API_URL}/flags/${this.flagId}/enabled`, {
-        enabled: checked
-      }).then(() => {
-        this.flag.enabled = checked
-        this.$message.success(`You turned ${checked ? "on" : "off"} this feature flag`)
-      }, handleErr.bind(this))
-    },
-
-    handleUpdateFlag(patch) {
-      Object.assign(this.flag, patch)
-    },
-
-    // --- Tags ---
-    handleCreateTag({ value }) {
-      this.newTag.value = value
-      Axios.post(`${API_URL}/flags/${this.flagId}/tags`, { value }).then(
-        response => {
-          const tag = response.data
-          this.newTag = { ...DEFAULT_TAG }
-          if (!this.flag.tags.map(t => t.value).includes(tag.value)) {
-            this.flag.tags.push(tag)
-            this.$message.success("new tag created")
-          }
-          this.tagInputVisible = false
-          this.loadAllTags()
-        },
-        handleErr.bind(this)
-      )
-    },
-
-    handleCancelCreateTag() {
-      this.newTag = { ...DEFAULT_TAG }
-      this.tagInputVisible = false
-    },
-
-    handleShowTagInput() {
-      this.tagInputVisible = true
-    },
-
-    deleteTag(tag) {
-      this.$confirm(`Are you sure you want to delete tag #${tag.value}`, "Warning", {
-        confirmButtonText: "OK", cancelButtonText: "Cancel", type: "warning"
-      }).then(() => {
-        Axios.delete(`${API_URL}/flags/${this.flagId}/tags/${tag.id}`).then(
-          () => {
-            this.$message.success("tag deleted")
-            this.fetchFlag()
-            this.loadAllTags()
-          },
-          handleErr.bind(this)
-        )
-      }).catch(() => {})
-    },
-
-    loadAllTags() {
-      Axios.get(`${API_URL}/tags`).then(response => {
-        this.allTags = response.data
-      }, handleErr.bind(this))
-    },
-
-    // --- Variants ---
-    handleCreateVariant({ key }) {
-      Axios.post(`${API_URL}/flags/${this.flagId}/variants`, { key }).then(
-        response => {
-          this.flag.variants = [...this.flag.variants, response.data]
-          this.$message.success("new variant created")
-        },
-        handleErr.bind(this)
-      )
-    },
-
-
-    handleUpdateVariantKey({ variant, key }) {
-      variant.key = key
-    },
-
-    handleVariantAttachmentChange({ variant, valid }) {
-      variant.attachmentValid = valid
-    },
-
-
-    putVariant(variant) {
-      if (variant.attachmentValid === false) {
-        this.$message.error("variant attachment is not valid")
-        return
-      }
-      Axios.put(`${API_URL}/flags/${this.flagId}/variants/${variant.id}`, { key: variant.key, attachment: variant.attachment }).then(
-        () => this.$message.success("variant updated"),
-        handleErr.bind(this)
-      )
-    },
-
-    deleteVariant(variant) {
-      if (this.flag.segments.some(s =>
-        s.distributions.some(d => d.variantID === variant.id)
-      )) {
-        this.$message.warning(
-          "This variant is being used by a segment distribution. Please remove the segment or edit the distribution in order to remove this variant."
-        )
-        return
-      }
-      this.$confirm(
-        `Are you sure you want to delete variant #${variant.id} [${variant.key}]`,
-        "Warning",
-        { confirmButtonText: "OK", cancelButtonText: "Cancel", type: "warning" }
-      ).then(() => {
-        Axios.delete(`${API_URL}/flags/${this.flagId}/variants/${variant.id}`).then(
-          () => {
-            this.$message.success("variant deleted")
-            this.fetchFlag()
-          },
-          handleErr.bind(this)
-        )
-      }).catch(() => {})
-    },
-
-
-    // --- Segments ---
-    createSegment() {
-      Axios.post(`${API_URL}/flags/${this.flagId}/segments`, this.newSegment).then(
-        response => {
-          const segment = normalizeSegment(response.data)
-          this.newSegment = { ...DEFAULT_SEGMENT }
-          this.flag.segments = [...this.flag.segments, segment]
-          this.dialogCreateSegmentOpen = false
-          this.$message.success("new segment created")
-        },
-        handleErr.bind(this)
-      )
-    },
-
-    putSegment(segment) {
-      Axios.put(`${API_URL}/flags/${this.flagId}/segments/${segment.id}`, {
-        description: segment.description,
-        rolloutPercent: parseInt(segment.rolloutPercent, 10)
-      }).then(() => {
-        this.$message.success("segment updated")
-      }, handleErr.bind(this))
-    },
-
-    deleteSegment(segment) {
-      this.$confirm("Are you sure you want to delete this segment?", "Warning", {
-        confirmButtonText: "OK", cancelButtonText: "Cancel", type: "warning"
-      }).then(() => {
-        Axios.delete(`${API_URL}/flags/${this.flagId}/segments/${segment.id}`).then(
-          () => {
-            this.flag.segments = this.flag.segments.filter(el => el.id !== segment.id)
-            this.$message.success("segment deleted")
-          },
-          handleErr.bind(this)
-        )
-      }).catch(() => {})
-    },
-
-    handleReorderSegments(segments) {
-      Axios.put(`${API_URL}/flags/${this.flagId}/segments/reorder`, {
-        segmentIDs: pluck(segments, "id")
-      }).then(() => {
-        this.$message.success("segment reordered")
-      }, handleErr.bind(this))
-    },
-
-    moveSegmentUp(_element, index) {
-      if (index <= 0) return
-      const arr = [...this.flag.segments]
-      const temp = arr[index - 1]
-      arr[index - 1] = arr[index]
-      arr[index] = temp
-      this.flag.segments = arr
-    },
-    moveSegmentDown(_element, index) {
-      if (index >= this.flag.segments.length - 1) return
-      const arr = [...this.flag.segments]
-      const temp = arr[index + 1]
-      arr[index + 1] = arr[index]
-      arr[index] = temp
-      this.flag.segments = arr
-    },
-
-
-    handleUpdateSegmentField({ segment, field, value }) {
-      segment[field] = value
-    },
-
-    // --- Constraints ---
-    createConstraint({ segment, constraint }) {
-      const c = { ...constraint }
-      c.property = c.property.trim()
-      c.value = c.value.trim()
-      Axios.post(
-        `${API_URL}/flags/${this.flagId}/segments/${segment.id}/constraints`,
-        c
-      ).then(response => {
-        segment.constraints = [...segment.constraints, response.data]
-        this.$message.success("new constraint created")
-      }, handleErr.bind(this))
-    },
-
-    putConstraint({ segment, constraint }) {
-      constraint.property = constraint.property.trim()
-      constraint.value = constraint.value.trim()
-      Axios.put(
-        `${API_URL}/flags/${this.flagId}/segments/${segment.id}/constraints/${constraint.id}`,
-        constraint
-      ).then(() => {
-        this.$message.success("constraint updated")
-      }, handleErr.bind(this))
-    },
-
-    deleteConstraint({ segment, constraint }) {
-      this.$confirm("Are you sure you want to delete this constraint?", "Warning", {
-        confirmButtonText: "OK", cancelButtonText: "Cancel", type: "warning"
-      }).then(() => {
-        Axios.delete(
-          `${API_URL}/flags/${this.flagId}/segments/${segment.id}/constraints/${constraint.id}`
-        ).then(() => {
-          segment.constraints = segment.constraints.filter(c => c.id !== constraint.id)
-          this.$message.success("constraint deleted")
-        }, handleErr.bind(this))
-      }).catch(() => {})
-    },
-
-    handleUpdateConstraintField({ constraint, field, value }) {
-      constraint[field] = value
-    },
-
-    // --- Distributions ---
-    handleEditDistribution(segment) {
-      this.selectedSegment = segment
-      const draft = {}
-      for (const d of segment.distributions) {
-        draft[d.variantID] = { ...d }
-      }
-      this.distributionDraft = draft
-      this.dialogEditDistributionOpen = true
-    },
-
-    handleSaveDistribution(draft) {
-      const distributions = Object.values(draft)
-        .filter(d => d.percent !== 0)
-        .map(d => {
-          const dist = { ...d }
-          delete dist.id
-          return dist
-        })
-      Axios.put(
-        `${API_URL}/flags/${this.flagId}/segments/${this.selectedSegment.id}/distributions`,
-        { distributions }
-      ).then(response => {
-        this.selectedSegment.distributions = response.data
-        this.dialogEditDistributionOpen = false
-        this.$message.success("distributions updated")
-      }, handleErr.bind(this))
-    },
-
-    // --- Other ---
-    handleHistoryTabClick(tab) {
-      if (tab.props?.name === 'history') {
-        this.historyLoaded = true
-        this.historyKey++
-      }
-    },
-
-    // --- Data fetching ---
-    fetchFlag() {
-      Axios.get(`${API_URL}/flags/${this.flagId}`).then(response => {
-        this.flag = normalizeFlag(response.data)
-        this.loaded = true
-      }, handleErr.bind(this))
-      this.fetchEntityTypes()
-    },
-
-    fetchEntityTypes() {
-      const prepareEntityTypes = (entityTypes) => {
-        const arr = entityTypes.map(key => ({
-          label: key === "" ? "<null>" : key,
-          value: key
-        }))
-        if (entityTypes.indexOf("") === -1) {
-          arr.unshift({ label: "<null>", value: "" })
-        }
-        return arr
-      }
-
-      if (FLAGR_UI_POSSIBLE_ENTITY_TYPES && FLAGR_UI_POSSIBLE_ENTITY_TYPES != "null") {
-        this.entityTypes = prepareEntityTypes(FLAGR_UI_POSSIBLE_ENTITY_TYPES.split(","))
-        this.allowCreateEntityType = false
-        return
-      }
-      Axios.get(`${API_URL}/flags/entity_types`).then(response => {
-        this.entityTypes = prepareEntityTypes(response.data)
-      }, handleErr.bind(this))
-    }
   },
   mounted() {
-    this.fetchFlag()
-    this.loadAllTags()
-  }
+    mountFlagPage(this.page)
+  },
+  methods: {
+    onHistoryTabClick(tab: { props?: { name?: string } }) {
+      handleHistoryTabClick(this.page, tab)
+    },
+  },
 }
 </script>
 

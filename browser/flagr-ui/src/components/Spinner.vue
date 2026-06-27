@@ -1,11 +1,11 @@
 <template>
-  <div class="spinner"></div>
+  <div class="spinner" />
 </template>
 
-<script>
+<script lang="ts">
 export default {
-  name: "spinner"
-};
+  name: 'Spinner',
+}
 </script>
 
 <style scoped>

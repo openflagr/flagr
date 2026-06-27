@@ -1,163 +1,242 @@
 <template>
   <div class="container">
+    <spinner v-if="!loaded" />
 
-        <spinner v-if="!loaded" />
+    <div v-if="loaded">
+      <!-- Toolbar: Search + Create Flag button -->
+      <div class="flags-toolbar">
+        <div class="flags-search-wrap">
+          <el-icon class="flags-search-icon">
+            <Search />
+          </el-icon>
+          <el-input
+            v-model="searchTerm"
+            v-focus
+            placeholder="Search flags by ID, key, description, or tags..."
+            size="large"
+            data-testid="search-input"
+            class="flags-search"
+            clearable
+          />
+        </div>
+        <el-button
+          type="primary"
+          size="large"
+          data-testid="create-flag-btn"
+          @click="showCreateModal = true"
+        >
+          <el-icon><Plus /></el-icon>
+          Create Flag
+        </el-button>
+      </div>
 
-        <div v-if="loaded">
-          <!-- Toolbar: Search + Create Flag button -->
-          <div class="flags-toolbar">
-            <div class="flags-search-wrap">
-              <el-icon class="flags-search-icon"><Search /></el-icon>
-              <el-input
-                placeholder="Search flags by ID, key, description, or tags..."
-                v-model="searchTerm"
-                v-focus
-                size="large"
-                data-testid="search-input"
-                class="flags-search"
-                clearable
-              />
+      <!-- Flags Table -->
+      <el-card
+        shadow="never"
+        class="flags-table-card"
+      >
+        <el-table
+          :data="filteredFlags"
+          :highlight-current-row="false"
+          :default-sort="{ prop: 'id', order: 'descending' }"
+          virtual-scroll
+          size="small"
+          max-height="calc(100vh - 240px)"
+          style="width: 100%"
+          data-testid="flags-table"
+          @row-click="goToRow"
+        >
+          <el-table-column
+            prop="id"
+            align="center"
+            label="Flag ID"
+            sortable
+            width="100"
+          />
+          <el-table-column
+            prop="description"
+            label="Description"
+            min-width="250"
+          >
+            <template #default="scope">
+              <div class="flag-desc-cell">
+                <span class="flag-desc-text">{{ scope.row.description }}</span>
+                <span
+                  v-if="scope.row.key"
+                  class="flag-key-tag"
+                >key: {{ scope.row.key }}</span>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column
+            prop="tags"
+            label="Tags"
+            min-width="160"
+          >
+            <template #default="scope">
+              <div class="flag-tags-cell">
+                <el-tag
+                  v-for="tag in scope.row.tags"
+                  :key="tag.id"
+                  type="success"
+                  size="small"
+                  effect="light"
+                >
+                  {{ tag.value }}
+                </el-tag>
+                <span
+                  v-if="!scope.row.tags.length"
+                  class="flags-empty-tag"
+                >—</span>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column
+            prop="updatedBy"
+            label="Updated By"
+            sortable
+            width="140"
+          />
+          <el-table-column
+            prop="updatedAt"
+            label="Updated At"
+            :formatter="datetimeFormatter"
+            sortable
+            width="130"
+          />
+          <el-table-column
+            prop="enabled"
+            label="Status"
+            sortable
+            align="center"
+            width="120"
+            :filters="[{ text: 'Enabled', value: true }, { text: 'Disabled', value: false }]"
+            :filter-method="filterStatus"
+          >
+            <template #default="scope">
+              <el-tag
+                :type="scope.row.enabled ? 'primary' : 'info'"
+                effect="light"
+                size="small"
+                round
+              >
+                {{ scope.row.enabled ? "Enabled" : "Disabled" }}
+              </el-tag>
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-card>
+
+      <!-- Deleted Flags -->
+      <el-card
+        shadow="never"
+        class="flags-table-card"
+      >
+        <template #header>
+          <div class="el-card-header">
+            <div class="flex-row">
+              <div class="flex-row-left">
+                <h2>Deleted Flags</h2>
+              </div>
+              <div class="flex-row-right" />
             </div>
-            <el-button type="primary" size="large" @click="showCreateModal = true" data-testid="create-flag-btn">
-              <el-icon><Plus /></el-icon>
-              Create Flag
-            </el-button>
           </div>
-
-          <!-- Flags Table -->
-          <el-card shadow="never" class="flags-table-card">
-            <el-table
-              :data="filteredFlags"
-              :highlight-current-row="false"
-              :default-sort="{ prop: 'id', order: 'descending' }"
-              @row-click="goToFlag"
-              virtual-scroll
-              size="small"
-              max-height="calc(100vh - 240px)"
-              style="width: 100%"
-              data-testid="flags-table"
+        </template>
+        <el-collapse
+          class="deleted-flags-inner"
+          data-testid="deleted-flags-section"
+          @change="flagsListPage.fetchDeletedFlags(page)"
+        >
+          <el-collapse-item title="View deleted flags">
+            <div
+              v-if="!deletedFlagsLoaded"
+              class="card--empty"
             >
-              <el-table-column prop="id" align="center" label="Flag ID" sortable width="100"></el-table-column>
-              <el-table-column prop="description" label="Description" min-width="250">
-                <template #default="scope">
-                  <div class="flag-desc-cell">
-                    <span class="flag-desc-text">{{ scope.row.description }}</span>
-                    <span class="flag-key-tag" v-if="scope.row.key">key: {{ scope.row.key }}</span>
-                  </div>
-                </template>
-              </el-table-column>
-              <el-table-column prop="tags" label="Tags" min-width="160">
-                <template #default="scope">
-                  <div class="flag-tags-cell">
+              Loading...
+            </div>
+            <div v-else-if="deletedFlags.length">
+              <el-table
+                :data="deletedFlags"
+                :highlight-current-row="false"
+                :default-sort="{ prop: 'id', order: 'descending' }"
+                virtual-scroll
+                size="small"
+                max-height="calc(100vh - 240px)"
+                style="width: 100%"
+              >
+                <el-table-column
+                  prop="id"
+                  align="center"
+                  label="Flag ID"
+                  sortable
+                  width="140"
+                />
+                <el-table-column
+                  prop="description"
+                  label="Description"
+                  min-width="300"
+                />
+                <el-table-column
+                  prop="tags"
+                  label="Tags"
+                  min-width="200"
+                >
+                  <template #default="scope">
                     <el-tag
                       v-for="tag in scope.row.tags"
                       :key="tag.id"
                       type="success"
                       size="small"
                       effect="light"
-                    >{{ tag.value }}</el-tag>
-                    <span v-if="!scope.row.tags.length" class="flags-empty-tag">—</span>
-                  </div>
-                </template>
-              </el-table-column>
-              <el-table-column prop="updatedBy" label="Updated By" sortable width="140"></el-table-column>
-              <el-table-column
-                prop="updatedAt"
-                label="Updated At"
-                :formatter="datetimeFormatter"
-                sortable
-                width="130"
-              ></el-table-column>
-              <el-table-column
-                prop="enabled"
-                label="Status"
-                sortable
-                align="center"
-                width="120"
-                :filters="[{ text: 'Enabled', value: true }, { text: 'Disabled', value: false }]"
-                :filter-method="filterStatus"
-              >
-                <template #default="scope">
-                  <el-tag
-                    :type="scope.row.enabled ? 'primary' : 'info'"
-                    effect="light"
-                    size="small"
-                    round
-                  >{{ scope.row.enabled ? "Enabled" : "Disabled" }}</el-tag>
-                </template>
-              </el-table-column>
-            </el-table>
-          </el-card>
-
-          <!-- Deleted Flags -->
-          <el-card shadow="never" class="flags-table-card">
-            <template #header>
-              <div class="el-card-header">
-                <div class="flex-row">
-                  <div class="flex-row-left"><h2>Deleted Flags</h2></div>
-                  <div class="flex-row-right">
-                  </div>
-                </div>
-              </div>
-            </template>
-            <el-collapse class="deleted-flags-inner" @change="fetchDeletedFlags" data-testid="deleted-flags-section">
-              <el-collapse-item title="View deleted flags">
-                <div v-if="!deletedFlagsLoaded" class="card--empty">Loading...</div>
-                <div v-else-if="deletedFlags.length">
-                  <el-table
-                    :data="deletedFlags"
-                    :highlight-current-row="false"
-                    :default-sort="{ prop: 'id', order: 'descending' }"
-                    virtual-scroll
-                    size="small"
-                    max-height="calc(100vh - 240px)"
-                    style="width: 100%"
-                  >
-                    <el-table-column prop="id" align="center" label="Flag ID" sortable width="140"></el-table-column>
-                    <el-table-column prop="description" label="Description" min-width="300"></el-table-column>
-                    <el-table-column prop="tags" label="Tags" min-width="200">
-                      <template #default="scope">
-                        <el-tag
-                          v-for="tag in scope.row.tags"
-                          :key="tag.id"
-                          type="success"
-                          size="small"
-                          effect="light"
-                        >{{ tag.value }}</el-tag>
-                      </template>
-                    </el-table-column>
-                    <el-table-column prop="updatedBy" label="Updated By" sortable width="200"></el-table-column>
-                    <el-table-column
-                      prop="updatedAt"
-                      label="Updated At"
-                      :formatter="datetimeFormatter"
-                      sortable
-                      width="180"
-                    ></el-table-column>
-              <el-table-column
-                prop="action"
-                label="Action"
-                align="center"
-                width="100"
-              >
-                      <template #default="scope">
-                        <el-button
-                          @click="restoreFlag(scope.row)"
-                          type="warning"
-                          size="small"
-                          plain
-                          :data-testid="'restore-flag-' + scope.row.id"
-                        >Restore</el-button>
-                      </template>
-                    </el-table-column>
-                  </el-table>
-                </div>
-                <div v-else class="card--empty">No deleted flags</div>
-              </el-collapse-item>
-            </el-collapse>
-          </el-card>
-        </div>
-      </div>
+                    >
+                      {{ tag.value }}
+                    </el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  prop="updatedBy"
+                  label="Updated By"
+                  sortable
+                  width="200"
+                />
+                <el-table-column
+                  prop="updatedAt"
+                  label="Updated At"
+                  :formatter="datetimeFormatter"
+                  sortable
+                  width="180"
+                />
+                <el-table-column
+                  prop="action"
+                  label="Action"
+                  align="center"
+                  width="100"
+                >
+                  <template #default="scope">
+                    <el-button
+                      type="warning"
+                      size="small"
+                      plain
+                      :data-testid="'restore-flag-' + scope.row.id"
+                      @click="flagsListPage.restoreFlag(page, scope.row)"
+                    >
+                      Restore
+                    </el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+            <div
+              v-else
+              class="card--empty"
+            >
+              No deleted flags
+            </div>
+          </el-collapse-item>
+        </el-collapse>
+      </el-card>
+    </div>
+  </div>
 
   <!-- Create Flag Modal -->
   <el-dialog
@@ -174,18 +253,22 @@
         placeholder="e.g. Enable new onboarding flow"
         data-testid="new-flag-input"
         size="large"
-        @keyup.enter="createFlag"
+        @keyup.enter="flagsListPage.createFlag(page)"
       />
-      <p class="create-flag-hint">A short description of what this feature flag controls.</p>
+      <p class="create-flag-hint">
+        A short description of what this feature flag controls.
+      </p>
 
       <div class="create-flag-options">
         <div class="create-flag-option">
           <el-button
             type="primary"
             :disabled="!newFlag.description"
-            @click="createFlag"
             data-testid="create-flag-submit-btn"
-          >Create Flag</el-button>
+            @click="flagsListPage.createFlag(page)"
+          >
+            Create Flag
+          </el-button>
           <span class="create-flag-option-sub">Blank flag — configure variants and segments yourself</span>
         </div>
         <div class="create-flag-option">
@@ -193,156 +276,118 @@
             type="primary"
             plain
             :disabled="!newFlag.description"
-            @click="createBooleanFlag"
             data-testid="create-boolean-flag-btn"
-          >Create Boolean Flag</el-button>
+            @click="flagsListPage.createBooleanFlag(page)"
+          >
+            Create Boolean Flag
+          </el-button>
           <span class="create-flag-option-sub">Ready-to-use flag with on/off variants and a 100% rollout</span>
         </div>
       </div>
     </div>
     <template #footer>
-      <el-button @click="showCreateModal = false">Cancel</el-button>
+      <el-button @click="showCreateModal = false">
+        Cancel
+      </el-button>
     </template>
   </el-dialog>
 </template>
 
-<script>
-import Axios from "axios";
-import { Plus, Search } from "@element-plus/icons-vue";
 
-import constants from "@/constants";
-import Spinner from "@/components/Spinner";
-import helpers from "@/helpers/helpers";
+<script lang="ts">
+import { Plus, Search } from '@element-plus/icons-vue'
+import Spinner from '@/components/Spinner.vue'
+import { getFlagsCache } from '@/pages/flagsListPage'
+import helpers from '@/helpers/helpers'
+import { castFlagsList } from '@/helpers/vuePageCast'
+import * as flagsListPage from '@/pages/flagsListPage'
+import {
+  datetimeFormatter,
+  filterStatus,
+  mountFlagsList,
+} from '@/pages/flagsListPage'
+import type { Flag } from '@/api/types'
 
-const { handleErr, debounce } = helpers;
-const { API_URL } = constants;
-
-
-let flagsCache = null; // { flags: [], maxSnapshotID: number } | null
+const { debounce } = helpers
 
 export default {
-  name: "flags",
+  name: 'Flags',
   components: {
     spinner: Spinner,
     Plus,
     Search,
   },
   data() {
-    const cached = flagsCache;
+    const cached = getFlagsCache()
     return {
+      flagsListPage,
       loaded: !!cached,
-      flags: cached ? cached.flags : [],
+      flags: cached ? cached.flags : [] as Flag[],
       deletedFlagsLoaded: false,
-      deletedFlags: [],
-      searchTerm: "",
-      debouncedSearchTerm: "",
+      deletedFlags: [] as Flag[],
+      searchTerm: '',
+      debouncedSearchTerm: '',
       showCreateModal: false,
       newFlag: {
-        description: ""
-      }
-    };
-  },
-
-  beforeUnmount() {
-    if (this._visHandler) document.removeEventListener('visibilitychange', this._visHandler);
-  },
-
-  mounted() {
-    this._visHandler = () => { if (!document.hidden) this.refreshFlags(); };
-    document.addEventListener('visibilitychange', this._visHandler);
-  },
-
-  created() {
-    this._debouncedUpdate = debounce(() => {
-      this.debouncedSearchTerm = this.searchTerm;
-    }, 150);
-    this.refreshFlags();
+        description: '',
+      },
+      visHandler: null as (() => void) | null,
+      debouncedUpdate: null as (() => void) | null,
+    }
   },
   computed: {
-    filteredFlags() {
+    page() {
+      return castFlagsList(this)
+    },
+    filteredFlags(): Flag[] {
       if (this.debouncedSearchTerm) {
-        const terms = this.debouncedSearchTerm.split(",");
+        const terms = this.debouncedSearchTerm.split(',')
         return this.flags.filter(({ id, key, description, tags }) =>
-          terms.every(term => {
-            const t = term.toLowerCase();
+          terms.every((term) => {
+            const t = term.toLowerCase()
             return (
-              id.toString().includes(t) ||
+              id?.toString().includes(t) ||
               (key && key.toLowerCase().includes(t)) ||
               (description && description.toLowerCase().includes(t)) ||
-              (tags && tags.some(tag => tag.value && tag.value.toLowerCase().includes(t)))
-            );
-          })
-        );
+              (tags && tags.some((tag) => tag.value && tag.value.toLowerCase().includes(t)))
+            )
+          }),
+        )
       }
-      return this.flags;
+      return this.flags
     },
   },
   watch: {
     searchTerm() {
-      this._debouncedUpdate();
+      this.debouncedUpdate?.()
     },
   },
-  methods: {
-    async refreshFlags() {
-      try {
-        const { data: { maxID } } = await Axios.get(`${API_URL}/flags/snapshots/max_id`);
-        if (flagsCache && maxID === flagsCache.maxSnapshotID) return;
-        const { data } = await Axios.get(`${API_URL}/flags`);
-        const flags = [...data].reverse();
-        flagsCache = { flags, maxSnapshotID: maxID };
-        this.flags = flags;
-        this.loaded = true;
-      } catch (err) {
-        handleErr.call(this, err);
-      }
-    },
-    datetimeFormatter(row, col, val) {
-      return val ? val.split(".")[0] : "";
-    },
-    goToFlag(row) {
-      this.$router.push({ name: "flag", params: { flagId: row.id } });
-    },
-    createBooleanFlag() {
-      this.createFlag({ template: "simple_boolean_flag" });
-    },
-    createFlag(params) {
-      if (!this.newFlag.description) return;
-      const payload = params ? { ...this.newFlag, ...params } : { ...this.newFlag };
-      Axios.post(`${API_URL}/flags`, payload).then(response => {
-        const flag = response.data;
-        this.newFlag.description = "";
-        this.showCreateModal = false;
-        this.$message.success("Flag created");
-        this.flags.unshift(flag);
-      }, handleErr.bind(this));
-    },
-    restoreFlag(row) {
-      this.$confirm("This will recover the deleted flag. Continue?", "Warning", {
-        confirmButtonText: "OK",
-        cancelButtonText: "Cancel",
-        type: "warning"
-      }).then(() => {
-        Axios.put(`${API_URL}/flags/${row.id}/restore`).then(response => {
-          const flag = response.data;
-          this.$message.success(`Flag restored`);
-          this.flags.push(flag);
-          this.deletedFlags = this.deletedFlags.filter(el => el.id !== flag.id);
-        }, handleErr.bind(this));
-      });
-    },
-    fetchDeletedFlags() {
-      if (!this.deletedFlagsLoaded) {
-        Axios.get(`${API_URL}/flags?deleted=true`).then(response => {
-          this.deletedFlags = [...response.data].reverse();
-          this.deletedFlagsLoaded = true;
-        }, handleErr.bind(this));
-      }
-    },
-    filterStatus(value, row) {
-      return row.enabled === value;
+
+  beforeUnmount() {
+    if (this.visHandler) document.removeEventListener('visibilitychange', this.visHandler)
+  },
+
+  mounted() {
+    this.visHandler = () => {
+      if (!document.hidden) flagsListPage.refreshFlags(this.page)
     }
-  }
-};
+    document.addEventListener('visibilitychange', this.visHandler)
+  },
+
+  created() {
+    this.debouncedUpdate = debounce(() => {
+      this.debouncedSearchTerm = this.searchTerm
+    }, 150)
+    mountFlagsList(this.page)
+  },
+  methods: {
+    goToRow(row: Flag) {
+      flagsListPage.goToFlag(this.page, row)
+    },
+    datetimeFormatter,
+    filterStatus,
+  },
+}
 </script>
 
 <style lang="scss" scoped>

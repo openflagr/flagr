@@ -1,79 +1,192 @@
+# Flagr — command entrypoint (repo root)
+#
+# Naming: multi-word targets use hyphens (build-ui, test-e2e, stop-ui).
+# Run `make` or `make help` for the public catalog.
+
 PWD := $(shell pwd)
 GOPATH := $(shell go env GOPATH)
+FLAGR_UI_DIR := browser/flagr-ui
+INTEGRATION_DIR := integration_tests
 
-################################
-### Public
-################################
+.DEFAULT_GOAL := help
 
-all: deps gen build build_ui run
+# ------------------------------------------------------------------------------
+# Help
+# ------------------------------------------------------------------------------
 
-rebuild: gen build
+.PHONY: help
+help:
+	@echo "Flagr Makefile — run from repository root"
+	@echo ""
+	@echo "Setup"
+	@echo "  make deps              Go tools (swagger, golangci-lint)"
+	@echo "  make gen               OpenAPI bundle + swagger_gen + cmd stub"
+	@echo ""
+	@echo "Build"
+	@echo "  make build             Go server → ./flagr"
+	@echo "  make build-ui          UI: npm install, lint, typecheck, Vite → dist/"
+	@echo "  make rebuild           gen + build (server only)"
+	@echo ""
+	@echo "Run (dev)"
+	@echo "  make start             run + run-ui in parallel (run make build first)"
+	@echo "  make run               Pre-built ./flagr on :18000"
+	@echo "  make run-ui            UI dev server on :8080"
+	@echo "  make stop-ui           Free :18000 and :8080 (lsof, not pkill)"
+	@echo "  make rebuild-run       build → stop-ui → start"
+	@echo "  make serve-docs        Docsify site for ./docs"
+	@echo ""
+	@echo "Test"
+	@echo "  make test              Lint + swagger validate + Go unit tests"
+	@echo "  make test-e2e          build + UI check + Playwright"
+	@echo "  make test-integration  build + API integration (SQLite, local server)"
+	@echo "  make test-integration-compose"
+	@echo "                         Same suite vs 6 Docker Compose instances"
+	@echo "  make bench-integration HTTP eval benchmarks (local server)"
+	@echo "  make benchmark         Go package benchmarks (pkg/)"
+	@echo ""
+	@echo "CI (GitHub Actions call these)"
+	@echo "  make ci                Unit test gate (lint + swagger + go test)"
+	@echo "  make ci-swagger        Regenerate swagger; fail if git dirty"
+	@echo "  make ci-integration    Compose integration tests + benchmarks"
+	@echo ""
+	@echo "Other"
+	@echo "  make swagger           Regenerate swagger_gen/ (do not hand-edit)"
+	@echo "  make clean             Remove test binaries and build artifacts"
+	@echo "  make vendor            go mod tidy + vendor"
 
-test: verifiers
-	@go test -covermode=atomic -coverprofile=coverage.txt github.com/openflagr/flagr/pkg/...
+# ------------------------------------------------------------------------------
+# Setup
+# ------------------------------------------------------------------------------
 
-.PHONY: benchmark
-benchmark:
-	@go test -benchmem -run=^$$ -bench . ./pkg/...
+.PHONY: deps gen vendor
 
-ci: test
+deps:
+	@CGO_ENABLED=0 go install github.com/go-swagger/go-swagger/cmd/swagger@v0.34.1
+	@CGO_ENABLED=0 go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
+
+gen: api_docs swagger
 
 .PHONY: vendor
 vendor:
 	@go mod tidy
 	@go mod vendor
 
+# ------------------------------------------------------------------------------
+# Build
+# ------------------------------------------------------------------------------
+
+.PHONY: build build-ui rebuild
+
 build:
 	@echo "Building Flagr Server to $(PWD)/flagr ..."
 	@CGO_ENABLED=0 go build -o $(PWD)/flagr github.com/openflagr/flagr/cmd/flagr-server
 
-build_ui:
-	@echo "Building Flagr UI ..."
-	@cd ./browser/flagr-ui/; npm install && npm run build
+flagr-ui-npm:
+	@cd $(FLAGR_UI_DIR) && npm install
 
-run_ui:
-	@cd ./browser/flagr-ui/; npm run dev
+flagr-ui-check: flagr-ui-npm
+	@cd $(FLAGR_UI_DIR) && npm run lint && npm run typecheck && npm run test
+
+build-ui: flagr-ui-check
+	@echo "Building Flagr UI ..."
+	@cd $(FLAGR_UI_DIR) && npm run build
+
+rebuild: gen build
+
+# ------------------------------------------------------------------------------
+# Run (dev)
+# ------------------------------------------------------------------------------
+
+.PHONY: start run run-ui stop-ui rebuild-run serve-docs
 
 run:
-	@$(PWD)/flagr --port 18000
+	@test -x ./flagr || (echo "Run make build first" && exit 1)
+	@./flagr --port 18000
 
-test-e2e: build
-	@echo "Running Flagr UI e2e tests..."
-	@cd ./browser/flagr-ui/; npx playwright test
+run-ui: flagr-ui-npm
+	@cd $(FLAGR_UI_DIR) && npm run dev
 
-.PHONY: test-integration
-test-integration: build
-	@echo "Running Go integration tests (local auto-start mode)..."
-	@go test -tags=integration -count=1 -v ./integration_tests/
-
-.PHONY: bench-integration
-bench-integration: build
-	@echo "Running Go integration benchmarks (local auto-start mode)..."
-	@go test -tags=integration -bench=. -benchmem -count=1 -run=^$$ ./integration_tests/ > integration-bench.txt
-	@echo "Benchmarks saved to integration-bench.txt"
-
+start:
+	$(MAKE) -j run run-ui
 
 stop-ui:
 	@-kill $$(lsof -ti:18000 2>/dev/null) 2>/dev/null; kill $$(lsof -ti:8080 2>/dev/null) 2>/dev/null; sleep 1; echo "Stopped UI services"
 
 rebuild-run: build stop-ui start
 
-start:
-	$(MAKE) -j run run_ui
-
-gen: api_docs swagger
-
-deps:
-	@CGO_ENABLED=0 go install github.com/go-swagger/go-swagger/cmd/swagger@v0.34.1
-	@CGO_ENABLED=0 go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
-
-serve_docs:
+serve-docs:
 	@npm install -g docsify-cli@4
 	@docsify serve $(PWD)/docs
 
-################################
-### Private
-################################
+# ------------------------------------------------------------------------------
+# Test
+# ------------------------------------------------------------------------------
+
+.PHONY: test test-e2e test-integration test-integration-compose bench-integration benchmark ci ci-swagger ci-integration
+
+test: verifiers
+	@go test -covermode=atomic -coverprofile=coverage.txt github.com/openflagr/flagr/pkg/...
+
+test-e2e: build flagr-ui-check
+	@echo "Installing Playwright browsers (chromium)..."
+	@cd $(FLAGR_UI_DIR) && npx playwright install chromium
+	@echo "Running Flagr UI e2e tests..."
+	@cd $(FLAGR_UI_DIR) && npx playwright test
+
+test-integration: build
+	@echo "Running Go integration tests (local auto-start mode)..."
+	@go test -tags=integration -count=1 -v ./integration_tests/
+
+test-integration-compose:
+	@$(MAKE) -C $(INTEGRATION_DIR) test
+
+bench-integration: build
+	@echo "Running Go integration benchmarks (local auto-start mode)..."
+	@go test -tags=integration -bench=. -benchmem -count=1 -run=^$$ ./integration_tests/ > integration-bench.txt
+	@echo "Benchmarks saved to integration-bench.txt"
+
+benchmark:
+	@go test -benchmem -run=^$$ -bench . ./pkg/...
+
+ci: test
+
+ci-swagger: swagger
+	@echo "Checking swagger_gen is committed"
+	@git diff --exit-code
+
+ci-integration:
+	@$(MAKE) -C $(INTEGRATION_DIR) test-and-bench
+
+# ------------------------------------------------------------------------------
+# Maintenance
+# ------------------------------------------------------------------------------
+
+.PHONY: swagger clean all
+
+swagger: verify_swagger
+	@echo "Regenerate swagger files"
+	@rm -f /tmp/configure_flagr.go
+	@cp $(PWD)/swagger_gen/restapi/configure_flagr.go /tmp/configure_flagr.go 2>/dev/null || :
+	@rm -rf $(PWD)/swagger_gen
+	@mkdir $(PWD)/swagger_gen
+	@swagger generate server -t ./swagger_gen -f $(PWD)/docs/api_docs/bundle.yaml
+	@cp /tmp/configure_flagr.go $(PWD)/swagger_gen/restapi/configure_flagr.go 2>/dev/null || :
+	@mkdir -p $(PWD)/cmd/flagr-server
+	@cp $(PWD)/swagger_gen/cmd/flagr-server/main.go $(PWD)/cmd/flagr-server/main.go
+	@rm -rf $(PWD)/swagger_gen/cmd
+
+clean:
+	@echo "Cleaning up all the generated files"
+	@find . -name '*.test' | xargs rm -fv
+	@rm -rf build
+	@rm -rf release
+
+# Full local bootstrap (uncommon)
+all: deps gen build build-ui run
+
+# ------------------------------------------------------------------------------
+# Private
+# ------------------------------------------------------------------------------
 
 api_docs:
 	@echo "Installing swagger-merger" && npm install swagger-merger -g
@@ -88,25 +201,3 @@ verify_lint:
 verify_swagger:
 	@echo "Running $@"
 	@swagger validate $(PWD)/docs/api_docs/bundle.yaml
-
-verify_swagger_nochange: swagger
-	@echo "Running verify_swagger_nochange to make sure the swagger generated code is checked in"
-	@git diff --exit-code
-
-clean:
-	@echo "Cleaning up all the generated files"
-	@find . -name '*.test' | xargs rm -fv
-	@rm -rf build
-	@rm -rf release
-
-swagger: verify_swagger
-	@echo "Regenerate swagger files"
-	@rm -f /tmp/configure_flagr.go
-	@cp $(PWD)/swagger_gen/restapi/configure_flagr.go /tmp/configure_flagr.go 2>/dev/null || :
-	@rm -rf $(PWD)/swagger_gen
-	@mkdir $(PWD)/swagger_gen
-	@swagger generate server -t ./swagger_gen -f $(PWD)/docs/api_docs/bundle.yaml
-	@cp /tmp/configure_flagr.go $(PWD)/swagger_gen/restapi/configure_flagr.go 2>/dev/null || :
-	@mkdir -p $(PWD)/cmd/flagr-server
-	@cp $(PWD)/swagger_gen/cmd/flagr-server/main.go $(PWD)/cmd/flagr-server/main.go
-	@rm -rf $(PWD)/swagger_gen/cmd

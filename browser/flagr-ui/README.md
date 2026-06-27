@@ -1,36 +1,18 @@
 # flagr-ui
 
-## Project setup
-```
-npm install
-```
+Vue 3 + Vite + TypeScript. **Commands live in the repo root `Makefile`** — run `make help` there.
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
+| Goal | From repo root |
+|------|----------------|
+| Dev server (`:8080`) | `make run-ui` (or `make start` with backend) |
+| Production build | `make build-ui` |
+| Lint + types + unit | `make flagr-ui-check` |
+| Playwright e2e | `make test-e2e` |
 
-### Compiles and minifies for production
-```
-npm run build
-```
+Layout: `src/api/` (`crud.ts`, `eval.ts`, `types.ts`) · `src/pages/` · `src/components/` · `src/helpers/` (`evaluation.ts` for debug console)
 
-### Run your tests
-```
-npm run test
-```
+DTOs: `src/api/types.ts` (aligned with `docs/api_docs/bundle.yaml`).
 
-### Lints and fixes files
-```
-npm run lint
-```
+Config: `VITE_API_URL` (default `/api/v1`) in `src/helpers/constants.ts`.
 
-### Upgrade vue-cli
-```
-npm install -g @vue/cli
-vue --version
-vue upgrade
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+**Architecture (As-built):** [`docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md`](../../docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md)
