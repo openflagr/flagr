@@ -43,6 +43,7 @@ func TestIntegration_Health(t *testing.T) {
 func TestIntegration_FlagCRUD(t *testing.T) {
 	// Create a flag
 	key := fmt.Sprintf("crud_flag_%d", time.Now().UnixNano())
+	maxBeforeCreate := getSnapshotMaxID(t)
 	var created flagResponse
 	postJSON(t, "/api/v1/flags", map[string]any{
 		"key":         key,
@@ -51,6 +52,13 @@ func TestIntegration_FlagCRUD(t *testing.T) {
 	if created.ID == 0 {
 		t.Fatal("expected non-zero id")
 	}
+	maxAfterCreate := getSnapshotMaxID(t)
+	if maxAfterCreate <= maxBeforeCreate {
+		t.Fatalf("expected global max snapshot id to increase after create: before=%d after=%d", maxBeforeCreate, maxAfterCreate)
+	}
+	if n := countFlagSnapshots(t, created.ID); n < 1 {
+		t.Fatalf("expected at least 1 snapshot after create, got %d", n)
+	}
 
 	// Get flag
 	var fetched flagResponse
@@ -58,6 +66,8 @@ func TestIntegration_FlagCRUD(t *testing.T) {
 	if fetched.Key != key {
 		t.Fatalf("expected key %s, got %s", key, fetched.Key)
 	}
+
+	snapsBeforePut := countFlagSnapshots(t, created.ID)
 
 	// Put flag — description, key, dataRecordsEnabled, entityType
 	putJSON(t, fmt.Sprintf("/api/v1/flags/%d", created.ID), map[string]any{
@@ -68,6 +78,9 @@ func TestIntegration_FlagCRUD(t *testing.T) {
 	}, &fetched)
 	if !fetched.DataRecordsEnabled {
 		t.Fatalf("expected dataRecordsEnabled=true, got %v", fetched.DataRecordsEnabled)
+	}
+	if n := countFlagSnapshots(t, created.ID); n <= snapsBeforePut {
+		t.Fatalf("expected new snapshot after put: before=%d after=%d", snapsBeforePut, n)
 	}
 
 	// Set enabled (PUT)
@@ -126,9 +139,12 @@ func TestIntegration_FlagCRUD(t *testing.T) {
 	// Restore flag (PUT, not POST)
 	putJSON(t, fmt.Sprintf("/api/v1/flags/%d/restore", created.ID), nil, nil)
 
-	// Get snapshot
+	// Each mutation above should append one history row for this flag
 	var snapshots []any
 	getJSON(t, fmt.Sprintf("/api/v1/flags/%d/snapshots", created.ID), &snapshots)
+	if len(snapshots) < 5 {
+		t.Fatalf("expected at least 5 flag snapshots (create, put, enabled, delete, restore), got %d", len(snapshots))
+	}
 }
 
 func TestIntegration_SegmentCRUD(t *testing.T) {
@@ -344,6 +360,9 @@ func TestIntegration_DuplicateFlag(t *testing.T) {
 	var source flagResponse
 	getJSON(t, fmt.Sprintf("/api/v1/flags/%d", sourceID), &source)
 
+	sourceSnapsBefore := countFlagSnapshots(t, sourceID)
+	maxBefore := getSnapshotMaxID(t)
+
 	var clone flagResponse
 	postJSON(t, fmt.Sprintf("/api/v1/flags/%d/duplicate", sourceID), map[string]any{}, &clone)
 	if clone.ID == sourceID {
@@ -361,6 +380,18 @@ func TestIntegration_DuplicateFlag(t *testing.T) {
 	if len(clone.Segments) != len(source.Segments) {
 		t.Fatalf("segment count: source %d clone %d", len(source.Segments), len(clone.Segments))
 	}
+
+	if sourceSnapsAfter := countFlagSnapshots(t, sourceID); sourceSnapsAfter != sourceSnapsBefore {
+		t.Fatalf("duplicate must not append snapshots to source flag: before=%d after=%d", sourceSnapsBefore, sourceSnapsAfter)
+	}
+	if cloneSnaps := countFlagSnapshots(t, clone.ID); cloneSnaps != 1 {
+		t.Fatalf("duplicate must create exactly one snapshot on the new flag, got %d", cloneSnaps)
+	}
+	maxAfter := getSnapshotMaxID(t)
+	if maxAfter <= maxBefore {
+		t.Fatalf("expected global max snapshot id to increase after duplicate: before=%d after=%d", maxBefore, maxAfter)
+	}
+
 	getJSON(t, fmt.Sprintf("/api/v1/flags/%d", clone.ID), &clone)
 	if clone.ID == 0 {
 		t.Fatal("GET clone failed")

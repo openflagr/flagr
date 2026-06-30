@@ -112,6 +112,24 @@ func pollUntil(name, url string, timeout time.Duration, check func() bool) error
 	}
 }
 
+type snapshotMaxIDResponse struct {
+	MaxID int64 `json:"maxID"`
+}
+
+func getSnapshotMaxID(t *testing.T) int64 {
+	t.Helper()
+	var out snapshotMaxIDResponse
+	getJSON(t, "/api/v1/flags/snapshots/max_id", &out)
+	return out.MaxID
+}
+
+func countFlagSnapshots(t *testing.T, flagID int64) int {
+	t.Helper()
+	var snaps []json.RawMessage
+	getJSON(t, fmt.Sprintf("/api/v1/flags/%d/snapshots", flagID), &snaps)
+	return len(snaps)
+}
+
 // ---------------------------------------------------------------------------
 // API response types
 // ---------------------------------------------------------------------------
