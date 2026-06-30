@@ -41,7 +41,7 @@ func TestIntegration_Health(t *testing.T) {
 }
 
 func TestIntegration_FlagCRUD(t *testing.T) {
-	// Create a flag
+	requireFlagSnapshotMaxIDAPI(t)
 	key := fmt.Sprintf("crud_flag_%d", time.Now().UnixNano())
 	maxBeforeCreate := getSnapshotMaxID(t)
 	var created flagResponse
@@ -365,6 +365,7 @@ func TestIntegration_DistributionCRUD(t *testing.T) {
 	getJSON(t, fmt.Sprintf("/api/v1/flags/%d", flagID), &flag)
 }
 func TestIntegration_DuplicateFlag(t *testing.T) {
+	requireDuplicateFlagAPI(t)
 	if len(seedFlagIDs) == 0 {
 		t.Fatal("no seeded flags available")
 	}
@@ -427,6 +428,7 @@ func TestIntegration_DuplicateFlag(t *testing.T) {
 }
 
 func TestIntegration_DuplicateFlag_Errors(t *testing.T) {
+	requireDuplicateFlagAPI(t)
 	if len(seedFlagIDs) == 0 {
 		t.Fatal("no seeded flags available")
 	}
