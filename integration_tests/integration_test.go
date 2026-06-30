@@ -9,7 +9,7 @@
 //
 // Execution modes:
 //   - Local:   go test -tags=integration ./integration_tests/
-//              (auto-starts server with SQLite :memory:, recorder on)
+//              (auto-starts server: SQLite :memory:, recorder on, Datar flush 500ms, eval cache 1s)
 //   - BYO:     FLAGR_SERVER_URL=http://host:18000 go test -tags=integration ./integration_tests/
 //   - Docker:  cd integration_tests && make test
 //              (builds binary, runs against all 6 compose instances)

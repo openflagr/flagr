@@ -57,6 +57,7 @@ Run from **repo root**. Match what [`.github/workflows/ci.yml`](.github/workflow
 - `pages/flagPage.ts`, `pages/flagsListPage.ts` (incl. list snapshot cache) — orchestration; `flagPage.*(page)` / `flagsListPage.*(page)` via `castFlagPage` / `castFlagsList`
 - Composed REST in `api/crud.ts`; UI via `helpers/runApi`; eval UI helpers in `helpers/evaluation.ts`
 - Architecture: **`docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md`** (As-built)
+- Duplicate flag + transactional snapshots: **`docs/plans/2026-06-30-001-duplicate-flag-plan.md`** (As-built)
 
 ## Constraints
 

@@ -24,6 +24,10 @@ what happened:
 | `delete` | A flag is soft-deleted, **or** a segment, variant, constraint, or tag is deleted from a flag |
 | `restore` | A soft-deleted flag is restored |
 
+Duplicating a flag (`POST /api/v1/flags/{flagID}/duplicate`) emits a **`create`**
+notification on the **new** flag (`component_type: "flag"`), same as `POST /flags`.
+The source flag does not receive a snapshot or notification.
+
 The `component_type` field identifies **what** changed (`flag`, `segment`,
 `variant`, `constraint`, `distribution`, or `tag`).
 

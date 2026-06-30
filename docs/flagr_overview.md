@@ -137,10 +137,12 @@ Go implementation (not generated from the old `flagr_arch.png`). When the
 diagram and code disagree, **code wins** — update this page.
 
 **Implementation map:** `pkg/handler` (`handler.go`, `eval.go`, `eval_cache.go`,
-`exposure.go`, `data_recorder*.go`), `pkg/entity/flag_snapshot.go`,
+`exposure.go`, `data_recorder*.go`, `crud_snapshot.go`, `crud_duplicate.go`),
+`pkg/entity/flag_snapshot.go`, `pkg/entity/flag_template.go`,
 `pkg/config/config.go` (eval-only drivers). **Tests that encode the contract:**
 `TestReloadMapCacheShortCircuit`, `TestRecordCountsTowardDatar`,
-`TestAllMutationHandlersCallSaveFlagSnapshot` in `pkg/handler/`.
+`TestAllMutationHandlersCallSaveFlagSnapshot`, `TestCommitFlagMutation_RollbackOnMutateFailure`
+in `pkg/handler/`.
 
 Three logical components implement the read / write / record split:
 
@@ -226,7 +228,11 @@ evaluation`). No record when flag is missing, disabled, or has no segments.
 `GET /api/v1/flags/snapshots/max_id`.
 
 **Manager** — CRUD for flags, segments, variants, constraints, distributions,
-tags; not on the eval request path.
+tags, and **`POST /flags/{flagID}/duplicate`** (full graph clone in one transaction);
+not on the eval request path. Flag detail UI exposes **Duplicate Flag** (confirm + link toast).
+Mutations use **`commitFlagMutation`**: one DB transaction for the change plus a
+`flag_snapshot` row; webhooks run only after commit. Boolean create and duplicate
+share **`ApplyFlagTemplate`** (`SimpleBooleanFlagTemplate` / `SourceFlagTemplate`).
 
 **Metrics** — `FLAGR_RECORDER_ENABLED` + per-flag `dataRecordsEnabled`; combine
 backends via `FLAGR_RECORDER_TYPE` (e.g. `kafka,datar`). Details:

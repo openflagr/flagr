@@ -78,6 +78,12 @@ kill switch to turn off the entire flag regardless of segments or distributions.
 
 ![feature flagging setting demo](/images/demo_ff.png)
 
+To copy an existing flag’s segments, variants, and tags into a new flag (for example
+to fork an experiment or reuse a rollout pattern), use **`POST /api/v1/flags/{flagID}/duplicate`**
+or **Duplicate Flag** on the flag detail page in the UI. The clone gets a new key and
+` (cloned)` in the description by default; optional `key` and `description` in the API
+body override those defaults.
+
 ## Experimenting — A/B testing
 
 A feature flag answers *on or off?* An experiment answers a harder question:
