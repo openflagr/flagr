@@ -1426,12 +1426,12 @@ func TestCrudDistributionsWithFailures(t *testing.T) {
 }
 
 // TestAllMutationHandlersCallSaveFlagSnapshot enforces that every mutation
-// handler records a flag snapshot (commitFlagMutation, or WriteFlagSnapshotTx for tx-heavy handlers).
+// handler records a flag snapshot via commitFlagMutation.
 func TestAllMutationHandlersCallSaveFlagSnapshot(t *testing.T) {
 	files := []string{"crud.go", "crud_flag_creation.go", "crud_duplicate.go"}
 
 	isMutation := func(name string) bool {
-		for _, p := range []string{"Create", "Put", "Delete", "Restore", "Set"} {
+		for _, p := range []string{"Create", "Put", "Delete", "Restore", "Set", "Duplicate"} {
 			if strings.HasPrefix(name, p) {
 				return true
 			}
@@ -1480,27 +1480,15 @@ func TestAllMutationHandlersCallSaveFlagSnapshot(t *testing.T) {
 				if !ok {
 					return true
 				}
-				switch fun := call.Fun.(type) {
-				case *ast.Ident:
-					if fun.Name == "commitFlagMutation" {
-						callsSnapshot = true
-						return false
-					}
-				case *ast.SelectorExpr:
-					pkg, ok := fun.X.(*ast.Ident)
-					if !ok {
-						return true
-					}
-					if pkg.Name == "entity" && fun.Sel.Name == "WriteFlagSnapshotTx" {
-						callsSnapshot = true
-						return false
-					}
+				if fun, ok := call.Fun.(*ast.Ident); ok && fun.Name == "commitFlagMutation" {
+					callsSnapshot = true
+					return false
 				}
 				return true
 			})
 
 			if !callsSnapshot {
-				t.Errorf("%s: mutation handler %q must call commitFlagMutation or entity.WriteFlagSnapshotTx", filename, name)
+				t.Errorf("%s: mutation handler %q must call commitFlagMutation", filename, name)
 			}
 		}
 	}

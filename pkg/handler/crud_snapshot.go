@@ -6,25 +6,32 @@ import (
 	"gorm.io/gorm"
 )
 
+// MutationNotify carries webhook component metadata after a successful mutation.
+type MutationNotify struct {
+	ComponentID  uint
+	ComponentKey string
+}
+
+// commitFlagMutation runs mutate in one transaction, writes a flag snapshot on the same tx, commits, then notifies.
+// snapshotFlagID is the flag whose history row is updated (use 0 when the new flag ID is assigned inside mutate).
 func commitFlagMutation(
-	flagID uint,
+	snapshotFlagID uint,
 	subject string,
 	operation notification.Operation,
 	componentType notification.ComponentType,
-	mutate func(tx *gorm.DB) error,
-	notifyComponent func() (componentID uint, componentKey string),
+	mutate func(tx *gorm.DB) (uint, MutationNotify, error),
 ) error {
 	tx := getDB().Begin()
-	if err := mutate(tx); err != nil {
+	resolvedID, notify, err := mutate(tx)
+	if err != nil {
 		tx.Rollback()
 		return err
 	}
-	snapshotFlagID := flagID
-	if snapshotFlagID == 0 {
-		componentID, _ := notifyComponent()
-		snapshotFlagID = componentID
+	flagIDForSnapshot := snapshotFlagID
+	if flagIDForSnapshot == 0 {
+		flagIDForSnapshot = resolvedID
 	}
-	meta, err := entity.WriteFlagSnapshotTx(tx, snapshotFlagID, subject)
+	meta, err := entity.WriteFlagSnapshotTx(tx, flagIDForSnapshot, subject)
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -32,7 +39,6 @@ func commitFlagMutation(
 	if err := tx.Commit().Error; err != nil {
 		return err
 	}
-	componentID, componentKey := notifyComponent()
-	entity.NotifyFlagSnapshot(snapshotFlagID, subject, operation, componentType, componentID, componentKey, meta)
+	entity.NotifyFlagSnapshot(flagIDForSnapshot, subject, operation, componentType, notify.ComponentID, notify.ComponentKey, meta)
 	return nil
 }

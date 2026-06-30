@@ -45,6 +45,7 @@ export interface FlagPageVm extends ConfirmVm {
   entityTypes: EntityTypeOption[]
   allowCreateEntityType: boolean
   dialogCreateSegmentOpen: boolean
+  dialogDuplicateFlagVisible: boolean
   dialogEditDistributionOpen: boolean
   selectedSegment: Segment | null
   distributionDraft: Record<string, DistributionDraft>
@@ -83,14 +84,12 @@ export function deleteFlag(vm: FlagPageVm): void {
   })
 }
 
-export function duplicateFlag(vm: FlagPageVm & { dialogDuplicateFlagVisible?: boolean }): void {
+export function duplicateFlag(vm: FlagPageVm): void {
   runApi(vm, crudApi.duplicateFlag(vm.flagId), {
     onSuccess: (cloned) => {
       const cloneId = cloned.id
       if (cloneId == null) return
-      if (vm.dialogDuplicateFlagVisible !== undefined) {
-        vm.dialogDuplicateFlagVisible = false
-      }
+      vm.dialogDuplicateFlagVisible = false
       vm.$message({
         type: 'success',
         duration: 0,

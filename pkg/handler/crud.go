@@ -243,9 +243,9 @@ func (c *crud) PutFlag(params flag.PutFlagParams) middleware.Responder {
 	subject := getSubjectFromRequest(params.HTTPRequest)
 	f := &entity.Flag{}
 
-	err := commitFlagMutation(flagID, subject, notification.OperationUpdate, notification.ComponentFlag, func(tx *gorm.DB) error {
+	err := commitFlagMutation(flagID, subject, notification.OperationUpdate, notification.ComponentFlag, func(tx *gorm.DB) (uint, MutationNotify, error) {
 		if err := tx.First(f, params.FlagID).Error; err != nil {
-			return err
+			return 0, MutationNotify{}, err
 		}
 		if params.Body.Description != nil {
 			f.Description = *params.Body.Description
@@ -256,14 +256,14 @@ func (c *crud) PutFlag(params flag.PutFlagParams) middleware.Responder {
 		if params.Body.Key != nil {
 			key, err := entity.CreateFlagKey(*params.Body.Key)
 			if err != nil {
-				return err
+				return 0, MutationNotify{}, NewError(400, "%s", err)
 			}
 			f.Key = key
 		}
 		if params.Body.EntityType != nil {
 			et := *params.Body.EntityType
 			if err := entity.CreateFlagEntityType(tx, et); err != nil {
-				return err
+				return 0, MutationNotify{}, err
 			}
 			f.EntityType = et
 		}
@@ -271,13 +271,19 @@ func (c *crud) PutFlag(params flag.PutFlagParams) middleware.Responder {
 			f.Notes = *params.Body.Notes
 		}
 		if err := tx.Save(f).Error; err != nil {
-			return err
+			return 0, MutationNotify{}, err
 		}
-		return entity.PreloadSegmentsVariantsTags(tx).First(f, params.FlagID).Error
-	}, func() (uint, string) { return flagID, f.Key })
+		if err := entity.PreloadSegmentsVariantsTags(tx).First(f, params.FlagID).Error; err != nil {
+			return 0, MutationNotify{}, err
+		}
+		return flagID, MutationNotify{ComponentID: flagID, ComponentKey: f.Key}, nil
+	})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return flag.NewPutFlagDefault(404).WithPayload(ErrorMessage("%s", err))
+		}
+		if herr, ok := err.(*Error); ok {
+			return flag.NewPutFlagDefault(herr.StatusCode).WithPayload(ErrorMessage("%s", err))
 		}
 		return flag.NewPutFlagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
@@ -296,13 +302,16 @@ func (c *crud) SetFlagEnabledState(params flag.SetFlagEnabledParams) middleware.
 	subject := getSubjectFromRequest(params.HTTPRequest)
 	f := &entity.Flag{}
 
-	err := commitFlagMutation(flagID, subject, notification.OperationUpdate, notification.ComponentFlag, func(tx *gorm.DB) error {
+	err := commitFlagMutation(flagID, subject, notification.OperationUpdate, notification.ComponentFlag, func(tx *gorm.DB) (uint, MutationNotify, error) {
 		if err := tx.First(f, params.FlagID).Error; err != nil {
-			return err
+			return 0, MutationNotify{}, err
 		}
 		f.Enabled = *params.Body.Enabled
-		return tx.Save(f).Error
-	}, func() (uint, string) { return flagID, f.Key })
+		if err := tx.Save(f).Error; err != nil {
+			return 0, MutationNotify{}, err
+		}
+		return flagID, MutationNotify{ComponentID: flagID, ComponentKey: f.Key}, nil
+	})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return flag.NewSetFlagEnabledDefault(404).WithPayload(ErrorMessage("%s", err))
@@ -324,13 +333,16 @@ func (c *crud) RestoreFlag(params flag.RestoreFlagParams) middleware.Responder {
 	subject := getSubjectFromRequest(params.HTTPRequest)
 	f := &entity.Flag{}
 
-	err := commitFlagMutation(flagID, subject, notification.OperationRestore, notification.ComponentFlag, func(tx *gorm.DB) error {
+	err := commitFlagMutation(flagID, subject, notification.OperationRestore, notification.ComponentFlag, func(tx *gorm.DB) (uint, MutationNotify, error) {
 		if err := entity.PreloadFlagTags(tx.Unscoped()).First(f, params.FlagID).Error; err != nil {
-			return err
+			return 0, MutationNotify{}, err
 		}
 		f.DeletedAt = gorm.DeletedAt{}
-		return tx.Unscoped().Save(f).Error
-	}, func() (uint, string) { return flagID, f.Key })
+		if err := tx.Unscoped().Save(f).Error; err != nil {
+			return 0, MutationNotify{}, err
+		}
+		return flagID, MutationNotify{ComponentID: flagID, ComponentKey: f.Key}, nil
+	})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return flag.NewRestoreFlagDefault(404).WithPayload(ErrorMessage("%s", err))
@@ -352,12 +364,15 @@ func (c *crud) DeleteFlag(params flag.DeleteFlagParams) middleware.Responder {
 	subject := getSubjectFromRequest(params.HTTPRequest)
 	f := &entity.Flag{}
 
-	err := commitFlagMutation(flagID, subject, notification.OperationDelete, notification.ComponentFlag, func(tx *gorm.DB) error {
+	err := commitFlagMutation(flagID, subject, notification.OperationDelete, notification.ComponentFlag, func(tx *gorm.DB) (uint, MutationNotify, error) {
 		if err := tx.First(f, params.FlagID).Error; err != nil {
-			return err
+			return 0, MutationNotify{}, err
 		}
-		return tx.Delete(&entity.Flag{}, params.FlagID).Error
-	}, func() (uint, string) { return flagID, f.Key })
+		if err := tx.Delete(&entity.Flag{}, params.FlagID).Error; err != nil {
+			return 0, MutationNotify{}, err
+		}
+		return flagID, MutationNotify{ComponentID: flagID, ComponentKey: f.Key}, nil
+	})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return flag.NewDeleteFlagDefault(404).WithPayload(ErrorMessage("%s", err))
@@ -372,13 +387,16 @@ func (c *crud) DeleteTag(params tag.DeleteTagParams) middleware.Responder {
 	subject := getSubjectFromRequest(params.HTTPRequest)
 	tagID := uint(params.TagID)
 
-	err := commitFlagMutation(flagID, subject, notification.OperationDelete, notification.ComponentTag, func(tx *gorm.DB) error {
+	err := commitFlagMutation(flagID, subject, notification.OperationDelete, notification.ComponentTag, func(tx *gorm.DB) (uint, MutationNotify, error) {
 		t := &entity.Tag{}
 		t.ID = tagID
 		s := &entity.Flag{}
 		s.ID = flagID
-		return tx.Model(s).Association("Tags").Delete(t)
-	}, func() (uint, string) { return tagID, "" })
+		if err := tx.Model(s).Association("Tags").Delete(t); err != nil {
+			return 0, MutationNotify{}, err
+		}
+		return flagID, MutationNotify{ComponentID: tagID, ComponentKey: ""}, nil
+	})
 	if err != nil {
 		return tag.NewDeleteTagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
@@ -435,15 +453,15 @@ func (c *crud) CreateTag(params tag.CreateTagParams) middleware.Responder {
 		return tag.NewCreateTagDefault(400).WithPayload(ErrorMessage("%s", reason))
 	}
 
-	err := commitFlagMutation(flagID, subject, notification.OperationCreate, notification.ComponentTag, func(tx *gorm.DB) error {
-		s := &entity.Flag{}
-		s.ID = flagID
-		tx.Where("value = ?", util.SafeString(params.Body.Value)).Find(t)
-		if err := tx.Model(s).Association("Tags").Append(t); err != nil {
-			return err
+	err := commitFlagMutation(flagID, subject, notification.OperationCreate, notification.ComponentTag, func(tx *gorm.DB) (uint, MutationNotify, error) {
+		if err := entity.AppendTagValueToFlag(tx, flagID, t.Value); err != nil {
+			return 0, MutationNotify{}, err
 		}
-		return nil
-	}, func() (uint, string) { return t.ID, t.Value })
+		if err := tx.Where("value = ?", t.Value).First(t).Error; err != nil {
+			return 0, MutationNotify{}, err
+		}
+		return flagID, MutationNotify{ComponentID: t.ID, ComponentKey: t.Value}, nil
+	})
 	if err != nil {
 		return tag.NewCreateTagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
@@ -462,9 +480,12 @@ func (c *crud) CreateSegment(params segment.CreateSegmentParams) middleware.Resp
 	s.Description = util.SafeString(params.Body.Description)
 	s.Rank = entity.SegmentDefaultRank
 
-	err := commitFlagMutation(flagID, subject, notification.OperationCreate, notification.ComponentSegment, func(tx *gorm.DB) error {
-		return tx.Create(s).Error
-	}, func() (uint, string) { return s.ID, "" })
+	err := commitFlagMutation(flagID, subject, notification.OperationCreate, notification.ComponentSegment, func(tx *gorm.DB) (uint, MutationNotify, error) {
+		if err := tx.Create(s).Error; err != nil {
+			return 0, MutationNotify{}, err
+		}
+		return flagID, MutationNotify{ComponentID: s.ID, ComponentKey: ""}, nil
+	})
 	if err != nil {
 		return segment.NewCreateSegmentDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
@@ -499,14 +520,17 @@ func (c *crud) PutSegment(params segment.PutSegmentParams) middleware.Responder 
 	subject := getSubjectFromRequest(params.HTTPRequest)
 	s := &entity.Segment{}
 
-	err := commitFlagMutation(flagID, subject, notification.OperationUpdate, notification.ComponentSegment, func(tx *gorm.DB) error {
+	err := commitFlagMutation(flagID, subject, notification.OperationUpdate, notification.ComponentSegment, func(tx *gorm.DB) (uint, MutationNotify, error) {
 		if err := entity.PreloadConstraintsDistribution(tx).First(s, params.SegmentID).Error; err != nil {
-			return err
+			return 0, MutationNotify{}, err
 		}
 		s.RolloutPercent = util.SafeUint(params.Body.RolloutPercent)
 		s.Description = util.SafeString(params.Body.Description)
-		return tx.Save(s).Error
-	}, func() (uint, string) { return segmentID, "" })
+		if err := tx.Save(s).Error; err != nil {
+			return 0, MutationNotify{}, err
+		}
+		return flagID, MutationNotify{ComponentID: segmentID, ComponentKey: ""}, nil
+	})
 	if err != nil {
 		return segment.NewPutSegmentDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
@@ -520,29 +544,25 @@ func (c *crud) PutSegmentsReorder(params segment.PutSegmentsReorderParams) middl
 	flagID := util.SafeUint(params.FlagID)
 	subject := getSubjectFromRequest(params.HTTPRequest)
 
-	tx := getDB().Begin()
-	for i, segmentID := range params.Body.SegmentIDs {
-		s := &entity.Segment{}
-		if err := tx.First(s, segmentID).Error; err != nil {
-			tx.Rollback()
+	err := commitFlagMutation(flagID, subject, notification.OperationUpdate, notification.ComponentSegment, func(tx *gorm.DB) (uint, MutationNotify, error) {
+		for i, segmentID := range params.Body.SegmentIDs {
+			s := &entity.Segment{}
+			if err := tx.First(s, segmentID).Error; err != nil {
+				return 0, MutationNotify{}, err
+			}
+			s.Rank = uint(i)
+			if err := tx.Save(s).Error; err != nil {
+				return 0, MutationNotify{}, err
+			}
+		}
+		return flagID, MutationNotify{ComponentID: 0, ComponentKey: ""}, nil
+	})
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return segment.NewPutSegmentsReorderDefault(404).WithPayload(ErrorMessage("%s", err))
 		}
-		s.Rank = uint(i)
-		if err := tx.Save(s).Error; err != nil {
-			tx.Rollback()
-			return segment.NewPutSegmentsReorderDefault(500).WithPayload(ErrorMessage("%s", err))
-		}
-	}
-	meta, err := entity.WriteFlagSnapshotTx(tx, flagID, subject)
-	if err != nil {
-		tx.Rollback()
 		return segment.NewPutSegmentsReorderDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
-	if err := tx.Commit().Error; err != nil {
-		tx.Rollback()
-		return segment.NewPutSegmentsReorderDefault(500).WithPayload(ErrorMessage("%s", err))
-	}
-	entity.NotifyFlagSnapshot(flagID, subject, notification.OperationUpdate, notification.ComponentSegment, 0, "", meta)
 	return segment.NewPutSegmentsReorderOK()
 }
 
@@ -551,9 +571,12 @@ func (c *crud) DeleteSegment(params segment.DeleteSegmentParams) middleware.Resp
 	segmentID := util.SafeUint(params.SegmentID)
 	subject := getSubjectFromRequest(params.HTTPRequest)
 
-	err := commitFlagMutation(flagID, subject, notification.OperationDelete, notification.ComponentSegment, func(tx *gorm.DB) error {
-		return tx.Delete(&entity.Segment{}, segmentID).Error
-	}, func() (uint, string) { return segmentID, "" })
+	err := commitFlagMutation(flagID, subject, notification.OperationDelete, notification.ComponentSegment, func(tx *gorm.DB) (uint, MutationNotify, error) {
+		if err := tx.Delete(&entity.Segment{}, segmentID).Error; err != nil {
+			return 0, MutationNotify{}, err
+		}
+		return flagID, MutationNotify{ComponentID: segmentID, ComponentKey: ""}, nil
+	})
 	if err != nil {
 		return segment.NewDeleteSegmentDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
@@ -574,9 +597,12 @@ func (c *crud) CreateConstraint(params constraint.CreateConstraintParams) middle
 		return constraint.NewCreateConstraintDefault(400).WithPayload(ErrorMessage("%s", err))
 	}
 
-	err := commitFlagMutation(flagID, subject, notification.OperationCreate, notification.ComponentConstraint, func(tx *gorm.DB) error {
-		return tx.Create(cons).Error
-	}, func() (uint, string) { return cons.ID, "" })
+	err := commitFlagMutation(flagID, subject, notification.OperationCreate, notification.ComponentConstraint, func(tx *gorm.DB) (uint, MutationNotify, error) {
+		if err := tx.Create(cons).Error; err != nil {
+			return 0, MutationNotify{}, err
+		}
+		return flagID, MutationNotify{ComponentID: cons.ID, ComponentKey: ""}, nil
+	})
 	if err != nil {
 		return constraint.NewCreateConstraintDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
@@ -616,9 +642,12 @@ func (c *crud) PutConstraint(params constraint.PutConstraintParams) middleware.R
 		return constraint.NewPutConstraintDefault(400).WithPayload(ErrorMessage("%s", err))
 	}
 
-	err := commitFlagMutation(flagID, subject, notification.OperationUpdate, notification.ComponentConstraint, func(tx *gorm.DB) error {
-		return tx.Save(cons).Error
-	}, func() (uint, string) { return constraintID, "" })
+	err := commitFlagMutation(flagID, subject, notification.OperationUpdate, notification.ComponentConstraint, func(tx *gorm.DB) (uint, MutationNotify, error) {
+		if err := tx.Save(cons).Error; err != nil {
+			return 0, MutationNotify{}, err
+		}
+		return flagID, MutationNotify{ComponentID: constraintID, ComponentKey: ""}, nil
+	})
 	if err != nil {
 		return constraint.NewPutConstraintDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
@@ -633,9 +662,12 @@ func (c *crud) DeleteConstraint(params constraint.DeleteConstraintParams) middle
 	constraintID := util.SafeUint(params.ConstraintID)
 	subject := getSubjectFromRequest(params.HTTPRequest)
 
-	err := commitFlagMutation(flagID, subject, notification.OperationDelete, notification.ComponentConstraint, func(tx *gorm.DB) error {
-		return tx.Delete(&entity.Constraint{}, params.ConstraintID).Error
-	}, func() (uint, string) { return constraintID, "" })
+	err := commitFlagMutation(flagID, subject, notification.OperationDelete, notification.ComponentConstraint, func(tx *gorm.DB) (uint, MutationNotify, error) {
+		if err := tx.Delete(&entity.Constraint{}, params.ConstraintID).Error; err != nil {
+			return 0, MutationNotify{}, err
+		}
+		return flagID, MutationNotify{ComponentID: constraintID, ComponentKey: ""}, nil
+	})
 	if err != nil {
 		return constraint.NewDeleteConstraintDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
@@ -653,30 +685,20 @@ func (c *crud) PutDistributions(params distribution.PutDistributionsParams) midd
 	segmentID := uint(params.SegmentID)
 	ds := r2eMapDistributions(params.Body.Distributions, segmentID)
 
-	tx := getDB().Begin()
-	err := tx.Where("segment_id = ?", segmentID).Delete(&entity.Distribution{}).Error
-	if err != nil {
-		tx.Rollback()
-		return distribution.NewPutDistributionsDefault(500).WithPayload(ErrorMessage("%s", err))
-	}
-
-	for _, d := range ds {
-		err1 := tx.Create(&d).Error
-		if err1 != nil {
-			tx.Rollback()
-			return distribution.NewPutDistributionsDefault(500).WithPayload(ErrorMessage("%s", err1))
+	err := commitFlagMutation(flagID, subject, notification.OperationUpdate, notification.ComponentDistribution, func(tx *gorm.DB) (uint, MutationNotify, error) {
+		if err := tx.Where("segment_id = ?", segmentID).Delete(&entity.Distribution{}).Error; err != nil {
+			return 0, MutationNotify{}, err
 		}
-	}
-	meta, err := entity.WriteFlagSnapshotTx(tx, flagID, subject)
+		for i := range ds {
+			if err := tx.Create(&ds[i]).Error; err != nil {
+				return 0, MutationNotify{}, err
+			}
+		}
+		return flagID, MutationNotify{ComponentID: 0, ComponentKey: ""}, nil
+	})
 	if err != nil {
-		tx.Rollback()
 		return distribution.NewPutDistributionsDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
-	if err := tx.Commit().Error; err != nil {
-		tx.Rollback()
-		return distribution.NewPutDistributionsDefault(500).WithPayload(ErrorMessage("%s", err))
-	}
-	entity.NotifyFlagSnapshot(flagID, subject, notification.OperationUpdate, notification.ComponentDistribution, 0, "", meta)
 
 	resp := distribution.NewPutDistributionsOK()
 	resp.SetPayload(e2r.MapDistributions(ds))
@@ -716,9 +738,12 @@ func (c *crud) CreateVariant(params variant.CreateVariantParams) middleware.Resp
 		return variant.NewCreateVariantDefault(400).WithPayload(ErrorMessage("%s", err))
 	}
 
-	err = commitFlagMutation(flagID, subject, notification.OperationCreate, notification.ComponentVariant, func(tx *gorm.DB) error {
-		return tx.Create(v).Error
-	}, func() (uint, string) { return v.ID, v.Key })
+	err = commitFlagMutation(flagID, subject, notification.OperationCreate, notification.ComponentVariant, func(tx *gorm.DB) (uint, MutationNotify, error) {
+		if err := tx.Create(v).Error; err != nil {
+			return 0, MutationNotify{}, err
+		}
+		return flagID, MutationNotify{ComponentID: v.ID, ComponentKey: v.Key}, nil
+	})
 	if err != nil {
 		return variant.NewCreateVariantDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
@@ -767,12 +792,15 @@ func (c *crud) PutVariant(params variant.PutVariantParams) middleware.Responder 
 		return variant.NewPutVariantDefault(400).WithPayload(ErrorMessage("%s", err))
 	}
 
-	err := commitFlagMutation(flagID, subject, notification.OperationUpdate, notification.ComponentVariant, func(tx *gorm.DB) error {
+	err := commitFlagMutation(flagID, subject, notification.OperationUpdate, notification.ComponentVariant, func(tx *gorm.DB) (uint, MutationNotify, error) {
 		if err := tx.Save(v).Error; err != nil {
-			return err
+			return 0, MutationNotify{}, err
 		}
-		return validatePutVariantForDistributions(v, tx)
-	}, func() (uint, string) { return variantID, v.Key })
+		if err := validatePutVariantForDistributions(v, tx); err != nil {
+			return 0, MutationNotify{}, err
+		}
+		return flagID, MutationNotify{ComponentID: variantID, ComponentKey: v.Key}, nil
+	})
 	if err != nil {
 		if herr, ok := err.(*Error); ok {
 			return variant.NewPutVariantDefault(herr.StatusCode).WithPayload(ErrorMessage("%s", err))
@@ -794,9 +822,12 @@ func (c *crud) DeleteVariant(params variant.DeleteVariantParams) middleware.Resp
 	variantID := util.SafeUint(params.VariantID)
 	subject := getSubjectFromRequest(params.HTTPRequest)
 
-	err := commitFlagMutation(flagID, subject, notification.OperationDelete, notification.ComponentVariant, func(tx *gorm.DB) error {
-		return tx.Delete(&entity.Variant{}, params.VariantID).Error
-	}, func() (uint, string) { return variantID, "" })
+	err := commitFlagMutation(flagID, subject, notification.OperationDelete, notification.ComponentVariant, func(tx *gorm.DB) (uint, MutationNotify, error) {
+		if err := tx.Delete(&entity.Variant{}, params.VariantID).Error; err != nil {
+			return 0, MutationNotify{}, err
+		}
+		return flagID, MutationNotify{ComponentID: variantID, ComponentKey: ""}, nil
+	})
 	if err != nil {
 		return variant.NewDeleteVariantDefault(500).WithPayload(ErrorMessage("%s", err))
 	}

@@ -2,8 +2,6 @@ package handler
 
 import (
 	"errors"
-	"fmt"
-	"sort"
 	"strings"
 
 	"github.com/go-openapi/runtime/middleware"
@@ -58,30 +56,23 @@ func (c *crud) DuplicateFlag(params flag.DuplicateFlagParams) middleware.Respond
 		CreatedBy:          subject,
 	}
 
-	tx := getDB().Begin()
-	if err := tx.Create(created).Error; err != nil {
-		tx.Rollback()
-		return flag.NewDuplicateFlagDefault(500).WithPayload(ErrorMessage("cannot duplicate flag. %s", err))
-	}
-	if created.EntityType != "" {
-		if err := entity.CreateFlagEntityType(tx, created.EntityType); err != nil {
-			tx.Rollback()
-			return flag.NewDuplicateFlagDefault(500).WithPayload(ErrorMessage("%s", err))
+	err = commitFlagMutation(0, subject, notification.OperationCreate, notification.ComponentFlag, func(tx *gorm.DB) (uint, MutationNotify, error) {
+		if err := tx.Create(created).Error; err != nil {
+			return 0, MutationNotify{}, err
 		}
-	}
-	if err := cloneFlagGraph(tx, source, created); err != nil {
-		tx.Rollback()
+		if created.EntityType != "" {
+			if err := entity.CreateFlagEntityType(tx, created.EntityType); err != nil {
+				return 0, MutationNotify{}, err
+			}
+		}
+		if err := entity.CloneFlagGraph(tx, source, created); err != nil {
+			return 0, MutationNotify{}, err
+		}
+		return created.ID, MutationNotify{ComponentID: created.ID, ComponentKey: key}, nil
+	})
+	if err != nil {
 		return flag.NewDuplicateFlagDefault(500).WithPayload(ErrorMessage("cannot duplicate flag. %s", err))
 	}
-	meta, err := entity.WriteFlagSnapshotTx(tx, created.ID, subject)
-	if err != nil {
-		tx.Rollback()
-		return flag.NewDuplicateFlagDefault(500).WithPayload(ErrorMessage("%s", err))
-	}
-	if err := tx.Commit().Error; err != nil {
-		return flag.NewDuplicateFlagDefault(500).WithPayload(ErrorMessage("%s", err))
-	}
-	entity.NotifyFlagSnapshot(created.ID, subject, notification.OperationCreate, notification.ComponentFlag, created.ID, key, meta)
 
 	if err := entity.PreloadSegmentsVariantsTags(getDB()).First(created, created.ID).Error; err != nil {
 		return flag.NewDuplicateFlagDefault(500).WithPayload(ErrorMessage("%s", err))
@@ -94,85 +85,4 @@ func (c *crud) DuplicateFlag(params flag.DuplicateFlagParams) middleware.Respond
 	}
 	resp.SetPayload(payload)
 	return resp
-}
-
-func cloneFlagGraph(tx *gorm.DB, source *entity.Flag, dest *entity.Flag) error {
-	variantMap := make(map[uint]uint, len(source.Variants))
-	for _, sv := range source.Variants {
-		nv := &entity.Variant{
-			FlagID:     dest.ID,
-			Key:        sv.Key,
-			Attachment: sv.Attachment,
-		}
-		if err := nv.Validate(); err != nil {
-			return err
-		}
-		if err := tx.Create(nv).Error; err != nil {
-			return err
-		}
-		variantMap[sv.ID] = nv.ID
-	}
-
-	segments := append([]entity.Segment(nil), source.Segments...)
-	sort.SliceStable(segments, func(i, j int) bool {
-		if segments[i].Rank != segments[j].Rank {
-			return segments[i].Rank < segments[j].Rank
-		}
-		return segments[i].ID < segments[j].ID
-	})
-
-	for _, ss := range segments {
-		ns := &entity.Segment{
-			FlagID:         dest.ID,
-			Description:    ss.Description,
-			Rank:           ss.Rank,
-			RolloutPercent: ss.RolloutPercent,
-		}
-		if err := tx.Create(ns).Error; err != nil {
-			return err
-		}
-		for _, sc := range ss.Constraints {
-			nc := &entity.Constraint{
-				SegmentID: ns.ID,
-				Property:  sc.Property,
-				Operator:  sc.Operator,
-				Value:     sc.Value,
-			}
-			if err := nc.Validate(); err != nil {
-				return err
-			}
-			if err := tx.Create(nc).Error; err != nil {
-				return err
-			}
-		}
-		for _, sd := range ss.Distributions {
-			newVID, ok := variantMap[sd.VariantID]
-			if !ok {
-				return fmt.Errorf("distribution references unknown variant id %d", sd.VariantID)
-			}
-			nd := &entity.Distribution{
-				SegmentID:  ns.ID,
-				VariantID:  newVID,
-				VariantKey: sd.VariantKey,
-				Percent:    sd.Percent,
-				Bitmap:     sd.Bitmap,
-			}
-			if err := tx.Create(nd).Error; err != nil {
-				return err
-			}
-		}
-	}
-
-	if len(source.Tags) > 0 {
-		flagRef := &entity.Flag{}
-		flagRef.ID = dest.ID
-		for _, st := range source.Tags {
-			t := &entity.Tag{Value: st.Value}
-			tx.Where("value = ?", st.Value).FirstOrCreate(t)
-			if err := tx.Model(flagRef).Association("Tags").Append(t); err != nil {
-				return err
-			}
-		}
-	}
-	return nil
 }
