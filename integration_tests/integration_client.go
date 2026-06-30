@@ -67,6 +67,25 @@ func postJSON(t *testing.T, path string, body, dst any) {
 	doReqAndDecode("POST", path, body, dst, t.Fatalf)
 }
 
+// postJSONExpectStatus POSTs JSON and requires an exact HTTP status (dst may be nil).
+func postJSONExpectStatus(t *testing.T, path string, body any, wantStatus int, dst any) {
+	t.Helper()
+	resp, err := doReq("POST", path, body)
+	if err != nil {
+		t.Fatalf("POST %s: %v", path, err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != wantStatus {
+		b, _ := io.ReadAll(resp.Body)
+		t.Fatalf("POST %s: expected status %d, got %d: %s", path, wantStatus, resp.StatusCode, string(b))
+	}
+	if dst != nil {
+		if err := json.NewDecoder(resp.Body).Decode(dst); err != nil {
+			t.Fatalf("decode POST %s: %v", path, err)
+		}
+	}
+}
+
 func putJSON(t *testing.T, path string, body, dst any) {
 	t.Helper()
 	doReqAndDecode("PUT", path, body, dst, t.Fatalf)

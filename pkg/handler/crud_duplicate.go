@@ -16,13 +16,13 @@ func isDuplicateClientError(err error) bool {
 	if err == nil {
 		return false
 	}
-	if _, ok := err.(*Error); ok {
-		return true
+	if herr, ok := err.(*Error); ok {
+		return herr.StatusCode >= 400 && herr.StatusCode < 500
 	}
 	msg := err.Error()
-	return strings.Contains(msg, "unknown variant key") ||
-		strings.Contains(msg, "invalid key") ||
-		strings.Contains(msg, "cannot create flag due to invalid key")
+	return strings.Contains(msg, "distribution references unknown variant key") ||
+		strings.Contains(msg, "cannot create flag due to invalid key") ||
+		strings.Contains(msg, "invalid key")
 }
 
 func (c *crud) DuplicateFlag(params flag.DuplicateFlagParams) middleware.Responder {

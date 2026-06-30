@@ -426,6 +426,34 @@ func TestIntegration_DuplicateFlag(t *testing.T) {
 	deleteResource(t, fmt.Sprintf("/api/v1/flags/%d", clone.ID))
 }
 
+func TestIntegration_DuplicateFlag_Errors(t *testing.T) {
+	if len(seedFlagIDs) == 0 {
+		t.Fatal("no seeded flags available")
+	}
+	sourceID := seedFlagIDs[0]
+
+	postJSONExpectStatus(t, "/api/v1/flags/999999999/duplicate", map[string]any{}, 404, nil)
+
+	key := fmt.Sprintf("dup_err_src_%d", time.Now().UnixNano())
+	var created flagResponse
+	postJSON(t, "/api/v1/flags", map[string]any{
+		"key":         key,
+		"description": "dup error source",
+	}, &created)
+	deleteResource(t, fmt.Sprintf("/api/v1/flags/%d", created.ID))
+	postJSONExpectStatus(t, fmt.Sprintf("/api/v1/flags/%d/duplicate", created.ID), map[string]any{}, 404, nil)
+
+	takenKey := fmt.Sprintf("dup_taken_%d", time.Now().UnixNano())
+	postJSON(t, "/api/v1/flags", map[string]any{"key": takenKey, "description": "holder"}, nil)
+	postJSONExpectStatus(t, fmt.Sprintf("/api/v1/flags/%d/duplicate", sourceID), map[string]any{
+		"key": takenKey,
+	}, 400, nil)
+
+	postJSONExpectStatus(t, fmt.Sprintf("/api/v1/flags/%d/duplicate", sourceID), map[string]any{
+		"key": " spaces invalid ",
+	}, 400, nil)
+}
+
 
 func TestIntegration_Evaluation(t *testing.T) {
 	// Use a seeded flag untouched by other tests (all CRUD tests use seedFlagIDs[0]).

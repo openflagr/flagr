@@ -100,9 +100,9 @@ Graph writes for **boolean create** and **duplicate** share one path in `pkg/ent
 
 | Layer | Coverage |
 |-------|----------|
-| **Unit** | `crud_duplicate_test.go`, `flag_template_test.go`, `crud_flag_creation_test.go`, notification duplicate subtest |
-| **Integration** | `TestIntegration_DuplicateFlag` — graph parity, custom key/description, **source snapshot count unchanged**, **clone exactly 1 snapshot**, global max snapshot id increases; CRUD tests assert snapshots on segment/variant/tag mutations |
-| **E2E** | `flag-detail.spec.ts` — duplicate, toast link, navigate to clone, API/UI parity |
+| **Unit** | `crud_duplicate_test.go`, `flag_template_test.go`, `crud_flag_creation_test.go` (`TestCreateFlag_DuplicateKeyReturns400`), `error_test.go` (`TestIsDuplicateClientError`), notification duplicate subtest |
+| **Integration** | `TestIntegration_DuplicateFlag`, `TestIntegration_DuplicateFlag_Errors` (404/400 HTTP); CRUD snapshot asserts |
+| **E2E** | `flag-detail.spec.ts` — duplicate happy path, failure + `duplicateInFlight`, fast flag-id switch |
 | **Local integration server** | `FLAGR_RECORDER_DATAR_FLUSH_INTERVAL=500ms`, `FLAGR_EVALCACHE_REFRESHINTERVAL=1s`; Datar tests use `entityContext.tier=premium` for seeded flag |
 
 ### Verification commands

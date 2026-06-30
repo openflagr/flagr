@@ -453,6 +453,48 @@ test.describe('Flag detail page', () => {
     await deleteFlag(cloneId)
   })
 
+  test('duplicate failure clears in-flight and keeps confirm enabled', async ({ page }) => {
+    flag = await createFlag({ description: `dup-fail-${Date.now()}` })
+    await page.goto(`/#/flags/${flag.id}`)
+    await expect(page.locator('input[data-testid="flag-key-input"]')).toBeVisible({ timeout: 10000 })
+
+    await page.route(`**/api/v1/flags/${flag.id}/duplicate`, async (route) => {
+      await route.fulfill({
+        status: 400,
+        contentType: 'application/json',
+        body: JSON.stringify({ message: 'cannot duplicate flag. flag key already exists' }),
+      })
+    })
+
+    await page.locator('[data-testid="duplicate-flag-btn"]').click()
+    await expect(page.locator('.el-dialog')).toBeVisible({ timeout: 5000 })
+    await page.locator('[data-testid="confirm-duplicate-flag-btn"]').click()
+
+    await expect(page.locator('.el-message--error')).toBeVisible({ timeout: 10000 })
+    await expect(page.locator('.el-message--success')).toHaveCount(0)
+    await expect(page.locator('[data-testid="confirm-duplicate-flag-btn"]')).toBeEnabled({ timeout: 5000 })
+    await expect(page.locator('.el-dialog')).toBeVisible()
+  })
+
+  test('fast flag id switch shows correct flag key', async ({ page }) => {
+    const descA = `switch-a-${Date.now()}`
+    const descB = `switch-b-${Date.now()}`
+    const flagA = await createFlag({ description: descA })
+    const flagB = await createFlag({ description: descB })
+    flag = flagA
+
+    await page.goto(`/#/flags/${flagA.id}`)
+    await expect(page.locator('input[data-testid="flag-key-input"]')).toBeVisible({ timeout: 10000 })
+    const keyA = await page.locator('input[data-testid="flag-key-input"]').inputValue()
+
+    await page.goto(`/#/flags/${flagB.id}`)
+    await expect(page.locator('input[data-testid="flag-key-input"]')).toBeVisible({ timeout: 10000 })
+    await expect(page.locator('input[data-testid="flag-key-input"]')).not.toHaveValue(keyA, { timeout: 10000 })
+    await expect(page.locator('input[data-testid="flag-desc-input"]')).toHaveValue(descB, { timeout: 10000 })
+
+    await deleteFlag(flagB.id!)
+  })
+
 
   test('can add and delete tags via UI', async ({ page }) => {
     flag = await createFlag()

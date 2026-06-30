@@ -41,6 +41,10 @@ func flagKeyUniqueViolation(err error) bool {
 		return false
 	}
 	msg := strings.ToLower(err.Error())
-	return strings.Contains(msg, "unique") &&
-		(strings.Contains(msg, "idx_flag_key") || strings.Contains(msg, "flags.key") || strings.Contains(msg, "key"))
+	if !strings.Contains(msg, "unique") && !strings.Contains(msg, "duplicate") {
+		return false
+	}
+	return strings.Contains(msg, "idx_flag_key") ||
+		strings.Contains(msg, "flags.key") ||
+		(strings.Contains(msg, "constraint failed") && strings.Contains(msg, "key"))
 }
