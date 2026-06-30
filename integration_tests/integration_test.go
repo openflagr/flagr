@@ -366,6 +366,7 @@ func TestIntegration_DistributionCRUD(t *testing.T) {
 }
 func TestIntegration_DuplicateFlag(t *testing.T) {
 	requireDuplicateFlagAPI(t)
+	requireFlagSnapshotMaxIDAPI(t)
 	if len(seedFlagIDs) == 0 {
 		t.Fatal("no seeded flags available")
 	}
@@ -829,16 +830,18 @@ func TestIntegration_DatarSummary(t *testing.T) {
 
 	flagID := seedFlagIDs[1]
 
-	// Datar may not be enabled on all servers (e.g. checkr_flagr_with_sqlite).
-	// Probe the endpoint first; skip if unavailable.
+	// Datar is only enabled on flagr_integration_tests images (see README.md).
+	requireOptionalAPI(t, http.MethodGet, "/api/v1/datar/summary", nil, "GET /api/v1/datar/summary")
 	resp, err := doReq("GET", "/api/v1/datar/summary", nil)
 	if err != nil {
-		t.Skipf("datar not available: %v", err)
+		if isLegacyIntegrationBaseline() {
+			t.Skipf("datar not available: %v", err)
+		}
+		t.Fatalf("GET /api/v1/datar/summary: %v", err)
 	}
+	body, _ := io.ReadAll(resp.Body)
 	resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		t.Skipf("datar summary returned %d, skipping", resp.StatusCode)
-	}
+	requireRecorderEndpointOK(t, resp.StatusCode, body, "GET /api/v1/datar/summary")
 	// Enable dataRecordsEnabled so evaluations are recorded into the datar engine.
 	doReqOK(t, "PUT", fmt.Sprintf("/api/v1/flags/%d", flagID), map[string]any{
 		"dataRecordsEnabled": true,
@@ -880,15 +883,17 @@ func TestIntegration_DatarFlagSummary(t *testing.T) {
 
 	flagID := seedFlagIDs[1]
 
-	// Skip if datar is not available.
+	requireOptionalAPI(t, http.MethodGet, fmt.Sprintf("/api/v1/datar/flags/%d/summary", flagID), nil, "GET /api/v1/datar/flags/{flagID}/summary")
 	resp, err := doReq("GET", fmt.Sprintf("/api/v1/datar/flags/%d/summary", flagID), nil)
 	if err != nil {
-		t.Skipf("datar not available: %v", err)
+		if isLegacyIntegrationBaseline() {
+			t.Skipf("datar not available: %v", err)
+		}
+		t.Fatalf("GET /api/v1/datar/flags/%d/summary: %v", flagID, err)
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		t.Skipf("datar flag summary returned %d, skipping", resp.StatusCode)
-	}
+	body, _ := io.ReadAll(resp.Body)
+	resp.Body.Close()
+	requireRecorderEndpointOK(t, resp.StatusCode, body, "GET /api/v1/datar/flags/{flagID}/summary")
 	// Enable dataRecordsEnabled so evaluations are recorded into the datar engine.
 	doReqOK(t, "PUT", fmt.Sprintf("/api/v1/flags/%d", flagID), map[string]any{
 		"dataRecordsEnabled": true,
