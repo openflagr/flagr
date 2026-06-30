@@ -229,7 +229,8 @@ func dayBucketExpr(db *gorm.DB) (selectDay string, groupOrderDay string) {
 	case "sqlite":
 		return "strftime('%Y-%m-%d', bucket_hour) AS day", "strftime('%Y-%m-%d', bucket_hour)"
 	default:
-		return "CAST(DATE(bucket_hour) AS CHAR) AS day", "DATE(bucket_hour)"
+		expr := "CAST(DATE(bucket_hour) AS CHAR)"
+		return expr + " AS day", expr
 	}
 }
 
