@@ -479,6 +479,7 @@ export function mountFlagPage(vm: FlagPageVm): void {
   vm.dialogEditDistributionOpen = false
   vm.dialogCreateSegmentOpen = false
   vm.selectedSegment = null
+  vm.duplicateInFlight = false
 
   const flagId = vm.flagId
   const gen = vm.flagPageLoadGen ?? 0

@@ -1,5 +1,5 @@
 <template>
-  <el-card class="dc-container is-card-utility">
+  <el-card class="dc-container">
     <template #header>
       <div class="el-card-header">
         <h2>Debug Console</h2>

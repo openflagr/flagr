@@ -4,6 +4,8 @@ Clones an existing flag (variants, segments, constraints, distributions, tags) i
 
 **Status:** implemented (2026-06-30). Branch `feat/dup-flag`.
 
+**Also on branch (compose CI):** Datar portable schema + cross-DB summary SQL; integration skip-vs-fail gates (`integration_compat.go`, `integration_tests/README.md`).
+
 ## Motivation
 
 - No first-class way to copy a flag’s full configuration; manual CRUD is slow and error-prone.
@@ -91,9 +93,9 @@ Graph writes for **boolean create** and **duplicate** share one path in `pkg/ent
 
 | Area | As-built |
 |------|----------|
-| **Placement** | **Duplicate Flag** on flag detail (`Flag.vue`, `data-testid="duplicate-flag-btn"`) |
+| **Placement** | **Flag Management** card on flag detail: **Duplicate Flag** + **Delete Flag** (`Flag.vue`; `data-testid="duplicate-flag-btn"`, `delete-flag-btn`) |
 | **Flow** | Confirm dialog → `duplicateFlag` → stay on source; confirm disabled while `duplicateInFlight` |
-| **Route changes** | `mountFlagPage` resets history/dialogs, bumps `flagPageLoadGen`, stale-response guard on load |
+| **Route changes** | `mountFlagPage` resets history/dialogs/`duplicateInFlight`, bumps `flagPageLoadGen`, stale-response guard on load |
 | **Toast** | `DUPLICATE_SUCCESS_TOAST_DURATION_MS`, `showClose`, aria-label on clone link |
 
 ## Testing (as-built)

@@ -52,5 +52,6 @@ describe('mountFlagPage', () => {
     expect(vm.dialogEditDistributionOpen).toBe(false)
     expect(vm.dialogCreateSegmentOpen).toBe(false)
     expect(vm.selectedSegment).toBeNull()
+    expect(vm.duplicateInFlight).toBe(false)
   })
 })

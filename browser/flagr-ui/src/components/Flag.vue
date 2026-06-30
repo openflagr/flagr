@@ -2,7 +2,7 @@
   <div class="container flag-container">
     <el-dialog
       v-model="dialogDeleteFlagVisible"
-      title="Delete feature flag"
+      title="Delete Flag"
     >
       <span>Are you sure you want to delete this feature flag?</span>
       <template #footer>
@@ -17,7 +17,7 @@
     </el-dialog>
     <el-dialog
       v-model="dialogDuplicateFlagVisible"
-      title="Duplicate feature flag"
+      title="Duplicate Flag"
     >
       <span>{{ flagPage.DUPLICATE_FLAG_CONFIRM_MESSAGE }}</span>
       <template #footer>
@@ -139,38 +139,44 @@
           />
 
           <el-card
-            class="danger-zone-card is-card-danger"
+            class="flag-management-card"
             style="margin-top: var(--space-xl);"
           >
             <template #header>
               <div class="el-card-header">
-                <h2>Danger Zone</h2>
+                <h2>Flag Management</h2>
               </div>
             </template>
-            <div class="danger-zone-body">
-              <p class="danger-zone-text">
-                Deleting a flag hides it from active evaluation. Its segments, variants, and distributions stay intact and come back when you restore the flag from the Deleted Flags section on the flags list page.
-              </p>
-              <el-button
-                type="primary"
-                plain
-                size="small"
-                data-testid="duplicate-flag-btn"
-                @click="dialogDuplicateFlagVisible = true"
-              >
-                Duplicate Flag
-              </el-button>
-
-              <el-button
-                type="danger"
-                plain
-                size="small"
-                data-testid="delete-flag-btn"
-                @click="dialogDeleteFlagVisible = true"
-              >
-                <el-icon><Delete /></el-icon>
-                Delete Flag
-              </el-button>
+            <div class="flag-management-body">
+              <div class="flag-management-row">
+                <p class="flag-management-text">
+                  Create a copy of this flag with the same segments, variants, constraints, distributions, and tags. The new flag gets its own ID and key.
+                </p>
+                <el-button
+                  type="primary"
+                  plain
+                  size="small"
+                  data-testid="duplicate-flag-btn"
+                  @click="dialogDuplicateFlagVisible = true"
+                >
+                  Duplicate Flag
+                </el-button>
+              </div>
+              <div class="flag-management-row flag-management-row--delete">
+                <p class="flag-management-text">
+                  Deleting hides this flag from evaluation. Segments, variants, and distributions are kept; restore it from <strong>Deleted flags</strong> on the flags list.
+                </p>
+                <el-button
+                  type="danger"
+                  plain
+                  size="small"
+                  data-testid="delete-flag-btn"
+                  @click="dialogDeleteFlagVisible = true"
+                >
+                  <el-icon><Delete /></el-icon>
+                  Delete Flag
+                </el-button>
+              </div>
             </div>
           </el-card>
         </el-tab-pane>
@@ -319,16 +325,26 @@ h5 {
   color: var(--el-text-color-secondary);
 }
 
-.danger-zone-card {
+
+.flag-management-card {
   margin-bottom: 0;
-  .danger-zone-body {
+  .flag-management-body {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+  .flag-management-row {
+    display: flex;
+    align-items: flex-start;
     justify-content: space-between;
     gap: var(--space-md);
     flex-wrap: wrap;
   }
-  .danger-zone-text {
+  .flag-management-row--delete {
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--el-border-color-lighter);
+  }
+  .flag-management-text {
     margin: 0;
     font-size: 12px;
     line-height: 1.6;

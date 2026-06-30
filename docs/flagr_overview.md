@@ -229,7 +229,7 @@ evaluation`). No record when flag is missing, disabled, or has no segments.
 
 **Manager** — CRUD for flags, segments, variants, constraints, distributions,
 tags, and **`POST /flags/{flagID}/duplicate`** (full graph clone in one transaction);
-not on the eval request path. Flag detail UI exposes **Duplicate Flag** (confirm + link toast).
+not on the eval request path. Flag detail **Flag Management** section: **Duplicate Flag** (confirm + link toast) and **Delete Flag**.
 Mutations use **`commitFlagMutation`**: one DB transaction for the change plus a
 `flag_snapshot` row; webhooks run only after commit. Boolean create and duplicate
 share **`ApplyFlagTemplate`** (`SimpleBooleanFlagTemplate` / `SourceFlagTemplate`).
