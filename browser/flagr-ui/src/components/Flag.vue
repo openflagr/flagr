@@ -201,7 +201,7 @@ import type { BatchEvalContext, BatchEvalResult, DistributionDraft, EvalContext,
 import type { EntityTypeOption } from '@/helpers/flagModel'
 import { castFlagPage } from '@/helpers/vuePageCast'
 import * as flagPage from '@/pages/flagPage'
-import { handleHistoryTabClick, mountFlagPage, syncEvalContextFromFlag } from '@/pages/flagPage'
+import { handleHistoryTabClick, mountFlagPage } from '@/pages/flagPage'
 import operatorsData from '@/operators.json'
 
 const operators = operatorsData.operators
