@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -16,4 +17,10 @@ func TestNewError(t *testing.T) {
 func TestErrorMessage(t *testing.T) {
 	msg := ErrorMessage("%s some error", "err message")
 	assert.NotNil(t, msg)
+}
+
+func TestFlagKeyUniqueViolation(t *testing.T) {
+	assert.False(t, flagKeyUniqueViolation(nil))
+	assert.True(t, flagKeyUniqueViolation(errors.New("UNIQUE constraint failed: idx_flag_key")))
+	assert.False(t, flagKeyUniqueViolation(errors.New("some other db error")))
 }
