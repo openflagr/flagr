@@ -14,16 +14,9 @@ import (
 
 func TestCrudCreateFlag(t *testing.T) {
 	var res middleware.Responder
-	db := entity.NewTestDB()
+	db, cleanup := handlerTestDB(t)
+	defer cleanup()
 	c := &crud{}
-
-	tmpDB, dbErr := db.DB()
-	if dbErr != nil {
-		t.Errorf("Failed to get database")
-	}
-
-	defer tmpDB.Close()
-	defer gostub.StubFunc(&getDB, db).Reset()
 
 	t.Run("it should be able to create one flag", func(t *testing.T) {
 		res = c.CreateFlag(flag.CreateFlagParams{
@@ -77,16 +70,9 @@ func TestCrudCreateFlag(t *testing.T) {
 
 func TestCrudCreateFlagWithFailures(t *testing.T) {
 	var res middleware.Responder
-	db := entity.NewTestDB()
+	db, cleanup := handlerTestDB(t)
+	defer cleanup()
 	c := &crud{}
-
-	tmpDB, dbErr := db.DB()
-	if dbErr != nil {
-		t.Errorf("Failed to get database")
-	}
-
-	defer tmpDB.Close()
-	defer gostub.StubFunc(&getDB, db).Reset()
 
 	t.Run("CreateFlag - got e2r MapFlag error", func(t *testing.T) {
 		defer gostub.StubFunc(&e2rMapFlag, nil, fmt.Errorf("e2r MapFlag error")).Reset()

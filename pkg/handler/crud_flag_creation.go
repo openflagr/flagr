@@ -46,6 +46,11 @@ func (c *crud) CreateFlag(params flag.CreateFlagParams) middleware.Responder {
 			ErrorMessage("cannot create flag. %s", err))
 	}
 
+	if err := entity.PreloadSegmentsVariantsTags(getDB()).First(f, f.ID).Error; err != nil {
+		return flag.NewCreateFlagDefault(500).WithPayload(
+			ErrorMessage("cannot create flag. %s", err))
+	}
+
 	resp := flag.NewCreateFlagOK()
 	payload, err := e2rMapFlag(f)
 	if err != nil {
@@ -56,42 +61,7 @@ func (c *crud) CreateFlag(params flag.CreateFlagParams) middleware.Responder {
 	return resp
 }
 
-// LoadSimpleBooleanFlagTemplate loads the simple boolean flag template into
-// a new flag. It creates a single segment, variant ('on'), and distribution.
+// LoadSimpleBooleanFlagTemplate loads the simple boolean flag template into a new flag.
 func LoadSimpleBooleanFlagTemplate(flag *entity.Flag, tx *gorm.DB) error {
-	// Create our default segment
-	s := &entity.Segment{}
-	s.FlagID = flag.ID
-	s.RolloutPercent = uint(100)
-	s.Rank = entity.SegmentDefaultRank
-
-	if err := tx.Create(s).Error; err != nil {
-		return err
-	}
-
-	// .. and our default Variant
-	v := &entity.Variant{}
-	v.FlagID = flag.ID
-	v.Key = "on"
-
-	if err := tx.Create(v).Error; err != nil {
-		return err
-	}
-
-	// .. and our default Distribution
-	d := &entity.Distribution{}
-	d.SegmentID = s.ID
-	d.VariantID = v.ID
-	d.VariantKey = v.Key
-	d.Percent = uint(100)
-
-	if err := tx.Create(d).Error; err != nil {
-		return err
-	}
-
-	s.Distributions = append(s.Distributions, *d)
-	flag.Variants = append(flag.Variants, *v)
-	flag.Segments = append(flag.Segments, *s)
-
-	return nil
+	return entity.ApplyFlagTemplate(tx, flag.ID, entity.SimpleBooleanFlagTemplate())
 }

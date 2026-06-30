@@ -152,6 +152,7 @@ func TestIntegration_SegmentCRUD(t *testing.T) {
 		t.Fatal("no seeded flags available")
 	}
 	flagID := seedFlagIDs[0]
+	snapsBefore := countFlagSnapshots(t, flagID)
 
 	// Create segment
 	var seg segmentResponse
@@ -159,6 +160,9 @@ func TestIntegration_SegmentCRUD(t *testing.T) {
 		"description":    "test segment",
 		"rolloutPercent": 50,
 	}, &seg)
+	if n := countFlagSnapshots(t, flagID); n <= snapsBefore {
+		t.Fatalf("expected snapshot after segment create: before=%d after=%d", snapsBefore, n)
+	}
 
 	// Put segment — update description and rollout
 	putJSON(t, fmt.Sprintf("/api/v1/flags/%d/segments/%d", flagID, seg.ID), map[string]any{
@@ -188,8 +192,12 @@ func TestIntegration_SegmentCRUD(t *testing.T) {
 		t.Fatal("reordered segment not found in flag response")
 	}
 
+	snapsBeforeDelete := countFlagSnapshots(t, flagID)
 	// Delete segment
 	deleteResource(t, fmt.Sprintf("/api/v1/flags/%d/segments/%d", flagID, seg.ID))
+	if n := countFlagSnapshots(t, flagID); n <= snapsBeforeDelete {
+		t.Fatalf("expected snapshot after segment delete: before=%d after=%d", snapsBeforeDelete, n)
+	}
 
 	// Verify deletion
 	getJSON(t, fmt.Sprintf("/api/v1/flags/%d", flagID), &flagObj)
@@ -241,12 +249,16 @@ func TestIntegration_VariantCRUD(t *testing.T) {
 		t.Fatal("no seeded flags available")
 	}
 	flagID := seedFlagIDs[0]
+	snapsBefore := countFlagSnapshots(t, flagID)
 
 	// Create variant
 	var v variantResponse
 	postJSON(t, fmt.Sprintf("/api/v1/flags/%d/variants", flagID), map[string]any{
 		"key": "test_variant",
 	}, &v)
+	if n := countFlagSnapshots(t, flagID); n <= snapsBefore {
+		t.Fatalf("expected snapshot after variant create: before=%d after=%d", snapsBefore, n)
+	}
 	variantID := v.ID
 
 	// Update variant key
@@ -384,6 +396,21 @@ func TestIntegration_DuplicateFlag(t *testing.T) {
 	if sourceSnapsAfter := countFlagSnapshots(t, sourceID); sourceSnapsAfter != sourceSnapsBefore {
 		t.Fatalf("duplicate must not append snapshots to source flag: before=%d after=%d", sourceSnapsBefore, sourceSnapsAfter)
 	}
+
+	cloneKey := fmt.Sprintf("dup_custom_key_%d", time.Now().UnixNano())
+	cloneDesc := "integration custom clone description"
+	var customClone flagResponse
+	postJSON(t, fmt.Sprintf("/api/v1/flags/%d/duplicate", sourceID), map[string]any{
+		"key":         cloneKey,
+		"description": cloneDesc,
+	}, &customClone)
+	if customClone.Key != cloneKey {
+		t.Fatalf("expected clone key %q, got %q", cloneKey, customClone.Key)
+	}
+	if customClone.Description != cloneDesc {
+		t.Fatalf("expected clone description %q, got %q", cloneDesc, customClone.Description)
+	}
+	deleteResource(t, fmt.Sprintf("/api/v1/flags/%d", customClone.ID))
 	if cloneSnaps := countFlagSnapshots(t, clone.ID); cloneSnaps != 1 {
 		t.Fatalf("duplicate must create exactly one snapshot on the new flag, got %d", cloneSnaps)
 	}
@@ -498,6 +525,7 @@ func TestIntegration_TagCRUD(t *testing.T) {
 		t.Fatal("no seeded flags available")
 	}
 	flagID := seedFlagIDs[0]
+	snapsBefore := countFlagSnapshots(t, flagID)
 
 	// Create two tags
 	tagVal1 := fmt.Sprintf("tag_crud_1_%d", time.Now().UnixNano())
@@ -505,6 +533,9 @@ func TestIntegration_TagCRUD(t *testing.T) {
 	postJSON(t, fmt.Sprintf("/api/v1/flags/%d/tags", flagID), map[string]any{
 		"value": tagVal1,
 	}, &tag1)
+	if n := countFlagSnapshots(t, flagID); n <= snapsBefore {
+		t.Fatalf("expected snapshot after tag create: before=%d after=%d", snapsBefore, n)
+	}
 
 	tagVal2 := fmt.Sprintf("tag_crud_2_%d", time.Now().UnixNano())
 	var tag2 tagResponse
@@ -746,6 +777,18 @@ type datarFlagSummaryResponse struct {
 	TrafficByDay     []datarDayEntry     `json:"trafficByDay"`
 }
 
+// datarEvalBody matches TestIntegration_Evaluation (seedFlagIDs[1] = int_flag_EQ_02, tier EQ premium).
+func datarEvalBody(flagID int64, entityID string) map[string]any {
+	return map[string]any{
+		"flagID":     flagID,
+		"entityID":   entityID,
+		"entityType": "user",
+		"entityContext": map[string]any{
+			"tier": "premium",
+		},
+	}
+}
+
 func TestIntegration_DatarSummary(t *testing.T) {
 	if len(seedFlagIDs) < 2 {
 		t.Fatal("need at least 2 seeded flags for datar test")
@@ -772,15 +815,11 @@ func TestIntegration_DatarSummary(t *testing.T) {
 	// inside the loop because the eval cache refreshes every ~3s — the
 	// DataRecordsEnabled change won't take effect until the next reload.
 	var summary datarSummaryResponse
-	err = pollUntil("datar/summary", "/api/v1/datar/summary", 15*time.Second, func() bool {
-		// Perform evaluations on each poll attempt.
-		for i := 0; i < 3; i++ {
-			doReqOK(t, "POST", "/api/v1/evaluation", map[string]any{
-				"flagID":     flagID,
-				"entityID":   fmt.Sprintf("datar-entity-%d", i),
-				"entityType": "user",
-			})
+	err = pollUntil("datar/summary", "/api/v1/datar/summary", 30*time.Second, func() bool {
+		for i := 0; i < 5; i++ {
+			doReqOK(t, "POST", "/api/v1/evaluation", datarEvalBody(flagID, fmt.Sprintf("datar-entity-%d", i)))
 		}
+		time.Sleep(600 * time.Millisecond) // allow datar flush to DB (FLAGR_RECORDER_DATAR_FLUSH_INTERVAL)
 		resp, err := doReq("GET", "/api/v1/datar/summary", nil)
 		if err != nil {
 			return false
@@ -827,14 +866,11 @@ func TestIntegration_DatarFlagSummary(t *testing.T) {
 	// Poll until flag summary has traffic. Evaluations are performed
 	// inside the loop because the eval cache refreshes every ~3s.
 	var flagSummary datarFlagSummaryResponse
-	err = pollUntil("datar/flags/summary", fmt.Sprintf("/api/v1/datar/flags/%d/summary", flagID), 15*time.Second, func() bool {
-		for i := 0; i < 3; i++ {
-			doReqOK(t, "POST", "/api/v1/evaluation", map[string]any{
-				"flagID":     flagID,
-				"entityID":   fmt.Sprintf("datar-flag-entity-%d", i),
-				"entityType": "user",
-			})
+	err = pollUntil("datar/flags/summary", fmt.Sprintf("/api/v1/datar/flags/%d/summary", flagID), 30*time.Second, func() bool {
+		for i := 0; i < 5; i++ {
+			doReqOK(t, "POST", "/api/v1/evaluation", datarEvalBody(flagID, fmt.Sprintf("datar-flag-entity-%d", i)))
 		}
+		time.Sleep(600 * time.Millisecond)
 		resp, err := doReq("GET", fmt.Sprintf("/api/v1/datar/flags/%d/summary", flagID), nil)
 		if err != nil {
 			return false

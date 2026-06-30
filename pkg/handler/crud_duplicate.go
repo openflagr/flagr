@@ -65,7 +65,7 @@ func (c *crud) DuplicateFlag(params flag.DuplicateFlagParams) middleware.Respond
 				return 0, MutationNotify{}, err
 			}
 		}
-		if err := entity.CloneFlagGraph(tx, source, created); err != nil {
+		if err := entity.ApplyFlagTemplate(tx, created.ID, entity.SourceFlagTemplate(source)); err != nil {
 			return 0, MutationNotify{}, err
 		}
 		return created.ID, MutationNotify{ComponentID: created.ID, ComponentKey: key}, nil

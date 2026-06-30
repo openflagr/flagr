@@ -164,6 +164,8 @@ func startLocalServer() string {
 		"FLAGR_DB_DBCONNECTIONSTR=file::memory:?cache=shared",
 		"FLAGR_RECORDER_ENABLED=true",
 		"FLAGR_RECORDER_TYPE=datar",
+		"FLAGR_RECORDER_DATAR_FLUSH_INTERVAL=500ms",
+		"FLAGR_EVALCACHE_REFRESHINTERVAL=1s",
 	)
 	// Redirect server output to a temp file to avoid "I/O incomplete" errors
 	// when the test binary kills the server process.

@@ -79,6 +79,101 @@ func TestDuplicateFlag_NotFound(t *testing.T) {
 	assert.True(t, isDef)
 }
 
+func TestDuplicateFlag_DefaultDescriptionWhenSourceEmpty(t *testing.T) {
+	_, cleanup := handlerTestDB(t)
+	defer cleanup()
+	c := &crud{}
+
+	createRes := c.CreateFlag(flag.CreateFlagParams{
+		Body: &models.CreateFlagRequest{Key: "empty_desc_src"},
+	})
+	createOK := createRes.(*flag.CreateFlagOK)
+	require.NotNil(t, createOK.Payload)
+
+	dupRes := c.DuplicateFlag(flag.DuplicateFlagParams{FlagID: createOK.Payload.ID})
+	ok := dupRes.(*flag.DuplicateFlagOK)
+	require.NotNil(t, ok.Payload.Description)
+	assert.Equal(t, "(cloned)", *ok.Payload.Description)
+}
+
+func TestDuplicateFlag_CopiesEnabledState(t *testing.T) {
+	_, cleanup := handlerTestDB(t)
+	defer cleanup()
+	c := &crud{}
+
+	createRes := c.CreateFlag(flag.CreateFlagParams{
+		Body: &models.CreateFlagRequest{
+			Description: new("off flag"),
+			Key:         "dup_enabled_src",
+		},
+	})
+	createOK := createRes.(*flag.CreateFlagOK)
+	require.NotNil(t, createOK.Payload)
+	flagID := createOK.Payload.ID
+
+	c.SetFlagEnabledState(flag.SetFlagEnabledParams{
+		FlagID: flagID,
+		Body:   &models.SetFlagEnabledRequest{Enabled: new(false)},
+	})
+
+	dupRes := c.DuplicateFlag(flag.DuplicateFlagParams{FlagID: flagID})
+	ok := dupRes.(*flag.DuplicateFlagOK)
+	require.NotNil(t, ok.Payload.Enabled)
+	assert.False(t, *ok.Payload.Enabled)
+}
+
+func TestDuplicateFlag_OptionalKeyAndDescription(t *testing.T) {
+	_, cleanup := handlerTestDB(t)
+	defer cleanup()
+	c := &crud{}
+
+	createRes := c.CreateFlag(flag.CreateFlagParams{
+		Body: &models.CreateFlagRequest{
+			Description: new("custom dup source"),
+			Key:         "dup_body_src",
+		},
+	})
+	createOK := createRes.(*flag.CreateFlagOK)
+	require.NotNil(t, createOK.Payload)
+
+	customKey := "my_clone_key"
+	customDesc := "my clone description"
+	dupRes := c.DuplicateFlag(flag.DuplicateFlagParams{
+		FlagID: createOK.Payload.ID,
+		Body: &models.DuplicateFlagRequest{
+			Key:         customKey,
+			Description: customDesc,
+		},
+	})
+	ok := dupRes.(*flag.DuplicateFlagOK)
+	require.NotNil(t, ok.Payload)
+	assert.Equal(t, customKey, ok.Payload.Key)
+	require.NotNil(t, ok.Payload.Description)
+	assert.Equal(t, customDesc, *ok.Payload.Description)
+}
+
+func TestDuplicateFlag_InvalidOptionalKeyReturns400(t *testing.T) {
+	_, cleanup := handlerTestDB(t)
+	defer cleanup()
+	c := &crud{}
+
+	createRes := c.CreateFlag(flag.CreateFlagParams{
+		Body: &models.CreateFlagRequest{Description: new("bad key dup"), Key: "dup_bad_key_src"},
+	})
+	createOK := createRes.(*flag.CreateFlagOK)
+	require.NotNil(t, createOK.Payload)
+
+	res := c.DuplicateFlag(flag.DuplicateFlagParams{
+		FlagID: createOK.Payload.ID,
+		Body:   &models.DuplicateFlagRequest{Key: " spaces invalid "},
+	})
+	def, ok := res.(*flag.DuplicateFlagDefault)
+	require.True(t, ok, "expected DuplicateFlagDefault, got %T", res)
+	require.NotNil(t, def.Payload)
+	require.NotNil(t, def.Payload.Message)
+	assert.Contains(t, *def.Payload.Message, "cannot duplicate flag")
+}
+
 func TestCreateTag_ReusesExistingTagValue(t *testing.T) {
 	db, cleanup := handlerTestDB(t)
 	defer cleanup()
