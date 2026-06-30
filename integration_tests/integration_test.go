@@ -12,7 +12,7 @@
 //              (auto-starts server: SQLite :memory:, recorder on, Datar flush 500ms, eval cache 1s)
 //   - BYO:     FLAGR_SERVER_URL=http://host:18000 go test -tags=integration ./integration_tests/
 //   - Docker:  cd integration_tests && make test
-//              (builds binary, runs against all 6 compose instances)
+//              (builds binary, runs against all compose instances — see README.md for which tests run on legacy checkr/flagr:1.1.12)
 //
 // TestIntegration_Exposures asserts POST /exposures recording via loggedCount (no test-process FLAGR_RECORDER_ENABLED).
 package flagr_integration
@@ -708,17 +708,9 @@ func TestIntegration_Exposures(t *testing.T) {
 	}
 	flagID := seedFlagIDs[1]
 
-	avail, err := doReq("POST", "/api/v1/exposures", map[string]any{
+	requireOptionalAPI(t, http.MethodPost, "/api/v1/exposures", map[string]any{
 		"exposures": []map[string]any{{"flagID": flagID, "entityID": "exposure-probe"}},
-	})
-	if err != nil {
-		t.Fatalf("POST /exposures probe: %v", err)
-	}
-	io.Copy(io.Discard, avail.Body)
-	avail.Body.Close()
-	if avail.StatusCode == http.StatusNotFound {
-		t.Skip("POST /exposures not available on this server (e.g. checkr/flagr:1.1.12)")
-	}
+	}, "POST /api/v1/exposures")
 
 	doReqOK(t, "PUT", fmt.Sprintf("/api/v1/flags/%d", flagID), map[string]any{
 		"dataRecordsEnabled": true,

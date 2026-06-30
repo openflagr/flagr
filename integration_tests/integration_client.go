@@ -12,37 +12,6 @@ import (
 	"time"
 )
 
-// endpointAvailable returns false when the route is missing (404), e.g. on checkr/flagr:1.1.12.
-func endpointAvailable(t *testing.T, method, path string, body any) bool {
-	t.Helper()
-	resp, err := doReq(method, path, body)
-	if err != nil {
-		return false
-	}
-	io.Copy(io.Discard, resp.Body)
-	resp.Body.Close()
-	return resp.StatusCode != http.StatusNotFound
-}
-
-func requireFlagSnapshotMaxIDAPI(t *testing.T) {
-	t.Helper()
-	if endpointAvailable(t, "GET", "/api/v1/flags/snapshots/max_id", nil) {
-		return
-	}
-	t.Skip("GET /flags/snapshots/max_id not available on this server (e.g. checkr/flagr:1.1.12)")
-}
-
-func requireDuplicateFlagAPI(t *testing.T) {
-	t.Helper()
-	if len(seedFlagIDs) == 0 {
-		t.Fatal("no seeded flags available")
-	}
-	path := fmt.Sprintf("/api/v1/flags/%d/duplicate", seedFlagIDs[0])
-	if endpointAvailable(t, "POST", path, map[string]any{}) {
-		return
-	}
-	t.Skip("POST /flags/{flagID}/duplicate not available on this server (e.g. checkr/flagr:1.1.12)")
-}
 
 // ---------------------------------------------------------------------------
 // HTTP helpers
