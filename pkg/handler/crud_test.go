@@ -22,6 +22,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/prashantv/gostub"
 	"github.com/stretchr/testify/assert"
+	"gorm.io/gorm"
 )
 
 func TestCrudFlags(t *testing.T) {
@@ -903,6 +904,7 @@ func TestCrudVariants(t *testing.T) {
 
 	defer tmpDB.Close()
 	defer gostub.StubFunc(&getDB, db).Reset()
+	assert.NoError(t, db.AutoMigrate(entity.AutoMigrateTables...))
 
 	c.CreateFlag(flag.CreateFlagParams{
 		Body: &models.CreateFlagRequest{
@@ -991,6 +993,7 @@ func TestCrudVariantsWithFailures(t *testing.T) {
 
 	defer tmpDB.Close()
 	defer gostub.StubFunc(&getDB, db).Reset()
+	assert.NoError(t, db.AutoMigrate(entity.AutoMigrateTables...))
 
 	c.CreateFlag(flag.CreateFlagParams{
 		Body: &models.CreateFlagRequest{
@@ -1067,9 +1070,10 @@ func TestCrudVariantsWithFailures(t *testing.T) {
 		})
 		assert.NotZero(t, *res.(*variant.PutVariantDefault).Payload)
 	})
-
 	t.Run("PutVariant - validatePutVariantForDistributions error", func(t *testing.T) {
-		defer gostub.StubFunc(&validatePutVariantForDistributions, NewError(500, "validatePutVariantForDistributions error")).Reset()
+		defer gostub.Stub(&validatePutVariantForDistributions, func(v *entity.Variant, tx *gorm.DB) error {
+			return NewError(500, "validatePutVariantForDistributions error")
+		}).Reset()
 		res = c.PutVariant(variant.PutVariantParams{
 			FlagID:    int64(1),
 			VariantID: int64(1),
@@ -1422,13 +1426,10 @@ func TestCrudDistributionsWithFailures(t *testing.T) {
 }
 
 // TestAllMutationHandlersCallSaveFlagSnapshot enforces that every mutation
-// handler in crud.go calls entity.SaveFlagSnapshot. Without the snapshot the
-// EvalCache short-circuit would silently serve stale data after a change.
+// handler records a flag snapshot (commitFlagMutation, or WriteFlagSnapshotTx for tx-heavy handlers).
 func TestAllMutationHandlersCallSaveFlagSnapshot(t *testing.T) {
-	// Read the source files containing mutation handlers.
-	files := []string{"crud.go", "crud_flag_creation.go"}
+	files := []string{"crud.go", "crud_flag_creation.go", "crud_duplicate.go"}
 
-	// Identify mutation methods by these prefixes.
 	isMutation := func(name string) bool {
 		for _, p := range []string{"Create", "Put", "Delete", "Restore", "Set"} {
 			if strings.HasPrefix(name, p) {
@@ -1451,7 +1452,6 @@ func TestAllMutationHandlersCallSaveFlagSnapshot(t *testing.T) {
 				continue
 			}
 
-			// Must be a method on *crud.
 			if funcDecl.Recv == nil || len(funcDecl.Recv.List) != 1 {
 				continue
 			}
@@ -1474,30 +1474,33 @@ func TestAllMutationHandlersCallSaveFlagSnapshot(t *testing.T) {
 				continue
 			}
 
-			// Walk the function body looking for entity.SaveFlagSnapshot.
 			callsSnapshot := false
 			ast.Inspect(funcDecl.Body, func(n ast.Node) bool {
 				call, ok := n.(*ast.CallExpr)
 				if !ok {
 					return true
 				}
-				sel, ok := call.Fun.(*ast.SelectorExpr)
-				if !ok {
-					return true
-				}
-				pkg, ok := sel.X.(*ast.Ident)
-				if !ok {
-					return true
-				}
-				if pkg.Name == "entity" && sel.Sel.Name == "SaveFlagSnapshot" {
-					callsSnapshot = true
-					return false
+				switch fun := call.Fun.(type) {
+				case *ast.Ident:
+					if fun.Name == "commitFlagMutation" {
+						callsSnapshot = true
+						return false
+					}
+				case *ast.SelectorExpr:
+					pkg, ok := fun.X.(*ast.Ident)
+					if !ok {
+						return true
+					}
+					if pkg.Name == "entity" && fun.Sel.Name == "WriteFlagSnapshotTx" {
+						callsSnapshot = true
+						return false
+					}
 				}
 				return true
 			})
 
 			if !callsSnapshot {
-				t.Errorf("%s: mutation handler %q must call entity.SaveFlagSnapshot", filename, name)
+				t.Errorf("%s: mutation handler %q must call commitFlagMutation or entity.WriteFlagSnapshotTx", filename, name)
 			}
 		}
 	}

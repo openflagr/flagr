@@ -83,6 +83,25 @@ export function deleteFlag(vm: FlagPageVm): void {
   })
 }
 
+export function duplicateFlag(vm: FlagPageVm & { dialogDuplicateFlagVisible?: boolean }): void {
+  runApi(vm, crudApi.duplicateFlag(vm.flagId), {
+    onSuccess: (cloned) => {
+      const cloneId = cloned.id
+      if (cloneId == null) return
+      if (vm.dialogDuplicateFlagVisible !== undefined) {
+        vm.dialogDuplicateFlagVisible = false
+      }
+      vm.$message({
+        type: 'success',
+        duration: 0,
+        showClose: true,
+        dangerouslyUseHTMLString: true,
+        message: `Flag cloned successfully. <a href="#/flags/${cloneId}" class="duplicate-flag-toast-link">Open clone</a> to update details.`,
+      })
+    },
+  })
+}
+
 export function putFlag(vm: FlagPageVm): void {
   const f = vm.flag
   runApi(

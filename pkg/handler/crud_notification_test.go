@@ -122,8 +122,8 @@ func TestHandlerNotifications(t *testing.T) {
 	})
 
 	t.Run("DeleteFlag sends notification", func(t *testing.T) {
-		f := entity.GenFixtureFlag()
-		db.Create(&f)
+		f := entity.Flag{Key: "delete_notif_flag", Description: "to delete", Enabled: true}
+		assert.NoError(t, db.Create(&f).Error)
 		mockNotifier.ClearSent()
 
 		params := flag.DeleteFlagParams{
@@ -143,9 +143,8 @@ func TestHandlerNotifications(t *testing.T) {
 	})
 
 	t.Run("RestoreFlag sends notification", func(t *testing.T) {
-		f := entity.GenFixtureFlag()
-		db.Create(&f)
-		// Soft delete first
+		f := entity.Flag{Key: "restore_notif_flag", Description: "restore", Enabled: true}
+		assert.NoError(t, db.Create(&f).Error)
 		db.Delete(&f)
 		mockNotifier.ClearSent()
 
@@ -166,8 +165,8 @@ func TestHandlerNotifications(t *testing.T) {
 	})
 
 	t.Run("SetFlagEnabledState sends notification", func(t *testing.T) {
-		f := entity.GenFixtureFlag()
-		db.Create(&f)
+		f := entity.Flag{Key: "enabled_notif_flag", Description: "enabled", Enabled: true}
+		assert.NoError(t, db.Create(&f).Error)
 		mockNotifier.ClearSent()
 
 		params := flag.SetFlagEnabledParams{

@@ -61,6 +61,8 @@ paths:
     $ref: ./flag.yaml
   /flags/{flagID}/restore:
     $ref: ./flag_restore.yaml
+  /flags/{flagID}/duplicate:
+    $ref: ./flag_duplicate.yaml
   /flags/{flagID}/enabled:
     $ref: ./flag_enabled.yaml
   /flags/{flagID}/tags:
@@ -160,6 +162,16 @@ definitions:
       updatedAt:
         type: string
         format: date-time
+  duplicateFlagRequest:
+    type: object
+    properties:
+      key:
+        description: unique key for the new flag; auto-generated if omitted or empty
+        type: string
+      description:
+        description: description for the new flag; defaults to source description with " (cloned)" suffix if omitted or empty
+        type: string
+
   createFlagRequest:
     type: object
     required:

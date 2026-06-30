@@ -15,6 +15,22 @@
         </span>
       </template>
     </el-dialog>
+    <el-dialog
+      v-model="dialogDuplicateFlagVisible"
+      title="Duplicate feature flag"
+    >
+      <span>Duplicate this feature flag? A new flag will be created with the same segments, variants, constraints, distributions, and tags.</span>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="dialogDuplicateFlagVisible = false">Cancel</el-button>
+          <el-button
+            type="primary"
+            data-testid="confirm-duplicate-flag-btn"
+            @click.prevent="flagPage.duplicateFlag(page)"
+          >Confirm</el-button>
+        </span>
+      </template>
+    </el-dialog>
 
     <el-dialog
       v-model="dialogCreateSegmentOpen"
@@ -135,6 +151,16 @@
                 Deleting a flag hides it from active evaluation. Its segments, variants, and distributions stay intact and come back when you restore the flag from the Deleted Flags section on the flags list page.
               </p>
               <el-button
+                type="primary"
+                plain
+                size="small"
+                data-testid="duplicate-flag-btn"
+                @click="dialogDuplicateFlagVisible = true"
+              >
+                Duplicate Flag
+              </el-button>
+
+              <el-button
                 type="danger"
                 plain
                 size="small"
@@ -216,6 +242,7 @@ export default {
       loaded: false,
       flagId: '',
       dialogDeleteFlagVisible: false,
+      dialogDuplicateFlagVisible: false,
       dialogEditDistributionOpen: false,
       dialogCreateSegmentOpen: false,
       flagPage,

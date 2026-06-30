@@ -563,6 +563,47 @@ func init() {
         }
       }
     },
+    "/flags/{flagID}/duplicate": {
+      "post": {
+        "tags": [
+          "flag"
+        ],
+        "operationId": "duplicateFlag",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the flag to duplicate",
+            "name": "flagID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "optional overrides for the new flag",
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/duplicateFlagRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "returns the duplicated flag with preloaded segments, variants, and tags",
+            "schema": {
+              "$ref": "#/definitions/flag"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
     "/flags/{flagID}/enabled": {
       "put": {
         "tags": [
@@ -1811,6 +1852,19 @@ func init() {
         "variantKey": {
           "type": "string",
           "minLength": 1
+        }
+      }
+    },
+    "duplicateFlagRequest": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "description": "description for the new flag; defaults to source description with \" (cloned)\" suffix if omitted or empty",
+          "type": "string"
+        },
+        "key": {
+          "description": "unique key for the new flag; auto-generated if omitted or empty",
+          "type": "string"
         }
       }
     },
@@ -3046,6 +3100,47 @@ func init() {
         }
       }
     },
+    "/flags/{flagID}/duplicate": {
+      "post": {
+        "tags": [
+          "flag"
+        ],
+        "operationId": "duplicateFlag",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the flag to duplicate",
+            "name": "flagID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "optional overrides for the new flag",
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/duplicateFlagRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "returns the duplicated flag with preloaded segments, variants, and tags",
+            "schema": {
+              "$ref": "#/definitions/flag"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
     "/flags/{flagID}/enabled": {
       "put": {
         "tags": [
@@ -4296,6 +4391,19 @@ func init() {
         "variantKey": {
           "type": "string",
           "minLength": 1
+        }
+      }
+    },
+    "duplicateFlagRequest": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "description": "description for the new flag; defaults to source description with \" (cloned)\" suffix if omitted or empty",
+          "type": "string"
+        },
+        "key": {
+          "description": "unique key for the new flag; auto-generated if omitted or empty",
+          "type": "string"
         }
       }
     },

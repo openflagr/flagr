@@ -23,41 +23,36 @@ func (c *crud) CreateFlag(params flag.CreateFlagParams) middleware.Responder {
 		f.Key = key
 	}
 
-	tx := getDB().Begin()
+	subject := getSubjectFromRequest(params.HTTPRequest)
 
-	if err := tx.Create(f).Error; err != nil {
-		tx.Rollback()
-		return flag.NewCreateFlagDefault(500).WithPayload(
-			ErrorMessage("cannot create flag. %s", err))
-	}
-
-	if params.Body.Template == "simple_boolean_flag" {
-		if err := LoadSimpleBooleanFlagTemplate(f, tx); err != nil {
-			tx.Rollback()
-			return flag.NewCreateFlagDefault(500).WithPayload(
-				ErrorMessage("cannot create flag. %s", err))
-		}
-	} else if params.Body.Template != "" {
+	if params.Body != nil && params.Body.Template != "" && params.Body.Template != "simple_boolean_flag" {
 		return flag.NewCreateFlagDefault(400).WithPayload(
 			ErrorMessage("unknown value for template: %s", params.Body.Template))
 	}
 
-	err := tx.Commit().Error
+	err := commitFlagMutation(0, subject, notification.OperationCreate, notification.ComponentFlag, func(tx *gorm.DB) error {
+		if err := tx.Create(f).Error; err != nil {
+			return err
+		}
+		if params.Body != nil && params.Body.Template == "simple_boolean_flag" {
+			if err := LoadSimpleBooleanFlagTemplate(f, tx); err != nil {
+				return err
+			}
+		}
+		return nil
+	}, func() (uint, string) { return f.ID, f.Key })
 	if err != nil {
-		tx.Rollback()
-		return flag.NewCreateFlagDefault(500).WithPayload(ErrorMessage("%s", err))
+		return flag.NewCreateFlagDefault(500).WithPayload(
+			ErrorMessage("cannot create flag. %s", err))
 	}
 
 	resp := flag.NewCreateFlagOK()
 	payload, err := e2rMapFlag(f)
 	if err != nil {
 		return flag.NewCreateFlagDefault(500).WithPayload(
-			ErrorMessage("cannot map flag. %s", err))
+			ErrorMessage("cannot create flag. %s", err))
 	}
 	resp.SetPayload(payload)
-
-	entity.SaveFlagSnapshot(getDB(), f.ID, getSubjectFromRequest(params.HTTPRequest), notification.OperationCreate, notification.ComponentFlag, f.ID, f.Key)
-
 	return resp
 }
 

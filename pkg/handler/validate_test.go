@@ -275,7 +275,7 @@ func TestValidatePutVariantForDistributions(t *testing.T) {
 			FlagID: 1,
 			Key:    "control",
 		}
-		err := validatePutVariantForDistributions(v)
+		err := validatePutVariantForDistributions(v, nil)
 		assert.Nil(t, err)
 	})
 
@@ -288,7 +288,7 @@ func TestValidatePutVariantForDistributions(t *testing.T) {
 			FlagID: 1,
 			Key:    "control",
 		}
-		err := validatePutVariantForDistributions(v)
+		err := validatePutVariantForDistributions(v, nil)
 		assert.NotZero(t, err)
 		db.Error = nil
 	})

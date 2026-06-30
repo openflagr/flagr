@@ -23,6 +23,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 )
@@ -335,6 +336,38 @@ func TestIntegration_DistributionCRUD(t *testing.T) {
 	// Verify by getting the flag (includes segments with distributions)
 	getJSON(t, fmt.Sprintf("/api/v1/flags/%d", flagID), &flag)
 }
+func TestIntegration_DuplicateFlag(t *testing.T) {
+	if len(seedFlagIDs) == 0 {
+		t.Fatal("no seeded flags available")
+	}
+	sourceID := seedFlagIDs[0]
+	var source flagResponse
+	getJSON(t, fmt.Sprintf("/api/v1/flags/%d", sourceID), &source)
+
+	var clone flagResponse
+	postJSON(t, fmt.Sprintf("/api/v1/flags/%d/duplicate", sourceID), map[string]any{}, &clone)
+	if clone.ID == sourceID {
+		t.Fatalf("clone id must differ from source, both %d", sourceID)
+	}
+	if clone.Key == source.Key {
+		t.Fatalf("clone key must differ from source")
+	}
+	if !strings.Contains(clone.Description, "(cloned)") {
+		t.Fatalf("expected cloned description suffix, got %q", clone.Description)
+	}
+	if len(clone.Variants) != len(source.Variants) {
+		t.Fatalf("variant count: source %d clone %d", len(source.Variants), len(clone.Variants))
+	}
+	if len(clone.Segments) != len(source.Segments) {
+		t.Fatalf("segment count: source %d clone %d", len(source.Segments), len(clone.Segments))
+	}
+	getJSON(t, fmt.Sprintf("/api/v1/flags/%d", clone.ID), &clone)
+	if clone.ID == 0 {
+		t.Fatal("GET clone failed")
+	}
+	deleteResource(t, fmt.Sprintf("/api/v1/flags/%d", clone.ID))
+}
+
 
 func TestIntegration_Evaluation(t *testing.T) {
 	// Use a seeded flag untouched by other tests (all CRUD tests use seedFlagIDs[0]).

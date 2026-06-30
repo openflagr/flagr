@@ -5,6 +5,7 @@ import (
 	"github.com/openflagr/flagr/pkg/util"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/distribution"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/variant"
+	"gorm.io/gorm"
 )
 
 var validatePutDistributions = func(params distribution.PutDistributionsParams) *Error {
@@ -69,8 +70,12 @@ var validateDeleteVariant = func(params variant.DeleteVariantParams) *Error {
 	return nil
 }
 
-var validatePutVariantForDistributions = func(v *entity.Variant) *Error {
-	err := getDB().
+var validatePutVariantForDistributions = func(v *entity.Variant, tx *gorm.DB) error {
+	db := tx
+	if db == nil {
+		db = getDB()
+	}
+	err := db.
 		Model(entity.Distribution{}).
 		Where(entity.Distribution{VariantID: v.ID}).
 		Updates(entity.Distribution{VariantKey: v.Key}).

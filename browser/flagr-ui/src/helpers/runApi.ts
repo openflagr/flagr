@@ -9,6 +9,14 @@ export interface MessageApi {
 export interface ElementMessageApi extends MessageApi {
   success: (msg: string) => void
   warning: (msg: string) => void
+  (options: {
+    type?: 'success' | 'warning' | 'info' | 'error'
+    message?: string
+    duration?: number
+    showClose?: boolean
+    dangerouslyUseHTMLString?: boolean
+    customClass?: string
+  }): void
 }
 
 export interface RunApiVm {
