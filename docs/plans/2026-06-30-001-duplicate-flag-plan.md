@@ -23,7 +23,7 @@ Clones an existing flag (variants, segments, constraints, distributions, tags) i
 | UI entry | **Flag detail only** (no list action) |
 | After duplicate | Stay on **source** detail page |
 | Confirm UX | **A** — one-step confirm dialog only (no key/description fields in UI) |
-| Success toast | **B** — persistent until dismissed; link to `/#/flags/{newId}` |
+| Success toast | **B** — auto-dismiss after **10s** (`duration: 10_000`); **showClose**; link text `Open #/flags/{id}`; body shows **new flag ID** |
 | Source flag | **A** — must be non-deleted; deleted source → **404** |
 | `entityType` | **A** — copy value + `CreateFlagEntityType(tx, et)` in duplicate tx |
 | Route | **A** — `POST /flags/{flagID}/duplicate`, `operationId: duplicateFlag` |
@@ -93,7 +93,7 @@ Graph writes for **boolean create** and **duplicate** share one path in `pkg/ent
 |------|----------|
 | **Placement** | **Duplicate Flag** on flag detail (`Flag.vue`, `data-testid="duplicate-flag-btn"`) |
 | **Flow** | Confirm dialog → `crud.duplicateFlag(flagId)` → stay on source |
-| **Toast** | `flagPage.ts`: `duration: 0`, link `a.duplicate-flag-toast-link` → `/#/flags/{id}` |
+| **Toast** | `flagPage.ts`: `duration: 10_000`, `showClose: true`; **New flag ID** + `Open #/flags/{id}` link |
 | **API** | `api/crud.ts` `duplicateFlag`, `DuplicateFlagPayload` in `types.ts` |
 
 ## Testing (as-built)

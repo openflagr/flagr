@@ -416,6 +416,9 @@ test.describe('Flag detail page', () => {
     expect(href).toMatch(/^#\/flags\/\d+$/)
     const cloneId = Number(href!.replace('#/flags/', ''))
     expect(cloneId).not.toBe(flag.id)
+    await expect(toast).toContainText(`New flag ID:`)
+    await expect(toast).toContainText(String(cloneId))
+    await expect(toast.locator('a.duplicate-flag-toast-link')).toHaveText(`Open #/flags/${cloneId}`)
     await expect(page).toHaveURL(new RegExp(`/#/flags/${flag.id}$`))
 
     const clone = await getFlag(cloneId)

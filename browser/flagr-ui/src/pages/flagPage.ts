@@ -67,12 +67,15 @@ export const DUPLICATE_FLAG_CONFIRM_MESSAGE =
   'Duplicate this feature flag? A new flag will be created with the same segments, variants, constraints, distributions, and tags.'
 
 function showDuplicateSuccessToast(vm: FlagPageVm, cloneId: number): void {
+  const clonePath = `#/flags/${cloneId}`
   vm.$message({
     type: 'success',
-    duration: 0,
+    duration: 10_000,
     showClose: true,
     dangerouslyUseHTMLString: true,
-    message: `Flag cloned successfully. <a href="#/flags/${cloneId}" class="duplicate-flag-toast-link">Open clone</a> to update details.`,
+    message:
+      `Flag cloned successfully. New flag ID: <strong>${cloneId}</strong>. ` +
+      `<a href="${clonePath}" class="duplicate-flag-toast-link">Open ${clonePath}</a> to update details.`,
   })
 }
 
