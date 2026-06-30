@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { createFlagWithVariants, createFlag, deleteFlag, createSegment, createConstraint, createVariant, API, waitForSnapshot, getFlag, putSegmentDistributions } from './helpers'
+import { createFlagWithVariants, createFlag, deleteFlag, createSegment, createConstraint, createVariant, createTag, API, waitForSnapshot, getFlag, putSegmentDistributions } from './helpers'
 
 test.describe('Flag detail page', () => {
   /** Set by each test, cleaned up in afterEach. */
@@ -392,9 +392,18 @@ test.describe('Flag detail page', () => {
     expect(updated.segments[0].distributions[0].percent).toBe(100)
   })
   test('can duplicate flag from detail page', async ({ page }) => {
-    flag = await createFlagWithVariants({ description: 'dup-source' })
-    const segment = await createSegment(flag.id, `dup-seg-${Date.now()}`)
-    await createConstraint(flag.id, segment.id)
+    const sourceDesc = `dup-source-${Date.now()}`
+    flag = await createFlagWithVariants({ description: sourceDesc })
+    const segmentDesc = `dup-seg-${Date.now()}`
+    const segment = await createSegment(flag.id!, segmentDesc)
+    await createConstraint(flag.id!, segment.id!)
+    const tagValue = `dup-tag-${Date.now()}`
+    await createTag(flag.id!, tagValue)
+    const source = await getFlag(flag.id!)
+    expect(source.variants).toHaveLength(2)
+    const variantKeys = source.variants.map((v) => v.key).sort()
+    expect(variantKeys).toEqual(['control', 'test'])
+
     await page.goto(`/#/flags/${flag.id}`)
     await expect(page.locator('input[data-testid="flag-key-input"]')).toBeVisible({ timeout: 10000 })
     await page.locator('[data-testid="duplicate-flag-btn"]').click()
@@ -408,12 +417,37 @@ test.describe('Flag detail page', () => {
     const cloneId = Number(href!.replace('#/flags/', ''))
     expect(cloneId).not.toBe(flag.id)
     await expect(page).toHaveURL(new RegExp(`/#/flags/${flag.id}$`))
+
     const clone = await getFlag(cloneId)
+    expect(clone.key).toBeTruthy()
+    expect(clone.key).not.toBe(source.key)
     expect(clone.description).toContain('(cloned)')
-    expect(clone.variants?.length).toBe(2)
+    expect(clone.description).toContain(sourceDesc)
+    expect(clone.variants).toHaveLength(2)
+    expect(clone.variants.map((v) => v.key).sort()).toEqual(variantKeys)
     expect(clone.segments?.length).toBeGreaterThanOrEqual(1)
+    const clonedSeg = clone.segments!.find((s) => s.description === segmentDesc)
+    expect(clonedSeg).toBeTruthy()
+    expect(clonedSeg!.constraints?.length).toBeGreaterThanOrEqual(1)
+    expect(clonedSeg!.constraints![0].property).toBe('country')
+    expect(clonedSeg!.constraints![0].operator).toBe('EQ')
+    expect(clone.tags?.some((t) => t.value === tagValue)).toBe(true)
+
     await page.locator('a.duplicate-flag-toast-link').click()
     await expect(page).toHaveURL(new RegExp(`/#/flags/${cloneId}$`), { timeout: 10000 })
+    await expect(page.locator('input[data-testid="flag-desc-input"]')).toHaveValue(clone.description, { timeout: 10000 })
+    await expect(page.locator('input[data-testid="flag-key-input"]')).toHaveValue(clone.key!)
+    const variantInputs = page.locator('input[data-testid="variant-key-input"]')
+    await expect(variantInputs).toHaveCount(2)
+    const uiVariantKeys = (await variantInputs.evaluateAll((els) =>
+      els.map((el) => (el as HTMLInputElement).value),
+    )).sort()
+    expect(uiVariantKeys).toEqual(variantKeys)
+    await expect(page.locator('[data-testid="segment-desc-input"]').first()).toHaveValue(segmentDesc)
+    await expect(page.locator('[data-testid="constraint-prop-input"]').first()).toHaveValue('country')
+    await expect(page.locator('.el-tag').filter({ hasText: tagValue })).toBeVisible()
+
+    await deleteFlag(cloneId)
   })
 
 

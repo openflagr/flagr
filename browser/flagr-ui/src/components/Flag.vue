@@ -278,17 +278,11 @@ export default {
       immediate: true,
       handler(id: string | string[] | undefined) {
         this.flagId = String(id ?? '')
+        if (this.flagId) {
+          mountFlagPage(this.page)
+        }
       },
     },
-    flag: {
-      deep: true,
-      handler() {
-        syncEvalContextFromFlag(this.page)
-      },
-    },
-  },
-  mounted() {
-    mountFlagPage(this.page)
   },
   methods: {
     onHistoryTabClick(tab: { props?: { name?: string } }) {
