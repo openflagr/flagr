@@ -187,7 +187,7 @@ func (e *Engine) QueryFlagSummaryBreakdown(flagID int64, from, to time.Time) (*F
 	var variants []VariantEntry
 	if err := e.db.Model(&entity.HourlyEvent{}).
 		Select("variant_id, SUM(eval_count) AS count").
-		Where(where, args...).Group("variant_id").Order("count DESC").
+		Where(where, args...).Group("variant_id").Order("SUM(eval_count) DESC").
 		Scan(&variants).Error; err != nil {
 		logrus.WithError(err).Error("Datar: QueryFlagSummaryBreakdown variants failed")
 		return nil, err
@@ -197,19 +197,17 @@ func (e *Engine) QueryFlagSummaryBreakdown(flagID int64, from, to time.Time) (*F
 	var segs []SegmentEntry
 	if err := e.db.Model(&entity.HourlyEvent{}).
 		Select("segment_id, SUM(eval_count) AS count").
-		Where(where+" AND segment_id > 0", args...).Group("segment_id").Order("count DESC").
+		Where(where+" AND segment_id > 0", args...).Group("segment_id").Order("SUM(eval_count) DESC").
 		Scan(&segs).Error; err != nil {
 		logrus.WithError(err).Error("Datar: QueryFlagSummaryBreakdown segments failed")
 		return nil, err
 	}
 
-	// Days, sorted by date ascending.
-	// DATE() returns a native DATE on MySQL which GORM can't scan into a Go string.
-	// GROUP BY and ORDER BY use the expression directly to avoid alias ambiguity.
+	daySelect, dayGroup := dayBucketExpr(e.db)
 	var days []DayEntry
 	if err := e.db.Model(&entity.HourlyEvent{}).
-		Select("CAST(DATE(bucket_hour) AS CHAR) AS day, SUM(eval_count) AS count").
-		Where(where, args...).Group("DATE(bucket_hour)").Order("DATE(bucket_hour) ASC").
+		Select(daySelect+", SUM(eval_count) AS count").
+		Where(where, args...).Group(dayGroup).Order(dayGroup + " ASC").
 		Scan(&days).Error; err != nil {
 		logrus.WithError(err).Error("Datar: QueryFlagSummaryBreakdown days failed")
 		return nil, err
@@ -221,6 +219,18 @@ func (e *Engine) QueryFlagSummaryBreakdown(flagID int64, from, to time.Time) (*F
 		Segments: segs,
 		Days:     days,
 	}, nil
+}
+
+// dayBucketExpr returns SQL to bucket bucket_hour by calendar day for the active dialect.
+func dayBucketExpr(db *gorm.DB) (selectDay string, groupOrderDay string) {
+	switch db.Name() {
+	case "postgres":
+		return "TO_CHAR(bucket_hour AT TIME ZONE 'UTC', 'YYYY-MM-DD') AS day", "TO_CHAR(bucket_hour AT TIME ZONE 'UTC', 'YYYY-MM-DD')"
+	case "sqlite":
+		return "strftime('%Y-%m-%d', bucket_hour) AS day", "strftime('%Y-%m-%d', bucket_hour)"
+	default:
+		return "DATE(bucket_hour) AS day", "DATE(bucket_hour)"
+	}
 }
 
 // Shutdown stops the flush loop and flushes remaining in-memory counts to the DB.

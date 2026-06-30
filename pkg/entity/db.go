@@ -77,7 +77,9 @@ func GetDB() *gorm.DB {
 				logrus.Fatal("failed to connect to db")
 			}
 		}
-		db.AutoMigrate(AutoMigrateTables...)
+		if err := db.AutoMigrate(AutoMigrateTables...); err != nil {
+			logrus.WithField("err", err).Fatal("failed to auto-migrate database")
+		}
 		singletonDB = db
 	})
 
