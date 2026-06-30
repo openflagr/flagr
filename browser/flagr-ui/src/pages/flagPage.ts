@@ -37,6 +37,8 @@ import { runApi } from '@/helpers/runApi'
 export interface FlagPageVm extends ConfirmVm {
   $router: Router
   flagId: string
+  /** Bumped on each route flagId change; mountFlagPage ignores stale responses. */
+  flagPageLoadGen?: number
   flag: FlagView
   newSegment: { description: string; rolloutPercent: number }
   newTag: { value: string }
@@ -58,6 +60,7 @@ export interface FlagPageVm extends ConfirmVm {
   evalSummary: EvalSummary | null
   batchEvalContext: BatchEvalContext
   batchEvalResult: BatchEvalResult
+  duplicateInFlight?: boolean
 }
 
 export const DEFAULT_SEGMENT = { description: '', rolloutPercent: 50 }
@@ -78,7 +81,7 @@ function showDuplicateSuccessToast(vm: FlagPageVm, cloneId: number): void {
     dangerouslyUseHTMLString: true,
     message:
       `Flag cloned successfully. New flag ID: <strong>${cloneId}</strong>. ` +
-      `<a href="${clonePath}" class="duplicate-flag-toast-link">Open ${clonePath}</a> to update details.`,
+      `<a href="${clonePath}" class="duplicate-flag-toast-link" aria-label="Open cloned flag ${cloneId}">Open ${clonePath}</a> to update details.`,
   })
 }
 
@@ -104,10 +107,19 @@ export function deleteFlag(vm: FlagPageVm): void {
 }
 
 export function duplicateFlag(vm: FlagPageVm): void {
+  if (vm.duplicateInFlight) return
+  vm.duplicateInFlight = true
   runApi(vm, crudApi.duplicateFlag(vm.flagId), {
+    onFailure: () => {
+      vm.duplicateInFlight = false
+    },
     onSuccess: (cloned) => {
+      vm.duplicateInFlight = false
       const cloneId = cloned.id
-      if (cloneId == null) return
+      if (cloneId == null) {
+        vm.$message.error('Duplicate succeeded but response had no flag id')
+        return
+      }
       vm.dialogDuplicateFlagVisible = false
       showDuplicateSuccessToast(vm, cloneId)
     },
@@ -125,7 +137,7 @@ export function putFlag(vm: FlagPageVm): void {
       entityType: f.entityType || '',
       notes: f.notes || '',
     }),
-    { successMessage: 'Flag updated' },
+    { successMessage: 'Flag updated', onSuccess: () => syncEvalContextFromFlag(vm) },
   )
 }
 
@@ -455,9 +467,28 @@ export function syncEvalContextFromFlag(vm: FlagPageVm): void {
   vm.evalContext.flagKey = vm.flag.key
   vm.batchEvalContext.flagIDs = [id]
 }
+
+/** Call when $route.params.flagId changes before mountFlagPage. */
+export function prepareFlagRouteChange(vm: FlagPageVm): void {
+  vm.flagPageLoadGen = (vm.flagPageLoadGen ?? 0) + 1
+  vm.loaded = false
+  vm.historyLoaded = false
+  vm.historyKey++
+  vm.flagSnapshots = []
+  vm.dialogDuplicateFlagVisible = false
+  vm.dialogEditDistributionOpen = false
+  vm.dialogCreateSegmentOpen = false
+  vm.selectedSegment = null
+}
+
 export function mountFlagPage(vm: FlagPageVm): void {
-  runApi(vm, crudApi.loadFlagPageContext(vm.flagId), {
+  const flagId = vm.flagId
+  const gen = vm.flagPageLoadGen ?? 0
+  runApi(vm, crudApi.loadFlagPageContext(flagId), {
     onSuccess: (load) => {
+      if (vm.flagId !== flagId || (vm.flagPageLoadGen ?? 0) !== gen) {
+        return
+      }
       vm.flag = normalizeFlag(load.flag)
       vm.loaded = true
       vm.allTags = load.allTags

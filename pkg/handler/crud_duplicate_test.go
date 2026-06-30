@@ -1,16 +1,20 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"testing"
 
 	"github.com/openflagr/flagr/pkg/entity"
 	"github.com/openflagr/flagr/pkg/notification"
 	"github.com/openflagr/flagr/swagger_gen/models"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/constraint"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/flag"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/distribution"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/segment"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/tag"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/variant"
+	"github.com/prashantv/gostub"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
@@ -256,4 +260,152 @@ func TestCommitFlagMutation_RollbackOnMutateFailure(t *testing.T) {
 	var after int64
 	require.NoError(t, db.Model(&entity.FlagSnapshot{}).Where("flag_id = ?", flagID).Count(&after).Error)
 	assert.Equal(t, before, after, "failed mutation must not add a snapshot row")
+}
+
+func TestDuplicateFlag_DeletedSourceReturns404(t *testing.T) {
+	_, cleanup := handlerTestDB(t)
+	defer cleanup()
+	c := &crud{}
+	req := &http.Request{}
+
+	createRes := c.CreateFlag(flag.CreateFlagParams{
+		HTTPRequest: req,
+		Body:        &models.CreateFlagRequest{Key: "dup_del_src", Description: new("src")},
+	})
+	createOK := createRes.(*flag.CreateFlagOK)
+	require.NotNil(t, createOK.Payload)
+	flagID := createOK.Payload.ID
+
+	delRes := c.DeleteFlag(flag.DeleteFlagParams{FlagID: flagID, HTTPRequest: req})
+	_, isDelOK := delRes.(*flag.DeleteFlagOK)
+	require.True(t, isDelOK, "delete failed: %T", delRes)
+
+	dupRes := c.DuplicateFlag(flag.DuplicateFlagParams{FlagID: flagID, HTTPRequest: req})
+	_, ok := dupRes.(*flag.DuplicateFlagDefault)
+	require.True(t, ok, "expected 404 default, got %T", dupRes)
+}
+
+func TestDuplicateFlag_DuplicateKeyReturns400(t *testing.T) {
+	_, cleanup := handlerTestDB(t)
+	defer cleanup()
+	c := &crud{}
+	req := &http.Request{}
+
+	takenKey := "dup_taken_key"
+	c.CreateFlag(flag.CreateFlagParams{
+		HTTPRequest: req,
+		Body:        &models.CreateFlagRequest{Key: takenKey, Description: new("existing")},
+	})
+	createRes := c.CreateFlag(flag.CreateFlagParams{
+		HTTPRequest: req,
+		Body:        &models.CreateFlagRequest{Key: "dup_src_for_key", Description: new("src")},
+	})
+	sourceID := createRes.(*flag.CreateFlagOK).Payload.ID
+
+	dupRes := c.DuplicateFlag(flag.DuplicateFlagParams{
+		FlagID:      sourceID,
+		HTTPRequest: req,
+		Body:        &models.DuplicateFlagRequest{Key: takenKey},
+	})
+	def, ok := dupRes.(*flag.DuplicateFlagDefault)
+	require.True(t, ok, "expected error response, got %T", dupRes)
+	require.NotNil(t, def.Payload)
+	require.NotNil(t, def.Payload.Message)
+	assert.Contains(t, *def.Payload.Message, "key")
+}
+
+func TestCommitFlagMutation_RollbackOnWriteFlagSnapshotFailure(t *testing.T) {
+	db, cleanup := handlerTestDB(t)
+	defer cleanup()
+
+	createRes := (&crud{}).CreateFlag(flag.CreateFlagParams{
+		Body: &models.CreateFlagRequest{Description: new("snap-rollback"), Key: "snap_rb_src"},
+	})
+	createOK := createRes.(*flag.CreateFlagOK)
+	require.NotNil(t, createOK.Payload)
+	flagID := createOK.Payload.ID
+
+	var before int64
+	require.NoError(t, db.Model(&entity.FlagSnapshot{}).Where("flag_id = ?", flagID).Count(&before).Error)
+
+	stub := gostub.Stub(&writeFlagSnapshotTx, func(tx *gorm.DB, flagID uint, updatedBy string) (entity.FlagSnapshotCommitMeta, error) {
+		return entity.FlagSnapshotCommitMeta{}, fmt.Errorf("snapshot write failed")
+	})
+	defer stub.Reset()
+
+	err := commitFlagMutation(uint(flagID), "tester", notification.OperationUpdate, notification.ComponentFlag, func(tx *gorm.DB) (uint, MutationNotify, error) {
+		return uint(flagID), MutationNotify{ComponentID: uint(flagID), ComponentKey: "snap_rb_src"}, nil
+	})
+	assert.Error(t, err)
+
+	var after int64
+	require.NoError(t, db.Model(&entity.FlagSnapshot{}).Where("flag_id = ?", flagID).Count(&after).Error)
+	assert.Equal(t, before, after)
+}
+
+func TestDuplicateFlag_CopiesConstraintsAndDistributions(t *testing.T) {
+	_, cleanup := handlerTestDB(t)
+	defer cleanup()
+	c := &crud{}
+	req := &http.Request{}
+
+	createRes := c.CreateFlag(flag.CreateFlagParams{
+		HTTPRequest: req,
+		Body:        &models.CreateFlagRequest{Key: "dup_graph_src", Description: new("graph")},
+	})
+	createOK := createRes.(*flag.CreateFlagOK)
+	require.NotNil(t, createOK.Payload)
+	flagID := createOK.Payload.ID
+	c.CreateVariant(variant.CreateVariantParams{
+		FlagID: flagID,
+		Body:   &models.CreateVariantRequest{Key: new("on")},
+	})
+	variantRes := c.FindVariants(variant.FindVariantsParams{FlagID: flagID})
+	variantOK := variantRes.(*variant.FindVariantsOK)
+	require.NotEmpty(t, variantOK.Payload)
+	variantID := variantOK.Payload[0].ID
+
+	rollout := int64(100)
+	segRes := c.CreateSegment(segment.CreateSegmentParams{
+		FlagID: flagID,
+		Body: &models.CreateSegmentRequest{
+			Description:    new("seg-with-constraint"),
+			RolloutPercent: &rollout,
+		},
+	})
+	segOK := segRes.(*segment.CreateSegmentOK)
+	require.NotNil(t, segOK.Payload)
+	segID := segOK.Payload.ID
+
+	c.CreateConstraint(constraint.CreateConstraintParams{
+		FlagID:    flagID,
+		SegmentID: segID,
+		Body: &models.CreateConstraintRequest{
+			Property: new("country"),
+			Operator: new("EQ"),
+			Value:    new(`"US"`),
+		},
+	})
+
+	pct := int64(100)
+	c.PutDistributions(distribution.PutDistributionsParams{
+		FlagID:    flagID,
+		SegmentID: segID,
+		Body: &models.PutDistributionsRequest{
+			Distributions: []*models.Distribution{{
+				Percent:    &pct,
+				VariantID:  &variantID,
+				VariantKey: new("on"),
+			}},
+		},
+	})
+
+	dupRes := c.DuplicateFlag(flag.DuplicateFlagParams{FlagID: flagID, HTTPRequest: req})
+	ok := dupRes.(*flag.DuplicateFlagOK)
+	require.NotNil(t, ok.Payload)
+	require.Len(t, ok.Payload.Segments, 1)
+	require.NotEmpty(t, ok.Payload.Segments[0].Constraints)
+	require.NotNil(t, ok.Payload.Segments[0].Constraints[0].Property)
+	assert.Equal(t, "country", *ok.Payload.Segments[0].Constraints[0].Property)
+	assert.NotEmpty(t, ok.Payload.Segments[0].Distributions)
 }

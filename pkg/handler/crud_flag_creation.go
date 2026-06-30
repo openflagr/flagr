@@ -42,6 +42,10 @@ func (c *crud) CreateFlag(params flag.CreateFlagParams) middleware.Responder {
 		return f.ID, MutationNotify{ComponentID: f.ID, ComponentKey: f.Key}, nil
 	})
 	if err != nil {
+		if flagKeyUniqueViolation(err) {
+			return flag.NewCreateFlagDefault(400).WithPayload(
+				ErrorMessage("cannot create flag. flag key already exists"))
+		}
 		return flag.NewCreateFlagDefault(500).WithPayload(
 			ErrorMessage("cannot create flag. %s", err))
 	}

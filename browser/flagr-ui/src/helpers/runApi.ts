@@ -29,6 +29,7 @@ export interface RunApiVm {
  */
 export interface RunApiOptions<A> {
   onSuccess?: (value: A) => void
+  onFailure?: () => void
   successMessage?: string
 }
 
@@ -67,6 +68,7 @@ export function runApi<A>(
 ): void {
   void promise.then((result) => {
     if (!result.ok) {
+      options.onFailure?.()
       presentApiError(result.error, vm.$message)
       return
     }

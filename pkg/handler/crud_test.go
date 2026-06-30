@@ -22,6 +22,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/prashantv/gostub"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 )
 
@@ -253,15 +254,22 @@ func TestCrudFlagsWithFailures(t *testing.T) {
 	})
 
 	t.Run("PutFlag - cannot set duplicate flag_key", func(t *testing.T) {
+		c.CreateFlag(flag.CreateFlagParams{
+			Body: &models.CreateFlagRequest{
+				Description: new("second flag"),
+				Key:         "flag_key_2",
+			},
+		})
 		res = c.PutFlag(flag.PutFlagParams{
 			FlagID: int64(2),
 			Body: &models.PutFlagRequest{
-				Description:        new("another funny flag"),
-				DataRecordsEnabled: new(true),
-				Key:                new("flag_key_1"),
+				Key: new("flag_key_1"),
 			}},
 		)
-		assert.NotZero(t, res.(*flag.PutFlagDefault).Payload)
+		def := res.(*flag.PutFlagDefault)
+		require.NotNil(t, def.Payload)
+		require.NotNil(t, def.Payload.Message)
+		assert.Contains(t, *def.Payload.Message, "key already exists")
 	})
 
 	t.Run("SetFlagEnabledState - try to set on a non-existing flag", func(t *testing.T) {
@@ -1459,18 +1467,36 @@ func TestAllMutationHandlersCallSaveFlagSnapshot(t *testing.T) {
 			}
 
 			callsSnapshot := false
+			directSnapshot := false
 			ast.Inspect(funcDecl.Body, func(n ast.Node) bool {
 				call, ok := n.(*ast.CallExpr)
 				if !ok {
 					return true
 				}
-				if fun, ok := call.Fun.(*ast.Ident); ok && fun.Name == "commitFlagMutation" {
-					callsSnapshot = true
-					return false
+				switch fun := call.Fun.(type) {
+				case *ast.Ident:
+					switch fun.Name {
+					case "commitFlagMutation":
+						callsSnapshot = true
+						return false
+					case "SaveFlagSnapshot", "WriteFlagSnapshotTx":
+						directSnapshot = true
+						return false
+					}
+				case *ast.SelectorExpr:
+					if id, ok := fun.X.(*ast.Ident); ok && id.Name == "entity" && fun.Sel != nil {
+						if fun.Sel.Name == "SaveFlagSnapshot" || fun.Sel.Name == "WriteFlagSnapshotTx" {
+							directSnapshot = true
+							return false
+						}
+					}
 				}
 				return true
 			})
 
+			if directSnapshot {
+				t.Errorf("%s: mutation handler %q must not call SaveFlagSnapshot/WriteFlagSnapshotTx directly", filename, name)
+			}
 			if !callsSnapshot {
 				t.Errorf("%s: mutation handler %q must call commitFlagMutation", filename, name)
 			}

@@ -26,6 +26,7 @@
           <el-button
             type="primary"
             data-testid="confirm-duplicate-flag-btn"
+            :disabled="page.duplicateInFlight"
             @click.prevent="flagPage.duplicateFlag(page)"
           >Confirm</el-button>
         </span>
@@ -201,7 +202,7 @@ import type { BatchEvalContext, BatchEvalResult, DistributionDraft, EvalContext,
 import type { EntityTypeOption } from '@/helpers/flagModel'
 import { castFlagPage } from '@/helpers/vuePageCast'
 import * as flagPage from '@/pages/flagPage'
-import { handleHistoryTabClick, mountFlagPage } from '@/pages/flagPage'
+import { handleHistoryTabClick, mountFlagPage, prepareFlagRouteChange } from '@/pages/flagPage'
 import operatorsData from '@/operators.json'
 
 const operators = operatorsData.operators
@@ -241,6 +242,8 @@ export default {
     return {
       loaded: false,
       flagId: '',
+      flagPageLoadGen: 0,
+      duplicateInFlight: false,
       dialogDeleteFlagVisible: false,
       dialogDuplicateFlagVisible: false,
       dialogEditDistributionOpen: false,
@@ -280,6 +283,7 @@ export default {
       handler(id: string | string[] | undefined) {
         this.flagId = String(id ?? '')
         if (this.flagId) {
+          prepareFlagRouteChange(this.page)
           mountFlagPage(this.page)
         }
       },

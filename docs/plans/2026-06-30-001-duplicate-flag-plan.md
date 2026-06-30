@@ -43,7 +43,7 @@ Clones an existing flag (variants, segments, constraints, distributions, tags) i
 | **Body** | Optional `duplicateFlagRequest`: `key`, `description` (both optional). `{}` for defaults. |
 | **Defaults** | Random `key` via `entity.CreateFlagKey("")`. Description: `util.SafeString(source.Description) + " (cloned)"`, or `"(cloned)"` if source description empty. |
 | **Source load** | Scoped preload (`PreloadSegmentsVariantsTags`); not `Unscoped` |
-| **Errors** | `404` missing/deleted source; `400` invalid optional `key`; `500` tx/snapshot failures |
+| **Errors** | `404` missing/deleted source; `400` invalid optional `key`, duplicate `flags.key`, or template/validation errors; `500` other failures |
 | **Success** | `200` + `flag` with segments, variants, tags (nested constraints/distributions) |
 
 **Snapshots:** Exactly **one** new `flag_snapshot` on the **clone**; **zero** on the source flag.
@@ -92,9 +92,9 @@ Graph writes for **boolean create** and **duplicate** share one path in `pkg/ent
 | Area | As-built |
 |------|----------|
 | **Placement** | **Duplicate Flag** on flag detail (`Flag.vue`, `data-testid="duplicate-flag-btn"`) |
-| **Flow** | Confirm dialog → `crud.duplicateFlag(flagId)` → stay on source |
-| **Toast** | `flagPage.ts`: `duration: 10_000`, `showClose: true`; **New flag ID** + `Open #/flags/{id}` link |
-| **API** | `api/crud.ts` `duplicateFlag`, `DuplicateFlagPayload` in `types.ts` |
+| **Flow** | Confirm dialog → `duplicateFlag` → stay on source; confirm disabled while `duplicateInFlight` |
+| **Route changes** | `prepareFlagRouteChange` + `flagPageLoadGen` stale-response guard in `mountFlagPage` |
+| **Toast** | `DUPLICATE_SUCCESS_TOAST_DURATION_MS`, `showClose`, aria-label on clone link |
 
 ## Testing (as-built)
 
@@ -149,4 +149,6 @@ docs/flagr_notifications.md
 
 - **B-wide refactor:** All mutation handlers use `commitFlagMutation`; export still uses `SaveFlagSnapshot` in a separate tx.
 - **Duplicate snapshots:** One row on new flag only — integration test enforces.
+
+- **Variant keys on clone:** Per-flag variant keys are not unique in the DB; duplicate copies source graph faithfully. Eval-cache validation may warn on duplicate variant keys after load.
 - **Distribution bitmap:** Copied from source entity rows in `ApplyFlagTemplate`.

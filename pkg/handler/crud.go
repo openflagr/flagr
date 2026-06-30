@@ -285,6 +285,10 @@ func (c *crud) PutFlag(params flag.PutFlagParams) middleware.Responder {
 		if herr, ok := err.(*Error); ok {
 			return flag.NewPutFlagDefault(herr.StatusCode).WithPayload(ErrorMessage("%s", err))
 		}
+		if flagKeyUniqueViolation(err) {
+			return flag.NewPutFlagDefault(400).WithPayload(
+				ErrorMessage("cannot update flag. flag key already exists"))
+		}
 		return flag.NewPutFlagDefault(500).WithPayload(ErrorMessage("%s", err))
 	}
 
@@ -859,7 +863,7 @@ func commitFlagMutation(
 	if flagIDForSnapshot == 0 {
 		flagIDForSnapshot = resolvedID
 	}
-	meta, err := entity.WriteFlagSnapshotTx(tx, flagIDForSnapshot, subject)
+	meta, err := writeFlagSnapshotTx(tx, flagIDForSnapshot, subject)
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -870,3 +874,6 @@ func commitFlagMutation(
 	entity.NotifyFlagSnapshot(flagIDForSnapshot, subject, operation, componentType, notify.ComponentID, notify.ComponentKey, meta)
 	return nil
 }
+
+// writeFlagSnapshotTx is the indirection used by commitFlagMutation (stubbable in tests).
+var writeFlagSnapshotTx = entity.WriteFlagSnapshotTx

@@ -12,6 +12,19 @@ import (
 	"gorm.io/gorm"
 )
 
+func isDuplicateClientError(err error) bool {
+	if err == nil {
+		return false
+	}
+	if _, ok := err.(*Error); ok {
+		return true
+	}
+	msg := err.Error()
+	return strings.Contains(msg, "unknown variant key") ||
+		strings.Contains(msg, "invalid key") ||
+		strings.Contains(msg, "cannot create flag due to invalid key")
+}
+
 func (c *crud) DuplicateFlag(params flag.DuplicateFlagParams) middleware.Responder {
 	source := &entity.Flag{}
 	if err := entity.PreloadSegmentsVariantsTags(getDB()).First(source, params.FlagID).Error; err != nil {
@@ -71,6 +84,19 @@ func (c *crud) DuplicateFlag(params flag.DuplicateFlagParams) middleware.Respond
 		return created.ID, MutationNotify{ComponentID: created.ID, ComponentKey: key}, nil
 	})
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return flag.NewDuplicateFlagDefault(404).WithPayload(ErrorMessage("%s", err))
+		}
+		if herr, ok := err.(*Error); ok {
+			return flag.NewDuplicateFlagDefault(herr.StatusCode).WithPayload(ErrorMessage("%s", err))
+		}
+		if flagKeyUniqueViolation(err) {
+			return flag.NewDuplicateFlagDefault(400).WithPayload(
+				ErrorMessage("cannot duplicate flag. flag key already exists"))
+		}
+		if isDuplicateClientError(err) {
+			return flag.NewDuplicateFlagDefault(400).WithPayload(ErrorMessage("cannot duplicate flag. %s", err))
+		}
 		return flag.NewDuplicateFlagDefault(500).WithPayload(ErrorMessage("cannot duplicate flag. %s", err))
 	}
 
