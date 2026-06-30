@@ -69,19 +69,19 @@ func (c *crud) DuplicateFlag(params flag.DuplicateFlagParams) middleware.Respond
 		CreatedBy:          subject,
 	}
 
-	err = commitFlagMutation(0, subject, notification.OperationCreate, notification.ComponentFlag, func(tx *gorm.DB) (uint, MutationNotify, error) {
+	err = commitFlagMutation(0, subject, notification.OperationCreate, notification.ComponentFlag, func(tx *gorm.DB) (uint, mutationNotify, error) {
 		if err := tx.Create(created).Error; err != nil {
-			return 0, MutationNotify{}, err
+			return 0, mutationNotify{}, err
 		}
 		if created.EntityType != "" {
 			if err := entity.CreateFlagEntityType(tx, created.EntityType); err != nil {
-				return 0, MutationNotify{}, err
+				return 0, mutationNotify{}, err
 			}
 		}
 		if err := entity.ApplyFlagTemplate(tx, created.ID, entity.SourceFlagTemplate(source)); err != nil {
-			return 0, MutationNotify{}, err
+			return 0, mutationNotify{}, err
 		}
-		return created.ID, MutationNotify{ComponentID: created.ID, ComponentKey: key}, nil
+		return created.ID, mutationNotify{ComponentID: created.ID, ComponentKey: key}, nil
 	})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

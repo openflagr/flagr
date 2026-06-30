@@ -21,12 +21,20 @@ type FlagSnapshot struct {
 	Flag      []byte `gorm:"type:text"`
 }
 
-// FlagSnapshotCommitMeta is returned after a snapshot row is written inside a caller transaction.
-type FlagSnapshotCommitMeta struct {
-	FlagKey   string
-	PreValue  string
-	PostValue string
-	Diff      string
+// snapshotNotificationPayload is populated by WriteFlagSnapshotTx inside the caller's transaction
+// (flag key and optional detailed-diff fields). It is not exported: pass the opaque
+// SnapshotNotification wrapper to NotifyAfterCommit only after the outer transaction commits.
+type snapshotNotificationPayload struct {
+	flagKey   string
+	preValue  string
+	postValue string
+	diff      string
+}
+
+// SnapshotNotification is an opaque handle returned from WriteFlagSnapshotTx. Call
+// NotifyAfterCommit after the outer transaction commits; do not inspect or construct it outside entity.
+type SnapshotNotification struct {
+	payload snapshotNotificationPayload
 }
 
 // WriteFlagSnapshotTx records a flag snapshot using tx. The caller must Commit or Rollback.
@@ -34,8 +42,8 @@ func WriteFlagSnapshotTx(
 	tx *gorm.DB,
 	flagID uint,
 	updatedBy string,
-) (FlagSnapshotCommitMeta, error) {
-	var meta FlagSnapshotCommitMeta
+) (SnapshotNotification, error) {
+	var out SnapshotNotification
 	f := &Flag{}
 	// Use Unscoped to include soft-deleted flags. This is necessary for:
 	// 1. Delete operations: we need to snapshot the flag after it's been soft-deleted
@@ -45,10 +53,10 @@ func WriteFlagSnapshotTx(
 			"err":    err,
 			"flagID": flagID,
 		}).Error("failed to find the flag when WriteFlagSnapshotTx")
-		return meta, err
+		return out, err
 	}
 	if err := PreloadSegmentsVariantsTags(tx.Unscoped()).First(f, flagID).Error; err != nil {
-		return meta, err
+		return out, err
 	}
 
 	b, err := json.Marshal(f)
@@ -57,7 +65,7 @@ func WriteFlagSnapshotTx(
 			"err":    err,
 			"flagID": flagID,
 		}).Error("failed to marshal the flag into JSON when WriteFlagSnapshotTx")
-		return meta, err
+		return out, err
 	}
 
 	preFS := &FlagSnapshot{}
@@ -71,7 +79,7 @@ func WriteFlagSnapshotTx(
 			"err":    err,
 			"flagID": f.Model.ID,
 		}).Error("failed to save FlagSnapshot")
-		return meta, err
+		return out, err
 	}
 
 	f.UpdatedBy = updatedBy
@@ -83,39 +91,38 @@ func WriteFlagSnapshotTx(
 			"flagID":         f.Model.ID,
 			"flagSnapshotID": fs.Model.ID,
 		}).Error("failed to save Flag's UpdatedBy and SnapshotID")
-		return meta, err
+		return out, err
 	}
 
-	meta.FlagKey = f.Key
+	out.payload.flagKey = f.Key
 	if config.Config.NotificationDetailedDiffEnabled {
-		meta.PreValue = string(preFS.Flag)
-		meta.PostValue = string(fs.Flag)
-		meta.Diff = notification.CalculateDiff(meta.PreValue, meta.PostValue)
+		out.payload.preValue = string(preFS.Flag)
+		out.payload.postValue = string(fs.Flag)
+		out.payload.diff = notification.CalculateDiff(out.payload.preValue, out.payload.postValue)
 	}
-	return meta, nil
+	return out, nil
 }
 
-// NotifyFlagSnapshot sends webhook/metrics after the outer transaction committed.
-func NotifyFlagSnapshot(
+// NotifyAfterCommit sends webhook/metrics after the outer transaction committed.
+func (n SnapshotNotification) NotifyAfterCommit(
 	flagID uint,
 	updatedBy string,
 	operation notification.Operation,
 	componentType notification.ComponentType,
 	componentID uint,
 	componentKey string,
-	meta FlagSnapshotCommitMeta,
 ) {
 	logFlagSnapshotUpdate(flagID, updatedBy)
 	notification.SendNotification(notification.Notification{
 		Operation:     operation,
 		FlagID:        flagID,
-		FlagKey:       meta.FlagKey,
+		FlagKey:       n.payload.flagKey,
 		ComponentType: componentType,
 		ComponentID:   componentID,
 		ComponentKey:  componentKey,
-		PreValue:      meta.PreValue,
-		PostValue:     meta.PostValue,
-		Diff:          meta.Diff,
+		PreValue:      n.payload.preValue,
+		PostValue:     n.payload.postValue,
+		Diff:          n.payload.diff,
 		User:          updatedBy,
 	})
 }
@@ -123,7 +130,7 @@ func NotifyFlagSnapshot(
 // SaveFlagSnapshot saves the Flag Snapshot and sends a notification in its own transaction.
 func SaveFlagSnapshot(db *gorm.DB, flagID uint, updatedBy string, operation notification.Operation, componentType notification.ComponentType, componentID uint, componentKey string) {
 	tx := db.Begin()
-	meta, err := WriteFlagSnapshotTx(tx, flagID, updatedBy)
+	snap, err := WriteFlagSnapshotTx(tx, flagID, updatedBy)
 	if err != nil {
 		tx.Rollback()
 		return
@@ -133,7 +140,7 @@ func SaveFlagSnapshot(db *gorm.DB, flagID uint, updatedBy string, operation noti
 		logrus.WithError(err).WithField("flagID", flagID).Error("failed to commit flag snapshot")
 		return
 	}
-	NotifyFlagSnapshot(flagID, updatedBy, operation, componentType, componentID, componentKey, meta)
+	snap.NotifyAfterCommit(flagID, updatedBy, operation, componentType, componentID, componentKey)
 }
 
 var logFlagSnapshotUpdate = func(flagID uint, updatedBy string) {

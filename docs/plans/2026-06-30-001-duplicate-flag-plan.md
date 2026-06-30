@@ -56,13 +56,13 @@ Clones an existing flag (variants, segments, constraints, distributions, tags) i
 
 ### `pkg/handler/crud.go` (`commitFlagMutation`)
 
-- **`commitFlagMutation(snapshotFlagID, subject, operation, componentType, mutate)`** — `Begin` → `mutate(tx)` → **`entity.WriteFlagSnapshotTx(tx, flagID, subject)`** → `Commit` → **`entity.NotifyFlagSnapshot`** (post-commit).
+- **`commitFlagMutation(snapshotFlagID, subject, operation, componentType, mutate)`** — `Begin` → `mutate(tx)` → **`entity.WriteFlagSnapshotTx(tx, flagID, subject)`** → `Commit` → **`SnapshotNotification.NotifyAfterCommit`** (post-commit).
 - Use `snapshotFlagID == 0` when the new flag ID is assigned inside `mutate` (duplicate, create boolean).
 
 ### `pkg/entity/flag_snapshot.go`
 
-- **`WriteFlagSnapshotTx(tx, flagID, updatedBy)`** — load flag on `tx`, preload, marshal, insert snapshot, update flag `SnapshotID` / `UpdatedBy`; no commit, no notify.
-- **`NotifyFlagSnapshot`** — webhook + logging after commit.
+- **`WriteFlagSnapshotTx(tx, flagID, updatedBy)`** — returns opaque **`SnapshotNotification`**; load flag on `tx`, preload, marshal, insert snapshot, update flag `SnapshotID` / `UpdatedBy`; no commit, no notify.
+- **`SnapshotNotification.NotifyAfterCommit`** — webhook + logging after commit (replaces exported meta struct).
 - **`SaveFlagSnapshot(db, …)`** — thin wrapper for export and legacy paths (own transaction).
 
 ### Enforcement
@@ -93,7 +93,7 @@ Graph writes for **boolean create** and **duplicate** share one path in `pkg/ent
 |------|----------|
 | **Placement** | **Duplicate Flag** on flag detail (`Flag.vue`, `data-testid="duplicate-flag-btn"`) |
 | **Flow** | Confirm dialog → `duplicateFlag` → stay on source; confirm disabled while `duplicateInFlight` |
-| **Route changes** | `prepareFlagRouteChange` + `flagPageLoadGen` stale-response guard in `mountFlagPage` |
+| **Route changes** | `mountFlagPage` resets history/dialogs, bumps `flagPageLoadGen`, stale-response guard on load |
 | **Toast** | `DUPLICATE_SUCCESS_TOAST_DURATION_MS`, `showClose`, aria-label on clone link |
 
 ## Testing (as-built)

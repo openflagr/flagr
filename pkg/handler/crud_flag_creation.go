@@ -30,16 +30,16 @@ func (c *crud) CreateFlag(params flag.CreateFlagParams) middleware.Responder {
 			ErrorMessage("unknown value for template: %s", params.Body.Template))
 	}
 
-	err := commitFlagMutation(0, subject, notification.OperationCreate, notification.ComponentFlag, func(tx *gorm.DB) (uint, MutationNotify, error) {
+	err := commitFlagMutation(0, subject, notification.OperationCreate, notification.ComponentFlag, func(tx *gorm.DB) (uint, mutationNotify, error) {
 		if err := tx.Create(f).Error; err != nil {
-			return 0, MutationNotify{}, err
+			return 0, mutationNotify{}, err
 		}
 		if params.Body != nil && params.Body.Template == "simple_boolean_flag" {
 			if err := LoadSimpleBooleanFlagTemplate(f, tx); err != nil {
-				return 0, MutationNotify{}, err
+				return 0, mutationNotify{}, err
 			}
 		}
-		return f.ID, MutationNotify{ComponentID: f.ID, ComponentKey: f.Key}, nil
+		return f.ID, mutationNotify{ComponentID: f.ID, ComponentKey: f.Key}, nil
 	})
 	if err != nil {
 		if flagKeyUniqueViolation(err) {

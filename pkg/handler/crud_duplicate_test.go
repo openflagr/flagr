@@ -252,8 +252,8 @@ func TestCommitFlagMutation_RollbackOnMutateFailure(t *testing.T) {
 	var before int64
 	require.NoError(t, db.Model(&entity.FlagSnapshot{}).Where("flag_id = ?", flagID).Count(&before).Error)
 
-	err := commitFlagMutation(uint(flagID), "tester", notification.OperationUpdate, notification.ComponentFlag, func(tx *gorm.DB) (uint, MutationNotify, error) {
-		return 0, MutationNotify{}, gorm.ErrInvalidDB
+	err := commitFlagMutation(uint(flagID), "tester", notification.OperationUpdate, notification.ComponentFlag, func(tx *gorm.DB) (uint, mutationNotify, error) {
+		return 0, mutationNotify{}, gorm.ErrInvalidDB
 	})
 	assert.Error(t, err)
 
@@ -328,13 +328,13 @@ func TestCommitFlagMutation_RollbackOnWriteFlagSnapshotFailure(t *testing.T) {
 	var before int64
 	require.NoError(t, db.Model(&entity.FlagSnapshot{}).Where("flag_id = ?", flagID).Count(&before).Error)
 
-	stub := gostub.Stub(&writeFlagSnapshotTx, func(tx *gorm.DB, flagID uint, updatedBy string) (entity.FlagSnapshotCommitMeta, error) {
-		return entity.FlagSnapshotCommitMeta{}, fmt.Errorf("snapshot write failed")
+	stub := gostub.Stub(&writeFlagSnapshotTx, func(tx *gorm.DB, flagID uint, updatedBy string) (entity.SnapshotNotification, error) {
+		return entity.SnapshotNotification{}, fmt.Errorf("snapshot write failed")
 	})
 	defer stub.Reset()
 
-	err := commitFlagMutation(uint(flagID), "tester", notification.OperationUpdate, notification.ComponentFlag, func(tx *gorm.DB) (uint, MutationNotify, error) {
-		return uint(flagID), MutationNotify{ComponentID: uint(flagID), ComponentKey: "snap_rb_src"}, nil
+	err := commitFlagMutation(uint(flagID), "tester", notification.OperationUpdate, notification.ComponentFlag, func(tx *gorm.DB) (uint, mutationNotify, error) {
+		return uint(flagID), mutationNotify{ComponentID: uint(flagID), ComponentKey: "snap_rb_src"}, nil
 	})
 	assert.Error(t, err)
 

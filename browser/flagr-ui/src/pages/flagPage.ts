@@ -468,8 +468,8 @@ export function syncEvalContextFromFlag(vm: FlagPageVm): void {
   vm.batchEvalContext.flagIDs = [id]
 }
 
-/** Call when $route.params.flagId changes before mountFlagPage. */
-export function prepareFlagRouteChange(vm: FlagPageVm): void {
+/** Loads flag page context; resets route-local state and bumps load generation (route watcher). */
+export function mountFlagPage(vm: FlagPageVm): void {
   vm.flagPageLoadGen = (vm.flagPageLoadGen ?? 0) + 1
   vm.loaded = false
   vm.historyLoaded = false
@@ -479,9 +479,7 @@ export function prepareFlagRouteChange(vm: FlagPageVm): void {
   vm.dialogEditDistributionOpen = false
   vm.dialogCreateSegmentOpen = false
   vm.selectedSegment = null
-}
 
-export function mountFlagPage(vm: FlagPageVm): void {
   const flagId = vm.flagId
   const gen = vm.flagPageLoadGen ?? 0
   runApi(vm, crudApi.loadFlagPageContext(flagId), {
