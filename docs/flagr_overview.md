@@ -214,8 +214,7 @@ flowchart TB
 in rank order → variant response → optional `AsyncRecord` (`recordSource:
 evaluation`). No record when flag is missing, disabled, or has no segments.
 
-**Configuration (cold path)** — CRUD → DB → `SaveFlagSnapshot` → on next poll,
-**EvalCache** reloads if `MAX(flag_snapshot.id)` changed.
+**Configuration (cold path)** — CRUD mutations run in one DB transaction with an appended `flag_snapshot` row (webhooks after commit) → on next poll, **EvalCache** reloads if `MAX(flag_snapshot.id)` changed. Read-only export paths may still call `SaveFlagSnapshot` in a separate transaction.
 
 **Exposure** — `POST /api/v1/exposures` after render; validates against
 **EvalCache** (no constraint re-eval) → `AsyncRecord` (`recordSource: exposure`).

@@ -19,7 +19,7 @@
       v-model="dialogDuplicateFlagVisible"
       title="Duplicate feature flag"
     >
-      <span>Duplicate this feature flag? A new flag will be created with the same segments, variants, constraints, distributions, and tags.</span>
+      <span>{{ flagPage.DUPLICATE_FLAG_CONFIRM_MESSAGE }}</span>
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="dialogDuplicateFlagVisible = false">Cancel</el-button>

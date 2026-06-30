@@ -8,15 +8,15 @@ import (
 	"github.com/openflagr/flagr/swagger_gen/models"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/flag"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/segment"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/tag"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/variant"
-	"github.com/prashantv/gostub"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestDuplicateFlag(t *testing.T) {
-	db := entity.NewTestDB()
-	defer gostub.StubFunc(&getDB, db).Reset()
+	_, cleanup := handlerTestDB(t)
+	defer cleanup()
 	c := &crud{}
 	req := &http.Request{}
 
@@ -48,6 +48,10 @@ func TestDuplicateFlag(t *testing.T) {
 			RolloutPercent: &rollout,
 		},
 	})
+	c.CreateTag(tag.CreateTagParams{
+		FlagID: flagID,
+		Body:   &models.CreateTagRequest{Value: new("dup-tag")},
+	})
 
 	res := c.DuplicateFlag(flag.DuplicateFlagParams{FlagID: flagID, HTTPRequest: req})
 	ok, isOK := res.(*flag.DuplicateFlagOK)
@@ -59,13 +63,49 @@ func TestDuplicateFlag(t *testing.T) {
 	assert.NotEmpty(t, ok.Payload.Key)
 	assert.Len(t, ok.Payload.Variants, 2)
 	assert.Len(t, ok.Payload.Segments, 1)
+	require.Len(t, ok.Payload.Tags, 1)
+	require.NotNil(t, ok.Payload.Tags[0].Value)
+	assert.Equal(t, "dup-tag", *ok.Payload.Tags[0].Value)
 }
 
 func TestDuplicateFlag_NotFound(t *testing.T) {
-	db := entity.NewTestDB()
-	defer gostub.StubFunc(&getDB, db).Reset()
+	_, cleanup := handlerTestDB(t)
+	defer cleanup()
 	c := &crud{}
 	res := c.DuplicateFlag(flag.DuplicateFlagParams{FlagID: 999999})
 	_, isDef := res.(*flag.DuplicateFlagDefault)
 	assert.True(t, isDef)
+}
+
+func TestCreateTag_ReusesExistingTagValue(t *testing.T) {
+	db, cleanup := handlerTestDB(t)
+	defer cleanup()
+	c := &crud{}
+
+	c.CreateFlag(flag.CreateFlagParams{
+		Body: &models.CreateFlagRequest{Description: new("f1")},
+	})
+	c.CreateFlag(flag.CreateFlagParams{
+		Body: &models.CreateFlagRequest{Description: new("f2")},
+	})
+	tagValue := "shared-tag"
+	res1 := c.CreateTag(tag.CreateTagParams{
+		FlagID: 1,
+		Body:   &models.CreateTagRequest{Value: &tagValue},
+	})
+	ok1 := res1.(*tag.CreateTagOK)
+	require.NotNil(t, ok1.Payload)
+	firstID := ok1.Payload.ID
+
+	res2 := c.CreateTag(tag.CreateTagParams{
+		FlagID: 2,
+		Body:   &models.CreateTagRequest{Value: &tagValue},
+	})
+	ok2 := res2.(*tag.CreateTagOK)
+	require.NotNil(t, ok2.Payload)
+	assert.Equal(t, firstID, ok2.Payload.ID, "same tag value should reuse tag row")
+
+	var tagRows int64
+	require.NoError(t, db.Model(&entity.Tag{}).Where("value = ?", tagValue).Count(&tagRows).Error)
+	assert.Equal(t, int64(1), tagRows)
 }

@@ -63,6 +63,19 @@ export interface FlagPageVm extends ConfirmVm {
 export const DEFAULT_SEGMENT = { description: '', rolloutPercent: 50 }
 export const DEFAULT_TAG = { value: '' }
 
+export const DUPLICATE_FLAG_CONFIRM_MESSAGE =
+  'Duplicate this feature flag? A new flag will be created with the same segments, variants, constraints, distributions, and tags.'
+
+function showDuplicateSuccessToast(vm: FlagPageVm, cloneId: number): void {
+  vm.$message({
+    type: 'success',
+    duration: 0,
+    showClose: true,
+    dangerouslyUseHTMLString: true,
+    message: `Flag cloned successfully. <a href="#/flags/${cloneId}" class="duplicate-flag-toast-link">Open clone</a> to update details.`,
+  })
+}
+
 
 export function reloadFlag(vm: FlagPageVm): void {
   runApi(vm, crudApi.getFlag(vm.flagId), {
@@ -90,13 +103,7 @@ export function duplicateFlag(vm: FlagPageVm): void {
       const cloneId = cloned.id
       if (cloneId == null) return
       vm.dialogDuplicateFlagVisible = false
-      vm.$message({
-        type: 'success',
-        duration: 0,
-        showClose: true,
-        dangerouslyUseHTMLString: true,
-        message: `Flag cloned successfully. <a href="#/flags/${cloneId}" class="duplicate-flag-toast-link">Open clone</a> to update details.`,
-      })
+      showDuplicateSuccessToast(vm, cloneId)
     },
   })
 }

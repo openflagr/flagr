@@ -894,17 +894,9 @@ func TestCrudConstraintsFailures(t *testing.T) {
 
 func TestCrudVariants(t *testing.T) {
 	var res middleware.Responder
-	db := entity.NewTestDB()
+	_, cleanup := handlerTestDB(t)
+	defer cleanup()
 	c := &crud{}
-
-	tmpDB, dbErr := db.DB()
-	if dbErr != nil {
-		t.Errorf("Failed to get database")
-	}
-
-	defer tmpDB.Close()
-	defer gostub.StubFunc(&getDB, db).Reset()
-	assert.NoError(t, db.AutoMigrate(entity.AutoMigrateTables...))
 
 	c.CreateFlag(flag.CreateFlagParams{
 		Body: &models.CreateFlagRequest{
@@ -983,17 +975,9 @@ func TestCrudVariants(t *testing.T) {
 
 func TestCrudVariantsWithFailures(t *testing.T) {
 	var res middleware.Responder
-	db := entity.NewTestDB()
+	db, cleanup := handlerTestDB(t)
+	defer cleanup()
 	c := &crud{}
-
-	tmpDB, dbErr := db.DB()
-	if dbErr != nil {
-		t.Errorf("Failed to get database")
-	}
-
-	defer tmpDB.Close()
-	defer gostub.StubFunc(&getDB, db).Reset()
-	assert.NoError(t, db.AutoMigrate(entity.AutoMigrateTables...))
 
 	c.CreateFlag(flag.CreateFlagParams{
 		Body: &models.CreateFlagRequest{
