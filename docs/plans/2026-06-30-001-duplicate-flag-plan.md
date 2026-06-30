@@ -54,7 +54,7 @@ Clones an existing flag (variants, segments, constraints, distributions, tags) i
 
 ## As-built: transactional snapshots (B-wide)
 
-### `pkg/handler/crud_snapshot.go`
+### `pkg/handler/crud.go` (`commitFlagMutation`)
 
 - **`commitFlagMutation(snapshotFlagID, subject, operation, componentType, mutate)`** — `Begin` → `mutate(tx)` → **`entity.WriteFlagSnapshotTx(tx, flagID, subject)`** → `Commit` → **`entity.NotifyFlagSnapshot`** (post-commit).
 - Use `snapshotFlagID == 0` when the new flag ID is assigned inside `mutate` (duplicate, create boolean).
@@ -67,7 +67,7 @@ Clones an existing flag (variants, segments, constraints, distributions, tags) i
 
 ### Enforcement
 
-- **`TestAllMutationHandlersCallSaveFlagSnapshot`** — AST guard: handlers must not call snapshot writers except via `crud_snapshot.go`.
+- **`TestAllMutationHandlersCallSaveFlagSnapshot`** — AST guard: mutation handlers must call `commitFlagMutation`.
 - **`TestCommitFlagMutation_RollbackOnMutateFailure`** — rollback leaves no snapshot row.
 - **`crud_notification_test.go`** — includes **DuplicateFlag sends notification** (filter by clone flag ID).
 
@@ -85,7 +85,7 @@ Graph writes for **boolean create** and **duplicate** share one path in `pkg/ent
 
 **Boolean create** (`pkg/handler/crud_flag_creation.go`): **`ApplyFlagTemplate(..., SimpleBooleanFlagTemplate())`**.
 
-`pkg/entity/flag_clone.go` retains **`AppendTagValueToFlag`** only.
+`AppendTagValueToFlag` lives in **`pkg/entity/flag_template.go`** (used by templates and `CreateTag`).
 
 ## UI (`browser/flagr-ui`)
 
@@ -122,8 +122,7 @@ swagger/flag_duplicate.yaml
 pkg/entity/flag_template.go
 pkg/entity/flag_template_test.go
 pkg/entity/flag_snapshot.go
-pkg/entity/flag_clone.go
-pkg/handler/crud_snapshot.go
+pkg/handler/crud.go (commitFlagMutation)
 pkg/handler/crud_duplicate.go
 pkg/handler/crud_duplicate_test.go
 pkg/handler/crud_flag_creation.go

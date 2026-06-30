@@ -66,11 +66,14 @@ export const DEFAULT_TAG = { value: '' }
 export const DUPLICATE_FLAG_CONFIRM_MESSAGE =
   'Duplicate this feature flag? A new flag will be created with the same segments, variants, constraints, distributions, and tags.'
 
+/** Element Plus message duration (ms); user can still dismiss early via showClose. */
+export const DUPLICATE_SUCCESS_TOAST_DURATION_MS = 10_000
+
 function showDuplicateSuccessToast(vm: FlagPageVm, cloneId: number): void {
   const clonePath = `#/flags/${cloneId}`
   vm.$message({
     type: 'success',
-    duration: 10_000,
+    duration: DUPLICATE_SUCCESS_TOAST_DURATION_MS,
     showClose: true,
     dangerouslyUseHTMLString: true,
     message:

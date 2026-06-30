@@ -644,7 +644,7 @@ func TestIntegration_BatchEvalOperator(t *testing.T) {
 // The Flagr server must have FLAGR_RECORDER_ENABLED and per-flag dataRecordsEnabled.
 func assertExposureRecorderGate(t *testing.T, flagID int64) {
 	t.Helper()
-	err := pollUntil("exposure recorder gate", "/api/v1/exposures", 15*time.Second, func() bool {
+	err := pollUntil("exposure recorder gate", "/api/v1/exposures", exposureRecorderGateTimeout, func() bool {
 		r, err := doReq("POST", "/api/v1/exposures", map[string]any{
 			"exposures": []map[string]any{{
 				"flagID":   flagID,
@@ -777,6 +777,17 @@ type datarFlagSummaryResponse struct {
 	TrafficByDay     []datarDayEntry     `json:"trafficByDay"`
 }
 
+func waitForDatarFlushAfterEvals() {
+	time.Sleep(integrationDatarFlushWait())
+}
+
+func postDatarEvalBurst(t *testing.T, flagID int64, idPrefix string) {
+	t.Helper()
+	for i := 0; i < datarPollEvalsPerAttempt; i++ {
+		doReqOK(t, "POST", "/api/v1/evaluation", datarEvalBody(flagID, fmt.Sprintf("%s-%d", idPrefix, i)))
+	}
+}
+
 // datarEvalBody matches TestIntegration_Evaluation (seedFlagIDs[1] = int_flag_EQ_02, tier EQ premium).
 func datarEvalBody(flagID int64, entityID string) map[string]any {
 	return map[string]any{
@@ -815,11 +826,9 @@ func TestIntegration_DatarSummary(t *testing.T) {
 	// inside the loop because the eval cache refreshes every ~3s — the
 	// DataRecordsEnabled change won't take effect until the next reload.
 	var summary datarSummaryResponse
-	err = pollUntil("datar/summary", "/api/v1/datar/summary", 30*time.Second, func() bool {
-		for i := 0; i < 5; i++ {
-			doReqOK(t, "POST", "/api/v1/evaluation", datarEvalBody(flagID, fmt.Sprintf("datar-entity-%d", i)))
-		}
-		time.Sleep(600 * time.Millisecond) // allow datar flush to DB (FLAGR_RECORDER_DATAR_FLUSH_INTERVAL)
+	err = pollUntil("datar/summary", "/api/v1/datar/summary", datarPollTimeout, func() bool {
+		postDatarEvalBurst(t, flagID, "datar-entity")
+		waitForDatarFlushAfterEvals()
 		resp, err := doReq("GET", "/api/v1/datar/summary", nil)
 		if err != nil {
 			return false
@@ -866,11 +875,9 @@ func TestIntegration_DatarFlagSummary(t *testing.T) {
 	// Poll until flag summary has traffic. Evaluations are performed
 	// inside the loop because the eval cache refreshes every ~3s.
 	var flagSummary datarFlagSummaryResponse
-	err = pollUntil("datar/flags/summary", fmt.Sprintf("/api/v1/datar/flags/%d/summary", flagID), 30*time.Second, func() bool {
-		for i := 0; i < 5; i++ {
-			doReqOK(t, "POST", "/api/v1/evaluation", datarEvalBody(flagID, fmt.Sprintf("datar-flag-entity-%d", i)))
-		}
-		time.Sleep(600 * time.Millisecond)
+	err = pollUntil("datar/flags/summary", fmt.Sprintf("/api/v1/datar/flags/%d/summary", flagID), datarPollTimeout, func() bool {
+		postDatarEvalBurst(t, flagID, "datar-flag-entity")
+		waitForDatarFlushAfterEvals()
 		resp, err := doReq("GET", fmt.Sprintf("/api/v1/datar/flags/%d/summary", flagID), nil)
 		if err != nil {
 			return false

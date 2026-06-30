@@ -274,6 +274,7 @@ export default {
   },
 
   watch: {
+    // Initial load and flag switches: mountFlagPage → syncEvalContextFromFlag (not mounted-only).
     '$route.params.flagId': {
       immediate: true,
       handler(id: string | string[] | undefined) {

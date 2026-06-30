@@ -27,7 +27,7 @@ var (
 	seedFlagIDs  []int64
 	seedFlagKeys []string
 	serverCmd    *exec.Cmd
-	httpClient   = &http.Client{Timeout: 10 * time.Second}
+	httpClient   = &http.Client{Timeout: integrationHTTPClientTimeout}
 )
 
 // ---------------------------------------------------------------------------
@@ -79,7 +79,7 @@ func TestMain(m *testing.M) {
 
 // prepareServer waits for a server to be healthy, seeds flags if needed, and waits for eval cache.
 func prepareServer(url string) {
-	waitForServer(url, 30*time.Second)
+	waitForServer(url, serverHealthWaitTimeout)
 	// Check if flags already exist (idempotent for re-runs against same server).
 	var existing []flagResponse
 	getJSON := func(path string, dst any) {
@@ -102,7 +102,7 @@ func prepareServer(url string) {
 			seedFlagKeys = append(seedFlagKeys, f.Key)
 		}
 	}
-	waitForEvalReady(url, 20*time.Second)
+	waitForEvalReady(url, evalCacheReadyTimeout)
 }
 
 // ---------------------------------------------------------------------------
@@ -164,8 +164,8 @@ func startLocalServer() string {
 		"FLAGR_DB_DBCONNECTIONSTR=file::memory:?cache=shared",
 		"FLAGR_RECORDER_ENABLED=true",
 		"FLAGR_RECORDER_TYPE=datar",
-		"FLAGR_RECORDER_DATAR_FLUSH_INTERVAL=500ms",
-		"FLAGR_EVALCACHE_REFRESHINTERVAL=1s",
+		fmt.Sprintf("FLAGR_RECORDER_DATAR_FLUSH_INTERVAL=%s", integrationDatarFlushInterval),
+		fmt.Sprintf("FLAGR_EVALCACHE_REFRESHINTERVAL=%s", integrationEvalCacheRefresh),
 	)
 	// Redirect server output to a temp file to avoid "I/O incomplete" errors
 	// when the test binary kills the server process.
@@ -175,7 +175,7 @@ func startLocalServer() string {
 	}
 	serverCmd.Stdout = serverLog
 	serverCmd.Stderr = serverLog
-	serverCmd.WaitDelay = 5 * time.Second
+	serverCmd.WaitDelay = integrationServerProcessWaitDelay
 	if err := serverCmd.Start(); err != nil {
 		log.Fatalf("cannot start server: %v", err)
 	}

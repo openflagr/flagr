@@ -137,7 +137,7 @@ Go implementation (not generated from the old `flagr_arch.png`). When the
 diagram and code disagree, **code wins** — update this page.
 
 **Implementation map:** `pkg/handler` (`handler.go`, `eval.go`, `eval_cache.go`,
-`exposure.go`, `data_recorder*.go`, `crud_snapshot.go`, `crud_duplicate.go`),
+`exposure.go`, `data_recorder*.go`, `crud.go`, `crud_duplicate.go`),
 `pkg/entity/flag_snapshot.go`, `pkg/entity/flag_template.go`,
 `pkg/config/config.go` (eval-only drivers). **Tests that encode the contract:**
 `TestReloadMapCacheShortCircuit`, `TestRecordCountsTowardDatar`,

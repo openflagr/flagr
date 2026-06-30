@@ -70,6 +70,8 @@ var validateDeleteVariant = func(params variant.DeleteVariantParams) *Error {
 	return nil
 }
 
+// validatePutVariantForDistributions syncs distribution.variant_key rows when a variant key changes.
+// tx is the open PutVariant transaction so distribution updates roll back with the variant save.
 var validatePutVariantForDistributions = func(v *entity.Variant, tx *gorm.DB) error {
 	db := tx
 	if db == nil {

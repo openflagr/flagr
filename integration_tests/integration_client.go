@@ -95,7 +95,7 @@ func doReqOK(t *testing.T, method, path string, body any) {
 // Polling helper
 // ---------------------------------------------------------------------------
 
-// pollUntil calls check every 500ms until it returns true or timeout expires.
+// pollUntil calls check every pollInterval until it returns true or timeout expires.
 // Returns an error on timeout.
 func pollUntil(name, url string, timeout time.Duration, check func() bool) error {
 	deadline := time.After(timeout)
@@ -107,7 +107,7 @@ func pollUntil(name, url string, timeout time.Duration, check func() bool) error
 		case <-deadline:
 			return fmt.Errorf("%s at %s not ready after %v", name, url, timeout)
 		default:
-			time.Sleep(500 * time.Millisecond)
+			time.Sleep(pollInterval)
 		}
 	}
 }
