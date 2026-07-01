@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/openflagr/flagr/swagger_gen/models"
 )
@@ -32,4 +33,18 @@ func ErrorMessage(s string, data ...any) *models.Error {
 	return &models.Error{
 		Message: new(fmt.Sprintf(s, data...)),
 	}
+}
+
+// flagKeyUniqueViolation reports whether err is a DB unique violation on flags.key (idx_flag_key).
+func flagKeyUniqueViolation(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := strings.ToLower(err.Error())
+	if !strings.Contains(msg, "unique") && !strings.Contains(msg, "duplicate") {
+		return false
+	}
+	return strings.Contains(msg, "idx_flag_key") ||
+		strings.Contains(msg, "flags.key") ||
+		(strings.Contains(msg, "constraint failed") && strings.Contains(msg, "key"))
 }

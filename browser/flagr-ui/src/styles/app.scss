@@ -20,6 +20,10 @@ body {
   --space-lg: 24px;
   --space-xl: 32px;
 
+  --font-size-card-title: 14px;
+  --font-size-card-title-secondary: 13px;
+
+
   // --- Domain colors (not covered by Element Plus tokens) ---
   // These are the only colors outside the --el-* system; keep them here
   // so a retheme only touches two files: this block + element/index.scss.
@@ -113,7 +117,7 @@ ol { margin: 0; padding-left: 20px; }
       h2 {
         margin: 0;
         color: var(--el-text-color-primary);
-        font-size: 14px;
+        font-size: var(--font-size-card-title);
         font-weight: 600;
         letter-spacing: -0.01em;
       }
@@ -121,26 +125,19 @@ ol { margin: 0; padding-left: 20px; }
     .el-card__body { padding: var(--space-sm) var(--space-md); }
   }
 
-  // --- Card tier: secondary (demoted children of the primary card) ---
-  // Thinner accent bar (2px) + slightly smaller header (13px).
+  // --- Card tier: secondary (thinner accent + slightly smaller title) ---
   .el-card.is-card-secondary {
     .el-card__header {
       &::before { width: 2px; }
-      h2 { font-size: 13px; }
+      h2 { font-size: var(--font-size-card-title-secondary); }
     }
   }
 
-  // --- Card tier: utility (muted accent, no primary color) ---
-  .el-card.is-card-utility {
-    .el-card__header {
-      &::before { background: var(--el-border-color); }
-    }
-  }
-
-  // --- Card tier: danger (danger accent, explicit danger zone) ---
+  // --- Card tier: danger (danger accent) ---
   .el-card.is-card-danger {
     .el-card__header {
       &::before { background: var(--el-color-danger); }
+      h2 { color: var(--el-color-danger); }
     }
   }
 

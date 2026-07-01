@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { createFlagWithVariants, createFlag, deleteFlag, createSegment, createConstraint, createVariant, API, waitForSnapshot, getFlag, putSegmentDistributions } from './helpers'
+import { createFlagWithVariants, createFlag, deleteFlag, createSegment, createConstraint, createVariant, createTag, API, waitForSnapshot, getFlag, putSegmentDistributions } from './helpers'
 
 test.describe('Flag detail page', () => {
   /** Set by each test, cleaned up in afterEach. */
@@ -391,6 +391,110 @@ test.describe('Flag detail page', () => {
     expect(updated.segments[0].distributions.length).toBeGreaterThan(0)
     expect(updated.segments[0].distributions[0].percent).toBe(100)
   })
+  test('can duplicate flag from detail page', async ({ page }) => {
+    const sourceDesc = `dup-source-${Date.now()}`
+    flag = await createFlagWithVariants({ description: sourceDesc })
+    const segmentDesc = `dup-seg-${Date.now()}`
+    const segment = await createSegment(flag.id!, segmentDesc)
+    await createConstraint(flag.id!, segment.id!)
+    const tagValue = `dup-tag-${Date.now()}`
+    await createTag(flag.id!, tagValue)
+    const source = await getFlag(flag.id!)
+    expect(source.variants).toHaveLength(2)
+    const variantKeys = source.variants.map((v) => v.key).sort()
+    expect(variantKeys).toEqual(['control', 'test'])
+
+    await page.goto(`/#/flags/${flag.id}`)
+    await expect(page.locator('input[data-testid="flag-key-input"]')).toBeVisible({ timeout: 10000 })
+    await page.locator('[data-testid="duplicate-flag-btn"]').click()
+    await expect(page.locator('.el-dialog')).toBeVisible({ timeout: 5000 })
+    await page.locator('[data-testid="confirm-duplicate-flag-btn"]').click()
+    const toast = page.locator('.el-message--success').filter({ hasText: 'Flag cloned successfully' })
+    await expect(toast).toBeVisible({ timeout: 10000 })
+    await expect(toast.locator('a.duplicate-flag-toast-link')).toBeVisible()
+    const href = await toast.locator('a.duplicate-flag-toast-link').getAttribute('href')
+    expect(href).toMatch(/^#\/flags\/\d+$/)
+    const cloneId = Number(href!.replace('#/flags/', ''))
+    expect(cloneId).not.toBe(flag.id)
+    await expect(toast).toContainText(`New flag ID:`)
+    await expect(toast).toContainText(String(cloneId))
+    await expect(toast.locator('a.duplicate-flag-toast-link')).toHaveText(`Open #/flags/${cloneId}`)
+    await expect(page).toHaveURL(new RegExp(`/#/flags/${flag.id}$`))
+
+    const clone = await getFlag(cloneId)
+    expect(clone.key).toBeTruthy()
+    expect(clone.key).not.toBe(source.key)
+    expect(clone.description).toContain('(cloned)')
+    expect(clone.description).toContain(sourceDesc)
+    expect(clone.variants).toHaveLength(2)
+    expect(clone.variants.map((v) => v.key).sort()).toEqual(variantKeys)
+    expect(clone.segments?.length).toBeGreaterThanOrEqual(1)
+    const clonedSeg = clone.segments!.find((s) => s.description === segmentDesc)
+    expect(clonedSeg).toBeTruthy()
+    expect(clonedSeg!.constraints?.length).toBeGreaterThanOrEqual(1)
+    expect(clonedSeg!.constraints![0].property).toBe('country')
+    expect(clonedSeg!.constraints![0].operator).toBe('EQ')
+    expect(clone.tags?.some((t) => t.value === tagValue)).toBe(true)
+
+    await page.locator('a.duplicate-flag-toast-link').click()
+    await expect(page).toHaveURL(new RegExp(`/#/flags/${cloneId}$`), { timeout: 10000 })
+    await expect(page.locator('input[data-testid="flag-desc-input"]')).toHaveValue(clone.description, { timeout: 10000 })
+    await expect(page.locator('input[data-testid="flag-key-input"]')).toHaveValue(clone.key!)
+    const variantInputs = page.locator('input[data-testid="variant-key-input"]')
+    await expect(variantInputs).toHaveCount(2)
+    const uiVariantKeys = (await variantInputs.evaluateAll((els) =>
+      els.map((el) => (el as HTMLInputElement).value),
+    )).sort()
+    expect(uiVariantKeys).toEqual(variantKeys)
+    await expect(page.locator('[data-testid="segment-desc-input"]').first()).toHaveValue(segmentDesc)
+    await expect(page.locator('[data-testid="constraint-prop-input"]').first()).toHaveValue('country')
+    await expect(page.locator('.el-tag').filter({ hasText: tagValue })).toBeVisible()
+
+    await deleteFlag(cloneId)
+  })
+
+  test('duplicate failure clears in-flight and keeps confirm enabled', async ({ page }) => {
+    flag = await createFlag({ description: `dup-fail-${Date.now()}` })
+    await page.goto(`/#/flags/${flag.id}`)
+    await expect(page.locator('input[data-testid="flag-key-input"]')).toBeVisible({ timeout: 10000 })
+
+    await page.route(`**/api/v1/flags/${flag.id}/duplicate`, async (route) => {
+      await route.fulfill({
+        status: 400,
+        contentType: 'application/json',
+        body: JSON.stringify({ message: 'cannot duplicate flag. flag key already exists' }),
+      })
+    })
+
+    await page.locator('[data-testid="duplicate-flag-btn"]').click()
+    await expect(page.locator('.el-dialog')).toBeVisible({ timeout: 5000 })
+    await page.locator('[data-testid="confirm-duplicate-flag-btn"]').click()
+
+    await expect(page.locator('.el-message--error')).toBeVisible({ timeout: 10000 })
+    await expect(page.locator('.el-message--success')).toHaveCount(0)
+    await expect(page.locator('[data-testid="confirm-duplicate-flag-btn"]')).toBeEnabled({ timeout: 5000 })
+    await expect(page.locator('.el-dialog')).toBeVisible()
+  })
+
+  test('fast flag id switch shows correct flag key', async ({ page }) => {
+    const descA = `switch-a-${Date.now()}`
+    const descB = `switch-b-${Date.now()}`
+    const flagA = await createFlag({ description: descA })
+    const flagB = await createFlag({ description: descB })
+    flag = flagA
+
+    await page.goto(`/#/flags/${flagA.id}`)
+    await expect(page.locator('input[data-testid="flag-key-input"]')).toBeVisible({ timeout: 10000 })
+    const keyA = await page.locator('input[data-testid="flag-key-input"]').inputValue()
+
+    await page.goto(`/#/flags/${flagB.id}`)
+    await expect(page.locator('input[data-testid="flag-key-input"]')).toBeVisible({ timeout: 10000 })
+    await expect(page.locator('input[data-testid="flag-key-input"]')).not.toHaveValue(keyA, { timeout: 10000 })
+    await expect(page.locator('input[data-testid="flag-desc-input"]')).toHaveValue(descB, { timeout: 10000 })
+
+    await deleteFlag(flagB.id!)
+  })
+
 
   test('can add and delete tags via UI', async ({ page }) => {
     flag = await createFlag()

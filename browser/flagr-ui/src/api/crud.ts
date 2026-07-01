@@ -3,6 +3,7 @@ import { setEntityTypeOptionsFromApiKeys, type EntityTypeOption } from '@/helper
 import type {
   Constraint,
   CreateFlagPayload,
+  DuplicateFlagPayload,
   Distribution,
   Flag,
   FlagSnapshot,
@@ -53,6 +54,12 @@ export const restoreFlag = (flagId: number): Promise<ApiResult<Flag>> =>
   requestJson<Flag>({ method: 'PUT', path: `${flag(flagId)}/restore` })
 
 export const getFlag = (flagId: FlagId): Promise<ApiResult<Flag>> => get(flag(flagId))
+
+export const duplicateFlag = (
+  flagId: FlagId,
+  body: DuplicateFlagPayload = {},
+): Promise<ApiResult<Flag>> =>
+  post(`${flag(flagId)}/duplicate`, body)
 
 export const updateFlag = (
   flagId: FlagId,

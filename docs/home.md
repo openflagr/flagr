@@ -49,6 +49,7 @@ New to Flagr? Start with the [Overview](flagr_overview) for core concepts.
 | Capability | Highlights |
 |------------|------------|
 | **Feature flags** | Binary toggles, kill switches, targeted audience rollouts |
+| **Duplicate flag** | Clone full configuration via `POST /flags/{id}/duplicate` or flag-detail UI ([#724](https://github.com/openflagr/flagr/issues/724)) |
 | **A/B testing** | Multi-variant experiments with deterministic distribution |
 | **Dynamic configuration** | Per-variant JSON attachments for runtime config |
 | **GitOps / Flags-as-code** | Load flags from JSON files or HTTP URLs; manage in Git, validate in CI |

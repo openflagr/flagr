@@ -9,6 +9,14 @@ export interface MessageApi {
 export interface ElementMessageApi extends MessageApi {
   success: (msg: string) => void
   warning: (msg: string) => void
+  (options: {
+    type?: 'success' | 'warning' | 'info' | 'error'
+    message?: string
+    duration?: number
+    showClose?: boolean
+    dangerouslyUseHTMLString?: boolean
+    customClass?: string
+  }): void
 }
 
 export interface RunApiVm {
@@ -21,6 +29,7 @@ export interface RunApiVm {
  */
 export interface RunApiOptions<A> {
   onSuccess?: (value: A) => void
+  onFailure?: () => void
   successMessage?: string
 }
 
@@ -59,6 +68,7 @@ export function runApi<A>(
 ): void {
   void promise.then((result) => {
     if (!result.ok) {
+      options.onFailure?.()
       presentApiError(result.error, vm.$message)
       return
     }

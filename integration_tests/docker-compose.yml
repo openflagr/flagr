@@ -36,6 +36,8 @@ services:
       POSTGRES_USER: "test"
       POSTGRES_DB: "flagr"
 
+  # Legacy release baseline (not built from this repo). Integration tests that need
+  # routes added after 1.1.12 skip on this instance; see integration_tests/README.md.
   checkr_flagr_with_sqlite:
     image: checkr/flagr:1.1.12
     environment:

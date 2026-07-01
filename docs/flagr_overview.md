@@ -137,10 +137,12 @@ Go implementation (not generated from the old `flagr_arch.png`). When the
 diagram and code disagree, **code wins** — update this page.
 
 **Implementation map:** `pkg/handler` (`handler.go`, `eval.go`, `eval_cache.go`,
-`exposure.go`, `data_recorder*.go`), `pkg/entity/flag_snapshot.go`,
+`exposure.go`, `data_recorder*.go`, `crud.go`, `crud_duplicate.go`),
+`pkg/entity/flag_snapshot.go`, `pkg/entity/flag_template.go`,
 `pkg/config/config.go` (eval-only drivers). **Tests that encode the contract:**
 `TestReloadMapCacheShortCircuit`, `TestRecordCountsTowardDatar`,
-`TestAllMutationHandlersCallSaveFlagSnapshot` in `pkg/handler/`.
+`TestAllMutationHandlersCallSaveFlagSnapshot`, `TestCommitFlagMutation_RollbackOnMutateFailure`
+in `pkg/handler/`.
 
 Three logical components implement the read / write / record split:
 
@@ -214,8 +216,7 @@ flowchart TB
 in rank order → variant response → optional `AsyncRecord` (`recordSource:
 evaluation`). No record when flag is missing, disabled, or has no segments.
 
-**Configuration (cold path)** — CRUD → DB → `SaveFlagSnapshot` → on next poll,
-**EvalCache** reloads if `MAX(flag_snapshot.id)` changed.
+**Configuration (cold path)** — CRUD mutations run in one DB transaction with an appended `flag_snapshot` row (webhooks after commit) → on next poll, **EvalCache** reloads if `MAX(flag_snapshot.id)` changed. Read-only export paths may still call `SaveFlagSnapshot` in a separate transaction.
 
 **Exposure** — `POST /api/v1/exposures` after render; validates against
 **EvalCache** (no constraint re-eval) → `AsyncRecord` (`recordSource: exposure`).
@@ -227,7 +228,11 @@ evaluation`). No record when flag is missing, disabled, or has no segments.
 `GET /api/v1/flags/snapshots/max_id`.
 
 **Manager** — CRUD for flags, segments, variants, constraints, distributions,
-tags; not on the eval request path.
+tags, and **`POST /flags/{flagID}/duplicate`** (full graph clone in one transaction);
+not on the eval request path. Flag detail **Flag Management** section: **Duplicate Flag** (confirm + link toast) and **Delete Flag**.
+Mutations use **`commitFlagMutation`**: one DB transaction for the change plus a
+`flag_snapshot` row; webhooks run only after commit. Boolean create and duplicate
+share **`ApplyFlagTemplate`** (`SimpleBooleanFlagTemplate` / `SourceFlagTemplate`).
 
 **Metrics** — `FLAGR_RECORDER_ENABLED` + per-flag `dataRecordsEnabled`; combine
 backends via `FLAGR_RECORDER_TYPE` (e.g. `kafka,datar`). Details:

@@ -9,10 +9,10 @@
 //
 // Execution modes:
 //   - Local:   go test -tags=integration ./integration_tests/
-//              (auto-starts server with SQLite :memory:, recorder on)
+//              (auto-starts server: SQLite :memory:, recorder on, Datar flush 500ms, eval cache 1s)
 //   - BYO:     FLAGR_SERVER_URL=http://host:18000 go test -tags=integration ./integration_tests/
 //   - Docker:  cd integration_tests && make test
-//              (builds binary, runs against all 6 compose instances)
+//              (builds binary, runs against all compose instances — see README.md for which tests run on legacy checkr/flagr:1.1.12)
 //
 // TestIntegration_Exposures asserts POST /exposures recording via loggedCount (no test-process FLAGR_RECORDER_ENABLED).
 package flagr_integration
@@ -23,6 +23,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 )
@@ -40,8 +41,9 @@ func TestIntegration_Health(t *testing.T) {
 }
 
 func TestIntegration_FlagCRUD(t *testing.T) {
-	// Create a flag
+	requireFlagSnapshotMaxIDAPI(t)
 	key := fmt.Sprintf("crud_flag_%d", time.Now().UnixNano())
+	maxBeforeCreate := getSnapshotMaxID(t)
 	var created flagResponse
 	postJSON(t, "/api/v1/flags", map[string]any{
 		"key":         key,
@@ -50,6 +52,13 @@ func TestIntegration_FlagCRUD(t *testing.T) {
 	if created.ID == 0 {
 		t.Fatal("expected non-zero id")
 	}
+	maxAfterCreate := getSnapshotMaxID(t)
+	if maxAfterCreate <= maxBeforeCreate {
+		t.Fatalf("expected global max snapshot id to increase after create: before=%d after=%d", maxBeforeCreate, maxAfterCreate)
+	}
+	if n := countFlagSnapshots(t, created.ID); n < 1 {
+		t.Fatalf("expected at least 1 snapshot after create, got %d", n)
+	}
 
 	// Get flag
 	var fetched flagResponse
@@ -57,6 +66,8 @@ func TestIntegration_FlagCRUD(t *testing.T) {
 	if fetched.Key != key {
 		t.Fatalf("expected key %s, got %s", key, fetched.Key)
 	}
+
+	snapsBeforePut := countFlagSnapshots(t, created.ID)
 
 	// Put flag — description, key, dataRecordsEnabled, entityType
 	putJSON(t, fmt.Sprintf("/api/v1/flags/%d", created.ID), map[string]any{
@@ -67,6 +78,9 @@ func TestIntegration_FlagCRUD(t *testing.T) {
 	}, &fetched)
 	if !fetched.DataRecordsEnabled {
 		t.Fatalf("expected dataRecordsEnabled=true, got %v", fetched.DataRecordsEnabled)
+	}
+	if n := countFlagSnapshots(t, created.ID); n <= snapsBeforePut {
+		t.Fatalf("expected new snapshot after put: before=%d after=%d", snapsBeforePut, n)
 	}
 
 	// Set enabled (PUT)
@@ -125,9 +139,12 @@ func TestIntegration_FlagCRUD(t *testing.T) {
 	// Restore flag (PUT, not POST)
 	putJSON(t, fmt.Sprintf("/api/v1/flags/%d/restore", created.ID), nil, nil)
 
-	// Get snapshot
+	// Each mutation above should append one history row for this flag
 	var snapshots []any
 	getJSON(t, fmt.Sprintf("/api/v1/flags/%d/snapshots", created.ID), &snapshots)
+	if len(snapshots) < 5 {
+		t.Fatalf("expected at least 5 flag snapshots (create, put, enabled, delete, restore), got %d", len(snapshots))
+	}
 }
 
 func TestIntegration_SegmentCRUD(t *testing.T) {
@@ -135,6 +152,7 @@ func TestIntegration_SegmentCRUD(t *testing.T) {
 		t.Fatal("no seeded flags available")
 	}
 	flagID := seedFlagIDs[0]
+	snapsBefore := countFlagSnapshots(t, flagID)
 
 	// Create segment
 	var seg segmentResponse
@@ -142,6 +160,9 @@ func TestIntegration_SegmentCRUD(t *testing.T) {
 		"description":    "test segment",
 		"rolloutPercent": 50,
 	}, &seg)
+	if n := countFlagSnapshots(t, flagID); n <= snapsBefore {
+		t.Fatalf("expected snapshot after segment create: before=%d after=%d", snapsBefore, n)
+	}
 
 	// Put segment — update description and rollout
 	putJSON(t, fmt.Sprintf("/api/v1/flags/%d/segments/%d", flagID, seg.ID), map[string]any{
@@ -171,8 +192,12 @@ func TestIntegration_SegmentCRUD(t *testing.T) {
 		t.Fatal("reordered segment not found in flag response")
 	}
 
+	snapsBeforeDelete := countFlagSnapshots(t, flagID)
 	// Delete segment
 	deleteResource(t, fmt.Sprintf("/api/v1/flags/%d/segments/%d", flagID, seg.ID))
+	if n := countFlagSnapshots(t, flagID); n <= snapsBeforeDelete {
+		t.Fatalf("expected snapshot after segment delete: before=%d after=%d", snapsBeforeDelete, n)
+	}
 
 	// Verify deletion
 	getJSON(t, fmt.Sprintf("/api/v1/flags/%d", flagID), &flagObj)
@@ -224,12 +249,16 @@ func TestIntegration_VariantCRUD(t *testing.T) {
 		t.Fatal("no seeded flags available")
 	}
 	flagID := seedFlagIDs[0]
+	snapsBefore := countFlagSnapshots(t, flagID)
 
 	// Create variant
 	var v variantResponse
 	postJSON(t, fmt.Sprintf("/api/v1/flags/%d/variants", flagID), map[string]any{
 		"key": "test_variant",
 	}, &v)
+	if n := countFlagSnapshots(t, flagID); n <= snapsBefore {
+		t.Fatalf("expected snapshot after variant create: before=%d after=%d", snapsBefore, n)
+	}
 	variantID := v.ID
 
 	// Update variant key
@@ -335,6 +364,99 @@ func TestIntegration_DistributionCRUD(t *testing.T) {
 	// Verify by getting the flag (includes segments with distributions)
 	getJSON(t, fmt.Sprintf("/api/v1/flags/%d", flagID), &flag)
 }
+func TestIntegration_DuplicateFlag(t *testing.T) {
+	requireDuplicateFlagAPI(t)
+	requireFlagSnapshotMaxIDAPI(t)
+	if len(seedFlagIDs) == 0 {
+		t.Fatal("no seeded flags available")
+	}
+	sourceID := seedFlagIDs[0]
+	var source flagResponse
+	getJSON(t, fmt.Sprintf("/api/v1/flags/%d", sourceID), &source)
+
+	sourceSnapsBefore := countFlagSnapshots(t, sourceID)
+	maxBefore := getSnapshotMaxID(t)
+
+	var clone flagResponse
+	postJSON(t, fmt.Sprintf("/api/v1/flags/%d/duplicate", sourceID), map[string]any{}, &clone)
+	if clone.ID == sourceID {
+		t.Fatalf("clone id must differ from source, both %d", sourceID)
+	}
+	if clone.Key == source.Key {
+		t.Fatalf("clone key must differ from source")
+	}
+	if !strings.Contains(clone.Description, "(cloned)") {
+		t.Fatalf("expected cloned description suffix, got %q", clone.Description)
+	}
+	if len(clone.Variants) != len(source.Variants) {
+		t.Fatalf("variant count: source %d clone %d", len(source.Variants), len(clone.Variants))
+	}
+	if len(clone.Segments) != len(source.Segments) {
+		t.Fatalf("segment count: source %d clone %d", len(source.Segments), len(clone.Segments))
+	}
+
+	if sourceSnapsAfter := countFlagSnapshots(t, sourceID); sourceSnapsAfter != sourceSnapsBefore {
+		t.Fatalf("duplicate must not append snapshots to source flag: before=%d after=%d", sourceSnapsBefore, sourceSnapsAfter)
+	}
+
+	cloneKey := fmt.Sprintf("dup_custom_key_%d", time.Now().UnixNano())
+	cloneDesc := "integration custom clone description"
+	var customClone flagResponse
+	postJSON(t, fmt.Sprintf("/api/v1/flags/%d/duplicate", sourceID), map[string]any{
+		"key":         cloneKey,
+		"description": cloneDesc,
+	}, &customClone)
+	if customClone.Key != cloneKey {
+		t.Fatalf("expected clone key %q, got %q", cloneKey, customClone.Key)
+	}
+	if customClone.Description != cloneDesc {
+		t.Fatalf("expected clone description %q, got %q", cloneDesc, customClone.Description)
+	}
+	deleteResource(t, fmt.Sprintf("/api/v1/flags/%d", customClone.ID))
+	if cloneSnaps := countFlagSnapshots(t, clone.ID); cloneSnaps != 1 {
+		t.Fatalf("duplicate must create exactly one snapshot on the new flag, got %d", cloneSnaps)
+	}
+	maxAfter := getSnapshotMaxID(t)
+	if maxAfter <= maxBefore {
+		t.Fatalf("expected global max snapshot id to increase after duplicate: before=%d after=%d", maxBefore, maxAfter)
+	}
+
+	getJSON(t, fmt.Sprintf("/api/v1/flags/%d", clone.ID), &clone)
+	if clone.ID == 0 {
+		t.Fatal("GET clone failed")
+	}
+	deleteResource(t, fmt.Sprintf("/api/v1/flags/%d", clone.ID))
+}
+
+func TestIntegration_DuplicateFlag_Errors(t *testing.T) {
+	requireDuplicateFlagAPI(t)
+	if len(seedFlagIDs) == 0 {
+		t.Fatal("no seeded flags available")
+	}
+	sourceID := seedFlagIDs[0]
+
+	postJSONExpectStatus(t, "/api/v1/flags/999999999/duplicate", map[string]any{}, 404, nil)
+
+	key := fmt.Sprintf("dup_err_src_%d", time.Now().UnixNano())
+	var created flagResponse
+	postJSON(t, "/api/v1/flags", map[string]any{
+		"key":         key,
+		"description": "dup error source",
+	}, &created)
+	deleteResource(t, fmt.Sprintf("/api/v1/flags/%d", created.ID))
+	postJSONExpectStatus(t, fmt.Sprintf("/api/v1/flags/%d/duplicate", created.ID), map[string]any{}, 404, nil)
+
+	takenKey := fmt.Sprintf("dup_taken_%d", time.Now().UnixNano())
+	postJSON(t, "/api/v1/flags", map[string]any{"key": takenKey, "description": "holder"}, nil)
+	postJSONExpectStatus(t, fmt.Sprintf("/api/v1/flags/%d/duplicate", sourceID), map[string]any{
+		"key": takenKey,
+	}, 400, nil)
+
+	postJSONExpectStatus(t, fmt.Sprintf("/api/v1/flags/%d/duplicate", sourceID), map[string]any{
+		"key": " spaces invalid ",
+	}, 400, nil)
+}
+
 
 func TestIntegration_Evaluation(t *testing.T) {
 	// Use a seeded flag untouched by other tests (all CRUD tests use seedFlagIDs[0]).
@@ -434,6 +556,7 @@ func TestIntegration_TagCRUD(t *testing.T) {
 		t.Fatal("no seeded flags available")
 	}
 	flagID := seedFlagIDs[0]
+	snapsBefore := countFlagSnapshots(t, flagID)
 
 	// Create two tags
 	tagVal1 := fmt.Sprintf("tag_crud_1_%d", time.Now().UnixNano())
@@ -441,6 +564,9 @@ func TestIntegration_TagCRUD(t *testing.T) {
 	postJSON(t, fmt.Sprintf("/api/v1/flags/%d/tags", flagID), map[string]any{
 		"value": tagVal1,
 	}, &tag1)
+	if n := countFlagSnapshots(t, flagID); n <= snapsBefore {
+		t.Fatalf("expected snapshot after tag create: before=%d after=%d", snapsBefore, n)
+	}
 
 	tagVal2 := fmt.Sprintf("tag_crud_2_%d", time.Now().UnixNano())
 	var tag2 tagResponse
@@ -549,7 +675,7 @@ func TestIntegration_BatchEvalOperator(t *testing.T) {
 // The Flagr server must have FLAGR_RECORDER_ENABLED and per-flag dataRecordsEnabled.
 func assertExposureRecorderGate(t *testing.T, flagID int64) {
 	t.Helper()
-	err := pollUntil("exposure recorder gate", "/api/v1/exposures", 15*time.Second, func() bool {
+	err := pollUntil("exposure recorder gate", "/api/v1/exposures", exposureRecorderGateTimeout, func() bool {
 		r, err := doReq("POST", "/api/v1/exposures", map[string]any{
 			"exposures": []map[string]any{{
 				"flagID":   flagID,
@@ -583,17 +709,9 @@ func TestIntegration_Exposures(t *testing.T) {
 	}
 	flagID := seedFlagIDs[1]
 
-	avail, err := doReq("POST", "/api/v1/exposures", map[string]any{
+	requireOptionalAPI(t, http.MethodPost, "/api/v1/exposures", map[string]any{
 		"exposures": []map[string]any{{"flagID": flagID, "entityID": "exposure-probe"}},
-	})
-	if err != nil {
-		t.Fatalf("POST /exposures probe: %v", err)
-	}
-	io.Copy(io.Discard, avail.Body)
-	avail.Body.Close()
-	if avail.StatusCode == http.StatusNotFound {
-		t.Skip("POST /exposures not available on this server (e.g. checkr/flagr:1.1.12)")
-	}
+	}, "POST /api/v1/exposures")
 
 	doReqOK(t, "PUT", fmt.Sprintf("/api/v1/flags/%d", flagID), map[string]any{
 		"dataRecordsEnabled": true,
@@ -682,6 +800,29 @@ type datarFlagSummaryResponse struct {
 	TrafficByDay     []datarDayEntry     `json:"trafficByDay"`
 }
 
+func waitForDatarFlushAfterEvals() {
+	time.Sleep(integrationDatarFlushWait())
+}
+
+func postDatarEvalBurst(t *testing.T, flagID int64, idPrefix string) {
+	t.Helper()
+	for i := 0; i < datarPollEvalsPerAttempt; i++ {
+		doReqOK(t, "POST", "/api/v1/evaluation", datarEvalBody(flagID, fmt.Sprintf("%s-%d", idPrefix, i)))
+	}
+}
+
+// datarEvalBody matches TestIntegration_Evaluation (seedFlagIDs[1] = int_flag_EQ_02, tier EQ premium).
+func datarEvalBody(flagID int64, entityID string) map[string]any {
+	return map[string]any{
+		"flagID":     flagID,
+		"entityID":   entityID,
+		"entityType": "user",
+		"entityContext": map[string]any{
+			"tier": "premium",
+		},
+	}
+}
+
 func TestIntegration_DatarSummary(t *testing.T) {
 	if len(seedFlagIDs) < 2 {
 		t.Fatal("need at least 2 seeded flags for datar test")
@@ -689,16 +830,18 @@ func TestIntegration_DatarSummary(t *testing.T) {
 
 	flagID := seedFlagIDs[1]
 
-	// Datar may not be enabled on all servers (e.g. checkr_flagr_with_sqlite).
-	// Probe the endpoint first; skip if unavailable.
+	// Datar is only enabled on flagr_integration_tests images (see README.md).
+	requireOptionalAPI(t, http.MethodGet, "/api/v1/datar/summary", nil, "GET /api/v1/datar/summary")
 	resp, err := doReq("GET", "/api/v1/datar/summary", nil)
 	if err != nil {
-		t.Skipf("datar not available: %v", err)
+		if isLegacyIntegrationBaseline() {
+			t.Skipf("datar not available: %v", err)
+		}
+		t.Fatalf("GET /api/v1/datar/summary: %v", err)
 	}
+	body, _ := io.ReadAll(resp.Body)
 	resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		t.Skipf("datar summary returned %d, skipping", resp.StatusCode)
-	}
+	requireRecorderEndpointOK(t, resp.StatusCode, body, "GET /api/v1/datar/summary")
 	// Enable dataRecordsEnabled so evaluations are recorded into the datar engine.
 	doReqOK(t, "PUT", fmt.Sprintf("/api/v1/flags/%d", flagID), map[string]any{
 		"dataRecordsEnabled": true,
@@ -708,15 +851,9 @@ func TestIntegration_DatarSummary(t *testing.T) {
 	// inside the loop because the eval cache refreshes every ~3s — the
 	// DataRecordsEnabled change won't take effect until the next reload.
 	var summary datarSummaryResponse
-	err = pollUntil("datar/summary", "/api/v1/datar/summary", 15*time.Second, func() bool {
-		// Perform evaluations on each poll attempt.
-		for i := 0; i < 3; i++ {
-			doReqOK(t, "POST", "/api/v1/evaluation", map[string]any{
-				"flagID":     flagID,
-				"entityID":   fmt.Sprintf("datar-entity-%d", i),
-				"entityType": "user",
-			})
-		}
+	err = pollUntil("datar/summary", "/api/v1/datar/summary", datarPollTimeout, func() bool {
+		postDatarEvalBurst(t, flagID, "datar-entity")
+		waitForDatarFlushAfterEvals()
 		resp, err := doReq("GET", "/api/v1/datar/summary", nil)
 		if err != nil {
 			return false
@@ -746,15 +883,17 @@ func TestIntegration_DatarFlagSummary(t *testing.T) {
 
 	flagID := seedFlagIDs[1]
 
-	// Skip if datar is not available.
+	requireOptionalAPI(t, http.MethodGet, fmt.Sprintf("/api/v1/datar/flags/%d/summary", flagID), nil, "GET /api/v1/datar/flags/{flagID}/summary")
 	resp, err := doReq("GET", fmt.Sprintf("/api/v1/datar/flags/%d/summary", flagID), nil)
 	if err != nil {
-		t.Skipf("datar not available: %v", err)
+		if isLegacyIntegrationBaseline() {
+			t.Skipf("datar not available: %v", err)
+		}
+		t.Fatalf("GET /api/v1/datar/flags/%d/summary: %v", flagID, err)
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		t.Skipf("datar flag summary returned %d, skipping", resp.StatusCode)
-	}
+	body, _ := io.ReadAll(resp.Body)
+	resp.Body.Close()
+	requireRecorderEndpointOK(t, resp.StatusCode, body, "GET /api/v1/datar/flags/{flagID}/summary")
 	// Enable dataRecordsEnabled so evaluations are recorded into the datar engine.
 	doReqOK(t, "PUT", fmt.Sprintf("/api/v1/flags/%d", flagID), map[string]any{
 		"dataRecordsEnabled": true,
@@ -763,14 +902,9 @@ func TestIntegration_DatarFlagSummary(t *testing.T) {
 	// Poll until flag summary has traffic. Evaluations are performed
 	// inside the loop because the eval cache refreshes every ~3s.
 	var flagSummary datarFlagSummaryResponse
-	err = pollUntil("datar/flags/summary", fmt.Sprintf("/api/v1/datar/flags/%d/summary", flagID), 15*time.Second, func() bool {
-		for i := 0; i < 3; i++ {
-			doReqOK(t, "POST", "/api/v1/evaluation", map[string]any{
-				"flagID":     flagID,
-				"entityID":   fmt.Sprintf("datar-flag-entity-%d", i),
-				"entityType": "user",
-			})
-		}
+	err = pollUntil("datar/flags/summary", fmt.Sprintf("/api/v1/datar/flags/%d/summary", flagID), datarPollTimeout, func() bool {
+		postDatarEvalBurst(t, flagID, "datar-flag-entity")
+		waitForDatarFlushAfterEvals()
 		resp, err := doReq("GET", fmt.Sprintf("/api/v1/datar/flags/%d/summary", flagID), nil)
 		if err != nil {
 			return false

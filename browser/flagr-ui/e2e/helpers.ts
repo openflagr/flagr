@@ -1,4 +1,4 @@
-import type { Constraint, Distribution, Flag, FlagSnapshot, Segment, Variant } from '../src/api/types'
+import type { Constraint, Distribution, Flag, FlagSnapshot, Segment, Tag, Variant } from '../src/api/types'
 
 export const API = process.env.API_URL || 'http://localhost:18000/api/v1'
 
@@ -48,6 +48,16 @@ export async function getFlag(flagId: number): Promise<Flag> {
   const r = await fetch(`${API}/flags/${flagId}`)
   if (!r.ok) throw new Error(`getFlag(${flagId}) failed: ${r.status}`)
   return r.json() as Promise<Flag>
+}
+
+export async function createTag(flagId: number, value: string): Promise<Tag> {
+  const r = await fetch(`${API}/flags/${flagId}/tags`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ value }),
+  })
+  if (!r.ok) throw new Error(`createTag failed: ${r.status}`)
+  return r.json() as Promise<Tag>
 }
 
 export async function putSegmentDistributions(

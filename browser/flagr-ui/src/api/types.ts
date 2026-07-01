@@ -96,6 +96,11 @@ export interface CreateFlagPayload {
   [key: string]: unknown
 }
 
+export interface DuplicateFlagPayload {
+  key?: string
+  description?: string
+}
+
 export interface UpdateFlagPayload {
   description: string
   dataRecordsEnabled?: boolean

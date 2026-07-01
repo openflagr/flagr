@@ -111,6 +111,12 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 			return middleware.NotImplemented("operation variant.DeleteVariant has not yet been implemented")
 		}),
 
+		FlagDuplicateFlagHandler: flag.DuplicateFlagHandlerFunc(func(params flag.DuplicateFlagParams) middleware.Responder {
+			_ = params
+
+			return middleware.NotImplemented("operation flag.DuplicateFlag has not yet been implemented")
+		}),
+
 		TagFindAllTagsHandler: tag.FindAllTagsHandlerFunc(func(params tag.FindAllTagsParams) middleware.Responder {
 			_ = params
 
@@ -332,6 +338,8 @@ type FlagrAPI struct {
 	TagDeleteTagHandler tag.DeleteTagHandler
 	// VariantDeleteVariantHandler sets the operation handler for the delete variant operation
 	VariantDeleteVariantHandler variant.DeleteVariantHandler
+	// FlagDuplicateFlagHandler sets the operation handler for the duplicate flag operation
+	FlagDuplicateFlagHandler flag.DuplicateFlagHandler
 	// TagFindAllTagsHandler sets the operation handler for the find all tags operation
 	TagFindAllTagsHandler tag.FindAllTagsHandler
 	// ConstraintFindConstraintsHandler sets the operation handler for the find constraints operation
@@ -495,6 +503,9 @@ func (o *FlagrAPI) Validate() error {
 	}
 	if o.VariantDeleteVariantHandler == nil {
 		unregistered = append(unregistered, "variant.DeleteVariantHandler")
+	}
+	if o.FlagDuplicateFlagHandler == nil {
+		unregistered = append(unregistered, "flag.DuplicateFlagHandler")
 	}
 	if o.TagFindAllTagsHandler == nil {
 		unregistered = append(unregistered, "tag.FindAllTagsHandler")
@@ -710,6 +721,10 @@ func (o *FlagrAPI) initHandlerCache() {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
 	o.handlers["DELETE"]["/flags/{flagID}/variants/{variantID}"] = variant.NewDeleteVariant(o.context, o.VariantDeleteVariantHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/flags/{flagID}/duplicate"] = flag.NewDuplicateFlag(o.context, o.FlagDuplicateFlagHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}

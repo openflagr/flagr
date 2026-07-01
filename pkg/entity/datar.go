@@ -8,7 +8,7 @@ import "time"
 type HourlyEvent struct {
 	ID         uint      `gorm:"primaryKey;autoIncrement"`
 	FlagID     int64     `gorm:"not null;uniqueIndex:idx_datar_hourly,priority:1"`
-	BucketHour time.Time `gorm:"not null;type:datetime(3);uniqueIndex:idx_datar_hourly,priority:2"`
+	BucketHour time.Time `gorm:"not null;uniqueIndex:idx_datar_hourly,priority:2"`
 	VariantID  int64     `gorm:"not null;default:0;uniqueIndex:idx_datar_hourly,priority:3"`
 	SegmentID  int64     `gorm:"not null;default:0;uniqueIndex:idx_datar_hourly,priority:4"`
 	EvalCount  int32     `gorm:"not null;default:0"`

@@ -1,10 +1,9 @@
 package entity
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
-
-	"encoding/json"
 
 	"github.com/openflagr/flagr/pkg/config"
 	"github.com/openflagr/flagr/pkg/notification"
@@ -22,31 +21,56 @@ type FlagSnapshot struct {
 	Flag      []byte `gorm:"type:text"`
 }
 
-// SaveFlagSnapshot saves the Flag Snapshot and sends a notification.
-func SaveFlagSnapshot(db *gorm.DB, flagID uint, updatedBy string, operation notification.Operation, componentType notification.ComponentType, componentID uint, componentKey string) {
-	tx := db.Begin()
+// snapshotNotificationPayload is populated by WriteFlagSnapshotTx inside the caller's transaction
+// (flag key and optional detailed-diff fields). It is not exported: pass the opaque
+// SnapshotNotification wrapper to NotifyAfterCommit only after the outer transaction commits.
+type snapshotNotificationPayload struct {
+	flagKey   string
+	preValue  string
+	postValue string
+	diff      string
+}
+
+// SnapshotNotification is an opaque handle returned from WriteFlagSnapshotTx. Call
+// NotifyAfterCommit after the outer transaction commits; do not inspect or construct it outside entity.
+type SnapshotNotification struct {
+	payload snapshotNotificationPayload
+}
+
+// WriteFlagSnapshotTx records a flag snapshot using tx. The caller must Commit or Rollback.
+func WriteFlagSnapshotTx(
+	tx *gorm.DB,
+	flagID uint,
+	updatedBy string,
+) (SnapshotNotification, error) {
+	var out SnapshotNotification
 	f := &Flag{}
 	// Use Unscoped to include soft-deleted flags. This is necessary for:
 	// 1. Delete operations: we need to snapshot the flag after it's been soft-deleted
 	// 2. Restore operations: we need to update the flag that was previously soft-deleted
-	// This is safe because flagID comes from validated request params and the operation
-	// is explicitly tracked (create/update/delete/restore).
 	if err := tx.Unscoped().First(f, flagID).Error; err != nil {
 		logrus.WithFields(logrus.Fields{
 			"err":    err,
 			"flagID": flagID,
-		}).Error("failed to find the flag when SaveFlagSnapshot")
-		return
+		}).Error("failed to find the flag when WriteFlagSnapshotTx")
+		return out, err
 	}
-	f.Preload(tx)
+	if err := PreloadSegmentsVariantsTags(tx.Unscoped()).First(f, flagID).Error; err != nil {
+		return out, err
+	}
 
 	b, err := json.Marshal(f)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
 			"err":    err,
 			"flagID": flagID,
-		}).Error("failed to marshal the flag into JSON when SaveFlagSnapshot")
-		return
+		}).Error("failed to marshal the flag into JSON when WriteFlagSnapshotTx")
+		return out, err
+	}
+
+	preFS := &FlagSnapshot{}
+	if err := tx.Unscoped().Where("flag_id = ?", flagID).Order("id desc").First(preFS).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		logrus.WithError(err).WithField("flagID", flagID).Warn("failed to find previous flag snapshot")
 	}
 
 	fs := FlagSnapshot{FlagID: f.ID, UpdatedBy: updatedBy, Flag: b}
@@ -55,61 +79,68 @@ func SaveFlagSnapshot(db *gorm.DB, flagID uint, updatedBy string, operation noti
 			"err":    err,
 			"flagID": f.Model.ID,
 		}).Error("failed to save FlagSnapshot")
-		tx.Rollback()
-		return
+		return out, err
 	}
 
 	f.UpdatedBy = updatedBy
 	f.SnapshotID = fs.ID
 
-	// Use Unscoped to update soft-deleted flags (e.g., after delete operation).
-	// Without Unscoped(), GORM would add "deleted_at IS NULL" condition and fail.
 	if err := tx.Unscoped().Save(f).Error; err != nil {
 		logrus.WithFields(logrus.Fields{
 			"err":            err,
 			"flagID":         f.Model.ID,
 			"flagSnapshotID": fs.Model.ID,
 		}).Error("failed to save Flag's UpdatedBy and SnapshotID")
+		return out, err
+	}
+
+	out.payload.flagKey = f.Key
+	if config.Config.NotificationDetailedDiffEnabled {
+		out.payload.preValue = string(preFS.Flag)
+		out.payload.postValue = string(fs.Flag)
+		out.payload.diff = notification.CalculateDiff(out.payload.preValue, out.payload.postValue)
+	}
+	return out, nil
+}
+
+// NotifyAfterCommit sends webhook/metrics after the outer transaction committed.
+func (n SnapshotNotification) NotifyAfterCommit(
+	flagID uint,
+	updatedBy string,
+	operation notification.Operation,
+	componentType notification.ComponentType,
+	componentID uint,
+	componentKey string,
+) {
+	logFlagSnapshotUpdate(flagID, updatedBy)
+	notification.SendNotification(notification.Notification{
+		Operation:     operation,
+		FlagID:        flagID,
+		FlagKey:       n.payload.flagKey,
+		ComponentType: componentType,
+		ComponentID:   componentID,
+		ComponentKey:  componentKey,
+		PreValue:      n.payload.preValue,
+		PostValue:     n.payload.postValue,
+		Diff:          n.payload.diff,
+		User:          updatedBy,
+	})
+}
+
+// SaveFlagSnapshot saves the Flag Snapshot and sends a notification in its own transaction.
+func SaveFlagSnapshot(db *gorm.DB, flagID uint, updatedBy string, operation notification.Operation, componentType notification.ComponentType, componentID uint, componentKey string) {
+	tx := db.Begin()
+	snap, err := WriteFlagSnapshotTx(tx, flagID, updatedBy)
+	if err != nil {
 		tx.Rollback()
 		return
 	}
-
-	preFS := &FlagSnapshot{}
-	// Find the most recent snapshot before the current one (use Unscoped to include any soft-deleted).
-	// ErrRecordNotFound is expected for the first snapshot of a flag.
-	if err := tx.Unscoped().Where("flag_id = ? AND id < ?", flagID, fs.ID).Order("id desc").First(preFS).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		logrus.WithError(err).WithField("flagID", flagID).Warn("failed to find previous flag snapshot")
-	}
-
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
 		logrus.WithError(err).WithField("flagID", flagID).Error("failed to commit flag snapshot")
 		return
 	}
-
-	preValue := ""
-	postValue := ""
-	diff := ""
-
-	if config.Config.NotificationDetailedDiffEnabled {
-		preValue = string(preFS.Flag)
-		postValue = string(fs.Flag)
-		diff = notification.CalculateDiff(preValue, postValue)
-	}
-
-	logFlagSnapshotUpdate(flagID, updatedBy)
-	notification.SendNotification(notification.Notification{
-		Operation:     operation,
-		FlagID:        flagID,
-		FlagKey:       f.Key,
-		ComponentType: componentType,
-		ComponentID:   componentID,
-		ComponentKey:  componentKey,
-		PreValue:      preValue,
-		PostValue:     postValue,
-		Diff:          diff,
-		User:          updatedBy,
-	})
+	snap.NotifyAfterCommit(flagID, updatedBy, operation, componentType, componentID, componentKey)
 }
 
 var logFlagSnapshotUpdate = func(flagID uint, updatedBy string) {

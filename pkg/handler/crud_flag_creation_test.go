@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/openflagr/flagr/pkg/entity"
@@ -10,20 +11,14 @@ import (
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/flag"
 	"github.com/prashantv/gostub"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCrudCreateFlag(t *testing.T) {
 	var res middleware.Responder
-	db := entity.NewTestDB()
+	db, cleanup := handlerTestDB(t)
+	defer cleanup()
 	c := &crud{}
-
-	tmpDB, dbErr := db.DB()
-	if dbErr != nil {
-		t.Errorf("Failed to get database")
-	}
-
-	defer tmpDB.Close()
-	defer gostub.StubFunc(&getDB, db).Reset()
 
 	t.Run("it should be able to create one flag", func(t *testing.T) {
 		res = c.CreateFlag(flag.CreateFlagParams{
@@ -77,16 +72,9 @@ func TestCrudCreateFlag(t *testing.T) {
 
 func TestCrudCreateFlagWithFailures(t *testing.T) {
 	var res middleware.Responder
-	db := entity.NewTestDB()
+	db, cleanup := handlerTestDB(t)
+	defer cleanup()
 	c := &crud{}
-
-	tmpDB, dbErr := db.DB()
-	if dbErr != nil {
-		t.Errorf("Failed to get database")
-	}
-
-	defer tmpDB.Close()
-	defer gostub.StubFunc(&getDB, db).Reset()
 
 	t.Run("CreateFlag - got e2r MapFlag error", func(t *testing.T) {
 		defer gostub.StubFunc(&e2rMapFlag, nil, fmt.Errorf("e2r MapFlag error")).Reset()
@@ -129,4 +117,31 @@ func TestCrudCreateFlagWithFailures(t *testing.T) {
 		})
 		assert.NotZero(t, res.(*flag.CreateFlagDefault).Payload)
 	})
+}
+
+func TestCreateFlag_DuplicateKeyReturns400(t *testing.T) {
+	_, cleanup := handlerTestDB(t)
+	defer cleanup()
+	c := &crud{}
+
+	takenKey := fmt.Sprintf("create_dup_key_%d", time.Now().UnixNano())
+	res := c.CreateFlag(flag.CreateFlagParams{
+		Body: &models.CreateFlagRequest{
+			Description: new("first"),
+			Key:         takenKey,
+		},
+	})
+	require.IsType(t, &flag.CreateFlagOK{}, res)
+
+	res2 := c.CreateFlag(flag.CreateFlagParams{
+		Body: &models.CreateFlagRequest{
+			Description: new("second"),
+			Key:         takenKey,
+		},
+	})
+	def, ok := res2.(*flag.CreateFlagDefault)
+	require.True(t, ok, "expected CreateFlagDefault, got %T", res2)
+	require.NotNil(t, def.Payload)
+	require.NotNil(t, def.Payload.Message)
+	assert.Contains(t, *def.Payload.Message, "flag key already exists")
 }

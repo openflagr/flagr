@@ -12,11 +12,12 @@ import (
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/flag"
 	"github.com/prashantv/gostub"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestHandlerNotifications(t *testing.T) {
-	db := entity.NewTestDB()
-	defer gostub.StubFunc(&getDB, db).Reset()
+	db, cleanup := handlerTestDB(t)
+	defer cleanup()
 
 	mockNotifier := notification.NewMockNotifier()
 	// Use gostub to set notifiers and reset via defer
@@ -122,8 +123,8 @@ func TestHandlerNotifications(t *testing.T) {
 	})
 
 	t.Run("DeleteFlag sends notification", func(t *testing.T) {
-		f := entity.GenFixtureFlag()
-		db.Create(&f)
+		f := entity.Flag{Key: "delete_notif_flag", Description: "to delete", Enabled: true}
+		assert.NoError(t, db.Create(&f).Error)
 		mockNotifier.ClearSent()
 
 		params := flag.DeleteFlagParams{
@@ -143,9 +144,8 @@ func TestHandlerNotifications(t *testing.T) {
 	})
 
 	t.Run("RestoreFlag sends notification", func(t *testing.T) {
-		f := entity.GenFixtureFlag()
-		db.Create(&f)
-		// Soft delete first
+		f := entity.Flag{Key: "restore_notif_flag", Description: "restore", Enabled: true}
+		assert.NoError(t, db.Create(&f).Error)
 		db.Delete(&f)
 		mockNotifier.ClearSent()
 
@@ -166,8 +166,8 @@ func TestHandlerNotifications(t *testing.T) {
 	})
 
 	t.Run("SetFlagEnabledState sends notification", func(t *testing.T) {
-		f := entity.GenFixtureFlag()
-		db.Create(&f)
+		f := entity.Flag{Key: "enabled_notif_flag", Description: "enabled", Enabled: true}
+		assert.NoError(t, db.Create(&f).Error)
 		mockNotifier.ClearSent()
 
 		params := flag.SetFlagEnabledParams{
@@ -188,5 +188,58 @@ func TestHandlerNotifications(t *testing.T) {
 		assert.Equal(t, notification.OperationUpdate, sent[0].Operation)
 		assert.Equal(t, f.Key, sent[0].FlagKey)
 		assert.Equal(t, f.ID, sent[0].FlagID) // Verify entity ID is set correctly
+	})
+
+	t.Run("DuplicateFlag sends notification", func(t *testing.T) {
+		createParams := flag.CreateFlagParams{
+			HTTPRequest: &http.Request{},
+			Body: &models.CreateFlagRequest{
+				Description: new("dup notif source"),
+				Key:         "dup_notif_src",
+			},
+		}
+		createRes := c.CreateFlag(createParams)
+		createOK := createRes.(*flag.CreateFlagOK)
+		require.NotNil(t, createOK.Payload)
+		sourceID := createOK.Payload.ID
+
+		assert.Eventually(t, func() bool {
+			return len(mockNotifier.GetSentNotifications()) > 0
+		}, 1*time.Second, 10*time.Millisecond)
+		mockNotifier.ClearSent()
+		assert.Eventually(t, func() bool {
+			return len(mockNotifier.GetSentNotifications()) == 0
+		}, 1*time.Second, 10*time.Millisecond)
+
+		dupRes := c.DuplicateFlag(flag.DuplicateFlagParams{
+			FlagID:      sourceID,
+			HTTPRequest: &http.Request{},
+		})
+		dupOK, ok := dupRes.(*flag.DuplicateFlagOK)
+		require.True(t, ok, "duplicate failed: %T", dupRes)
+		require.NotNil(t, dupOK.Payload)
+		assert.NotEqual(t, sourceID, dupOK.Payload.ID)
+
+		dupFlagID := uint(dupOK.Payload.ID)
+		assert.Eventually(t, func() bool {
+			for _, n := range mockNotifier.GetSentNotifications() {
+				if n.Operation == notification.OperationCreate && n.FlagID == dupFlagID {
+					return true
+				}
+			}
+			return false
+		}, 1*time.Second, 10*time.Millisecond)
+
+		var dupNotif *notification.Notification
+		for _, n := range mockNotifier.GetSentNotifications() {
+			if n.Operation == notification.OperationCreate && n.FlagID == dupFlagID {
+				n := n
+				dupNotif = &n
+				break
+			}
+		}
+		require.NotNil(t, dupNotif)
+		assert.NotEqual(t, "dup_notif_src", dupNotif.FlagKey)
+		assert.NotEmpty(t, dupNotif.FlagKey)
 	})
 }

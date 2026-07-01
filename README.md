@@ -60,6 +60,7 @@ beyond the original [`checkr/flagr`](https://github.com/checkr/flagr).
 ## Features
 
 - **Feature flags** — binary on/off, kill switches, targeted rollouts by audience
+- **Duplicate flag** — clone variants, segments, constraints, distributions, and tags to a new flag (`POST /flags/{id}/duplicate` or **Flag Management** on flag detail)
 - **A/B testing** — multi-variant experiments with deterministic, sticky assignment
 - **Dynamic configuration** — per-variant JSON attachments, no redeploy or restart
 - **GitOps / Flags-as-code** — load flags from JSON or HTTP; manage in Git, validate in CI, rollback with `git revert`
