@@ -25,22 +25,11 @@ export function operatorSelectClosedBadge(
   return operatorApiBadge(operatorValue, options)
 }
 
-/** Tooltip copy: dedicated hintLine, else catalog description when an operator is chosen. */
-export function getOperatorHelpText(
-  operatorValue: string | undefined,
-  options?: OperatorUiOption[],
-): string | null {
-  if (!operatorValue) return null
-  const op = findOperatorUi(operatorValue, options)
+/** Tooltip copy from catalog row (hintLine, else description). */
+export function operatorHelpText(op: OperatorUiOption | undefined): string | null {
   if (!op) return null
   return op.hintLine ?? op.description ?? null
 }
-
-/** Help text for one catalog row (dropdown option hover). */
-export function getOperatorOptionHelpText(op: OperatorUiOption): string | null {
-  return op.hintLine ?? op.description ?? null
-}
-
 
 export function propertyPlaceholderFor(
   operator: string,

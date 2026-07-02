@@ -14,6 +14,7 @@
       "value": "NEQ",
       "label": "Not equals",
       "group": "Compare",
+      "description": "Property does not equal value. Strings use quoted JSON literals; numbers are unquoted.",
       "hintLine": "Property != value. String: quote it — e.g. tier != \"free\". Number: no quotes — e.g. level != 0.",
       "exprToken": "!=",
       "propertyPlaceholder": "tier",
@@ -23,7 +24,6 @@
       "value": "LT",
       "label": "Less than",
       "group": "Compare",
-      "hintLine": "Numbers only: property < value — e.g. age < 18 (unquoted). No string or alphabetical compare; string properties fail evaluation. Text → Equals.",
       "exprToken": "<",
       "propertyPlaceholder": "age",
       "valuePlaceholder": "18"
@@ -32,7 +32,6 @@
       "value": "LTE",
       "label": "Less or equal",
       "group": "Compare",
-      "hintLine": "Numbers only: property <= value — e.g. score <= 100 (unquoted). No string compare; string properties fail evaluation. Text → Equals.",
       "exprToken": "<=",
       "propertyPlaceholder": "score",
       "valuePlaceholder": "100"
@@ -41,7 +40,6 @@
       "value": "GT",
       "label": "Greater than",
       "group": "Compare",
-      "hintLine": "Numbers only: property > value — e.g. age > 18 (unquoted). No string or alphabetical compare; string properties fail evaluation. Text → Equals.",
       "exprToken": ">",
       "propertyPlaceholder": "version",
       "valuePlaceholder": "2"
@@ -50,7 +48,6 @@
       "value": "GTE",
       "label": "Greater or equal",
       "group": "Compare",
-      "hintLine": "Numbers only: property >= value — e.g. level >= 5 (unquoted). No string compare; string properties fail evaluation. Text → Equals.",
       "exprToken": ">=",
       "propertyPlaceholder": "level",
       "valuePlaceholder": "5"
@@ -69,6 +66,7 @@
       "value": "NOTIN",
       "label": "Not in list",
       "group": "Lists",
+      "description": "Property value is not in the JSON array.",
       "hintLine": "Property must not be in the value list — e.g. env not in [\"staging\",\"dev\"].",
       "exprToken": "NOT IN",
       "propertyPlaceholder": "env",
