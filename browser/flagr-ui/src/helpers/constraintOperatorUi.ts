@@ -25,15 +25,17 @@ export function operatorSelectClosedBadge(
   return operatorApiBadge(operatorValue, options)
 }
 
-/** One-line hint only when the operator is easy to misuse; otherwise omit. */
-export function getOperatorHintLine(
+/** Tooltip copy: dedicated hintLine, else catalog description when an operator is chosen. */
+export function getOperatorHelpText(
   operatorValue: string | undefined,
   options?: OperatorUiOption[],
 ): string | null {
+  if (!operatorValue) return null
   const op = findOperatorUi(operatorValue, options)
-  if (!op?.hintLine) return null
-  return op.hintLine
+  if (!op) return null
+  return op.hintLine ?? op.description ?? null
 }
+
 
 export function propertyPlaceholderFor(
   operator: string,
