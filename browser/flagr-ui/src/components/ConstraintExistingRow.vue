@@ -14,7 +14,6 @@
       :grouped-operator-options="groupedOperatorOptions"
       :operator-options="operatorOptions"
       test-id="constraint-op-select"
-      hint-test-id="constraint-operator-hint"
       @update:model-value="onOperator"
     />
     <el-input

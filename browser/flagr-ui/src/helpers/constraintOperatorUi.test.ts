@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   getOperatorHelpText,
+  getOperatorOptionHelpText,
   operatorApiBadge,
   operatorOptionDisplayText,
   operatorSelectClosedBadge,
@@ -9,6 +10,11 @@ import {
 import { findOperatorUi } from './constraintOperators'
 
 describe('constraintOperatorUi', () => {
+  it('getOperatorOptionHelpText returns catalog hint for option row', () => {
+    const op = findOperatorUi('CONTAINS')!
+    expect(getOperatorOptionHelpText(op)).toMatch(/roles includes/i)
+  })
+
   it('getOperatorHelpText explains list vs substring for CONTAINS', () => {
     const line = getOperatorHelpText('CONTAINS')
     expect(line).toMatch(/roles includes/i)

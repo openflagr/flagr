@@ -1,5 +1,35 @@
 <template>
-  <div class="constraint-op-option">
+  <el-tooltip
+    v-if="helpText"
+    placement="right"
+    effect="light"
+    :show-after="0"
+    :enterable="true"
+    :offset="10"
+    popper-class="constraint-op-hint-tooltip constraint-op-option-hint-popper"
+  >
+    <template #content>
+      <span
+        class="constraint-op-hint-tooltip__text"
+        :data-testid="`constraint-op-option-hint-${item.value}`"
+      >{{ helpText }}</span>
+    </template>
+    <div class="constraint-op-option">
+      <span class="constraint-op-option-text">{{ displayText }}</span>
+      <el-tag
+        size="small"
+        type="info"
+        effect="plain"
+        class="constraint-op-api-tag"
+      >
+        {{ badge }}
+      </el-tag>
+    </div>
+  </el-tooltip>
+  <div
+    v-else
+    class="constraint-op-option"
+  >
     <span class="constraint-op-option-text">{{ displayText }}</span>
     <el-tag
       size="small"
@@ -15,7 +45,10 @@
 <script lang="ts">
 import type { PropType } from 'vue'
 import type { OperatorUiOption } from '@/helpers/constraintOperators'
-import { operatorOptionDisplayText } from '@/helpers/constraintOperatorUi'
+import {
+  getOperatorOptionHelpText,
+  operatorOptionDisplayText,
+} from '@/helpers/constraintOperatorUi'
 
 export default {
   name: 'ConstraintOperatorOption',
@@ -28,6 +61,9 @@ export default {
     },
     badge(): string {
       return this.item.exprToken
+    },
+    helpText(): string | null {
+      return getOperatorOptionHelpText(this.item)
     },
   },
 }

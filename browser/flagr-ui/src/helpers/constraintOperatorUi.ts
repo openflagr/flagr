@@ -36,6 +36,11 @@ export function getOperatorHelpText(
   return op.hintLine ?? op.description ?? null
 }
 
+/** Help text for one catalog row (dropdown option hover). */
+export function getOperatorOptionHelpText(op: OperatorUiOption): string | null {
+  return op.hintLine ?? op.description ?? null
+}
+
 
 export function propertyPlaceholderFor(
   operator: string,

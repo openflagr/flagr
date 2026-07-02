@@ -452,6 +452,11 @@ ol { margin: 0; padding-left: 20px; }
   color: var(--el-text-color-regular);
 }
 
+.constraint-op-option-hint-popper {
+  z-index: calc(var(--el-index-popper) + 2);
+}
+
+
 
 .constraint-add-caption {
   grid-column: 1 / -1;

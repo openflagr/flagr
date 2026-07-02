@@ -29,7 +29,6 @@
         :grouped-operator-options="groupedOperatorOptions"
         :operator-options="operatorOptions"
         test-id="new-constraint-op-select"
-        hint-test-id="new-constraint-operator-hint"
         @update:model-value="patch('operator', $event)"
       />
       <el-input
