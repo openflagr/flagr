@@ -24,8 +24,9 @@ describe('constraintOperatorUi', () => {
     expect(pattern).toMatch(/regex pattern/i)
   })
 
-  it('getOperatorHelpText returns hint for EQ when operator chosen', () => {
-    expect(getOperatorHelpText('EQ')).toMatch(/country/i)
+  it('getOperatorHelpText documents quoted strings for EQ', () => {
+    expect(getOperatorHelpText('EQ')).toMatch(/quote/i)
+    expect(getOperatorHelpText('EQ')).toMatch(/"US"/)
     expect(getOperatorHelpText('')).toBeNull()
   })
 
