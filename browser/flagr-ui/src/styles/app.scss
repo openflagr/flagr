@@ -19,10 +19,37 @@ body {
   --space-md: 20px;
   --space-lg: 24px;
   --space-xl: 32px;
-
   --font-size-card-title: 14px;
   --font-size-card-title-secondary: 13px;
 
+  --font-size-micro: 10px;
+  --font-size-caption: 11px;
+  --font-size-body-sm: 12px;
+  --font-size-body: 13px;
+  --font-size-tab: 14px;
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --letter-spacing-tight: -0.01em;
+  --letter-spacing-ui: 0.02em;
+  --letter-spacing-label: 0.03em;
+  --letter-spacing-wide: 0.06em;
+
+  --line-height-tight: 1.4;
+  --line-height-ui: 1.5;
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+
+  --surface-inset-padding: var(--space-2xs) var(--space-xs);
+  --surface-inset-radius: var(--radius-md);
+
+  --content-max-width: 1200px;
 
   // --- Domain colors (not covered by Element Plus tokens) ---
   // These are the only colors outside the --el-* system; keep them here
@@ -34,7 +61,7 @@ body {
   --diff-ins-bg: #cce3d6;
 }
 
-h1, h2 { font-weight: 600; }
+h1, h2 { font-weight: var(--font-weight-semibold); }
 ol { margin: 0; padding-left: 20px; }
 .width--full { width: 100%; }
 
@@ -52,7 +79,7 @@ ol { margin: 0; padding-left: 20px; }
     padding: 0;
   }
   .navbar-inner {
-    max-width: 1200px;
+    max-width: var(--content-max-width);
     margin: 0 auto;
     padding: 0 var(--space-lg);
     display: flex;
@@ -63,17 +90,17 @@ ol { margin: 0; padding-left: 20px; }
   .navbar-brand {
     color: inherit;
     text-decoration: none;
-    .logo { margin: 0; font-size: 1.2em; font-weight: 700; letter-spacing: -0.03em; }
-    .version { font-size: 11px; font-weight: 400; opacity: 0.7; margin-left: 6px; }
+    .logo { margin: 0; font-size: 1.2em; font-weight: var(--font-weight-bold); letter-spacing: -0.03em; }
+    .version { font-size: var(--font-size-caption); font-weight: var(--font-weight-normal); opacity: 0.7; margin-left: 6px; }
   }
   .navbar-nav {
     display: flex;
     gap: var(--space-lg);
-    a { color: inherit; text-decoration: none; font-size: 0.9em; font-weight: 500; opacity: 0.85; }
+    a { color: inherit; text-decoration: none; font-size: 0.9em; font-weight: var(--font-weight-medium); opacity: 0.85; }
     a:hover { opacity: 1; }
   }
   .router-view-container {
-    max-width: 1200px;
+    max-width: var(--content-max-width);
     margin: 0 auto;
     padding: 0 var(--space-lg);
   }
@@ -93,7 +120,7 @@ ol { margin: 0; padding-left: 20px; }
 
   // --- Notion-style cards ---
   .el-card {
-    border-radius: 12px;
+    border-radius: var(--radius-xl);
     border: 1px solid var(--el-border-color);
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     margin-bottom: var(--space-md);
@@ -118,8 +145,8 @@ ol { margin: 0; padding-left: 20px; }
         margin: 0;
         color: var(--el-text-color-primary);
         font-size: var(--font-size-card-title);
-        font-weight: 600;
-        letter-spacing: -0.01em;
+        font-weight: var(--font-weight-semibold);
+        letter-spacing: var(--letter-spacing-tight);
       }
     }
     .el-card__body { padding: var(--space-sm) var(--space-md); }
@@ -164,7 +191,7 @@ ol { margin: 0; padding-left: 20px; }
       text-align: center;
       color: var(--el-color-danger);
       border: 1px solid var(--el-color-danger-light-7);
-      border-radius: 8px;
+      border-radius: var(--radius-md);
       width: 100%;
       margin-bottom: var(--space-xs);
       font-size: 0.9em;
@@ -176,7 +203,7 @@ ol { margin: 0; padding-left: 20px; }
       text-align: center;
       color: var(--el-text-color-placeholder);
       border: 1px dashed var(--el-border-color);
-      border-radius: 8px;
+      border-radius: var(--radius-md);
       width: 100%;
       margin-bottom: var(--space-xs);
       font-size: 0.9em;
@@ -187,20 +214,20 @@ ol { margin: 0; padding-left: 20px; }
       box-sizing: border-box;
       background-color: var(--el-fill-color-light);
       border: 1px dashed var(--el-border-color);
-      border-radius: 8px;
+      border-radius: var(--radius-md);
       width: 100%;
       padding: var(--space-xs) var(--space-sm);
       color: var(--el-text-color-placeholder);
       text-align: left;
       .card--cue-title {
-        font-size: 12px;
-        font-weight: 600;
+        font-size: var(--font-size-body-sm);
+        font-weight: var(--font-weight-semibold);
         color: var(--el-text-color-secondary);
         margin: 0 0 var(--space-3xs);
       }
       .card--cue-body {
-        font-size: 12px;
-        line-height: 1.5;
+        font-size: var(--font-size-body-sm);
+        line-height: var(--line-height-ui);
         margin: 0;
       }
     }
@@ -214,7 +241,7 @@ ol { margin: 0; padding-left: 20px; }
 
   .jsoneditor {
     border-color: var(--el-border-color);
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     .jsoneditor-menu {
       background-color: var(--el-fill-color-light);
       border-bottom-color: var(--el-border-color);
@@ -225,7 +252,7 @@ ol { margin: 0; padding-left: 20px; }
   .el-tag {
     margin: 2px;
     border: none;
-    font-weight: 500;
+    font-weight: var(--font-weight-medium);
     &--warning {
       color: var(--warning-tag-text);
       background-color: var(--warning-tag-bg);
@@ -239,25 +266,25 @@ ol { margin: 0; padding-left: 20px; }
       background-color: var(--el-fill-color-light);
     }
   }
-.segment-rollout-percent .el-input-group__prepend {
-  color: var(--el-text-color-placeholder);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-}
+  .segment-rollout-percent .el-input-group__prepend {
+    color: var(--el-text-color-placeholder);
+    font-size: var(--font-size-caption);
+    font-weight: var(--font-weight-medium);
+    letter-spacing: var(--letter-spacing-ui);
+  }
 
   .el-tabs {
     .el-tabs__header { margin-bottom: var(--space-md); }
-    .el-tabs__item { font-size: 14px; font-weight: 500; }
+    .el-tabs__item { font-size: var(--font-size-tab); font-weight: var(--font-weight-medium); }
   }
 
   .el-dialog {
-    border-radius: 12px;
-    .el-dialog__header { margin-right: 0; padding: var(--space-md) var(--space-lg) 0; font-weight: 600; }
+    border-radius: var(--radius-xl);
+    .el-dialog__header { margin-right: 0; padding: var(--space-md) var(--space-lg) 0; font-weight: var(--font-weight-semibold); }
     .el-dialog__body { padding: var(--space-xs) var(--space-lg); }
     .el-dialog__footer { padding: var(--space-2xs) var(--space-lg) var(--space-md); }
   }
-  .el-button--small { font-size: 12px; }
+  .el-button--small { font-size: var(--font-size-body-sm); }
   .el-button.is-disabled {
     opacity: 0.45;
   }
@@ -307,5 +334,175 @@ ol { margin: 0; padding-left: 20px; }
       font-size: 12px;
       color: var(--el-text-color-secondary);
     }
+  }
+}
+
+/* Operator dropdown: label left, API tag right-aligned in each row */
+.constraint-op-select-popper .el-select-dropdown__item {
+  padding-right: 12px;
+}
+.constraint-op-select-popper .constraint-op-option {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  column-gap: 12px;
+  width: 100%;
+}
+.constraint-op-select-popper .constraint-op-option-text {
+  text-align: left;
+  min-width: 0;
+}
+.constraint-op-select-popper .constraint-op-api-tag {
+  justify-self: end;
+}
+
+// --- Shared UI patterns (flag detail); use vars from :root ---
+.ui-surface-inset {
+  background: var(--el-fill-color-light);
+  border-radius: var(--surface-inset-radius);
+  padding: var(--surface-inset-padding);
+}
+
+.ui-field-label {
+  display: block;
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  color: var(--el-text-color-secondary);
+  margin-bottom: var(--space-3xs);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-label);
+}
+
+.ui-id-badge {
+  font-size: var(--font-size-micro);
+  font-weight: var(--font-weight-semibold);
+  color: var(--el-text-color-placeholder);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  letter-spacing: var(--letter-spacing-ui);
+}
+
+.ui-section-title {
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  color: var(--el-text-color-secondary);
+  letter-spacing: var(--letter-spacing-ui);
+  text-transform: uppercase;
+}
+
+// Constraint grid (global): child SFC roots use display: contents to participate in parent grid.
+.constraint-table {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) minmax(0, 1.28fr) minmax(0, 1fr) auto;
+  column-gap: var(--space-2xs);
+  row-gap: var(--space-3xs);
+  align-items: center;
+  margin-top: var(--space-3xs);
+}
+
+.constraint-row {
+  display: contents;
+}
+
+.constraint-logic {
+  font-size: var(--font-size-micro);
+  font-weight: var(--font-weight-bold);
+  color: var(--el-text-color-secondary);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  text-align: right;
+  justify-self: end;
+  align-self: center;
+  white-space: nowrap;
+}
+
+.constraint-logic--add {
+  color: var(--el-color-primary);
+}
+
+.constraint-cell {
+  min-width: 0;
+  align-self: center;
+}
+
+.constraint-control {
+  width: 100%;
+
+  .el-input__wrapper,
+  .el-select__wrapper {
+    border-radius: var(--radius-sm);
+  }
+}
+
+.constraint-actions {
+  display: flex;
+  gap: var(--space-3xs);
+  align-self: center;
+  justify-self: end;
+}
+
+.constraint-hint-cell {
+  grid-column: 2 / -1;
+  align-self: start;
+}
+
+.constraint-hint-line {
+  margin: 0 0 var(--space-3xs);
+}
+
+.constraint-add-caption {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-ui);
+  color: var(--el-text-color-secondary);
+}
+
+.constraint-row--add {
+  opacity: 0.88;
+
+  .constraint-logic--add {
+    color: var(--el-text-color-placeholder);
+    font-size: var(--font-size-tab);
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  .constraint-control .el-input__wrapper,
+  .constraint-control .el-select__wrapper {
+    background-color: var(--el-fill-color-lighter);
+  }
+}
+
+.constraint-add-divider {
+  grid-column: 1 / -1;
+  height: 0;
+  border-top: 1px dashed var(--el-border-color-lighter);
+  margin: var(--space-3xs) 0 var(--space-3xs);
+}
+
+.constraint-add-btn {
+  justify-self: end;
+  align-self: center;
+}
+
+@media (max-width: 720px) {
+  .constraint-table {
+    grid-template-columns: 36px 1fr;
+  }
+
+  .constraint-actions {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .constraint-hint-cell {
+    grid-column: 2;
+  }
+
+  .constraint-add-btn {
+    grid-column: 2;
+    justify-self: start;
   }
 }

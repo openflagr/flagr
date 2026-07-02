@@ -40,7 +40,7 @@
       >
         <!-- Header row -->
         <div class="seg-header">
-          <span class="seg-id">#{{ element.id }}</span>
+          <span class="seg-id ui-id-badge">#{{ element.id }}</span>
           <div class="seg-header-fields">
             <el-input
               size="small"
@@ -124,77 +124,9 @@
 
         <!-- Constraints + Distribution -->
         <div class="seg-panel-row">
-          <div class="seg-panel">
-            <div class="seg-section-title">
+          <div class="seg-panel ui-surface-inset">
+            <div class="seg-section-title ui-section-title">
               Constraints <span class="seg-section-subtitle">— match ALL</span>
-            </div>
-            <div
-              v-if="(element.constraints ?? []).length"
-              class="constraint-grid"
-            >
-              <div
-                v-for="(constraint, cIdx) in (element.constraints ?? [])"
-                :key="constraint.id"
-                class="constraint-row"
-              >
-                <span class="constraint-logic">{{ cIdx === 0 ? 'IF' : 'AND' }}</span>
-                <div class="constraint-input-group">
-                  <el-input
-                    size="small"
-                    placeholder="Property"
-                    :model-value="constraint.property"
-                    data-testid="constraint-prop-input"
-                    @update:model-value="onConstraintFieldChange(element, constraint, 'property', $event)"
-                  />
-                  <el-select
-                    class="width--full"
-                    size="small"
-                    :model-value="constraint.operator"
-                    placeholder="OP"
-                    data-testid="constraint-op-select"
-                    @update:model-value="onConstraintFieldChange(element, constraint, 'operator', $event)"
-                  >
-                    <el-option
-                      v-for="item in operatorOptions"
-                      :key="item.value"
-                      :label="item.label"
-                      :value="item.value"
-                    />
-                  </el-select>
-                  <el-input
-                    size="small"
-                    :model-value="constraint.value"
-                    data-testid="constraint-value-input"
-                    @update:model-value="onConstraintFieldChange(element, constraint, 'value', $event)"
-                  />
-                </div>
-                <div class="constraint-actions">
-                  <el-tooltip
-                    :content="SAVE_DIRTY_TOOLTIP"
-                    placement="top"
-                    effect="light"
-                    :disabled="!isConstraintDirty(element, constraint)"
-                  >
-                    <el-button
-                      size="small"
-                      :plain="!isConstraintDirty(element, constraint)"
-                      :type="saveButtonType(isConstraintDirty(element, constraint))"
-                      data-testid="save-constraint-btn"
-                      @click="handleSaveConstraint(element, constraint)"
-                    >
-                      {{ saveButtonLabel(isConstraintDirty(element, constraint)) }}
-                    </el-button>
-                  </el-tooltip>
-                  <el-button
-                    size="small"
-                    plain
-                    data-testid="delete-constraint-btn"
-                    @click="() => $emit('delete-constraint', { segment: element, constraint })"
-                  >
-                    <el-icon><Delete /></el-icon>
-                  </el-button>
-                </div>
-              </div>
             </div>
             <div
               v-if="!(element.constraints ?? []).length"
@@ -204,50 +136,37 @@
             </div>
             <div
               v-if="element.id != null"
-              class="constraint-row new-constraint-row"
+              class="constraint-table"
             >
-              <span class="constraint-logic">AND</span>
-              <div class="constraint-input-group">
-                <el-input
-                  v-model="newConstraints[element.id].property"
-                  size="small"
-                  placeholder="Property"
-                  data-testid="new-constraint-prop-input"
-                />
-                <el-select
-                  v-model="newConstraints[element.id].operator"
-                  size="small"
-                  placeholder="OP"
-                  data-testid="new-constraint-op-select"
-                >
-                  <el-option
-                    v-for="item in operatorOptions"
-                    :key="item.value"
-                    :label="item.label"
-                    :value="item.value"
-                  />
-                </el-select>
-                <el-input
-                  v-model="newConstraints[element.id].value"
-                  size="small"
-                  placeholder="Value"
-                  data-testid="new-constraint-value-input"
-                />
-              </div>
-              <el-button
-                size="small"
-                type="primary"
-                plain
-                :disabled="!newConstraints[element.id]?.property || !newConstraints[element.id]?.value"
-                data-testid="add-constraint-btn"
-                @click.prevent="handleCreateConstraint(element)"
-              >
-                Add
-              </el-button>
+              <ConstraintExistingRow
+                v-for="(constraint, cIdx) in (element.constraints ?? [])"
+                :key="constraint.id"
+                :constraint="constraint"
+                :index="cIdx"
+                :operator-options="operatorOptions"
+                :grouped-operator-options="groupedOperatorOptions"
+                :dirty="isConstraintDirty(element, constraint)"
+                :save-button-label="saveButtonLabel(isConstraintDirty(element, constraint))"
+                :save-button-type="saveButtonType(isConstraintDirty(element, constraint)) ?? ''"
+                @update-field="onConstraintFieldChange(element, constraint, $event.field, $event.value)"
+                @update-operator="onConstraintOperatorFieldChange(element, constraint, $event.uiOperator)"
+                @save="handleSaveConstraint(element, constraint)"
+                @delete="$emit('delete-constraint', { segment: element, constraint })"
+              />
+              <ConstraintAddRow
+                :draft="newConstraints[element.id]"
+                :operator-options="operatorOptions"
+                :grouped-operator-options="groupedOperatorOptions"
+                :show-divider="(element.constraints ?? []).length > 0"
+                show-caption
+                :caption="(element.constraints ?? []).length ? 'Add another constraint' : 'Add a constraint'"
+                @update:draft="newConstraints[element.id] = $event"
+                @add="handleCreateConstraint(element)"
+              />
             </div>
           </div>
-          <div class="seg-panel seg-panel-dist">
-            <div class="seg-section-title seg-section-title--with-action">
+          <div class="seg-panel seg-panel-dist ui-surface-inset">
+            <div class="seg-section-title seg-section-title--with-action ui-section-title">
               <span>Distribution</span>
               <el-button
                 size="small"
@@ -311,27 +230,32 @@ import {
   saveButtonType as fmtSaveType,
 } from '@/helpers/saveDirtyUi'
 
+import ConstraintAddRow, { type NewConstraintDraft } from '@/components/ConstraintAddRow.vue'
+import ConstraintExistingRow from '@/components/ConstraintExistingRow.vue'
 import { Delete, Edit, ArrowUp, ArrowDown } from '@element-plus/icons-vue'
 import type { PropType } from 'vue'
 import type { Constraint, ConstraintFieldKey, Segment, SegmentFieldKey } from '@/api/types'
+import { applyUiOperatorSelection } from '@/helpers/constraintOperatorSugar'
+import { operatorOptionGroups, type OperatorUiOption } from '@/helpers/constraintOperators'
 
-interface OperatorOption {
-  value: string
-  label: string
+function emptyNewConstraintDraft(): NewConstraintDraft {
+  return { operator: '', property: '', value: '' }
 }
 
-interface NewConstraintDraft {
-  operator: string
-  property: string
-  value: string
-}
 
 export default {
   name: 'SegmentsSection',
-  components: { Delete, Edit, ArrowUp, ArrowDown },
+  components: {
+    ConstraintAddRow,
+    ConstraintExistingRow,
+    Delete,
+    Edit,
+    ArrowUp,
+    ArrowDown,
+  },
   props: {
     segments: { type: Array as PropType<Segment[]>, required: true },
-    operatorOptions: { type: Array as PropType<OperatorOption[]>, required: true },
+    operatorOptions: { type: Array as PropType<OperatorUiOption[]>, required: true },
   },
   emits: [
     'move-up',
@@ -356,19 +280,44 @@ export default {
       newConstraints: {} as Record<number, NewConstraintDraft>,
     }
   },
+  computed: {
+    groupedOperatorOptions() {
+      return operatorOptionGroups(this.operatorOptions)
+    },
+  },
   watch: {
     segments: {
       immediate: true,
       handler(segs: Segment[]) {
+        const ids = new Set<number>()
         for (const seg of segs) {
-          if (seg.id != null && !(seg.id in this.newConstraints)) {
-            this.newConstraints[seg.id] = { operator: 'EQ', property: '', value: '' }
+          if (seg.id == null) continue
+          ids.add(seg.id)
+          if (!(seg.id in this.newConstraints)) {
+            this.newConstraints[seg.id] = emptyNewConstraintDraft()
           }
+        }
+        for (const key of Object.keys(this.newConstraints)) {
+          if (!ids.has(Number(key))) delete this.newConstraints[Number(key)]
         }
       },
     },
   },
   methods: {
+    onConstraintOperatorFieldChange(
+      segment: Segment,
+      constraint: Constraint,
+      uiOperator: string,
+    ): void {
+      applyUiOperatorSelection(constraint, uiOperator)
+      this.markConstraintDirty(segment, constraint)
+      this.$emit('update-constraint-field', {
+        segment,
+        constraint,
+        field: 'operator',
+        value: constraint.operator,
+      })
+    },
     saveButtonLabel(dirty: boolean) {
       return fmtSaveLabel(dirty)
     },
@@ -437,11 +386,12 @@ export default {
     handleCreateConstraint(element: Segment) {
       const id = element.id!
       const c = this.newConstraints[id]
+      if (!c.operator) return
       this.$emit('create-constraint', {
         segment: element,
         constraint: { operator: c.operator, property: c.property, value: c.value },
       })
-      this.newConstraints[id] = { operator: 'EQ', property: '', value: '' }
+      this.newConstraints[id] = emptyNewConstraintDraft()
     },
   },
 }
@@ -451,7 +401,7 @@ export default {
 .segment-card {
   background: var(--el-bg-color);
   border: 1px solid var(--el-border-color);
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   padding: var(--space-2xs) var(--space-xs);
   margin-bottom: var(--space-2xs);
   box-shadow: 0 1px 4px rgba(0,0,0,0.04);
@@ -464,15 +414,6 @@ export default {
   padding-bottom: var(--space-2xs);
   border-bottom: 1px solid var(--el-border-color-lighter);
 }
-.seg-id {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--el-text-color-placeholder);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-  letter-spacing: 0.02em;
-}
-
 .seg-header-fields {
   display: flex;
   gap: var(--space-2xs);
@@ -497,26 +438,15 @@ export default {
 .seg-panel {
   flex: 1;
   min-width: 0;
-  background: var(--el-fill-color-light);
-  border-radius: 8px;
-  padding: var(--space-2xs) var(--space-xs);
 }
 .seg-panel-dist {
   flex: 0 0 220px;
-  background: var(--el-fill-color-light);
-  border-radius: 8px;
-  padding: var(--space-2xs) var(--space-xs);
 }
 .seg-section-title {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--el-text-color-secondary);
   margin-bottom: var(--space-2xs);
   display: flex;
   align-items: center;
   gap: var(--space-2xs);
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
 }
 .seg-section-title--with-action {
   justify-content: space-between;
@@ -532,50 +462,6 @@ export default {
   letter-spacing: 0;
 }
 
-// --- Constraint Input Group ---
-.constraint-input-group {
-  display: flex;
-  flex: 1;
-  gap: var(--space-3xs);
-}
-
-.constraint-grid {
-  display: grid;
-  gap: var(--space-3xs);
-}
-.constraint-row {
-  display: grid;
-  grid-template-columns: 36px 1fr auto;
-  gap: var(--space-2xs);
-  align-items: center;
-  background: var(--el-color-primary-light-9);
-  border-radius: 6px;
-  padding: var(--space-3xs) var(--space-2xs);
-}
-.constraint-logic {
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--el-color-primary);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  text-align: right;
-  padding-right: 2px;
-  white-space: nowrap;
-}
-.constraint-actions {
-  display: flex;
-  gap: var(--space-3xs);
-}
-.new-constraint-row {
-  .constraint-input-group { flex: 1; }
-  margin-top: var(--space-3xs);
-  padding: var(--space-2xs) var(--space-2xs) var(--space-3xs);
-  border-top: 1px dashed var(--el-border-color);
-  border-radius: 0 0 6px 6px;
-  background: var(--el-color-primary-light-9);
-  grid-template-columns: 36px 1fr auto;
-  .constraint-logic { align-self: flex-start; padding-top: 5px; }
-}
 
 // --- Distribution ---
 .dist-list {
@@ -594,13 +480,13 @@ export default {
 }
 
 .dist-variant {
-  font-size: 12px;
-  font-weight: 500;
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-weight-medium);
   color: var(--el-text-color-regular);
 }
 .dist-pct {
-  font-size: 12px;
-  font-weight: 600;
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-weight-semibold);
   color: var(--el-text-color-primary);
   font-variant-numeric: tabular-nums;
 }

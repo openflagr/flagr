@@ -5,7 +5,7 @@
         <div class="flex-row">
           <div class="flex-row-left">
             <h2>Flag</h2>
-            <span class="flag-id">#{{ flag.id }}</span>
+            <span class="flag-id ui-id-badge">#{{ flag.id }}</span>
           </div>
           <div class="flex-row-right">
             <el-tooltip
@@ -44,7 +44,7 @@
       <div class="flag-left">
         <!-- Key -->
         <div class="flag-field-block">
-          <label class="flag-label">Flag Key</label>
+          <label class="flag-label ui-field-label">Flag Key</label>
           <el-input
             size="small"
             placeholder="Key"
@@ -56,7 +56,7 @@
 
         <!-- Description -->
         <div class="flag-field-block">
-          <label class="flag-label">Description</label>
+          <label class="flag-label ui-field-label">Description</label>
           <el-input
             size="small"
             placeholder="Description"
@@ -69,7 +69,7 @@
         <!-- Data Records + Entity Type in a compact row -->
         <div class="flag-compact-row">
           <div class="flag-field-block flag-field-narrow">
-            <label class="flag-label">Data Records</label>
+            <label class="flag-label ui-field-label">Data Records</label>
             <div class="flag-inline-row">
               <el-switch
                 size="small"
@@ -94,7 +94,7 @@
             v-show="!!flag.dataRecordsEnabled"
             class="flag-field-block"
           >
-            <label class="flag-label">Entity Type</label>
+            <label class="flag-label ui-field-label">Entity Type</label>
             <el-select
               :model-value="flag.entityType"
               size="small"
@@ -117,7 +117,7 @@
 
         <!-- Tags -->
         <div class="flag-field-block flag-tags-block">
-          <label class="flag-label">Tags</label>
+          <label class="flag-label ui-field-label">Tags</label>
           <div class="flag-tags-row">
             <el-tag
               v-for="tag in flag.tags"
@@ -157,9 +157,9 @@
 
       <!-- Right column: Notes -->
       <div class="flag-right">
-        <div class="flag-notes-panel">
+        <div class="flag-notes-panel ui-surface-inset">
           <div class="flag-section-header">
-            <label class="flag-label">Notes</label>
+            <label class="flag-label ui-field-label">Notes</label>
             <el-button
               size="small"
               link
@@ -295,34 +295,16 @@ export default {
 }
 
 .flag-notes-panel {
-  background: var(--el-fill-color-light);
-  border-radius: 8px;
-  padding: var(--space-2xs) var(--space-xs);
   min-height: 120px;
 }
 
 .flag-id {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--el-text-color-placeholder);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-  letter-spacing: 0.02em;
   margin-left: var(--space-2xs);
 }
 
+
 .flag-field-block {
   // each field block in the left column
-}
-
-.flag-label {
-  display: block;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--el-text-color-secondary);
-  margin-bottom: var(--space-3xs);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
 }
 
 .flag-compact-row {

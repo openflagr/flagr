@@ -207,11 +207,9 @@ import VariantsSection from '@/components/VariantsSection.vue'
 import type { BatchEvalContext, BatchEvalResult, DistributionDraft, EvalContext, EvalResult, EvalSummary, FlagView, Segment, Tag } from '@/api/types'
 import type { EntityTypeOption } from '@/helpers/flagModel'
 import { castFlagPage } from '@/helpers/vuePageCast'
-import * as flagPage from '@/pages/flagPage'
 import { handleHistoryTabClick, mountFlagPage } from '@/pages/flagPage'
-import operatorsData from '@/operators.json'
-
-const operators = operatorsData.operators
+import * as flagPage from '@/pages/flagPage'
+import { OPERATOR_UI_OPTIONS } from '@/helpers/constraintOperators'
 
 function defaultEvalContext(): EvalContext {
   return {
@@ -264,7 +262,7 @@ export default {
       newTag: { ...flagPage.DEFAULT_TAG },
       selectedSegment: null as Segment | null,
       distributionDraft: {} as Record<string, DistributionDraft>,
-      operatorOptions: operators,
+      operatorOptions: OPERATOR_UI_OPTIONS,
       showMdEditor: false,
       historyLoaded: false,
       historyKey: 0,

@@ -13,10 +13,10 @@
       <div
         v-for="variant in variants"
         :key="variant.id"
-        class="variant-item"
+        class="variant-item ui-surface-inset"
       >
         <div class="variant-row">
-          <span class="variant-id">#{{ variant.id }}</span>
+          <span class="variant-id ui-id-badge">#{{ variant.id }}</span>
           <el-input
             size="small"
             placeholder="Variant Key"
@@ -52,7 +52,7 @@
             </el-button>
           </div>
         </div>
-        <el-collapse>
+        <el-collapse class="variant-attachment-collapse">
           <el-collapse-item
             title="Variant attachment"
             class="variant-attachment-collapsable-title"
@@ -199,23 +199,14 @@ export default {
   min-width: 260px;
   background: var(--el-bg-color);
   border: 1px solid var(--el-border-color-light);
-  border-radius: 8px;
-  padding: var(--space-2xs) var(--space-xs);
+  border-radius: var(--surface-inset-radius);
+  padding: var(--surface-inset-padding);
 }
 .variant-row {
   display: flex;
   align-items: center;
   gap: var(--space-2xs);
 }
-.variant-id {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--el-text-color-placeholder);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-  letter-spacing: 0.02em;
-}
-
 .variant-key-field { flex: 1; }
 .variant-actions {
   display: flex;
@@ -228,14 +219,39 @@ export default {
   margin-top: var(--space-2xs);
   > *:first-child { flex: 1; }
 }
-.variant-attachment-collapsable-title {
-  margin: 0;
-  font-size: 12px;
-  color: var(--el-text-color-placeholder);
+.variant-attachment-collapse {
+  margin-top: var(--space-3xs);
+  border: none;
+
+  :deep(.el-collapse-item__header) {
+    height: auto;
+    min-height: 32px;
+    line-height: 1.4;
+    font-size: var(--font-size-caption);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--letter-spacing-ui);
+    color: var(--el-text-color-secondary);
+    font-family: inherit;
+    background: transparent;
+    border-bottom: none;
+  }
+
+  :deep(.el-collapse-item__arrow) {
+    color: var(--el-text-color-placeholder);
+  }
+
+  :deep(.el-collapse-item__wrap),
+  :deep(.el-collapse-item__content) {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
 }
+
 .variant-attachment-title {
   margin: 0 0 var(--space-3xs);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-tight);
   color: var(--el-text-color-placeholder);
 }
 @media (max-width: 640px) {
