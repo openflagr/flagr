@@ -28,10 +28,20 @@ describe('constraintOperators', () => {
     expect(op?.valuePlaceholder).toBe('@gmail.com')
   })
 
-  it('findOperatorUi resolves EREG substring guidance', () => {
+  it('findOperatorUi resolves EREG pattern guidance', () => {
     const op = findOperatorUi('EREG')
-    expect(op?.description).toMatch(/substring|contains text/i)
+    expect(op?.description).toMatch(/=~/i)
+    expect(op?.description).toMatch(/Text includes/i)
     expect(op?.valuePlaceholder).toBe('"@gmail.com"')
+  })
+
+  it('synthesizes numbers-only hint lines for LT/LTE/GT/GTE', () => {
+    for (const value of ['LT', 'LTE', 'GT', 'GTE'] as const) {
+      const op = findOperatorUi(value)!
+      expect(op.hintLine).toMatch(/Numbers only/i)
+      expect(op.hintLine).toMatch(/No string/i)
+      expect(op.hintLine).toMatch(/Text → Equals/i)
+    }
   })
 
   it('operatorOptionGroups orders Compare, Lists, Text simple, Text pattern', () => {

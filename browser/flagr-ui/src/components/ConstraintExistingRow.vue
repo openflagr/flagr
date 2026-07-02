@@ -50,19 +50,13 @@
         <el-icon><Delete /></el-icon>
       </el-button>
     </div>
-    <ConstraintOperatorHint
-      class="constraint-hint-cell"
-      :operator="uiOperator"
-      :operator-options="operatorOptions"
-      test-id="constraint-operator-hint"
-    />
   </div>
 </template>
 
 <script lang="ts">
 import type { PropType } from 'vue'
 import type { Constraint } from '@/api/types'
-import ConstraintOperatorHint from '@/components/ConstraintOperatorHint.vue'
+
 import ConstraintOperatorSelect from '@/components/ConstraintOperatorSelect.vue'
 import {
   propertyPlaceholderFor,
@@ -76,7 +70,6 @@ import { SAVE_DIRTY_TOOLTIP } from '@/helpers/saveDirtyUi'
 export default {
   name: 'ConstraintExistingRow',
   components: {
-    ConstraintOperatorHint,
     ConstraintOperatorSelect,
     Delete,
   },

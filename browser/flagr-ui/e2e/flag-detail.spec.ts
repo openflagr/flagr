@@ -382,12 +382,13 @@ test.describe('Flag detail page', () => {
 
     const opSelect = page.locator('[data-testid="new-constraint-op-select"]').first()
     await opSelect.click()
-    await page.locator('[data-testid="constraint-op-option-CONTAINS"]').first().click()
-
-    const hint = page.locator('[data-testid="new-constraint-operator-hint"]').first()
+    const containsOption = page.locator('[data-testid="constraint-op-option-CONTAINS"]').first()
+    await containsOption.hover()
+    const hint = page.locator('[data-testid="constraint-op-option-hint-CONTAINS"]').first()
     await expect(hint).toBeVisible({ timeout: 5000 })
-    await expect(hint).toContainText(/list/i)
-    await expect(hint).toContainText(/Not substring/i)
+    await expect(hint).toContainText(/roles includes/i)
+    await expect(hint).toContainText(/Not text substring/i)
+    await containsOption.click()
 
     const valueInput = page.locator('[data-testid="new-constraint-value-input"]').first()
     await expect(valueInput).toHaveAttribute('placeholder', '"premium"')
@@ -402,11 +403,13 @@ test.describe('Flag detail page', () => {
     await page.locator('input[data-testid="new-constraint-prop-input"]').first().fill('email')
     const opSelect = page.locator('[data-testid="new-constraint-op-select"]').first()
     await opSelect.click()
-    await page.locator('[data-testid="constraint-op-option-EREG"]').first().click()
-
-    await expect(page.locator('[data-testid="new-constraint-operator-hint"]').first()).toContainText(
-      /regex|substring|contains text/i,
-    )
+    const eregOption = page.locator('[data-testid="constraint-op-option-EREG"]').first()
+    await eregOption.hover()
+    const hint = page.locator('[data-testid="constraint-op-option-hint-EREG"]').first()
+    await expect(hint).toBeVisible({ timeout: 5000 })
+    await expect(hint).toContainText(/String property =~ value \(regex pattern\)/i)
+    await expect(hint).toContainText(/Text includes/i)
+    await eregOption.click()
     await page.locator('input[data-testid="new-constraint-value-input"]').first().fill('"@gmail.com"')
     await page.locator('[data-testid="add-constraint-btn"]').first().click()
     await expect(page.locator('.el-message--success')).toBeVisible({ timeout: 5000 })
@@ -429,11 +432,12 @@ test.describe('Flag detail page', () => {
     await page.locator('input[data-testid="new-constraint-prop-input"]').first().fill('email')
     const opSelect = page.locator('[data-testid="new-constraint-op-select"]').first()
     await opSelect.click()
-    await page.locator('[data-testid="constraint-op-option-UI_STRING_CONTAINS"]').first().click()
-
-    await expect(page.locator('[data-testid="new-constraint-operator-hint"]').first()).toContainText(
-      /substring|escaped/i,
+    const textIncludesOption = page.locator('[data-testid="constraint-op-option-UI_STRING_CONTAINS"]').first()
+    await textIncludesOption.hover()
+    await expect(page.locator('[data-testid="constraint-op-option-hint-UI_STRING_CONTAINS"]').first()).toContainText(
+      /String property =~ value \(plain text/i,
     )
+    await textIncludesOption.click()
     await page.locator('input[data-testid="new-constraint-value-input"]').first().fill('@gmail.com')
     await page.locator('[data-testid="add-constraint-btn"]').first().click()
     await expect(page.locator('.el-message--success')).toBeVisible({ timeout: 5000 })

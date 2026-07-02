@@ -4,7 +4,8 @@
       "value": "EQ",
       "label": "Equals",
       "group": "Compare",
-      "description": "Property equals this value (scalar comparison).",
+      "description": "Property equals value. Strings use quoted JSON literals; numbers are unquoted.",
+      "hintLine": "Property == value. String: quote it — e.g. country == \"US\". Number: no quotes — e.g. level == 5.",
       "exprToken": "==",
       "propertyPlaceholder": "country",
       "valuePlaceholder": "\"US\""
@@ -13,7 +14,8 @@
       "value": "NEQ",
       "label": "Not equals",
       "group": "Compare",
-      "description": "Property does not equal this value.",
+      "description": "Property does not equal value. Strings use quoted JSON literals; numbers are unquoted.",
+      "hintLine": "Property != value. String: quote it — e.g. tier != \"free\". Number: no quotes — e.g. level != 0.",
       "exprToken": "!=",
       "propertyPlaceholder": "tier",
       "valuePlaceholder": "\"free\""
@@ -22,7 +24,6 @@
       "value": "LT",
       "label": "Less than",
       "group": "Compare",
-      "description": "Numeric comparison: property < value.",
       "exprToken": "<",
       "propertyPlaceholder": "age",
       "valuePlaceholder": "18"
@@ -31,7 +32,6 @@
       "value": "LTE",
       "label": "Less or equal",
       "group": "Compare",
-      "description": "Numeric comparison: property <= value.",
       "exprToken": "<=",
       "propertyPlaceholder": "score",
       "valuePlaceholder": "100"
@@ -40,7 +40,6 @@
       "value": "GT",
       "label": "Greater than",
       "group": "Compare",
-      "description": "Numeric comparison: property > value.",
       "exprToken": ">",
       "propertyPlaceholder": "version",
       "valuePlaceholder": "2"
@@ -49,7 +48,6 @@
       "value": "GTE",
       "label": "Greater or equal",
       "group": "Compare",
-      "description": "Numeric comparison: property >= value.",
       "exprToken": ">=",
       "propertyPlaceholder": "level",
       "valuePlaceholder": "5"
@@ -60,7 +58,7 @@
       "group": "Lists",
       "description": "Property value is one of the values in a JSON array.",
       "exprToken": "IN",
-      "hintLine": "Value must be a JSON array of allowed scalars.",
+      "hintLine": "Property must be in the value list — e.g. country in [\"US\",\"CA\"].",
       "propertyPlaceholder": "country",
       "valuePlaceholder": "[\"US\",\"CA\"]"
     },
@@ -69,6 +67,7 @@
       "label": "Not in list",
       "group": "Lists",
       "description": "Property value is not in the JSON array.",
+      "hintLine": "Property must not be in the value list — e.g. env not in [\"staging\",\"dev\"].",
       "exprToken": "NOT IN",
       "propertyPlaceholder": "env",
       "valuePlaceholder": "[\"staging\",\"dev\"]"
@@ -79,7 +78,7 @@
       "group": "Lists",
       "description": "List/array property contains this value. Not substring search on a string.",
       "exprToken": "CONTAINS",
-      "hintLine": "List/array property must contain this value — not substring search on a string.",
+      "hintLine": "List property must include this item — e.g. roles includes \"premium\". Not text substring.",
       "propertyPlaceholder": "roles",
       "valuePlaceholder": "\"premium\""
     },
@@ -89,7 +88,7 @@
       "group": "Lists",
       "description": "List/array property does not contain this value.",
       "exprToken": "NOT CONTAINS",
-      "hintLine": "List property must not contain this value.",
+      "hintLine": "List property must not include this item — e.g. tags excludes \"blocked\".",
       "propertyPlaceholder": "tags",
       "valuePlaceholder": "\"blocked\""
     },
@@ -97,11 +96,11 @@
       "value": "UI_STRING_CONTAINS",
       "label": "Text includes",
       "group": "Text (simple)",
-      "description": "String must contain this plain text (saved as =~ with escaped text).",
+      "description": "String property matches value with =~ (plain text; escaped when saved).",
       "uiOnly": true,
       "persistAs": "EREG",
       "exprToken": "=~",
-      "hintLine": "Plain substring on a string; stored as =~ with escaped text.",
+      "hintLine": "String property =~ value (plain text; saved as regex literal). E.g. email =~ @gmail.com.",
       "propertyPlaceholder": "email",
       "valuePlaceholder": "@gmail.com"
     },
@@ -109,11 +108,11 @@
       "value": "UI_STRING_NOT_CONTAINS",
       "label": "Text excludes",
       "group": "Text (simple)",
-      "description": "String must not contain this plain text (saved as !~).",
+      "description": "String property does not match value with !~ (plain text; escaped when saved).",
       "uiOnly": true,
       "persistAs": "NEREG",
       "exprToken": "!~",
-      "hintLine": "Plain text must not appear in the string; stored as !~.",
+      "hintLine": "String property !~ value (plain text; saved as regex literal). E.g. user_agent !~ bot.",
       "propertyPlaceholder": "user_agent",
       "valuePlaceholder": "bot"
     },
@@ -121,9 +120,9 @@
       "value": "EREG",
       "label": "Text matches pattern",
       "group": "Text pattern",
-      "description": "String property matches this regex. For plain substring use Text includes.",
+      "description": "String property matches value with =~ (regex pattern in value). For plain text use Text includes.",
       "exprToken": "=~",
-      "hintLine": "Regex on a string; for simple text prefer “text includes”.",
+      "hintLine": "String property =~ value (regex pattern). E.g. email =~ \".+@gmail\\.com\". Plain text → Text includes.",
       "propertyPlaceholder": "email",
       "valuePlaceholder": "\"@gmail.com\""
     },
@@ -131,9 +130,9 @@
       "value": "NEREG",
       "label": "Text does not match pattern",
       "group": "Text pattern",
-      "description": "String property does not match this regex.",
+      "description": "String property does not match value with !~ (regex pattern in value). For plain text use Text excludes.",
       "exprToken": "!~",
-      "hintLine": "Regex must not match; for simple exclusion prefer “text excludes”.",
+      "hintLine": "String property !~ value (regex pattern). E.g. user_agent !~ \".*bot.*\". Plain text → Text excludes.",
       "propertyPlaceholder": "user_agent",
       "valuePlaceholder": "\"bot\""
     }

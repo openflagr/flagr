@@ -441,13 +441,17 @@ ol { margin: 0; padding-left: 20px; }
   justify-self: end;
 }
 
-.constraint-hint-cell {
-  grid-column: 2 / -1;
-  align-self: start;
+.constraint-op-hint-tooltip__text {
+  display: block;
+  max-width: 18rem;
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-normal);
+  line-height: 1.45;
+  color: var(--el-text-color-regular);
 }
 
-.constraint-hint-line {
-  margin: 0 0 var(--space-3xs);
+.constraint-op-option-hint-popper {
+  z-index: calc(var(--el-index-popper) + 2);
 }
 
 .constraint-add-caption {
@@ -497,9 +501,6 @@ ol { margin: 0; padding-left: 20px; }
     justify-self: start;
   }
 
-  .constraint-hint-cell {
-    grid-column: 2;
-  }
 
   .constraint-add-btn {
     grid-column: 2;

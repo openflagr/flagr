@@ -598,3 +598,67 @@ func TestConstraintToExpr_RegexEscaping(t *testing.T) {
 		assert.False(t, match)
 	})
 }
+func TestCompareOperators_StringNotLexicographic(t *testing.T) {
+	compareOps := []struct {
+		name     string
+		operator string
+	}{
+		{"LT", models.ConstraintOperatorLT},
+		{"LTE", models.ConstraintOperatorLTE},
+		{"GT", models.ConstraintOperatorGT},
+		{"GTE", models.ConstraintOperatorGTE},
+	}
+
+	for _, tc := range compareOps {
+		tc := tc
+		t.Run(tc.name+" requires numeric literals on both sides", func(t *testing.T) {
+			c := Constraint{
+				Property: "left",
+				Operator: tc.operator,
+				Value:    `"right"`,
+			}
+			expr, err := c.ToExpr()
+			assert.NoError(t, err)
+			_, err = conditions.Evaluate(expr, map[string]any{"left": "zzz"})
+			assert.Error(t, err)
+		})
+
+		t.Run(tc.name+" errors when property resolves to string", func(t *testing.T) {
+			c := Constraint{
+				Property: "name",
+				Operator: tc.operator,
+				Value:    `5`,
+			}
+			expr, err := c.ToExpr()
+			assert.NoError(t, err)
+			_, err = conditions.Evaluate(expr, map[string]any{"name": "10"})
+			assert.Error(t, err)
+		})
+	}
+
+	t.Run("GT matches numeric property and threshold", func(t *testing.T) {
+		c := Constraint{
+			Property: "age",
+			Operator: models.ConstraintOperatorGT,
+			Value:    `18`,
+		}
+		expr, err := c.ToExpr()
+		assert.NoError(t, err)
+		match, err := conditions.Evaluate(expr, map[string]any{"age": float64(25)})
+		assert.NoError(t, err)
+		assert.True(t, match)
+	})
+
+	t.Run("EQ compares strings for equality", func(t *testing.T) {
+		c := Constraint{
+			Property: "region",
+			Operator: models.ConstraintOperatorEQ,
+			Value:    `"US"`,
+		}
+		expr, err := c.ToExpr()
+		assert.NoError(t, err)
+		match, err := conditions.Evaluate(expr, map[string]any{"region": "US"})
+		assert.NoError(t, err)
+		assert.True(t, match)
+	})
+}
