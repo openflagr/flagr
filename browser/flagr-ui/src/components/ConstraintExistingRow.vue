@@ -67,7 +67,7 @@ import ConstraintOperatorSelect from '@/components/ConstraintOperatorSelect.vue'
 import {
   propertyPlaceholderFor,
   valuePlaceholderFor,
-} from '@/helpers/constraintFieldPlaceholders'
+} from '@/helpers/constraintOperatorUi'
 import { constraintValueForInput, resolveUiOperator } from '@/helpers/constraintOperatorSugar'
 import type { OperatorOptionGroup, OperatorUiOption } from '@/helpers/constraintOperators'
 import { Delete } from '@element-plus/icons-vue'

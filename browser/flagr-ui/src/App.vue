@@ -41,5 +41,4 @@ export default {
 
 <style lang="scss">
 @use './styles/app.scss';
-@use './styles/constraint-table.scss';
 </style>

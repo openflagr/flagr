@@ -67,7 +67,7 @@ import ConstraintOperatorSelect from '@/components/ConstraintOperatorSelect.vue'
 import {
   propertyPlaceholderFor,
   valuePlaceholderFor,
-} from '@/helpers/constraintFieldPlaceholders'
+} from '@/helpers/constraintOperatorUi'
 import type { OperatorOptionGroup, OperatorUiOption } from '@/helpers/constraintOperators'
 
 export interface NewConstraintDraft {

@@ -34,3 +34,14 @@ export function getOperatorHintLine(
   if (!op?.hintLine) return null
   return op.hintLine
 }
+
+export function propertyPlaceholderFor(
+  operator: string,
+  options: OperatorUiOption[],
+): string {
+  return findOperatorUi(operator, options)?.propertyPlaceholder ?? 'Property'
+}
+
+export function valuePlaceholderFor(operator: string, options: OperatorUiOption[]): string {
+  return findOperatorUi(operator, options)?.valuePlaceholder ?? 'Value'
+}
