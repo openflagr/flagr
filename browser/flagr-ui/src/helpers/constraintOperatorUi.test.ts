@@ -9,6 +9,15 @@ describe('constraintOperatorUi', () => {
     expect(line).toMatch(/Not text substring/i)
   })
 
+  it('getOperatorHintLine uses same =~ framing for text includes and EREG', () => {
+    const simple = getOperatorHintLine('UI_STRING_CONTAINS')
+    const pattern = getOperatorHintLine('EREG')
+    expect(simple).toMatch(/String property =~ value/)
+    expect(pattern).toMatch(/String property =~ value/)
+    expect(simple).toMatch(/plain text/i)
+    expect(pattern).toMatch(/regex pattern/i)
+  })
+
   it('getOperatorHintLine is null for EQ', () => {
     expect(getOperatorHintLine('EQ')).toBeNull()
   })

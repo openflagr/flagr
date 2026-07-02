@@ -408,7 +408,10 @@ test.describe('Flag detail page', () => {
 
     await page.locator('[data-testid="new-constraint-op-select"]').first().hover()
     await expect(page.locator('[data-testid="new-constraint-operator-hint"]').first()).toContainText(
-      /email =~|Text includes/i,
+      /String property =~ value \(regex pattern\)/i,
+    )
+    await expect(page.locator('[data-testid="new-constraint-operator-hint"]').first()).toContainText(
+      /Text includes/i,
     )
     await page.locator('input[data-testid="new-constraint-value-input"]').first().fill('"@gmail.com"')
     await page.locator('[data-testid="add-constraint-btn"]').first().click()
@@ -436,7 +439,7 @@ test.describe('Flag detail page', () => {
 
     await page.locator('[data-testid="new-constraint-op-select"]').first().hover()
     await expect(page.locator('[data-testid="new-constraint-operator-hint"]').first()).toContainText(
-      /email contains/i,
+      /String property =~ value \(plain text/i,
     )
     await page.locator('input[data-testid="new-constraint-value-input"]').first().fill('@gmail.com')
     await page.locator('[data-testid="add-constraint-btn"]').first().click()

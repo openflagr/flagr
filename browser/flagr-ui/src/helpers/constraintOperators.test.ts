@@ -28,9 +28,10 @@ describe('constraintOperators', () => {
     expect(op?.valuePlaceholder).toBe('@gmail.com')
   })
 
-  it('findOperatorUi resolves EREG substring guidance', () => {
+  it('findOperatorUi resolves EREG pattern guidance', () => {
     const op = findOperatorUi('EREG')
-    expect(op?.description).toMatch(/substring|contains text/i)
+    expect(op?.description).toMatch(/=~/i)
+    expect(op?.description).toMatch(/Text includes/i)
     expect(op?.valuePlaceholder).toBe('"@gmail.com"')
   })
 
