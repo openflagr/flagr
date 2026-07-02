@@ -209,6 +209,9 @@ test.describe('Flag detail page', () => {
     await page.goto(`/#/flags/${flag.id}`)
     await expect(page.locator('input[data-testid="flag-key-input"]')).toBeVisible({ timeout: 10000 })
     await page.locator('input[data-testid="new-constraint-prop-input"]').first().fill('region')
+    const opSelect = page.locator('[data-testid="new-constraint-op-select"]').first()
+    await opSelect.click()
+    await page.getByRole('option', { name: 'Equals ==', exact: true }).click()
     await page.locator('input[data-testid="new-constraint-value-input"]').first().fill('"EU"')
     await page.locator('[data-testid="add-constraint-btn"]').first().click()
     await expect(page.locator('.el-message--success')).toBeVisible({ timeout: 5000 })
@@ -360,12 +363,86 @@ test.describe('Flag detail page', () => {
     const propInput = page.locator('input[data-testid="new-constraint-prop-input"]').first()
     const valueInput = page.locator('input[data-testid="new-constraint-value-input"]').first()
     await propInput.fill('status')
+    const opSelect = page.locator('[data-testid="new-constraint-op-select"]').first()
+    await opSelect.click()
+    await page.getByRole('option', { name: 'Equals ==', exact: true }).click()
     await valueInput.fill('"active"')
     await page.locator('[data-testid="add-constraint-btn"]').first().click()
     await expect(page.locator('.el-message--success')).toBeVisible({ timeout: 5000 })
     // Verify the new-constraint form fields cleared (F1 fix verification)
     await expect(propInput).toHaveValue('')
     await expect(valueInput).toHaveValue('')
+  })
+
+  test('constraint operator UX shows list-includes hint for CONTAINS', async ({ page }) => {
+    flag = await createFlag()
+    await createSegment(flag.id, `op-hint-${Date.now()}`)
+    await page.goto(`/#/flags/${flag.id}`)
+    await expect(page.locator('input[data-testid="flag-key-input"]')).toBeVisible({ timeout: 10000 })
+
+    const opSelect = page.locator('[data-testid="new-constraint-op-select"]').first()
+    await opSelect.click()
+    await page.getByRole('option', { name: 'List includes' }).click()
+
+    const hint = page.locator('[data-testid="new-constraint-operator-hint"]').first()
+    await expect(hint).toBeVisible({ timeout: 5000 })
+    await expect(hint).toContainText(/list/i)
+    await expect(hint).toContainText(/Not substring/i)
+
+    const valueInput = page.locator('[data-testid="new-constraint-value-input"]').first()
+    await expect(valueInput).toHaveAttribute('placeholder', '"premium"')
+  })
+
+  test('constraint operator UX persists EREG operator from grouped select', async ({ page }) => {
+    flag = await createFlag()
+    await createSegment(flag.id, `op-ereg-${Date.now()}`)
+    await page.goto(`/#/flags/${flag.id}`)
+    await expect(page.locator('input[data-testid="flag-key-input"]')).toBeVisible({ timeout: 10000 })
+
+    await page.locator('input[data-testid="new-constraint-prop-input"]').first().fill('email')
+    const opSelect = page.locator('[data-testid="new-constraint-op-select"]').first()
+    await opSelect.click()
+    await page.getByRole('option', { name: /Text matches pattern/i }).click()
+
+    await expect(page.locator('[data-testid="new-constraint-operator-hint"]').first()).toContainText(
+      /regex|substring|contains text/i,
+    )
+    await page.locator('input[data-testid="new-constraint-value-input"]').first().fill('"@gmail.com"')
+    await page.locator('[data-testid="add-constraint-btn"]').first().click()
+    await expect(page.locator('.el-message--success')).toBeVisible({ timeout: 5000 })
+
+    const r = await page.request.get(`${API}/flags/${flag.id}`)
+    expect(r.ok()).toBeTruthy()
+    const updated = await r.json()
+    const c = updated.segments[0].constraints.find((x: { property: string }) => x.property === 'email')
+    expect(c).toBeTruthy()
+    expect(c.operator).toBe('EREG')
+    expect(c.value).toBe('"@gmail.com"')
+  })
+
+  test('constraint operator UX persists text includes as EREG literal regex', async ({ page }) => {
+    flag = await createFlagWithVariants()
+    await createSegment(flag.id, `op-text-includes-${Date.now()}`)
+    await page.goto(`/#/flags/${flag.id}`)
+    await expect(page.locator('input[data-testid="flag-key-input"]')).toBeVisible({ timeout: 10000 })
+
+    await page.locator('input[data-testid="new-constraint-prop-input"]').first().fill('email')
+    const opSelect = page.locator('[data-testid="new-constraint-op-select"]').first()
+    await opSelect.click()
+    await page.getByRole('option', { name: 'Text includes' }).click()
+
+    await expect(page.locator('[data-testid="new-constraint-operator-hint"]').first()).toContainText(
+      /substring|escaped/i,
+    )
+    await page.locator('input[data-testid="new-constraint-value-input"]').first().fill('@gmail.com')
+    await page.locator('[data-testid="add-constraint-btn"]').first().click()
+    await expect(page.locator('.el-message--success')).toBeVisible({ timeout: 5000 })
+
+    const updated = await getFlag(flag.id)
+    const segment = updated.segments?.[0]
+    const created = segment?.constraints?.find((c) => c.property === 'email')
+    expect(created?.operator).toBe('EREG')
+    expect(created?.value).toBe('"@gmail\\.com"')
   })
 
   test('can edit distribution via dialog', async ({ page }) => {

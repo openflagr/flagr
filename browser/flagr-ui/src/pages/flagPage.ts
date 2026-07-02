@@ -31,6 +31,7 @@ import {
   isIdentifiedSegment,
 } from '@/api/types'
 import { confirmAndRunApi, type ConfirmVm } from '@/helpers/runApi'
+import { materializeConstraintForApi } from '@/helpers/constraintOperatorSugar'
 import { runApi } from '@/helpers/runApi'
 
 
@@ -333,7 +334,11 @@ export function createConstraint(
   vm: FlagPageVm,
   { segment, constraint }: { segment: Segment; constraint: Constraint },
 ): void {
-  const c = { ...constraint, property: constraint.property.trim(), value: constraint.value.trim() }
+  const c = materializeConstraintForApi({
+    ...constraint,
+    property: constraint.property.trim(),
+    value: constraint.value.trim(),
+  })
   runApi(vm, crudApi.createConstraint(vm.flagId, requireSegmentId(segment), c), {
     successMessage: 'new constraint created',
     onSuccess: (created) => {
@@ -346,8 +351,14 @@ export function putConstraint(
   vm: FlagPageVm,
   { segment, constraint }: { segment: Segment; constraint: Constraint },
 ): void {
-  constraint.property = constraint.property.trim()
-  constraint.value = constraint.value.trim()
+  const prepared = materializeConstraintForApi({
+    ...constraint,
+    property: constraint.property.trim(),
+    value: constraint.value.trim(),
+  })
+  constraint.property = prepared.property
+  constraint.operator = prepared.operator
+  constraint.value = prepared.value
   runApi(
     vm,
     crudApi.updateConstraint(
