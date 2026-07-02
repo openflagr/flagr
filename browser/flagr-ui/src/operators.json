@@ -4,7 +4,8 @@
       "value": "EQ",
       "label": "Equals",
       "group": "Compare",
-      "description": "Property equals this value (use quotes for text).",
+      "description": "Property equals this value (scalar comparison).",
+      "exprToken": "==",
       "propertyPlaceholder": "country",
       "valuePlaceholder": "\"US\""
     },
@@ -13,14 +14,16 @@
       "label": "Not equals",
       "group": "Compare",
       "description": "Property does not equal this value.",
-      "propertyPlaceholder": "status",
-      "valuePlaceholder": "\"banned\""
+      "exprToken": "!=",
+      "propertyPlaceholder": "tier",
+      "valuePlaceholder": "\"free\""
     },
     {
       "value": "LT",
       "label": "Less than",
       "group": "Compare",
-      "description": "Numeric property is less than this value.",
+      "description": "Numeric comparison: property < value.",
+      "exprToken": "<",
       "propertyPlaceholder": "age",
       "valuePlaceholder": "18"
     },
@@ -28,73 +31,111 @@
       "value": "LTE",
       "label": "Less or equal",
       "group": "Compare",
-      "description": "Numeric property is less than or equal to this value.",
-      "propertyPlaceholder": "age",
-      "valuePlaceholder": "21"
+      "description": "Numeric comparison: property <= value.",
+      "exprToken": "<=",
+      "propertyPlaceholder": "score",
+      "valuePlaceholder": "100"
     },
     {
       "value": "GT",
       "label": "Greater than",
       "group": "Compare",
-      "description": "Numeric property is greater than this value.",
-      "propertyPlaceholder": "age",
-      "valuePlaceholder": "18"
+      "description": "Numeric comparison: property > value.",
+      "exprToken": ">",
+      "propertyPlaceholder": "version",
+      "valuePlaceholder": "2"
     },
     {
       "value": "GTE",
       "label": "Greater or equal",
       "group": "Compare",
-      "description": "Numeric property is greater than or equal to this value.",
-      "propertyPlaceholder": "tier",
+      "description": "Numeric comparison: property >= value.",
+      "exprToken": ">=",
+      "propertyPlaceholder": "level",
       "valuePlaceholder": "5"
     },
     {
       "value": "IN",
-      "label": "Value in list",
+      "label": "In list",
       "group": "Lists",
-      "description": "Scalar property is one of the values in this JSON array.",
-      "propertyPlaceholder": "region",
-      "valuePlaceholder": "[\"us-west\",\"us-east\"]"
+      "description": "Property value is one of the values in a JSON array.",
+      "exprToken": "IN",
+      "hintLine": "Value must be a JSON array of allowed scalars.",
+      "propertyPlaceholder": "country",
+      "valuePlaceholder": "[\"US\",\"CA\"]"
     },
     {
       "value": "NOTIN",
-      "label": "Value not in list",
+      "label": "Not in list",
       "group": "Lists",
-      "description": "Scalar property is not in this JSON array.",
-      "propertyPlaceholder": "blocked",
-      "valuePlaceholder": "[\"v1\",\"v2\"]"
+      "description": "Property value is not in the JSON array.",
+      "exprToken": "NOT IN",
+      "propertyPlaceholder": "env",
+      "valuePlaceholder": "[\"staging\",\"dev\"]"
     },
     {
       "value": "CONTAINS",
       "label": "List includes",
       "group": "Lists",
-      "description": "Property must be a list (array); true if the list contains this value. Not substring search.",
-      "propertyPlaceholder": "tags",
+      "description": "List/array property contains this value. Not substring search on a string.",
+      "exprToken": "CONTAINS",
+      "hintLine": "List/array property must contain this value — not substring search on a string.",
+      "propertyPlaceholder": "roles",
       "valuePlaceholder": "\"premium\""
     },
     {
       "value": "NOTCONTAINS",
       "label": "List excludes",
       "group": "Lists",
-      "description": "Property must be a list; true if the list does not contain this value.",
-      "propertyPlaceholder": "exclusions",
-      "valuePlaceholder": "\"banned\""
+      "description": "List/array property does not contain this value.",
+      "exprToken": "NOT CONTAINS",
+      "hintLine": "List property must not contain this value.",
+      "propertyPlaceholder": "tags",
+      "valuePlaceholder": "\"blocked\""
+    },
+    {
+      "value": "UI_STRING_CONTAINS",
+      "label": "Text includes",
+      "group": "Text (simple)",
+      "description": "String must contain this plain text (saved as =~ with escaped text).",
+      "uiOnly": true,
+      "persistAs": "EREG",
+      "exprToken": "=~",
+      "hintLine": "Plain substring on a string; stored as =~ with escaped text.",
+      "propertyPlaceholder": "email",
+      "valuePlaceholder": "@gmail.com"
+    },
+    {
+      "value": "UI_STRING_NOT_CONTAINS",
+      "label": "Text excludes",
+      "group": "Text (simple)",
+      "description": "String must not contain this plain text (saved as !~).",
+      "uiOnly": true,
+      "persistAs": "NEREG",
+      "exprToken": "!~",
+      "hintLine": "Plain text must not appear in the string; stored as !~.",
+      "propertyPlaceholder": "user_agent",
+      "valuePlaceholder": "bot"
     },
     {
       "value": "EREG",
       "label": "Text matches pattern",
       "group": "Text pattern",
-      "description": "String property matches this regex. For “contains text”, use a substring like \"@gmail.com\" (escape dots: \\.).",
+      "description": "String property matches this regex. For plain substring use Text includes.",
+      "exprToken": "=~",
+      "hintLine": "Regex on a string; for simple text prefer “text includes”.",
       "propertyPlaceholder": "email",
       "valuePlaceholder": "\"@gmail.com\""
     },
     {
       "value": "NEREG",
-      "label": "Text does not match",
+      "label": "Text does not match pattern",
       "group": "Text pattern",
-      "description": "String property does not match this regex pattern.",
-      "propertyPlaceholder": "email",
-      "valuePlaceholder": "\".*@spam\\.com\""
+      "description": "String property does not match this regex.",
+      "exprToken": "!~",
+      "hintLine": "Regex must not match; for simple exclusion prefer “text excludes”.",
+      "propertyPlaceholder": "user_agent",
+      "valuePlaceholder": "\"bot\""
     }
   ]
 }

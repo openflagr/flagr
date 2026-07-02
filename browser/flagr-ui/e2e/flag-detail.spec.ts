@@ -211,7 +211,7 @@ test.describe('Flag detail page', () => {
     await page.locator('input[data-testid="new-constraint-prop-input"]').first().fill('region')
     const opSelect = page.locator('[data-testid="new-constraint-op-select"]').first()
     await opSelect.click()
-    await page.getByRole('option', { name: 'Equals ==', exact: true }).click()
+    await page.locator('[data-testid="constraint-op-option-EQ"]').first().click()
     await page.locator('input[data-testid="new-constraint-value-input"]').first().fill('"EU"')
     await page.locator('[data-testid="add-constraint-btn"]').first().click()
     await expect(page.locator('.el-message--success')).toBeVisible({ timeout: 5000 })
@@ -365,7 +365,7 @@ test.describe('Flag detail page', () => {
     await propInput.fill('status')
     const opSelect = page.locator('[data-testid="new-constraint-op-select"]').first()
     await opSelect.click()
-    await page.getByRole('option', { name: 'Equals ==', exact: true }).click()
+    await page.locator('[data-testid="constraint-op-option-EQ"]').first().click()
     await valueInput.fill('"active"')
     await page.locator('[data-testid="add-constraint-btn"]').first().click()
     await expect(page.locator('.el-message--success')).toBeVisible({ timeout: 5000 })
@@ -382,7 +382,7 @@ test.describe('Flag detail page', () => {
 
     const opSelect = page.locator('[data-testid="new-constraint-op-select"]').first()
     await opSelect.click()
-    await page.getByRole('option', { name: 'List includes' }).click()
+    await page.locator('[data-testid="constraint-op-option-CONTAINS"]').first().click()
 
     const hint = page.locator('[data-testid="new-constraint-operator-hint"]').first()
     await expect(hint).toBeVisible({ timeout: 5000 })
@@ -402,7 +402,7 @@ test.describe('Flag detail page', () => {
     await page.locator('input[data-testid="new-constraint-prop-input"]').first().fill('email')
     const opSelect = page.locator('[data-testid="new-constraint-op-select"]').first()
     await opSelect.click()
-    await page.getByRole('option', { name: /Text matches pattern/i }).click()
+    await page.locator('[data-testid="constraint-op-option-EREG"]').first().click()
 
     await expect(page.locator('[data-testid="new-constraint-operator-hint"]').first()).toContainText(
       /regex|substring|contains text/i,
@@ -429,7 +429,7 @@ test.describe('Flag detail page', () => {
     await page.locator('input[data-testid="new-constraint-prop-input"]').first().fill('email')
     const opSelect = page.locator('[data-testid="new-constraint-op-select"]').first()
     await opSelect.click()
-    await page.getByRole('option', { name: 'Text includes' }).click()
+    await page.locator('[data-testid="constraint-op-option-UI_STRING_CONTAINS"]').first().click()
 
     await expect(page.locator('[data-testid="new-constraint-operator-hint"]').first()).toContainText(
       /substring|escaped/i,

@@ -7,7 +7,7 @@
       effect="plain"
       class="constraint-op-api-tag"
     >
-      {{ operatorApiBadge(item.value) }}
+      {{ badge }}
     </el-tag>
   </div>
 </template>
@@ -15,7 +15,7 @@
 <script lang="ts">
 import type { PropType } from 'vue'
 import type { OperatorUiOption } from '@/helpers/constraintOperators'
-import { operatorApiBadge, operatorOptionDisplayText } from '@/helpers/constraintOperatorUi'
+import { operatorOptionDisplayText } from '@/helpers/constraintOperatorUi'
 
 export default {
   name: 'ConstraintOperatorOption',
@@ -26,9 +26,9 @@ export default {
     displayText(): string {
       return operatorOptionDisplayText(this.item)
     },
-  },
-  methods: {
-    operatorApiBadge,
+    badge(): string {
+      return this.item.exprToken
+    },
   },
 }
 </script>

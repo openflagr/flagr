@@ -3,45 +3,59 @@ import type { OperatorValue } from '@/api/types'
 import {
   UI_STRING_CONTAINS,
   UI_STRING_NOT_CONTAINS,
+  type UiSugarOperator,
 } from '@/helpers/constraintOperatorSugar'
 
-/** UI metadata for a constraint operator; API values unchanged; sugar ids map to EREG/NEREG on save. */
-export interface OperatorUiOption {
+/** Catalog row from operators.json (API + optional UI-only sugar). */
+export interface OperatorCatalogRow {
   value: string
   label: string
   group: string
   description: string
+  exprToken?: string
+  hintLine?: string
   propertyPlaceholder?: string
   valuePlaceholder?: string
+  uiOnly?: boolean
+  persistAs?: OperatorValue
+}
+
+export type OperatorUiValue = OperatorValue | UiSugarOperator
+
+/** UI metadata for a constraint operator option in el-select. */
+export interface OperatorUiOption {
+  value: OperatorUiValue
+  label: string
+  group: string
+  description: string
+  exprToken: string
+  hintLine?: string
+  propertyPlaceholder?: string
+  valuePlaceholder?: string
+  uiOnly?: boolean
+  persistAs?: OperatorValue
 }
 
 const GROUP_ORDER = ['Compare', 'Lists', 'Text (simple)', 'Text pattern'] as const
 
-const API_OPERATOR_UI_OPTIONS: OperatorUiOption[] = operatorsData.operators as OperatorUiOption[]
+function rowToUiOption(row: OperatorCatalogRow): OperatorUiOption {
+  return {
+    value: row.value as OperatorUiValue,
+    label: row.label,
+    group: row.group,
+    description: row.description,
+    exprToken: row.exprToken ?? row.value,
+    hintLine: row.hintLine,
+    propertyPlaceholder: row.propertyPlaceholder,
+    valuePlaceholder: row.valuePlaceholder,
+    uiOnly: row.uiOnly,
+    persistAs: row.persistAs,
+  }
+}
 
-const SUGAR_OPERATOR_UI_OPTIONS: OperatorUiOption[] = [
-  {
-    value: UI_STRING_CONTAINS,
-    label: 'Text includes',
-    group: 'Text (simple)',
-    description: 'String must contain this plain text (saved as =~ with escaped text).',
-    propertyPlaceholder: 'email',
-    valuePlaceholder: '@gmail.com',
-  },
-  {
-    value: UI_STRING_NOT_CONTAINS,
-    label: 'Text excludes',
-    group: 'Text (simple)',
-    description: 'String must not contain this plain text (saved as !~).',
-    propertyPlaceholder: 'user_agent',
-    valuePlaceholder: 'bot',
-  },
-]
+const CATALOG_ROWS = operatorsData.operators as OperatorCatalogRow[]
 
-export const OPERATOR_UI_OPTIONS: OperatorUiOption[] = [
-  ...API_OPERATOR_UI_OPTIONS,
-  ...SUGAR_OPERATOR_UI_OPTIONS,
-]
+export const OPERATOR_UI_OPTIONS: OperatorUiOption[] = CATALOG_ROWS.map(rowToUiOption)
 
 export function findOperatorUi(
   value: string | undefined,
@@ -78,6 +92,4 @@ export function operatorOptionGroups(
   return groups
 }
 
-export function isApiOperatorValue(value: string): value is OperatorValue {
-  return API_OPERATOR_UI_OPTIONS.some((o) => o.value === value)
-}
+export { UI_STRING_CONTAINS, UI_STRING_NOT_CONTAINS }

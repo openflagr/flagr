@@ -6,12 +6,12 @@ import {
 } from './constraintOperators'
 
 describe('constraintOperators', () => {
-  it('exposes 12 API operators plus 2 UI sugar options', () => {
+  it('exposes 12 API operators plus 2 UI sugar options from operators.json', () => {
     expect(OPERATOR_UI_OPTIONS).toHaveLength(14)
-    const values = OPERATOR_UI_OPTIONS.map((o) => o.value)
-    expect(values).toContain('CONTAINS')
-    expect(values).toContain('EREG')
-    expect(values).toContain('UI_STRING_CONTAINS')
+    const apiCount = OPERATOR_UI_OPTIONS.filter((o) => !o.uiOnly).length
+    expect(apiCount).toBe(12)
+    expect(OPERATOR_UI_OPTIONS.find((o) => o.value === 'EQ')?.exprToken).toBe('==')
+    expect(OPERATOR_UI_OPTIONS.find((o) => o.value === 'UI_STRING_CONTAINS')?.persistAs).toBe('EREG')
   })
 
   it('findOperatorUi resolves CONTAINS list semantics in description', () => {

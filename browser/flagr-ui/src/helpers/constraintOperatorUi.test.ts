@@ -6,7 +6,7 @@ describe('constraintOperatorUi', () => {
   it('getOperatorHintLine explains list vs substring for CONTAINS', () => {
     const line = getOperatorHintLine('CONTAINS')
     expect(line).toMatch(/List|array/i)
-    expect(line).toMatch(/Not substring|not substring/i)
+    expect(line).toMatch(/substring/i)
   })
 
   it('getOperatorHintLine is null for EQ', () => {

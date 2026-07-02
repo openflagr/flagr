@@ -30,9 +30,6 @@ export default {
 
 <style scoped>
 .constraint-hint-line {
-  margin: 0;
-  grid-column: 1 / -1;
-  font-size: var(--font-size-caption);
   line-height: var(--line-height-tight);
   color: var(--el-text-color-placeholder);
 }

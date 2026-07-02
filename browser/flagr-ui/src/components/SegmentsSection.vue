@@ -138,159 +138,31 @@
               v-if="element.id != null"
               class="constraint-table"
             >
-              <div
+              <ConstraintExistingRow
                 v-for="(constraint, cIdx) in (element.constraints ?? [])"
                 :key="constraint.id"
-                class="constraint-row"
-              >
-                <span class="constraint-logic">{{ cIdx === 0 ? 'IF' : 'AND' }}</span>
-                <el-input
-                  size="small"
-                  class="constraint-cell constraint-control"
-                  :placeholder="propertyPlaceholderFor(displayUiOperator(constraint))"
-                  :model-value="constraint.property"
-                  data-testid="constraint-prop-input"
-                  @update:model-value="onConstraintFieldChange(element, constraint, 'property', $event)"
-                />
-                <el-select
-                  class="constraint-cell constraint-control width--full constraint-op-select"
-                  size="small"
-                  :model-value="displayUiOperator(constraint)"
-                  placeholder="Operator"
-                  popper-class="constraint-op-select-popper"
-                  data-testid="constraint-op-select"
-                  @update:model-value="onConstraintOperatorChange(element, constraint, $event)"
-                >
-                  <template #label>
-                    {{ operatorSelectClosedBadge(displayUiOperator(constraint)) }}
-                  </template>
-                  <el-option-group
-                    v-for="group in groupedOperatorOptions"
-                    :key="group.label"
-                    :label="group.label"
-                  >
-                    <el-option
-                      v-for="item in group.options"
-                      :key="item.value"
-                      :label="operatorSelectLabel(item)"
-                      :value="item.value"
-                    >
-                      <ConstraintOperatorOption :item="item" />
-                    </el-option>
-                  </el-option-group>
-                </el-select>
-                <el-input
-                  size="small"
-                  class="constraint-cell constraint-control"
-                  :placeholder="valuePlaceholderFor(displayUiOperator(constraint))"
-                  :model-value="constraintValueForInput(constraint)"
-                  data-testid="constraint-value-input"
-                  @update:model-value="onConstraintFieldChange(element, constraint, 'value', $event)"
-                />
-                <div class="constraint-actions">
-                  <el-tooltip
-                    :content="SAVE_DIRTY_TOOLTIP"
-                    placement="top"
-                    effect="light"
-                    :disabled="!isConstraintDirty(element, constraint)"
-                  >
-                    <el-button
-                      size="small"
-                      :plain="!isConstraintDirty(element, constraint)"
-                      :type="saveButtonType(isConstraintDirty(element, constraint))"
-                      data-testid="save-constraint-btn"
-                      @click="handleSaveConstraint(element, constraint)"
-                    >
-                      {{ saveButtonLabel(isConstraintDirty(element, constraint)) }}
-                    </el-button>
-                  </el-tooltip>
-                  <el-button
-                    size="small"
-                    plain
-                    data-testid="delete-constraint-btn"
-                    @click="() => $emit('delete-constraint', { segment: element, constraint })"
-                  >
-                    <el-icon><Delete /></el-icon>
-                  </el-button>
-                </div>
-                <ConstraintOperatorHint
-                  class="constraint-hint-cell"
-                  :operator="displayUiOperator(constraint)"
-                  :operator-options="operatorOptions"
-                  test-id="constraint-operator-hint"
-                />
-              </div>
-              <div
-                v-if="(element.constraints ?? []).length"
-                class="constraint-add-divider"
-                aria-hidden="true"
+                :constraint="constraint"
+                :index="cIdx"
+                :operator-options="operatorOptions"
+                :grouped-operator-options="groupedOperatorOptions"
+                :dirty="isConstraintDirty(element, constraint)"
+                :save-button-label="saveButtonLabel(isConstraintDirty(element, constraint))"
+                :save-button-type="saveButtonType(isConstraintDirty(element, constraint)) ?? ''"
+                @update-field="onConstraintFieldChange(element, constraint, $event.field, $event.value)"
+                @update-operator="onConstraintOperatorFieldChange(element, constraint, $event.uiOperator)"
+                @save="handleSaveConstraint(element, constraint)"
+                @delete="$emit('delete-constraint', { segment: element, constraint })"
               />
-              <p class="constraint-add-caption">
-                {{ (element.constraints ?? []).length ? 'Add another constraint' : 'Add a constraint' }}
-              </p>
-              <div class="constraint-row constraint-row--add">
-                <span
-                  class="constraint-logic constraint-logic--add"
-                  aria-hidden="true"
-                >+</span>
-                <el-input
-                  v-model="newConstraints[element.id].property"
-                  size="small"
-                  class="constraint-cell constraint-control"
-                  :placeholder="propertyPlaceholderFor(newConstraints[element.id].operator)"
-                  data-testid="new-constraint-prop-input"
-                />
-                <el-select
-                  v-model="newConstraints[element.id].operator"
-                  size="small"
-                  class="constraint-cell constraint-control width--full constraint-op-select"
-                  placeholder="Operator"
-                  popper-class="constraint-op-select-popper"
-                  data-testid="new-constraint-op-select"
-                >
-                  <template #label>
-                    {{ operatorSelectClosedBadge(newConstraints[element.id].operator) }}
-                  </template>
-                  <el-option-group
-                    v-for="group in groupedOperatorOptions"
-                    :key="group.label"
-                    :label="group.label"
-                  >
-                    <el-option
-                      v-for="item in group.options"
-                      :key="item.value"
-                      :label="operatorSelectLabel(item)"
-                      :value="item.value"
-                    >
-                      <ConstraintOperatorOption :item="item" />
-                    </el-option>
-                  </el-option-group>
-                </el-select>
-                <el-input
-                  v-model="newConstraints[element.id].value"
-                  size="small"
-                  class="constraint-cell constraint-control"
-                  :placeholder="valuePlaceholderFor(newConstraints[element.id].operator)"
-                  data-testid="new-constraint-value-input"
-                />
-                <el-button
-                  size="small"
-                  type="primary"
-                  plain
-                  class="constraint-add-btn"
-                  :disabled="!newConstraints[element.id]?.operator || !newConstraints[element.id]?.property || !newConstraints[element.id]?.value"
-                  data-testid="add-constraint-btn"
-                  @click.prevent="handleCreateConstraint(element)"
-                >
-                  Add constraint
-                </el-button>
-                <ConstraintOperatorHint
-                  class="constraint-hint-cell"
-                  :operator="newConstraints[element.id].operator"
-                  :operator-options="operatorOptions"
-                  test-id="new-constraint-operator-hint"
-                />
-              </div>
+              <ConstraintAddRow
+                :draft="newConstraints[element.id]"
+                :operator-options="operatorOptions"
+                :grouped-operator-options="groupedOperatorOptions"
+                :show-divider="(element.constraints ?? []).length > 0"
+                show-caption
+                :caption="(element.constraints ?? []).length ? 'Add another constraint' : 'Add a constraint'"
+                @update:draft="newConstraints[element.id] = $event"
+                @add="handleCreateConstraint(element)"
+              />
             </div>
           </div>
           <div class="seg-panel seg-panel-dist ui-surface-inset">
@@ -358,39 +230,29 @@ import {
   saveButtonType as fmtSaveType,
 } from '@/helpers/saveDirtyUi'
 
-import ConstraintOperatorHint from '@/components/ConstraintOperatorHint.vue'
-import ConstraintOperatorOption from '@/components/ConstraintOperatorOption.vue'
+import ConstraintAddRow, { type NewConstraintDraft } from '@/components/ConstraintAddRow.vue'
+import ConstraintExistingRow from '@/components/ConstraintExistingRow.vue'
 import { Delete, Edit, ArrowUp, ArrowDown } from '@element-plus/icons-vue'
 import type { PropType } from 'vue'
 import type { Constraint, ConstraintFieldKey, Segment, SegmentFieldKey } from '@/api/types'
-import {
-  findOperatorUi,
-  operatorOptionGroups,
-  type OperatorUiOption,
-} from '@/helpers/constraintOperators'
-import {
-  operatorSelectClosedBadge as formatOperatorSelectClosedBadge,
-  operatorSelectLabel as formatOperatorSelectLabel,
-} from '@/helpers/constraintOperatorUi'
-import {
-  applyUiOperatorSelection,
-  constraintValueForInput as sugarConstraintValueForInput,
-  resolveUiOperator,
-} from '@/helpers/constraintOperatorSugar'
-
-interface NewConstraintDraft {
-  operator: string
-  property: string
-  value: string
-}
+import { applyUiOperatorSelection } from '@/helpers/constraintOperatorSugar'
+import { operatorOptionGroups, type OperatorUiOption } from '@/helpers/constraintOperators'
 
 function emptyNewConstraintDraft(): NewConstraintDraft {
   return { operator: '', property: '', value: '' }
 }
 
+
 export default {
   name: 'SegmentsSection',
-  components: { ConstraintOperatorHint, ConstraintOperatorOption, Delete, Edit, ArrowUp, ArrowDown },
+  components: {
+    ConstraintAddRow,
+    ConstraintExistingRow,
+    Delete,
+    Edit,
+    ArrowUp,
+    ArrowDown,
+  },
   props: {
     segments: { type: Array as PropType<Segment[]>, required: true },
     operatorOptions: { type: Array as PropType<OperatorUiOption[]>, required: true },
@@ -427,22 +289,22 @@ export default {
     segments: {
       immediate: true,
       handler(segs: Segment[]) {
+        const ids = new Set<number>()
         for (const seg of segs) {
-          if (seg.id != null && !(seg.id in this.newConstraints)) {
+          if (seg.id == null) continue
+          ids.add(seg.id)
+          if (!(seg.id in this.newConstraints)) {
             this.newConstraints[seg.id] = emptyNewConstraintDraft()
           }
+        }
+        for (const key of Object.keys(this.newConstraints)) {
+          if (!ids.has(Number(key))) delete this.newConstraints[Number(key)]
         }
       },
     },
   },
   methods: {
-    displayUiOperator(constraint: Constraint): string {
-      return resolveUiOperator(constraint.operator, constraint.value)
-    },
-    constraintValueForInput(constraint: Constraint): string {
-      return sugarConstraintValueForInput(constraint)
-    },
-    onConstraintOperatorChange(
+    onConstraintOperatorFieldChange(
       segment: Segment,
       constraint: Constraint,
       uiOperator: string,
@@ -455,23 +317,6 @@ export default {
         field: 'operator',
         value: constraint.operator,
       })
-    },
-    operatorSelectLabel(op: OperatorUiOption): string {
-      return formatOperatorSelectLabel(op)
-    },
-    operatorSelectClosedBadge(operatorValue: string | undefined): string {
-      return formatOperatorSelectClosedBadge(operatorValue)
-    },
-    operatorDescription(operator: string): string {
-      return findOperatorUi(operator, this.operatorOptions)?.description ?? ''
-    },
-    propertyPlaceholderFor(operator: string): string {
-      const op = findOperatorUi(operator, this.operatorOptions)
-      return op?.propertyPlaceholder ?? 'Property'
-    },
-    valuePlaceholderFor(operator: string): string {
-      const op = findOperatorUi(operator, this.operatorOptions)
-      return op?.valuePlaceholder ?? 'Value'
     },
     saveButtonLabel(dirty: boolean) {
       return fmtSaveLabel(dirty)
@@ -617,112 +462,6 @@ export default {
   letter-spacing: 0;
 }
 
-// --- Constraints ---
-.constraint-table {
-  display: grid;
-  grid-template-columns: 40px minmax(0, 1fr) minmax(0, 1.28fr) minmax(0, 1fr) auto;
-  column-gap: var(--space-2xs);
-  row-gap: var(--space-3xs);
-  align-items: center;
-  margin-top: var(--space-3xs);
-}
-.constraint-row {
-  display: contents;
-}
-.constraint-logic {
-  font-size: var(--font-size-micro);
-  font-weight: var(--font-weight-bold);
-  color: var(--el-text-color-secondary);
-  letter-spacing: var(--letter-spacing-wide);
-  text-transform: uppercase;
-  text-align: right;
-  justify-self: end;
-  align-self: center;
-  white-space: nowrap;
-}
-.constraint-logic--add {
-  color: var(--el-color-primary);
-}
-.constraint-cell {
-  min-width: 0;
-  align-self: center;
-}
-.constraint-control {
-  width: 100%;
-  :deep(.el-input__wrapper) {
-    border-radius: var(--radius-sm);
-  }
-}
-.constraint-actions {
-  display: flex;
-  gap: var(--space-3xs);
-  align-self: center;
-  justify-self: end;
-}
-.constraint-hint-cell {
-  grid-column: 2 / -1;
-  align-self: start;
-}
-
-.constraint-add-caption {
-  grid-column: 1 / -1;
-  margin: 0;
-  font-size: var(--font-size-caption);
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: var(--letter-spacing-ui);
-  color: var(--el-text-color-secondary);
-}
-.constraint-row--add {
-  opacity: 0.88;
-
-  .constraint-logic--add {
-    color: var(--el-text-color-placeholder);
-    font-size: var(--font-size-tab);
-    font-weight: 600;
-    line-height: 1;
-  }
-
-  :deep(.el-input__wrapper),
-  :deep(.el-select__wrapper) {
-    background-color: var(--el-fill-color-lighter);
-  }
-}
-
-.constraint-add-divider {
-  grid-column: 1 / -1;
-  height: 0;
-  border-top: 1px dashed var(--el-border-color-lighter);
-  margin: var(--space-3xs) 0 var(--space-3xs);
-}
-.constraint-add-btn {
-  justify-self: end;
-  align-self: center;
-}
-
-:deep(.constraint-hint-line) {
-  margin: 0 0 var(--space-3xs);
-}
-
-@media (max-width: 720px) {
-  .constraint-table {
-    grid-template-columns: 36px 1fr;
-  }
-  .constraint-cell--prop,
-  .constraint-cell:nth-child(2) {
-    grid-column: 2;
-  }
-  .constraint-actions {
-    grid-column: 2;
-    justify-self: start;
-  }
-  .constraint-hint-cell {
-    grid-column: 2;
-  }
-  .constraint-add-btn {
-    grid-column: 2;
-    justify-self: start;
-  }
-}
 
 // --- Distribution ---
 .dist-list {

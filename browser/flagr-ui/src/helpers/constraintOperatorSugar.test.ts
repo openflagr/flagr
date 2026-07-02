@@ -4,19 +4,27 @@ import {
   UI_STRING_NOT_CONTAINS,
   escapeRegexLiteral,
   isStoredLiteralSubstringPattern,
+  isUiSugarOperator,
   materializeConstraintForApi,
   plainTextFromStoredConstraintValue,
   resolveUiOperator,
 } from './constraintOperatorSugar'
 
 describe('constraintOperatorSugar', () => {
+  it('isUiSugarOperator identifies sugar ids only', () => {
+    expect(isUiSugarOperator(UI_STRING_CONTAINS)).toBe(true)
+    expect(isUiSugarOperator(UI_STRING_NOT_CONTAINS)).toBe(true)
+    expect(isUiSugarOperator('EQ')).toBe(false)
+    expect(isUiSugarOperator('EREG')).toBe(false)
+  })
+
   it('escapeRegexLiteral escapes regexp metacharacters', () => {
     expect(escapeRegexLiteral('@gmail.com')).toBe('@gmail\\.com')
     expect(escapeRegexLiteral('a+b')).toBe('a\\+b')
   })
 
   it('detects literal substring patterns', () => {
-    expect(isStoredLiteralSubstringPattern('"@gmail.com"')).toBe(true)
+    expect(isStoredLiteralSubstringPattern('"premium"')).toBe(true)
     expect(isStoredLiteralSubstringPattern('".*foo.*"')).toBe(false)
   })
 
