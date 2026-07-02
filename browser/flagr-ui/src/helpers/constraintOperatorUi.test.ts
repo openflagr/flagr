@@ -5,8 +5,8 @@ import { findOperatorUi } from './constraintOperators'
 describe('constraintOperatorUi', () => {
   it('getOperatorHintLine explains list vs substring for CONTAINS', () => {
     const line = getOperatorHintLine('CONTAINS')
-    expect(line).toMatch(/lists|arrays/i)
-    expect(line).toMatch(/substring/i)
+    expect(line).toMatch(/roles includes/i)
+    expect(line).toMatch(/Not text substring/i)
   })
 
   it('getOperatorHintLine is null for EQ', () => {

@@ -60,7 +60,7 @@
       "group": "Lists",
       "description": "Property value is one of the values in a JSON array.",
       "exprToken": "IN",
-      "hintLine": "JSON array of allowed values.",
+      "hintLine": "Property must be in the value list — e.g. country in [\"US\",\"CA\"].",
       "propertyPlaceholder": "country",
       "valuePlaceholder": "[\"US\",\"CA\"]"
     },
@@ -79,7 +79,7 @@
       "group": "Lists",
       "description": "List/array property contains this value. Not substring search on a string.",
       "exprToken": "CONTAINS",
-      "hintLine": "For lists/arrays — not string substring.",
+      "hintLine": "List property must include this item — e.g. roles includes \"premium\". Not text substring.",
       "propertyPlaceholder": "roles",
       "valuePlaceholder": "\"premium\""
     },
@@ -89,7 +89,7 @@
       "group": "Lists",
       "description": "List/array property does not contain this value.",
       "exprToken": "NOT CONTAINS",
-      "hintLine": "List must not include this value.",
+      "hintLine": "List property must not include this item — e.g. tags excludes \"blocked\".",
       "propertyPlaceholder": "tags",
       "valuePlaceholder": "\"blocked\""
     },
@@ -101,7 +101,7 @@
       "uiOnly": true,
       "persistAs": "EREG",
       "exprToken": "=~",
-      "hintLine": "Plain text in a string (saved as =~).",
+      "hintLine": "String property must contain this text — e.g. email contains @gmail.com.",
       "propertyPlaceholder": "email",
       "valuePlaceholder": "@gmail.com"
     },
@@ -113,7 +113,7 @@
       "uiOnly": true,
       "persistAs": "NEREG",
       "exprToken": "!~",
-      "hintLine": "Plain text must not appear (!~).",
+      "hintLine": "String property must not contain this text — e.g. user_agent excludes bot.",
       "propertyPlaceholder": "user_agent",
       "valuePlaceholder": "bot"
     },
@@ -123,7 +123,7 @@
       "group": "Text pattern",
       "description": "String property matches this regex. For plain substring use Text includes.",
       "exprToken": "=~",
-      "hintLine": "Regex; use Text includes for plain text.",
+      "hintLine": "String must match regex on value — e.g. email =~ pattern. Plain text? Use Text includes.",
       "propertyPlaceholder": "email",
       "valuePlaceholder": "\"@gmail.com\""
     },
@@ -133,7 +133,7 @@
       "group": "Text pattern",
       "description": "String property does not match this regex.",
       "exprToken": "!~",
-      "hintLine": "Regex; use Text excludes for plain text.",
+      "hintLine": "String must not match regex on value — e.g. user_agent !~ pattern. Plain text? Use Text excludes.",
       "propertyPlaceholder": "user_agent",
       "valuePlaceholder": "\"bot\""
     }

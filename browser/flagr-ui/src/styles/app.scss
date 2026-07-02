@@ -448,11 +448,11 @@ ol { margin: 0; padding-left: 20px; }
 
 .constraint-op-hint-tooltip__text {
   display: block;
-  max-width: 16rem;
-  font-size: var(--font-size-micro);
+  max-width: 18rem;
+  font-size: var(--font-size-caption);
   font-weight: var(--font-weight-normal);
-  line-height: 1.35;
-  color: var(--el-text-color-secondary);
+  line-height: 1.45;
+  color: var(--el-text-color-regular);
 }
 
 

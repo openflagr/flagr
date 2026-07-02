@@ -2,7 +2,8 @@
   <el-tooltip
     placement="top"
     effect="light"
-    :show-after="280"
+    :show-after="90"
+    :enterable="true"
     :disabled="!hintLine"
     popper-class="constraint-op-hint-tooltip"
   >

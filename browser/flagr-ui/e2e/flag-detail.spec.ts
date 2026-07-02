@@ -388,8 +388,8 @@ test.describe('Flag detail page', () => {
     await opSelectWrap.hover()
     const hint = page.locator('[data-testid="new-constraint-operator-hint"]').first()
     await expect(hint).toBeVisible({ timeout: 5000 })
-    await expect(hint).toContainText(/list/i)
-    await expect(hint).toContainText(/substring/i)
+    await expect(hint).toContainText(/roles includes/i)
+    await expect(hint).toContainText(/Not text substring/i)
 
     const valueInput = page.locator('[data-testid="new-constraint-value-input"]').first()
     await expect(valueInput).toHaveAttribute('placeholder', '"premium"')
@@ -408,7 +408,7 @@ test.describe('Flag detail page', () => {
 
     await page.locator('[data-testid="new-constraint-op-select"]').first().hover()
     await expect(page.locator('[data-testid="new-constraint-operator-hint"]').first()).toContainText(
-      /regex|Text includes/i,
+      /email =~|Text includes/i,
     )
     await page.locator('input[data-testid="new-constraint-value-input"]').first().fill('"@gmail.com"')
     await page.locator('[data-testid="add-constraint-btn"]').first().click()
@@ -436,7 +436,7 @@ test.describe('Flag detail page', () => {
 
     await page.locator('[data-testid="new-constraint-op-select"]').first().hover()
     await expect(page.locator('[data-testid="new-constraint-operator-hint"]').first()).toContainText(
-      /plain text|=~/i,
+      /email contains/i,
     )
     await page.locator('input[data-testid="new-constraint-value-input"]').first().fill('@gmail.com')
     await page.locator('[data-testid="add-constraint-btn"]').first().click()
