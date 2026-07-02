@@ -29,6 +29,7 @@
         :grouped-operator-options="groupedOperatorOptions"
         :operator-options="operatorOptions"
         test-id="new-constraint-op-select"
+        hint-test-id="new-constraint-operator-hint"
         @update:model-value="patch('operator', $event)"
       />
       <el-input
@@ -50,19 +51,13 @@
       >
         Add constraint
       </el-button>
-      <ConstraintOperatorHint
-        class="constraint-hint-cell"
-        :operator="draft.operator"
-        :operator-options="operatorOptions"
-        test-id="new-constraint-operator-hint"
-      />
     </div>
   </div>
 </template>
 
 <script lang="ts">
 import type { PropType } from 'vue'
-import ConstraintOperatorHint from '@/components/ConstraintOperatorHint.vue'
+
 import ConstraintOperatorSelect from '@/components/ConstraintOperatorSelect.vue'
 import {
   propertyPlaceholderFor,
@@ -79,7 +74,6 @@ export interface NewConstraintDraft {
 export default {
   name: 'ConstraintAddRow',
   components: {
-    ConstraintOperatorHint,
     ConstraintOperatorSelect,
   },
   props: {

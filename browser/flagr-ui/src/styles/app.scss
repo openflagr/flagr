@@ -441,14 +441,20 @@ ol { margin: 0; padding-left: 20px; }
   justify-self: end;
 }
 
-.constraint-hint-cell {
-  grid-column: 2 / -1;
-  align-self: start;
+.constraint-op-select-wrap {
+  display: block;
+  width: 100%;
 }
 
-.constraint-hint-line {
-  margin: 0 0 var(--space-3xs);
+.constraint-op-hint-tooltip__text {
+  display: block;
+  max-width: 16rem;
+  font-size: var(--font-size-micro);
+  font-weight: var(--font-weight-normal);
+  line-height: 1.35;
+  color: var(--el-text-color-secondary);
 }
+
 
 .constraint-add-caption {
   grid-column: 1 / -1;
@@ -497,9 +503,6 @@ ol { margin: 0; padding-left: 20px; }
     justify-self: start;
   }
 
-  .constraint-hint-cell {
-    grid-column: 2;
-  }
 
   .constraint-add-btn {
     grid-column: 2;

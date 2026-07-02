@@ -5,7 +5,7 @@ import { findOperatorUi } from './constraintOperators'
 describe('constraintOperatorUi', () => {
   it('getOperatorHintLine explains list vs substring for CONTAINS', () => {
     const line = getOperatorHintLine('CONTAINS')
-    expect(line).toMatch(/List|array/i)
+    expect(line).toMatch(/lists|arrays/i)
     expect(line).toMatch(/substring/i)
   })
 
