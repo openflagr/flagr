@@ -384,8 +384,7 @@ test.describe('Flag detail page', () => {
     await opSelect.click()
     await page.locator('[data-testid="constraint-op-option-CONTAINS"]').first().click()
 
-    const opSelectWrap = page.locator('[data-testid="new-constraint-op-select"]').first()
-    await opSelectWrap.hover()
+    await page.locator('[data-testid="new-constraint-operator-hint-icon"]').first().hover()
     const hint = page.locator('[data-testid="new-constraint-operator-hint"]').first()
     await expect(hint).toBeVisible({ timeout: 5000 })
     await expect(hint).toContainText(/roles includes/i)
@@ -406,7 +405,7 @@ test.describe('Flag detail page', () => {
     await opSelect.click()
     await page.locator('[data-testid="constraint-op-option-EREG"]').first().click()
 
-    await page.locator('[data-testid="new-constraint-op-select"]').first().hover()
+    await page.locator('[data-testid="new-constraint-operator-hint-icon"]').first().hover()
     await expect(page.locator('[data-testid="new-constraint-operator-hint"]').first()).toContainText(
       /String property =~ value \(regex pattern\)/i,
     )
@@ -437,7 +436,7 @@ test.describe('Flag detail page', () => {
     await opSelect.click()
     await page.locator('[data-testid="constraint-op-option-UI_STRING_CONTAINS"]').first().click()
 
-    await page.locator('[data-testid="new-constraint-op-select"]').first().hover()
+    await page.locator('[data-testid="new-constraint-operator-hint-icon"]').first().hover()
     await expect(page.locator('[data-testid="new-constraint-operator-hint"]').first()).toContainText(
       /String property =~ value \(plain text/i,
     )
