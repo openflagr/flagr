@@ -36,6 +36,15 @@ describe('constraintOperatorUi', () => {
     expect(getOperatorHelpText('')).toBeNull()
   })
 
+  it('getOperatorHelpText states compare operators are numbers-only', () => {
+    for (const op of ['LT', 'LTE', 'GT', 'GTE'] as const) {
+      const line = getOperatorHelpText(op)
+      expect(line).toMatch(/Numbers only/i)
+      expect(line).toMatch(/No string/i)
+      expect(line).toMatch(/Equals/i)
+    }
+  })
+
   it('operatorApiBadge maps API tokens', () => {
     expect(operatorApiBadge('EQ')).toBe('==')
     expect(operatorApiBadge('IN')).toBe('IN')

@@ -23,7 +23,7 @@
       "value": "LT",
       "label": "Less than",
       "group": "Compare",
-      "hintLine": "Numeric compare: property < value — e.g. age < 18. String equality? Use Equals with \"quoted\" value.",
+      "hintLine": "Numbers only: property < value — e.g. age < 18 (unquoted). No string or alphabetical compare; string properties fail evaluation. Text → Equals.",
       "exprToken": "<",
       "propertyPlaceholder": "age",
       "valuePlaceholder": "18"
@@ -32,7 +32,7 @@
       "value": "LTE",
       "label": "Less or equal",
       "group": "Compare",
-      "hintLine": "Numeric compare: property <= value — e.g. score <= 100. Strings: use Equals with quoted literal.",
+      "hintLine": "Numbers only: property <= value — e.g. score <= 100 (unquoted). No string compare; string properties fail evaluation. Text → Equals.",
       "exprToken": "<=",
       "propertyPlaceholder": "score",
       "valuePlaceholder": "100"
@@ -41,7 +41,7 @@
       "value": "GT",
       "label": "Greater than",
       "group": "Compare",
-      "hintLine": "Numeric compare: property > value — e.g. version > 2. Strings: use Equals with quoted literal.",
+      "hintLine": "Numbers only: property > value — e.g. age > 18 (unquoted). No string or alphabetical compare; string properties fail evaluation. Text → Equals.",
       "exprToken": ">",
       "propertyPlaceholder": "version",
       "valuePlaceholder": "2"
@@ -50,7 +50,7 @@
       "value": "GTE",
       "label": "Greater or equal",
       "group": "Compare",
-      "hintLine": "Numeric compare: property >= value — e.g. level >= 5. Strings: use Equals with quoted literal.",
+      "hintLine": "Numbers only: property >= value — e.g. level >= 5 (unquoted). No string compare; string properties fail evaluation. Text → Equals.",
       "exprToken": ">=",
       "propertyPlaceholder": "level",
       "valuePlaceholder": "5"
