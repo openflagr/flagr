@@ -171,5 +171,9 @@ export FLAGR_DB_DBCONNECTIONSTR=root:@tcp(127.0.0.1:18100)/flagr?parseTime=true
 docker run -it -p 18000:18000 ghcr.io/openflagr/flagr
 ```
 
+### Documentation site (GitHub Pages)
+
+The site at [openflagr.github.io/flagr](https://openflagr.github.io/flagr/) is the static **Docsify** tree in `docs/`. Pushes to `main` run [`.github/workflows/pages.yml`](https://github.com/openflagr/flagr/blob/main/.github/workflows/pages.yml), which uploads `docs/` and deploys with `actions/deploy-pages`. Repository **Settings → Pages → Build and deployment** must use **GitHub Actions** (not “Deploy from a branch” / legacy Jekyll). After OpenAPI changes, run `make api_docs` or `make swagger` so `docs/api_docs/bundle.yaml` stays in sync.
+
 For GitOps workflows (flags-as-code, eval-only mode), see the
 [JSON Flag Source](flagr_json_flag_spec) guide.
