@@ -103,8 +103,8 @@ test.describe('Flag list cache & snapshot max-id', () => {
     await page.goto('/')
     await expect(page.locator('[data-testid="flags-table"]')).toContainText(desc, { timeout: 10000 })
 
-    // Navigate to flag detail
-    await page.locator('[data-testid="flags-table"] .el-table__row').first().click()
+    // Open the flag we created (do not use .first() — parallel workers add other rows)
+    await page.goto(`/#/flags/${flag.id}`)
     await expect(page.locator('input[data-testid="flag-key-input"]')).toBeVisible({ timeout: 10000 })
 
     // Navigate back — should use cached flags

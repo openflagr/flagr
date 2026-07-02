@@ -560,16 +560,18 @@ test.describe('Flag detail page', () => {
     const flagB = await createFlag({ description: descB })
     flag = flagA
 
-    await page.goto(`/#/flags/${flagA.id}`)
-    await expect(page.locator('input[data-testid="flag-key-input"]')).toBeVisible({ timeout: 10000 })
-    const keyA = await page.locator('input[data-testid="flag-key-input"]').inputValue()
+    try {
+      await page.goto(`/#/flags/${flagA.id}`)
+      await expect(page.locator('input[data-testid="flag-key-input"]')).toBeVisible({ timeout: 10000 })
+      const keyA = await page.locator('input[data-testid="flag-key-input"]').inputValue()
 
-    await page.goto(`/#/flags/${flagB.id}`)
-    await expect(page.locator('input[data-testid="flag-key-input"]')).toBeVisible({ timeout: 10000 })
-    await expect(page.locator('input[data-testid="flag-key-input"]')).not.toHaveValue(keyA, { timeout: 10000 })
-    await expect(page.locator('input[data-testid="flag-desc-input"]')).toHaveValue(descB, { timeout: 10000 })
-
-    await deleteFlag(flagB.id!)
+      await page.goto(`/#/flags/${flagB.id}`)
+      await expect(page.locator('input[data-testid="flag-key-input"]')).toBeVisible({ timeout: 10000 })
+      await expect(page.locator('input[data-testid="flag-key-input"]')).not.toHaveValue(keyA, { timeout: 10000 })
+      await expect(page.locator('input[data-testid="flag-desc-input"]')).toHaveValue(descB, { timeout: 10000 })
+    } finally {
+      await deleteFlag(flagB.id!).catch(() => {})
+    }
   })
 
 
