@@ -552,6 +552,10 @@ func TestIntegration_Export(t *testing.T) {
 }
 
 func TestIntegration_EvalCacheExportQuery(t *testing.T) {
+	if isLegacyIntegrationBaseline() {
+		t.Skip("eval cache query params not available on legacy checkr/flagr:1.1.12")
+	}
+
 	// Create test flags with specific states
 	var enabledFlag flagResponse
 	postJSON(t, "/api/v1/flags", map[string]any{
