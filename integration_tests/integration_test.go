@@ -578,15 +578,8 @@ func TestIntegration_EvalCacheExportQuery(t *testing.T) {
 	postJSON(t, fmt.Sprintf("/api/v1/flags/%d/tags", enabledFlag.ID), map[string]any{"value": tagVal2}, nil)
 	postJSON(t, fmt.Sprintf("/api/v1/flags/%d/tags", disabledFlag.ID), map[string]any{"value": tagVal2}, nil)
 
-	// Wait for eval cache to contain the new flags (poll instead of fixed sleep)
-	err := pollUntil("eval cache export", "/api/v1/export/eval_cache/json", 10*time.Second, func() bool {
-		var cache struct{ Flags []flagResponse }
-		getJSON(t, "/api/v1/export/eval_cache/json", &cache)
-		return len(cache.Flags) >= 2
-	})
-	if err != nil {
-		t.Fatalf("eval cache did not contain new flags: %v", err)
-	}
+	// Wait for eval cache refresh
+	time.Sleep(2 * time.Second)
 
 	t.Run("no params returns all flags", func(t *testing.T) {
 		var cache struct{ Flags []flagResponse }
