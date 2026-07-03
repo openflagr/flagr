@@ -92,6 +92,7 @@
         size="small"
         placeholder="New Variant Key"
         data-testid="new-variant-input"
+        @keyup.enter="createVariant"
       />
       <el-button
         type="primary"

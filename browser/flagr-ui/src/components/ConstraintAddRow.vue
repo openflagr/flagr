@@ -38,6 +38,7 @@
         :model-value="draft.value"
         data-testid="new-constraint-value-input"
         @update:model-value="patch('value', $event)"
+        @keyup.enter="canAdd && $emit('add')"
       />
       <el-button
         size="small"
