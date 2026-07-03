@@ -39,6 +39,28 @@ GitOps workflows where Git is the source of truth.
 For JSON-based workflows (GitOps, eval-only mode), see the
 [JSON Flag Source](flagr_json_flag_spec.md) guide.
 
+### Eval-only mode and export
+
+In eval-only mode (`json_file` or `json_http` drivers), Flagr only exposes
+the evaluation API — no CRUD operations. The eval cache export endpoint is
+available in this mode, allowing replicas to export their local cache:
+
+```sh
+# Export all flags from eval cache
+GET /api/v1/export/eval_cache/json
+
+# Export only enabled flags
+GET /api/v1/export/eval_cache/json?enabled=true
+
+# Export flags with specific tags
+GET /api/v1/export/eval_cache/json?tags=team-a,team-b
+```
+
+This is useful for read-only replicas that need to expose their cached flag
+state without hitting the master database. See the
+[EvalCache Query Filter](plans/2026-07-03-001-eval-cache-query-filter.md) plan
+for full API documentation.
+
 ## Authentication
 
 By default Flagr's API is open — convenient for a local dev instance behind a
