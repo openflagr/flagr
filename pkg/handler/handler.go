@@ -31,6 +31,7 @@ func Setup(api *operations.FlagrAPI) {
 	if config.Config.EvalOnlyMode {
 		setupHealth(api)
 		setupEvaluation(api)
+		setupExportEvalCache(api)
 		return
 	}
 
@@ -128,5 +129,9 @@ func setupHealth(api *operations.FlagrAPI) {
 
 func setupExport(api *operations.FlagrAPI) {
 	api.ExportGetExportSqliteHandler = export.GetExportSqliteHandlerFunc(exportSQLiteHandler)
+	setupExportEvalCache(api)
+}
+
+func setupExportEvalCache(api *operations.FlagrAPI) {
 	api.ExportGetExportEvalCacheJSONHandler = export.GetExportEvalCacheJSONHandlerFunc(exportEvalCacheJSONHandler)
 }

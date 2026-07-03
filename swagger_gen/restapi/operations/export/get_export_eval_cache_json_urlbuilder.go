@@ -6,11 +6,21 @@ import (
 	"errors"
 	"net/url"
 	golangswaggerpaths "path"
+
+	"github.com/go-openapi/swag/conv"
 )
 
 // GetExportEvalCacheJSONURL generates an URL for the get export eval cache JSON operation
 type GetExportEvalCacheJSONURL struct {
+	All     *bool
+	Enabled *bool
+	Ids     *string
+	Keys    *string
+	Tags    *string
+
 	_basePath string
+	// avoid unkeyed usage
+	_ struct{}
 }
 
 // WithBasePath sets the base path for this url builder, only required when it's different from the
@@ -39,6 +49,50 @@ func (o *GetExportEvalCacheJSONURL) Build() (*url.URL, error) {
 		_basePath = "/api/v1"
 	}
 	_result.Path = golangswaggerpaths.Join(_basePath, _path)
+
+	qs := make(url.Values)
+
+	var allQ string
+	if o.All != nil {
+		allQ = conv.FormatBool(*o.All)
+	}
+	if allQ != "" {
+		qs.Set("all", allQ)
+	}
+
+	var enabledQ string
+	if o.Enabled != nil {
+		enabledQ = conv.FormatBool(*o.Enabled)
+	}
+	if enabledQ != "" {
+		qs.Set("enabled", enabledQ)
+	}
+
+	var idsQ string
+	if o.Ids != nil {
+		idsQ = *o.Ids
+	}
+	if idsQ != "" {
+		qs.Set("ids", idsQ)
+	}
+
+	var keysQ string
+	if o.Keys != nil {
+		keysQ = *o.Keys
+	}
+	if keysQ != "" {
+		qs.Set("keys", keysQ)
+	}
+
+	var tagsQ string
+	if o.Tags != nil {
+		tagsQ = *o.Tags
+	}
+	if tagsQ != "" {
+		qs.Set("tags", tagsQ)
+	}
+
+	_result.RawQuery = qs.Encode()
 
 	return &_result, nil
 }

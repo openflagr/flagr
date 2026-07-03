@@ -7,6 +7,8 @@ import (
 	"math/rand"
 	"os"
 	"path"
+	"strconv"
+	"strings"
 
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/openflagr/flagr/pkg/entity"
@@ -100,8 +102,122 @@ var exportFlagEntityTypes = func(tmpDB *gorm.DB) error {
 	return nil
 }
 
-var exportEvalCacheJSONHandler = func(export.GetExportEvalCacheJSONParams) middleware.Responder {
-	return export.NewGetExportEvalCacheJSONOK().WithPayload(
-		GetEvalCache().export(),
-	)
+var exportEvalCacheJSONHandler = func(p export.GetExportEvalCacheJSONParams) middleware.Responder {
+	result := GetEvalCache().exportWithFilter(p)
+	return export.NewGetExportEvalCacheJSONOK().WithPayload(result)
+}
+
+// exportWithFilter returns the eval cache JSON filtered by the request params.
+func (ec *EvalCache) exportWithFilter(p export.GetExportEvalCacheJSONParams) EvalCacheJSON {
+	flags := ec.export().Flags
+	flags = filterFlags(flags, p)
+	return EvalCacheJSON{Flags: flags}
+}
+
+// filterFlags applies AND predicates across all provided filter groups.
+// Within ids/keys, values are OR'd.
+func filterFlags(flags []entity.Flag, p export.GetExportEvalCacheJSONParams) []entity.Flag {
+	if p.Ids == nil && p.Keys == nil && p.Enabled == nil && p.Tags == nil {
+		return flags
+	}
+
+	var idFilter map[uint]bool
+	if p.Ids != nil {
+		idFilter = parseCSVUint(*p.Ids)
+	}
+
+	var keyFilter map[string]bool
+	if p.Keys != nil {
+		keyFilter = parseCSVString(*p.Keys)
+	}
+
+	var tagFilter []string
+	if p.Tags != nil {
+		tagFilter = parseCSVStrings(*p.Tags)
+	}
+
+	useAll := p.All != nil && *p.All
+
+	result := make([]entity.Flag, 0, len(flags))
+	for _, f := range flags {
+		if !matchFlag(f, idFilter, keyFilter, p.Enabled, tagFilter, useAll) {
+			continue
+		}
+		result = append(result, f)
+	}
+	return result
+}
+
+func matchFlag(f entity.Flag, ids map[uint]bool, keys map[string]bool, enabled *bool, tags []string, useAll bool) bool {
+	if ids != nil && !ids[f.ID] {
+		return false
+	}
+	if keys != nil && !keys[f.Key] {
+		return false
+	}
+	if enabled != nil && f.Enabled != *enabled {
+		return false
+	}
+	if len(tags) > 0 && !matchTags(f.Tags, tags, useAll) {
+		return false
+	}
+	return true
+}
+
+func matchTags(flagTags []entity.Tag, filterTags []string, useAll bool) bool {
+	tagSet := make(map[string]bool, len(flagTags))
+	for _, t := range flagTags {
+		tagSet[t.Value] = true
+	}
+	if useAll {
+		for _, ft := range filterTags {
+			if !tagSet[ft] {
+				return false
+			}
+		}
+		return true
+	}
+	// ANY
+	for _, ft := range filterTags {
+		if tagSet[ft] {
+			return true
+		}
+	}
+	return false
+}
+
+func parseCSVUint(s string) map[uint]bool {
+	parts := strings.Split(s, ",")
+	m := make(map[uint]bool, len(parts))
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		if v, err := strconv.ParseUint(p, 10, 64); err == nil {
+			m[uint(v)] = true
+		}
+	}
+	return m
+}
+
+func parseCSVString(s string) map[string]bool {
+	parts := strings.Split(s, ",")
+	m := make(map[string]bool, len(parts))
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		if p != "" {
+			m[p] = true
+		}
+	}
+	return m
+}
+
+func parseCSVStrings(s string) []string {
+	parts := strings.Split(s, ",")
+	result := make([]string, 0, len(parts))
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		if p != "" {
+			result = append(result, p)
+		}
+	}
+	return result
 }

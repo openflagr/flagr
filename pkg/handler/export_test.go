@@ -158,3 +158,89 @@ func TestExportEvalCacheJSONHandler(t *testing.T) {
 		assert.IsType(t, res.(*export.GetExportEvalCacheJSONOK), res)
 	})
 }
+
+func exportStrPtr(s string) *string { return &s }
+func exportBoolPtr(b bool) *bool    { return &b }
+
+func TestFilterFlags(t *testing.T) {
+	fixtureFlag := entity.GenFixtureFlag()
+	db := entity.PopulateTestDB(fixtureFlag)
+	tmpDB1, dbErr1 := db.DB()
+	if dbErr1 != nil {
+		t.Errorf("Failed to get database")
+	}
+
+	defer tmpDB1.Close()
+	defer gostub.StubFunc(&getDB, db).Reset()
+
+	ec := GetEvalCache()
+	ec.lastSnapshotMaxID = 0
+	ec.reloadMapCache()
+
+	allFlags := ec.export().Flags
+	assert.Len(t, allFlags, 1)
+
+	t.Run("no params returns all flags", func(t *testing.T) {
+		result := filterFlags(allFlags, export.GetExportEvalCacheJSONParams{})
+		assert.Len(t, result, 1)
+	})
+
+	t.Run("filter by ids", func(t *testing.T) {
+		result := filterFlags(allFlags, export.GetExportEvalCacheJSONParams{Ids: exportStrPtr("100")})
+		assert.Len(t, result, 1)
+		assert.Equal(t, uint(100), result[0].ID)
+
+		result = filterFlags(allFlags, export.GetExportEvalCacheJSONParams{Ids: exportStrPtr("999")})
+		assert.Len(t, result, 0)
+
+		// invalid id is skipped silently
+		result = filterFlags(allFlags, export.GetExportEvalCacheJSONParams{Ids: exportStrPtr("abc,100")})
+		assert.Len(t, result, 1)
+	})
+
+	t.Run("filter by keys", func(t *testing.T) {
+		result := filterFlags(allFlags, export.GetExportEvalCacheJSONParams{Keys: exportStrPtr("flag_key_100")})
+		assert.Len(t, result, 1)
+		assert.Equal(t, "flag_key_100", result[0].Key)
+
+		result = filterFlags(allFlags, export.GetExportEvalCacheJSONParams{Keys: exportStrPtr("nonexistent")})
+		assert.Len(t, result, 0)
+	})
+
+	t.Run("filter by enabled", func(t *testing.T) {
+		result := filterFlags(allFlags, export.GetExportEvalCacheJSONParams{Enabled: exportBoolPtr(true)})
+		assert.Len(t, result, 1)
+
+		result = filterFlags(allFlags, export.GetExportEvalCacheJSONParams{Enabled: exportBoolPtr(false)})
+		assert.Len(t, result, 0)
+	})
+
+	t.Run("filter by tags ANY", func(t *testing.T) {
+		result := filterFlags(allFlags, export.GetExportEvalCacheJSONParams{Tags: exportStrPtr("tag1,tag999")})
+		assert.Len(t, result, 1) // matches tag1
+
+		result = filterFlags(allFlags, export.GetExportEvalCacheJSONParams{Tags: exportStrPtr("tag999")})
+		assert.Len(t, result, 0)
+	})
+
+	t.Run("filter by tags ALL", func(t *testing.T) {
+		result := filterFlags(allFlags, export.GetExportEvalCacheJSONParams{Tags: exportStrPtr("tag1,tag2"), All: exportBoolPtr(true)})
+		assert.Len(t, result, 1) // has both tag1 and tag2
+
+		result = filterFlags(allFlags, export.GetExportEvalCacheJSONParams{Tags: exportStrPtr("tag1,tag999"), All: exportBoolPtr(true)})
+		assert.Len(t, result, 0) // missing tag999
+	})
+
+	t.Run("combined ids AND enabled", func(t *testing.T) {
+		result := filterFlags(allFlags, export.GetExportEvalCacheJSONParams{Ids: exportStrPtr("100"), Enabled: exportBoolPtr(true)})
+		assert.Len(t, result, 1)
+
+		result = filterFlags(allFlags, export.GetExportEvalCacheJSONParams{Ids: exportStrPtr("100"), Enabled: exportBoolPtr(false)})
+		assert.Len(t, result, 0)
+	})
+
+	t.Run("no match returns empty", func(t *testing.T) {
+		result := filterFlags(allFlags, export.GetExportEvalCacheJSONParams{Ids: exportStrPtr("999"), Keys: exportStrPtr("nonexistent")})
+		assert.Len(t, result, 0)
+	})
+}

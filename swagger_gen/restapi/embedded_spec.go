@@ -200,7 +200,7 @@ func init() {
     },
     "/export/eval_cache/json": {
       "get": {
-        "description": "Export JSON format of the eval cache dump",
+        "description": "Export JSON format of the eval cache dump, with optional filtering",
         "produces": [
           "application/json"
         ],
@@ -208,6 +208,39 @@ func init() {
           "export"
         ],
         "operationId": "getExportEvalCacheJSON",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "CSV of flag IDs to include (e.g. 1,2,3)",
+            "name": "ids",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "CSV of flag keys to include (e.g. one,two)",
+            "name": "keys",
+            "in": "query"
+          },
+          {
+            "type": "boolean",
+            "description": "Filter by enabled status (omit to return all)",
+            "name": "enabled",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "CSV of tag values to filter by (e.g. foo,bar)",
+            "name": "tags",
+            "in": "query"
+          },
+          {
+            "type": "boolean",
+            "default": false,
+            "description": "Use ALL semantics for tags (default: ANY)",
+            "name": "all",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -2737,7 +2770,7 @@ func init() {
     },
     "/export/eval_cache/json": {
       "get": {
-        "description": "Export JSON format of the eval cache dump",
+        "description": "Export JSON format of the eval cache dump, with optional filtering",
         "produces": [
           "application/json"
         ],
@@ -2745,6 +2778,39 @@ func init() {
           "export"
         ],
         "operationId": "getExportEvalCacheJSON",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "CSV of flag IDs to include (e.g. 1,2,3)",
+            "name": "ids",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "CSV of flag keys to include (e.g. one,two)",
+            "name": "keys",
+            "in": "query"
+          },
+          {
+            "type": "boolean",
+            "description": "Filter by enabled status (omit to return all)",
+            "name": "enabled",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "CSV of tag values to filter by (e.g. foo,bar)",
+            "name": "tags",
+            "in": "query"
+          },
+          {
+            "type": "boolean",
+            "default": false,
+            "description": "Use ALL semantics for tags (default: ANY)",
+            "name": "all",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",

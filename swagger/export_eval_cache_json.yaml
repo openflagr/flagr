@@ -2,9 +2,31 @@ get:
   tags:
     - export
   operationId: getExportEvalCacheJSON
-  description: Export JSON format of the eval cache dump
+  description: Export JSON format of the eval cache dump, with optional filtering
   produces:
     - application/json
+  parameters:
+    - name: ids
+      in: query
+      type: string
+      description: "CSV of flag IDs to include (e.g. 1,2,3)"
+    - name: keys
+      in: query
+      type: string
+      description: "CSV of flag keys to include (e.g. one,two)"
+    - name: enabled
+      in: query
+      type: boolean
+      description: "Filter by enabled status (omit to return all)"
+    - name: tags
+      in: query
+      type: string
+      description: "CSV of tag values to filter by (e.g. foo,bar)"
+    - name: all
+      in: query
+      type: boolean
+      default: false
+      description: "Use ALL semantics for tags (default: ANY)"
   responses:
     200:
       description: OK

@@ -6,15 +6,25 @@ import (
 	"net/http"
 
 	"github.com/go-openapi/errors"
+	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag/conv"
 )
 
 // NewGetExportEvalCacheJSONParams creates a new GetExportEvalCacheJSONParams object
-//
-// There are no default values defined in the spec.
+// with the default values initialized.
 func NewGetExportEvalCacheJSONParams() GetExportEvalCacheJSONParams {
 
-	return GetExportEvalCacheJSONParams{}
+	var (
+		// initialize parameters with default values
+
+		allDefault = bool(false)
+	)
+
+	return GetExportEvalCacheJSONParams{
+		All: &allDefault,
+	}
 }
 
 // GetExportEvalCacheJSONParams contains all the bound params for the get export eval cache JSON operation
@@ -24,6 +34,32 @@ func NewGetExportEvalCacheJSONParams() GetExportEvalCacheJSONParams {
 type GetExportEvalCacheJSONParams struct {
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
+
+	/*Use ALL semantics for tags (default: ANY)
+	  In: query
+	  Default: false
+	*/
+	All *bool
+
+	/*Filter by enabled status (omit to return all)
+	  In: query
+	*/
+	Enabled *bool
+
+	/*CSV of flag IDs to include (e.g. 1,2,3)
+	  In: query
+	*/
+	Ids *string
+
+	/*CSV of flag keys to include (e.g. one,two)
+	  In: query
+	*/
+	Keys *string
+
+	/*CSV of tag values to filter by (e.g. foo,bar)
+	  In: query
+	*/
+	Tags *string
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -34,9 +70,135 @@ func (o *GetExportEvalCacheJSONParams) BindRequest(r *http.Request, route *middl
 	var res []error
 
 	o.HTTPRequest = r
+	qs := runtime.Values(r.URL.Query())
 
+	qAll, qhkAll, _ := qs.GetOK("all")
+	if err := o.bindAll(qAll, qhkAll, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
+	qEnabled, qhkEnabled, _ := qs.GetOK("enabled")
+	if err := o.bindEnabled(qEnabled, qhkEnabled, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
+	qIds, qhkIds, _ := qs.GetOK("ids")
+	if err := o.bindIds(qIds, qhkIds, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
+	qKeys, qhkKeys, _ := qs.GetOK("keys")
+	if err := o.bindKeys(qKeys, qhkKeys, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
+	qTags, qhkTags, _ := qs.GetOK("tags")
+	if err := o.bindTags(qTags, qhkTags, route.Formats); err != nil {
+		res = append(res, err)
+	}
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+// bindAll binds and validates parameter All from query.
+func (o *GetExportEvalCacheJSONParams) bindAll(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+
+	// Required: false
+	// AllowEmptyValue: false
+
+	if raw == "" { // empty values pass all other validations
+		// Default values have been previously initialized by NewGetExportEvalCacheJSONParams()
+		return nil
+	}
+
+	value, err := conv.ConvertBool(raw)
+	if err != nil {
+		return errors.InvalidType("all", "query", "bool", raw)
+	}
+	o.All = &value
+
+	return nil
+}
+
+// bindEnabled binds and validates parameter Enabled from query.
+func (o *GetExportEvalCacheJSONParams) bindEnabled(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+
+	// Required: false
+	// AllowEmptyValue: false
+
+	if raw == "" { // empty values pass all other validations
+		return nil
+	}
+
+	value, err := conv.ConvertBool(raw)
+	if err != nil {
+		return errors.InvalidType("enabled", "query", "bool", raw)
+	}
+	o.Enabled = &value
+
+	return nil
+}
+
+// bindIds binds and validates parameter Ids from query.
+func (o *GetExportEvalCacheJSONParams) bindIds(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+
+	// Required: false
+	// AllowEmptyValue: false
+
+	if raw == "" { // empty values pass all other validations
+		return nil
+	}
+	o.Ids = &raw
+
+	return nil
+}
+
+// bindKeys binds and validates parameter Keys from query.
+func (o *GetExportEvalCacheJSONParams) bindKeys(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+
+	// Required: false
+	// AllowEmptyValue: false
+
+	if raw == "" { // empty values pass all other validations
+		return nil
+	}
+	o.Keys = &raw
+
+	return nil
+}
+
+// bindTags binds and validates parameter Tags from query.
+func (o *GetExportEvalCacheJSONParams) bindTags(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+
+	// Required: false
+	// AllowEmptyValue: false
+
+	if raw == "" { // empty values pass all other validations
+		return nil
+	}
+	o.Tags = &raw
+
 	return nil
 }
