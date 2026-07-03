@@ -59,6 +59,18 @@ Run from **repo root**. Match what [`.github/workflows/ci.yml`](.github/workflow
 - Architecture: **`docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md`** (As-built)
 - Duplicate flag + transactional snapshots: **`docs/plans/2026-06-30-001-duplicate-flag-plan.md`** (As-built)
 
+## Swagger / OpenAPI workflow
+
+The API spec has a two-step generation pipeline:
+
+1. **Source of truth:** edit `swagger/index.yaml` (and the split files under `swagger/` that it references).
+2. **Bundle:** `make api_docs` merges `swagger/index.yaml` into `docs/api_docs/bundle.yaml` via `swagger-merger`.
+3. **Generate Go server models:** `make swagger` regenerates `swagger_gen/` from `docs/api_docs/bundle.yaml`.
+
+**Never hand-edit `docs/api_docs/bundle.yaml` or `swagger_gen/` directly.** If you change a model used by handlers, commit all three artifacts: `swagger/index.yaml`, `docs/api_docs/bundle.yaml`, and `swagger_gen/`.
+
+Single command: `make gen` (runs `api_docs` + `swagger`).
+
 ## Constraints
 
 - **Don't edit `swagger_gen/`** — `make swagger`

@@ -2000,11 +2000,6 @@ func init() {
           "type": "boolean",
           "x-omitempty": true
         },
-        "entityType": {
-          "description": "The entity type for this evaluation. Duplicated from evalContext for convenience in logging and data recording.",
-          "type": "string",
-          "x-omitempty": true
-        },
         "evalContext": {
           "$ref": "#/definitions/evalContext"
         },
@@ -4600,11 +4595,6 @@ func init() {
         "dataRecordsEnabled": {
           "description": "Whether data records (impression logging) are enabled for this flag.",
           "type": "boolean",
-          "x-omitempty": true
-        },
-        "entityType": {
-          "description": "The entity type for this evaluation. Duplicated from evalContext for convenience in logging and data recording.",
-          "type": "string",
           "x-omitempty": true
         },
         "evalContext": {

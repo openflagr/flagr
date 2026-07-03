@@ -22,9 +22,6 @@ type EvalResult struct {
 	// Whether data records (impression logging) are enabled for this flag.
 	DataRecordsEnabled bool `json:"dataRecordsEnabled,omitempty"`
 
-	// The entity type for this evaluation. Duplicated from evalContext for convenience in logging and data recording.
-	EntityType string `json:"entityType,omitempty"`
-
 	// eval context
 	EvalContext *EvalContext `json:"evalContext,omitempty"`
 

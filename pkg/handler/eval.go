@@ -174,7 +174,6 @@ func BlankResult(f *entity.Flag, evalContext models.EvalContext, msg string) *mo
 		Timestamp:            util.TimeNow(),
 		RecordSource:         models.EvalResultRecordSourceEvaluation,
 		DataRecordsEnabled:   dataRecordsEnabled,
-		EntityType:           evalContext.EntityType,
 	}
 }
 

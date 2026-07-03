@@ -555,6 +555,10 @@ definitions:
         type: string
       evalDebugLog:
         $ref: "#/definitions/evalDebugLog"
+      dataRecordsEnabled:
+        type: boolean
+        description: Whether data records (impression logging) are enabled for this flag.
+        x-omitempty: true
   evalDebugLog:
     type: object
     properties:

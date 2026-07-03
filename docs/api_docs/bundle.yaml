@@ -1620,12 +1620,6 @@ definitions:
         type: boolean
         description: Whether data records (impression logging) are enabled for this flag.
         x-omitempty: true
-      entityType:
-        type: string
-        description: >-
-          The entity type for this evaluation. Duplicated from evalContext for
-          convenience in logging and data recording.
-        x-omitempty: true
   evalDebugLog:
     type: object
     properties:

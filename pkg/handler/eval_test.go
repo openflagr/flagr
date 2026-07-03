@@ -310,12 +310,6 @@ func TestBlankResult_DataRecordsEnabled(t *testing.T) {
 		r := BlankResult(nil, models.EvalContext{EntityID: "e1"}, "")
 		assert.False(t, r.DataRecordsEnabled)
 	})
-
-	t.Run("entityType is propagated to top level", func(t *testing.T) {
-		f := entity.GenFixtureFlag()
-		r := BlankResult(&f, models.EvalContext{EntityID: "e1", EntityType: "user"}, "")
-		assert.Equal(t, "user", r.EntityType)
-	})
 }
 
 func TestLogEvalResult_AsyncRecordEvaluationSource(t *testing.T) {
