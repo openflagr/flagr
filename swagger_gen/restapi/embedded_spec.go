@@ -1995,6 +1995,11 @@ func init() {
     "evalResult": {
       "type": "object",
       "properties": {
+        "dataRecordsEnabled": {
+          "description": "Whether data records (impression logging) are enabled for this flag.",
+          "type": "boolean",
+          "x-omitempty": true
+        },
         "evalContext": {
           "$ref": "#/definitions/evalContext"
         },
@@ -4587,6 +4592,11 @@ func init() {
     "evalResult": {
       "type": "object",
       "properties": {
+        "dataRecordsEnabled": {
+          "description": "Whether data records (impression logging) are enabled for this flag.",
+          "type": "boolean",
+          "x-omitempty": true
+        },
         "evalContext": {
           "$ref": "#/definitions/evalContext"
         },

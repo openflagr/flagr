@@ -291,6 +291,27 @@ func TestBlankResult_RecordSource(t *testing.T) {
 	assert.Equal(t, models.EvalResultRecordSourceEvaluation, r.RecordSource)
 }
 
+func TestBlankResult_DataRecordsEnabled(t *testing.T) {
+	t.Run("flag with data records enabled", func(t *testing.T) {
+		f := entity.GenFixtureFlag()
+		f.DataRecordsEnabled = true
+		r := BlankResult(&f, models.EvalContext{EntityID: "e1"}, "")
+		assert.True(t, r.DataRecordsEnabled)
+	})
+
+	t.Run("flag with data records disabled", func(t *testing.T) {
+		f := entity.GenFixtureFlag()
+		f.DataRecordsEnabled = false
+		r := BlankResult(&f, models.EvalContext{EntityID: "e1"}, "")
+		assert.False(t, r.DataRecordsEnabled)
+	})
+
+	t.Run("nil flag defaults to false", func(t *testing.T) {
+		r := BlankResult(nil, models.EvalContext{EntityID: "e1"}, "")
+		assert.False(t, r.DataRecordsEnabled)
+	})
+}
+
 func TestLogEvalResult_AsyncRecordEvaluationSource(t *testing.T) {
 	defer gostub.Stub(&config.Config.RecorderEnabled, true).Reset()
 	defer gostub.Stub(&config.Config.RecorderType, []string{}).Reset()

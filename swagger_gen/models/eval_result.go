@@ -19,6 +19,9 @@ import (
 // swagger:model evalResult
 type EvalResult struct {
 
+	// Whether data records (impression logging) are enabled for this flag.
+	DataRecordsEnabled bool `json:"dataRecordsEnabled,omitempty"`
+
 	// eval context
 	EvalContext *EvalContext `json:"evalContext,omitempty"`
 
