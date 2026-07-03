@@ -250,10 +250,14 @@ func init() {
             "in": "query"
           },
           {
-            "type": "boolean",
-            "default": false,
-            "description": "Use ALL semantics for tags (default: ANY)",
-            "name": "all",
+            "enum": [
+              "ANY",
+              "ALL"
+            ],
+            "type": "string",
+            "default": "ANY",
+            "description": "Tag matching operator: ANY (default) returns flags with any of the tags, ALL returns flags with all tags",
+            "name": "tagsOperator",
             "in": "query"
           }
         ],
@@ -2836,10 +2840,14 @@ func init() {
             "in": "query"
           },
           {
-            "type": "boolean",
-            "default": false,
-            "description": "Use ALL semantics for tags (default: ANY)",
-            "name": "all",
+            "enum": [
+              "ANY",
+              "ALL"
+            ],
+            "type": "string",
+            "default": "ANY",
+            "description": "Tag matching operator: ANY (default) returns flags with any of the tags, ALL returns flags with all tags",
+            "name": "tagsOperator",
             "in": "query"
           }
         ],

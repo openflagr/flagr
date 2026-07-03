@@ -13,11 +13,11 @@ import (
 
 // GetExportEvalCacheJSONURL generates an URL for the get export eval cache JSON operation
 type GetExportEvalCacheJSONURL struct {
-	All     *bool
-	Enabled *bool
-	Ids     []int64
-	Keys    []string
-	Tags    []string
+	Enabled      *bool
+	Ids          []int64
+	Keys         []string
+	Tags         []string
+	TagsOperator *string
 
 	_basePath string
 	// avoid unkeyed usage
@@ -52,14 +52,6 @@ func (o *GetExportEvalCacheJSONURL) Build() (*url.URL, error) {
 	_result.Path = golangswaggerpaths.Join(_basePath, _path)
 
 	qs := make(url.Values)
-
-	var allQ string
-	if o.All != nil {
-		allQ = conv.FormatBool(*o.All)
-	}
-	if allQ != "" {
-		qs.Set("all", allQ)
-	}
 
 	var enabledQ string
 	if o.Enabled != nil {
@@ -118,6 +110,14 @@ func (o *GetExportEvalCacheJSONURL) Build() (*url.URL, error) {
 		if qsv != "" {
 			qs.Set("tags", qsv)
 		}
+	}
+
+	var tagsOperatorQ string
+	if o.TagsOperator != nil {
+		tagsOperatorQ = *o.TagsOperator
+	}
+	if tagsOperatorQ != "" {
+		qs.Set("tagsOperator", tagsOperatorQ)
 	}
 
 	_result.RawQuery = qs.Encode()

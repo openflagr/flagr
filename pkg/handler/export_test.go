@@ -159,7 +159,8 @@ func TestExportEvalCacheJSONHandler(t *testing.T) {
 	})
 }
 
-func boolPtr(b bool) *bool { return &b }
+func exportStrPtr(s string) *string { return &s }
+func exportBoolPtr(b bool) *bool    { return &b }
 
 func TestExportEvalCacheQuery(t *testing.T) {
 	// Use multiple flags to test filtering properly
@@ -200,7 +201,7 @@ func TestExportEvalCacheQuery(t *testing.T) {
 	})
 
 	t.Run("filter by enabled true", func(t *testing.T) {
-		result := ec.export(export.GetExportEvalCacheJSONParams{Enabled: boolPtr(true)})
+		result := ec.export(export.GetExportEvalCacheJSONParams{Enabled: exportBoolPtr(true)})
 		assert.Len(t, result.Flags, 3)
 		assert.True(t, containsID(result.Flags, 1))
 		assert.True(t, containsID(result.Flags, 2))
@@ -208,7 +209,7 @@ func TestExportEvalCacheQuery(t *testing.T) {
 	})
 
 	t.Run("filter by enabled false", func(t *testing.T) {
-		result := ec.export(export.GetExportEvalCacheJSONParams{Enabled: boolPtr(false)})
+		result := ec.export(export.GetExportEvalCacheJSONParams{Enabled: exportBoolPtr(false)})
 		assert.Len(t, result.Flags, 1)
 		assert.True(t, containsID(result.Flags, 3))
 	})
@@ -220,7 +221,8 @@ func TestExportEvalCacheQuery(t *testing.T) {
 	})
 
 	t.Run("filter by tags ALL", func(t *testing.T) {
-		result := ec.export(export.GetExportEvalCacheJSONParams{Tags: []string{"tag2", "tag3"}, All: boolPtr(true)})
+		tagsOpAll := "ALL"
+		result := ec.export(export.GetExportEvalCacheJSONParams{Tags: []string{"tag2", "tag3"}, TagsOperator: exportStrPtr(tagsOpAll)})
 		assert.Len(t, result.Flags, 2) // flags 2 and 3 have both tag2 and tag3
 		assert.True(t, containsID(result.Flags, 2))
 		assert.True(t, containsID(result.Flags, 3))
@@ -229,7 +231,7 @@ func TestExportEvalCacheQuery(t *testing.T) {
 	t.Run("ids override enabled and tags", func(t *testing.T) {
 		result := ec.export(export.GetExportEvalCacheJSONParams{
 			Ids:     []int64{1},
-			Enabled: boolPtr(false), // flag 1 is enabled=true, but ids take precedence
+			Enabled: exportBoolPtr(false), // flag 1 is enabled=true, but ids take precedence
 			Tags:    []string{"nonexistent"},
 		})
 		assert.Len(t, result.Flags, 1)
@@ -239,7 +241,7 @@ func TestExportEvalCacheQuery(t *testing.T) {
 	t.Run("keys override enabled and tags", func(t *testing.T) {
 		result := ec.export(export.GetExportEvalCacheJSONParams{
 			Keys:    []string{"first"},
-			Enabled: boolPtr(false), // flag first is enabled=true, but keys take precedence
+			Enabled: exportBoolPtr(false), // flag first is enabled=true, but keys take precedence
 			Tags:    []string{"nonexistent"},
 		})
 		assert.Len(t, result.Flags, 1)
@@ -248,7 +250,7 @@ func TestExportEvalCacheQuery(t *testing.T) {
 
 	t.Run("combined enabled AND tags", func(t *testing.T) {
 		result := ec.export(export.GetExportEvalCacheJSONParams{
-			Enabled: boolPtr(true),
+			Enabled: exportBoolPtr(true),
 			Tags:    []string{"tag2"},
 		})
 		assert.Len(t, result.Flags, 2) // flags 1 and 2 are enabled and have tag2

@@ -40,7 +40,7 @@ GET /api/v1/export/eval_cache/json
 | `keys` | `string[]` (CSV) | — | Flag keys to include. **Second precedence** — when provided, enabled/tags are ignored. |
 | `enabled` | `boolean` | — | Filter by enabled status (omit to return all). Combined with tags via AND. |
 | `tags` | `string[]` (CSV) | — | Tag values to filter by. Combined with enabled via AND. |
-| `all` | `boolean` | `false` | Use ALL semantics for tags (default: ANY). |
+| `tagsOperator` | `string` | `ANY` | Tag matching operator: `ANY` (default) returns flags with any of the tags, `ALL` returns flags with all tags. |
 
 ### Examples
 
@@ -61,7 +61,7 @@ GET /api/v1/export/eval_cache/json?keys=feature-a,feature-b
 GET /api/v1/export/eval_cache/json?tags=foo,bar
 
 # Get flags with BOTH "foo" AND "bar" tags (ALL semantics)
-GET /api/v1/export/eval_cache/json?tags=foo,bar&all=true
+GET /api/v1/export/eval_cache/json?tags=foo,bar&tagsOperator=ALL
 
 # Combined: enabled flags with specific tags
 GET /api/v1/export/eval_cache/json?enabled=true&tags=foo,bar
@@ -69,6 +69,10 @@ GET /api/v1/export/eval_cache/json?enabled=true&tags=foo,bar
 # IDs override everything (even if enabled=false or tags don't match)
 GET /api/v1/export/eval_cache/json?ids=1,2&enabled=false&tags=nonexistent
 # Returns flags 1 and 2 regardless of their enabled state or tags
+
+# Use tagsOperator=ALL to require all tags
+GET /api/v1/export/eval_cache/json?tags=foo,bar&tagsOperator=ALL
+# Returns only flags with BOTH foo AND bar tags
 ```
 
 ### Precedence Rules

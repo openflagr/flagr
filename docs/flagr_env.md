@@ -52,9 +52,18 @@ GET /api/v1/export/eval_cache/json
 # Export only enabled flags
 GET /api/v1/export/eval_cache/json?enabled=true
 
-# Export flags with specific tags
+# Export flags with specific tags (ANY - has either tag)
 GET /api/v1/export/eval_cache/json?tags=team-a,team-b
+
+# Export flags with specific tags (ALL - has both tags)
+GET /api/v1/export/eval_cache/json?tags=team-a,team-b&tagsOperator=ALL
 ```
+
+The `tagsOperator` parameter controls tag matching:
+- `ANY` (default): returns flags that have **any** of the specified tags
+- `ALL`: returns flags that have **all** of the specified tags
+
+This matches the `flagTagsOperator` parameter used in the evaluation batch API.
 
 This is useful for read-only replicas that need to expose their cached flag
 state without hitting the master database. See the

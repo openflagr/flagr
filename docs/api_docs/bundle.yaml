@@ -1092,11 +1092,16 @@ paths:
             type: string
             minLength: 1
           description: CSV of tag values to filter by (e.g. foo,bar)
-        - name: all
+        - name: tagsOperator
           in: query
-          type: boolean
-          default: false
-          description: 'Use ALL semantics for tags (default: ANY)'
+          type: string
+          enum:
+            - ANY
+            - ALL
+          default: ANY
+          description: >-
+            Tag matching operator: ANY (default) returns flags with any of the
+            tags, ALL returns flags with all tags
       responses:
         '200':
           description: OK

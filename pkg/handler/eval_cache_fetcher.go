@@ -42,7 +42,7 @@ func (ec *EvalCache) export(query export.GetExportEvalCacheJSONParams) EvalCache
 	// Build tag filter function
 	var hasTags func(*entity.Flag) bool
 	if len(query.Tags) > 0 {
-		useAll := query.All != nil && *query.All
+		useAll := query.TagsOperator != nil && *query.TagsOperator == "ALL"
 		if useAll {
 			// ALL: flag must have every tag in query.Tags
 			hasTags = func(f *entity.Flag) bool {

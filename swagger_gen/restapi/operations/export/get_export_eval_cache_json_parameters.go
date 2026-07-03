@@ -22,11 +22,11 @@ func NewGetExportEvalCacheJSONParams() GetExportEvalCacheJSONParams {
 	var (
 		// initialize parameters with default values
 
-		allDefault = bool(false)
+		tagsOperatorDefault = string("ANY")
 	)
 
 	return GetExportEvalCacheJSONParams{
-		All: &allDefault,
+		TagsOperator: &tagsOperatorDefault,
 	}
 }
 
@@ -37,12 +37,6 @@ func NewGetExportEvalCacheJSONParams() GetExportEvalCacheJSONParams {
 type GetExportEvalCacheJSONParams struct {
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
-
-	/*Use ALL semantics for tags (default: ANY)
-	  In: query
-	  Default: false
-	*/
-	All *bool
 
 	/*Filter by enabled status (omit to return all)
 	  In: query
@@ -66,6 +60,12 @@ type GetExportEvalCacheJSONParams struct {
 	  Collection Format: csv
 	*/
 	Tags []string
+
+	/*Tag matching operator: ANY (default) returns flags with any of the tags, ALL returns flags with all tags
+	  In: query
+	  Default: "ANY"
+	*/
+	TagsOperator *string
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -77,11 +77,6 @@ func (o *GetExportEvalCacheJSONParams) BindRequest(r *http.Request, route *middl
 
 	o.HTTPRequest = r
 	qs := runtime.Values(r.URL.Query())
-
-	qAll, qhkAll, _ := qs.GetOK("all")
-	if err := o.bindAll(qAll, qhkAll, route.Formats); err != nil {
-		res = append(res, err)
-	}
 
 	qEnabled, qhkEnabled, _ := qs.GetOK("enabled")
 	if err := o.bindEnabled(qEnabled, qhkEnabled, route.Formats); err != nil {
@@ -102,33 +97,14 @@ func (o *GetExportEvalCacheJSONParams) BindRequest(r *http.Request, route *middl
 	if err := o.bindTags(qTags, qhkTags, route.Formats); err != nil {
 		res = append(res, err)
 	}
+
+	qTagsOperator, qhkTagsOperator, _ := qs.GetOK("tagsOperator")
+	if err := o.bindTagsOperator(qTagsOperator, qhkTagsOperator, route.Formats); err != nil {
+		res = append(res, err)
+	}
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-// bindAll binds and validates parameter All from query.
-func (o *GetExportEvalCacheJSONParams) bindAll(rawData []string, hasKey bool, formats strfmt.Registry) error {
-	var raw string
-	if len(rawData) > 0 {
-		raw = rawData[len(rawData)-1]
-	}
-
-	// Required: false
-	// AllowEmptyValue: false
-
-	if raw == "" { // empty values pass all other validations
-		// Default values have been previously initialized by NewGetExportEvalCacheJSONParams()
-		return nil
-	}
-
-	value, err := conv.ConvertBool(raw)
-	if err != nil {
-		return errors.InvalidType("all", "query", "bool", raw)
-	}
-	o.All = &value
-
 	return nil
 }
 
@@ -248,6 +224,39 @@ func (o *GetExportEvalCacheJSONParams) bindTags(rawData []string, hasKey bool, f
 	}
 
 	o.Tags = tagsIR
+
+	return nil
+}
+
+// bindTagsOperator binds and validates parameter TagsOperator from query.
+func (o *GetExportEvalCacheJSONParams) bindTagsOperator(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+
+	// Required: false
+	// AllowEmptyValue: false
+
+	if raw == "" { // empty values pass all other validations
+		// Default values have been previously initialized by NewGetExportEvalCacheJSONParams()
+		return nil
+	}
+	o.TagsOperator = &raw
+
+	if err := o.validateTagsOperator(formats); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// validateTagsOperator carries out validations for parameter TagsOperator
+func (o *GetExportEvalCacheJSONParams) validateTagsOperator(formats strfmt.Registry) error {
+
+	if err := validate.EnumCase("tagsOperator", "query", *o.TagsOperator, []any{"ANY", "ALL"}, true); err != nil {
+		return err
+	}
 
 	return nil
 }
