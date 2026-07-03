@@ -3,18 +3,31 @@
 package export
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/go-openapi/errors"
+	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag/conv"
+	"github.com/go-openapi/swag/stringutils"
+	"github.com/go-openapi/validate"
 )
 
 // NewGetExportEvalCacheJSONParams creates a new GetExportEvalCacheJSONParams object
-//
-// There are no default values defined in the spec.
+// with the default values initialized.
 func NewGetExportEvalCacheJSONParams() GetExportEvalCacheJSONParams {
 
-	return GetExportEvalCacheJSONParams{}
+	var (
+		// initialize parameters with default values
+
+		tagsOperatorDefault = string("ANY")
+	)
+
+	return GetExportEvalCacheJSONParams{
+		TagsOperator: &tagsOperatorDefault,
+	}
 }
 
 // GetExportEvalCacheJSONParams contains all the bound params for the get export eval cache JSON operation
@@ -24,6 +37,35 @@ func NewGetExportEvalCacheJSONParams() GetExportEvalCacheJSONParams {
 type GetExportEvalCacheJSONParams struct {
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
+
+	/*Filter by enabled status (omit to return all)
+	  In: query
+	*/
+	Enabled *bool
+
+	/*CSV of flag IDs to include (e.g. 1,2,3). When provided, keys/enabled/tags are ignored.
+	  In: query
+	  Collection Format: csv
+	*/
+	Ids []int64
+
+	/*CSV of flag keys to include (e.g. one,two). When provided, enabled/tags are ignored.
+	  In: query
+	  Collection Format: csv
+	*/
+	Keys []string
+
+	/*CSV of tag values to filter by (e.g. foo,bar)
+	  In: query
+	  Collection Format: csv
+	*/
+	Tags []string
+
+	/*Tag matching operator: ANY (default) returns flags with any of the tags, ALL returns flags with all tags
+	  In: query
+	  Default: "ANY"
+	*/
+	TagsOperator *string
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -34,9 +76,187 @@ func (o *GetExportEvalCacheJSONParams) BindRequest(r *http.Request, route *middl
 	var res []error
 
 	o.HTTPRequest = r
+	qs := runtime.Values(r.URL.Query())
 
+	qEnabled, qhkEnabled, _ := qs.GetOK("enabled")
+	if err := o.bindEnabled(qEnabled, qhkEnabled, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
+	qIds, qhkIds, _ := qs.GetOK("ids")
+	if err := o.bindIds(qIds, qhkIds, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
+	qKeys, qhkKeys, _ := qs.GetOK("keys")
+	if err := o.bindKeys(qKeys, qhkKeys, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
+	qTags, qhkTags, _ := qs.GetOK("tags")
+	if err := o.bindTags(qTags, qhkTags, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
+	qTagsOperator, qhkTagsOperator, _ := qs.GetOK("tagsOperator")
+	if err := o.bindTagsOperator(qTagsOperator, qhkTagsOperator, route.Formats); err != nil {
+		res = append(res, err)
+	}
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+// bindEnabled binds and validates parameter Enabled from query.
+func (o *GetExportEvalCacheJSONParams) bindEnabled(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+
+	// Required: false
+	// AllowEmptyValue: false
+
+	if raw == "" { // empty values pass all other validations
+		return nil
+	}
+
+	value, err := conv.ConvertBool(raw)
+	if err != nil {
+		return errors.InvalidType("enabled", "query", "bool", raw)
+	}
+	o.Enabled = &value
+
+	return nil
+}
+
+// bindIds binds and validates array parameter Ids from query.
+//
+// Arrays are parsed according to CollectionFormat: "csv" (defaults to "csv" when empty).
+func (o *GetExportEvalCacheJSONParams) bindIds(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var qvIds string
+	if len(rawData) > 0 {
+		qvIds = rawData[len(rawData)-1]
+	}
+
+	// CollectionFormat: csv
+	idsIC := stringutils.SplitByFormat(qvIds, "csv")
+	if len(idsIC) == 0 {
+		return nil
+	}
+
+	var idsIR []int64
+	for i, idsIV := range idsIC {
+		// items.Format: "int64"
+		idsI, err := conv.ConvertInt64(idsIV)
+		if err != nil {
+			return errors.InvalidType(fmt.Sprintf("%s.%v", "ids", i), "query", "int64", idsI)
+		}
+
+		if err := validate.MinimumInt(fmt.Sprintf("%s.%v", "ids", i), "query", idsI, 1, false); err != nil {
+			return err
+		}
+
+		idsIR = append(idsIR, idsI)
+	}
+
+	o.Ids = idsIR
+
+	return nil
+}
+
+// bindKeys binds and validates array parameter Keys from query.
+//
+// Arrays are parsed according to CollectionFormat: "csv" (defaults to "csv" when empty).
+func (o *GetExportEvalCacheJSONParams) bindKeys(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var qvKeys string
+	if len(rawData) > 0 {
+		qvKeys = rawData[len(rawData)-1]
+	}
+
+	// CollectionFormat: csv
+	keysIC := stringutils.SplitByFormat(qvKeys, "csv")
+	if len(keysIC) == 0 {
+		return nil
+	}
+
+	var keysIR []string
+	for i, keysIV := range keysIC {
+		keysI := keysIV
+
+		if err := validate.MinLength(fmt.Sprintf("%s.%v", "keys", i), "query", keysI, 1); err != nil {
+			return err
+		}
+
+		keysIR = append(keysIR, keysI)
+	}
+
+	o.Keys = keysIR
+
+	return nil
+}
+
+// bindTags binds and validates array parameter Tags from query.
+//
+// Arrays are parsed according to CollectionFormat: "csv" (defaults to "csv" when empty).
+func (o *GetExportEvalCacheJSONParams) bindTags(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var qvTags string
+	if len(rawData) > 0 {
+		qvTags = rawData[len(rawData)-1]
+	}
+
+	// CollectionFormat: csv
+	tagsIC := stringutils.SplitByFormat(qvTags, "csv")
+	if len(tagsIC) == 0 {
+		return nil
+	}
+
+	var tagsIR []string
+	for i, tagsIV := range tagsIC {
+		tagsI := tagsIV
+
+		if err := validate.MinLength(fmt.Sprintf("%s.%v", "tags", i), "query", tagsI, 1); err != nil {
+			return err
+		}
+
+		tagsIR = append(tagsIR, tagsI)
+	}
+
+	o.Tags = tagsIR
+
+	return nil
+}
+
+// bindTagsOperator binds and validates parameter TagsOperator from query.
+func (o *GetExportEvalCacheJSONParams) bindTagsOperator(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+
+	// Required: false
+	// AllowEmptyValue: false
+
+	if raw == "" { // empty values pass all other validations
+		// Default values have been previously initialized by NewGetExportEvalCacheJSONParams()
+		return nil
+	}
+	o.TagsOperator = &raw
+
+	if err := o.validateTagsOperator(formats); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// validateTagsOperator carries out validations for parameter TagsOperator
+func (o *GetExportEvalCacheJSONParams) validateTagsOperator(formats strfmt.Registry) error {
+
+	if err := validate.EnumCase("tagsOperator", "query", *o.TagsOperator, []any{"ANY", "ALL"}, true); err != nil {
+		return err
+	}
+
 	return nil
 }

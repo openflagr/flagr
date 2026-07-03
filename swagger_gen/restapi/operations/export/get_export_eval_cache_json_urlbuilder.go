@@ -6,11 +6,22 @@ import (
 	"errors"
 	"net/url"
 	golangswaggerpaths "path"
+
+	"github.com/go-openapi/swag/conv"
+	"github.com/go-openapi/swag/stringutils"
 )
 
 // GetExportEvalCacheJSONURL generates an URL for the get export eval cache JSON operation
 type GetExportEvalCacheJSONURL struct {
+	Enabled      *bool
+	Ids          []int64
+	Keys         []string
+	Tags         []string
+	TagsOperator *string
+
 	_basePath string
+	// avoid unkeyed usage
+	_ struct{}
 }
 
 // WithBasePath sets the base path for this url builder, only required when it's different from the
@@ -39,6 +50,77 @@ func (o *GetExportEvalCacheJSONURL) Build() (*url.URL, error) {
 		_basePath = "/api/v1"
 	}
 	_result.Path = golangswaggerpaths.Join(_basePath, _path)
+
+	qs := make(url.Values)
+
+	var enabledQ string
+	if o.Enabled != nil {
+		enabledQ = conv.FormatBool(*o.Enabled)
+	}
+	if enabledQ != "" {
+		qs.Set("enabled", enabledQ)
+	}
+
+	var idsIR []string
+	for _, idsI := range o.Ids {
+		idsIS := conv.FormatInteger(idsI)
+		if idsIS != "" {
+			idsIR = append(idsIR, idsIS)
+		}
+	}
+
+	ids := stringutils.JoinByFormat(idsIR, "csv")
+
+	if len(ids) > 0 {
+		qsv := ids[0]
+		if qsv != "" {
+			qs.Set("ids", qsv)
+		}
+	}
+
+	var keysIR []string
+	for _, keysI := range o.Keys {
+		keysIS := keysI
+		if keysIS != "" {
+			keysIR = append(keysIR, keysIS)
+		}
+	}
+
+	keys := stringutils.JoinByFormat(keysIR, "csv")
+
+	if len(keys) > 0 {
+		qsv := keys[0]
+		if qsv != "" {
+			qs.Set("keys", qsv)
+		}
+	}
+
+	var tagsIR []string
+	for _, tagsI := range o.Tags {
+		tagsIS := tagsI
+		if tagsIS != "" {
+			tagsIR = append(tagsIR, tagsIS)
+		}
+	}
+
+	tags := stringutils.JoinByFormat(tagsIR, "csv")
+
+	if len(tags) > 0 {
+		qsv := tags[0]
+		if qsv != "" {
+			qs.Set("tags", qsv)
+		}
+	}
+
+	var tagsOperatorQ string
+	if o.TagsOperator != nil {
+		tagsOperatorQ = *o.TagsOperator
+	}
+	if tagsOperatorQ != "" {
+		qs.Set("tagsOperator", tagsOperatorQ)
+	}
+
+	_result.RawQuery = qs.Encode()
 
 	return &_result, nil
 }

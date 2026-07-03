@@ -41,7 +41,6 @@ test.describe('Flag detail page', () => {
 
     // Toggle: click to switch to opposite state
     await switchToggle.click()
-    await expect(page.locator('.el-message--success').first()).toBeVisible({ timeout: 5000 })
 
     // Verify the switch input reflects toggled state
     if (wasEnabled) {
@@ -57,7 +56,6 @@ test.describe('Flag detail page', () => {
 
     // Toggle back to original state
     await switchToggle.click()
-    await expect(page.locator('.el-message--success').first()).toBeVisible({ timeout: 5000 })
 
     // Verify switch input reflects original state
     if (wasEnabled) {

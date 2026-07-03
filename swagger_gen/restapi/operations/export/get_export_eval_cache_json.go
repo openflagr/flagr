@@ -29,7 +29,7 @@ func NewGetExportEvalCacheJSON(ctx *middleware.Context, handler GetExportEvalCac
 /*
 	GetExportEvalCacheJSON swagger:route GET /export/eval_cache/json export getExportEvalCacheJson
 
-Export JSON format of the eval cache dump
+Export JSON format of the eval cache dump, with optional filtering
 */
 type GetExportEvalCacheJSON struct {
 	Context *middleware.Context

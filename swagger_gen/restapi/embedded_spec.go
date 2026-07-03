@@ -200,7 +200,7 @@ func init() {
     },
     "/export/eval_cache/json": {
       "get": {
-        "description": "Export JSON format of the eval cache dump",
+        "description": "Export JSON format of the eval cache dump, with optional filtering",
         "produces": [
           "application/json"
         ],
@@ -208,6 +208,59 @@ func init() {
           "export"
         ],
         "operationId": "getExportEvalCacheJSON",
+        "parameters": [
+          {
+            "type": "array",
+            "items": {
+              "minimum": 1,
+              "type": "integer",
+              "format": "int64"
+            },
+            "collectionFormat": "csv",
+            "description": "CSV of flag IDs to include (e.g. 1,2,3). When provided, keys/enabled/tags are ignored.",
+            "name": "ids",
+            "in": "query"
+          },
+          {
+            "type": "array",
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "collectionFormat": "csv",
+            "description": "CSV of flag keys to include (e.g. one,two). When provided, enabled/tags are ignored.",
+            "name": "keys",
+            "in": "query"
+          },
+          {
+            "type": "boolean",
+            "description": "Filter by enabled status (omit to return all)",
+            "name": "enabled",
+            "in": "query"
+          },
+          {
+            "type": "array",
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "collectionFormat": "csv",
+            "description": "CSV of tag values to filter by (e.g. foo,bar)",
+            "name": "tags",
+            "in": "query"
+          },
+          {
+            "enum": [
+              "ANY",
+              "ALL"
+            ],
+            "type": "string",
+            "default": "ANY",
+            "description": "Tag matching operator: ANY (default) returns flags with any of the tags, ALL returns flags with all tags",
+            "name": "tagsOperator",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -2737,7 +2790,7 @@ func init() {
     },
     "/export/eval_cache/json": {
       "get": {
-        "description": "Export JSON format of the eval cache dump",
+        "description": "Export JSON format of the eval cache dump, with optional filtering",
         "produces": [
           "application/json"
         ],
@@ -2745,6 +2798,59 @@ func init() {
           "export"
         ],
         "operationId": "getExportEvalCacheJSON",
+        "parameters": [
+          {
+            "type": "array",
+            "items": {
+              "minimum": 1,
+              "type": "integer",
+              "format": "int64"
+            },
+            "collectionFormat": "csv",
+            "description": "CSV of flag IDs to include (e.g. 1,2,3). When provided, keys/enabled/tags are ignored.",
+            "name": "ids",
+            "in": "query"
+          },
+          {
+            "type": "array",
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "collectionFormat": "csv",
+            "description": "CSV of flag keys to include (e.g. one,two). When provided, enabled/tags are ignored.",
+            "name": "keys",
+            "in": "query"
+          },
+          {
+            "type": "boolean",
+            "description": "Filter by enabled status (omit to return all)",
+            "name": "enabled",
+            "in": "query"
+          },
+          {
+            "type": "array",
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "collectionFormat": "csv",
+            "description": "CSV of tag values to filter by (e.g. foo,bar)",
+            "name": "tags",
+            "in": "query"
+          },
+          {
+            "enum": [
+              "ANY",
+              "ALL"
+            ],
+            "type": "string",
+            "default": "ANY",
+            "description": "Tag matching operator: ANY (default) returns flags with any of the tags, ALL returns flags with all tags",
+            "name": "tagsOperator",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",

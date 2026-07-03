@@ -551,6 +551,127 @@ func TestIntegration_Export(t *testing.T) {
 	}
 }
 
+func TestIntegration_EvalCacheExportQuery(t *testing.T) {
+	if isLegacyIntegrationBaseline() {
+		t.Skip("eval cache query params not available on legacy checkr/flagr:1.1.12")
+	}
+
+	// Create test flags with specific states
+	var enabledFlag flagResponse
+	postJSON(t, "/api/v1/flags", map[string]any{
+		"key":         fmt.Sprintf("export_query_enabled_%d", time.Now().UnixNano()),
+		"description": "enabled flag for export query",
+		"enabled":     true,
+	}, &enabledFlag)
+
+	var disabledFlag flagResponse
+	postJSON(t, "/api/v1/flags", map[string]any{
+		"key":         fmt.Sprintf("export_query_disabled_%d", time.Now().UnixNano()),
+		"description": "disabled flag for export query",
+		"enabled":     false,
+	}, &disabledFlag)
+
+	// Add tags
+	tagVal1 := fmt.Sprintf("export_tag_a_%d", time.Now().UnixNano())
+	postJSON(t, fmt.Sprintf("/api/v1/flags/%d/tags", enabledFlag.ID), map[string]any{"value": tagVal1}, nil)
+	tagVal2 := fmt.Sprintf("export_tag_b_%d", time.Now().UnixNano())
+	postJSON(t, fmt.Sprintf("/api/v1/flags/%d/tags", enabledFlag.ID), map[string]any{"value": tagVal2}, nil)
+	postJSON(t, fmt.Sprintf("/api/v1/flags/%d/tags", disabledFlag.ID), map[string]any{"value": tagVal2}, nil)
+
+	// Wait for eval cache refresh
+	time.Sleep(2 * time.Second)
+
+	t.Run("no params returns all flags", func(t *testing.T) {
+		var cache struct{ Flags []flagResponse }
+		getJSON(t, "/api/v1/export/eval_cache/json", &cache)
+		if len(cache.Flags) < 2 {
+			t.Fatalf("expected at least 2 flags, got %d", len(cache.Flags))
+		}
+	})
+
+	t.Run("filter by ids", func(t *testing.T) {
+		var cache struct{ Flags []flagResponse }
+		getJSON(t, fmt.Sprintf("/api/v1/export/eval_cache/json?ids=%d", enabledFlag.ID), &cache)
+		if len(cache.Flags) != 1 {
+			t.Fatalf("expected 1 flag, got %d", len(cache.Flags))
+		}
+		if cache.Flags[0].ID != enabledFlag.ID {
+			t.Errorf("expected flag ID %d, got %d", enabledFlag.ID, cache.Flags[0].ID)
+		}
+	})
+
+	t.Run("filter by multiple ids", func(t *testing.T) {
+		var cache struct{ Flags []flagResponse }
+		getJSON(t, fmt.Sprintf("/api/v1/export/eval_cache/json?ids=%d,%d", enabledFlag.ID, disabledFlag.ID), &cache)
+		if len(cache.Flags) != 2 {
+			t.Fatalf("expected 2 flags, got %d", len(cache.Flags))
+		}
+	})
+
+	t.Run("filter by enabled true", func(t *testing.T) {
+		var cache struct{ Flags []flagResponse }
+		getJSON(t, "/api/v1/export/eval_cache/json?enabled=true", &cache)
+		for _, f := range cache.Flags {
+			if !f.Enabled {
+				t.Errorf("expected flag %d to be enabled", f.ID)
+			}
+		}
+	})
+
+	t.Run("filter by enabled false", func(t *testing.T) {
+		var cache struct{ Flags []flagResponse }
+		getJSON(t, "/api/v1/export/eval_cache/json?enabled=false", &cache)
+		found := false
+		for _, f := range cache.Flags {
+			if f.ID == disabledFlag.ID {
+				found = true
+			}
+			if f.Enabled {
+				t.Errorf("expected flag %d to be disabled", f.ID)
+			}
+		}
+		if !found {
+			t.Error("expected to find the disabled flag")
+		}
+	})
+
+	t.Run("filter by tags ANY", func(t *testing.T) {
+		var cache struct{ Flags []flagResponse }
+		getJSON(t, fmt.Sprintf("/api/v1/export/eval_cache/json?tags=%s", tagVal1), &cache)
+		if len(cache.Flags) != 1 {
+			t.Fatalf("expected 1 flag with tag1, got %d", len(cache.Flags))
+		}
+	})
+
+	t.Run("filter by tags ALL", func(t *testing.T) {
+		var cache struct{ Flags []flagResponse }
+		getJSON(t, fmt.Sprintf("/api/v1/export/eval_cache/json?tags=%s,%s&tagsOperator=ALL", tagVal1, tagVal2), &cache)
+		if len(cache.Flags) != 1 {
+			t.Fatalf("expected 1 flag with both tags, got %d", len(cache.Flags))
+		}
+		if cache.Flags[0].ID != enabledFlag.ID {
+			t.Errorf("expected flag ID %d, got %d", enabledFlag.ID, cache.Flags[0].ID)
+		}
+	})
+
+	t.Run("ids override other filters", func(t *testing.T) {
+		var cache struct{ Flags []flagResponse }
+		// disabled flag ID with enabled=true should still return it
+		getJSON(t, fmt.Sprintf("/api/v1/export/eval_cache/json?ids=%d&enabled=true", disabledFlag.ID), &cache)
+		if len(cache.Flags) != 1 {
+			t.Fatalf("expected 1 flag (ids override), got %d", len(cache.Flags))
+		}
+	})
+
+	t.Run("no match returns empty", func(t *testing.T) {
+		var cache struct{ Flags []flagResponse }
+		getJSON(t, "/api/v1/export/eval_cache/json?ids=999999", &cache)
+		if len(cache.Flags) != 0 {
+			t.Fatalf("expected 0 flags, got %d", len(cache.Flags))
+		}
+	})
+}
+
 func TestIntegration_TagCRUD(t *testing.T) {
 	if len(seedFlagIDs) == 0 {
 		t.Fatal("no seeded flags available")
