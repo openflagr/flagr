@@ -79,3 +79,4 @@ Single command: `make gen` (runs `api_docs` + `swagger`).
 - See [deepwiki.com/openflagr/flagr](https://deepwiki.com/openflagr/flagr) and `docs/`
 - **File size & layout:** Prefer **medium-sized** files with a clear, logical split — not monoliths, not one-off micro-files for a single helper. Group by responsibility (e.g. handler `error.go` for API/handler errors and DB error classification; `validate.go` for request validation; `crud*.go` for CRUD surfaces). New code should extend an existing cohesive file when it fits; add a new file only when it names a real subsystem or API slice.
 - When creating a PR, follow `PULL_REQUEST_TEMPLATE.md`
+- **Never push directly to `main`** — always create a PR
