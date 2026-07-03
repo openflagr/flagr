@@ -1503,3 +1503,94 @@ func TestAllMutationHandlersCallSaveFlagSnapshot(t *testing.T) {
 		}
 	}
 }
+
+func TestOwnershipValidation(t *testing.T) {
+	db := entity.NewTestDB()
+	c := &crud{}
+
+	tmpDB, dbErr := db.DB()
+	if dbErr != nil {
+		t.Fatalf("Failed to get database")
+	}
+	defer tmpDB.Close()
+	defer gostub.StubFunc(&getDB, db).Reset()
+
+	// Create two flags
+	c.CreateFlag(flag.CreateFlagParams{
+		Body: &models.CreateFlagRequest{Description: new("flag1")},
+	})
+	c.CreateFlag(flag.CreateFlagParams{
+		Body: &models.CreateFlagRequest{Description: new("flag2")},
+	})
+
+	// Create segment on flag1
+	res := c.CreateSegment(segment.CreateSegmentParams{
+		FlagID: int64(1),
+		Body:   &models.CreateSegmentRequest{Description: new("seg1"), RolloutPercent: new(int64(100))},
+	})
+	seg1 := res.(*segment.CreateSegmentOK).Payload
+
+	// Create segment on flag2
+	res = c.CreateSegment(segment.CreateSegmentParams{
+		FlagID: int64(2),
+		Body:   &models.CreateSegmentRequest{Description: new("seg2"), RolloutPercent: new(int64(100))},
+	})
+	seg2 := res.(*segment.CreateSegmentOK).Payload
+
+	// Try to update flag2's segment via flag1's endpoint — should fail
+	res = c.PutSegment(segment.PutSegmentParams{
+		FlagID:    int64(1),
+		SegmentID: seg2.ID,
+		Body:      &models.PutSegmentRequest{Description: new("hacked"), RolloutPercent: new(int64(0))},
+	})
+	_, isDefault := res.(*segment.PutSegmentDefault)
+	assert.True(t, isDefault, "PutSegment with wrong flag ownership should return error")
+
+	// Try to delete flag2's segment via flag1's endpoint — should fail
+	res = c.DeleteSegment(segment.DeleteSegmentParams{
+		FlagID:    int64(1),
+		SegmentID: seg2.ID,
+	})
+	_, isDefault = res.(*segment.DeleteSegmentDefault)
+	assert.True(t, isDefault, "DeleteSegment with wrong flag ownership should return error")
+
+	// Create variant on flag1
+	res = c.CreateVariant(variant.CreateVariantParams{
+		FlagID: int64(1),
+		Body:   &models.CreateVariantRequest{Key: new("v1")},
+	})
+	v1 := res.(*variant.CreateVariantOK).Payload
+
+	// Create variant on flag2
+	res = c.CreateVariant(variant.CreateVariantParams{
+		FlagID: int64(2),
+		Body:   &models.CreateVariantRequest{Key: new("v2")},
+	})
+	v2 := res.(*variant.CreateVariantOK).Payload
+
+	// Put distributions on flag1's segment with flag2's variant — should fail
+	res = c.PutDistributions(distribution.PutDistributionsParams{
+		FlagID:    int64(1),
+		SegmentID: seg1.ID,
+		Body: &models.PutDistributionsRequest{
+			Distributions: []*models.Distribution{
+				{VariantID: &v2.ID, Percent: new(int64(100))},
+			},
+		},
+	})
+	_, isDefault = res.(*distribution.PutDistributionsDefault)
+	assert.True(t, isDefault, "PutDistributions with wrong variant ownership should return error")
+
+	// Put distributions on flag2's segment via flag1's endpoint — should fail
+	res = c.PutDistributions(distribution.PutDistributionsParams{
+		FlagID:    int64(1),
+		SegmentID: seg2.ID,
+		Body: &models.PutDistributionsRequest{
+			Distributions: []*models.Distribution{
+				{VariantID: &v1.ID, Percent: new(int64(100))},
+			},
+		},
+	})
+	_, isDefault = res.(*distribution.PutDistributionsDefault)
+	assert.True(t, isDefault, "PutDistributions with wrong segment ownership should return error")
+}
