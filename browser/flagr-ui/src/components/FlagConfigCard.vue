@@ -124,7 +124,8 @@
               :key="tag.id"
               closable
               size="small"
-              type="success"
+              effect="plain"
+              :style="{ backgroundColor: tagColor(tag.value), borderColor: 'transparent' }"
               @close="$emit('delete-tag', tag)"
             >
               {{ tag.value }}
@@ -196,6 +197,7 @@ import {
 } from '@/helpers/saveDirtyUi'
 import { defineAsyncComponent, type PropType } from 'vue'
 import { InfoFilled, Edit, View } from '@element-plus/icons-vue'
+import { tagColor } from '@/helpers/tagColor'
 import type { FlagView, Tag } from '@/api/types'
 
 interface EntityTypeOption {
@@ -237,6 +239,7 @@ export default {
     }
   },
   methods: {
+    tagColor,
     saveButtonLabel(dirty: boolean) {
       return fmtSaveLabel(dirty)
     },

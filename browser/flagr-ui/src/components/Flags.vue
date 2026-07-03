@@ -78,9 +78,9 @@
                 <el-tag
                   v-for="tag in scope.row.tags"
                   :key="tag.id"
-                  type="success"
                   size="small"
-                  effect="light"
+                  effect="plain"
+                  :style="{ backgroundColor: tagColor(tag.value), borderColor: 'transparent' }"
                 >
                   {{ tag.value }}
                 </el-tag>
@@ -185,9 +185,9 @@
                     <el-tag
                       v-for="tag in scope.row.tags"
                       :key="tag.id"
-                      type="success"
                       size="small"
-                      effect="light"
+                      effect="plain"
+                      :style="{ backgroundColor: tagColor(tag.value), borderColor: 'transparent' }"
                     >
                       {{ tag.value }}
                     </el-tag>
@@ -299,6 +299,7 @@ import { Plus, Search } from '@element-plus/icons-vue'
 import Spinner from '@/components/Spinner.vue'
 import { getFlagsCache } from '@/pages/flagsListPage'
 import helpers from '@/helpers/helpers'
+import { tagColor } from '@/helpers/tagColor'
 import { castFlagsList } from '@/helpers/vuePageCast'
 import * as flagsListPage from '@/pages/flagsListPage'
 import {
@@ -384,6 +385,7 @@ export default {
     goToRow(row: Flag) {
       flagsListPage.goToFlag(this.page, row)
     },
+    tagColor,
     datetimeFormatter,
     filterStatus,
   },

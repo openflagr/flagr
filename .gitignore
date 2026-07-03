@@ -37,3 +37,4 @@ coverage.txt
 progress.md
 integration-bench.txt
 
+node_modules/
