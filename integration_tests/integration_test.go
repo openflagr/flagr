@@ -641,7 +641,7 @@ func TestIntegration_EvalCacheExportQuery(t *testing.T) {
 
 	t.Run("filter by tags ALL", func(t *testing.T) {
 		var cache struct{ Flags []flagResponse }
-		getJSON(t, fmt.Sprintf("/api/v1/export/eval_cache/json?tags=%s,%s&all=true", tagVal1, tagVal2), &cache)
+		getJSON(t, fmt.Sprintf("/api/v1/export/eval_cache/json?tags=%s,%s&tagsOperator=ALL", tagVal1, tagVal2), &cache)
 		if len(cache.Flags) != 1 {
 			t.Fatalf("expected 1 flag with both tags, got %d", len(cache.Flags))
 		}
