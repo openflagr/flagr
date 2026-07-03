@@ -23,6 +23,39 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+// validateSegmentOwnership checks that the segment belongs to the flag.
+func validateSegmentOwnership(tx *gorm.DB, flagID, segmentID uint) error {
+	var count int64
+	tx.Model(&entity.Segment{}).Where("id = ? AND flag_id = ?", segmentID, flagID).Count(&count)
+	if count == 0 {
+		return fmt.Errorf("segment %d does not belong to flag %d", segmentID, flagID)
+	}
+	return nil
+}
+
+// validateVariantOwnership checks that the variant belongs to the flag.
+func validateVariantOwnership(tx *gorm.DB, flagID, variantID uint) error {
+	var count int64
+	tx.Model(&entity.Variant{}).Where("id = ? AND flag_id = ?", variantID, flagID).Count(&count)
+	if count == 0 {
+		return fmt.Errorf("variant %d does not belong to flag %d", variantID, flagID)
+	}
+	return nil
+}
+
+// validateConstraintOwnership checks that the constraint's segment belongs to the flag.
+func validateConstraintOwnership(tx *gorm.DB, flagID, constraintID uint) error {
+	var count int64
+	tx.Table("constraints").
+		Joins("JOIN segments ON segments.id = constraints.segment_id").
+		Where("constraints.id = ? AND segments.flag_id = ?", constraintID, flagID).
+		Count(&count)
+	if count == 0 {
+		return fmt.Errorf("constraint %d does not belong to flag %d", constraintID, flagID)
+	}
+	return nil
+}
+
 // CRUD is the CRUD interface
 type CRUD interface {
 	// Flags
@@ -525,6 +558,9 @@ func (c *crud) PutSegment(params segment.PutSegmentParams) middleware.Responder 
 	s := &entity.Segment{}
 
 	err := commitFlagMutation(flagID, subject, notification.OperationUpdate, notification.ComponentSegment, func(tx *gorm.DB) (uint, mutationNotify, error) {
+		if err := validateSegmentOwnership(tx, flagID, uint(params.SegmentID)); err != nil {
+			return 0, mutationNotify{}, err
+		}
 		if err := entity.PreloadConstraintsDistribution(tx).First(s, params.SegmentID).Error; err != nil {
 			return 0, mutationNotify{}, err
 		}
@@ -576,6 +612,9 @@ func (c *crud) DeleteSegment(params segment.DeleteSegmentParams) middleware.Resp
 	subject := getSubjectFromRequest(params.HTTPRequest)
 
 	err := commitFlagMutation(flagID, subject, notification.OperationDelete, notification.ComponentSegment, func(tx *gorm.DB) (uint, mutationNotify, error) {
+		if err := validateSegmentOwnership(tx, flagID, uint(params.SegmentID)); err != nil {
+			return 0, mutationNotify{}, err
+		}
 		if err := tx.Delete(&entity.Segment{}, segmentID).Error; err != nil {
 			return 0, mutationNotify{}, err
 		}
@@ -647,6 +686,9 @@ func (c *crud) PutConstraint(params constraint.PutConstraintParams) middleware.R
 	}
 
 	err := commitFlagMutation(flagID, subject, notification.OperationUpdate, notification.ComponentConstraint, func(tx *gorm.DB) (uint, mutationNotify, error) {
+		if err := validateConstraintOwnership(tx, flagID, uint(params.ConstraintID)); err != nil {
+			return 0, mutationNotify{}, err
+		}
 		if err := tx.Save(cons).Error; err != nil {
 			return 0, mutationNotify{}, err
 		}
@@ -667,6 +709,9 @@ func (c *crud) DeleteConstraint(params constraint.DeleteConstraintParams) middle
 	subject := getSubjectFromRequest(params.HTTPRequest)
 
 	err := commitFlagMutation(flagID, subject, notification.OperationDelete, notification.ComponentConstraint, func(tx *gorm.DB) (uint, mutationNotify, error) {
+		if err := validateConstraintOwnership(tx, flagID, uint(params.ConstraintID)); err != nil {
+			return 0, mutationNotify{}, err
+		}
 		if err := tx.Delete(&entity.Constraint{}, params.ConstraintID).Error; err != nil {
 			return 0, mutationNotify{}, err
 		}
@@ -690,6 +735,14 @@ func (c *crud) PutDistributions(params distribution.PutDistributionsParams) midd
 	ds := r2eMapDistributions(params.Body.Distributions, segmentID)
 
 	err := commitFlagMutation(flagID, subject, notification.OperationUpdate, notification.ComponentDistribution, func(tx *gorm.DB) (uint, mutationNotify, error) {
+		if err := validateSegmentOwnership(tx, flagID, segmentID); err != nil {
+			return 0, mutationNotify{}, err
+		}
+		for i := range ds {
+			if err := validateVariantOwnership(tx, flagID, ds[i].VariantID); err != nil {
+				return 0, mutationNotify{}, err
+			}
+		}
 		if err := tx.Where("segment_id = ?", segmentID).Delete(&entity.Distribution{}).Error; err != nil {
 			return 0, mutationNotify{}, err
 		}
