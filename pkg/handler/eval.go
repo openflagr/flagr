@@ -232,10 +232,10 @@ var EvalFlagWithContext = func(flag *entity.Flag, evalContext models.EvalContext
 		logs = make([]*models.SegmentDebugLog, 0, len(flag.Segments))
 	}
 	for _, segment := range flag.Segments {
-		sID = int64(segment.ID)
 		variantID, log, evalNextSegment := evalSegment(evalContext, segment)
 		if variantID != nil {
 			vID = int64(*variantID)
+			sID = int64(segment.ID)
 		}
 		if config.Config.EvalDebugEnabled && evalContext.EnableDebug {
 			logs = append(logs, log)

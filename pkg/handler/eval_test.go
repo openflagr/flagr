@@ -486,6 +486,45 @@ func TestEvalFlag(t *testing.T) {
 		assert.Zero(t, result.VariantID)
 	})
 
+	t.Run("segmentID is zero when no segment matches", func(t *testing.T) {
+		f := entity.GenFixtureFlag()
+		// Segment has constraint dl_state == "CA"
+		f.PrepareEvaluation()
+		ec := &EvalCache{
+			cache: &cacheContainer{idCache: map[string]*entity.Flag{"100": &f}},
+		}
+		defer gostub.StubFunc(&GetEvalCache, ec).Reset()
+		result := EvalFlag(models.EvalContext{
+			EnableDebug:   true,
+			EntityContext: map[string]any{"dl_state": "NY"},
+			EntityID:      "entityID1",
+			EntityType:    "entityType1",
+			FlagID:        int64(100),
+		})
+		assert.NotNil(t, result)
+		assert.Zero(t, result.VariantID)
+		assert.Zero(t, result.SegmentID, "segmentID should be 0 when no segment matches")
+	})
+
+	t.Run("segmentID is set when a segment matches", func(t *testing.T) {
+		f := entity.GenFixtureFlag()
+		f.PrepareEvaluation()
+		ec := &EvalCache{
+			cache: &cacheContainer{idCache: map[string]*entity.Flag{"100": &f}},
+		}
+		defer gostub.StubFunc(&GetEvalCache, ec).Reset()
+		result := EvalFlag(models.EvalContext{
+			EnableDebug:   true,
+			EntityContext: map[string]any{"dl_state": "CA"},
+			EntityID:      "entityID1",
+			EntityType:    "entityType1",
+			FlagID:        int64(100),
+		})
+		assert.NotNil(t, result)
+		assert.NotZero(t, result.VariantID)
+		assert.Equal(t, int64(200), result.SegmentID, "segmentID should be the matched segment's ID")
+	})
+
 	t.Run("test enabled=false", func(t *testing.T) {
 		f := entity.GenFixtureFlag()
 		f.Enabled = false
