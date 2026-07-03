@@ -8,19 +8,32 @@ get:
   parameters:
     - name: ids
       in: query
-      type: string
-      description: "CSV of flag IDs to include (e.g. 1,2,3)"
+      type: array
+      collectionFormat: csv
+      items:
+        type: integer
+        format: int64
+        minimum: 1
+      description: "CSV of flag IDs to include (e.g. 1,2,3). When provided, keys/enabled/tags are ignored."
     - name: keys
       in: query
-      type: string
-      description: "CSV of flag keys to include (e.g. one,two)"
+      type: array
+      collectionFormat: csv
+      items:
+        type: string
+        minLength: 1
+      description: "CSV of flag keys to include (e.g. one,two). When provided, enabled/tags are ignored."
     - name: enabled
       in: query
       type: boolean
       description: "Filter by enabled status (omit to return all)"
     - name: tags
       in: query
-      type: string
+      type: array
+      collectionFormat: csv
+      items:
+        type: string
+        minLength: 1
       description: "CSV of tag values to filter by (e.g. foo,bar)"
     - name: all
       in: query

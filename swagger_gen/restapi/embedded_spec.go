@@ -210,14 +210,25 @@ func init() {
         "operationId": "getExportEvalCacheJSON",
         "parameters": [
           {
-            "type": "string",
-            "description": "CSV of flag IDs to include (e.g. 1,2,3)",
+            "type": "array",
+            "items": {
+              "minimum": 1,
+              "type": "integer",
+              "format": "int64"
+            },
+            "collectionFormat": "csv",
+            "description": "CSV of flag IDs to include (e.g. 1,2,3). When provided, keys/enabled/tags are ignored.",
             "name": "ids",
             "in": "query"
           },
           {
-            "type": "string",
-            "description": "CSV of flag keys to include (e.g. one,two)",
+            "type": "array",
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "collectionFormat": "csv",
+            "description": "CSV of flag keys to include (e.g. one,two). When provided, enabled/tags are ignored.",
             "name": "keys",
             "in": "query"
           },
@@ -228,7 +239,12 @@ func init() {
             "in": "query"
           },
           {
-            "type": "string",
+            "type": "array",
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "collectionFormat": "csv",
             "description": "CSV of tag values to filter by (e.g. foo,bar)",
             "name": "tags",
             "in": "query"
@@ -2780,14 +2796,25 @@ func init() {
         "operationId": "getExportEvalCacheJSON",
         "parameters": [
           {
-            "type": "string",
-            "description": "CSV of flag IDs to include (e.g. 1,2,3)",
+            "type": "array",
+            "items": {
+              "minimum": 1,
+              "type": "integer",
+              "format": "int64"
+            },
+            "collectionFormat": "csv",
+            "description": "CSV of flag IDs to include (e.g. 1,2,3). When provided, keys/enabled/tags are ignored.",
             "name": "ids",
             "in": "query"
           },
           {
-            "type": "string",
-            "description": "CSV of flag keys to include (e.g. one,two)",
+            "type": "array",
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "collectionFormat": "csv",
+            "description": "CSV of flag keys to include (e.g. one,two). When provided, enabled/tags are ignored.",
             "name": "keys",
             "in": "query"
           },
@@ -2798,7 +2825,12 @@ func init() {
             "in": "query"
           },
           {
-            "type": "string",
+            "type": "array",
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "collectionFormat": "csv",
             "description": "CSV of tag values to filter by (e.g. foo,bar)",
             "name": "tags",
             "in": "query"

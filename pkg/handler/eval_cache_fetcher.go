@@ -1,16 +1,17 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
-
-	"encoding/json"
+	"slices"
 
 	"github.com/openflagr/flagr/pkg/config"
 	"github.com/openflagr/flagr/pkg/entity"
 	"github.com/openflagr/flagr/pkg/util"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/export"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
@@ -20,13 +21,86 @@ type EvalCacheJSON struct {
 	Flags []entity.Flag
 }
 
-func (ec *EvalCache) export() EvalCacheJSON {
+func (ec *EvalCache) export(query export.GetExportEvalCacheJSONParams) EvalCacheJSON {
+	// Build lookup sets for id/key filters (O(1) lookups)
+	var targetIDs map[int64]struct{}
+	if len(query.Ids) > 0 {
+		targetIDs = make(map[int64]struct{}, len(query.Ids))
+		for _, id := range query.Ids {
+			targetIDs[id] = struct{}{}
+		}
+	}
+
+	var targetKeys map[string]struct{}
+	if len(query.Keys) > 0 {
+		targetKeys = make(map[string]struct{}, len(query.Keys))
+		for _, key := range query.Keys {
+			targetKeys[key] = struct{}{}
+		}
+	}
+
+	// Build tag filter function
+	var hasTags func(*entity.Flag) bool
+	if len(query.Tags) > 0 {
+		useAll := query.All != nil && *query.All
+		if useAll {
+			// ALL: flag must have every tag in query.Tags
+			hasTags = func(f *entity.Flag) bool {
+				for _, tag := range query.Tags {
+					if !slices.ContainsFunc(f.Tags, func(t entity.Tag) bool {
+						return t.Value == tag
+					}) {
+						return false
+					}
+				}
+				return true
+			}
+		} else {
+			// ANY: flag must have at least one tag in query.Tags
+			hasTags = func(f *entity.Flag) bool {
+				return slices.ContainsFunc(query.Tags, func(tag string) bool {
+					return slices.ContainsFunc(f.Tags, func(t entity.Tag) bool {
+						return t.Value == tag
+					})
+				})
+			}
+		}
+	}
+
 	ec.cacheMutex.RLock()
 	defer ec.cacheMutex.RUnlock()
 
 	idCache := ec.cache.idCache
 	fs := make([]entity.Flag, 0, len(idCache))
 	for _, f := range idCache {
+		// ids filter: highest precedence, OR within group
+		if targetIDs != nil {
+			if _, ok := targetIDs[int64(f.ID)]; ok {
+				ff := *f
+				fs = append(fs, ff)
+			}
+			continue
+		}
+
+		// keys filter: second precedence, OR within group
+		if targetKeys != nil {
+			if _, ok := targetKeys[f.Key]; ok {
+				ff := *f
+				fs = append(fs, ff)
+			}
+			continue
+		}
+
+		// enabled filter
+		if query.Enabled != nil && *query.Enabled != f.Enabled {
+			continue
+		}
+
+		// tags filter
+		if hasTags != nil && !hasTags(f) {
+			continue
+		}
+
 		ff := *f
 		fs = append(fs, ff)
 	}
