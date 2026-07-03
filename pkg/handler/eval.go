@@ -152,11 +152,13 @@ func BlankResult(f *entity.Flag, evalContext models.EvalContext, msg string) *mo
 	flagKey := ""
 	flagSnapshotID := uint(0)
 	var flagTags []string
+	var dataRecordsEnabled bool
 	if f != nil {
 		flagID = f.ID
 		flagSnapshotID = f.SnapshotID
 		flagKey = f.Key
 		flagTags = f.FlagEvaluation.TagValues
+		dataRecordsEnabled = f.DataRecordsEnabled
 	}
 	ec := evalContext
 	return &models.EvalResult{
@@ -165,12 +167,14 @@ func BlankResult(f *entity.Flag, evalContext models.EvalContext, msg string) *mo
 			Msg:              msg,
 			SegmentDebugLogs: nil,
 		},
-		FlagID:         int64(flagID),
-		FlagKey:        flagKey,
-		FlagSnapshotID: int64(flagSnapshotID),
-		FlagTags:       flagTags,
-		Timestamp:      util.TimeNow(),
-		RecordSource:   models.EvalResultRecordSourceEvaluation,
+		FlagID:               int64(flagID),
+		FlagKey:              flagKey,
+		FlagSnapshotID:       int64(flagSnapshotID),
+		FlagTags:             flagTags,
+		Timestamp:            util.TimeNow(),
+		RecordSource:         models.EvalResultRecordSourceEvaluation,
+		DataRecordsEnabled:   dataRecordsEnabled,
+		EntityType:           evalContext.EntityType,
 	}
 }
 
