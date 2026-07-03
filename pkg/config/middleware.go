@@ -91,11 +91,13 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 		n.Use(setupBasicAuthMiddleware())
 	}
 
-	n.Use(&negroni.Static{
-		Dir:       http.Dir("./browser/flagr-ui/dist/"),
-		Prefix:    Config.WebPrefix,
-		IndexFile: "index.html",
-	})
+	if Config.UIEnabled {
+		n.Use(&negroni.Static{
+			Dir:       http.Dir("./browser/flagr-ui/dist/"),
+			Prefix:    Config.WebPrefix,
+			IndexFile: "index.html",
+		})
+	}
 
 	n.Use(setupRecoveryMiddleware())
 
