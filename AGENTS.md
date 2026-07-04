@@ -48,6 +48,7 @@ Run from **repo root**. Match what [`.github/workflows/ci.yml`](.github/workflow
 
 **Backend (`pkg/`):**
 - `handler/eval.go` — evaluation engine; `handler/crud.go` — CRUD API handlers
+- `handler/builtin_context.go` — built-in context injection (`@ts*`, `@http_*` keys into entityContext)
 - `handler/exposure.go` — exposure (impression) logging; `handler/data_recorder*.go` — recorders (Kafka, Kinesis, Pub/Sub, Datar)
 - `entity/` — domain models (flag, segment, constraint, variant, distribution)
 - `config/env.go` — all environment variables (single source of truth)
@@ -56,8 +57,6 @@ Run from **repo root**. Match what [`.github/workflows/ci.yml`](.github/workflow
 - `api/types.ts` — DTOs; `api/crud.ts` (flag CRUD + tags/variants/segments), `api/eval.ts` (POST /evaluation), `http.ts`
 - `pages/flagPage.ts`, `pages/flagsListPage.ts` (incl. list snapshot cache) — orchestration; `flagPage.*(page)` / `flagsListPage.*(page)` via `castFlagPage` / `castFlagsList`
 - Composed REST in `api/crud.ts`; UI via `helpers/runApi`; eval UI helpers in `helpers/evaluation.ts`
-- Architecture: **`docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md`** (As-built)
-- Duplicate flag + transactional snapshots: **`docs/plans/2026-06-30-001-duplicate-flag-plan.md`** (As-built)
 
 ## Swagger / OpenAPI workflow
 

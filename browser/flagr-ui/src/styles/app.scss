@@ -492,18 +492,96 @@ ol { margin: 0; padding-left: 20px; }
 }
 
 @media (max-width: 720px) {
+  // Segment header: stack buttons below title
+  .segment-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2xs);
+
+    .segment-header-actions {
+      width: 100%;
+      display: flex;
+      gap: var(--space-2xs);
+
+      .el-button {
+        flex: 1;
+      }
+    }
+  }
+
+  // Constraint table: stack rows vertically
   .constraint-table {
-    grid-template-columns: 36px 1fr;
+    grid-template-columns: 1fr;
+    gap: var(--space-xs);
+  }
+
+  .constraint-row {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2xs);
+    padding: var(--space-2xs);
+    background: var(--el-fill-color-lighter);
+    border-radius: var(--border-radius-base);
+  }
+
+  .constraint-logic {
+    text-align: left;
+    justify-self: start;
+  }
+
+  .constraint-cell,
+  .constraint-control {
+    width: 100%;
+  }
+
+  .constraint-value-cell {
+    width: 100%;
   }
 
   .constraint-actions {
-    grid-column: 2;
-    justify-self: start;
+    grid-column: 1;
+    justify-self: stretch;
+    display: flex;
+    gap: var(--space-2xs);
+    padding-top: var(--space-2xs);
+    border-top: 1px solid var(--el-border-color-lighter);
+
+    .el-button {
+      flex: 1;
+    }
   }
 
-
+  // Add constraint button
   .constraint-add-btn {
-    grid-column: 2;
-    justify-self: start;
+    grid-column: 1;
+    justify-self: stretch;
+    width: 100%;
+  }
+
+  // Rollout section: stack vertically
+  .segment-rollout {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2xs);
+  }
+
+  .segment-rollout-row {
+    display: flex;
+    gap: var(--space-2xs);
+    align-items: center;
+
+    > * {
+      flex: 1;
+    }
+  }
+
+  // Distribution section
+  .segment-distribution {
+    grid-column: 1;
+  }
+
+  // Segment card padding
+  .segment-card {
+    padding: var(--space-2xs);
   }
 }

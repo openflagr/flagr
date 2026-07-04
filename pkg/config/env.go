@@ -264,5 +264,18 @@ var Config = struct {
 	// UI path  => localhost:18000/foo"
 	// API path => localhost:18000/foo/api/v1"
 
+	// InjectedContextEnabled - enables built-in context injection into entityContext.
+	// When true, @ts, @ts_hour, @ts_weekday, @ts_month are always injected.
+	// HTTP headers listed in InjectedContextHTTPHeaders are injected as @http_* keys.
+	InjectedContextEnabled bool `env:"FLAGR_INJECTED_CONTEXT_ENABLED" envDefault:"false"`
+
+	// InjectedContextHTTPHeaders - comma-separated list of HTTP header names to expose as @http_* context keys.
+	// Example: "X-Environment,X-Tenant-ID,Host"
+	InjectedContextHTTPHeaders []string `env:"FLAGR_INJECTED_CONTEXT_HTTP_HEADERS" envDefault:"" envSeparator:","`
+
+	// InjectedContextHTTPHeaderPrefixes - comma-separated list of HTTP header prefixes to auto-inject as @http_* keys.
+	// Any header starting with these prefixes is injected.
+	// Example: "CF-,X-Flagr-"
+	InjectedContextHTTPHeaderPrefixes []string `env:"FLAGR_INJECTED_CONTEXT_HTTP_HEADER_PREFIXES" envDefault:"" envSeparator:","`
 	WebPrefix string `env:"FLAGR_WEB_PREFIX" envDefault:""`
 }{}

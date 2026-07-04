@@ -67,6 +67,7 @@ beyond the original [`checkr/flagr`](https://github.com/checkr/flagr).
 - **Exposure logging** — `POST /exposures` for client-reported impressions, the trustworthy A/B denominator
 - **Webhook notifications** — HTTP POST on every flag change, with retry and backoff
 - **Multi-database** — SQLite (dev), MySQL, PostgreSQL, and JSON sources
+- **Built-in context injection** — server-side `@ts*` (time scheduling) and configurable `@http_*` (header-based targeting) keys injected into evaluation context
 - **Vue 3 UI** — TypeScript management UI (Vite, typed REST via `ApiResult`); see `make help` for `build-ui` / `test-e2e`
 
 ## Quick start

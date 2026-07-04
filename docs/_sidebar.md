@@ -3,6 +3,7 @@
     - [Overview](flagr_overview.md)
     - [Use Cases](flagr_use_cases.md)
     - [Debug Console](flagr_debugging.md)
+    - [Built-in Context Injection](flagr_injected_context.md)
 - Server & deployment
     - [Environment Variables](flagr_env.md)
     - [JSON Flag Source (GitOps)](flagr_json_flag_spec.md)

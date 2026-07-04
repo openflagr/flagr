@@ -217,3 +217,24 @@ FLAGR_RECORDER_DATAR_FLUSH_INTERVAL=60s
 
 See [Datar Analytics](flagr_datar.md) for endpoint documentation, data model,
 and resource usage.
+
+## Built-in context injection
+
+Flagr can inject server-side and HTTP request metadata into every
+evaluation's `entityContext`. This enables time-based scheduling,
+environment scoping, and header-based targeting without application changes.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `FLAGR_INJECTED_CONTEXT_ENABLED` | `false` | Enable built-in context injection |
+| `FLAGR_INJECTED_CONTEXT_HTTP_HEADERS` | `""` | Comma-separated header names to expose as `@http_*` keys |
+| `FLAGR_INJECTED_CONTEXT_HTTP_HEADER_PREFIXES` | `""` | Comma-separated prefixes for auto-injecting headers |
+
+```sh
+# Example: enable injection with environment header
+FLAGR_INJECTED_CONTEXT_ENABLED=true
+FLAGR_INJECTED_CONTEXT_HTTP_HEADERS="X-Environment,X-Tenant-ID"
+```
+
+See [Built-in Context Injection](flagr_injected_context.md) for full
+documentation, real-world examples, and configuration details.

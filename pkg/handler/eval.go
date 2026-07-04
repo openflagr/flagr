@@ -40,6 +40,9 @@ func (e *eval) PostEvaluation(params evaluation.PostEvaluationParams) middleware
 			ErrorMessage("empty body"))
 	}
 
+	// Inject built-in context keys (@ts_*, @http_*) into entityContext
+	evalContext.EntityContext = InjectBuiltInContext(evalContext.EntityContext, params.HTTPRequest)
+
 	evalResult := EvalFlag(*evalContext)
 	resp := evaluation.NewPostEvaluationOK()
 	resp.SetPayload(evalResult)
@@ -103,6 +106,8 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 
 	// TODO make it concurrent
 	for _, entity := range entities {
+		// Inject built-in context keys into each entity's context
+		entity.EntityContext = InjectBuiltInContext(entity.EntityContext, params.HTTPRequest)
 		if len(flagTags) > 0 {
 			evalContext := models.EvalContext{
 				EnableDebug:      params.Body.EnableDebug,
