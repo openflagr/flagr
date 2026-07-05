@@ -109,6 +109,44 @@ func getEvalBatchWithJSON(t *testing.T, batchBody map[string]any, dst *batchEval
 	getJSON(t, path, dst)
 }
 
+// getEvalExpectStatus GETs /evaluation?json= and requires an exact HTTP status.
+func getEvalExpectStatus(t *testing.T, evalContext map[string]any, wantStatus int) {
+	t.Helper()
+	raw, err := json.Marshal(evalContext)
+	if err != nil {
+		t.Fatalf("marshal evalContext: %v", err)
+	}
+	path := "/api/v1/evaluation?json=" + url.QueryEscape(string(raw))
+	resp, err := doReq("GET", path, nil)
+	if err != nil {
+		t.Fatalf("GET %s: %v", path, err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != wantStatus {
+		b, _ := io.ReadAll(resp.Body)
+		t.Fatalf("GET %s: expected status %d, got %d: %s", path, wantStatus, resp.StatusCode, string(b))
+	}
+}
+
+// getEvalBatchExpectStatus GETs /evaluation/batch?json= and requires an exact HTTP status.
+func getEvalBatchExpectStatus(t *testing.T, batchBody map[string]any, wantStatus int) {
+	t.Helper()
+	raw, err := json.Marshal(batchBody)
+	if err != nil {
+		t.Fatalf("marshal batch body: %v", err)
+	}
+	path := "/api/v1/evaluation/batch?json=" + url.QueryEscape(string(raw))
+	resp, err := doReq("GET", path, nil)
+	if err != nil {
+		t.Fatalf("GET %s: %v", path, err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != wantStatus {
+		b, _ := io.ReadAll(resp.Body)
+		t.Fatalf("GET %s: expected status %d, got %d: %s", path, wantStatus, resp.StatusCode, string(b))
+	}
+}
+
 func postJSON(t *testing.T, path string, body, dst any) {
 	t.Helper()
 	doReqAndDecode("POST", path, body, dst, t.Fatalf)

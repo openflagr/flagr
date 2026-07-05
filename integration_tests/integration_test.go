@@ -577,6 +577,16 @@ func TestIntegration_GetEvaluation(t *testing.T) {
 			t.Fatal("GET batch: expected evaluationResults")
 		}
 	})
+
+	t.Run("GET schema validation 400", func(t *testing.T) {
+		getEvalExpectStatus(t, map[string]any{
+			"entityID": "e1",
+			"flagID":   -1,
+		}, http.StatusBadRequest)
+		getEvalBatchExpectStatus(t, map[string]any{
+			"flagIDs": []int64{flagID},
+		}, http.StatusBadRequest)
+	})
 }
 
 func TestIntegration_Preload(t *testing.T) {

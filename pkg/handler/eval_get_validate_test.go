@@ -26,6 +26,13 @@ func TestValidateEvalContextAfterJSON(t *testing.T) {
 		require.NotNil(t, err)
 		assert.Contains(t, *err.Message, "flagID")
 	})
+
+	t.Run("nil context", func(t *testing.T) {
+		t.Parallel()
+		err := validateEvalContextAfterJSON(req, nil)
+		require.NotNil(t, err)
+		assert.Contains(t, *err.Message, "empty object")
+	})
 }
 
 func TestValidateEvaluationBatchRequestAfterJSON(t *testing.T) {
@@ -39,6 +46,13 @@ func TestValidateEvaluationBatchRequestAfterJSON(t *testing.T) {
 			FlagIDs:  []int64{1},
 		}
 		assert.Nil(t, validateEvaluationBatchRequestAfterJSON(req, &b))
+	})
+
+	t.Run("nil batch", func(t *testing.T) {
+		t.Parallel()
+		err := validateEvaluationBatchRequestAfterJSON(req, nil)
+		require.NotNil(t, err)
+		assert.Contains(t, *err.Message, "empty object")
 	})
 
 	t.Run("missing entities", func(t *testing.T) {

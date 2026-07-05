@@ -44,19 +44,9 @@ func evalGetQueryTooLong(rawQueryLen int) *models.Error {
 }
 
 func (e *eval) GetEvaluation(params evaluation.GetEvaluationParams) middleware.Responder {
-	if errPayload := evalGetQueryTooLong(len(params.HTTPRequest.URL.RawQuery)); errPayload != nil {
-		return evaluation.NewGetEvaluationDefault(400).WithPayload(errPayload)
-	}
-	if params.JSON == "" {
-		return evaluation.NewGetEvaluationDefault(400).WithPayload(
-			ErrorMessage("missing required query parameter json"))
-	}
-	var evalContext models.EvalContext
-	if err := json.Unmarshal([]byte(params.JSON), &evalContext); err != nil {
-		return evaluation.NewGetEvaluationDefault(400).WithPayload(
-			ErrorMessage("json is not valid evalContext: %v", err))
-	}
-	if errPayload := validateEvalContextAfterJSON(params.HTTPRequest, &evalContext); errPayload != nil {
+	evalContext, errPayload := decodeEvalContextFromGet(
+		params.HTTPRequest, len(params.HTTPRequest.URL.RawQuery), params.JSON)
+	if errPayload != nil {
 		return evaluation.NewGetEvaluationDefault(400).WithPayload(errPayload)
 	}
 	evalContext.EntityContext = InjectBuiltInContext(evalContext.EntityContext, params.HTTPRequest)
@@ -67,19 +57,9 @@ func (e *eval) GetEvaluation(params evaluation.GetEvaluationParams) middleware.R
 }
 
 func (e *eval) GetEvaluationBatch(params evaluation.GetEvaluationBatchParams) middleware.Responder {
-	if errPayload := evalGetQueryTooLong(len(params.HTTPRequest.URL.RawQuery)); errPayload != nil {
-		return evaluation.NewGetEvaluationBatchDefault(400).WithPayload(errPayload)
-	}
-	if params.JSON == "" {
-		return evaluation.NewGetEvaluationBatchDefault(400).WithPayload(
-			ErrorMessage("missing required query parameter json"))
-	}
-	var batchReq models.EvaluationBatchRequest
-	if err := json.Unmarshal([]byte(params.JSON), &batchReq); err != nil {
-		return evaluation.NewGetEvaluationBatchDefault(400).WithPayload(
-			ErrorMessage("json is not valid evaluationBatchRequest: %v", err))
-	}
-	if errPayload := validateEvaluationBatchRequestAfterJSON(params.HTTPRequest, &batchReq); errPayload != nil {
+	batchReq, errPayload := decodeEvaluationBatchFromGet(
+		params.HTTPRequest, len(params.HTTPRequest.URL.RawQuery), params.JSON)
+	if errPayload != nil {
 		return evaluation.NewGetEvaluationBatchDefault(400).WithPayload(errPayload)
 	}
 	results, errPayload := EvaluateBatch(&batchReq, nil)
