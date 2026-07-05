@@ -155,9 +155,11 @@ flowchart TB
 
   subgraph evaluator [Evaluator — hot path]
     Eval["POST /evaluation"]
+    EvalGet["GET /evaluation"]
     Exp["POST /exposures"]
     EC[(EvalCache)]
     Eval --> EC
+    EvalGet --> EC
     Exp --> EC
   end
 
@@ -186,6 +188,7 @@ flowchart TB
   end
 
   App --> Eval
+  App --> EvalGet
   App --> Exp
   Eval --> AR
   Exp --> AR
@@ -212,7 +215,7 @@ flowchart TB
 
 ### Request flows
 
-**Evaluation (hot path)** — `POST /api/v1/evaluation` → **EvalCache** → segments
+**Evaluation (hot path)** — `POST` or `GET /api/v1/evaluation` (same semantics; see [Use Cases — GET evaluation](flagr_use_cases.md#get-evaluation-browser-friendly)) → **EvalCache** → segments
 in rank order → variant response → optional `AsyncRecord` (`recordSource:
 evaluation`). No record when flag is missing, disabled, or has no segments.
 

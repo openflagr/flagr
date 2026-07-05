@@ -45,7 +45,7 @@ beyond the original [`checkr/flagr`](https://github.com/checkr/flagr).
 |------|---------|
 | [Home](https://openflagr.github.io/flagr/) | Quick start, dev, testing, deploy |
 | [Overview](https://openflagr.github.io/flagr/#/flagr_overview) | Concepts, running example, architecture |
-| [Use Cases](https://openflagr.github.io/flagr/#/flagr_use_cases) | Feature flags, A/B testing, dynamic configuration |
+| [Use Cases](https://openflagr.github.io/flagr/#/flagr_use_cases) | Feature flags, A/B testing, dynamic config; **GET** `?json=` eval (see [GET evaluation](https://openflagr.github.io/flagr/#/flagr_use_cases?id=get-evaluation-browser-friendly)) |
 | [Debug Console](https://openflagr.github.io/flagr/#/flagr_debugging) | UI evaluation testing |
 | [Server Configuration](https://openflagr.github.io/flagr/#/flagr_env) | Environment variables, DB, auth, recorders |
 | [JSON Flag Source](https://openflagr.github.io/flagr/#/flagr_json_flag_spec) | GitOps, JSON format, validator |
@@ -60,6 +60,7 @@ beyond the original [`checkr/flagr`](https://github.com/checkr/flagr).
 ## Features
 
 - **Feature flags** — binary on/off, kill switches, targeted rollouts by audience
+- **GET evaluation** — `GET /api/v1/evaluation?json=…` with the same JSON as POST (browser/cache-friendly; POST remains primary)
 - **Duplicate flag** — clone variants, segments, constraints, distributions, and tags to a new flag (`POST /flags/{id}/duplicate` or **Flag Management** on flag detail)
 - **A/B testing** — multi-variant experiments with deterministic, sticky assignment
 - **Dynamic configuration** — per-variant JSON attachments, no redeploy or restart
@@ -107,7 +108,7 @@ curl --request POST \
 
 Flagr has three components:
 
-- **Evaluator** — serves evaluation from an in-memory cache of all flags. The
+- **Evaluator** — serves evaluation from an in-memory cache (`POST` or `GET /evaluation`; see [Use Cases](https://openflagr.github.io/flagr/#/flagr_use_cases?id=get-evaluation-browser-friendly)). The
   cache refreshes periodically (default 3s) and short-circuits when nothing
   changed, so evaluation never touches the database on the request path.
 - **Manager** — the CRUD gateway; all flag mutations flow through here.

@@ -49,7 +49,7 @@ Run from **repo root**. Match what [`.github/workflows/ci.yml`](.github/workflow
 ## Key Code
 
 **Backend (`pkg/`):**
-- `handler/eval.go` — evaluation engine (POST/GET), batch; `handler/eval_test.go` — GET eval tests; `handler/crud.go` — CRUD API handlers
+- `handler/eval.go` — evaluation engine (POST/GET), batch; `handler/eval_get_test.go` — GET eval tests; `handler/crud.go` — CRUD API handlers
 - `handler/builtin_context.go` — built-in context injection (`@ts*`, `@http_*` keys into entityContext)
 - `handler/exposure.go` — exposure (impression) logging; `handler/data_recorder*.go` — recorders (Kafka, Kinesis, Pub/Sub, Datar)
 - `entity/` — domain models (flag, segment, constraint, variant, distribution)
