@@ -332,8 +332,11 @@ Result:             segment matches (it's 2 PM UTC)
 ### Performance
 
 Injection adds ~1.2µs to a 328µs evaluation — negligible overhead.
-The `@ts` keys are computed from `time.Now().UTC()` (zero allocation).
-Header injection iterates `r.Header` once per request.
+The `@ts` keys are computed from `time.Now().UTC()` (1 allocation for the map).
+Header matching uses `sync.Once`-cached sets — the config is parsed once, not
+per-request. Header injection iterates `r.Header` directly (no `Clone()`).
+When the feature is disabled, `InjectBuiltInContext` returns the original
+context unchanged (zero cost).
 
 ### Namespace isolation
 
@@ -373,5 +376,6 @@ time. This is intentional — it prevents spoofing.
 
 **Q: Does this work with batch evaluation?**
 
-A: Yes. Each entity in a batch request gets the same built-in context
-(same `@ts`, same headers). The injection runs once per entity.
+A: Yes. Each entity in a batch request gets built-in context injected
+individually — same semantics as the single-eval path (in-place mutation
+when the context is already a map). When disabled, no injection occurs.
