@@ -78,6 +78,18 @@ make test-integration
 make ci-swagger   # before push
 ```
 
+## Code quality review (2026-07-05, thermo-nuclear)
+
+**Verdict:** **Approve with minor follow-ups** (no blockers).
+
+| Finding | Status |
+|---------|--------|
+| `eval_test.go` ~1840 lines (above ~1k bar) | **Follow-up:** split GET tests to `eval_get_test.go` or benchmarks to separate file when touching tests again |
+| Duplicate GET decode pipelines | **Fixed:** `decodeFromGetQuery` + thin wrappers |
+| GET handler tests vs `t.Parallel` / gostub | **Fixed:** `TestGetEvaluation_QueryTooLong` uses gostub |
+| `eval_batch.go` micro-file | **Fixed:** merged into `eval.go` (~525 lines) |
+
+
 ## References
 
 - Issue [#613](https://github.com/openflagr/flagr/issues/613)
