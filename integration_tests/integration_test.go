@@ -1080,6 +1080,16 @@ func TestIntegration_DatarFlagSummary(t *testing.T) {
 	}
 }
 
+// Built-in context integration test constants.
+const (
+	builtinCtxEvalCacheWait   = 3 * time.Second // wait for eval cache to pick up new flag/constraints
+	builtinCtxEvalCacheWait2  = 2 * time.Second // shorter wait before polling waitForEvalReady
+	builtinCtxRolloutPercent  = 100             // full rollout for constraint-only segments
+	builtinCtxVariantOn       = "on"
+	builtinCtxVariantEnabled  = "enabled"
+	builtinCtxEnvHeaderValue  = "test"
+)
+
 func TestIntegration_BuiltInContext(t *testing.T) {
 	// Built-in context injection (@ts, @ts_hour, @ts_weekday, @ts_month) is a
 	// current-Flagr-only feature. The /evaluation route exists on legacy
@@ -1108,7 +1118,7 @@ func TestIntegration_BuiltInContext(t *testing.T) {
 	// Create a variant
 	var variant variantResponse
 	postJSON(t, fmt.Sprintf("/api/v1/flags/%d/variants", created.ID), map[string]any{
-		"key": "on",
+		"key": builtinCtxVariantOn,
 	}, &variant)
 	if variant.ID == 0 {
 		t.Fatal("expected non-zero variant id")
@@ -1118,7 +1128,7 @@ func TestIntegration_BuiltInContext(t *testing.T) {
 	var segment segmentResponse
 	postJSON(t, fmt.Sprintf("/api/v1/flags/%d/segments", created.ID), map[string]any{
 		"description":    "ts constraint segment",
-		"rolloutPercent": 100,
+		"rolloutPercent": builtinCtxRolloutPercent,
 	}, &segment)
 	if segment.ID == 0 {
 		t.Fatal("expected non-zero segment id")
@@ -1140,14 +1150,14 @@ func TestIntegration_BuiltInContext(t *testing.T) {
 		"distributions": []map[string]any{
 			{
 				"variantID":  variant.ID,
-				"variantKey": "on",
-				"percent":    100,
+				"variantKey": builtinCtxVariantOn,
+				"percent":    builtinCtxRolloutPercent,
 			},
 		},
 	}, nil)
 
 	// Wait for eval cache to pick up the new flag
-	time.Sleep(3 * time.Second)
+	time.Sleep(builtinCtxEvalCacheWait)
 
 	// Evaluate — should match because @ts >= 0 is always true
 	var evalResult evalResponse
@@ -1160,7 +1170,7 @@ func TestIntegration_BuiltInContext(t *testing.T) {
 		},
 	}, &evalResult)
 
-	if evalResult.VariantKey != "on" {
+	if evalResult.VariantKey != builtinCtxVariantOn {
 		t.Fatalf("expected variantKey 'on', got '%s' — @ts constraint may not be injected", evalResult.VariantKey)
 	}
 
@@ -1194,7 +1204,7 @@ func TestIntegration_BuiltInContextHTTPHeader(t *testing.T) {
 	// Create variant
 	var variant variantResponse
 	postJSON(t, fmt.Sprintf("/api/v1/flags/%d/variants", created.ID), map[string]any{
-		"key": "enabled",
+		"key": builtinCtxVariantEnabled,
 	}, &variant)
 	if variant.ID == 0 {
 		t.Fatal("expected non-zero variant id")
@@ -1204,7 +1214,7 @@ func TestIntegration_BuiltInContextHTTPHeader(t *testing.T) {
 	var segment segmentResponse
 	postJSON(t, fmt.Sprintf("/api/v1/flags/%d/segments", created.ID), map[string]any{
 		"description":    "environment constraint segment",
-		"rolloutPercent": 100,
+		"rolloutPercent": builtinCtxRolloutPercent,
 	}, &segment)
 	if segment.ID == 0 {
 		t.Fatal("expected non-zero segment id")
@@ -1215,7 +1225,7 @@ func TestIntegration_BuiltInContextHTTPHeader(t *testing.T) {
 	postJSON(t, fmt.Sprintf("/api/v1/flags/%d/segments/%d/constraints", created.ID, segment.ID), map[string]any{
 		"property": "@http_x_environment",
 		"operator": "EQ",
-		"value":    `"test"`,
+		"value":    `"` + builtinCtxEnvHeaderValue + `"`,
 	}, &constraint)
 	if constraint.ID == 0 {
 		t.Fatal("expected non-zero constraint id")
@@ -1226,12 +1236,12 @@ func TestIntegration_BuiltInContextHTTPHeader(t *testing.T) {
 		"distributions": []map[string]any{
 			{
 				"variantID":  variant.ID,
-				"variantKey": "enabled",
-				"percent":    100,
+				"variantKey": builtinCtxVariantEnabled,
+				"percent":    builtinCtxRolloutPercent,
 			},
 		},
 	}, nil)
-	time.Sleep(2 * time.Second)
+	time.Sleep(builtinCtxEvalCacheWait2)
 	waitForEvalReady(baseURL, evalCacheReadyTimeout)
 	// Evaluate WITHOUT X-Environment header — should NOT match
 	var evalResult evalResponse
@@ -1253,19 +1263,19 @@ func TestIntegration_BuiltInContextHTTPHeader(t *testing.T) {
 		"entityID":   "http-header-positive-entity",
 		"entityType": "user",
 		"entityContext": map[string]any{},
-	}, map[string]string{"X-Environment": "test"})
+	}, map[string]string{"X-Environment": builtinCtxEnvHeaderValue})
 	if err != nil {
 		t.Fatalf("evaluation request failed: %v", err)
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		b, _ := io.ReadAll(resp.Body)
 		t.Fatalf("expected 200, got %d: %s", resp.StatusCode, string(b))
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&positiveResult); err != nil {
 		t.Fatalf("decode failed: %v", err)
 	}
-	if positiveResult.VariantKey != "enabled" {
+	if positiveResult.VariantKey != builtinCtxVariantEnabled {
 		t.Fatalf("expected variantKey 'enabled', got '%s' — @http_x_environment should match with X-Environment: test", positiveResult.VariantKey)
 	}
 
