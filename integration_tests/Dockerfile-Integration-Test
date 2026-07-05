@@ -1,9 +1,18 @@
-FROM golang:1.26-alpine as go_builder
+# syntax=docker/dockerfile:1
+FROM golang:1.26-alpine AS go_builder
 WORKDIR /go/src/github.com/openflagr/flagr
 RUN apk add --no-cache git make build-base
-ADD . .
+
+# Cache Go modules — only re-downloaded when go.mod/go.sum change.
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Cache Go build artifacts via BuildKit mount.
+COPY . .
 ENV CGO_ENABLED=0
-RUN make build
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    --mount=type=cache,target=/go/pkg/mod \
+    make build
 
 FROM alpine
 

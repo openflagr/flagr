@@ -226,12 +226,29 @@ go test -count=5 ./pkg/...  # repeat to catch flaky ordering
 
 #### CI cache warming
 
-The CI workflow caches Go modules and npm dependencies between runs. The
-**first push** to a new branch populates the cache; subsequent pushes on the
-same branch (and PRs targeting the same base) hit the cache and skip dependency
-downloads. To warm the cache before your PR runs its checks, simply push an
-empty commit or amend-and-force-push — the first run saves the cache, and the
-second run benefits from it.
+The CI workflow caches Go modules, npm dependencies, and Docker layers between
+runs. The **first push** to a new branch populates the cache; subsequent pushes
+hit the cache and skip dependency downloads. To warm the cache before your PR
+runs its checks, simply push an empty commit or amend-and-force-push — the
+first run saves the cache, and the second run benefits from it.
+
+#### Integration test Docker caching
+
+The integration test Docker image (`integration_tests/Dockerfile-Integration-Test`)
+uses two caching strategies:
+
+1. **Dependency layer** — `go.mod`/`go.sum` are copied and `go mod download`
+   runs before source code. Changing application code doesn't re-download
+   dependencies.
+
+2. **BuildKit cache mounts** — `--mount=type=cache,target=/root/.cache/go-build`
+   and `--mount=type=cache,target=/go/pkg/mod` persist Go's build and module
+   caches across builds. In CI, `docker/setup-buildx-action` + GHA cache
+   backend persists these layers between runs.
+
+Locally, Docker BuildKit (default on modern Docker) activates these
+automatically — no extra setup needed.
+
 
 ## Deploy
 
