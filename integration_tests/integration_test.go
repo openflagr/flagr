@@ -1081,175 +1081,49 @@ func TestIntegration_DatarFlagSummary(t *testing.T) {
 }
 
 func TestIntegration_BuiltInContext(t *testing.T) {
-	// Built-in context injection (@ts, @ts_hour, @ts_weekday, @ts_month) is a
-	// current-Flagr-only feature. The /evaluation route exists on legacy
-	// checkr/flagr:1.1.12 but the server does not inject @ts keys, so the
-	// constraint would never match. Skip on legacy baseline.
 	if isLegacyIntegrationBaseline() {
 		t.Skip("built-in context injection not available on legacy checkr/flagr:1.1.12")
 	}
-	// The server is started with FLAGR_INJECTED_CONTEXT_ENABLED=true.
-	// Create a flag with a @ts constraint (always matches since @ts >= 0)
+
 	key := fmt.Sprintf("builtin_ctx_%d", time.Now().UnixNano())
-	var created flagResponse
-	postJSON(t, "/api/v1/flags", map[string]any{
-		"key":         key,
-		"description": "built-in context test flag",
-	}, &created)
-	if created.ID == 0 {
-		t.Fatal("expected non-zero id")
+	fixture := createEvalReadyFlag(t, key, "built-in context test flag",
+		evalConstraintFixture{Property: "@ts", Operator: "GTE", Value: "0"},
+		builtinCtxVariantOn,
+		"ts constraint segment",
+	)
+	defer deleteEvalReadyFlag(t, fixture.FlagID)
+
+	result := postEval(t, fixture.FlagID, "builtin-ctx-entity", map[string]any{"country": "US"})
+	if result.VariantKey != builtinCtxVariantOn {
+		t.Fatalf("expected variantKey 'on', got '%s' — @ts constraint may not be injected", result.VariantKey)
 	}
-
-	// Enable the flag (flags are disabled by default)
-	putJSON(t, fmt.Sprintf("/api/v1/flags/%d/enabled", created.ID), map[string]any{
-		"enabled": true,
-	}, nil)
-
-	// Create a variant
-	var variant variantResponse
-	postJSON(t, fmt.Sprintf("/api/v1/flags/%d/variants", created.ID), map[string]any{
-		"key": builtinCtxVariantOn,
-	}, &variant)
-	if variant.ID == 0 {
-		t.Fatal("expected non-zero variant id")
-	}
-
-	// Create a segment with @ts constraint (always matches)
-	var segment segmentResponse
-	postJSON(t, fmt.Sprintf("/api/v1/flags/%d/segments", created.ID), map[string]any{
-		"description":    "ts constraint segment",
-		"rolloutPercent": builtinCtxRolloutPercent,
-	}, &segment)
-	if segment.ID == 0 {
-		t.Fatal("expected non-zero segment id")
-	}
-
-	// Create constraint: @ts GTE 0 (always true)
-	var constraint constraintResponse
-	postJSON(t, fmt.Sprintf("/api/v1/flags/%d/segments/%d/constraints", created.ID, segment.ID), map[string]any{
-		"property": "@ts",
-		"operator": "GTE",
-		"value":    "0",
-	}, &constraint)
-	if constraint.ID == 0 {
-		t.Fatal("expected non-zero constraint id")
-	}
-
-	// Create distribution: 100% to "on"
-	putJSON(t, fmt.Sprintf("/api/v1/flags/%d/segments/%d/distributions", created.ID, segment.ID), map[string]any{
-		"distributions": []map[string]any{
-			{
-				"variantID":  variant.ID,
-				"variantKey": builtinCtxVariantOn,
-				"percent":    builtinCtxRolloutPercent,
-			},
-		},
-	}, nil)
-
-	// Wait for eval cache to pick up the new flag
-	time.Sleep(builtinCtxEvalCacheWait)
-
-	// Evaluate — should match because @ts >= 0 is always true
-	var evalResult evalResponse
-	postJSON(t, "/api/v1/evaluation", map[string]any{
-		"flagID":     created.ID,
-		"entityID":   "builtin-ctx-entity",
-		"entityType": "user",
-		"entityContext": map[string]any{
-			"country": "US",
-		},
-	}, &evalResult)
-
-	if evalResult.VariantKey != builtinCtxVariantOn {
-		t.Fatalf("expected variantKey 'on', got '%s' — @ts constraint may not be injected", evalResult.VariantKey)
-	}
-
-	// Cleanup
-	deleteResource(t, fmt.Sprintf("/api/v1/flags/%d", created.ID))
 }
 
 func TestIntegration_BuiltInContextHTTPHeader(t *testing.T) {
-	// Built-in HTTP header injection (@http_*) is a current-Flagr-only feature.
-	// The /evaluation route exists on legacy checkr/flagr:1.1.12 but the server
-	// does not inject @http_* keys, so the constraint would never match.
 	if isLegacyIntegrationBaseline() {
 		t.Skip("built-in HTTP header injection not available on legacy checkr/flagr:1.1.12")
 	}
-	// Create a flag with @http_x_environment constraint
+
 	key := fmt.Sprintf("builtin_http_%d", time.Now().UnixNano())
-	var created flagResponse
-	postJSON(t, "/api/v1/flags", map[string]any{
-		"key":         key,
-		"description": "built-in HTTP header context test flag",
-	}, &created)
-	if created.ID == 0 {
-		t.Fatal("expected non-zero id")
-	}
-
-	// Enable the flag (flags are disabled by default)
-	putJSON(t, fmt.Sprintf("/api/v1/flags/%d/enabled", created.ID), map[string]any{
-		"enabled": true,
-	}, nil)
-
-	// Create variant
-	var variant variantResponse
-	postJSON(t, fmt.Sprintf("/api/v1/flags/%d/variants", created.ID), map[string]any{
-		"key": builtinCtxVariantEnabled,
-	}, &variant)
-	if variant.ID == 0 {
-		t.Fatal("expected non-zero variant id")
-	}
-
-	// Create segment with @http_x_environment EQ "test"
-	var segment segmentResponse
-	postJSON(t, fmt.Sprintf("/api/v1/flags/%d/segments", created.ID), map[string]any{
-		"description":    "environment constraint segment",
-		"rolloutPercent": builtinCtxRolloutPercent,
-	}, &segment)
-	if segment.ID == 0 {
-		t.Fatal("expected non-zero segment id")
-	}
-
-	// Create constraint
-	var constraint constraintResponse
-	postJSON(t, fmt.Sprintf("/api/v1/flags/%d/segments/%d/constraints", created.ID, segment.ID), map[string]any{
-		"property": "@http_x_environment",
-		"operator": "EQ",
-		"value":    `"` + builtinCtxEnvHeaderValue + `"`,
-	}, &constraint)
-	if constraint.ID == 0 {
-		t.Fatal("expected non-zero constraint id")
-	}
-
-	// Create distribution
-	putJSON(t, fmt.Sprintf("/api/v1/flags/%d/segments/%d/distributions", created.ID, segment.ID), map[string]any{
-		"distributions": []map[string]any{
-			{
-				"variantID":  variant.ID,
-				"variantKey": builtinCtxVariantEnabled,
-				"percent":    builtinCtxRolloutPercent,
-			},
+	fixture := createEvalReadyFlag(t, key, "built-in HTTP header context test flag",
+		evalConstraintFixture{
+			Property: "@http_x_environment",
+			Operator: "EQ",
+			Value:    `"` + builtinCtxEnvHeaderValue + `"`,
 		},
-	}, nil)
-	// Wait for eval cache to pick up the new flag
-	time.Sleep(builtinCtxEvalCacheWait)
-	// Evaluate WITHOUT X-Environment header — should NOT match
-	var evalResult evalResponse
-	postJSON(t, "/api/v1/evaluation", map[string]any{
-		"flagID":        created.ID,
-		"entityID":      "http-header-entity",
-		"entityType":    "user",
-		"entityContext": map[string]any{},
-	}, &evalResult)
+		builtinCtxVariantEnabled,
+		"environment constraint segment",
+	)
+	defer deleteEvalReadyFlag(t, fixture.FlagID)
 
-	if evalResult.VariantKey != "" {
-		t.Fatalf("expected empty variantKey (no match), got '%s' — constraint should not match without X-Environment header", evalResult.VariantKey)
+	noHeader := postEval(t, fixture.FlagID, "http-header-entity", map[string]any{})
+	if noHeader.VariantKey != "" {
+		t.Fatalf("expected empty variantKey (no match), got '%s' — constraint should not match without X-Environment header", noHeader.VariantKey)
 	}
 
-	// Positive test: evaluate WITH X-Environment header set to "test" — should match
 	var positiveResult evalResponse
 	resp, err := doReqWithHeaders("POST", "/api/v1/evaluation", map[string]any{
-		"flagID":        created.ID,
+		"flagID":        fixture.FlagID,
 		"entityID":      "http-header-positive-entity",
 		"entityType":    "user",
 		"entityContext": map[string]any{},
@@ -1268,7 +1142,4 @@ func TestIntegration_BuiltInContextHTTPHeader(t *testing.T) {
 	if positiveResult.VariantKey != builtinCtxVariantEnabled {
 		t.Fatalf("expected variantKey 'enabled', got '%s' — @http_x_environment should match with X-Environment: test", positiveResult.VariantKey)
 	}
-
-	// Cleanup
-	deleteResource(t, fmt.Sprintf("/api/v1/flags/%d", created.ID))
 }
