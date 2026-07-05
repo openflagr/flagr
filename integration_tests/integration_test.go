@@ -1082,9 +1082,12 @@ func TestIntegration_DatarFlagSummary(t *testing.T) {
 
 // Built-in context integration test constants.
 const (
-	// builtinCtxEvalCacheWait waits for the eval cache refresh interval
-	// (integrationEvalCacheRefresh = 1s) to pick up newly created flags.
-	builtinCtxEvalCacheWait = 2 * integrationEvalCacheRefresh
+	// builtinCtxEvalCacheWait waits for the eval cache to pick up newly created
+	// flags/constraints. The local auto-start server uses 1s refresh
+	// (integrationEvalCacheRefresh), but docker-compose backends use the default
+	// 3s (FLAGR_EVALCACHE_REFRESHINTERVAL envDefault). Use 2× the default to
+	// account for DB latency on postgres/mysql/etc.
+	builtinCtxEvalCacheWait = 6 * time.Second
 
 	builtinCtxRolloutPercent = 100  // full rollout for constraint-only segments
 	builtinCtxVariantOn      = "on"
