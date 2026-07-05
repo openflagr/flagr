@@ -35,6 +35,7 @@ func doReq(method, path string, body any) (*http.Response, error) {
 	}
 	return httpClient.Do(req)
 }
+
 // doReqWithHeaders is like doReq but sets additional headers on the request.
 func doReqWithHeaders(method, path string, body any, extraHeaders map[string]string) (*http.Response, error) {
 	var reqBody io.Reader

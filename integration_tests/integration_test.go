@@ -1089,7 +1089,7 @@ const (
 	// account for DB latency on postgres/mysql/etc.
 	builtinCtxEvalCacheWait = 6 * time.Second
 
-	builtinCtxRolloutPercent = 100  // full rollout for constraint-only segments
+	builtinCtxRolloutPercent = 100 // full rollout for constraint-only segments
 	builtinCtxVariantOn      = "on"
 	builtinCtxVariantEnabled = "enabled"
 	builtinCtxEnvHeaderValue = "test"
@@ -1251,9 +1251,9 @@ func TestIntegration_BuiltInContextHTTPHeader(t *testing.T) {
 	// Evaluate WITHOUT X-Environment header — should NOT match
 	var evalResult evalResponse
 	postJSON(t, "/api/v1/evaluation", map[string]any{
-		"flagID":     created.ID,
-		"entityID":   "http-header-entity",
-		"entityType": "user",
+		"flagID":        created.ID,
+		"entityID":      "http-header-entity",
+		"entityType":    "user",
 		"entityContext": map[string]any{},
 	}, &evalResult)
 
@@ -1264,9 +1264,9 @@ func TestIntegration_BuiltInContextHTTPHeader(t *testing.T) {
 	// Positive test: evaluate WITH X-Environment header set to "test" — should match
 	var positiveResult evalResponse
 	resp, err := doReqWithHeaders("POST", "/api/v1/evaluation", map[string]any{
-		"flagID":     created.ID,
-		"entityID":   "http-header-positive-entity",
-		"entityType": "user",
+		"flagID":        created.ID,
+		"entityID":      "http-header-positive-entity",
+		"entityType":    "user",
 		"entityContext": map[string]any{},
 	}, map[string]string{"X-Environment": builtinCtxEnvHeaderValue})
 	if err != nil {
