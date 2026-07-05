@@ -1082,12 +1082,14 @@ func TestIntegration_DatarFlagSummary(t *testing.T) {
 
 // Built-in context integration test constants.
 const (
-	builtinCtxEvalCacheWait   = 3 * time.Second // wait for eval cache to pick up new flag/constraints
-	builtinCtxEvalCacheWait2  = 2 * time.Second // shorter wait before polling waitForEvalReady
-	builtinCtxRolloutPercent  = 100             // full rollout for constraint-only segments
-	builtinCtxVariantOn       = "on"
-	builtinCtxVariantEnabled  = "enabled"
-	builtinCtxEnvHeaderValue  = "test"
+	// builtinCtxEvalCacheWait waits for the eval cache refresh interval
+	// (integrationEvalCacheRefresh = 1s) to pick up newly created flags.
+	builtinCtxEvalCacheWait = 2 * integrationEvalCacheRefresh
+
+	builtinCtxRolloutPercent = 100  // full rollout for constraint-only segments
+	builtinCtxVariantOn      = "on"
+	builtinCtxVariantEnabled = "enabled"
+	builtinCtxEnvHeaderValue = "test"
 )
 
 func TestIntegration_BuiltInContext(t *testing.T) {
@@ -1241,8 +1243,8 @@ func TestIntegration_BuiltInContextHTTPHeader(t *testing.T) {
 			},
 		},
 	}, nil)
-	time.Sleep(builtinCtxEvalCacheWait2)
-	waitForEvalReady(baseURL, evalCacheReadyTimeout)
+	// Wait for eval cache to pick up the new flag
+	time.Sleep(builtinCtxEvalCacheWait)
 	// Evaluate WITHOUT X-Environment header — should NOT match
 	var evalResult evalResponse
 	postJSON(t, "/api/v1/evaluation", map[string]any{
