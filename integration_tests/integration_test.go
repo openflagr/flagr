@@ -15,6 +15,12 @@
 //     (builds binary, runs against all compose instances — see README.md for which tests run on legacy checkr/flagr:1.1.12)
 //
 // TestIntegration_Exposures asserts POST /exposures recording via loggedCount (no test-process FLAGR_RECORDER_ENABLED).
+//
+// Built-in context tests (TestIntegration_BuiltInContext, TestIntegration_BuiltInContextHTTPHeader)
+// use isLegacyIntegrationBaseline() to skip on checkr/flagr:1.1.12 — the /evaluation route exists
+// on legacy but the server does not inject @ts/@http_* keys, so constraints would never match.
+// Only the current Flagr image supports built-in context injection (FLAGR_INJECTED_CONTEXT_ENABLED).
+
 package flagr_integration
 
 import (
@@ -1075,9 +1081,14 @@ func TestIntegration_DatarFlagSummary(t *testing.T) {
 }
 
 func TestIntegration_BuiltInContext(t *testing.T) {
-	// Test that built-in context keys (@ts) are injected and usable in constraints.
+	// Built-in context injection (@ts, @ts_hour, @ts_weekday, @ts_month) is a
+	// current-Flagr-only feature. The /evaluation route exists on legacy
+	// checkr/flagr:1.1.12 but the server does not inject @ts keys, so the
+	// constraint would never match. Skip on legacy baseline.
+	if isLegacyIntegrationBaseline() {
+		t.Skip("built-in context injection not available on legacy checkr/flagr:1.1.12")
+	}
 	// The server is started with FLAGR_INJECTED_CONTEXT_ENABLED=true.
-
 	// Create a flag with a @ts constraint (always matches since @ts >= 0)
 	key := fmt.Sprintf("builtin_ctx_%d", time.Now().UnixNano())
 	var created flagResponse
@@ -1158,9 +1169,12 @@ func TestIntegration_BuiltInContext(t *testing.T) {
 }
 
 func TestIntegration_BuiltInContextHTTPHeader(t *testing.T) {
-	// Test that HTTP headers are injected as @http_* context keys.
-	// The server is started with X-Environment in HTTP_HEADERS config.
-
+	// Built-in HTTP header injection (@http_*) is a current-Flagr-only feature.
+	// The /evaluation route exists on legacy checkr/flagr:1.1.12 but the server
+	// does not inject @http_* keys, so the constraint would never match.
+	if isLegacyIntegrationBaseline() {
+		t.Skip("built-in HTTP header injection not available on legacy checkr/flagr:1.1.12")
+	}
 	// Create a flag with @http_x_environment constraint
 	key := fmt.Sprintf("builtin_http_%d", time.Now().UnixNano())
 	var created flagResponse

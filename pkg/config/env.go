@@ -277,5 +277,5 @@ var Config = struct {
 	// Any header starting with these prefixes is injected.
 	// Example: "CF-,X-Flagr-"
 	InjectedContextHTTPHeaderPrefixes []string `env:"FLAGR_INJECTED_CONTEXT_HTTP_HEADER_PREFIXES" envDefault:"" envSeparator:","`
-	WebPrefix string `env:"FLAGR_WEB_PREFIX" envDefault:""`
+	WebPrefix                         string   `env:"FLAGR_WEB_PREFIX" envDefault:""`
 }{}

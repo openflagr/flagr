@@ -55,7 +55,7 @@ func TestEvalWithBuiltinContext(t *testing.T) {
 			{
 				Property: "@ts",
 				Operator: models.ConstraintOperatorGTE,
-			Value:    strconv.FormatInt(futureTS, 10),
+				Value:    strconv.FormatInt(futureTS, 10),
 			},
 		}
 		s.PrepareEvaluation()
@@ -302,5 +302,3 @@ func TestEvalWithBuiltinContext(t *testing.T) {
 		}
 	})
 }
-
-	

@@ -13,10 +13,10 @@ import (
 // @ prefix is used because the conditions library explicitly supports it as a
 // variable prefix character, providing namespace isolation from client context.
 const (
-	BuiltInKeyTs      = "@ts"
-	BuiltInKeyTsHour  = "@ts_hour"
+	BuiltInKeyTs        = "@ts"
+	BuiltInKeyTsHour    = "@ts_hour"
 	BuiltInKeyTsWeekday = "@ts_weekday"
-	BuiltInKeyTsMonth = "@ts_month"
+	BuiltInKeyTsMonth   = "@ts_month"
 )
 
 // httpHeaderPrefix is the prefix used for HTTP header context keys.
@@ -128,6 +128,7 @@ func getHeaderMatchSets() (map[string]bool, map[string]bool) {
 	})
 	return headerExactSet, headerPrefixSet
 }
+
 // ResetHeaderMatchCache resets the cached header match sets.
 // Use only in tests that change config values between calls.
 func ResetHeaderMatchCache() {
@@ -135,4 +136,3 @@ func ResetHeaderMatchCache() {
 	headerExactSet = nil
 	headerPrefixSet = nil
 }
-

@@ -7,6 +7,7 @@
       :model-value="modelValue"
       :data-testid="dataTestid"
       @update:model-value="$emit('update:modelValue', $event)"
+      @keyup="$emit('keyup', $event)"
     />
     <el-tooltip
       v-if="valueHint"
@@ -34,7 +35,7 @@ export default {
     placeholder: { type: String, default: '' },
     dataTestid: { type: String, default: '' },
   },
-  emits: ['update:modelValue'],
+  emits: ['update:modelValue', 'keyup'],
   computed: {
     valueHint(): string | null {
       return contextKeyHint(this.property, this.modelValue)
