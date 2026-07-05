@@ -12,7 +12,7 @@
     - [Data Recorders & A/B Analysis](flagr_eval_exposure_pipeline.md)
     - [Datar Analytics](flagr_datar.md)
 - Development
-    - [Testing](home?id=testing)
+    - [Testing](flagr_testing.md)
     - [API Reference 🔗](https://openflagr.github.io/flagr/api_docs)
 - Client SDKs
     - [Go SDK 🔗](https://github.com/openflagr/goflagr)

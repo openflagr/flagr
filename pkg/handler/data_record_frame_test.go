@@ -8,6 +8,8 @@ import (
 )
 
 func TestFrameOutput(t *testing.T) {
+	t.Parallel()
+
 	er := models.EvalResult{
 		EvalContext: &models.EvalContext{
 			EntityID: "123",
@@ -20,6 +22,7 @@ func TestFrameOutput(t *testing.T) {
 	}
 
 	t.Run("empty options", func(t *testing.T) {
+		t.Parallel()
 		frame := DataRecordFrame{
 			evalResult: er,
 			options:    DataRecordFrameOptions{},
@@ -31,6 +34,7 @@ func TestFrameOutput(t *testing.T) {
 	})
 
 	t.Run("payload with encryption options", func(t *testing.T) {
+		t.Parallel()
 		frame := DataRecordFrame{
 			evalResult: er,
 			options: DataRecordFrameOptions{
@@ -45,6 +49,7 @@ func TestFrameOutput(t *testing.T) {
 	})
 
 	t.Run("payload_raw_json options", func(t *testing.T) {
+		t.Parallel()
 		frame := DataRecordFrame{
 			evalResult: er,
 			options: DataRecordFrameOptions{
@@ -62,14 +67,17 @@ func TestFrameOutput(t *testing.T) {
 }
 
 func TestGetPartitionKey(t *testing.T) {
+	t.Parallel()
 
 	t.Run("empty evalResult", func(t *testing.T) {
+		t.Parallel()
 		er := models.EvalResult{}
 		frame := DataRecordFrame{evalResult: er}
 		assert.Equal(t, "", frame.GetPartitionKey())
 	})
 
 	t.Run("happy code path evalResult", func(t *testing.T) {
+		t.Parallel()
 		er := models.EvalResult{
 			EvalContext: &models.EvalContext{
 				EntityID: "123",

@@ -9,6 +9,7 @@ import (
 )
 
 func TestConstraintToExpr(t *testing.T) {
+	t.Parallel()
 	t.Run("empty case", func(t *testing.T) {
 		c := Constraint{}
 		expr, err := c.ToExpr()
@@ -90,6 +91,7 @@ func TestConstraintToExpr(t *testing.T) {
 }
 
 func TestConstraintValidate(t *testing.T) {
+	t.Parallel()
 	t.Run("empty case", func(t *testing.T) {
 		c := Constraint{}
 		assert.Error(t, c.Validate())
@@ -107,6 +109,7 @@ func TestConstraintValidate(t *testing.T) {
 }
 
 func TestConstraintArray(t *testing.T) {
+	t.Parallel()
 	cs := ConstraintArray{
 		{
 			SegmentID: 0,
@@ -127,6 +130,7 @@ func TestConstraintArray(t *testing.T) {
 }
 
 func TestConstraintToExpr_NestedField(t *testing.T) {
+	t.Parallel()
 	t.Run("dotted path property - EQ", func(t *testing.T) {
 		c := Constraint{
 			Property: "user.name",
@@ -388,6 +392,7 @@ func TestConstraintToExpr_NestedField(t *testing.T) {
 }
 
 func TestConstraintToExpr_RegexEscaping(t *testing.T) {
+	t.Parallel()
 	// EREG with backslash sequences (the main fix)
 	// These previously caused Go scanner "invalid char escape" errors
 	t.Run("EREG with \\d pattern", func(t *testing.T) {
@@ -599,6 +604,7 @@ func TestConstraintToExpr_RegexEscaping(t *testing.T) {
 	})
 }
 func TestCompareOperators_StringNotLexicographic(t *testing.T) {
+	t.Parallel()
 	compareOps := []struct {
 		name     string
 		operator string

@@ -120,41 +120,16 @@ make rebuild-run    # build → stop-ui → start
 
 ## Testing
 
-Three test layers — all via **`make`** from the repo root (`make help` → **Test**).
-
-### Unit tests
-
-```bash
-make test           # golangci-lint + swagger validate + go test ./pkg/...
-```
-
-### E2E tests (UI)
+Flagr has three test layers (unit, E2E, integration), parallel test conventions,
+and CI cache strategies — all covered in the [Testing](flagr_testing.md) guide.
 
 ```bash
-make test-e2e       # build server + UI lint/typecheck + Playwright
+make test              # lint + unit tests
+make test-e2e          # UI + Playwright
+make test-integration  # API integration (local)
 ```
 
-Flagr UI is **TypeScript** (`browser/flagr-ui`); architecture and patterns: [`docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md`](plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md) (As-built).
 
-### Integration tests (API, multi-DB)
-
-**Local** — SQLite `:memory:`, auto-started server:
-
-```bash
-make test-integration
-```
-
-**Docker Compose** — same suite against six instances (SQLite, MySQL, PostgreSQL, …):
-
-```bash
-make test-integration-compose
-```
-
-CI runs **`make ci-integration`** (tests + benchmarks on Compose). Local benchmarks:
-
-```bash
-make bench-integration
-```
 
 ## Deploy
 

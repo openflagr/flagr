@@ -49,6 +49,7 @@ func TestNewKafkaRecorder(t *testing.T) {
 }
 
 func TestCreateTLSConfiguration(t *testing.T) {
+	t.Parallel()
 	t.Run("happy code path", func(t *testing.T) {
 		tlsConfig := createTLSConfiguration(
 			"./testdata/certificates/alice.crt",
@@ -126,7 +127,6 @@ func TestLogKafkaAsyncRecordToDatadog_SkipsExposure(t *testing.T) {
 	})
 }
 
-
 func TestLogKafkaAsyncRecordToDatadog_EvaluationSource(t *testing.T) {
 	called := false
 	orig := logKafkaAsyncRecordToDatadog
@@ -146,6 +146,7 @@ func TestLogKafkaAsyncRecordToDatadog_EvaluationSource(t *testing.T) {
 }
 
 func TestMustParseKafkaVersion(t *testing.T) {
+	t.Parallel()
 	assert.NotPanics(t, func() {
 		mustParseKafkaVersion("0.8.2.0")
 		mustParseKafkaVersion("1.1.0") // for version >1.0, use 3 numbers

@@ -18,7 +18,9 @@ import (
 )
 
 func TestEvalSegment(t *testing.T) {
+	t.Parallel()
 	t.Run("test empty evalContext", func(t *testing.T) {
+		t.Parallel()
 		s := entity.GenFixtureSegment()
 		vID, log, evalNextSegment := evalSegment(models.EvalContext{}, s)
 
@@ -28,6 +30,7 @@ func TestEvalSegment(t *testing.T) {
 	})
 
 	t.Run("test happy code path", func(t *testing.T) {
+		t.Parallel()
 		s := entity.GenFixtureSegment()
 		s.RolloutPercent = uint(100)
 		vID, log, evalNextSegment := evalSegment(models.EvalContext{
@@ -44,6 +47,7 @@ func TestEvalSegment(t *testing.T) {
 	})
 
 	t.Run("test constraint evaluation error", func(t *testing.T) {
+		t.Parallel()
 		s := entity.GenFixtureSegment()
 		s.RolloutPercent = uint(100)
 		vID, log, evalNextSegment := evalSegment(models.EvalContext{
@@ -60,6 +64,7 @@ func TestEvalSegment(t *testing.T) {
 	})
 
 	t.Run("test constraint not match", func(t *testing.T) {
+		t.Parallel()
 		s := entity.GenFixtureSegment()
 		s.RolloutPercent = uint(100)
 		vID, log, evalNextSegment := evalSegment(models.EvalContext{
@@ -76,6 +81,7 @@ func TestEvalSegment(t *testing.T) {
 	})
 
 	t.Run("test evalContext wrong format", func(t *testing.T) {
+		t.Parallel()
 		s := entity.GenFixtureSegment()
 		s.RolloutPercent = uint(100)
 		vID, log, evalNextSegment := evalSegment(models.EvalContext{
@@ -92,6 +98,7 @@ func TestEvalSegment(t *testing.T) {
 	})
 
 	t.Run("test float comparison - 9990403>=9990404 evals to be false", func(t *testing.T) {
+		t.Parallel()
 		s := entity.GenFixtureSegment()
 		s.RolloutPercent = uint(100)
 		s.Constraints = []entity.Constraint{
@@ -119,6 +126,7 @@ func TestEvalSegment(t *testing.T) {
 	})
 
 	t.Run("test float comparison - 9990404>=9990403 evals to be true", func(t *testing.T) {
+		t.Parallel()
 		s := entity.GenFixtureSegment()
 		s.RolloutPercent = uint(100)
 		s.Constraints = []entity.Constraint{
@@ -147,7 +155,9 @@ func TestEvalSegment(t *testing.T) {
 }
 
 func TestEvalSegment_NestedEntityContext(t *testing.T) {
+	t.Parallel()
 	t.Run("nested dotted path constraint matches nested entity context", func(t *testing.T) {
+		t.Parallel()
 		s := entity.GenFixtureSegment()
 		s.Constraints = []entity.Constraint{
 			{
@@ -182,6 +192,7 @@ func TestEvalSegment_NestedEntityContext(t *testing.T) {
 	})
 
 	t.Run("nested dotted path constraint no match", func(t *testing.T) {
+		t.Parallel()
 		s := entity.GenFixtureSegment()
 		s.Constraints = []entity.Constraint{
 			{
@@ -206,6 +217,7 @@ func TestEvalSegment_NestedEntityContext(t *testing.T) {
 	})
 
 	t.Run("nested array index constraint matches", func(t *testing.T) {
+		t.Parallel()
 		s := entity.GenFixtureSegment()
 		s.Constraints = []entity.Constraint{
 			{
@@ -230,6 +242,7 @@ func TestEvalSegment_NestedEntityContext(t *testing.T) {
 	})
 
 	t.Run("nested chained path (array + dot) matches", func(t *testing.T) {
+		t.Parallel()
 		s := entity.GenFixtureSegment()
 		s.Constraints = []entity.Constraint{
 			{
@@ -258,6 +271,7 @@ func TestEvalSegment_NestedEntityContext(t *testing.T) {
 	})
 
 	t.Run("nested path with missing key errors gracefully", func(t *testing.T) {
+		t.Parallel()
 		s := entity.GenFixtureSegment()
 		s.Constraints = []entity.Constraint{
 			{
@@ -284,15 +298,17 @@ func TestEvalSegment_NestedEntityContext(t *testing.T) {
 	})
 }
 
-
 func TestBlankResult_RecordSource(t *testing.T) {
+	t.Parallel()
 	f := entity.GenFixtureFlag()
 	r := BlankResult(&f, models.EvalContext{EntityID: "e1"}, "msg")
 	assert.Equal(t, models.EvalResultRecordSourceEvaluation, r.RecordSource)
 }
 
 func TestBlankResult_DataRecordsEnabled(t *testing.T) {
+	t.Parallel()
 	t.Run("flag with data records enabled", func(t *testing.T) {
+		t.Parallel()
 		f := entity.GenFixtureFlag()
 		f.DataRecordsEnabled = true
 		r := BlankResult(&f, models.EvalContext{EntityID: "e1"}, "")
@@ -300,6 +316,7 @@ func TestBlankResult_DataRecordsEnabled(t *testing.T) {
 	})
 
 	t.Run("flag with data records disabled", func(t *testing.T) {
+		t.Parallel()
 		f := entity.GenFixtureFlag()
 		f.DataRecordsEnabled = false
 		r := BlankResult(&f, models.EvalContext{EntityID: "e1"}, "")
@@ -307,6 +324,7 @@ func TestBlankResult_DataRecordsEnabled(t *testing.T) {
 	})
 
 	t.Run("nil flag defaults to false", func(t *testing.T) {
+		t.Parallel()
 		r := BlankResult(nil, models.EvalContext{EntityID: "e1"}, "")
 		assert.False(t, r.DataRecordsEnabled)
 	})
@@ -796,7 +814,9 @@ func TestEvalFlagsByTags(t *testing.T) {
 }
 
 func TestPostEvaluation(t *testing.T) {
+	t.Parallel()
 	t.Run("test empty body", func(t *testing.T) {
+		t.Parallel()
 		defer gostub.StubFunc(&EvalFlag, &models.EvalResult{}).Reset()
 		e := NewEval()
 		resp := e.PostEvaluation(evaluation.PostEvaluationParams{})
@@ -804,6 +824,7 @@ func TestPostEvaluation(t *testing.T) {
 	})
 
 	t.Run("test happy code path", func(t *testing.T) {
+		t.Parallel()
 		defer gostub.StubFunc(&EvalFlag, &models.EvalResult{}).Reset()
 		e := NewEval()
 		resp := e.PostEvaluation(evaluation.PostEvaluationParams{
@@ -1027,7 +1048,9 @@ func TestPostEvaluationBatch(t *testing.T) {
 }
 
 func TestTagsPostEvaluationBatch(t *testing.T) {
+	t.Parallel()
 	t.Run("test happy code path", func(t *testing.T) {
+		t.Parallel()
 		defer gostub.StubFunc(&EvalFlag, &models.EvalResult{}).Reset()
 		e := NewEval()
 		resp := e.PostEvaluationBatch(evaluation.PostEvaluationBatchParams{
@@ -1048,8 +1071,10 @@ func TestTagsPostEvaluationBatch(t *testing.T) {
 }
 
 func TestRateLimitPerFlagConsoleLogging(t *testing.T) {
+	t.Parallel()
 	r := &models.EvalResult{FlagID: 1}
 	t.Run("running fast triggers rate limiting", func(t *testing.T) {
+		t.Parallel()
 		for range 100 {
 			rateLimitPerFlagConsoleLogging(r)
 		}

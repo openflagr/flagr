@@ -7,6 +7,7 @@ import (
 )
 
 func TestFlagPrepareEvaluation(t *testing.T) {
+	t.Parallel()
 	t.Run("happy code path", func(t *testing.T) {
 		f := GenFixtureFlag()
 		assert.NoError(t, f.PrepareEvaluation())
@@ -16,6 +17,7 @@ func TestFlagPrepareEvaluation(t *testing.T) {
 }
 
 func TestFlagPreload(t *testing.T) {
+	t.Parallel()
 	t.Run("happy code path", func(t *testing.T) {
 		f := GenFixtureFlag()
 		db := PopulateTestDB(f)
@@ -33,6 +35,7 @@ func TestFlagPreload(t *testing.T) {
 }
 
 func TestFlagPreloadTags(t *testing.T) {
+	t.Parallel()
 	t.Run("happy code path", func(t *testing.T) {
 		f := GenFixtureFlag()
 		db := PopulateTestDB(f)
@@ -50,6 +53,7 @@ func TestFlagPreloadTags(t *testing.T) {
 }
 
 func TestCreateFlagKey(t *testing.T) {
+	t.Parallel()
 	t.Run("happy code path", func(t *testing.T) {
 		key, err := CreateFlagKey("")
 		assert.NoError(t, err)
@@ -64,6 +68,7 @@ func TestCreateFlagKey(t *testing.T) {
 }
 
 func TestCreateFlagEntityType(t *testing.T) {
+	t.Parallel()
 	t.Run("happy code path", func(t *testing.T) {
 		f := GenFixtureFlag()
 		db := PopulateTestDB(f)

@@ -9,10 +9,10 @@
 //
 // Execution modes:
 //   - Local:   go test -tags=integration ./integration_tests/
-//              (auto-starts server: SQLite :memory:, recorder on, Datar flush 500ms, eval cache 1s)
+//     (auto-starts server: SQLite :memory:, recorder on, Datar flush 500ms, eval cache 1s)
 //   - BYO:     FLAGR_SERVER_URL=http://host:18000 go test -tags=integration ./integration_tests/
 //   - Docker:  cd integration_tests && make test
-//              (builds binary, runs against all compose instances — see README.md for which tests run on legacy checkr/flagr:1.1.12)
+//     (builds binary, runs against all compose instances — see README.md for which tests run on legacy checkr/flagr:1.1.12)
 //
 // TestIntegration_Exposures asserts POST /exposures recording via loggedCount (no test-process FLAGR_RECORDER_ENABLED).
 package flagr_integration
@@ -456,7 +456,6 @@ func TestIntegration_DuplicateFlag_Errors(t *testing.T) {
 		"key": " spaces invalid ",
 	}, 400, nil)
 }
-
 
 func TestIntegration_Evaluation(t *testing.T) {
 	// Use a seeded flag untouched by other tests (all CRUD tests use seedFlagIDs[0]).

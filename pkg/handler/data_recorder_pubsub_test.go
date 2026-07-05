@@ -36,7 +36,7 @@ func TestPubsubAsyncRecord(t *testing.T) {
 		publisher := client.Publisher("test")
 		assert.NotPanics(t, func() {
 			pr := &pubsubRecorder{
-				producer: client,
+				producer:  client,
 				publisher: publisher,
 			}
 

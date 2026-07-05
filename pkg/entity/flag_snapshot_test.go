@@ -7,6 +7,7 @@ import (
 )
 
 func TestSaveFlagSnapshot(t *testing.T) {
+	t.Parallel()
 	f := GenFixtureFlag()
 	db := PopulateTestDB(f)
 

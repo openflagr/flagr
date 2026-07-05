@@ -12,6 +12,7 @@ import (
 )
 
 func TestCalculateDiff(t *testing.T) {
+	t.Parallel()
 	t.Run("empty cases", func(t *testing.T) {
 		assert.Empty(t, CalculateDiff("", ""))
 		assert.Empty(t, CalculateDiff("a", ""))
@@ -50,10 +51,10 @@ func TestSendNotification(t *testing.T) {
 		defer stubs.Reset()
 
 		SendNotification(Notification{
-			Operation:  OperationCreate,
-			FlagID:   1,
-			FlagKey:  "test-flag",
-			User:       "user",
+			Operation: OperationCreate,
+			FlagID:    1,
+			FlagKey:   "test-flag",
+			User:      "user",
 		})
 
 		// Wait for goroutine to complete
@@ -88,9 +89,9 @@ func TestSendNotification(t *testing.T) {
 		defer stubs.Reset()
 
 		SendNotification(Notification{
-			Operation:  OperationUpdate,
-			FlagID:   2,
-			FlagKey:  "test-flag-2",
+			Operation: OperationUpdate,
+			FlagID:    2,
+			FlagKey:   "test-flag-2",
 		})
 
 		// Wait for goroutine to complete
@@ -113,8 +114,8 @@ func TestSendNotification(t *testing.T) {
 
 		// Should not panic
 		SendNotification(Notification{
-			Operation:  OperationCreate,
-			FlagID:   1,
+			Operation: OperationCreate,
+			FlagID:    1,
 		})
 	})
 
@@ -125,10 +126,10 @@ func TestSendNotification(t *testing.T) {
 		defer stubs.Reset()
 
 		SendNotification(Notification{
-			Operation:   OperationCreate,
+			Operation: OperationCreate,
 			FlagID:    42,
 			FlagKey:   "my-flag",
-			User:        "creator",
+			User:      "creator",
 		})
 
 		assert.Eventually(t, func() bool {
@@ -151,8 +152,8 @@ func TestSendNotification(t *testing.T) {
 
 		before := time.Now()
 		SendNotification(Notification{
-			Operation:  OperationCreate,
-			FlagID:   1,
+			Operation: OperationCreate,
+			FlagID:    1,
 		})
 
 		assert.Eventually(t, func() bool {
@@ -178,9 +179,9 @@ func TestSendNotificationConcurrency(t *testing.T) {
 			go func(id uint) {
 				defer wg.Done()
 				SendNotification(Notification{
-					Operation:  OperationCreate,
-					FlagID:   id,
-					FlagKey:  "flag",
+					Operation: OperationCreate,
+					FlagID:    id,
+					FlagKey:   "flag",
 				})
 			}(uint(i))
 		}
@@ -195,15 +196,16 @@ func TestSendNotificationConcurrency(t *testing.T) {
 }
 
 func TestNotifierDirectSend(t *testing.T) {
+	t.Parallel()
 	t.Run("can send to notifier directly with context", func(t *testing.T) {
 		mock := NewMockNotifier()
 
 		ctx := context.Background()
 		notif := Notification{
-			Operation:   OperationCreate,
+			Operation: OperationCreate,
 			FlagID:    1,
 			FlagKey:   "direct-test",
-			User:        "tester",
+			User:      "tester",
 		}
 
 		err := mock.Send(ctx, notif)

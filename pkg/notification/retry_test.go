@@ -13,6 +13,7 @@ import (
 )
 
 func TestDoRequestWithRetry(t *testing.T) {
+	t.Parallel()
 	t.Run("returns immediately on 2xx success", func(t *testing.T) {
 		callCount := int32(0)
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

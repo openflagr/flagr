@@ -11,14 +11,15 @@ import (
 )
 
 func TestNotification(t *testing.T) {
+	t.Parallel()
 	t.Run("null notifier should not fail", func(t *testing.T) {
 		n := &nullNotifier{}
 		ctx := context.Background()
 		notif := Notification{
-			Operation:  OperationCreate,
-			FlagID:   1,
-			FlagKey:  "test-flag",
-			User:       "test@example.com",
+			Operation: OperationCreate,
+			FlagID:    1,
+			FlagKey:   "test-flag",
+			User:      "test@example.com",
 		}
 
 		err := n.Send(ctx, notif)
@@ -35,17 +36,17 @@ func TestNotification(t *testing.T) {
 		ctx := context.Background()
 
 		notif1 := Notification{
-			Operation:  OperationCreate,
-			FlagID:   1,
-			FlagKey:  "test-flag-1",
-			User:       "user1@example.com",
+			Operation: OperationCreate,
+			FlagID:    1,
+			FlagKey:   "test-flag-1",
+			User:      "user1@example.com",
 		}
 
 		notif2 := Notification{
-			Operation:  OperationUpdate,
-			FlagID:   2,
-			FlagKey:  "test-flag-2",
-			User:       "user2@example.com",
+			Operation: OperationUpdate,
+			FlagID:    2,
+			FlagKey:   "test-flag-2",
+			User:      "user2@example.com",
 		}
 
 		err1 := m.Send(ctx, notif1)
@@ -113,6 +114,7 @@ func TestGetNotifiers(t *testing.T) {
 }
 
 func TestNotifierConcurrency(t *testing.T) {
+	t.Parallel()
 	t.Run("MockNotifier is safe for concurrent use", func(t *testing.T) {
 		mock := NewMockNotifier()
 

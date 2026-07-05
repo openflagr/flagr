@@ -11,7 +11,9 @@ import (
 )
 
 func TestJSONFileFetcher(t *testing.T) {
+	t.Parallel()
 	t.Run("happy code path", func(t *testing.T) {
+		t.Parallel()
 		jff := &jsonFileFetcher{filePath: "./testdata/sample_eval_cache.json"}
 		fs, err := jff.fetch()
 		assert.NoError(t, err)
@@ -19,6 +21,7 @@ func TestJSONFileFetcher(t *testing.T) {
 	})
 
 	t.Run("non-exists file path", func(t *testing.T) {
+		t.Parallel()
 		jff := &jsonFileFetcher{filePath: "./testdata/non-exists.json"}
 		fs, err := jff.fetch()
 		assert.Error(t, err)
@@ -27,7 +30,9 @@ func TestJSONFileFetcher(t *testing.T) {
 }
 
 func TestJSONHTTPFetcher(t *testing.T) {
+	t.Parallel()
 	t.Run("happy code path", func(t *testing.T) {
+		t.Parallel()
 		h := func(w http.ResponseWriter, r *http.Request) {
 			b, _ := os.ReadFile("./testdata/sample_eval_cache.json")
 			w.Write(b)
@@ -43,6 +48,7 @@ func TestJSONHTTPFetcher(t *testing.T) {
 	})
 
 	t.Run("non-exists file path", func(t *testing.T) {
+		t.Parallel()
 		jhf := &jsonHTTPFetcher{url: "http://invalid-url"}
 		fs, err := jhf.fetch()
 		assert.Error(t, err)

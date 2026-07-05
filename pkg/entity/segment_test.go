@@ -7,6 +7,7 @@ import (
 )
 
 func TestSegmentPrepareEvaluation(t *testing.T) {
+	t.Parallel()
 	t.Run("happy code path", func(t *testing.T) {
 		s := GenFixtureSegment()
 		assert.NoError(t, s.PrepareEvaluation())
@@ -26,6 +27,7 @@ func TestSegmentPrepareEvaluation(t *testing.T) {
 }
 
 func TestSegmentPreload(t *testing.T) {
+	t.Parallel()
 	t.Run("happy code path", func(t *testing.T) {
 		s := GenFixtureSegment()
 		f := GenFixtureFlag()

@@ -16,6 +16,7 @@ import (
 )
 
 func TestParseTimeRange(t *testing.T) {
+	t.Parallel()
 	from := strfmt.DateTime(time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC))
 	to := strfmt.DateTime(time.Date(2024, 1, 10, 0, 0, 0, 0, time.UTC))
 
@@ -218,6 +219,7 @@ func TestDatarEndpoints_Pagination(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestSlicesContainsDatar(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name  string
 		types []string
@@ -232,6 +234,7 @@ func TestSlicesContainsDatar(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := slices.Contains(tt.types, "datar")
 			assert.Equal(t, tt.want, got)
 		})
@@ -243,6 +246,7 @@ func TestSlicesContainsDatar(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestToSwaggerSummaryFlag_WithValidLastEvaluated(t *testing.T) {
+	t.Parallel()
 	r := datar.SummaryRow{
 		FlagID:         42,
 		FlagKey:        "my-flag",
@@ -258,18 +262,21 @@ func TestToSwaggerSummaryFlag_WithValidLastEvaluated(t *testing.T) {
 }
 
 func TestToSwaggerSummaryFlag_EmptyLastEvaluated(t *testing.T) {
+	t.Parallel()
 	r := datar.SummaryRow{FlagID: 1, LastEvaluated: ""}
 	f := toSwaggerSummaryFlag(r)
 	assert.True(t, f.LastEvaluatedAt.IsZero(), "empty string should leave zero value")
 }
 
 func TestToSwaggerDay_InvalidDate(t *testing.T) {
+	t.Parallel()
 	d := datar.DayEntry{Day: "not-a-date", Count: 10}
 	entry := toSwaggerDay(d)
 	assert.Nil(t, entry, "unparseable date should return nil")
 }
 
 func TestToSwaggerDay_ValidDate(t *testing.T) {
+	t.Parallel()
 	d := datar.DayEntry{Day: "2024-01-15", Count: 42}
 	entry := toSwaggerDay(d)
 	assert.NotNil(t, entry)

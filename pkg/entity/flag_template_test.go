@@ -8,6 +8,7 @@ import (
 )
 
 func TestAppendTagValueToFlag(t *testing.T) {
+	t.Parallel()
 	db := NewTestDB()
 	require.NoError(t, db.AutoMigrate(AutoMigrateTables...))
 	f := &Flag{Key: "tag_flag", Description: "d", Enabled: true}
@@ -25,6 +26,7 @@ func TestAppendTagValueToFlag(t *testing.T) {
 }
 
 func TestApplyFlagTemplate_SimpleBoolean(t *testing.T) {
+	t.Parallel()
 	db := NewTestDB()
 	require.NoError(t, db.AutoMigrate(AutoMigrateTables...))
 
@@ -49,6 +51,7 @@ func TestApplyFlagTemplate_SimpleBoolean(t *testing.T) {
 }
 
 func TestApplyFlagTemplate_UnknownVariantKey(t *testing.T) {
+	t.Parallel()
 	db := NewTestDB()
 	require.NoError(t, db.AutoMigrate(AutoMigrateTables...))
 	f := &Flag{Key: "bad_tpl", Description: "d", Enabled: true}
@@ -67,6 +70,7 @@ func TestApplyFlagTemplate_UnknownVariantKey(t *testing.T) {
 }
 
 func TestApplyFlagTemplate_InvalidVariantKey(t *testing.T) {
+	t.Parallel()
 	db := NewTestDB()
 	require.NoError(t, db.AutoMigrate(AutoMigrateTables...))
 	f := &Flag{Key: "invalid_var", Description: "d", Enabled: true}
@@ -80,6 +84,7 @@ func TestApplyFlagTemplate_InvalidVariantKey(t *testing.T) {
 }
 
 func TestSourceFlagTemplate_PreservesGraphShape(t *testing.T) {
+	t.Parallel()
 	db := NewTestDB()
 	require.NoError(t, db.AutoMigrate(AutoMigrateTables...))
 	source := GenFixtureFlag()
@@ -99,6 +104,7 @@ func TestSourceFlagTemplate_PreservesGraphShape(t *testing.T) {
 }
 
 func TestSourceFlagTemplate_RoundTripViaApply(t *testing.T) {
+	t.Parallel()
 	db := NewTestDB()
 	require.NoError(t, db.AutoMigrate(AutoMigrateTables...))
 	source := GenFixtureFlag()
@@ -121,6 +127,7 @@ func TestSourceFlagTemplate_RoundTripViaApply(t *testing.T) {
 }
 
 func TestApplyFlagTemplate_FromSourceVariantsAndSegments(t *testing.T) {
+	t.Parallel()
 	db := NewTestDB()
 	require.NoError(t, db.AutoMigrate(AutoMigrateTables...))
 	source := GenFixtureFlag()
@@ -141,6 +148,7 @@ func TestApplyFlagTemplate_FromSourceVariantsAndSegments(t *testing.T) {
 }
 
 func TestApplyFlagTemplate_FromSourceTags(t *testing.T) {
+	t.Parallel()
 	db := NewTestDB()
 	require.NoError(t, db.AutoMigrate(AutoMigrateTables...))
 	source := &Flag{Key: "src_tags", Description: "s", Enabled: true}

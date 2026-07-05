@@ -8,6 +8,7 @@ import (
 )
 
 func TestValidate(t *testing.T) {
+	t.Parallel()
 	t.Run("empty case", func(t *testing.T) {
 		v := Variant{}
 		err := v.Validate()
@@ -26,6 +27,7 @@ func TestValidate(t *testing.T) {
 }
 
 func TestVariantScan(t *testing.T) {
+	t.Parallel()
 	t.Run("happy code path", func(t *testing.T) {
 		a := &Attachment{}
 		err := a.Scan([]byte(`{"key": "value"}`))

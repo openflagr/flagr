@@ -1,5 +1,7 @@
+DOCKER_BUILDX_CACHE ?=
+
 build-image:
-	docker build -f ./Dockerfile-Integration-Test -t flagr_integration_tests ../
+	docker buildx build $(DOCKER_BUILDX_CACHE) -f ./Dockerfile-Integration-Test -t flagr_integration_tests --load ../
 
 down:
 	docker compose down -v

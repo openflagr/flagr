@@ -11,9 +11,9 @@ import (
 )
 
 type pubsubRecorder struct {
-	producer *pubsub.Client
+	producer  *pubsub.Client
 	publisher *pubsub.Publisher
-	options  DataRecordFrameOptions
+	options   DataRecordFrameOptions
 }
 
 var (
@@ -34,7 +34,7 @@ var NewPubsubRecorder = func() DataRecorder {
 	}
 
 	return &pubsubRecorder{
-		producer: client,
+		producer:  client,
 		publisher: client.Publisher(config.Config.RecorderPubsubTopicName),
 		options: DataRecordFrameOptions{
 			Encrypted:       false, // not implemented yet

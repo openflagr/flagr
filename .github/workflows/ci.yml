@@ -13,26 +13,28 @@ jobs:
     env:
       CGO_ENABLED: 0
     steps:
+      - name: Check out source code
+        uses: actions/checkout@v4
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: 1.26
-      - name: Check out source code
-        uses: actions/checkout@v4
+          cache: true
       - run: echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
       - run: make deps
       - run: make ci-swagger
       - run: make ci
-      - run: make benchmark
       - uses: codecov/codecov-action@v4
   ui_lint:
     runs-on: ubuntu-latest
     steps:
+      - name: Check out source code
+        uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Check out source code
-        uses: actions/checkout@v4
+          cache: 'npm'
+          cache-dependency-path: browser/flagr-ui/package-lock.json
       - run: make build-ui
   integration_test:
     runs-on: ubuntu-latest
@@ -41,21 +43,27 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: "1.26"
+          cache: true
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
       - name: Integration tests and benchmarks (Docker Compose)
-        run: make ci-integration
+        run: make ci-integration DOCKER_BUILDX_CACHE="--cache-from type=gha --cache-to type=gha,mode=max"
   e2e_test:
     runs-on: ubuntu-latest
     steps:
+      - name: Check out source code
+        uses: actions/checkout@v4
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: 1.26
+          cache: true
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Check out source code
-        uses: actions/checkout@v4
+          cache: 'npm'
+          cache-dependency-path: browser/flagr-ui/package-lock.json
       - run: make test-e2e
   actionlint:
     runs-on: ubuntu-latest
@@ -71,15 +79,19 @@ jobs:
   dep_freshness:
     runs-on: ubuntu-latest
     steps:
+      - name: Check out source code
+        uses: actions/checkout@v4
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: 1.26
+          cache: true
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Check out source code
-        uses: actions/checkout@v4
+          cache: 'npm'
+          cache-dependency-path: browser/flagr-ui/package-lock.json
       - name: Check Go dependency freshness (5-day minimum age)
         run: MIN_AGE_DAYS=5 ./scripts/check-dep-freshness.sh
+

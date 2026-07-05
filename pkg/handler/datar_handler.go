@@ -94,6 +94,7 @@ func toSwaggerSummaryFlag(r datar.SummaryRow) *models.DatarSummaryFlag {
 	}
 	return f
 }
+
 // toSwaggerDay converts an engine DayEntry to a swagger model.
 // Returns nil if the date string is unparseable.
 func toSwaggerDay(d datar.DayEntry) *models.DatarDayEntry {
