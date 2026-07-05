@@ -284,9 +284,10 @@ func TestEvalWithBuiltinContext(t *testing.T) {
 		}
 		s.PrepareEvaluation()
 
+		ctx := InjectBuiltInContext(map[string]any{}, nil)
 		vID, _, evalNextSegment := evalSegment(models.EvalContext{
 			EnableDebug:   true,
-			EntityContext: map[string]any{},
+			EntityContext: ctx,
 			EntityID:      "entity1",
 			EntityType:    "entityType1",
 			FlagID:        100,
