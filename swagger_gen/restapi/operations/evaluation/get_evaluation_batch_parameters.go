@@ -28,7 +28,7 @@ type GetEvaluationBatchParams struct {
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
-	/*Percent-encoded JSON matching POST /evaluation/batch body (evaluationBatchRequest).
+	/*Percent-encoded (URI-encoded) JSON matching POST /evaluation/batch body (evaluationBatchRequest). Example: ?json=%7B%22entities%22%3A%5B%7B%22entityID%22%3A%22u1%22%7D%5D%2C%22flagIDs%22%3A%5B1%5D%7D decodes to {"entities":[{"entityID":"u1"}],"flagIDs":[1]}.
 	  Required: true
 	  In: query
 	*/

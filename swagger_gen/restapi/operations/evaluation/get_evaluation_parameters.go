@@ -28,7 +28,7 @@ type GetEvaluationParams struct {
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
-	/*Percent-encoded JSON matching POST /evaluation body (evalContext). Example: ?json=%7B%22entityID%22%3A%22u1%22%2C%22flagID%22%3A1%7D
+	/*Percent-encoded (URI-encoded) JSON matching POST /evaluation body (evalContext). Example: ?json=%7B%22entityID%22%3A%22u1%22%2C%22flagID%22%3A1%7D decodes to {"entityID":"u1","flagID":1}.
 	  Required: true
 	  In: query
 	*/

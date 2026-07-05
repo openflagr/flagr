@@ -141,7 +141,7 @@ func init() {
         "parameters": [
           {
             "type": "string",
-            "description": "Percent-encoded JSON matching POST /evaluation body (evalContext). Example: ?json=%7B%22entityID%22%3A%22u1%22%2C%22flagID%22%3A1%7D",
+            "description": "Percent-encoded (URI-encoded) JSON matching POST /evaluation body (evalContext). Example: ?json=%7B%22entityID%22%3A%22u1%22%2C%22flagID%22%3A1%7D decodes to {\"entityID\":\"u1\",\"flagID\":1}.",
             "name": "json",
             "in": "query",
             "required": true
@@ -203,7 +203,7 @@ func init() {
         "parameters": [
           {
             "type": "string",
-            "description": "Percent-encoded JSON matching POST /evaluation/batch body (evaluationBatchRequest).",
+            "description": "Percent-encoded (URI-encoded) JSON matching POST /evaluation/batch body (evaluationBatchRequest). Example: ?json=%7B%22entities%22%3A%5B%7B%22entityID%22%3A%22u1%22%7D%5D%2C%22flagIDs%22%3A%5B1%5D%7D decodes to {\"entities\":[{\"entityID\":\"u1\"}],\"flagIDs\":[1]}.",
             "name": "json",
             "in": "query",
             "required": true
@@ -2794,7 +2794,7 @@ func init() {
         "parameters": [
           {
             "type": "string",
-            "description": "Percent-encoded JSON matching POST /evaluation body (evalContext). Example: ?json=%7B%22entityID%22%3A%22u1%22%2C%22flagID%22%3A1%7D",
+            "description": "Percent-encoded (URI-encoded) JSON matching POST /evaluation body (evalContext). Example: ?json=%7B%22entityID%22%3A%22u1%22%2C%22flagID%22%3A1%7D decodes to {\"entityID\":\"u1\",\"flagID\":1}.",
             "name": "json",
             "in": "query",
             "required": true
@@ -2856,7 +2856,7 @@ func init() {
         "parameters": [
           {
             "type": "string",
-            "description": "Percent-encoded JSON matching POST /evaluation/batch body (evaluationBatchRequest).",
+            "description": "Percent-encoded (URI-encoded) JSON matching POST /evaluation/batch body (evaluationBatchRequest). Example: ?json=%7B%22entities%22%3A%5B%7B%22entityID%22%3A%22u1%22%7D%5D%2C%22flagIDs%22%3A%5B1%5D%7D decodes to {\"entities\":[{\"entityID\":\"u1\"}],\"flagIDs\":[1]}.",
             "name": "json",
             "in": "query",
             "required": true
