@@ -20,6 +20,8 @@ Run **`make help`** from the repo root for the full catalog. Common targets:
 | `make bench-integration` | HTTP eval benchmarks (local) |
 | `make swagger` | Regenerate `swagger_gen/` |
 
+**Go tests:** Prefer `t.Parallel()` unless the test mutates global state (`config.Config`, singletons, `os.Setenv`). See `docs/flagr_testing.md` for the decision tree.
+
 ## Before commit / push (PR)
 
 Run from **repo root**. Match what [`.github/workflows/ci.yml`](.github/workflows/ci.yml) enforces so PR checks stay green.
@@ -47,7 +49,7 @@ Run from **repo root**. Match what [`.github/workflows/ci.yml`](.github/workflow
 ## Key Code
 
 **Backend (`pkg/`):**
-- `handler/eval.go` — evaluation engine; `handler/crud.go` — CRUD API handlers
+- `handler/eval.go` — evaluation engine (POST/GET), batch; `handler/eval_test.go` — GET eval tests; `handler/crud.go` — CRUD API handlers
 - `handler/builtin_context.go` — built-in context injection (`@ts*`, `@http_*` keys into entityContext)
 - `handler/exposure.go` — exposure (impression) logging; `handler/data_recorder*.go` — recorders (Kafka, Kinesis, Pub/Sub, Datar)
 - `entity/` — domain models (flag, segment, constraint, variant, distribution)

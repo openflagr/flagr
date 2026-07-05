@@ -1,9 +1,11 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"net/http"
 	"sync"
 	"time"
 
@@ -17,6 +19,8 @@ import (
 	"github.com/bsm/ratelimit"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/validate"
 	"github.com/zhouzhuojie/conditions"
 )
 
@@ -100,6 +104,86 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 	resp := evaluation.NewPostEvaluationBatchOK()
 	resp.SetPayload(results)
 	return resp
+}
+
+// GET evaluation: query decode and POST-parity validation
+
+// decodeEvalContextFromGet applies GET /evaluation checks: raw query length (as received),
+// non-empty json param, JSON syntax, then POST-parity schema validation.
+func decodeEvalContextFromGet(req *http.Request, rawQueryLen int, jsonParam string) (models.EvalContext, *models.Error) {
+	var zero models.EvalContext
+	if errPayload := evalGetQueryTooLong(rawQueryLen); errPayload != nil {
+		return zero, errPayload
+	}
+	if jsonParam == "" {
+		return zero, ErrorMessage("missing required query parameter json")
+	}
+	var evalContext models.EvalContext
+	if err := json.Unmarshal([]byte(jsonParam), &evalContext); err != nil {
+		return zero, ErrorMessage("json is not valid evalContext: %v", err)
+	}
+	if errPayload := validateEvalContextAfterJSON(req, &evalContext); errPayload != nil {
+		return zero, errPayload
+	}
+	return evalContext, nil
+}
+
+// decodeEvaluationBatchFromGet applies GET /evaluation/batch checks (same stages as single eval).
+func decodeEvaluationBatchFromGet(req *http.Request, rawQueryLen int, jsonParam string) (models.EvaluationBatchRequest, *models.Error) {
+	var zero models.EvaluationBatchRequest
+	if errPayload := evalGetQueryTooLong(rawQueryLen); errPayload != nil {
+		return zero, errPayload
+	}
+	if jsonParam == "" {
+		return zero, ErrorMessage("missing required query parameter json")
+	}
+	var batchReq models.EvaluationBatchRequest
+	if err := json.Unmarshal([]byte(jsonParam), &batchReq); err != nil {
+		return zero, ErrorMessage("json is not valid evaluationBatchRequest: %v", err)
+	}
+	if errPayload := validateEvaluationBatchRequestAfterJSON(req, &batchReq); errPayload != nil {
+		return zero, errPayload
+	}
+	return batchReq, nil
+}
+
+type swaggerValidated interface {
+	Validate(strfmt.Registry) error
+	ContextValidate(context.Context, strfmt.Registry) error
+}
+
+func validateSwaggerModelAfterJSON(r *http.Request, label string, v swaggerValidated) *models.Error {
+	if v == nil {
+		return ErrorMessage("json is not valid %s: empty object", label)
+	}
+	formats := strfmt.Default
+	if err := v.Validate(formats); err != nil {
+		return ErrorMessage("json is not valid %s: %v", label, err)
+	}
+	ctx := context.Background()
+	if r != nil {
+		ctx = validate.WithOperationRequest(r.Context())
+	}
+	if err := v.ContextValidate(ctx, formats); err != nil {
+		return ErrorMessage("json is not valid %s: %v", label, err)
+	}
+	return nil
+}
+
+// validateEvalContextAfterJSON applies the same checks as POST /evaluation BindRequest
+// (body.Validate + body.ContextValidate) after GET json has been unmarshaled.
+func validateEvalContextAfterJSON(r *http.Request, evalContext *models.EvalContext) *models.Error {
+	if evalContext == nil {
+		return ErrorMessage("json is not valid evalContext: empty object")
+	}
+	return validateSwaggerModelAfterJSON(r, "evalContext", evalContext)
+}
+
+func validateEvaluationBatchRequestAfterJSON(r *http.Request, batchReq *models.EvaluationBatchRequest) *models.Error {
+	if batchReq == nil {
+		return ErrorMessage("json is not valid evaluationBatchRequest: empty object")
+	}
+	return validateSwaggerModelAfterJSON(r, "evaluationBatchRequest", batchReq)
 }
 
 // BlankResult creates a blank result
