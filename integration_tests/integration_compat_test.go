@@ -51,6 +51,45 @@ func TestResponseIndicatesRouteNotRegistered(t *testing.T) {
 	}
 }
 
+func TestResponseIndicatesOptionalRouteUnavailable(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name   string
+		status int
+		body   string
+		want   bool
+	}{
+		{
+			name:   "swagger path missing",
+			status: 404,
+			body:   `{"code":404,"message":"path /api/v1/evaluation was not found"}`,
+			want:   true,
+		},
+		{
+			name:   "legacy GET eval unsupported",
+			status: 405,
+			body:   `{"code":405,"message":"method GET is not allowed, but [POST] are"}`,
+			want:   true,
+		},
+		{
+			name:   "application flag missing",
+			status: 404,
+			body:   `{"code":404,"message":"unable to find flag 999 in the database"}`,
+			want:   false,
+		},
+	}
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			got := responseIndicatesOptionalRouteUnavailable(tc.status, []byte(tc.body))
+			if got != tc.want {
+				t.Fatalf("got %v want %v", got, tc.want)
+			}
+		})
+	}
+}
+
 func TestIsLegacyIntegrationBaseline(t *testing.T) {
 	prev := baseURL
 	t.Cleanup(func() { baseURL = prev })
