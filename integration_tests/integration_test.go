@@ -587,6 +587,19 @@ func TestIntegration_GetEvaluation(t *testing.T) {
 			"flagIDs": []int64{flagID},
 		}, http.StatusBadRequest)
 	})
+	t.Run("GET malformed json and missing json 400", func(t *testing.T) {
+		getEvalExpectGETPath(t, "/api/v1/evaluation?json=not-json", http.StatusBadRequest, "json is not valid evalContext")
+		getEvalExpectGETPath(t, "/api/v1/evaluation?json=%7B", http.StatusBadRequest, "json is not valid evalContext")
+		getEvalExpectGETPath(t, "/api/v1/evaluation?json=%22x%22", http.StatusBadRequest, "json is not valid evalContext")
+		getEvalExpectGETPath(t, "/api/v1/evaluation/batch?json=not-json", http.StatusBadRequest, "json is not valid evaluationBatchRequest")
+		getEvalExpectGETPath(t, "/api/v1/evaluation/batch?json=%7B", http.StatusBadRequest, "json is not valid evaluationBatchRequest")
+	})
+
+	t.Run("GET missing json query param", func(t *testing.T) {
+		// Swagger bind requires query param json (may be 422); empty value is rejected before handler eval.
+		getEvalExpectGETPath(t, "/api/v1/evaluation", http.StatusUnprocessableEntity, "json")
+		getEvalExpectGETPath(t, "/api/v1/evaluation?json=", http.StatusUnprocessableEntity, "json")
+	})
 }
 
 func TestIntegration_Preload(t *testing.T) {

@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 )
@@ -125,6 +126,33 @@ func getEvalExpectStatus(t *testing.T, evalContext map[string]any, wantStatus in
 	if resp.StatusCode != wantStatus {
 		b, _ := io.ReadAll(resp.Body)
 		t.Fatalf("GET %s: expected status %d, got %d: %s", path, wantStatus, resp.StatusCode, string(b))
+	}
+}
+
+// getEvalExpectGETPath GETs path (including query) and requires status; if msgContains is non-empty,
+// the error response message must contain that substring.
+func getEvalExpectGETPath(t *testing.T, path string, wantStatus int, msgContains string) {
+	t.Helper()
+	resp, err := doReq("GET", path, nil)
+	if err != nil {
+		t.Fatalf("GET %s: %v", path, err)
+	}
+	defer resp.Body.Close()
+	b, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode != wantStatus {
+		t.Fatalf("GET %s: expected status %d, got %d: %s", path, wantStatus, resp.StatusCode, string(b))
+	}
+	if msgContains == "" {
+		return
+	}
+	var errPayload struct {
+		Message string `json:"message"`
+	}
+	if err := json.Unmarshal(b, &errPayload); err != nil {
+		t.Fatalf("GET %s: decode error body: %v raw=%s", path, err, string(b))
+	}
+	if !strings.Contains(errPayload.Message, msgContains) {
+		t.Fatalf("GET %s: message %q does not contain %q", path, errPayload.Message, msgContains)
 	}
 }
 
