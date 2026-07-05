@@ -1,3 +1,24 @@
+get:
+  tags:
+    - evaluation
+  operationId: getEvaluation
+  parameters:
+    - in: query
+      name: json
+      description: >-
+        Percent-encoded JSON matching POST /evaluation body (evalContext).
+        Example: ?json=%7B%22entityID%22%3A%22u1%22%2C%22flagID%22%3A1%7D
+      required: true
+      type: string
+  responses:
+    200:
+      description: evaluation result
+      schema:
+        $ref: "#/definitions/evalResult"
+    default:
+      description: generic error response
+      schema:
+        $ref: "#/definitions/error"
 post:
   tags:
     - evaluation

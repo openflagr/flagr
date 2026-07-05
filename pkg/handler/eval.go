@@ -22,6 +22,8 @@ import (
 
 // Eval is the Eval interface
 type Eval interface {
+	GetEvaluation(evaluation.GetEvaluationParams) middleware.Responder
+	GetEvaluationBatch(evaluation.GetEvaluationBatchParams) middleware.Responder
 	PostEvaluation(evaluation.PostEvaluationParams) middleware.Responder
 	PostEvaluationBatch(evaluation.PostEvaluationBatchParams) middleware.Responder
 }
@@ -32,6 +34,55 @@ func NewEval() Eval {
 }
 
 type eval struct{}
+
+func evalGetQueryTooLong(rawQueryLen int) *models.Error {
+	max := config.Config.EvalGetMaxURLBytes
+	if max <= 0 || rawQueryLen <= max {
+		return nil
+	}
+	return ErrorMessage("GET evaluation query length %d exceeds maximum of %d; use POST", rawQueryLen, max)
+}
+
+func (e *eval) GetEvaluation(params evaluation.GetEvaluationParams) middleware.Responder {
+	if errPayload := evalGetQueryTooLong(len(params.HTTPRequest.URL.RawQuery)); errPayload != nil {
+		return evaluation.NewGetEvaluationDefault(400).WithPayload(errPayload)
+	}
+	if params.JSON == "" {
+		return evaluation.NewGetEvaluationDefault(400).WithPayload(
+			ErrorMessage("missing required query parameter json"))
+	}
+	var evalContext models.EvalContext
+	if err := json.Unmarshal([]byte(params.JSON), &evalContext); err != nil {
+		return evaluation.NewGetEvaluationDefault(400).WithPayload(
+			ErrorMessage("json is not valid evalContext: %v", err))
+	}
+	evalResult := EvalFlag(evalContext)
+	resp := evaluation.NewGetEvaluationOK()
+	resp.SetPayload(evalResult)
+	return resp
+}
+
+func (e *eval) GetEvaluationBatch(params evaluation.GetEvaluationBatchParams) middleware.Responder {
+	if errPayload := evalGetQueryTooLong(len(params.HTTPRequest.URL.RawQuery)); errPayload != nil {
+		return evaluation.NewGetEvaluationBatchDefault(400).WithPayload(errPayload)
+	}
+	if params.JSON == "" {
+		return evaluation.NewGetEvaluationBatchDefault(400).WithPayload(
+			ErrorMessage("missing required query parameter json"))
+	}
+	var batchReq models.EvaluationBatchRequest
+	if err := json.Unmarshal([]byte(params.JSON), &batchReq); err != nil {
+		return evaluation.NewGetEvaluationBatchDefault(400).WithPayload(
+			ErrorMessage("json is not valid evaluationBatchRequest: %v", err))
+	}
+	results, errPayload := EvaluateBatch(&batchReq, nil)
+	if errPayload != nil {
+		return evaluation.NewGetEvaluationBatchDefault(400).WithPayload(errPayload)
+	}
+	resp := evaluation.NewGetEvaluationBatchOK()
+	resp.SetPayload(results)
+	return resp
+}
 
 func (e *eval) PostEvaluation(params evaluation.PostEvaluationParams) middleware.Responder {
 	evalContext := params.Body
@@ -50,104 +101,13 @@ func (e *eval) PostEvaluation(params evaluation.PostEvaluationParams) middleware
 }
 
 func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) middleware.Responder {
-	entities := params.Body.Entities
-	flagIDs := params.Body.FlagIDs
-	flagKeys := params.Body.FlagKeys
-	flagTags := params.Body.FlagTags
-	flagTagsOperator := params.Body.FlagTagsOperator
-
-	// Deduplicate flagKeys to prevent DoS via repeated keys
-	if len(flagKeys) > 1 {
-		seen := make(map[string]struct{}, len(flagKeys))
-		uniqueFlagKeys := make([]string, 0, len(flagKeys))
-		for _, k := range flagKeys {
-			if _, exists := seen[k]; !exists {
-				seen[k] = struct{}{}
-				uniqueFlagKeys = append(uniqueFlagKeys, k)
-			}
-		}
-		flagKeys = uniqueFlagKeys
+	if params.Body == nil {
+		return evaluation.NewPostEvaluationBatchDefault(400).WithPayload(
+			ErrorMessage("empty body"))
 	}
-
-	// Deduplicate flagIDs to prevent DoS via repeated IDs
-	if len(flagIDs) > 1 {
-		seen := make(map[int64]struct{}, len(flagIDs))
-		uniqueFlagIDs := make([]int64, 0, len(flagIDs))
-		for _, id := range flagIDs {
-			if _, exists := seen[id]; !exists {
-				seen[id] = struct{}{}
-				uniqueFlagIDs = append(uniqueFlagIDs, id)
-			}
-		}
-		flagIDs = uniqueFlagIDs
-	}
-
-	// Validate batch size to prevent DoS attacks via resource exhaustion (if enabled)
-	if maxBatchSize := config.Config.EvalBatchSize; maxBatchSize > 0 {
-		// Calculate total evaluations: entities * (flagIDs + flagKeys + flagTags)
-		// For flagTags, we count each tag as potentially matching one flag (conservative estimate)
-		flagsPerEntity := len(flagIDs) + len(flagKeys)
-		if len(flagTags) > 0 {
-			flagsPerEntity++ // flagTags is evaluated once per entity regardless of count
-		}
-		if total := len(entities) * flagsPerEntity; total > maxBatchSize {
-			return evaluation.NewPostEvaluationBatchDefault(400).WithPayload(
-				ErrorMessage("batch evaluation size %d exceeds maximum allowed size of %d", total, maxBatchSize))
-		}
-	}
-
-	est := len(entities) * (len(flagIDs) + len(flagKeys))
-	if len(flagTags) > 0 {
-		est += len(entities)
-	}
-	results := &models.EvaluationBatchResponse{
-		EvaluationResults: make([]*models.EvalResult, 0, est),
-	}
-
-	// Inject built-in context keys (@ts_*, @http_*) into each entity's context.
-	// Same semantics as the single-eval path: in-place mutation when the context
-	// is already a map, or a new map when it is nil/non-map. When the feature is
-	// disabled, InjectBuiltInContext returns the original value unchanged (zero cost).
-
-	// TODO make it concurrent
-	for _, entity := range entities {
-		entity.EntityContext = InjectBuiltInContext(entity.EntityContext, params.HTTPRequest)
-		if len(flagTags) > 0 {
-			evalContext := models.EvalContext{
-				EnableDebug:      params.Body.EnableDebug,
-				EntityContext:    entity.EntityContext,
-				EntityID:         entity.EntityID,
-				EntityType:       entity.EntityType,
-				FlagTags:         flagTags,
-				FlagTagsOperator: flagTagsOperator,
-			}
-			evalResults := EvalFlagsByTags(evalContext)
-			results.EvaluationResults = append(results.EvaluationResults, evalResults...)
-		}
-		for _, flagID := range flagIDs {
-			evalContext := models.EvalContext{
-				EnableDebug:   params.Body.EnableDebug,
-				EntityContext: entity.EntityContext,
-				EntityID:      entity.EntityID,
-				EntityType:    entity.EntityType,
-				FlagID:        flagID,
-			}
-
-			evalResult := EvalFlag(evalContext)
-			results.EvaluationResults = append(results.EvaluationResults, evalResult)
-		}
-		for _, flagKey := range flagKeys {
-			evalContext := models.EvalContext{
-				EnableDebug:   params.Body.EnableDebug,
-				EntityContext: entity.EntityContext,
-				EntityID:      entity.EntityID,
-				EntityType:    entity.EntityType,
-				FlagKey:       flagKey,
-			}
-
-			evalResult := EvalFlag(evalContext)
-			results.EvaluationResults = append(results.EvaluationResults, evalResult)
-		}
+	results, errPayload := EvaluateBatch(params.Body, params.HTTPRequest)
+	if errPayload != nil {
+		return evaluation.NewPostEvaluationBatchDefault(400).WithPayload(errPayload)
 	}
 
 	resp := evaluation.NewPostEvaluationBatchOK()

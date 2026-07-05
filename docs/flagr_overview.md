@@ -127,7 +127,7 @@ Flagr separates three concerns that scale differently:
 
 | Concern | Path | Consistency | Latency goal |
 |---------|------|-------------|--------------|
-| **Read** (evaluation) | `POST /evaluation` | Stale-tolerant (cache refresh) | Sub-ms hot path |
+| **Read** (evaluation) | `POST` or `GET /evaluation` | Stale-tolerant (cache refresh) | Sub-ms hot path |
 | **Write** (configuration) | CRUD APIs + UI | Strong (database) | Rare, not on eval path |
 | **Record** (analytics) | `AsyncRecord` fan-out | Best-effort async | Must not block eval |
 
@@ -223,7 +223,7 @@ evaluation`). No record when flag is missing, disabled, or has no segments.
 
 ### Components
 
-**Evaluator** — `POST /evaluation`, batch eval, tag eval; refresh interval
+**Evaluator** — `POST` or `GET /evaluation` (see [GET Evaluation](flagr_get_evaluation.md)), batch eval, tag eval; refresh interval
 `FLAGR_EVALCACHE_REFRESHINTERVAL` (default 3s); version probe
 `GET /api/v1/flags/snapshots/max_id`.
 

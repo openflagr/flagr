@@ -1,3 +1,23 @@
+get:
+  tags:
+    - evaluation
+  operationId: getEvaluationBatch
+  parameters:
+    - in: query
+      name: json
+      description: >-
+        Percent-encoded JSON matching POST /evaluation/batch body (evaluationBatchRequest).
+      required: true
+      type: string
+  responses:
+    200:
+      description: evaluation batch result
+      schema:
+        $ref: "#/definitions/evaluationBatchResponse"
+    default:
+      description: generic error response
+      schema:
+        $ref: "#/definitions/error"
 post:
   tags:
     - evaluation

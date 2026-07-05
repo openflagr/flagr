@@ -49,6 +49,7 @@ Local `make test-integration` uses a single auto-started binary (always “curre
 | Test | Gate |
 |------|------|
 | `TestIntegration_Exposures` | `requireOptionalAPI` → `POST /api/v1/exposures` |
+| `TestIntegration_GetEvaluation` | `requireOptionalAPI` → `GET /api/v1/evaluation` |
 | `TestIntegration_DatarSummary` | optional route probe + `requireRecorderEndpointOK` |
 | `TestIntegration_DatarFlagSummary` | same |
 

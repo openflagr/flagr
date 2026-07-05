@@ -2,6 +2,7 @@
     - [Home](home.md)
     - [Overview](flagr_overview.md)
     - [Use Cases](flagr_use_cases.md)
+    - [GET Evaluation](flagr_get_evaluation.md)
     - [Debug Console](flagr_debugging.md)
     - [Built-in Context Injection](flagr_injected_context.md)
 - Server & deployment
