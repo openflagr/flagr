@@ -11,6 +11,7 @@ import (
 // --- Basic structural tests ---
 
 func TestValidateFlags_Valid(t *testing.T) {
+	t.Parallel()
 	flags := []entity.Flag{
 		{
 			Key:     "my-flag",
@@ -38,11 +39,13 @@ func TestValidateFlags_Valid(t *testing.T) {
 }
 
 func TestValidateFlags_EmptyFlags(t *testing.T) {
+	t.Parallel()
 	r := ValidateFlags([]entity.Flag{})
 	assert.True(t, r.OK())
 }
 
 func TestValidateFlags_EmptyFlagKey(t *testing.T) {
+	t.Parallel()
 	flags := []entity.Flag{{Key: ""}}
 	r := ValidateFlags(flags)
 	assert.False(t, r.OK())
@@ -51,6 +54,7 @@ func TestValidateFlags_EmptyFlagKey(t *testing.T) {
 }
 
 func TestValidateFlags_DuplicateFlagKeys(t *testing.T) {
+	t.Parallel()
 	flags := []entity.Flag{
 		{Key: "dup"},
 		{Key: "dup"},
@@ -70,6 +74,7 @@ func TestValidateFlags_DuplicateFlagKeys(t *testing.T) {
 // --- Variant validation ---
 
 func TestValidateFlags_DuplicateVariantKeys(t *testing.T) {
+	t.Parallel()
 	flags := []entity.Flag{
 		{
 			Key: "my-flag",
@@ -100,6 +105,7 @@ func TestValidateFlags_DuplicateVariantKeys(t *testing.T) {
 }
 
 func TestValidateFlags_NoVariantsWarning(t *testing.T) {
+	t.Parallel()
 	flags := []entity.Flag{
 		{Key: "my-flag"},
 	}
@@ -116,6 +122,7 @@ func TestValidateFlags_NoVariantsWarning(t *testing.T) {
 }
 
 func TestValidateFlags_EmptyVariantKey(t *testing.T) {
+	t.Parallel()
 	flags := []entity.Flag{
 		{
 			Key: "my-flag",
@@ -146,6 +153,7 @@ func TestValidateFlags_EmptyVariantKey(t *testing.T) {
 }
 
 func TestValidateFlags_InvalidAttachmentJSON(t *testing.T) {
+	t.Parallel()
 	// entity.Attachment is map[string]any — invalid JSON unmarshals to empty map,
 	// so this test verifies that valid attachments pass validation.
 	flags := []entity.Flag{
@@ -172,6 +180,7 @@ func TestValidateFlags_InvalidAttachmentJSON(t *testing.T) {
 // --- Segment validation ---
 
 func TestValidateFlags_NoSegmentsWarning(t *testing.T) {
+	t.Parallel()
 	flags := []entity.Flag{
 		{
 			Key: "my-flag",
@@ -193,6 +202,7 @@ func TestValidateFlags_NoSegmentsWarning(t *testing.T) {
 }
 
 func TestValidateFlags_RolloutPercentOver100(t *testing.T) {
+	t.Parallel()
 	flags := []entity.Flag{
 		{
 			Key: "my-flag",
@@ -224,6 +234,7 @@ func TestValidateFlags_RolloutPercentOver100(t *testing.T) {
 }
 
 func TestValidateFlags_RolloutPercentZero(t *testing.T) {
+	t.Parallel()
 	flags := []entity.Flag{
 		{
 			Key: "my-flag",
@@ -250,6 +261,7 @@ func TestValidateFlags_RolloutPercentZero(t *testing.T) {
 // --- Distribution validation ---
 
 func TestValidateFlags_DistributionSumNot100(t *testing.T) {
+	t.Parallel()
 	flags := []entity.Flag{
 		{
 			Key: "my-flag",
@@ -281,6 +293,7 @@ func TestValidateFlags_DistributionSumNot100(t *testing.T) {
 }
 
 func TestValidateFlags_UnknownVariantKey(t *testing.T) {
+	t.Parallel()
 	flags := []entity.Flag{
 		{
 			Key: "my-flag",
@@ -310,6 +323,7 @@ func TestValidateFlags_UnknownVariantKey(t *testing.T) {
 }
 
 func TestValidateFlags_DistributionNoVariantRef(t *testing.T) {
+	t.Parallel()
 	flags := []entity.Flag{
 		{
 			Key: "my-flag",
@@ -339,6 +353,7 @@ func TestValidateFlags_DistributionNoVariantRef(t *testing.T) {
 }
 
 func TestValidateFlags_DistributionPercentOver100(t *testing.T) {
+	t.Parallel()
 	flags := []entity.Flag{
 		{
 			Key: "my-flag",
@@ -368,6 +383,7 @@ func TestValidateFlags_DistributionPercentOver100(t *testing.T) {
 }
 
 func TestValidateFlags_NoDistributionsWarning(t *testing.T) {
+	t.Parallel()
 	flags := []entity.Flag{
 		{
 			Key: "my-flag",
@@ -397,6 +413,7 @@ func TestValidateFlags_NoDistributionsWarning(t *testing.T) {
 // --- Constraint validation ---
 
 func TestValidateFlags_EmptyConstraintProperty(t *testing.T) {
+	t.Parallel()
 	flags := []entity.Flag{
 		{
 			Key: "my-flag",
@@ -429,6 +446,7 @@ func TestValidateFlags_EmptyConstraintProperty(t *testing.T) {
 }
 
 func TestValidateFlags_EmptyConstraintOperator(t *testing.T) {
+	t.Parallel()
 	flags := []entity.Flag{
 		{
 			Key: "my-flag",
@@ -461,6 +479,7 @@ func TestValidateFlags_EmptyConstraintOperator(t *testing.T) {
 }
 
 func TestValidateFlags_EmptyConstraintValue(t *testing.T) {
+	t.Parallel()
 	flags := []entity.Flag{
 		{
 			Key: "my-flag",
@@ -493,6 +512,7 @@ func TestValidateFlags_EmptyConstraintValue(t *testing.T) {
 }
 
 func TestValidateFlags_InvalidConstraintOperator(t *testing.T) {
+	t.Parallel()
 	flags := []entity.Flag{
 		{
 			Key: "my-flag",
@@ -525,6 +545,7 @@ func TestValidateFlags_InvalidConstraintOperator(t *testing.T) {
 }
 
 func TestValidateFlags_InvalidConstraintRegex(t *testing.T) {
+	t.Parallel()
 	flags := []entity.Flag{
 		{
 			Key: "my-flag",
@@ -557,6 +578,7 @@ func TestValidateFlags_InvalidConstraintRegex(t *testing.T) {
 }
 
 func TestValidateFlags_ValidConstraintEQ(t *testing.T) {
+	t.Parallel()
 	flags := []entity.Flag{
 		{
 			Key: "my-flag",
@@ -582,6 +604,7 @@ func TestValidateFlags_ValidConstraintEQ(t *testing.T) {
 }
 
 func TestValidateFlags_ValidConstraintIN(t *testing.T) {
+	t.Parallel()
 	flags := []entity.Flag{
 		{
 			Key: "my-flag",
@@ -607,6 +630,7 @@ func TestValidateFlags_ValidConstraintIN(t *testing.T) {
 }
 
 func TestValidateFlags_ValidConstraintRegex(t *testing.T) {
+	t.Parallel()
 	flags := []entity.Flag{
 		{
 			Key: "my-flag",
@@ -634,6 +658,7 @@ func TestValidateFlags_ValidConstraintRegex(t *testing.T) {
 // --- Composite tests ---
 
 func TestValidateFlags_ComplexValidFile(t *testing.T) {
+	t.Parallel()
 	flags := []entity.Flag{
 		{
 			Key:     "feature-a",
@@ -679,6 +704,7 @@ func TestValidateFlags_ComplexValidFile(t *testing.T) {
 }
 
 func TestValidateFlags_MultipleErrors(t *testing.T) {
+	t.Parallel()
 	flags := []entity.Flag{
 		{Key: "dup"},
 		{Key: "dup"},

@@ -9,6 +9,7 @@ import (
 )
 
 func TestConstraintToExpr(t *testing.T) {
+	t.Parallel()
 	t.Run("empty case", func(t *testing.T) {
 		c := Constraint{}
 		expr, err := c.ToExpr()
@@ -90,6 +91,7 @@ func TestConstraintToExpr(t *testing.T) {
 }
 
 func TestConstraintValidate(t *testing.T) {
+	t.Parallel()
 	t.Run("empty case", func(t *testing.T) {
 		c := Constraint{}
 		assert.Error(t, c.Validate())
@@ -107,7 +109,8 @@ func TestConstraintValidate(t *testing.T) {
 }
 
 func TestConstraintArray(t *testing.T) {
-	cs := ConstraintArray{
+	t.Parallel()
+cs := ConstraintArray{
 		{
 			SegmentID: 0,
 			Property:  "dl_state",
@@ -124,10 +127,11 @@ func TestConstraintArray(t *testing.T) {
 	expr, err := cs.ToExpr()
 	assert.NoError(t, err)
 	assert.NotNil(t, expr)
-}
+ }
 
 func TestConstraintToExpr_NestedField(t *testing.T) {
-	t.Run("dotted path property - EQ", func(t *testing.T) {
+	t.Parallel()
+t.Run("dotted path property - EQ", func(t *testing.T) {
 		c := Constraint{
 			Property: "user.name",
 			Operator: models.ConstraintOperatorEQ,
@@ -385,10 +389,11 @@ func TestConstraintToExpr_NestedField(t *testing.T) {
 		assert.NoError(t, err)
 		assert.False(t, match)
 	})
-}
+ }
 
 func TestConstraintToExpr_RegexEscaping(t *testing.T) {
-	// EREG with backslash sequences (the main fix)
+	t.Parallel()
+// EREG with backslash sequences (the main fix)
 	// These previously caused Go scanner "invalid char escape" errors
 	t.Run("EREG with \\d pattern", func(t *testing.T) {
 		c := Constraint{
@@ -597,9 +602,10 @@ func TestConstraintToExpr_RegexEscaping(t *testing.T) {
 		assert.NoError(t, err)
 		assert.False(t, match)
 	})
-}
+ }
 func TestCompareOperators_StringNotLexicographic(t *testing.T) {
-	compareOps := []struct {
+	t.Parallel()
+compareOps := []struct {
 		name     string
 		operator string
 	}{
@@ -661,4 +667,4 @@ func TestCompareOperators_StringNotLexicographic(t *testing.T) {
 		assert.NoError(t, err)
 		assert.True(t, match)
 	})
-}
+ }

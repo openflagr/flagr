@@ -1420,6 +1420,7 @@ func TestCrudDistributionsWithFailures(t *testing.T) {
 // TestAllMutationHandlersCallSaveFlagSnapshot enforces that every mutation
 // handler records a flag snapshot via commitFlagMutation.
 func TestAllMutationHandlersCallSaveFlagSnapshot(t *testing.T) {
+	t.Parallel()
 	files := []string{"crud.go", "crud_flag_creation.go", "crud_duplicate.go"}
 
 	isMutation := func(name string) bool {

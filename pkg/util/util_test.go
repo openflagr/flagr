@@ -8,6 +8,7 @@ import (
 )
 
 func TestSafeString(t *testing.T) {
+	t.Parallel()
 	assert.Equal(t, SafeString("123"), "123")
 	assert.Equal(t, SafeString(new("123")), "123")
 	assert.Equal(t, SafeString(123), "123")
@@ -18,6 +19,7 @@ func TestSafeString(t *testing.T) {
 }
 
 func TestSafeStringWithDefault(t *testing.T) {
+	t.Parallel()
 	assert.Equal(t, SafeStringWithDefault("123", ""), "123")
 	assert.Equal(t, SafeStringWithDefault(new("123"), ""), "123")
 	assert.Equal(t, SafeStringWithDefault(123, ""), "123")
@@ -30,6 +32,7 @@ func TestSafeStringWithDefault(t *testing.T) {
 }
 
 func TestSafeUint(t *testing.T) {
+	t.Parallel()
 	assert.Equal(t, SafeUint(nil), uint(0))
 	assert.Equal(t, SafeUint("123"), uint(123))
 
@@ -58,16 +61,19 @@ func TestSafeUint(t *testing.T) {
 }
 
 func TestTimeNow(t *testing.T) {
+	t.Parallel()
 	assert.Len(t, TimeNow(), 20)
 }
 
 func TestTimeNowCachedSameSecond(t *testing.T) {
+	t.Parallel()
 	a := TimeNow()
 	b := TimeNow()
 	assert.Equal(t, a, b)
 }
 
 func TestIsSafeKey(t *testing.T) {
+	t.Parallel()
 	var b bool
 	var msg string
 
@@ -117,6 +123,7 @@ func TestIsSafeKey(t *testing.T) {
 }
 
 func TestIsSafeValue(t *testing.T) {
+	t.Parallel()
 	var b bool
 	var msg string
 
@@ -169,6 +176,7 @@ func TestIsSafeValue(t *testing.T) {
 	assert.Empty(t, msg)
 }
 func TestRound(t *testing.T) {
+	t.Parallel()
 	assert.Equal(t, Round(float64(1.01)), 1)
 	assert.Equal(t, Round(float64(1.99)), 2)
 	assert.Equal(t, Round(float64(-0.5)), -1)
@@ -177,6 +185,7 @@ func TestRound(t *testing.T) {
 }
 
 func TestNewSecureRandomKey(t *testing.T) {
+	t.Parallel()
 	assert.NotZero(t, NewSecureRandomKey())
 	assert.Contains(t, NewSecureRandomKey(), randomKeyPrefix)
 
@@ -185,6 +194,7 @@ func TestNewSecureRandomKey(t *testing.T) {
 }
 
 func TestHasSafePrefix(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name   string
 		s      string
@@ -285,6 +295,7 @@ func TestHasSafePrefix(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := HasSafePrefix(tt.s, tt.prefix)
 			assert.Equal(t, tt.want, got, "HasSafePrefix(%v, %v)", tt.s, tt.prefix)
 		})
@@ -292,6 +303,7 @@ func TestHasSafePrefix(t *testing.T) {
 }
 
 func TestParseHeaders(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		input    string
@@ -372,6 +384,7 @@ func TestParseHeaders(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := ParseHeaders(tt.input)
 			assert.Equal(t, tt.expected, result)
 		})

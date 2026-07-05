@@ -7,7 +7,8 @@ import (
 )
 
 func TestSaveFlagSnapshot(t *testing.T) {
-	f := GenFixtureFlag()
+	t.Parallel()
+f := GenFixtureFlag()
 	db := PopulateTestDB(f)
 
 	tmpDB, dbErr := db.DB()
@@ -24,4 +25,4 @@ func TestSaveFlagSnapshot(t *testing.T) {
 	t.Run("save on non-existing flag", func(t *testing.T) {
 		SaveFlagSnapshot(db, uint(999999), "flagr-test@example.com", notification.OperationUpdate, notification.ComponentFlag, 0, "")
 	})
-}
+ }

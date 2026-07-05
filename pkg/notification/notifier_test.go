@@ -11,6 +11,7 @@ import (
 )
 
 func TestNotification(t *testing.T) {
+	t.Parallel()
 	t.Run("null notifier should not fail", func(t *testing.T) {
 		n := &nullNotifier{}
 		ctx := context.Background()
@@ -113,6 +114,7 @@ func TestGetNotifiers(t *testing.T) {
 }
 
 func TestNotifierConcurrency(t *testing.T) {
+	t.Parallel()
 	t.Run("MockNotifier is safe for concurrent use", func(t *testing.T) {
 		mock := NewMockNotifier()
 

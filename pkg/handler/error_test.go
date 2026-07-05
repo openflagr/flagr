@@ -8,6 +8,7 @@ import (
 )
 
 func TestNewError(t *testing.T) {
+	t.Parallel()
 	err := NewError(500, "%s some error", "err message")
 	s := err.Error()
 	assert.NotNil(t, err)
@@ -15,11 +16,13 @@ func TestNewError(t *testing.T) {
 }
 
 func TestErrorMessage(t *testing.T) {
+	t.Parallel()
 	msg := ErrorMessage("%s some error", "err message")
 	assert.NotNil(t, msg)
 }
 
 func TestFlagKeyUniqueViolation(t *testing.T) {
+	t.Parallel()
 	assert.False(t, flagKeyUniqueViolation(nil))
 	assert.True(t, flagKeyUniqueViolation(errors.New("UNIQUE constraint failed: idx_flag_key")))
 	assert.False(t, flagKeyUniqueViolation(errors.New("some other db error")))
@@ -28,6 +31,7 @@ func TestFlagKeyUniqueViolation(t *testing.T) {
 }
 
 func TestIsDuplicateClientError(t *testing.T) {
+	t.Parallel()
 	assert.False(t, isDuplicateClientError(nil))
 	assert.True(t, isDuplicateClientError(NewError(400, "bad")))
 	assert.False(t, isDuplicateClientError(NewError(500, "bad")))

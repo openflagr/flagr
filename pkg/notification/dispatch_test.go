@@ -12,6 +12,7 @@ import (
 )
 
 func TestCalculateDiff(t *testing.T) {
+	t.Parallel()
 	t.Run("empty cases", func(t *testing.T) {
 		assert.Empty(t, CalculateDiff("", ""))
 		assert.Empty(t, CalculateDiff("a", ""))
@@ -195,6 +196,7 @@ func TestSendNotificationConcurrency(t *testing.T) {
 }
 
 func TestNotifierDirectSend(t *testing.T) {
+	t.Parallel()
 	t.Run("can send to notifier directly with context", func(t *testing.T) {
 		mock := NewMockNotifier()
 

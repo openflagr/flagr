@@ -9,7 +9,8 @@ import (
 )
 
 func TestNormalizeIDs_AllZero(t *testing.T) {
-	// Core use case: hand-edited file with no IDs at all
+	t.Parallel()
+// Core use case: hand-edited file with no IDs at all
 	flags := []entity.Flag{
 		{
 			Key: "flag-a", Enabled: true,
@@ -75,10 +76,11 @@ func TestNormalizeIDs_AllZero(t *testing.T) {
 
 	// Tags: globally unique
 	assert.Equal(t, uint(1), flags[0].Tags[0].ID)
-}
+ }
 
 func TestNormalizeIDs_ExplicitIDsPreserved(t *testing.T) {
-	flags := []entity.Flag{
+	t.Parallel()
+flags := []entity.Flag{
 		{
 			Key: "flag-a", Enabled: true,
 			Variants: []entity.Variant{
@@ -110,10 +112,11 @@ func TestNormalizeIDs_ExplicitIDsPreserved(t *testing.T) {
 
 	// Distribution resolved via VariantKey
 	assert.Equal(t, uint(42), flags[0].Segments[0].Distributions[0].VariantID)
-}
+ }
 
 func TestNormalizeIDs_PreservesExplicitFlagIDs(t *testing.T) {
-	flags := []entity.Flag{
+	t.Parallel()
+flags := []entity.Flag{
 		{Model: gorm.Model{ID: 100}, Key: "flag-a"},
 		{Key: "flag-b"}, // auto → 101
 		{Model: gorm.Model{ID: 200}, Key: "flag-c"},
@@ -123,10 +126,11 @@ func TestNormalizeIDs_PreservesExplicitFlagIDs(t *testing.T) {
 	assert.Equal(t, uint(100), flags[0].ID) // preserved
 	assert.Equal(t, uint(201), flags[1].ID) // auto (max existing 200 + 1)
 	assert.Equal(t, uint(200), flags[2].ID) // preserved
-}
+ }
 
 func TestNormalizeIDs_VariantKeyResolution(t *testing.T) {
-	// Distribution has VariantKey but VariantID=0 — resolved by key
+	t.Parallel()
+// Distribution has VariantKey but VariantID=0 — resolved by key
 	flags := []entity.Flag{
 		{
 			Key: "my-flag", Enabled: true,
@@ -156,23 +160,26 @@ func TestNormalizeIDs_VariantKeyResolution(t *testing.T) {
 	d1 := flags[0].Segments[0].Distributions[1]
 	assert.Equal(t, uint(1), d0.VariantID) // control
 	assert.Equal(t, uint(2), d1.VariantID) // treatment
-}
+ }
 
 func TestNormalizeIDs_EmptyFlags(t *testing.T) {
-	flags := []entity.Flag{}
+	t.Parallel()
+flags := []entity.Flag{}
 	normalizeIDs(flags)
 	assert.Empty(t, flags)
-}
+ }
 
 func TestNormalizeIDs_SingleFlagNoSegments(t *testing.T) {
-	flags := []entity.Flag{{Key: "simple", Enabled: true}}
+	t.Parallel()
+flags := []entity.Flag{{Key: "simple", Enabled: true}}
 	normalizeIDs(flags)
 	assert.Equal(t, uint(1), flags[0].ID)
 	assert.Empty(t, flags[0].Segments)
-}
+ }
 
 func TestNormalizeIDs_GlobalVariantIDUniqueness(t *testing.T) {
-	// Variant IDs continue across flags (global, not per-flag)
+	t.Parallel()
+// Variant IDs continue across flags (global, not per-flag)
 	flags := []entity.Flag{
 		{Key: "a", Variants: []entity.Variant{{Key: "v1"}, {Key: "v2"}}},
 		{Key: "b", Variants: []entity.Variant{{Key: "v3"}}},
@@ -183,10 +190,11 @@ func TestNormalizeIDs_GlobalVariantIDUniqueness(t *testing.T) {
 	assert.Equal(t, uint(1), flags[0].Variants[0].ID)
 	assert.Equal(t, uint(2), flags[0].Variants[1].ID)
 	assert.Equal(t, uint(3), flags[1].Variants[0].ID) // continues, not reset
-}
+ }
 
 func TestNormalizeIDs_GlobalSegmentIDUniqueness(t *testing.T) {
-	flags := []entity.Flag{
+	t.Parallel()
+flags := []entity.Flag{
 		{Key: "a", Segments: []entity.Segment{{Description: "s1"}, {Description: "s2"}}},
 		{Key: "b", Segments: []entity.Segment{{Description: "s3"}}},
 	}
@@ -196,10 +204,11 @@ func TestNormalizeIDs_GlobalSegmentIDUniqueness(t *testing.T) {
 	assert.Equal(t, uint(1), flags[0].Segments[0].ID)
 	assert.Equal(t, uint(2), flags[0].Segments[1].ID)
 	assert.Equal(t, uint(3), flags[1].Segments[0].ID) // continues
-}
+ }
 
 func TestNormalizeIDs_GlobalConstraintAndDistributionIDs(t *testing.T) {
-	flags := []entity.Flag{
+	t.Parallel()
+flags := []entity.Flag{
 		{
 			Key: "a",
 			Segments: []entity.Segment{
@@ -239,10 +248,11 @@ func TestNormalizeIDs_GlobalConstraintAndDistributionIDs(t *testing.T) {
 	// Distributions: globally unique
 	assert.Equal(t, uint(1), flags[0].Segments[0].Distributions[0].ID)
 	assert.Equal(t, uint(2), flags[1].Segments[0].Distributions[0].ID)
-}
+ }
 
 func TestNormalizeIDs_TagIDGlobalUniqueness(t *testing.T) {
-	// Same tag value in two flags — different IDs
+	t.Parallel()
+// Same tag value in two flags — different IDs
 	flags := []entity.Flag{
 		{Key: "a", Tags: []entity.Tag{{Value: "shared"}, {Value: "x"}}},
 		{Key: "b", Tags: []entity.Tag{{Value: "shared"}, {Value: "y"}}},
@@ -260,10 +270,11 @@ func TestNormalizeIDs_TagIDGlobalUniqueness(t *testing.T) {
 		}
 	}
 	assert.Len(t, seen, 4) // 4 unique tag IDs
-}
+ }
 
 func TestNormalizeIDs_ExplicitTagIDsPreserved(t *testing.T) {
-	flags := []entity.Flag{
+	t.Parallel()
+flags := []entity.Flag{
 		{Key: "a", Tags: []entity.Tag{{Model: gorm.Model{ID: 50}, Value: "my-tag"}}},
 		{Key: "b", Tags: []entity.Tag{{Value: "auto-tag"}}},
 	}
@@ -272,10 +283,11 @@ func TestNormalizeIDs_ExplicitTagIDsPreserved(t *testing.T) {
 
 	assert.Equal(t, uint(50), flags[0].Tags[0].ID) // preserved
 	assert.Equal(t, uint(51), flags[1].Tags[0].ID) // auto (50 + 1)
-}
+ }
 
 func TestNormalizeIDs_MixedExplicitAndAutoIDs(t *testing.T) {
-	flags := []entity.Flag{
+	t.Parallel()
+flags := []entity.Flag{
 		{
 			Model: gorm.Model{ID: 10}, Key: "flag-a",
 			Variants: []entity.Variant{
@@ -325,10 +337,11 @@ func TestNormalizeIDs_MixedExplicitAndAutoIDs(t *testing.T) {
 	assert.Equal(t, uint(6), flags[0].Segments[0].Distributions[0].VariantID) // v1
 	assert.Equal(t, uint(5), flags[0].Segments[0].Distributions[1].VariantID) // v2
 	assert.Equal(t, uint(7), flags[0].Segments[0].Distributions[2].VariantID) // v3
-}
+ }
 
 func TestUnmarshalFlags_NoIDs(t *testing.T) {
-	// End-to-end: JSON with zero IDs
+	t.Parallel()
+// End-to-end: JSON with zero IDs
 	jsonData := `{
 		"Flags": [{
 			"Key": "my-flag",
@@ -367,16 +380,18 @@ func TestUnmarshalFlags_NoIDs(t *testing.T) {
 	// Distributions resolved VariantIDs
 	assert.Equal(t, uint(1), f.Segments[0].Distributions[0].VariantID)
 	assert.Equal(t, uint(2), f.Segments[0].Distributions[1].VariantID)
-}
+ }
 
 func TestUnmarshalFlags_EmptyFlags(t *testing.T) {
-	flags, err := unmarshalFlags([]byte(`{"Flags": []}`))
+	t.Parallel()
+flags, err := unmarshalFlags([]byte(`{"Flags": []}`))
 	assert.NoError(t, err)
 	assert.Empty(t, flags)
-}
+ }
 
 func TestNormalizeIDs_DistributionWithExplicitVariantID(t *testing.T) {
-	// Distribution has both VariantID and VariantKey — explicit ID wins
+	t.Parallel()
+// Distribution has both VariantID and VariantKey — explicit ID wins
 	flags := []entity.Flag{
 		{
 			Key: "my-flag",
@@ -398,10 +413,11 @@ func TestNormalizeIDs_DistributionWithExplicitVariantID(t *testing.T) {
 	assert.Equal(t, uint(99), flags[0].Segments[0].Distributions[0].ID)
 	// Distribution's VariantID is 42 (explicit, not resolved from key)
 	assert.Equal(t, uint(42), flags[0].Segments[0].Distributions[0].VariantID)
-}
+ }
 
 func TestNormalizeIDs_ComplexHandEditedFile(t *testing.T) {
-	// Realistic hand-edited file with no IDs whatsoever
+	t.Parallel()
+// Realistic hand-edited file with no IDs whatsoever
 	jsonData := `{
 		"Flags": [
 			{
@@ -489,10 +505,11 @@ func TestNormalizeIDs_ComplexHandEditedFile(t *testing.T) {
 	// Tags got unique IDs
 	assert.Len(t, f.Tags, 2)
 	assert.NotEqual(t, f.Tags[0].ID, f.Tags[1].ID)
-}
+ }
 
 func TestNormalizeIDs_SampleDataUnchanged(t *testing.T) {
-	// The existing sample_eval_cache.json has explicit IDs.
+	t.Parallel()
+// The existing sample_eval_cache.json has explicit IDs.
 	// normalizeIDs must not alter them.
 	flags := []entity.Flag{
 		{
@@ -524,22 +541,25 @@ func TestNormalizeIDs_SampleDataUnchanged(t *testing.T) {
 	assert.Equal(t, uint(2), flags[0].Segments[0].Distributions[0].VariantID)
 	assert.Equal(t, uint(2), flags[0].Segments[0].Distributions[1].ID)
 	assert.Equal(t, uint(3), flags[0].Segments[0].Distributions[1].VariantID)
-}
+ }
 
 func TestUnmarshalFlags_InvalidJSON(t *testing.T) {
-	_, err := unmarshalFlags([]byte(`{bad json`))
+	t.Parallel()
+_, err := unmarshalFlags([]byte(`{bad json`))
 	assert.Error(t, err)
-}
+ }
 
 func TestUnmarshalFlags_ValidationErrors(t *testing.T) {
-	// Valid JSON with validation errors must be rejected.
+	t.Parallel()
+// Valid JSON with validation errors must be rejected.
 	_, err := unmarshalFlags([]byte(`{"Flags": [{"Key": ""}]}`))
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "flag validation failed")
-}
+ }
 
 func TestUnmarshalFlags_WarningsAreAllowed(t *testing.T) {
-	// Warnings (e.g. no segments, no variants) should not prevent loading.
+	t.Parallel()
+// Warnings (e.g. no segments, no variants) should not prevent loading.
 	flags, err := unmarshalFlags([]byte(`{
 		"Flags": [{
 			"Key": "my-flag",
@@ -551,10 +571,11 @@ func TestUnmarshalFlags_WarningsAreAllowed(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, flags, 1)
 	assert.Equal(t, "my-flag", flags[0].Key)
-}
+ }
 
 func TestNormalizeIDs_UnknownVariantKey(t *testing.T) {
-	// Distribution VariantKey doesn't match any variant — should warn
+	t.Parallel()
+// Distribution VariantKey doesn't match any variant — should warn
 	// but not crash, and VariantID stays 0.
 	flags := []entity.Flag{
 		{
@@ -575,4 +596,4 @@ func TestNormalizeIDs_UnknownVariantKey(t *testing.T) {
 
 	// VariantID stays 0 (unknown key, nothing to resolve from)
 	assert.Equal(t, uint(0), flags[0].Segments[0].Distributions[0].VariantID)
-}
+ }

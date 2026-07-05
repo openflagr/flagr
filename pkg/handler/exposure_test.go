@@ -16,6 +16,7 @@ import (
 )
 
 func TestPostExposures_EmptyBody(t *testing.T) {
+	t.Parallel()
 	h := NewExposure()
 	res := h.PostExposures(exposureapi.PostExposuresParams{})
 	_, ok := res.(*exposureapi.PostExposuresDefault)
@@ -377,9 +378,11 @@ func TestBuildExposureDataRecord(t *testing.T) {
 }
 
 func TestResolveExposureVariant(t *testing.T) {
+	t.Parallel()
 	flag := entity.GenFixtureFlag()
 
 	t.Run("optional empty", func(t *testing.T) {
+		t.Parallel()
 		id, key, err := resolveExposureVariant(&flag, 0, "")
 		if !assert.NoError(t, err) {
 			return
@@ -389,6 +392,7 @@ func TestResolveExposureVariant(t *testing.T) {
 	})
 
 	t.Run("by id", func(t *testing.T) {
+		t.Parallel()
 		id, key, err := resolveExposureVariant(&flag, 300, "")
 		if !assert.NoError(t, err) {
 			return
@@ -398,6 +402,7 @@ func TestResolveExposureVariant(t *testing.T) {
 	})
 
 	t.Run("by key", func(t *testing.T) {
+		t.Parallel()
 		id, key, err := resolveExposureVariant(&flag, 0, "treatment")
 		if !assert.NoError(t, err) {
 			return
@@ -407,31 +412,37 @@ func TestResolveExposureVariant(t *testing.T) {
 	})
 
 	t.Run("id and key mismatch", func(t *testing.T) {
+		t.Parallel()
 		_, _, err := resolveExposureVariant(&flag, 300, "treatment")
 		assert.Error(t, err)
 	})
 
 	t.Run("invalid variant id", func(t *testing.T) {
+		t.Parallel()
 		_, _, err := resolveExposureVariant(&flag, 999, "")
 		assert.Error(t, err)
 	})
 
 	t.Run("invalid variant key", func(t *testing.T) {
+		t.Parallel()
 		_, _, err := resolveExposureVariant(&flag, 0, "missing")
 		assert.Error(t, err)
 	})
 
 	t.Run("id not found when both set", func(t *testing.T) {
+		t.Parallel()
 		_, _, err := resolveExposureVariant(&flag, 999, "control")
 		assert.Error(t, err)
 	})
 
 	t.Run("key not found when both set", func(t *testing.T) {
+		t.Parallel()
 		_, _, err := resolveExposureVariant(&flag, 300, "missing")
 		assert.Error(t, err)
 	})
 
 	t.Run("matching id and key", func(t *testing.T) {
+		t.Parallel()
 		id, key, err := resolveExposureVariant(&flag, 300, "control")
 		if !assert.NoError(t, err) {
 			return
@@ -469,6 +480,7 @@ func TestResolveExposureFlag(t *testing.T) {
 
 
 func TestLogExposureStatsd_Stubbed(t *testing.T) {
+	t.Parallel()
 	var lastStatus string
 	orig := logExposureStatsd
 	logExposureStatsd = func(status string, flagID int64, flagKey string) {

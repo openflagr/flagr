@@ -8,7 +8,8 @@ import (
 )
 
 func TestAppendTagValueToFlag(t *testing.T) {
-	db := NewTestDB()
+	t.Parallel()
+db := NewTestDB()
 	require.NoError(t, db.AutoMigrate(AutoMigrateTables...))
 	f := &Flag{Key: "tag_flag", Description: "d", Enabled: true}
 	require.NoError(t, db.Create(f).Error)
@@ -22,10 +23,11 @@ func TestAppendTagValueToFlag(t *testing.T) {
 	require.NoError(t, PreloadFlagTags(db).First(&loaded, f.ID).Error)
 	require.Len(t, loaded.Tags, 1)
 	assert.Equal(t, "alpha", loaded.Tags[0].Value)
-}
+ }
 
 func TestApplyFlagTemplate_SimpleBoolean(t *testing.T) {
-	db := NewTestDB()
+	t.Parallel()
+db := NewTestDB()
 	require.NoError(t, db.AutoMigrate(AutoMigrateTables...))
 
 	f := &Flag{Key: "bool_mat", Description: "d", Enabled: true}
@@ -46,10 +48,11 @@ func TestApplyFlagTemplate_SimpleBoolean(t *testing.T) {
 	require.NoError(t, db.Where("segment_id = ?", segment.ID).First(&dist).Error)
 	assert.Equal(t, variant.ID, dist.VariantID)
 	assert.Equal(t, uint(100), dist.Percent)
-}
+ }
 
 func TestApplyFlagTemplate_UnknownVariantKey(t *testing.T) {
-	db := NewTestDB()
+	t.Parallel()
+db := NewTestDB()
 	require.NoError(t, db.AutoMigrate(AutoMigrateTables...))
 	f := &Flag{Key: "bad_tpl", Description: "d", Enabled: true}
 	require.NoError(t, db.Create(f).Error)
@@ -64,10 +67,11 @@ func TestApplyFlagTemplate_UnknownVariantKey(t *testing.T) {
 	err := ApplyFlagTemplate(db, f.ID, tpl)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "missing")
-}
+ }
 
 func TestApplyFlagTemplate_InvalidVariantKey(t *testing.T) {
-	db := NewTestDB()
+	t.Parallel()
+db := NewTestDB()
 	require.NoError(t, db.AutoMigrate(AutoMigrateTables...))
 	f := &Flag{Key: "invalid_var", Description: "d", Enabled: true}
 	require.NoError(t, db.Create(f).Error)
@@ -77,10 +81,11 @@ func TestApplyFlagTemplate_InvalidVariantKey(t *testing.T) {
 	}
 	err := ApplyFlagTemplate(db, f.ID, tpl)
 	require.Error(t, err)
-}
+ }
 
 func TestSourceFlagTemplate_PreservesGraphShape(t *testing.T) {
-	db := NewTestDB()
+	t.Parallel()
+db := NewTestDB()
 	require.NoError(t, db.AutoMigrate(AutoMigrateTables...))
 	source := GenFixtureFlag()
 	require.NoError(t, db.Create(&source).Error)
@@ -96,10 +101,11 @@ func TestSourceFlagTemplate_PreservesGraphShape(t *testing.T) {
 		assert.Equal(t, source.Variants[i].Key, v.Key)
 		assert.Zero(t, v.ID)
 	}
-}
+ }
 
 func TestSourceFlagTemplate_RoundTripViaApply(t *testing.T) {
-	db := NewTestDB()
+	t.Parallel()
+db := NewTestDB()
 	require.NoError(t, db.AutoMigrate(AutoMigrateTables...))
 	source := GenFixtureFlag()
 	require.NoError(t, db.Create(&source).Error)
@@ -118,10 +124,11 @@ func TestSourceFlagTemplate_RoundTripViaApply(t *testing.T) {
 	assert.Len(t, loaded.Segments, len(source.Segments))
 	require.NotEmpty(t, loaded.Segments[0].Constraints)
 	require.NotEmpty(t, loaded.Segments[0].Distributions)
-}
+ }
 
 func TestApplyFlagTemplate_FromSourceVariantsAndSegments(t *testing.T) {
-	db := NewTestDB()
+	t.Parallel()
+db := NewTestDB()
 	require.NoError(t, db.AutoMigrate(AutoMigrateTables...))
 	source := GenFixtureFlag()
 	require.NoError(t, db.Create(&source).Error)
@@ -138,10 +145,11 @@ func TestApplyFlagTemplate_FromSourceVariantsAndSegments(t *testing.T) {
 	require.NoError(t, PreloadSegmentsVariantsTags(db).First(&loaded, dest.ID).Error)
 	assert.Len(t, loaded.Variants, len(source.Variants))
 	assert.Len(t, loaded.Segments, len(source.Segments))
-}
+ }
 
 func TestApplyFlagTemplate_FromSourceTags(t *testing.T) {
-	db := NewTestDB()
+	t.Parallel()
+db := NewTestDB()
 	require.NoError(t, db.AutoMigrate(AutoMigrateTables...))
 	source := &Flag{Key: "src_tags", Description: "s", Enabled: true}
 	require.NoError(t, db.Create(source).Error)
@@ -161,4 +169,4 @@ func TestApplyFlagTemplate_FromSourceTags(t *testing.T) {
 	require.NoError(t, PreloadFlagTags(db).First(&loaded, dest.ID).Error)
 	require.Len(t, loaded.Tags, 1)
 	assert.Equal(t, "team-a", loaded.Tags[0].Value)
-}
+ }

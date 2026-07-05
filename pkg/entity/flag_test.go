@@ -7,16 +7,18 @@ import (
 )
 
 func TestFlagPrepareEvaluation(t *testing.T) {
-	t.Run("happy code path", func(t *testing.T) {
+	t.Parallel()
+t.Run("happy code path", func(t *testing.T) {
 		f := GenFixtureFlag()
 		assert.NoError(t, f.PrepareEvaluation())
 		assert.NotNil(t, f.FlagEvaluation.VariantsMap)
 		assert.NotNil(t, f.Tags)
 	})
-}
+ }
 
 func TestFlagPreload(t *testing.T) {
-	t.Run("happy code path", func(t *testing.T) {
+	t.Parallel()
+t.Run("happy code path", func(t *testing.T) {
 		f := GenFixtureFlag()
 		db := PopulateTestDB(f)
 
@@ -30,10 +32,11 @@ func TestFlagPreload(t *testing.T) {
 		err := f.Preload(db)
 		assert.NoError(t, err)
 	})
-}
+ }
 
 func TestFlagPreloadTags(t *testing.T) {
-	t.Run("happy code path", func(t *testing.T) {
+	t.Parallel()
+t.Run("happy code path", func(t *testing.T) {
 		f := GenFixtureFlag()
 		db := PopulateTestDB(f)
 
@@ -47,10 +50,11 @@ func TestFlagPreloadTags(t *testing.T) {
 		err := f.PreloadTags(db)
 		assert.NoError(t, err)
 	})
-}
+ }
 
 func TestCreateFlagKey(t *testing.T) {
-	t.Run("happy code path", func(t *testing.T) {
+	t.Parallel()
+t.Run("happy code path", func(t *testing.T) {
 		key, err := CreateFlagKey("")
 		assert.NoError(t, err)
 		assert.NotZero(t, key)
@@ -61,10 +65,11 @@ func TestCreateFlagKey(t *testing.T) {
 		assert.Error(t, err)
 		assert.Zero(t, key)
 	})
-}
+ }
 
 func TestCreateFlagEntityType(t *testing.T) {
-	t.Run("happy code path", func(t *testing.T) {
+	t.Parallel()
+t.Run("happy code path", func(t *testing.T) {
 		f := GenFixtureFlag()
 		db := PopulateTestDB(f)
 
@@ -79,4 +84,4 @@ func TestCreateFlagEntityType(t *testing.T) {
 		err := CreateFlagEntityType(db, " spaces in key are not allowed 123-invalid-key")
 		assert.Error(t, err)
 	})
-}
+ }

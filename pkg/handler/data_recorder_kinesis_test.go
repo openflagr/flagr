@@ -9,13 +9,17 @@ import (
 )
 
 func TestNewKinesisRecorder(t *testing.T) {
+	t.Parallel()
 	t.Run("no panics", func(t *testing.T) {
+		t.Parallel()
 		assert.NotPanics(t, func() { NewKinesisRecorder() })
 	})
 }
 
 func TestKinesisAsyncRecord(t *testing.T) {
+	t.Parallel()
 	t.Run("invalid stream name", func(t *testing.T) {
+		t.Parallel()
 		assert.Panics(t, func() {
 			kr := &kinesisRecorder{
 				producer: newKinesisProducer(&producer.Config{}),
@@ -26,6 +30,7 @@ func TestKinesisAsyncRecord(t *testing.T) {
 	})
 
 	t.Run("valid stream name", func(t *testing.T) {
+		t.Parallel()
 		assert.NotPanics(t, func() {
 			kr := &kinesisRecorder{
 				producer: newKinesisProducer(&producer.Config{StreamName: "hallo"}),
