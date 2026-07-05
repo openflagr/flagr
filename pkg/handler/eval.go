@@ -56,6 +56,10 @@ func (e *eval) GetEvaluation(params evaluation.GetEvaluationParams) middleware.R
 		return evaluation.NewGetEvaluationDefault(400).WithPayload(
 			ErrorMessage("json is not valid evalContext: %v", err))
 	}
+	if errPayload := validateEvalContextAfterJSON(params.HTTPRequest, &evalContext); errPayload != nil {
+		return evaluation.NewGetEvaluationDefault(400).WithPayload(errPayload)
+	}
+	evalContext.EntityContext = InjectBuiltInContext(evalContext.EntityContext, params.HTTPRequest)
 	evalResult := EvalFlag(evalContext)
 	resp := evaluation.NewGetEvaluationOK()
 	resp.SetPayload(evalResult)
@@ -74,6 +78,9 @@ func (e *eval) GetEvaluationBatch(params evaluation.GetEvaluationBatchParams) mi
 	if err := json.Unmarshal([]byte(params.JSON), &batchReq); err != nil {
 		return evaluation.NewGetEvaluationBatchDefault(400).WithPayload(
 			ErrorMessage("json is not valid evaluationBatchRequest: %v", err))
+	}
+	if errPayload := validateEvaluationBatchRequestAfterJSON(params.HTTPRequest, &batchReq); errPayload != nil {
+		return evaluation.NewGetEvaluationBatchDefault(400).WithPayload(errPayload)
 	}
 	results, errPayload := EvaluateBatch(&batchReq, nil)
 	if errPayload != nil {

@@ -13,7 +13,140 @@ call serves all three.
 
 > **Note:** The pseudocode below uses the actual API response field names —
 > `variantID`, `variantKey`, and `variantAttachment` (camelCase), as returned
-> by `POST /evaluation`.
+> by `POST /evaluation` or `GET /evaluation` (same JSON body).
+
+## GET evaluation (browser-friendly)
+
+**POST `/api/v1/evaluation`** is the **primary** integration path: server-side apps, official SDKs, large `entityContext`, batch workloads, and anything that must not live in a URL. **GET** is **secondary** — the same `evalContext` / `evaluationBatchRequest` JSON, but carried in one query parameter so browsers and caches can treat evaluation like a normal read.
+
+### Why GET exists (and why POST stays default)
+
+Browsers treat `POST` + `Content-Type: application/json` as a **non-simple** request (CORS preflight). That blocks patterns like a static page calling Flagr directly, `<link rel="preload">` warming eval URLs, or sharing a bookmarkable eval link. [Issue #613](https://github.com/openflagr/flagr/issues/613) tracks that motivation; [PR #631](https://github.com/openflagr/flagr/pull/631) explored the API shape. Flagr ships GET as an **opt-in wire variant** with POST semantics, not a replacement for SDK/server traffic.
+
+| | **POST (primary)** | **GET (secondary)** |
+|--|-------------------|---------------------|
+| **Best for** | App servers, SDKs, large or rich `entityContext`, batch eval, Debug Console | Browser `fetch` without preflight, preload, CDN/browser HTTP cache |
+| **Payload** | JSON body — no URL length ceiling from Flagr | Single `json` query param (percent-encoded) — bounded by proxies and `FLAGR_EVAL_GET_MAX_URL_BYTES` |
+| **Privacy** | Body usually absent from access logs and `Referer` | Full eval input often appears in **URLs** (logs, analytics, `Referer`, history, shared links) |
+| **Caching** | Not cacheable by default | Cacheable by full URL — good for repeat reads, risky if URLs embed sensitive context |
+| **Auth** | Same middleware as GET; body not in query strings | Same routes; whitelists often keep `/api/v1/evaluation` open — see [Environment Variables](flagr_env.md) |
+
+**Use POST** when in doubt. **Use GET** only when you need CORS-simple or HTTP caching and your eval payload is small, non-sensitive, and stable when serialized.
+
+### Wire format
+
+| Method | Path | `json` decodes to |
+|--------|------|-------------------|
+| `GET` | `/api/v1/evaluation` | `evalContext` (same as POST body) |
+| `GET` | `/api/v1/evaluation/batch` | `evaluationBatchRequest` (same as POST body) |
+
+Responses match POST (`evalResult` / `evaluationBatchResponse`). The [Debug Console](flagr_debugging.md) still uses POST only.
+
+```javascript
+const ctx = {
+  entityID: 'user-1',
+  entityType: 'user',
+  entityContext: { tier: 'premium' },
+  flagID: 42,
+};
+
+// POST — preferred from backends and SDKs
+await fetch('/api/v1/evaluation', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(ctx),
+});
+
+// GET — same object; only when browser/cache constraints require it
+const url = `/api/v1/evaluation?json=${encodeURIComponent(JSON.stringify(ctx))}`;
+await fetch(url);
+```
+
+Batch: `GET /api/v1/evaluation/batch?json=${encodeURIComponent(JSON.stringify(batchRequest))}`.
+
+### Security and validation
+
+Packing the whole request into **`json=`** concentrates user input in one place. That is convenient but **more exposed** than a POST body:
+
+- **Logging and observability** — load balancers, reverse proxies, and APM often log **query strings**. Treat GET eval URLs like credentials-adjacent data: do not put secrets, tokens, or PII you would not put in a GET URL.
+- **`Referer` and leakage** — if your page links to third parties, long eval URLs can leak context via the `Referer` header unless you use strict referrer policy.
+- **Caching** — shared CDNs or browser caches key on the full URL. A stable `json` serialization is required for hits; accidental caching of personalized eval URLs can serve one user’s assignment to another. Scope cache TTLs deliberately.
+- **`enableDebug: true`** — debug logs in the response; avoid on GET URLs that might be cached or forwarded.
+
+**What Flagr validates (GET aligned with POST after `json` decode):**
+
+- **Bind layer (all methods):** GET requires non-empty `json` query string (swagger bind); POST requires body and runs consume + validate on the body.
+- **GET handlers (after `json.Unmarshal`):** same **`Validate` + `ContextValidate`** as POST `BindRequest` on `evalContext` / `evaluationBatchRequest` (e.g. `flagID` ≥ 1 when set, `flagTagsOperator` ∈ `ANY`|`ALL`, batch `entities` required with min length 1).
+- **GET-only:** raw query length ≤ `FLAGR_EVAL_GET_MAX_URL_BYTES`.
+- **Batch (GET and POST):** total evaluations ≤ `FLAGR_EVAL_BATCH_SIZE` when set.
+- Invalid JSON syntax → **400** before schema checks.
+
+Remaining differences: POST middleware may return **422**-style composite validation errors from go-swagger before the handler; GET returns **400** with `{ "message": "json is not valid evalContext: …" }` (or batch equivalent). Semantic eval outcomes (unknown flag, no segment match) are still **200** with an empty or partial result, not validation errors.
+
+Because GET still puts the full request in the URL, keep payloads minimal and avoid sensitive fields even when validation passes. Review `FLAGR_BASIC_AUTH_WHITELIST_PATHS` and `FLAGR_JWT_AUTH_WHITELIST_PATHS` — evaluation is whitelisted by default so apps can call without tokens.
+
+### URL length and `FLAGR_EVAL_GET_MAX_URL_BYTES`
+
+Flagr measures the **raw query string** (`json=…` after URL encoding), not the full URL path. Default limit **`FLAGR_EVAL_GET_MAX_URL_BYTES=8192`** (`0` = disabled). Exceeding it returns **400** with a message to use POST.
+
+**Is 8192 enough for normal eval?** Yes. Payloads shaped like integration tests and handler fixtures use only a **small fraction** of the cap (on the order of **~100–250** bytes raw query for single eval; **~200–500** for modest batch bodies). The default is not sized for “typical” traffic — it is a **safety rail** against oversized queries and aligns with many load balancers that allow multi-kilobyte query strings. Treat **~2,048 characters for the entire URL** (path + query + host) as a separate, stricter browser/proxy limit when Flagr sits behind older gateways.
+
+**Typical raw query sizes** (measured from repo fixtures; `go test ./pkg/handler -run TestGetEvalQuerySizesDocumentsTypicalPayloads -v` logs the same):
+
+| Fixture shape | Raw query length | Share of 8192 cap |
+|---------------|------------------|-------------------|
+| Integration eval (`tier: premium`, `flagID`) | **~155** | **~2%** |
+| Handler unit test (`dl_state: CA`, `flagID`) | **~113** | **~1%** |
+| Nested `entityContext.user` | **~181** | **~2%** |
+| Several context fields + `enableDebug` | **~168–195** | **~2%** |
+| Batch: 1 entity, 5 `flagIDs` | **~218** | **~3%** |
+| Batch: 3 entities + `flagTags` | **~483** | **~6%** |
+| **At Flagr cap** (integration probe) | **8192** | **100%** (`entityContext.blob` **8033** ASCII chars) |
+
+So GET is appropriate for **constraint fields** (`state`, `tier`, `region`, nested paths you already use in segments), not for **large blobs** (serialized carts, feature vectors, JWT claims). Put an **~8 KB** ceiling on custom JSON in `entityContext` if you insist on GET; beyond that, **POST** (or shorten context: pass an id, resolve server-side).
+
+Integration tests pin the exact cap boundary:
+
+| Case | Raw query length | `entityContext.blob` length (chars) | HTTP |
+|------|------------------|-------------------------------------|------|
+| At limit | **8192** | **8033** | 200 |
+| One byte over | **8193** | **8034** | 400 — `GET evaluation query length 8193 exceeds maximum of 8192; use POST` |
+
+```json
+{
+  "entityID": "get-eval-url-limit-probe",
+  "entityType": "user",
+  "flagID": 1,
+  "entityContext": { "blob": "<8033× 'a'>" }
+}
+```
+
+### How other stacks enforce URL / header size (and why Flagr uses 8192)
+
+There is **no single HTTP standard** that mandates **2048** or **8192** for every hop. Limits are enforced **per component**, on different units (request line, query string, full request headers, or entire URL). Flagr’s **`FLAGR_EVAL_GET_MAX_URL_BYTES`** applies only to the **raw query string** on GET eval routes; your **first failure** in production is often a **reverse proxy or load balancer**, not the Flagr process.
+
+**Research note:** Automated web search in this environment (SearXNG `it` category) returned **no vendor-specific hits** for these limits; the table below is from **primary documentation** fetched directly (Apache, nginx, AWS, Go `net/http`, MDN).
+
+| Layer | What is measured | Typical default / documented limit | How it is enforced |
+|-------|------------------|----------------------------------|--------------------|
+| **Flagr GET eval** | Raw `?…` query string only | **`8192`** bytes (`FLAGR_EVAL_GET_MAX_URL_BYTES`; `0` = off) | Handler returns **400** before eval |
+| **Flagr HTTP server (Go)** | Entire request headers (request line + all header fields) | **`1 MiB`** — [`net/http.Server.MaxHeaderBytes`](https://pkg.go.dev/net/http#Server), default [`DefaultMaxHeaderBytes`](https://pkg.go.dev/net/http#pkg-constants) = `1 << 20`; Flagr go-swagger **`--max-header-size`** default **`1MiB`** (`swagger_gen/restapi/server.go`) | Connection read stops; **400** “request too large” |
+| **Apache httpd** | HTTP request line (method + request-URI + protocol) | **`LimitRequestLine 8190`** ([Apache `core`](https://httpd.apache.org/docs/2.4/mod/core.html#limitrequestline)) | **414** if exceeded |
+| **nginx** | Request line + header fields (per-buffer) | **`client_header_buffer_size 1k`**; overflow via **`large_client_header_buffers 4 8k`** ([`ngx_http_core_module`](https://nginx.org/en/docs/http/ngx_http_core_module.html#large_client_header_buffers)) — up to **four 8 KB** buffers for large lines/headers | **414** / **400** / connection close (config-dependent) |
+| **AWS Application Load Balancer** | Request line; single header; all request headers | Request line **16 KB**; one header **16 KB**; **entire request header block 64 KB** ([ALB quotas — HTTP headers](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-limits.html#http-headers-quotas)) | ALB rejects request before it reaches targets |
+| **HTTP semantics** | URI the server will interpret | No fixed number in RFC; servers may respond [**414 URI Too Long**](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/414) | Status **414** (or vendor-specific **400** / **431**) |
+
+**Where do “2048” and “8192” come from?**
+
+- **~8192 on the request line / URI** is a **common server default**, not a universal law. **Apache’s default `LimitRequestLine` is 8190** (bytes on the request line, which includes the path and query). That is why many operators treat **~8 KB** as a safe upper bound for **GET URLs** when the app sits behind Apache or similar configs. Flagr’s **8192 on the query string alone** is in the same ballpark but **stricter in meaning**: it does not count `/api/v1/evaluation?` or other headers—only `json=…`.
+- **~2048** is often cited for **legacy browsers** (historical IE) and **old proxies** limiting **total URL length** for the bar/bookmark UI, not for modern app servers. It is still worth remembering for **browser-only** GET eval: a URL that passes Flagr and nginx may **fail in the client** or in an ancient corporate proxy. Do not size production GET eval for 2048 unless you truly control every client; do treat **2–4 KB total URL** as a **conservative design target** for public web pages.
+- **Go does not cap “URL length” separately.** `MaxHeaderBytes` limits the **whole header block** (request line + headers). A long `?json=` query counts toward that **1 MiB** budget on direct-to-Flagr traffic, which is why Flagr adds an **application-level** cap on the query string so misconfigured clients fail with a clear **“use POST”** message instead of a generic header error.
+
+**Ingress / Kong / Cloudflare / Kubernetes:** There is **no one K8s limit**—`Ingress` controllers delegate to **nginx**, **Envoy** (Istio/Contour), **HAProxy**, etc., each with its own buffer directives. **Kong** (OpenResty/nginx-based data plane) inherits **nginx-style** header buffer behavior unless you tune it. **Cloudflare** and other CDNs publish limits in their own docs (not verified here); assume the **narrowest** hop wins: measure end-to-end with your actual edge + ingress + Flagr chain.
+
+**Practical takeaway:** Flagr’s default **8192** aligns with **Apache’s ~8K request-line culture** and is **far below** Go’s **1 MiB** header ceiling and **ALB’s 16 KB request line**, so for typical deployments **Flagr’s limit bites first** on GET eval—by design. If you raise `FLAGR_EVAL_GET_MAX_URL_BYTES`, re-check **nginx `large_client_header_buffers`**, **Apache `LimitRequestLine`**, and **ALB 16K request line** before relying on longer GET URLs.
+
+CDNs and browsers cache GET by full URL. Use **stable JSON serialization** (consistent key order, no pretty-print) so equivalent requests share a cache key — and only when caching is safe for your data.
 
 ## Feature flagging
 

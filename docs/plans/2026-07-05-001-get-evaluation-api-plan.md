@@ -62,7 +62,7 @@ const url = `/api/v1/evaluation/batch?json=${encodeURIComponent(JSON.stringify(r
 4. **`pkg/handler/handler.go`** — register GET handlers in `setupEvaluation`.
 5. **`pkg/config/env.go`** — `EvalGetMaxURLBytes` if not present.
 6. **Tests** — unit in `eval_test.go`; integration `TestIntegration_GetEvaluation` (and extend evaluation tests).
-7. **Docs** — `docs/flagr_get_evaluation.md`, sidebar link; touch `flagr_overview.md` architecture table; `flagr_env.md` for new env.
+7. **Docs** — section in `docs/flagr_use_cases.md` (GET evaluation); `flagr_overview.md`, `flagr_env.md`; integration-derived URL limit examples.
 
 ## Out of scope (v1)
 

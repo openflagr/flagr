@@ -81,3 +81,45 @@ func TestGetEvaluationBatch(t *testing.T) {
 	require.True(t, isOK, "got %T", resp)
 	require.Len(t, ok.Payload.EvaluationResults, 1)
 }
+
+func TestGetEvaluation_SchemaParityWithPOST(t *testing.T) {
+	e := NewEval()
+	t.Run("flagID below minimum", func(t *testing.T) {
+		raw := `{"flagID":-1,"entityID":"e1"}`
+		req := &http.Request{URL: &url.URL{RawQuery: "json=" + url.QueryEscape(raw)}}
+		resp := e.GetEvaluation(evaluation.GetEvaluationParams{HTTPRequest: req, JSON: raw})
+		def, ok := resp.(*evaluation.GetEvaluationDefault)
+		require.True(t, ok, "got %T", resp)
+		require.NotNil(t, def.Payload)
+		assert.Contains(t, *def.Payload.Message, "json is not valid evalContext")
+		assert.Contains(t, *def.Payload.Message, "flagID")
+	})
+	t.Run("invalid flagTagsOperator", func(t *testing.T) {
+		raw := `{"flagID":1,"flagTagsOperator":"BOTH"}`
+		req := &http.Request{URL: &url.URL{RawQuery: "json=" + url.QueryEscape(raw)}}
+		resp := e.GetEvaluation(evaluation.GetEvaluationParams{HTTPRequest: req, JSON: raw})
+		def, ok := resp.(*evaluation.GetEvaluationDefault)
+		require.True(t, ok)
+		assert.Contains(t, *def.Payload.Message, "flagTagsOperator")
+	})
+}
+
+func TestGetEvaluationBatch_SchemaParityWithPOST(t *testing.T) {
+	e := NewEval()
+	t.Run("missing entities", func(t *testing.T) {
+		raw := `{"flagIDs":[1]}`
+		req := &http.Request{URL: &url.URL{RawQuery: "json=" + url.QueryEscape(raw)}}
+		resp := e.GetEvaluationBatch(evaluation.GetEvaluationBatchParams{HTTPRequest: req, JSON: raw})
+		def, ok := resp.(*evaluation.GetEvaluationBatchDefault)
+		require.True(t, ok, "got %T", resp)
+		assert.Contains(t, *def.Payload.Message, "entities")
+	})
+	t.Run("empty entities array", func(t *testing.T) {
+		raw := `{"entities":[],"flagIDs":[1]}`
+		req := &http.Request{URL: &url.URL{RawQuery: "json=" + url.QueryEscape(raw)}}
+		resp := e.GetEvaluationBatch(evaluation.GetEvaluationBatchParams{HTTPRequest: req, JSON: raw})
+		def, ok := resp.(*evaluation.GetEvaluationBatchDefault)
+		require.True(t, ok)
+		assert.Contains(t, *def.Payload.Message, "entities")
+	})
+}

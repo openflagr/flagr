@@ -223,7 +223,7 @@ evaluation`). No record when flag is missing, disabled, or has no segments.
 
 ### Components
 
-**Evaluator** — `POST` or `GET /evaluation` (see [GET Evaluation](flagr_get_evaluation.md)), batch eval, tag eval; refresh interval
+**Evaluator** — `POST` or `GET /evaluation` (see [Use Cases — GET evaluation](flagr_use_cases.md#get-evaluation-browser-friendly)), batch eval, tag eval; refresh interval
 `FLAGR_EVALCACHE_REFRESHINTERVAL` (default 3s); version probe
 `GET /api/v1/flags/snapshots/max_id`.
 
