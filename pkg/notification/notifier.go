@@ -35,17 +35,17 @@ const (
 )
 
 type Notification struct {
-	Operation     Operation `json:"operation"`
-	FlagID        uint      `json:"flag_id"`
-	FlagKey       string    `json:"flag_key"`
+	Operation     Operation     `json:"operation"`
+	FlagID        uint          `json:"flag_id"`
+	FlagKey       string        `json:"flag_key"`
 	ComponentType ComponentType `json:"component_type,omitempty"`
-	ComponentID   uint      `json:"component_id,omitempty"`
-	ComponentKey  string    `json:"component_key,omitempty"`
-	PreValue      string    `json:"pre_value,omitempty"`
-	PostValue     string    `json:"post_value,omitempty"`
-	Diff          string    `json:"diff,omitempty"`
-	User          string    `json:"user,omitempty"`
-	Timestamp     time.Time `json:"timestamp"`
+	ComponentID   uint          `json:"component_id,omitempty"`
+	ComponentKey  string        `json:"component_key,omitempty"`
+	PreValue      string        `json:"pre_value,omitempty"`
+	PostValue     string        `json:"post_value,omitempty"`
+	Diff          string        `json:"diff,omitempty"`
+	User          string        `json:"user,omitempty"`
+	Timestamp     time.Time     `json:"timestamp"`
 }
 
 var (

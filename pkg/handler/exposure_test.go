@@ -478,7 +478,6 @@ func TestResolveExposureFlag(t *testing.T) {
 	})
 }
 
-
 func TestLogExposureStatsd_Stubbed(t *testing.T) {
 	t.Parallel()
 	var lastStatus string

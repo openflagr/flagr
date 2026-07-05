@@ -167,13 +167,13 @@ func BlankResult(f *entity.Flag, evalContext models.EvalContext, msg string) *mo
 			Msg:              msg,
 			SegmentDebugLogs: nil,
 		},
-		FlagID:               int64(flagID),
-		FlagKey:              flagKey,
-		FlagSnapshotID:       int64(flagSnapshotID),
-		FlagTags:             flagTags,
-		Timestamp:            util.TimeNow(),
-		RecordSource:         models.EvalResultRecordSourceEvaluation,
-		DataRecordsEnabled:   dataRecordsEnabled,
+		FlagID:             int64(flagID),
+		FlagKey:            flagKey,
+		FlagSnapshotID:     int64(flagSnapshotID),
+		FlagTags:           flagTags,
+		Timestamp:          util.TimeNow(),
+		RecordSource:       models.EvalResultRecordSourceEvaluation,
+		DataRecordsEnabled: dataRecordsEnabled,
 	}
 }
 

@@ -192,7 +192,11 @@ api_docs:
 	@echo "Installing swagger-merger" && npm install swagger-merger -g
 	@swagger-merger -i $(PWD)/swagger/index.yaml -o $(PWD)/docs/api_docs/bundle.yaml
 
-verifiers: verify_lint verify_swagger
+verifiers: verify_fmt verify_lint verify_swagger
+
+verify_fmt:
+	@echo "Running $@"
+	@test -z "$$(gofmt -l .)" || (echo "Files need gofmt -w:"; gofmt -l .; exit 1)
 
 verify_lint:
 	@echo "Running $@"

@@ -298,7 +298,6 @@ func TestEvalSegment_NestedEntityContext(t *testing.T) {
 	})
 }
 
-
 func TestBlankResult_RecordSource(t *testing.T) {
 	t.Parallel()
 	f := entity.GenFixtureFlag()

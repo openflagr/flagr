@@ -12,7 +12,6 @@ import (
 	"time"
 )
 
-
 // ---------------------------------------------------------------------------
 // HTTP helpers
 // ---------------------------------------------------------------------------
@@ -155,14 +154,14 @@ func countFlagSnapshots(t *testing.T, flagID int64) int {
 // ---------------------------------------------------------------------------
 
 type flagResponse struct {
-	ID                 int64              `json:"id"`
-	Key                string             `json:"key"`
-	Description        string             `json:"description"`
-	Enabled            bool               `json:"enabled"`
-	EntityType         string             `json:"entityType"`
-	DataRecordsEnabled bool               `json:"dataRecordsEnabled"`
-	Segments           []segmentResponse  `json:"segments"`
-	Variants           []variantResponse  `json:"variants"`
+	ID                 int64             `json:"id"`
+	Key                string            `json:"key"`
+	Description        string            `json:"description"`
+	Enabled            bool              `json:"enabled"`
+	EntityType         string            `json:"entityType"`
+	DataRecordsEnabled bool              `json:"dataRecordsEnabled"`
+	Segments           []segmentResponse `json:"segments"`
+	Variants           []variantResponse `json:"variants"`
 }
 
 type segmentResponse struct {

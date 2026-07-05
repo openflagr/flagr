@@ -176,6 +176,7 @@ var fetchAllFlags = func() ([]entity.Flag, error) {
 type jsonFileFetcher struct {
 	filePath string
 }
+
 func (ff *jsonFileFetcher) fetch() ([]entity.Flag, error) {
 	b, err := os.ReadFile(ff.filePath)
 	if err != nil {
@@ -183,9 +184,11 @@ func (ff *jsonFileFetcher) fetch() ([]entity.Flag, error) {
 	}
 	return unmarshalFlags(b)
 }
+
 type jsonHTTPFetcher struct {
 	url string
 }
+
 func (hf *jsonHTTPFetcher) fetch() ([]entity.Flag, error) {
 	client := http.Client{Timeout: config.Config.EvalCacheRefreshTimeout}
 	res, err := client.Get(hf.url)

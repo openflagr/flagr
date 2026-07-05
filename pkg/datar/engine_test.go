@@ -40,29 +40,29 @@ func createFlag(t *testing.T, db *gorm.DB, id int64, key, desc string, enabled b
 
 func TestNew_NilWhenDisabled(t *testing.T) {
 	t.Parallel()
-e := New(newTestDB(t), false, time.Second)
+	e := New(newTestDB(t), false, time.Second)
 	assert.Nil(t, e)
- }
+}
 
 func TestNew_Enabled(t *testing.T) {
 	t.Parallel()
-e := New(newTestDB(t), true, time.Hour)
+	e := New(newTestDB(t), true, time.Hour)
 	if e == nil {
 		t.Fatal("expected non-nil engine")
 	}
 	e.Shutdown()
- }
+}
 
 func TestNew_NilMethodsAreSafe(t *testing.T) {
 	t.Parallel()
-var e *Engine
+	var e *Engine
 	assert.NotPanics(t, func() {
 		e.Record(1, 1, 1)
 		assert.Equal(t, 0, e.Len())
 		assert.Nil(t, e.SnapshotAndReset())
 		assert.NoError(t, e.Shutdown())
 	})
- }
+}
 
 // ---------------------------------------------------------------------------
 // Record & buffer
@@ -70,7 +70,7 @@ var e *Engine
 
 func TestRecord_Increments(t *testing.T) {
 	t.Parallel()
-e := New(newTestDB(t), true, time.Hour)
+	e := New(newTestDB(t), true, time.Hour)
 	if e == nil {
 		t.Fatal("expected non-nil engine")
 	}
@@ -87,11 +87,11 @@ e := New(newTestDB(t), true, time.Hour)
 	assert.Equal(t, int32(2), agg[FlushKey{FlagID: 1, VariantID: 1, SegmentID: 10, Hour: time.Now().Truncate(time.Hour)}])
 	assert.Equal(t, int32(1), agg[FlushKey{FlagID: 1, VariantID: 2, SegmentID: 10, Hour: time.Now().Truncate(time.Hour)}])
 	assert.Equal(t, int32(1), agg[FlushKey{FlagID: 2, VariantID: 1, SegmentID: 20, Hour: time.Now().Truncate(time.Hour)}])
- }
+}
 
 func TestRecord_AfterCloseIsNoop(t *testing.T) {
 	t.Parallel()
-e := New(newTestDB(t), true, time.Hour)
+	e := New(newTestDB(t), true, time.Hour)
 	if e == nil {
 		t.Fatal("expected non-nil engine")
 		return
@@ -101,11 +101,11 @@ e := New(newTestDB(t), true, time.Hour)
 	e.closed.Store(true)
 	e.Record(1, 1, 1)
 	assert.Equal(t, 0, e.Len())
- }
+}
 
 func TestRecord_Concurrent(t *testing.T) {
 	t.Parallel()
-e := New(newTestDB(t), true, time.Hour)
+	e := New(newTestDB(t), true, time.Hour)
 	if e == nil {
 		t.Fatal("expected non-nil engine")
 	}
@@ -127,11 +127,11 @@ e := New(newTestDB(t), true, time.Hour)
 		total += v
 	}
 	assert.Equal(t, int32(100), total)
- }
+}
 
 func TestSnapshotAndReset_EmptyBuffer(t *testing.T) {
 	t.Parallel()
-e := New(newTestDB(t), true, time.Hour)
+	e := New(newTestDB(t), true, time.Hour)
 	if e == nil {
 		t.Fatal("expected non-nil engine")
 	}
@@ -140,11 +140,11 @@ e := New(newTestDB(t), true, time.Hour)
 	agg := e.SnapshotAndReset()
 	assert.Empty(t, agg)
 	assert.Equal(t, 0, e.Len())
- }
+}
 
 func TestLen_AfterRecordAndSnapshot(t *testing.T) {
 	t.Parallel()
-e := New(newTestDB(t), true, time.Hour)
+	e := New(newTestDB(t), true, time.Hour)
 	if e == nil {
 		t.Fatal("expected non-nil engine")
 	}
@@ -154,7 +154,7 @@ e := New(newTestDB(t), true, time.Hour)
 	assert.Equal(t, 1, e.Len())
 	e.SnapshotAndReset()
 	assert.Equal(t, 0, e.Len())
- }
+}
 
 // ---------------------------------------------------------------------------
 // Shutdown
@@ -162,17 +162,17 @@ e := New(newTestDB(t), true, time.Hour)
 
 func TestShutdown_Idempotent(t *testing.T) {
 	t.Parallel()
-e := New(newTestDB(t), true, time.Hour)
+	e := New(newTestDB(t), true, time.Hour)
 	if e == nil {
 		t.Fatal("expected non-nil engine")
 	}
 	assert.NoError(t, e.Shutdown())
 	assert.NoError(t, e.Shutdown()) // second call is no-op
- }
+}
 
 func TestShutdown_FlushesRemaining(t *testing.T) {
 	t.Parallel()
-db := newTestDB(t)
+	db := newTestDB(t)
 	createFlag(t, db, 1, "test", "flag", true)
 
 	e := New(db, true, time.Hour)
@@ -194,13 +194,13 @@ db := newTestDB(t)
 		assert.Equal(t, int64(2), summary.Variants[0].Count)
 		assert.Equal(t, int64(2), summary.Variants[1].Count)
 	}
- }
+}
 
 func TestShutdown_NilEngine(t *testing.T) {
 	t.Parallel()
-var e *Engine
+	var e *Engine
 	assert.NoError(t, e.Shutdown())
- }
+}
 
 // ---------------------------------------------------------------------------
 // Query flag summary breakdown
@@ -208,7 +208,7 @@ var e *Engine
 
 func TestQueryFlagSummaryBreakdown(t *testing.T) {
 	t.Parallel()
-db := newTestDB(t)
+	db := newTestDB(t)
 	createFlag(t, db, 1, "f1", "flag1", true)
 
 	e := New(db, true, time.Hour)
@@ -244,19 +244,19 @@ db := newTestDB(t)
 	// Two unique days.
 	assert.Len(t, summary.Days, 2)
 	assert.Equal(t, now.Format("2006-01-02"), summary.Days[1].Day, "most recent day last")
- }
+}
 
 func TestQueryFlagSummaryBreakdown_NilEngine(t *testing.T) {
 	t.Parallel()
-var e *Engine
+	var e *Engine
 	summary, err := e.QueryFlagSummaryBreakdown(1, time.Now(), time.Now())
 	assert.Error(t, err)
 	assert.Nil(t, summary)
- }
+}
 
 func TestQueryFlagSummaryBreakdown_NoData(t *testing.T) {
 	t.Parallel()
-db := newTestDB(t)
+	db := newTestDB(t)
 	createFlag(t, db, 1, "f1", "flag1", true)
 
 	e := New(db, true, time.Hour)
@@ -270,11 +270,11 @@ db := newTestDB(t)
 	assert.Empty(t, summary.Variants)
 	assert.Empty(t, summary.Segments)
 	assert.Empty(t, summary.Days)
- }
+}
 
 func TestQueryFlagSummaryBreakdown_NonexistentFlag(t *testing.T) {
 	t.Parallel()
-db := newTestDB(t)
+	db := newTestDB(t)
 	createFlag(t, db, 1, "f1", "flag1", true)
 
 	e := New(db, true, time.Hour)
@@ -286,7 +286,7 @@ db := newTestDB(t)
 	summary, err := e.QueryFlagSummaryBreakdown(999, time.Now().Add(-7*24*time.Hour), time.Now())
 	assert.NoError(t, err)
 	assert.Empty(t, summary.Variants)
- }
+}
 
 // ---------------------------------------------------------------------------
 // Query summary
@@ -294,7 +294,7 @@ db := newTestDB(t)
 
 func TestQuerySummary(t *testing.T) {
 	t.Parallel()
-db := newTestDB(t)
+	db := newTestDB(t)
 	createFlag(t, db, 1, "f1", "flag1", true)
 	createFlag(t, db, 2, "f2", "flag2", false)
 
@@ -324,11 +324,11 @@ db := newTestDB(t)
 	assert.Equal(t, int64(1), rows[0].FlagID)
 	assert.Equal(t, int64(150), rows[0].TotalEvalCount)
 	assert.True(t, rows[0].Enabled)
- }
+}
 
 func TestQuerySummary_NoData(t *testing.T) {
 	t.Parallel()
-db := newTestDB(t)
+	db := newTestDB(t)
 	createFlag(t, db, 1, "f1", "flag1", true)
 
 	e := New(db, true, time.Hour)
@@ -341,11 +341,11 @@ db := newTestDB(t)
 	rows, err := e.QuerySummary(time.Now().Add(-7*24*time.Hour), time.Now(), 100, 0)
 	assert.NoError(t, err)
 	assert.Empty(t, rows)
- }
+}
 
 func TestQuerySummary_Pagination(t *testing.T) {
 	t.Parallel()
-db := newTestDB(t)
+	db := newTestDB(t)
 
 	e := New(db, true, time.Hour)
 	if e == nil {
@@ -379,19 +379,19 @@ db := newTestDB(t)
 	assert.Equal(t, int64(98), rows[0].TotalEvalCount)
 	assert.Equal(t, int64(3), rows[1].FlagID, "flag 3 has 97 count")
 	assert.Equal(t, int64(97), rows[1].TotalEvalCount)
- }
+}
 
 func TestQuerySummary_NilEngine(t *testing.T) {
 	t.Parallel()
-var e *Engine
+	var e *Engine
 	rows, err := e.QuerySummary(time.Now(), time.Now(), 100, 0)
 	assert.Error(t, err)
 	assert.Nil(t, rows)
- }
+}
 
 func TestQuerySummary_DBError(t *testing.T) {
 	t.Parallel()
-db := newTestDB(t)
+	db := newTestDB(t)
 	// Drop the events table to cause a query error.
 	if err := db.Exec("DROP TABLE datar_hourly_events").Error; err != nil {
 		t.Fatal(err)
@@ -405,11 +405,11 @@ db := newTestDB(t)
 
 	_, err := e.QuerySummary(time.Now(), time.Now(), 100, 0)
 	assert.Error(t, err, "should fail with missing events table")
- }
+}
 
 func TestQueryFlagSummaryBreakdown_DBError(t *testing.T) {
 	t.Parallel()
-db := newTestDB(t)
+	db := newTestDB(t)
 	if err := db.Exec("DROP TABLE datar_hourly_events").Error; err != nil {
 		t.Fatal(err)
 	}
@@ -422,11 +422,11 @@ db := newTestDB(t)
 
 	_, err := e.QueryFlagSummaryBreakdown(1, time.Now(), time.Now())
 	assert.Error(t, err, "should fail with missing events table")
- }
+}
 
 func TestFlush_DBError(t *testing.T) {
 	t.Parallel()
-db := newTestDB(t)
+	db := newTestDB(t)
 	createFlag(t, db, 1, "f1", "test", true)
 
 	e := New(db, true, time.Hour)
@@ -445,11 +445,11 @@ db := newTestDB(t)
 	// Shutdown returns the flush error when it can't write to DB (after retries).
 	err := e.Shutdown()
 	assert.Error(t, err, "should fail flushing to dropped table")
- }
+}
 
 func TestFlushLoop_TickerFires(t *testing.T) {
 	t.Parallel()
-db := newTestDB(t)
+	db := newTestDB(t)
 	createFlag(t, db, 1, "f1", "test", true)
 
 	e := New(db, true, 1*time.Millisecond)
@@ -464,7 +464,7 @@ db := newTestDB(t)
 	time.Sleep(10 * time.Millisecond)
 
 	assert.Equal(t, 0, e.Len(), "buffer should be drained by ticker-triggered flush")
- }
+}
 
 // ---------------------------------------------------------------------------
 // flush / flushAggregates / flushLoop
@@ -472,7 +472,7 @@ db := newTestDB(t)
 
 func TestFlush_Direct(t *testing.T) {
 	t.Parallel()
-e := New(newTestDB(t), true, time.Hour)
+	e := New(newTestDB(t), true, time.Hour)
 	if e == nil {
 		t.Fatal("expected non-nil engine")
 	}
@@ -488,11 +488,11 @@ e := New(newTestDB(t), true, time.Hour)
 	e.flush()
 
 	assert.Equal(t, 0, e.Len(), "buffer should be empty after flush")
- }
+}
 
 func TestFlushAggregates_Empty(t *testing.T) {
 	t.Parallel()
-e := New(newTestDB(t), true, time.Hour)
+	e := New(newTestDB(t), true, time.Hour)
 	if e == nil {
 		t.Fatal("expected non-nil engine")
 	}
@@ -500,11 +500,11 @@ e := New(newTestDB(t), true, time.Hour)
 
 	assert.NoError(t, e.flushAggregates(nil))
 	assert.NoError(t, e.flushAggregates(map[FlushKey]int32{}))
- }
+}
 
 func TestQueryFlagSummaryBreakdown_MultipleSegments(t *testing.T) {
 	t.Parallel()
-db := newTestDB(t)
+	db := newTestDB(t)
 	createFlag(t, db, 1, "f1", "flag1", true)
 
 	e := New(db, true, time.Hour)
@@ -531,4 +531,4 @@ db := newTestDB(t)
 		assert.Equal(t, int64(20), summary.Segments[1].SegmentID)
 		assert.Equal(t, int64(50), summary.Segments[1].Count)
 	}
- }
+}

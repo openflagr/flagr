@@ -15,4 +15,3 @@ func TestSetup(t *testing.T) {
 		Setup(&operations.FlagrAPI{})
 	})
 }
-

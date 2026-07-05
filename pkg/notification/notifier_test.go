@@ -16,10 +16,10 @@ func TestNotification(t *testing.T) {
 		n := &nullNotifier{}
 		ctx := context.Background()
 		notif := Notification{
-			Operation:  OperationCreate,
-			FlagID:   1,
-			FlagKey:  "test-flag",
-			User:       "test@example.com",
+			Operation: OperationCreate,
+			FlagID:    1,
+			FlagKey:   "test-flag",
+			User:      "test@example.com",
 		}
 
 		err := n.Send(ctx, notif)
@@ -36,17 +36,17 @@ func TestNotification(t *testing.T) {
 		ctx := context.Background()
 
 		notif1 := Notification{
-			Operation:  OperationCreate,
-			FlagID:   1,
-			FlagKey:  "test-flag-1",
-			User:       "user1@example.com",
+			Operation: OperationCreate,
+			FlagID:    1,
+			FlagKey:   "test-flag-1",
+			User:      "user1@example.com",
 		}
 
 		notif2 := Notification{
-			Operation:  OperationUpdate,
-			FlagID:   2,
-			FlagKey:  "test-flag-2",
-			User:       "user2@example.com",
+			Operation: OperationUpdate,
+			FlagID:    2,
+			FlagKey:   "test-flag-2",
+			User:      "user2@example.com",
 		}
 
 		err1 := m.Send(ctx, notif1)

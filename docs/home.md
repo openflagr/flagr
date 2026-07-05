@@ -120,134 +120,15 @@ make rebuild-run    # build → stop-ui → start
 
 ## Testing
 
-Three test layers — all via **`make`** from the repo root (`make help` → **Test**).
-
-### Unit tests
-
-```bash
-make test           # golangci-lint + swagger validate + go test ./pkg/...
-```
-
-### E2E tests (UI)
+Flagr has three test layers (unit, E2E, integration), parallel test conventions,
+and CI cache strategies — all covered in the [Testing](flagr_testing.md) guide.
 
 ```bash
-make test-e2e       # build server + UI lint/typecheck + Playwright
+make test              # lint + unit tests
+make test-e2e          # UI + Playwright
+make test-integration  # API integration (local)
 ```
 
-Flagr UI is **TypeScript** (`browser/flagr-ui`); architecture and patterns: [`docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md`](plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md) (As-built).
-
-### Integration tests (API, multi-DB)
-
-**Local** — SQLite `:memory:`, auto-started server:
-
-```bash
-make test-integration
-```
-
-**Docker Compose** — same suite against six instances (SQLite, MySQL, PostgreSQL, …):
-
-```bash
-make test-integration-compose
-```
-
-CI runs **`make ci-integration`** (tests + benchmarks on Compose). Local benchmarks:
-
-```bash
-make bench-integration
-```
-
-### Writing parallel-safe tests
-
-CI runs `go test ./pkg/...` which already parallelizes across packages. To go
-faster, tests *within* a package should call `t.Parallel()` so the test runner
-can execute them concurrently on multi-core CI runners.
-
-**Rule of thumb:** every new test function should start with `t.Parallel()`
-unless it has a specific reason not to.
-
-#### Safe — add `t.Parallel()`
-
-```go
-func TestMyPureFunction(t *testing.T) {
-    t.Parallel() // no shared state, just assertions
-    result := MyPureFunction("input")
-    assert.Equal(t, "expected", result)
-}
-```
-
-Tests that create their own isolated resources (in-memory DB, local HTTP
-server, temp directory) are also safe:
-
-```go
-func TestWithIsolatedDB(t *testing.T) {
-    t.Parallel()
-    db := entity.NewTestDB() // fresh :memory: SQLite per test
-    // ... use db freely
-}
-```
-
-#### Unsafe — skip `t.Parallel()`
-
-Tests that mutate **global state** must not run in parallel:
-
-| Pattern | Why it's unsafe | Example |
-|---------|----------------|---------|
-| Direct `config.Config.X = ...` | Races with other tests reading/writing the same field | `config.Config.RecorderEnabled = true` |
-| `gostub.Stub(&config.Config.X, val)` | Same as above, via reflection | `gostub.Stub(&config.Config.RecorderType, ...)` |
-| Package-level singletons | Shared mutable state | `singletonDataRecorderOnce = sync.Once{}` |
-| `os.Setenv` / `t.Setenv` | Process-wide env mutation | OK inside `t.Run` subtest with `t.Setenv` (auto-restores) |
-
-If a top-level test function sets up global state and delegates to subtests,
-you can still parallelize the **subtests** — the parent serializes setup:
-
-```go
-func TestWithGlobalSetup(t *testing.T) {
-    // NO t.Parallel() here — this test mutates globals
-    config.Config.FeatureEnabled = true
-    defer func() { config.Config.FeatureEnabled = false }()
-
-    t.Run("case A", func(t *testing.T) {
-        t.Parallel() // safe — parent already finished setup
-        // ...
-    })
-    t.Run("case B", func(t *testing.T) {
-        t.Parallel()
-        // ...
-    })
-}
-```
-
-#### Checking for races locally
-
-```bash
-go test -race ./pkg/...     # requires CGO_ENABLED=1
-go test -count=5 ./pkg/...  # repeat to catch flaky ordering
-```
-
-#### CI cache warming
-
-The CI workflow caches Go modules, npm dependencies, and Docker layers between
-runs. The **first push** to a new branch populates the cache; subsequent pushes
-hit the cache and skip dependency downloads. To warm the cache before your PR
-runs its checks, simply push an empty commit or amend-and-force-push — the
-first run saves the cache, and the second run benefits from it.
-
-#### Integration test Docker caching
-
-The integration test Docker image (`integration_tests/Dockerfile-Integration-Test`)
-uses two caching strategies:
-
-1. **Dependency layer** — `go.mod`/`go.sum` are copied and `go mod download`
-   runs before source code. Changing application code doesn't re-download
-   dependencies.
-
-2. **BuildKit cache mounts** — `--mount=type=cache,target=/root/.cache/go-build`
-   and `--mount=type=cache,target=/go/pkg/mod` persist Go's build and module
-   caches across builds. In CI, `docker/setup-buildx-action` + GHA cache
-   backend persists these layers between runs.
-
-Locally, Docker BuildKit (default on modern Docker) activates these
-automatically — no extra setup needed.
 
 
 ## Deploy

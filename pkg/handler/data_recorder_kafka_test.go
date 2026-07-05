@@ -127,7 +127,6 @@ func TestLogKafkaAsyncRecordToDatadog_SkipsExposure(t *testing.T) {
 	})
 }
 
-
 func TestLogKafkaAsyncRecordToDatadog_EvaluationSource(t *testing.T) {
 	called := false
 	orig := logKafkaAsyncRecordToDatadog

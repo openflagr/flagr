@@ -8,7 +8,7 @@ import (
 
 func TestSegmentPrepareEvaluation(t *testing.T) {
 	t.Parallel()
-t.Run("happy code path", func(t *testing.T) {
+	t.Run("happy code path", func(t *testing.T) {
 		s := GenFixtureSegment()
 		assert.NoError(t, s.PrepareEvaluation())
 		assert.NotNil(t, s.SegmentEvaluation.ConditionsExpr)
@@ -24,11 +24,11 @@ t.Run("happy code path", func(t *testing.T) {
 		assert.Empty(t, s.SegmentEvaluation.DistributionArray.VariantIDs)
 		assert.Empty(t, s.SegmentEvaluation.DistributionArray.PercentsAccumulated)
 	})
- }
+}
 
 func TestSegmentPreload(t *testing.T) {
 	t.Parallel()
-t.Run("happy code path", func(t *testing.T) {
+	t.Run("happy code path", func(t *testing.T) {
 		s := GenFixtureSegment()
 		f := GenFixtureFlag()
 		db := PopulateTestDB(f)
@@ -43,4 +43,4 @@ t.Run("happy code path", func(t *testing.T) {
 		err := s.Preload(db)
 		assert.NoError(t, err)
 	})
- }
+}

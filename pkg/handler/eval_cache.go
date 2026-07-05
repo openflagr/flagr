@@ -42,6 +42,7 @@ func (ec *EvalCache) getFetcher() evalCacheFetcher {
 	ec.fetcher = f
 	return f
 }
+
 // EvalCache is the in-memory cache just for evaluation
 type EvalCache struct {
 	cache           *cacheContainer

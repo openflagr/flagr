@@ -94,7 +94,6 @@ func Round(f float64) int {
 	return int(f + math.Copysign(0.5, f))
 }
 
-
 var (
 	timeNowMu     sync.RWMutex
 	timeNowSec    int64

@@ -195,4 +195,3 @@ func benchEval(b *testing.B, path string, body any) {
 		}
 	}
 }
-

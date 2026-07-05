@@ -19,10 +19,10 @@ func TestWebhookNotifier(t *testing.T) {
 		wn := NewWebhookNotifier()
 		ctx := context.Background()
 		notif := Notification{
-			Operation:  "create",
-			FlagID:   1,
-			FlagKey:  "test-flag",
-			User:       "test@example.com",
+			Operation: "create",
+			FlagID:    1,
+			FlagKey:   "test-flag",
+			User:      "test@example.com",
 		}
 
 		err := wn.Send(ctx, notif)
@@ -48,7 +48,7 @@ func TestWebhookNotifier(t *testing.T) {
 		wn := NewWebhookNotifier()
 		ctx := context.Background()
 		notif := Notification{
-			Operation:  "create",
+			Operation: "create",
 		}
 
 		err := wn.Send(ctx, notif)
@@ -78,8 +78,8 @@ func TestWebhookNotifier(t *testing.T) {
 			FlagID:        42,
 			FlagKey:       "my-feature",
 			ComponentType: "segment",
-		ComponentID:   7,
-		ComponentKey:  "power-users",
+			ComponentID:   7,
+			ComponentKey:  "power-users",
 			Diff:          "-old\n+new",
 			User:          "admin@example.com",
 			Timestamp:     now,
@@ -104,7 +104,7 @@ func TestWebhookNotifier(t *testing.T) {
 
 		// Fields not present
 		assert.NotContains(t, parsed, "entity_type") // old name, should be gone
-		assert.NotContains(t, parsed, "object")       // removed for simplicity
+		assert.NotContains(t, parsed, "object")      // removed for simplicity
 		assert.NotContains(t, parsed, "pre_value")
 		assert.NotContains(t, parsed, "post_value")
 	})
