@@ -16,26 +16,13 @@
       test-id="constraint-op-select"
       @update:model-value="onOperator"
     />
-    <div class="constraint-value-cell">
-      <el-input
-        size="small"
-        class="constraint-cell constraint-control"
-        :placeholder="valuePlaceholder"
-        :model-value="valueForInput"
-        data-testid="constraint-value-input"
-        @update:model-value="onField('value', $event)"
-      />
-      <el-tooltip
-        v-if="valueHint"
-        :content="valueHint"
-        placement="top"
-        effect="light"
-      >
-        <el-icon class="constraint-value-hint-icon">
-          <InfoFilled />
-        </el-icon>
-      </el-tooltip>
-    </div>
+    <ConstraintValueCell
+      :model-value="valueForInput"
+      :property="constraint.property"
+      :placeholder="valuePlaceholder"
+      data-testid="constraint-value-input"
+      @update:model-value="onField('value', $event)"
+    />
     <div class="constraint-actions">
       <el-tooltip
         :content="saveDirtyTooltip"
@@ -70,14 +57,14 @@ import type { PropType } from 'vue'
 import type { Constraint } from '@/api/types'
 
 import ConstraintOperatorSelect from '@/components/ConstraintOperatorSelect.vue'
+import ConstraintValueCell from '@/components/ConstraintValueCell.vue'
 import {
   propertyPlaceholderFor,
   valuePlaceholderFor,
 } from '@/helpers/constraintOperatorUi'
 import { constraintValueForInput, resolveUiOperator } from '@/helpers/constraintOperatorSugar'
-import { contextKeyHint } from '@/helpers/contextKeyHints'
 import type { OperatorOptionGroup, OperatorUiOption } from '@/helpers/constraintOperators'
-import { Delete, InfoFilled } from '@element-plus/icons-vue'
+import { Delete } from '@element-plus/icons-vue'
 import { SAVE_DIRTY_TOOLTIP } from '@/helpers/saveDirtyUi'
 
 export default {
@@ -85,7 +72,7 @@ export default {
   components: {
     ConstraintOperatorSelect,
     Delete,
-    InfoFilled,
+    ConstraintValueCell,
   },
   props: {
     constraint: { type: Object as PropType<Constraint>, required: true },
@@ -117,9 +104,6 @@ export default {
     valuePlaceholder(): string {
       return valuePlaceholderFor(this.uiOperator, this.operatorOptions)
     },
-    valueHint(): string | null {
-      return contextKeyHint(this.constraint.property, this.constraint.value)
-    },
   },
   methods: {
     onField(field: 'property' | 'value', value: string) {
@@ -133,21 +117,4 @@ export default {
 </script>
 
 <style scoped>
-.constraint-value-cell {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3xs);
-}
-.constraint-value-cell .constraint-control {
-  flex: 1;
-  min-width: 0;
-}
-.constraint-value-hint-icon {
-  color: var(--el-color-success-light-5);
-  cursor: help;
-  font-size: var(--font-size-body-sm);
-}
-.constraint-value-hint-icon:hover {
-  color: var(--el-color-success);
-}
 </style>

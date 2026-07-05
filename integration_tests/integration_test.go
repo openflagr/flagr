@@ -1075,10 +1075,6 @@ func TestIntegration_DatarFlagSummary(t *testing.T) {
 }
 
 func TestIntegration_BuiltInContext(t *testing.T) {
-	t.Skip("TODO: @ts GTE 0 constraint not matching — investigate conditions library int64 handling")
-	// Test that built-in context keys (@ts) are injected and usable in constraints.
-	// The server is started with FLAGR_INJECTED_CONTEXT_ENABLED=true.
-
 	// Test that built-in context keys (@ts) are injected and usable in constraints.
 	// The server is started with FLAGR_INJECTED_CONTEXT_ENABLED=true.
 
@@ -1092,6 +1088,11 @@ func TestIntegration_BuiltInContext(t *testing.T) {
 	if created.ID == 0 {
 		t.Fatal("expected non-zero id")
 	}
+
+	// Enable the flag (flags are disabled by default)
+	putJSON(t, fmt.Sprintf("/api/v1/flags/%d/enabled", created.ID), map[string]any{
+		"enabled": true,
+	}, nil)
 
 	// Create a variant
 	var variant variantResponse
@@ -1135,7 +1136,6 @@ func TestIntegration_BuiltInContext(t *testing.T) {
 	}, nil)
 
 	// Wait for eval cache to pick up the new flag
-	// Wait for eval cache to pick up the new flag
 	time.Sleep(3 * time.Second)
 
 	// Evaluate — should match because @ts >= 0 is always true
@@ -1171,6 +1171,11 @@ func TestIntegration_BuiltInContextHTTPHeader(t *testing.T) {
 	if created.ID == 0 {
 		t.Fatal("expected non-zero id")
 	}
+
+	// Enable the flag (flags are disabled by default)
+	putJSON(t, fmt.Sprintf("/api/v1/flags/%d/enabled", created.ID), map[string]any{
+		"enabled": true,
+	}, nil)
 
 	// Create variant
 	var variant variantResponse
@@ -1225,6 +1230,29 @@ func TestIntegration_BuiltInContextHTTPHeader(t *testing.T) {
 
 	if evalResult.VariantKey != "" {
 		t.Fatalf("expected empty variantKey (no match), got '%s' — constraint should not match without X-Environment header", evalResult.VariantKey)
+	}
+
+	// Positive test: evaluate WITH X-Environment header set to "test" — should match
+	var positiveResult evalResponse
+	resp, err := doReqWithHeaders("POST", "/api/v1/evaluation", map[string]any{
+		"flagID":     created.ID,
+		"entityID":   "http-header-positive-entity",
+		"entityType": "user",
+		"entityContext": map[string]any{},
+	}, map[string]string{"X-Environment": "test"})
+	if err != nil {
+		t.Fatalf("evaluation request failed: %v", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		b, _ := io.ReadAll(resp.Body)
+		t.Fatalf("expected 200, got %d: %s", resp.StatusCode, string(b))
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&positiveResult); err != nil {
+		t.Fatalf("decode failed: %v", err)
+	}
+	if positiveResult.VariantKey != "enabled" {
+		t.Fatalf("expected variantKey 'enabled', got '%s' — @http_x_environment should match with X-Environment: test", positiveResult.VariantKey)
 	}
 
 	// Cleanup

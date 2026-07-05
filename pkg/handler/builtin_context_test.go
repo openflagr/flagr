@@ -42,43 +42,43 @@ func TestInjectBuiltInContext_CoreKeys(t *testing.T) {
 		clientCtx := map[string]any{"@ts": 0}
 		ctx := InjectBuiltInContext(clientCtx, nil).(map[string]any)
 		now := time.Now().UTC().Unix()
-		assert.NotEqual(t, int64(0), ctx[BuiltInKeyTs])
-		assert.InDelta(t, now, ctx[BuiltInKeyTs], 2, "ts should be close to current time")
+		assert.NotEqual(t, float64(0), ctx[BuiltInKeyTs])
+		assert.InDelta(t, float64(now), ctx[BuiltInKeyTs], 2, "ts should be close to current time")
 	})
 
 	t.Run("ts is Unix epoch seconds", func(t *testing.T) {
 		ctx := InjectBuiltInContext(nil, nil).(map[string]any)
-		ts, ok := ctx[BuiltInKeyTs].(int64)
-		assert.True(t, ok, "ts should be int64")
+		ts, ok := ctx[BuiltInKeyTs].(float64)
+		assert.True(t, ok, "ts should be float64 (JSON-compatible)")
 		now := time.Now().UTC().Unix()
-		assert.InDelta(t, now, ts, 2)
+		assert.InDelta(t, float64(now), ts, 2)
 	})
 
 	t.Run("ts_hour is 0-23", func(t *testing.T) {
 		ctx := InjectBuiltInContext(nil, nil).(map[string]any)
-		hour, ok := ctx[BuiltInKeyTsHour].(int)
-		assert.True(t, ok, "ts_hour should be int")
-		assert.GreaterOrEqual(t, hour, 0)
-		assert.LessOrEqual(t, hour, 23)
-		assert.Equal(t, time.Now().UTC().Hour(), hour)
+		hour, ok := ctx[BuiltInKeyTsHour].(float64)
+		assert.True(t, ok, "ts_hour should be float64 (JSON-compatible)")
+		assert.GreaterOrEqual(t, hour, float64(0))
+		assert.LessOrEqual(t, hour, float64(23))
+		assert.Equal(t, float64(time.Now().UTC().Hour()), hour)
 	})
 
 	t.Run("ts_weekday is 0-6 (Sunday=0)", func(t *testing.T) {
 		ctx := InjectBuiltInContext(nil, nil).(map[string]any)
-		day, ok := ctx[BuiltInKeyTsWeekday].(int)
-		assert.True(t, ok, "ts_weekday should be int")
-		assert.GreaterOrEqual(t, day, 0)
-		assert.LessOrEqual(t, day, 6)
-		assert.Equal(t, int(time.Now().UTC().Weekday()), day)
+		day, ok := ctx[BuiltInKeyTsWeekday].(float64)
+		assert.True(t, ok, "ts_weekday should be float64 (JSON-compatible)")
+		assert.GreaterOrEqual(t, day, float64(0))
+		assert.LessOrEqual(t, day, float64(6))
+		assert.Equal(t, float64(time.Now().UTC().Weekday()), day)
 	})
 
 	t.Run("ts_month is 1-12", func(t *testing.T) {
 		ctx := InjectBuiltInContext(nil, nil).(map[string]any)
-		month, ok := ctx[BuiltInKeyTsMonth].(int)
-		assert.True(t, ok, "ts_month should be int")
-		assert.GreaterOrEqual(t, month, 1)
-		assert.LessOrEqual(t, month, 12)
-		assert.Equal(t, int(time.Now().UTC().Month()), month)
+		month, ok := ctx[BuiltInKeyTsMonth].(float64)
+		assert.True(t, ok, "ts_month should be float64 (JSON-compatible)")
+		assert.GreaterOrEqual(t, month, float64(1))
+		assert.LessOrEqual(t, month, float64(12))
+		assert.Equal(t, float64(time.Now().UTC().Month()), month)
 	})
 
 	t.Run("non-map entityContext returns new map", func(t *testing.T) {
@@ -92,10 +92,12 @@ func TestInjectBuiltInContext_HTTPHeaders(t *testing.T) {
 	config.Config.InjectedContextEnabled = true
 	config.Config.InjectedContextHTTPHeaders = []string{"X-Environment", "X-Tenant-ID"}
 	config.Config.InjectedContextHTTPHeaderPrefixes = []string{"CF-"}
+	ResetHeaderMatchCache()
 	defer func() {
 		config.Config.InjectedContextEnabled = false
 		config.Config.InjectedContextHTTPHeaders = nil
 		config.Config.InjectedContextHTTPHeaderPrefixes = nil
+		ResetHeaderMatchCache()
 	}()
 
 	t.Run("exact header match", func(t *testing.T) {
@@ -137,8 +139,10 @@ func TestInjectBuiltInContext_HTTPHeaders(t *testing.T) {
 
 	t.Run("Host header special case", func(t *testing.T) {
 		config.Config.InjectedContextHTTPHeaders = append(config.Config.InjectedContextHTTPHeaders, "Host")
+		ResetHeaderMatchCache()
 		defer func() {
 			config.Config.InjectedContextHTTPHeaders = []string{"X-Environment", "X-Tenant-ID"}
+			ResetHeaderMatchCache()
 		}()
 
 		r := &http.Request{
@@ -160,8 +164,10 @@ func TestInjectBuiltInContext_HTTPHeaders(t *testing.T) {
 
 	t.Run("case insensitive header matching", func(t *testing.T) {
 		config.Config.InjectedContextHTTPHeaders = []string{"x-environment"}
+		ResetHeaderMatchCache()
 		defer func() {
 			config.Config.InjectedContextHTTPHeaders = []string{"X-Environment", "X-Tenant-ID"}
+			ResetHeaderMatchCache()
 		}()
 
 		r := &http.Request{
@@ -176,8 +182,10 @@ func TestInjectBuiltInContext_HTTPHeaders(t *testing.T) {
 
 	t.Run("empty header value skipped", func(t *testing.T) {
 		config.Config.InjectedContextHTTPHeaders = []string{"X-Empty"}
+		ResetHeaderMatchCache()
 		defer func() {
 			config.Config.InjectedContextHTTPHeaders = []string{"X-Environment", "X-Tenant-ID"}
+			ResetHeaderMatchCache()
 		}()
 
 		r := &http.Request{
@@ -192,8 +200,10 @@ func TestInjectBuiltInContext_HTTPHeaders(t *testing.T) {
 
 	t.Run("multi-value header joined with comma", func(t *testing.T) {
 		config.Config.InjectedContextHTTPHeaders = []string{"X-Multi"}
+		ResetHeaderMatchCache()
 		defer func() {
 			config.Config.InjectedContextHTTPHeaders = []string{"X-Environment", "X-Tenant-ID"}
+			ResetHeaderMatchCache()
 		}()
 
 		r := &http.Request{

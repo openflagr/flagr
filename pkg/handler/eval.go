@@ -104,10 +104,22 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 		EvaluationResults: make([]*models.EvalResult, 0, est),
 	}
 
+	// Build built-in context once for all entities in this batch
+	builtInCtx, _ := InjectBuiltInContext(nil, params.HTTPRequest).(map[string]any)
+
 	// TODO make it concurrent
 	for _, entity := range entities {
-		// Inject built-in context keys into each entity's context
-		entity.EntityContext = InjectBuiltInContext(entity.EntityContext, params.HTTPRequest)
+		// Merge built-in context into each entity's context
+		merged := make(map[string]any)
+		if entityCtx, ok := entity.EntityContext.(map[string]any); ok {
+			for k, v := range entityCtx {
+				merged[k] = v
+			}
+		}
+		for k, v := range builtInCtx {
+			merged[k] = v
+		}
+		entity.EntityContext = merged
 		if len(flagTags) > 0 {
 			evalContext := models.EvalContext{
 				EnableDebug:      params.Body.EnableDebug,

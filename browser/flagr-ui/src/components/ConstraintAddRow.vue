@@ -31,27 +31,14 @@
         test-id="new-constraint-op-select"
         @update:model-value="patch('operator', $event)"
       />
-      <div class="constraint-value-cell">
-        <el-input
-          size="small"
-          class="constraint-cell constraint-control"
-          :placeholder="valuePlaceholder"
-          :model-value="draft.value"
-          data-testid="new-constraint-value-input"
-          @update:model-value="patch('value', $event)"
-          @keyup.enter="canAdd && $emit('add')"
-        />
-        <el-tooltip
-          v-if="valueHint"
-          :content="valueHint"
-          placement="top"
-          effect="light"
-        >
-          <el-icon class="constraint-value-hint-icon">
-            <InfoFilled />
-          </el-icon>
-        </el-tooltip>
-      </div>
+      <ConstraintValueCell
+        :model-value="draft.value"
+        :property="draft.property"
+        :placeholder="valuePlaceholder"
+        data-testid="new-constraint-value-input"
+        @update:model-value="patch('value', $event)"
+        @keyup.enter="canAdd && $emit('add')"
+      />
       <el-button
         size="small"
         type="primary"
@@ -69,13 +56,12 @@
 
 <script lang="ts">
 import type { PropType } from 'vue'
-import { InfoFilled } from '@element-plus/icons-vue'
+import ConstraintValueCell from '@/components/ConstraintValueCell.vue'
 import ConstraintOperatorSelect from '@/components/ConstraintOperatorSelect.vue'
 import {
   propertyPlaceholderFor,
   valuePlaceholderFor,
 } from '@/helpers/constraintOperatorUi'
-import { contextKeyHint } from '@/helpers/contextKeyHints'
 import type { OperatorOptionGroup, OperatorUiOption } from '@/helpers/constraintOperators'
 
 export interface NewConstraintDraft {
@@ -88,7 +74,7 @@ export default {
   name: 'ConstraintAddRow',
   components: {
     ConstraintOperatorSelect,
-    InfoFilled,
+    ConstraintValueCell,
   },
   props: {
     draft: { type: Object as PropType<NewConstraintDraft>, required: true },
@@ -116,9 +102,6 @@ export default {
       const d = this.draft
       return Boolean(d.operator && d.property && d.value)
     },
-    valueHint(): string | null {
-      return contextKeyHint(this.draft.property, this.draft.value)
-    },
   },
   methods: {
     patch(field: keyof NewConstraintDraft, value: string) {
@@ -131,22 +114,5 @@ export default {
 <style scoped>
 .constraint-add-block {
   display: contents;
-}
-.constraint-value-cell {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3xs);
-}
-.constraint-value-cell .constraint-control {
-  flex: 1;
-  min-width: 0;
-}
-.constraint-value-hint-icon {
-  color: var(--el-color-success-light-5);
-  cursor: help;
-  font-size: var(--font-size-body-sm);
-}
-.constraint-value-hint-icon:hover {
-  color: var(--el-color-success);
 }
 </style>
