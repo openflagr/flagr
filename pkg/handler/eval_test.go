@@ -1510,15 +1510,16 @@ func TestGetEvaluation_InvalidJSON(t *testing.T) {
 }
 
 func TestGetEvaluation_QueryTooLong(t *testing.T) {
-	orig := config.Config.EvalGetMaxURLBytes
-	config.Config.EvalGetMaxURLBytes = 10
-	defer func() { config.Config.EvalGetMaxURLBytes = orig }()
-
+	stubs := gostub.Stub(&config.Config.EvalGetMaxURLBytes, 10)
+	defer stubs.Reset()
 	e := NewEval()
-	req := &http.Request{URL: &url.URL{RawQuery: "json=%7B%7D"}}
-	resp := e.GetEvaluation(evaluation.GetEvaluationParams{HTTPRequest: req, JSON: "{}"})
-	_, isDef := resp.(*evaluation.GetEvaluationDefault)
-	assert.True(t, isDef)
+	raw := `{"flagID":1,"entityID":"e1"}`
+	req := &http.Request{URL: &url.URL{RawQuery: "json=" + url.QueryEscape(raw)}}
+	resp := e.GetEvaluation(evaluation.GetEvaluationParams{HTTPRequest: req, JSON: raw})
+	def, isDef := resp.(*evaluation.GetEvaluationDefault)
+	require.True(t, isDef)
+	require.NotNil(t, def.Payload)
+	assert.Contains(t, *def.Payload.Message, "exceeds maximum")
 }
 
 func TestGetEvaluationBatch(t *testing.T) {

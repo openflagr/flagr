@@ -208,41 +208,40 @@ func EvaluateBatch(batchReq *models.EvaluationBatchRequest, r *http.Request) (*m
 
 // GET evaluation: query decode and POST-parity validation
 
-// decodeEvalContextFromGet applies GET /evaluation checks: raw query length (as received),
-// non-empty json param, JSON syntax, then POST-parity schema validation.
-func decodeEvalContextFromGet(req *http.Request, rawQueryLen int, jsonParam string) (models.EvalContext, *models.Error) {
-	var zero models.EvalContext
+func evalGetMissingJSONParam() *models.Error {
+	return ErrorMessage("missing required query parameter json")
+}
+
+// decodeFromGetQuery: raw query length (as received), json param, unmarshal, then schema validation.
+func decodeFromGetQuery(req *http.Request, rawQueryLen int, jsonParam string, label string, dest any, validate func() *models.Error) *models.Error {
 	if errPayload := evalGetQueryTooLong(rawQueryLen); errPayload != nil {
-		return zero, errPayload
+		return errPayload
 	}
 	if jsonParam == "" {
-		return zero, ErrorMessage("missing required query parameter json")
+		return evalGetMissingJSONParam()
 	}
+	if err := json.Unmarshal([]byte(jsonParam), dest); err != nil {
+		return ErrorMessage("json is not valid %s: %v", label, err)
+	}
+	return validate()
+}
+
+func decodeEvalContextFromGet(req *http.Request, rawQueryLen int, jsonParam string) (models.EvalContext, *models.Error) {
 	var evalContext models.EvalContext
-	if err := json.Unmarshal([]byte(jsonParam), &evalContext); err != nil {
-		return zero, ErrorMessage("json is not valid evalContext: %v", err)
-	}
-	if errPayload := validateEvalContextAfterJSON(req, &evalContext); errPayload != nil {
-		return zero, errPayload
+	if errPayload := decodeFromGetQuery(req, rawQueryLen, jsonParam, "evalContext", &evalContext, func() *models.Error {
+		return validateEvalContextAfterJSON(req, &evalContext)
+	}); errPayload != nil {
+		return models.EvalContext{}, errPayload
 	}
 	return evalContext, nil
 }
 
-// decodeEvaluationBatchFromGet applies GET /evaluation/batch checks (same stages as single eval).
 func decodeEvaluationBatchFromGet(req *http.Request, rawQueryLen int, jsonParam string) (models.EvaluationBatchRequest, *models.Error) {
-	var zero models.EvaluationBatchRequest
-	if errPayload := evalGetQueryTooLong(rawQueryLen); errPayload != nil {
-		return zero, errPayload
-	}
-	if jsonParam == "" {
-		return zero, ErrorMessage("missing required query parameter json")
-	}
 	var batchReq models.EvaluationBatchRequest
-	if err := json.Unmarshal([]byte(jsonParam), &batchReq); err != nil {
-		return zero, ErrorMessage("json is not valid evaluationBatchRequest: %v", err)
-	}
-	if errPayload := validateEvaluationBatchRequestAfterJSON(req, &batchReq); errPayload != nil {
-		return zero, errPayload
+	if errPayload := decodeFromGetQuery(req, rawQueryLen, jsonParam, "evaluationBatchRequest", &batchReq, func() *models.Error {
+		return validateEvaluationBatchRequestAfterJSON(req, &batchReq)
+	}); errPayload != nil {
+		return models.EvaluationBatchRequest{}, errPayload
 	}
 	return batchReq, nil
 }
