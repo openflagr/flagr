@@ -156,6 +156,83 @@ CI runs **`make ci-integration`** (tests + benchmarks on Compose). Local benchma
 make bench-integration
 ```
 
+### Writing parallel-safe tests
+
+CI runs `go test ./pkg/...` which already parallelizes across packages. To go
+faster, tests *within* a package should call `t.Parallel()` so the test runner
+can execute them concurrently on multi-core CI runners.
+
+**Rule of thumb:** every new test function should start with `t.Parallel()`
+unless it has a specific reason not to.
+
+#### Safe — add `t.Parallel()`
+
+```go
+func TestMyPureFunction(t *testing.T) {
+    t.Parallel() // no shared state, just assertions
+    result := MyPureFunction("input")
+    assert.Equal(t, "expected", result)
+}
+```
+
+Tests that create their own isolated resources (in-memory DB, local HTTP
+server, temp directory) are also safe:
+
+```go
+func TestWithIsolatedDB(t *testing.T) {
+    t.Parallel()
+    db := entity.NewTestDB() // fresh :memory: SQLite per test
+    // ... use db freely
+}
+```
+
+#### Unsafe — skip `t.Parallel()`
+
+Tests that mutate **global state** must not run in parallel:
+
+| Pattern | Why it's unsafe | Example |
+|---------|----------------|---------|
+| Direct `config.Config.X = ...` | Races with other tests reading/writing the same field | `config.Config.RecorderEnabled = true` |
+| `gostub.Stub(&config.Config.X, val)` | Same as above, via reflection | `gostub.Stub(&config.Config.RecorderType, ...)` |
+| Package-level singletons | Shared mutable state | `singletonDataRecorderOnce = sync.Once{}` |
+| `os.Setenv` / `t.Setenv` | Process-wide env mutation | OK inside `t.Run` subtest with `t.Setenv` (auto-restores) |
+
+If a top-level test function sets up global state and delegates to subtests,
+you can still parallelize the **subtests** — the parent serializes setup:
+
+```go
+func TestWithGlobalSetup(t *testing.T) {
+    // NO t.Parallel() here — this test mutates globals
+    config.Config.FeatureEnabled = true
+    defer func() { config.Config.FeatureEnabled = false }()
+
+    t.Run("case A", func(t *testing.T) {
+        t.Parallel() // safe — parent already finished setup
+        // ...
+    })
+    t.Run("case B", func(t *testing.T) {
+        t.Parallel()
+        // ...
+    })
+}
+```
+
+#### Checking for races locally
+
+```bash
+go test -race ./pkg/...     # requires CGO_ENABLED=1
+go test -count=5 ./pkg/...  # repeat to catch flaky ordering
+```
+
+#### CI cache warming
+
+The CI workflow caches Go modules and npm dependencies between runs. The
+**first push** to a new branch populates the cache; subsequent pushes on the
+same branch (and PRs targeting the same base) hit the cache and skip dependency
+downloads. To warm the cache before your PR runs its checks, simply push an
+empty commit or amend-and-force-push — the first run saves the cache, and the
+second run benefits from it.
+
 ## Deploy
 
 Use the `ghcr.io/openflagr/flagr` image directly and configure everything
