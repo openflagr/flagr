@@ -15,12 +15,14 @@ Shared links use GitHub Pages + Docsify hash routes: `https://openflagr.github.i
 
 | `#/flagr_*` | `flagr_*.md` | Unchanged filenames |
 
-## Former bookmark routes
+## Former bookmark routes (no stub pages)
+
+Old Docsify routes used removed filenames. Open the replacement route directly — there is no `USING_FLAGR.md` or `DEVELOPER_GUIDE.md`.
 
 | Old route | Use instead |
 |-----------|-------------|
-| `#/USING_FLAGR` | [integration.md](integration.md) (one-line redirect page kept) |
-| `#/DEVELOPER_GUIDE` | [CONTRIBUTING.md](CONTRIBUTING.md) (repo work) or [integration.md](integration.md) (client API) |
+| `#/USING_FLAGR` | `#/integration` — [Integration guide](integration.md) |
+| `#/DEVELOPER_GUIDE` | `#/CONTRIBUTING` — [Contributing](CONTRIBUTING.md); client API → `#/integration` |
 
 ## Deep anchors — preserved on purpose
 
