@@ -545,6 +545,62 @@
         border-radius: var(--radius-md);
         border: 1px solid var(--flagr-border);
       }
+
+      /* Mobile: Docsify default toggle is bottom-left — top-right FAB with clear affordance */
+      @media screen and (max-width: 768px) {
+        .sidebar-toggle {
+          top: max(0.65rem, env(safe-area-inset-top, 0px));
+          right: max(0.65rem, env(safe-area-inset-right, 0px));
+          left: auto;
+          bottom: auto;
+          width: 2.75rem;
+          height: 2.75rem;
+          padding: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: var(--flagr-surface);
+          border: 1px solid var(--flagr-border-strong);
+          border-radius: var(--radius-md);
+          box-shadow: var(--shadow-soft);
+          z-index: 50;
+          opacity: 1;
+        }
+
+        .sidebar-toggle:hover,
+        body.close .sidebar-toggle {
+          background: var(--flagr-surface);
+          width: 2.75rem;
+          padding: 0;
+          opacity: 1;
+        }
+
+        .sidebar-toggle:hover .sidebar-toggle-button {
+          opacity: 1;
+        }
+
+        .sidebar-toggle .sidebar-toggle-button {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 5px;
+          opacity: 1;
+        }
+
+        .sidebar-toggle span {
+          width: 1.125rem;
+          height: 2px;
+          margin-bottom: 0 !important;
+          background-color: var(--flagr-heading);
+          border-radius: 1px;
+        }
+
+        .content {
+          padding-top: 3.25rem;
+        }
+      }
+
     </style>
   </head>
   <body>
