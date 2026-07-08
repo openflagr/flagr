@@ -36,6 +36,30 @@ func doReq(method, path string, body any) (*http.Response, error) {
 	return httpClient.Do(req)
 }
 
+// doReqWithHeaders is like doReq but sets additional headers on the request.
+func doReqWithHeaders(method, path string, body any, extraHeaders map[string]string) (*http.Response, error) {
+	var reqBody io.Reader
+	if body != nil {
+		b, err := json.Marshal(body)
+		if err != nil {
+			return nil, fmt.Errorf("json marshal: %w", err)
+		}
+		reqBody = bytes.NewReader(b)
+	}
+
+	req, err := http.NewRequest(method, baseURL+path, reqBody)
+	if err != nil {
+		return nil, fmt.Errorf("new request: %w", err)
+	}
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	for k, v := range extraHeaders {
+		req.Header.Set(k, v)
+	}
+	return httpClient.Do(req)
+}
+
 // doReqAndDecode performs an HTTP request, checks for 2xx, and optionally decodes JSON into dst.
 func doReqAndDecode(method, path string, body, dst any, errorf func(string, ...any)) {
 	resp, err := doReq(method, path, body)

@@ -16,11 +16,10 @@
       test-id="constraint-op-select"
       @update:model-value="onOperator"
     />
-    <el-input
-      size="small"
-      class="constraint-cell constraint-control"
-      :placeholder="valuePlaceholder"
+    <ConstraintValueCell
       :model-value="valueForInput"
+      :property="constraint.property"
+      :placeholder="valuePlaceholder"
       data-testid="constraint-value-input"
       @update:model-value="onField('value', $event)"
     />
@@ -58,6 +57,7 @@ import type { PropType } from 'vue'
 import type { Constraint } from '@/api/types'
 
 import ConstraintOperatorSelect from '@/components/ConstraintOperatorSelect.vue'
+import ConstraintValueCell from '@/components/ConstraintValueCell.vue'
 import {
   propertyPlaceholderFor,
   valuePlaceholderFor,
@@ -72,6 +72,7 @@ export default {
   components: {
     ConstraintOperatorSelect,
     Delete,
+    ConstraintValueCell,
   },
   props: {
     constraint: { type: Object as PropType<Constraint>, required: true },

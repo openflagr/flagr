@@ -166,6 +166,9 @@ func startLocalServer() string {
 		"FLAGR_RECORDER_TYPE=datar",
 		fmt.Sprintf("FLAGR_RECORDER_DATAR_FLUSH_INTERVAL=%s", integrationDatarFlushInterval),
 		fmt.Sprintf("FLAGR_EVALCACHE_REFRESHINTERVAL=%s", integrationEvalCacheRefresh),
+		"FLAGR_INJECTED_CONTEXT_ENABLED=true",
+		"FLAGR_INJECTED_CONTEXT_HTTP_HEADERS=X-Environment,X-Tenant-ID",
+		"FLAGR_INJECTED_CONTEXT_HTTP_HEADER_PREFIXES=CF-",
 	)
 	// Redirect server output to a temp file to avoid "I/O incomplete" errors
 	// when the test binary kills the server process.

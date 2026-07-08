@@ -40,6 +40,9 @@ func (e *eval) PostEvaluation(params evaluation.PostEvaluationParams) middleware
 			ErrorMessage("empty body"))
 	}
 
+	// Inject built-in context keys (@ts_*, @http_*) into entityContext
+	evalContext.EntityContext = InjectBuiltInContext(evalContext.EntityContext, params.HTTPRequest)
+
 	evalResult := EvalFlag(*evalContext)
 	resp := evaluation.NewPostEvaluationOK()
 	resp.SetPayload(evalResult)
@@ -101,8 +104,14 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 		EvaluationResults: make([]*models.EvalResult, 0, est),
 	}
 
+	// Inject built-in context keys (@ts_*, @http_*) into each entity's context.
+	// Same semantics as the single-eval path: in-place mutation when the context
+	// is already a map, or a new map when it is nil/non-map. When the feature is
+	// disabled, InjectBuiltInContext returns the original value unchanged (zero cost).
+
 	// TODO make it concurrent
 	for _, entity := range entities {
+		entity.EntityContext = InjectBuiltInContext(entity.EntityContext, params.HTTPRequest)
 		if len(flagTags) > 0 {
 			evalContext := models.EvalContext{
 				EnableDebug:      params.Body.EnableDebug,

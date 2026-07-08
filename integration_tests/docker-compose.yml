@@ -1,8 +1,24 @@
-
 networks:
   default:
     external: true
     name: flagr_integration_tests
+
+# ---------------------------------------------------------------------------
+# Shared Flagr env vars for all current-image backends (not the legacy
+# checkr/flagr:1.1.12 baseline). Each flagr_with_* service extends this anchor
+# and overrides only DB driver + connection string. The shared config enables:
+#   - Datar recorder (500ms flush) for exposure/recorder integration tests
+#   - Built-in context injection (@ts*, @http_*) for TestIntegration_BuiltInContext
+# The legacy baseline (checkr_flagr_with_sqlite) does NOT use this anchor — it
+# predates these features and skips behavior-based tests via isLegacyIntegrationBaseline().
+# ---------------------------------------------------------------------------
+x-flagr-common-env: &flagr-common-env
+  FLAGR_RECORDER_TYPE: "datar"
+  FLAGR_RECORDER_ENABLED: "true"
+  FLAGR_RECORDER_DATAR_FLUSH_INTERVAL: "500ms"
+  FLAGR_INJECTED_CONTEXT_ENABLED: "true"
+  FLAGR_INJECTED_CONTEXT_HTTP_HEADERS: "X-Environment,X-Tenant-ID"
+  FLAGR_INJECTED_CONTEXT_HTTP_HEADER_PREFIXES: "CF-"
 
 services:
   mysql:
@@ -38,6 +54,7 @@ services:
 
   # Legacy release baseline (not built from this repo). Integration tests that need
   # routes added after 1.1.12 skip on this instance; see integration_tests/README.md.
+  # Does NOT use &flagr-common-env — predates recorder/datar and built-in context.
   checkr_flagr_with_sqlite:
     image: checkr/flagr:1.1.12
     environment:
@@ -50,11 +67,9 @@ services:
   flagr_with_sqlite:
     image: flagr_integration_tests
     environment:
+      <<: *flagr-common-env
       FLAGR_DB_DBDRIVER: "sqlite3"
       FLAGR_DB_DBCONNECTIONSTR: "/tmp/flagr.sqlite3"
-      FLAGR_RECORDER_TYPE: "datar"
-      FLAGR_RECORDER_ENABLED: "true"
-      FLAGR_RECORDER_DATAR_FLUSH_INTERVAL: "500ms"
     command: sh -c "sleep 15 && ./flagr"
     ports:
       - "18001:18000"
@@ -62,11 +77,9 @@ services:
   flagr_with_mysql:
     image: flagr_integration_tests
     environment:
+      <<: *flagr-common-env
       FLAGR_DB_DBDRIVER: "mysql"
       FLAGR_DB_DBCONNECTIONSTR: "root:@tcp(mysql:3306)/flagr?parseTime=true"
-      FLAGR_RECORDER_TYPE: "datar"
-      FLAGR_RECORDER_ENABLED: "true"
-      FLAGR_RECORDER_DATAR_FLUSH_INTERVAL: "500ms"
     command: sh -c "sleep 15 && ./flagr"
     ports:
       - "18002:18000"
@@ -74,11 +87,9 @@ services:
   flagr_with_mysql8:
     image: flagr_integration_tests
     environment:
+      <<: *flagr-common-env
       FLAGR_DB_DBDRIVER: "mysql"
       FLAGR_DB_DBCONNECTIONSTR: "root:@tcp(mysql8:3306)/flagr?parseTime=true"
-      FLAGR_RECORDER_TYPE: "datar"
-      FLAGR_RECORDER_ENABLED: "true"
-      FLAGR_RECORDER_DATAR_FLUSH_INTERVAL: "500ms"
     command: sh -c "sleep 15 && ./flagr"
     ports:
       - "18003:18000"
@@ -86,11 +97,9 @@ services:
   flagr_with_postgres9:
     image: flagr_integration_tests
     environment:
+      <<: *flagr-common-env
       FLAGR_DB_DBDRIVER: "postgres"
       FLAGR_DB_DBCONNECTIONSTR: "sslmode=disable host=postgres9 user=test password=test dbname=flagr"
-      FLAGR_RECORDER_TYPE: "datar"
-      FLAGR_RECORDER_ENABLED: "true"
-      FLAGR_RECORDER_DATAR_FLUSH_INTERVAL: "500ms"
     command: sh -c "sleep 15 && ./flagr"
     ports:
       - "18004:18000"
@@ -98,11 +107,9 @@ services:
   flagr_with_postgres13:
     image: flagr_integration_tests
     environment:
+      <<: *flagr-common-env
       FLAGR_DB_DBDRIVER: "postgres"
       FLAGR_DB_DBCONNECTIONSTR: "sslmode=disable host=postgres13 user=test password=test dbname=flagr"
-      FLAGR_RECORDER_TYPE: "datar"
-      FLAGR_RECORDER_ENABLED: "true"
-      FLAGR_RECORDER_DATAR_FLUSH_INTERVAL: "500ms"
     command: sh -c "sleep 15 && ./flagr"
     ports:
       - "18005:18000"

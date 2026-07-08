@@ -15,6 +15,12 @@
 //     (builds binary, runs against all compose instances — see README.md for which tests run on legacy checkr/flagr:1.1.12)
 //
 // TestIntegration_Exposures asserts POST /exposures recording via loggedCount (no test-process FLAGR_RECORDER_ENABLED).
+//
+// Built-in context tests (TestIntegration_BuiltInContext, TestIntegration_BuiltInContextHTTPHeader)
+// use isLegacyIntegrationBaseline() to skip on checkr/flagr:1.1.12 — the /evaluation route exists
+// on legacy but the server does not inject @ts/@http_* keys, so constraints would never match.
+// Only the current Flagr image supports built-in context injection (FLAGR_INJECTED_CONTEXT_ENABLED).
+
 package flagr_integration
 
 import (
@@ -1071,5 +1077,69 @@ func TestIntegration_DatarFlagSummary(t *testing.T) {
 		if d.Count <= 0 {
 			t.Errorf("day %s has non-positive count %d", d.Date, d.Count)
 		}
+	}
+}
+
+func TestIntegration_BuiltInContext(t *testing.T) {
+	if isLegacyIntegrationBaseline() {
+		t.Skip("built-in context injection not available on legacy checkr/flagr:1.1.12")
+	}
+
+	key := fmt.Sprintf("builtin_ctx_%d", time.Now().UnixNano())
+	fixture := createEvalReadyFlag(t, key, "built-in context test flag",
+		evalConstraintFixture{Property: "@ts", Operator: "GTE", Value: "0"},
+		builtinCtxVariantOn,
+		"ts constraint segment",
+	)
+	defer deleteEvalReadyFlag(t, fixture.FlagID)
+
+	result := postEval(t, fixture.FlagID, "builtin-ctx-entity", map[string]any{"country": "US"})
+	if result.VariantKey != builtinCtxVariantOn {
+		t.Fatalf("expected variantKey 'on', got '%s' — @ts constraint may not be injected", result.VariantKey)
+	}
+}
+
+func TestIntegration_BuiltInContextHTTPHeader(t *testing.T) {
+	if isLegacyIntegrationBaseline() {
+		t.Skip("built-in HTTP header injection not available on legacy checkr/flagr:1.1.12")
+	}
+
+	key := fmt.Sprintf("builtin_http_%d", time.Now().UnixNano())
+	fixture := createEvalReadyFlag(t, key, "built-in HTTP header context test flag",
+		evalConstraintFixture{
+			Property: "@http_x_environment",
+			Operator: "EQ",
+			Value:    `"` + builtinCtxEnvHeaderValue + `"`,
+		},
+		builtinCtxVariantEnabled,
+		"environment constraint segment",
+	)
+	defer deleteEvalReadyFlag(t, fixture.FlagID)
+
+	noHeader := postEval(t, fixture.FlagID, "http-header-entity", map[string]any{})
+	if noHeader.VariantKey != "" {
+		t.Fatalf("expected empty variantKey (no match), got '%s' — constraint should not match without X-Environment header", noHeader.VariantKey)
+	}
+
+	var positiveResult evalResponse
+	resp, err := doReqWithHeaders("POST", "/api/v1/evaluation", map[string]any{
+		"flagID":        fixture.FlagID,
+		"entityID":      "http-header-positive-entity",
+		"entityType":    "user",
+		"entityContext": map[string]any{},
+	}, map[string]string{"X-Environment": builtinCtxEnvHeaderValue})
+	if err != nil {
+		t.Fatalf("evaluation request failed: %v", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		b, _ := io.ReadAll(resp.Body)
+		t.Fatalf("expected 200, got %d: %s", resp.StatusCode, string(b))
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&positiveResult); err != nil {
+		t.Fatalf("decode failed: %v", err)
+	}
+	if positiveResult.VariantKey != builtinCtxVariantEnabled {
+		t.Fatalf("expected variantKey 'enabled', got '%s' — @http_x_environment should match with X-Environment: test", positiveResult.VariantKey)
 	}
 }

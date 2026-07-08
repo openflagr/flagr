@@ -508,6 +508,9 @@ export default {
     flex-direction: column;
     gap: var(--space-2xs);
   }
+  .seg-panel {
+    width: 100%;
+  }
   .seg-panel-dist {
     flex: 0 0 auto;
     width: 100%;

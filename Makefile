@@ -196,7 +196,12 @@ verifiers: verify_fmt verify_lint verify_swagger
 
 verify_fmt:
 	@echo "Running $@"
-	@test -z "$$(gofmt -l .)" || (echo "Files need gofmt -w:"; gofmt -l .; exit 1)
+	@unformatted=$$(gofmt -l $$(find . -name '*.go' -not -path './vendor/*')); \
+	if [ -n "$$unformatted" ]; then \
+		echo "$$unformatted" | xargs gofmt -w; \
+		echo "gofmt reformatted the above files. Please review and re-commit."; \
+		exit 1; \
+	fi
 
 verify_lint:
 	@echo "Running $@"

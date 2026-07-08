@@ -31,11 +31,10 @@
         test-id="new-constraint-op-select"
         @update:model-value="patch('operator', $event)"
       />
-      <el-input
-        size="small"
-        class="constraint-cell constraint-control"
-        :placeholder="valuePlaceholder"
+      <ConstraintValueCell
         :model-value="draft.value"
+        :property="draft.property"
+        :placeholder="valuePlaceholder"
         data-testid="new-constraint-value-input"
         @update:model-value="patch('value', $event)"
         @keyup.enter="canAdd && $emit('add')"
@@ -57,7 +56,7 @@
 
 <script lang="ts">
 import type { PropType } from 'vue'
-
+import ConstraintValueCell from '@/components/ConstraintValueCell.vue'
 import ConstraintOperatorSelect from '@/components/ConstraintOperatorSelect.vue'
 import {
   propertyPlaceholderFor,
@@ -75,6 +74,7 @@ export default {
   name: 'ConstraintAddRow',
   components: {
     ConstraintOperatorSelect,
+    ConstraintValueCell,
   },
   props: {
     draft: { type: Object as PropType<NewConstraintDraft>, required: true },

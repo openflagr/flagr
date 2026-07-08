@@ -42,7 +42,8 @@ Local `make test-integration` uses a single auto-started binary (always “curre
 | `TestIntegration_FlagCRUD` | `GET /api/v1/flags/snapshots/max_id` (and snapshot assertions) |
 | `TestIntegration_DuplicateFlag` | `POST /api/v1/flags/{flagID}/duplicate` (+ max_id) |
 | `TestIntegration_DuplicateFlag_Errors` | `POST /api/v1/flags/{flagID}/duplicate` |
-
+| `TestIntegration_BuiltInContext` | `isLegacyIntegrationBaseline` skip (route exists on legacy but `@ts` injection does not) |
+| `TestIntegration_BuiltInContextHTTPHeader` | `isLegacyIntegrationBaseline` skip (route exists on legacy but `@http_*` injection does not) |
 **Optional / recorder-specific** — `requireOptionalAPI` (router 404 → skip on legacy only); Datar uses `requireRecorderEndpointOK` (non-200 → skip on legacy, **fail** on current images with Datar enabled):
 
 | Test | Gate |
@@ -66,3 +67,4 @@ Skipped tests are **not** failures; the job still passes if all non-skipped asse
 1. If it only uses routes present in **checkr/flagr:1.1.12**, add the test with no gate (legacy compatibility).
 2. If it needs **new** routes or snapshot max_id, call the appropriate helper first and document the route in this README.
 3. If it needs **Datar / exposures / other optional** stacks, use `requireOptionalAPI` and, when the feature must be enabled on current images, `requireRecorderEndpointOK`.
+4. If the route exists on legacy but the **behavior** is new (e.g. built-in context injection), use a direct `isLegacyIntegrationBaseline()` skip at the top of the test — the compat probe approach cannot distinguish behavior differences, only missing routes.

@@ -48,6 +48,7 @@ Run from **repo root**. Match what [`.github/workflows/ci.yml`](.github/workflow
 
 **Backend (`pkg/`):**
 - `handler/eval.go` — evaluation engine; `handler/crud.go` — CRUD API handlers
+- `handler/builtin_context.go` — built-in context injection (`@ts*`, `@http_*` keys into entityContext)
 - `handler/exposure.go` — exposure (impression) logging; `handler/data_recorder*.go` — recorders (Kafka, Kinesis, Pub/Sub, Datar)
 - `entity/` — domain models (flag, segment, constraint, variant, distribution)
 - `config/env.go` — all environment variables (single source of truth)
@@ -78,5 +79,7 @@ Single command: `make gen` (runs `api_docs` + `swagger`).
 - Process management uses `lsof -ti:<port>` not `pkill -f` — never touches other projects' processes
 - See [deepwiki.com/openflagr/flagr](https://deepwiki.com/openflagr/flagr) and `docs/`
 - **File size & layout:** Prefer **medium-sized** files with a clear, logical split — not monoliths, not one-off micro-files for a single helper. Group by responsibility (e.g. handler `error.go` for API/handler errors and DB error classification; `validate.go` for request validation; `crud*.go` for CRUD surfaces). New code should extend an existing cohesive file when it fits; add a new file only when it names a real subsystem or API slice.
+- **No magic numbers:** Prefer named constants over inline literals. In Go, define `const` blocks for test values, timing durations, rollout percents, and HTTP status codes (use `http.StatusOK` not `200`). In CSS/SCSS, use design tokens (`--space-*`, `--font-size-*`, `--radius-*`) or component-scoped variables (`--constraint-logic-col`) instead of hardcoded `px` values. Exceptions: `0`, `1`, `-1`, and values defined in `:root` variable declarations.
+- **Go tests:** Prefer `t.Parallel()` unless the test mutates global state (`config.Config`, singletons, `os.Setenv`). See `docs/flagr_testing.md` for the decision tree.
 - When creating a PR, follow `PULL_REQUEST_TEMPLATE.md`
 - **Never push directly to `main`** — always create a PR
