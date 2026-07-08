@@ -70,6 +70,20 @@ state without hitting the master database. See the
 [EvalCache Query Filter](plans/2026-07-03-001-eval-cache-query-filter.md) plan
 for full API documentation.
 
+### Evaluation limits (POST and GET)
+
+`FLAGR_EVAL_BATCH_SIZE` (default **0** = disabled) caps total evaluations per
+batch request for both `POST` and `GET /api/v1/evaluation/batch`.
+
+`FLAGR_EVAL_GET_MAX_URL_BYTES` (default **8192**, **0** = disabled) caps the
+**raw query string** length on `GET /api/v1/evaluation` and
+`GET /api/v1/evaluation/batch`. At default **8192**, an evalContext with a
+**8033**-character ASCII `entityContext.blob` fills the limit; **8034** chars
+returns **400**. GET puts the full request in the URL — see **Security and
+validation** and **How other stacks enforce URL / header size** in
+[Use Cases — GET evaluation](flagr_use_cases.md#get-evaluation-browser-friendly).
+Examples and POST-vs-GET guidance: same section.
+
 ## Authentication
 
 By default Flagr's API is open — convenient for a local dev instance behind a

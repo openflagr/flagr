@@ -133,6 +133,35 @@ func init() {
       }
     },
     "/evaluation": {
+      "get": {
+        "tags": [
+          "evaluation"
+        ],
+        "operationId": "getEvaluation",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Percent-encoded (URI-encoded) JSON matching POST /evaluation body (evalContext). Example: ?json=%7B%22entityID%22%3A%22u1%22%2C%22flagID%22%3A1%7D decodes to {\"entityID\":\"u1\",\"flagID\":1}.",
+            "name": "json",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "evaluation result",
+            "schema": {
+              "$ref": "#/definitions/evalResult"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
       "post": {
         "tags": [
           "evaluation"
@@ -166,6 +195,35 @@ func init() {
       }
     },
     "/evaluation/batch": {
+      "get": {
+        "tags": [
+          "evaluation"
+        ],
+        "operationId": "getEvaluationBatch",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Percent-encoded (URI-encoded) JSON matching POST /evaluation/batch body (evaluationBatchRequest). Example: ?json=%7B%22entities%22%3A%5B%7B%22entityID%22%3A%22u1%22%7D%5D%2C%22flagIDs%22%3A%5B1%5D%7D decodes to {\"entities\":[{\"entityID\":\"u1\"}],\"flagIDs\":[1]}.",
+            "name": "json",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "evaluation batch result",
+            "schema": {
+              "$ref": "#/definitions/evaluationBatchResponse"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
       "post": {
         "tags": [
           "evaluation"
@@ -2728,6 +2786,35 @@ func init() {
       }
     },
     "/evaluation": {
+      "get": {
+        "tags": [
+          "evaluation"
+        ],
+        "operationId": "getEvaluation",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Percent-encoded (URI-encoded) JSON matching POST /evaluation body (evalContext). Example: ?json=%7B%22entityID%22%3A%22u1%22%2C%22flagID%22%3A1%7D decodes to {\"entityID\":\"u1\",\"flagID\":1}.",
+            "name": "json",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "evaluation result",
+            "schema": {
+              "$ref": "#/definitions/evalResult"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
       "post": {
         "tags": [
           "evaluation"
@@ -2761,6 +2848,35 @@ func init() {
       }
     },
     "/evaluation/batch": {
+      "get": {
+        "tags": [
+          "evaluation"
+        ],
+        "operationId": "getEvaluationBatch",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Percent-encoded (URI-encoded) JSON matching POST /evaluation/batch body (evaluationBatchRequest). Example: ?json=%7B%22entities%22%3A%5B%7B%22entityID%22%3A%22u1%22%7D%5D%2C%22flagIDs%22%3A%5B1%5D%7D decodes to {\"entities\":[{\"entityID\":\"u1\"}],\"flagIDs\":[1]}.",
+            "name": "json",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "evaluation batch result",
+            "schema": {
+              "$ref": "#/definitions/evaluationBatchResponse"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
       "post": {
         "tags": [
           "evaluation"

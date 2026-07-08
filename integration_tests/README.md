@@ -49,6 +49,8 @@ Local `make test-integration` uses a single auto-started binary (always “curre
 | Test | Gate |
 |------|------|
 | `TestIntegration_Exposures` | `requireOptionalAPI` → `POST /api/v1/exposures` |
+| `TestIntegration_GetEvaluation` | `requireOptionalAPI` → `GET /api/v1/evaluation` (schema **400**, malformed JSON **400**, missing `json` **422**) |
+| `TestIntegration_GetEvaluation_QueryURLBytesLimit` | `requireOptionalAPI` → GET eval; local auto-start only (8192-byte query cap) |
 | `TestIntegration_DatarSummary` | optional route probe + `requireRecorderEndpointOK` |
 | `TestIntegration_DatarFlagSummary` | same |
 
@@ -56,7 +58,7 @@ Capability gates: `integration_compat.go` (`responseIndicatesRouteNotRegistered`
 
 ### Skip vs fail (reliability)
 
-- **Legacy only (`http://…:18006`)**: skip when the swagger router returns `path … was not found`, or when optional recorder/Datar returns non-200.
+- **Legacy only (`http://…:18006`)**: skip when the swagger router returns `path … was not found`, when the method is not allowed (**405**, e.g. GET `/evaluation` on checkr/flagr:1.1.12), or when optional recorder/Datar returns non-200.
 - **Current images (`18001`–`18005`, local auto-start)**: gated routes must be registered — otherwise **`Fatal`**. Datar summary probes must return **200** — otherwise **`Fatal`**.
 - Probes distinguish **router 404** from **application 404** (duplicate gate uses `POST /flags/999999999/duplicate` so current servers prove the handler exists without cloning a flag).
 

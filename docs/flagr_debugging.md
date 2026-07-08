@@ -11,7 +11,7 @@ arrived at its verdict — without writing a throwaway script or hitting the
 API with curl.
 
 The console exercises **`POST /evaluation`** and
-**`POST /evaluation/batch`**. For production **impression** logging after
+**`POST /evaluation/batch`** only (not GET). For browser-friendly **`GET /evaluation?json=…`**, see [Use Cases — GET evaluation](flagr_use_cases.md#get-evaluation-browser-friendly). For production **impression** logging after
 render, see [Exposure Logging](flagr_exposure.md). For segment, constraint, and
 rollout concepts, see the [Overview](flagr_overview.md).
 

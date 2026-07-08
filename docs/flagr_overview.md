@@ -127,7 +127,7 @@ Flagr separates three concerns that scale differently:
 
 | Concern | Path | Consistency | Latency goal |
 |---------|------|-------------|--------------|
-| **Read** (evaluation) | `POST /evaluation` | Stale-tolerant (cache refresh) | Sub-ms hot path |
+| **Read** (evaluation) | `POST` or `GET /evaluation` | Stale-tolerant (cache refresh) | Sub-ms hot path |
 | **Write** (configuration) | CRUD APIs + UI | Strong (database) | Rare, not on eval path |
 | **Record** (analytics) | `AsyncRecord` fan-out | Best-effort async | Must not block eval |
 
@@ -155,9 +155,11 @@ flowchart TB
 
   subgraph evaluator [Evaluator — hot path]
     Eval["POST /evaluation"]
+    EvalGet["GET /evaluation"]
     Exp["POST /exposures"]
     EC[(EvalCache)]
     Eval --> EC
+    EvalGet --> EC
     Exp --> EC
   end
 
@@ -186,6 +188,7 @@ flowchart TB
   end
 
   App --> Eval
+  App --> EvalGet
   App --> Exp
   Eval --> AR
   Exp --> AR
@@ -212,7 +215,7 @@ flowchart TB
 
 ### Request flows
 
-**Evaluation (hot path)** — `POST /api/v1/evaluation` → **EvalCache** → segments
+**Evaluation (hot path)** — `POST` or `GET /api/v1/evaluation` (same semantics; see [Use Cases — GET evaluation](flagr_use_cases.md#get-evaluation-browser-friendly)) → **EvalCache** → segments
 in rank order → variant response → optional `AsyncRecord` (`recordSource:
 evaluation`). No record when flag is missing, disabled, or has no segments.
 
@@ -223,7 +226,7 @@ evaluation`). No record when flag is missing, disabled, or has no segments.
 
 ### Components
 
-**Evaluator** — `POST /evaluation`, batch eval, tag eval; refresh interval
+**Evaluator** — `POST` or `GET /evaluation` (see [Use Cases — GET evaluation](flagr_use_cases.md#get-evaluation-browser-friendly)), batch eval, tag eval; refresh interval
 `FLAGR_EVALCACHE_REFRESHINTERVAL` (default 3s); version probe
 `GET /api/v1/flags/snapshots/max_id`.
 

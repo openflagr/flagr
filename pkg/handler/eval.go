@@ -1,9 +1,11 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"net/http"
 	"sync"
 	"time"
 
@@ -17,11 +19,15 @@ import (
 	"github.com/bsm/ratelimit"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/validate"
 	"github.com/zhouzhuojie/conditions"
 )
 
 // Eval is the Eval interface
 type Eval interface {
+	GetEvaluation(evaluation.GetEvaluationParams) middleware.Responder
+	GetEvaluationBatch(evaluation.GetEvaluationBatchParams) middleware.Responder
 	PostEvaluation(evaluation.PostEvaluationParams) middleware.Responder
 	PostEvaluationBatch(evaluation.PostEvaluationBatchParams) middleware.Responder
 }
@@ -32,6 +38,42 @@ func NewEval() Eval {
 }
 
 type eval struct{}
+
+func evalGetQueryTooLong(rawQueryLen int) *models.Error {
+	max := config.Config.EvalGetMaxURLBytes
+	if max <= 0 || rawQueryLen <= max {
+		return nil
+	}
+	return ErrorMessage("GET evaluation query length %d exceeds maximum of %d; use POST", rawQueryLen, max)
+}
+
+func (e *eval) GetEvaluation(params evaluation.GetEvaluationParams) middleware.Responder {
+	evalContext, errPayload := decodeEvalContextFromGet(
+		params.HTTPRequest, len(params.HTTPRequest.URL.RawQuery), params.JSON)
+	if errPayload != nil {
+		return evaluation.NewGetEvaluationDefault(400).WithPayload(errPayload)
+	}
+	evalContext.EntityContext = InjectBuiltInContext(evalContext.EntityContext, params.HTTPRequest)
+	evalResult := EvalFlag(evalContext)
+	resp := evaluation.NewGetEvaluationOK()
+	resp.SetPayload(evalResult)
+	return resp
+}
+
+func (e *eval) GetEvaluationBatch(params evaluation.GetEvaluationBatchParams) middleware.Responder {
+	batchReq, errPayload := decodeEvaluationBatchFromGet(
+		params.HTTPRequest, len(params.HTTPRequest.URL.RawQuery), params.JSON)
+	if errPayload != nil {
+		return evaluation.NewGetEvaluationBatchDefault(400).WithPayload(errPayload)
+	}
+	results, errPayload := EvaluateBatch(&batchReq, nil)
+	if errPayload != nil {
+		return evaluation.NewGetEvaluationBatchDefault(400).WithPayload(errPayload)
+	}
+	resp := evaluation.NewGetEvaluationBatchOK()
+	resp.SetPayload(results)
+	return resp
+}
 
 func (e *eval) PostEvaluation(params evaluation.PostEvaluationParams) middleware.Responder {
 	evalContext := params.Body
@@ -50,13 +92,34 @@ func (e *eval) PostEvaluation(params evaluation.PostEvaluationParams) middleware
 }
 
 func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) middleware.Responder {
-	entities := params.Body.Entities
-	flagIDs := params.Body.FlagIDs
-	flagKeys := params.Body.FlagKeys
-	flagTags := params.Body.FlagTags
-	flagTagsOperator := params.Body.FlagTagsOperator
+	if params.Body == nil {
+		return evaluation.NewPostEvaluationBatchDefault(400).WithPayload(
+			ErrorMessage("empty body"))
+	}
+	results, errPayload := EvaluateBatch(params.Body, params.HTTPRequest)
+	if errPayload != nil {
+		return evaluation.NewPostEvaluationBatchDefault(400).WithPayload(errPayload)
+	}
 
-	// Deduplicate flagKeys to prevent DoS via repeated keys
+	resp := evaluation.NewPostEvaluationBatchOK()
+	resp.SetPayload(results)
+	return resp
+}
+
+// Batch evaluation (POST and GET /evaluation/batch)
+
+// EvaluateBatch runs the same logic as POST/GET /evaluation/batch for the given request body.
+// When r is non-nil, built-in context keys (@ts_*, @http_*) are injected per entity (POST path).
+func EvaluateBatch(batchReq *models.EvaluationBatchRequest, r *http.Request) (*models.EvaluationBatchResponse, *models.Error) {
+	if batchReq == nil {
+		return nil, ErrorMessage("empty batch request")
+	}
+	entities := batchReq.Entities
+	flagIDs := batchReq.FlagIDs
+	flagKeys := batchReq.FlagKeys
+	flagTags := batchReq.FlagTags
+	flagTagsOperator := batchReq.FlagTagsOperator
+
 	if len(flagKeys) > 1 {
 		seen := make(map[string]struct{}, len(flagKeys))
 		uniqueFlagKeys := make([]string, 0, len(flagKeys))
@@ -69,7 +132,6 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 		flagKeys = uniqueFlagKeys
 	}
 
-	// Deduplicate flagIDs to prevent DoS via repeated IDs
 	if len(flagIDs) > 1 {
 		seen := make(map[int64]struct{}, len(flagIDs))
 		uniqueFlagIDs := make([]int64, 0, len(flagIDs))
@@ -82,17 +144,13 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 		flagIDs = uniqueFlagIDs
 	}
 
-	// Validate batch size to prevent DoS attacks via resource exhaustion (if enabled)
 	if maxBatchSize := config.Config.EvalBatchSize; maxBatchSize > 0 {
-		// Calculate total evaluations: entities * (flagIDs + flagKeys + flagTags)
-		// For flagTags, we count each tag as potentially matching one flag (conservative estimate)
 		flagsPerEntity := len(flagIDs) + len(flagKeys)
 		if len(flagTags) > 0 {
-			flagsPerEntity++ // flagTags is evaluated once per entity regardless of count
+			flagsPerEntity++
 		}
 		if total := len(entities) * flagsPerEntity; total > maxBatchSize {
-			return evaluation.NewPostEvaluationBatchDefault(400).WithPayload(
-				ErrorMessage("batch evaluation size %d exceeds maximum allowed size of %d", total, maxBatchSize))
+			return nil, ErrorMessage("batch evaluation size %d exceeds maximum allowed size of %d", total, maxBatchSize)
 		}
 	}
 
@@ -104,17 +162,14 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 		EvaluationResults: make([]*models.EvalResult, 0, est),
 	}
 
-	// Inject built-in context keys (@ts_*, @http_*) into each entity's context.
-	// Same semantics as the single-eval path: in-place mutation when the context
-	// is already a map, or a new map when it is nil/non-map. When the feature is
-	// disabled, InjectBuiltInContext returns the original value unchanged (zero cost).
-
-	// TODO make it concurrent
+	enableDebug := batchReq.EnableDebug
 	for _, entity := range entities {
-		entity.EntityContext = InjectBuiltInContext(entity.EntityContext, params.HTTPRequest)
+		if entity != nil {
+			entity.EntityContext = InjectBuiltInContext(entity.EntityContext, r)
+		}
 		if len(flagTags) > 0 {
 			evalContext := models.EvalContext{
-				EnableDebug:      params.Body.EnableDebug,
+				EnableDebug:      enableDebug,
 				EntityContext:    entity.EntityContext,
 				EntityID:         entity.EntityID,
 				EntityType:       entity.EntityType,
@@ -126,33 +181,108 @@ func (e *eval) PostEvaluationBatch(params evaluation.PostEvaluationBatchParams) 
 		}
 		for _, flagID := range flagIDs {
 			evalContext := models.EvalContext{
-				EnableDebug:   params.Body.EnableDebug,
+				EnableDebug:   enableDebug,
 				EntityContext: entity.EntityContext,
 				EntityID:      entity.EntityID,
 				EntityType:    entity.EntityType,
 				FlagID:        flagID,
 			}
-
 			evalResult := EvalFlag(evalContext)
 			results.EvaluationResults = append(results.EvaluationResults, evalResult)
 		}
 		for _, flagKey := range flagKeys {
 			evalContext := models.EvalContext{
-				EnableDebug:   params.Body.EnableDebug,
+				EnableDebug:   enableDebug,
 				EntityContext: entity.EntityContext,
 				EntityID:      entity.EntityID,
 				EntityType:    entity.EntityType,
 				FlagKey:       flagKey,
 			}
-
 			evalResult := EvalFlag(evalContext)
 			results.EvaluationResults = append(results.EvaluationResults, evalResult)
 		}
 	}
 
-	resp := evaluation.NewPostEvaluationBatchOK()
-	resp.SetPayload(results)
-	return resp
+	return results, nil
+}
+
+// GET evaluation: query decode and POST-parity validation
+
+func evalGetMissingJSONParam() *models.Error {
+	return ErrorMessage("missing required query parameter json")
+}
+
+// decodeFromGetQuery: raw query length (as received), json param, unmarshal, then schema validation.
+func decodeFromGetQuery(req *http.Request, rawQueryLen int, jsonParam string, label string, dest any, validate func() *models.Error) *models.Error {
+	if errPayload := evalGetQueryTooLong(rawQueryLen); errPayload != nil {
+		return errPayload
+	}
+	if jsonParam == "" {
+		return evalGetMissingJSONParam()
+	}
+	if err := json.Unmarshal([]byte(jsonParam), dest); err != nil {
+		return ErrorMessage("json is not valid %s: %v", label, err)
+	}
+	return validate()
+}
+
+func decodeEvalContextFromGet(req *http.Request, rawQueryLen int, jsonParam string) (models.EvalContext, *models.Error) {
+	var evalContext models.EvalContext
+	if errPayload := decodeFromGetQuery(req, rawQueryLen, jsonParam, "evalContext", &evalContext, func() *models.Error {
+		return validateEvalContextAfterJSON(req, &evalContext)
+	}); errPayload != nil {
+		return models.EvalContext{}, errPayload
+	}
+	return evalContext, nil
+}
+
+func decodeEvaluationBatchFromGet(req *http.Request, rawQueryLen int, jsonParam string) (models.EvaluationBatchRequest, *models.Error) {
+	var batchReq models.EvaluationBatchRequest
+	if errPayload := decodeFromGetQuery(req, rawQueryLen, jsonParam, "evaluationBatchRequest", &batchReq, func() *models.Error {
+		return validateEvaluationBatchRequestAfterJSON(req, &batchReq)
+	}); errPayload != nil {
+		return models.EvaluationBatchRequest{}, errPayload
+	}
+	return batchReq, nil
+}
+
+type swaggerValidated interface {
+	Validate(strfmt.Registry) error
+	ContextValidate(context.Context, strfmt.Registry) error
+}
+
+func validateSwaggerModelAfterJSON(r *http.Request, label string, v swaggerValidated) *models.Error {
+	if v == nil {
+		return ErrorMessage("json is not valid %s: empty object", label)
+	}
+	formats := strfmt.Default
+	if err := v.Validate(formats); err != nil {
+		return ErrorMessage("json is not valid %s: %v", label, err)
+	}
+	ctx := context.Background()
+	if r != nil {
+		ctx = validate.WithOperationRequest(r.Context())
+	}
+	if err := v.ContextValidate(ctx, formats); err != nil {
+		return ErrorMessage("json is not valid %s: %v", label, err)
+	}
+	return nil
+}
+
+// validateEvalContextAfterJSON applies the same checks as POST /evaluation BindRequest
+// (body.Validate + body.ContextValidate) after GET json has been unmarshaled.
+func validateEvalContextAfterJSON(r *http.Request, evalContext *models.EvalContext) *models.Error {
+	if evalContext == nil {
+		return ErrorMessage("json is not valid evalContext: empty object")
+	}
+	return validateSwaggerModelAfterJSON(r, "evalContext", evalContext)
+}
+
+func validateEvaluationBatchRequestAfterJSON(r *http.Request, batchReq *models.EvaluationBatchRequest) *models.Error {
+	if batchReq == nil {
+		return ErrorMessage("json is not valid evaluationBatchRequest: empty object")
+	}
+	return validateSwaggerModelAfterJSON(r, "evaluationBatchRequest", batchReq)
 }
 
 // BlankResult creates a blank result

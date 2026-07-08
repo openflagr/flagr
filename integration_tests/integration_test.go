@@ -513,6 +513,95 @@ func TestIntegration_Evaluation(t *testing.T) {
 	})
 }
 
+func TestIntegration_GetEvaluation(t *testing.T) {
+	requireOptionalAPI(t, http.MethodGet, "/api/v1/evaluation?json=%7B%7D", nil, "GET /api/v1/evaluation")
+
+	if len(seedFlagIDs) < 2 || len(seedFlagKeys) < 2 {
+		t.Fatal("need at least 2 seeded flags")
+	}
+	flagID := seedFlagIDs[1]
+	flagKey := seedFlagKeys[1]
+	body := map[string]any{
+		"entityID":   "get-eval-entity",
+		"entityType": "user",
+		"entityContext": map[string]any{
+			"tier": "premium",
+		},
+	}
+
+	t.Run("GET matches POST by flagID", func(t *testing.T) {
+		var postResult, getResult evalResponse
+		postBody := map[string]any{}
+		for k, v := range body {
+			postBody[k] = v
+		}
+		postBody["flagID"] = flagID
+		postJSON(t, "/api/v1/evaluation", postBody, &postResult)
+		getBody := map[string]any{}
+		for k, v := range body {
+			getBody[k] = v
+		}
+		getBody["flagID"] = flagID
+		getEvalWithJSON(t, getBody, &getResult)
+		if getResult.VariantKey == "" {
+			t.Fatal("GET eval: expected non-empty variantKey")
+		}
+		if getResult.FlagID != flagID {
+			t.Fatalf("GET eval: expected flagID %d, got %d", flagID, getResult.FlagID)
+		}
+		if postResult.VariantKey != getResult.VariantKey {
+			t.Fatalf("GET vs POST variantKey: %q vs %q", getResult.VariantKey, postResult.VariantKey)
+		}
+	})
+
+	t.Run("GET by flagKey", func(t *testing.T) {
+		var result evalResponse
+		getBody := map[string]any{}
+		for k, v := range body {
+			getBody[k] = v
+		}
+		getBody["flagKey"] = flagKey
+		getEvalWithJSON(t, getBody, &result)
+		if result.VariantKey == "" {
+			t.Fatal("GET eval by flagKey: expected non-empty variantKey")
+		}
+	})
+
+	t.Run("GET batch", func(t *testing.T) {
+		var result batchEvalResponse
+		getEvalBatchWithJSON(t, map[string]any{
+			"entities": []map[string]any{body},
+			"flagIDs":  []int64{flagID},
+		}, &result)
+		if len(result.EvaluationResults) == 0 {
+			t.Fatal("GET batch: expected evaluationResults")
+		}
+	})
+
+	t.Run("GET schema validation 400", func(t *testing.T) {
+		getEvalExpectStatus(t, map[string]any{
+			"entityID": "e1",
+			"flagID":   -1,
+		}, http.StatusBadRequest)
+		getEvalBatchExpectStatus(t, map[string]any{
+			"flagIDs": []int64{flagID},
+		}, http.StatusBadRequest)
+	})
+	t.Run("GET malformed json and missing json 400", func(t *testing.T) {
+		getEvalExpectGETPath(t, "/api/v1/evaluation?json=not-json", http.StatusBadRequest, "json is not valid evalContext")
+		getEvalExpectGETPath(t, "/api/v1/evaluation?json=%7B", http.StatusBadRequest, "json is not valid evalContext")
+		getEvalExpectGETPath(t, "/api/v1/evaluation?json=%22x%22", http.StatusBadRequest, "json is not valid evalContext")
+		getEvalExpectGETPath(t, "/api/v1/evaluation/batch?json=not-json", http.StatusBadRequest, "json is not valid evaluationBatchRequest")
+		getEvalExpectGETPath(t, "/api/v1/evaluation/batch?json=%7B", http.StatusBadRequest, "json is not valid evaluationBatchRequest")
+	})
+
+	t.Run("GET missing json query param", func(t *testing.T) {
+		// Swagger bind requires query param json (may be 422); empty value is rejected before handler eval.
+		getEvalExpectGETPath(t, "/api/v1/evaluation", http.StatusUnprocessableEntity, "json")
+		getEvalExpectGETPath(t, "/api/v1/evaluation?json=", http.StatusUnprocessableEntity, "json")
+	})
+}
+
 func TestIntegration_Preload(t *testing.T) {
 	if len(seedFlagIDs) == 0 {
 		t.Fatal("no seeded flags available")

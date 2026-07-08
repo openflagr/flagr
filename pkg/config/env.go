@@ -56,6 +56,9 @@ var Config = struct {
 	// - With 2 entities and 2 tags (~100 flags each): 2 * 100 = 200 evaluations
 	// A reasonable limit might be 500-1000 for typical use cases.
 	EvalBatchSize int `env:"FLAGR_EVAL_BATCH_SIZE" envDefault:"0"`
+	// EvalGetMaxURLBytes - maximum length of the raw query string on GET /evaluation and GET /evaluation/batch.
+	// Set to 0 to disable (default 8192). Exceeding the limit returns 400; use POST when payloads are large.
+	EvalGetMaxURLBytes int `env:"FLAGR_EVAL_GET_MAX_URL_BYTES" envDefault:"8192"`
 
 	// InjectedContextEnabled - enables built-in context injection into entityContext.
 	// When true, @ts, @ts_hour, @ts_weekday, @ts_month are always injected.

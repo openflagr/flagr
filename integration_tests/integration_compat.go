@@ -47,6 +47,26 @@ func responseIndicatesRouteNotRegistered(status int, body []byte) bool {
 	return strings.Contains(msg, "path ") && strings.Contains(msg, "was not found")
 }
 
+// responseIndicatesMethodNotAllowedOnPath is true when the path is served but the HTTP method
+// is rejected (e.g. legacy checkr/flagr exposes POST /evaluation only — GET returns 405).
+func responseIndicatesMethodNotAllowedOnPath(status int, body []byte) bool {
+	if status != http.StatusMethodNotAllowed {
+		return false
+	}
+	var payload struct {
+		Message string `json:"message"`
+	}
+	if err := json.Unmarshal(body, &payload); err != nil {
+		return false
+	}
+	return strings.Contains(strings.ToLower(payload.Message), "is not allowed")
+}
+
+func responseIndicatesOptionalRouteUnavailable(status int, body []byte) bool {
+	return responseIndicatesRouteNotRegistered(status, body) ||
+		responseIndicatesMethodNotAllowedOnPath(status, body)
+}
+
 func probeHTTP(t *testing.T, method, path string, body any) (status int, respBody []byte, err error) {
 	t.Helper()
 	resp, err := doReq(method, path, body)
@@ -67,7 +87,7 @@ func skipOrFailRouteProbe(t *testing.T, method, path string, body any, label str
 		}
 		t.Fatalf("%s: request failed on current Flagr (must be reachable): %v", label, err)
 	}
-	if responseIndicatesRouteNotRegistered(status, respBody) {
+	if responseIndicatesOptionalRouteUnavailable(status, respBody) {
 		if isLegacyIntegrationBaseline() {
 			t.Skipf("%s not registered on legacy checkr/flagr:1.1.12", label)
 		}

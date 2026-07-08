@@ -11,7 +11,6 @@ import (
 	"github.com/openflagr/flagr/pkg/util"
 	"github.com/openflagr/flagr/swagger_gen/models"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/evaluation"
-
 	"github.com/prashantv/gostub"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
