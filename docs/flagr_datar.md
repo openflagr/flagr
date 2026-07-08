@@ -27,14 +27,15 @@ cannot index by `segment_id` due to high cardinality. Use Datar when you need:
   separate analytics stack
 
 For **client-reported impressions** and warehouse-style A/B analysis, use
-[Exposure Logging](flagr_exposure.md) and
-[Data Recorders & A/B Analysis](flagr_eval_exposure_pipeline.md) (Kafka,
+[Exposure logging](flagr_exposure.md) and
+[Data recorders & A/B analysis](flagr_eval_exposure_pipeline.md) (Kafka,
 Kinesis, or Pub/Sub). Datar does not ingest exposure rows.
 
 ## Enabling
 
-Requires `FLAGR_RECORDER_ENABLED=true`. With the master switch on, list
-`datar` in `FLAGR_RECORDER_TYPE` to activate the in-memory aggregator:
+Datar runs under the same master switch as every other recorder. Turn that
+switch on with `FLAGR_RECORDER_ENABLED=true`, then add `datar` to the
+`FLAGR_RECORDER_TYPE` list to activate the in-memory aggregator:
 
 ```bash
 export FLAGR_RECORDER_ENABLED=true
@@ -47,22 +48,23 @@ startup. No schema migration is needed.
 
 ## Recording
 
-Datar recording is gated on three conditions:
+Datar shares the same recording gates as the streaming recorders described in
+[Recording gates](contracts.md#recording-gates), with one key difference: it
+counts **evaluations only**. Rows carrying `recordSource: exposure` from
+`POST /exposures` are skipped, so impression-based experiments never reach
+Datar's counters.
 
-1. `FLAGR_RECORDER_ENABLED=true` (master switch)
-2. `datar` listed in `FLAGR_RECORDER_TYPE`
-3. The per-flag toggle `dataRecordsEnabled: true`
-   (configurable via `PUT /api/v1/flags/{id}`)
+The per-flag `dataRecordsEnabled` setting still applies, and you toggle it
+through `PUT /api/v1/flags/{id}` as usual. A flag must opt in before its
+evaluations are counted.
 
-This means you can selectively enable recording per flag, even when Datar is
-globally enabled.
-
-> **Note:** After creating or updating a flag, wait at least one eval cache
-> refresh cycle (~3s by default) before sending evaluations. The eval cache
-> needs to pick up the new flag's configuration, or evaluations will return
-> "not found" and won't reach the Datar recorder.
+> **Note:** After creating or updating a flag, wait for EvalCache to reload before evaluations count — [EvalCache freshness](contracts.md#evalcache-freshness).
 
 ## Endpoints
+
+Datar exposes two endpoints: a fleet-wide summary that shows which flags saw
+traffic, and a per-flag breakdown that splits that traffic by variant,
+segment, and day.
 
 ### GET /api/v1/datar/summary
 
@@ -132,13 +134,13 @@ Response:
 
 ## Data model
 
-Datar trades precision for simplicity: it counts evaluations, nothing more.
-There are no per-user rows, no unique-entity counting, no event payloads. Each
-evaluation bumps an in-memory counter keyed by `(flag, variant, segment, hour)`,
-and a background goroutine flushes those counters to one table periodically.
-The trade-off is that you lose entity-level detail (you can't ask "which users
-saw this variant") but you gain a tiny, fast, zero-dependency store that can
-run alongside evaluation without measurable cost.
+What Datar stores follows directly from what it counts. There are no
+per-user rows, no unique-entity counting, no event payloads. Each evaluation
+bumps an in-memory counter keyed by `(flag, variant, segment, hour)`, and a
+background goroutine flushes those counters to one table periodically. The
+trade-off is that you lose entity-level detail — you can't ask "which users
+saw this variant" — but you gain a tiny, fast, zero-dependency store that runs
+alongside evaluation without measurable cost.
 
 Counts are bucketed by hour using `time.Now().Truncate(time.Hour)`. Each row
 in the `datar_hourly_events` table represents one unique combination of:
@@ -153,8 +155,10 @@ ensures additive UPSERTs work correctly across concurrent instances.
 
 ## Resource usage
 
-The hot path uses `sync.Map` with atomic increments (zero allocations on the
-existing-key path) and one batch transaction per flush interval.
+The design choices above show up here as the cost of running Datar. The hot
+path uses `sync.Map` with atomic increments, which means zero allocations on
+the existing-key path, and the database sees one batch transaction per flush
+interval — nothing more.
 
 > **Note:** The numbers below are indicative, not benchmark-verified — the
 > repo currently has no Datar-specific benchmark. Measure on your own hardware
@@ -171,8 +175,8 @@ existing-key path) and one batch transaction per flush interval.
 
 ## Limitations
 
-Datar's simplicity comes from what it *doesn't* do. Knowing the boundaries
-tells you when to reach for a streaming recorder instead:
+Datar's simplicity comes from what it *doesn't* do, and knowing those
+boundaries tells you when to reach for a streaming recorder instead:
 
 - **Crash loss** — data is in-memory until the periodic flush. If the process
   crashes, up to one flush interval of aggregate data is lost (acceptable for
@@ -184,5 +188,5 @@ tells you when to reach for a streaming recorder instead:
 - **Evaluations only** — rows with `recordSource: exposure` from
   `POST /exposures` are not counted. Use a streaming recorder (Kafka, Kinesis,
   or Pub/Sub) and
-  [Data Recorders & A/B Analysis](flagr_eval_exposure_pipeline.md) for
+  [Data recorders & A/B analysis](flagr_eval_exposure_pipeline.md) for
   impression-based experiments.

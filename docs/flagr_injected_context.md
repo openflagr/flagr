@@ -379,3 +379,10 @@ time. This is intentional — it prevents spoofing.
 A: Yes. Each entity in a batch request gets built-in context injected
 individually — same semantics as the single-eval path (in-place mutation
 when the context is already a map). When disabled, no injection occurs.
+
+## Related documentation
+
+- [Environment variables](flagr_env.md) — `FLAGR_INJECTED_CONTEXT_*` in the guide
+- [Integration guide](integration.md) — `entityContext` and eval request shape
+- [Overview — constraint property access](flagr_overview.md#constraint-property-access) — how constraints read context fields
+- [Debug console](flagr_debugging.md) — verify injected keys with `enableDebug`

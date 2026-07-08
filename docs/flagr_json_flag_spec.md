@@ -1,21 +1,16 @@
-# JSON Flag Source
+# JSON flag source
 
-Not every team wants a database to own their flag configuration. Some want
-flags checked into Git alongside the code that consumes them — reviewed in
-PRs, diffed in commits, rolled back with `git revert`. Flagr meets that need
-by loading flags from a JSON file (or URL) instead of a database. The same
-evaluation engine runs; only the source of truth changes. This is the
-foundation for GitOps: manage flags as code, validate before deploy, and let
-Flagr serve them read-only. There is no CRUD API in this mode — edits happen
-in Git, Flagr reloads on its own.
+Flagr can serve flags from a **JSON file or URL** instead of a database. The evaluation engine is identical; what changes is the authoring workflow. Flags live in a file you control, edits happen through pull requests, and a running Flagr instance becomes a read-only consumer that polls for updates. Because `json_file` and `json_http` both put the server into eval-only mode, the CRUD UI, exposure endpoint, and database are gone — only evaluation, health, and the export endpoint remain. The behavioral rules for that mode are on [Behavioral contracts](contracts.md#eval-only).
 
 ## Quick start
 
-**From scratch** — create a file and point Flagr at it:
+The smallest valid file is an empty flags array:
 
 ```json
 { "Flags": [] }
 ```
+
+Point Flagr at it with two environment variables — the database driver and the connection string — and start the server:
 
 ```sh
 export FLAGR_DB_DBDRIVER=json_file
@@ -23,125 +18,57 @@ export FLAGR_DB_DBCONNECTIONSTR=/path/to/flags.json
 ./flagr
 ```
 
-**From an existing instance** — export, commit, deploy:
+If you already have a Flagr instance backed by a database, you do not need to hand-write your first file. The export endpoint returns the same JSON shape this driver reads, so you can capture your current flags and commit them to Git in one step:
 
 ```sh
-# Export from a running Flagr
 curl http://localhost:18000/api/v1/export/eval_cache/json -o flags.json
-
-# Edit, commit, push
 git add flags.json && git commit -m "update flags"
-
-# Deploy via local file or HTTP
-export FLAGR_DB_DBDRIVER=json_file       # or json_http
+export FLAGR_DB_DBDRIVER=json_file   # or json_http
 export FLAGR_DB_DBCONNECTIONSTR=/path/to/flags.json
 ```
 
-Flagr reloads flags automatically on the cache refresh interval (default:
-**3 seconds**).
+From there on, the file is the source of truth. Flagr re-fetches it on its EvalCache refresh interval, so a committed change reaches the server within that window — no restart, no deploy. The exact freshness contract and the `FLAGR_EVALCACHE_REFRESHINTERVAL` knob are on [EvalCache freshness](contracts.md#evalcache-freshness).
 
 ## Validation
 
-A broken flag file doesn't just fail to load — it can take your evaluation
-path down at reload time. The standalone `flagr-validate` binary lets you
-catch problems in CI, *before* the file reaches a running Flagr. It runs the
-same `ValidateFlags()` the server uses at load time, so what passes in CI
-passes in production.
-
-Validate your flag file before deploying:
+A hand-edited file can have typos, a missing key, or a distribution that sums to 99 instead of 100. The server catches these at reload time — validation errors block the load, warnings log only — but you want to catch them earlier, in CI, before a bad commit reaches production. The `flagr-validate` binary runs the exact same `ValidateFlags()` the server uses, so what passes CI is what the server will accept:
 
 ```sh
 go build -o flagr-validate ./cmd/flagr-validate/
 ./flagr-validate flags.json
 ```
 
-The validator checks:
-
-- Valid JSON
-- Required fields
-- Key uniqueness
-- Distribution sums (must be **100** when ≥1 distribution exists)
-- Variant references (`VariantKey` / `VariantID` resolve to a real variant)
-- Constraint expressions (operator validity, non-empty property/value, regex
-  parses)
-- Percentage ranges (`0–100`)
-
-It reports **errors** (must fix) and **warnings** (should fix) separately.
-Errors block the file from loading; warnings are logged but do not block.
-
-> **Note:** `Tag.Value` is **not** validated by `ValidateFlags` — an empty or
-> missing tag value passes validation and loads. Uniqueness is enforced only at
-> the DB layer (for DB-backed deployments), not by the JSON validator.
-
-You can also call `ValidateFlags()` from `pkg/handler` programmatically.
+It checks the JSON shape, required fields, key uniqueness, distribution sums (**100** when one or more distributions are present), variant references, constraint operator validity, and percent ranges. The exit code is `0` when the file is valid (warnings allowed), `1` on errors, and `2` on usage mistakes. One subtlety: `Tag.Value` is declared required by the schema but is not enforced by `ValidateFlags`, so an empty tag value will load without complaint. For programmatic use, `ValidateFlags()` is exported from the handler package.
 
 ## GitOps with GitHub
 
-The full GitOps loop has four parts: **author** in Git, **review** in a PR,
-**validate** in CI, **serve** from Flagr. Pointing Flagr at the raw file URL
-closes the loop — when a PR merges, the URL serves the new content and Flagr
-picks it up on its next refresh. No deploy step, no SSH, no CI job pushing to
-Flagr. The audit trail is the commit history; rollback is `git revert`.
-
-Host your `flags.json` in a Git repository and point Flagr at the raw file.
-This gives you full GitOps: PR review, audit trail, rollback via `git revert`,
-and CI validation before deploy.
+The full GitOps loop is: **author** flags in a Git repository → **review** every change in a pull request → **validate** in CI with `flagr-validate` → **serve** via `json_http` pointed at the raw file URL. Flagr polls that URL on its refresh interval, so a merged PR reaches the server without a deploy. If a change is wrong, rollback is a `git revert` — the same one-command undo you already trust for code.
 
 ### Setup
 
-1. **Create a GitHub Personal Access Token** (fine-grained, repo-scoped):
-   - Go to **Settings → Developer settings → Personal access tokens →
-     Fine-grained tokens**
-   - Scope to the repository containing your flags file
-   - Grant **Read access to Contents**
+You need a fine-grained personal access token with **Contents: read** scope on the config repository, and a Flagr instance pointed at the raw content URL:
 
-2. **Point Flagr at the raw file** using `json_http` with the token embedded in
-   the URL:
+1. Create a fine-grained PAT with repo Contents read permission.
+2. Point Flagr at the raw file:
 
    ```sh
    export FLAGR_DB_DBDRIVER=json_http
    export FLAGR_DB_DBCONNECTIONSTR="https://<PAT>@raw.githubusercontent.com/<owner>/<repo>/<ref>/flags.json"
    ```
 
-   The token is used as HTTP Basic Auth username (the password is empty), which
-   Go's `net/http` handles transparently. GitHub accepts this for raw content
-   access.
-
-   **Example** — load from a private repo's `main` branch:
+   The PAT travels as the HTTP Basic username with an empty password. For a private repo on `main`, the connection string looks like:
 
    ```sh
    export FLAGR_DB_DBCONNECTIONSTR="https://github_pat_xxxx@raw.githubusercontent.com/myorg/flagr-config/main/flags.json"
    ```
 
-### Security notes
+### Security
 
-- Use a **fine-grained token** with the narrowest scope possible (single repo,
-  read-only Contents).
-- The token is visible in the environment and process listing. On shared hosts,
-  restrict access to the env file (e.g. `chmod 600`).
-- Consider a dedicated machine account for the token rather than a personal
-  account.
-- Rotate tokens on a schedule; GitHub fine-grained tokens support expiration.
-
-### CI validation
-
-Validate your flag file in CI before merges land on the branch Flagr watches:
-
-```sh
-go build -o flagr-validate ./cmd/flagr-validate/
-./flagr-validate flags.json
-```
-
-Failing validation blocks the PR — broken flag config never reaches your
-running instances.
+Treat the token like any other secret: grant the narrowest scope that still reads the config repo, `chmod 600` any env file on shared hosts, and rotate tokens on a schedule. Because the server only needs read access, a leaked token cannot mutate your flags — it can only expose them, and rotation is a single environment variable change.
 
 ## JSON format
 
-The format mirrors the entity model: one `Flags` array at the root, each flag
-nested with its segments, variants, constraints, distributions, and tags.
-Because this is a hand-edited (or machine-generated) artifact, IDs are
-optional — Flagr assigns them on load — and distributions can reference
-variants by key rather than by numeric ID, so the file stays readable.
+The file mirrors Flagr's entity model directly: a single `Flags` array at the root, each flag carrying its own segments, variants, constraints, distributions, and tags as nested objects. This is a hand-edited (or machine-generated) artifact, not a database dump you have to round-trip through an API. IDs are optional — the server assigns them on load — and distributions can reference variants by their string key instead of a numeric ID, so the file stays readable and diff-friendly even when you reorder or rename things.
 
 The root object contains a single `Flags` array:
 
@@ -153,18 +80,17 @@ The root object contains a single `Flags` array:
 
 ### IDs are optional
 
-All entity IDs (flags, variants, segments, constraints, distributions, tags)
-are **auto-assigned** if omitted. Hand-edited files can skip IDs entirely. If
-you provide them, they must be globally unique per entity type.
+Every entity ID — flag, variant, segment, constraint, distribution, tag — is **auto-assigned** if you leave it at zero. Hand-edited files can omit IDs entirely and let the server fill them in. If you do supply IDs, they must be globally unique within their entity type, because the server uses one global counter per type to match the auto-increment behavior of a real database. That counter also means IDs stay stable if you ever migrate the file back to a SQL backend.
 
-Distributions can reference variants by `VariantKey` instead of `VariantID` —
-the system resolves the link automatically on load.
+Distributions can name their target variant by `VariantKey` instead of `VariantID`. The loader resolves the key to the variant's assigned ID on read, so you never have to manage numeric cross-references by hand.
 
 > **Note:** `SegmentDefaultRank` (`999`) is applied by the **CRUD API** when
 > creating segments, **not** by the JSON loader. If you omit `Rank` in a JSON
 > flag, it stays `0` — set it explicitly when segment order matters.
 
 ### Flag
+
+A flag is the top-level unit. It carries a unique key for evaluation requests, a human description, an enabled toggle, and the nested arrays that define its audience and outcomes. Notes are freeform markdown (the UI renders KaTeX). `DataRecordsEnabled` and `EntityType` control whether and how evaluation results are logged to the metrics pipeline.
 
 ```json
 {
@@ -194,6 +120,8 @@ the system resolves the link automatically on load.
 
 ### Variant
 
+Variants are the possible outcomes of an evaluation. Each has a unique key within the flag and an optional attachment — arbitrary JSON the client receives alongside the variant key, useful for feature configuration like colors, layouts, or feature flags passed downstream.
+
 ```json
 {
   "Key": "control",
@@ -207,6 +135,8 @@ the system resolves the link automatically on load.
 | `Attachment` | object | no | Arbitrary JSON configuration for this variant |
 
 ### Segment
+
+Segments divide a flag's audience into ranked groups. `Rank` sets evaluation priority — lower ranks evaluate first, so the first matching segment wins. `RolloutPercent` gates what fraction of matching traffic the segment admits. Constraints and distributions then refine and route that traffic.
 
 ```json
 {
@@ -227,6 +157,8 @@ the system resolves the link automatically on load.
 | `Distributions` | array | no | How to route matched users across variants |
 
 ### Constraint
+
+A constraint is a single condition on one entity property. `Value` is a JSON-encoded string — note the nested quotes for string literals — so the same field can carry a number, a string, or a list without a schema change.
 
 ```json
 {
@@ -261,6 +193,8 @@ the system resolves the link automatically on load.
 
 ### Distribution
 
+A distribution routes a share of a segment's traffic to one variant. Use `VariantKey` to name the target by its string key, or `VariantID` if you prefer the numeric form — exactly one is required. The `Percent` values across all distributions in a segment must sum to **100** when at least one distribution exists; a segment with zero distributions yields a warning instead.
+
 ```json
 {
   "VariantKey": "control",
@@ -278,6 +212,8 @@ the system resolves the link automatically on load.
 
 ### Tag
 
+Tags are freeform labels for grouping and searching flags. A flag can carry any number of them, and the evaluation API can filter by tag.
+
 ```json
 {
   "Value": "frontend"
@@ -293,7 +229,7 @@ an empty value loads without error.
 
 ## Complete example
 
-Two flags, no explicit IDs — the system auto-assigns them on load.
+Two flags in one file, no explicit IDs anywhere — the server assigns them on load. The first rolls a new dashboard out to 50% of users via a single segment with an even 50/50 split. The second gates maintenance mode, sending beta users to the `on` variant first and everyone else to `off`.
 
 ```json
 {

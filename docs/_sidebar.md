@@ -1,22 +1,26 @@
-- Getting Started
+- Documentation
     - [Home](home.md)
+    - [Integration guide](integration.md)
+    - [Behavioral contracts](contracts.md)
+    - [Contributing](CONTRIBUTING.md)
+
+- Concepts & API
     - [Overview](flagr_overview.md)
-    - [Use Cases](flagr_use_cases.md)
-    - [Debug Console](flagr_debugging.md)
-    - [Built-in Context Injection](flagr_injected_context.md)
-- Server & deployment
-    - [Environment Variables](flagr_env.md)
-    - [JSON Flag Source (GitOps)](flagr_json_flag_spec.md)
+    - [Use cases](flagr_use_cases.md)
+    - [Built-in context injection](flagr_injected_context.md)
+    - [Debug console](flagr_debugging.md)
+    - [API reference](https://openflagr.github.io/flagr/api_docs)
+
+- Deploy & config
+    - [Self-hosting](flagr_self_host.md)
+    - [Environment variables](flagr_env.md)
+    - [JSON flag source (GitOps)](flagr_json_flag_spec.md)
     - [Notifications](flagr_notifications.md)
-- Event recording & analytics
-    - [Exposure Logging](flagr_exposure.md)
-    - [Data Recorders & A/B Analysis](flagr_eval_exposure_pipeline.md)
-    - [Datar Analytics](flagr_datar.md)
+
+- Analytics
+    - [Exposure logging](flagr_exposure.md)
+    - [Data recorders & A/B analysis](flagr_eval_exposure_pipeline.md)
+    - [Datar analytics](flagr_datar.md)
+
 - Development
     - [Testing](flagr_testing.md)
-    - [API Reference 🔗](https://openflagr.github.io/flagr/api_docs)
-- Client SDKs
-    - [Go SDK 🔗](https://github.com/openflagr/goflagr)
-    - [JavaScript SDK 🔗](https://github.com/openflagr/jsflagr)
-    - [Python SDK 🔗](https://github.com/openflagr/pyflagr)
-    - [Ruby SDK 🔗](https://github.com/openflagr/rbflagr)

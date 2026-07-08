@@ -1,154 +1,58 @@
-# Get Started
+# Get started
 
-Shipping software is a constant negotiation between **velocity** and
-**risk**. You want to move fast, but you also need to decouple *deploy* from
-*release* — to turn a feature on for one user, a thousand users, or nobody,
-without redeploying. You need to **experiment**: to learn which of two
-experiences performs better, with a denominator you can trust. And you need
-**dynamic configuration** — change a color, a copy string, a timeout — without
-a code change or a restart.
+Flagr is an open-source Go service for **feature flags**, **A/B tests**, and **dynamic configuration**. The idea is simple: your application calls **`POST /api/v1/evaluation`** with an `entityID` and, optionally, some `entityContext`. Flagr decides which variant applies — and hands back a `variantKey` plus an optional `variantAttachment` JSON payload. That's it. One round trip, deterministic answer, no per-user state.
 
-These three problems — feature flagging, A/B testing, and dynamic
-configuration — are usually solved by three different tools. Flagr solves all
-three with one primitive: the **flag**. A flag is a decision point in your
-code. Behind that decision sits an evaluation engine that looks at *who* is
-asking and decides *what* they get. The same engine that toggles a kill switch
-also splits traffic between variants and serves per-variant JSON attachments.
+You can run it in front of a database, or as a stateless eval-only sidecar fed from a JSON file in your repo. You can target a rollout to a single state, split a checkout flow fifty-fifty, or serve a different timeout value per customer tier — all without redeploying your app. The same flag can be a kill switch today, an experiment tomorrow, and a piece of runtime config the day after.
 
-Flagr is an open-source Go service that delivers the right experience to the
-right entity and monitors the impact. It exposes that evaluation engine behind
-a Swagger-documented REST API for flag management and evaluation — so your
-application code stays thin (`POST /evaluation`, read the `variantKey`),
-while operators configure targeting, distribution, and rollout from a UI or
-as code.
-
-New to Flagr? Start with the [Overview](flagr_overview) for core concepts.
-
-## Documentation map
-
-| Goal | Read |
-|------|-----|
-| Learn concepts (flags, segments, rollout, architecture) | [Overview](flagr_overview) |
-| See code patterns for flags / A/B / config | [Use Cases](flagr_use_cases) |
-| Configure the server (DB, auth, recorders) | [Environment Variables](flagr_env) |
-| Run flags from Git (no DB) | [JSON Flag Source](flagr_json_flag_spec) |
-| Log impressions after eval (`POST /exposures`) | [Exposure Logging](flagr_exposure) |
-| Ship eval + exposure to a recorder and analyze A/B | [Data Recorders & A/B Analysis](flagr_eval_exposure_pipeline) |
-| Quick eval counts inside Flagr (no pipeline) | [Datar Analytics](flagr_datar) |
-| Test evaluation in the UI | [Debug Console](flagr_debugging) |
-| Webhooks on flag changes | [Notifications](flagr_notifications) |
-| REST API details | [API Reference](https://openflagr.github.io/flagr/api_docs) |
-
-**Event-recording path:** [Exposure](flagr_exposure) (API) →
-[Data Recorders & A/B Analysis](flagr_eval_exposure_pipeline) →
-[Datar](flagr_datar) (built-in eval-only aggregates). Recorder env vars:
-[Data record destinations](flagr_env?id=data-record-destinations).
-
-## What Flagr can do
-
-| Capability | Highlights |
-|------------|------------|
-| **Feature flags** | Binary toggles, kill switches, targeted audience rollouts |
-| **Duplicate flag** | Clone full configuration via `POST /flags/{id}/duplicate` or flag-detail UI ([#724](https://github.com/openflagr/flagr/issues/724)) |
-| **A/B testing** | Multi-variant experiments with deterministic distribution |
-| **Dynamic configuration** | Per-variant JSON attachments for runtime config |
-| **GitOps / Flags-as-code** | Load flags from JSON files or HTTP URLs; manage in Git, validate in CI |
-| **Exposure logging** | `POST /exposures` after the user sees the variant — [Exposure](flagr_exposure), [Data Recorders & A/B Analysis](flagr_eval_exposure_pipeline) |
-| **Webhook notifications** | HTTP POST on every flag change, with retry and backoff |
-| **Multi-database** | SQLite (dev), MySQL, PostgreSQL, JSON sources |
-
-See [Use Cases](flagr_use_cases) for practical examples of each pattern.
+If you want the rules of the road before you start, the canonical reference is [Behavioral contracts](contracts.md). For hands-on HTTP examples, see the [Integration guide](integration.md). And if you'd rather just build something, the quick demo below takes about thirty seconds.
 
 ## Quick demo
 
-Run Flagr with Docker — no dependencies required:
+The fastest way to see Flagr in action is to pull the image and point your browser at it:
 
 ```bash
 docker pull ghcr.io/openflagr/flagr
 docker run -it -p 18000:18000 ghcr.io/openflagr/flagr
 
-# Open the Flagr UI
-open localhost:18000
+open http://localhost:18000
 ```
 
-Or try the hosted demo at
-[https://try-flagr.onrender.com](https://try-flagr.onrender.com)
-(cold starts may take a moment):
+Prefer not to install anything? There's a hosted demo at [try-flagr.onrender.com](https://try-flagr.onrender.com) — you can evaluate a flag against it right now:
 
 ```bash
-curl --request POST \
-     --url https://try-flagr.onrender.com/api/v1/evaluation \
-     --header 'content-type: application/json' \
-     --data '{
-       "entityID": "127",
-       "entityType": "user",
-       "entityContext": { "state": "NY" },
-       "flagID": 1,
-       "enableDebug": true
-     }'
+curl -sS -X POST https://try-flagr.onrender.com/api/v1/evaluation \
+  -H 'content-type: application/json' \
+  -d '{
+    "entityID": "127",
+    "entityType": "user",
+    "entityContext": { "state": "NY" },
+    "flagID": 1,
+    "enableDebug": true
+  }'
 ```
 
-## Development
+The debug log in the response walks you through the segment evaluation, so you can watch how a `state == "NY"` constraint turns into a variant decision.
 
-### Prerequisites
+## What Flagr does
 
-- **Go** 1.24+ (CI builds with Go 1.26; see `go.mod`)
-- **Node** 20+ (for UI development)
-- **Make**
+Flagr wears a few hats — feature-flag engine, experiment platform, runtime configuration store — but they all share one mechanism: evaluate an entity, pick a variant, attach some JSON. The table below is less a feature list and more a map: each row is a thing you might want to do, with a link to the page that explains it properly.
 
-### Build and run
+| Capability | Where to read more |
+|------------|-------------------|
+| Feature flags, rollouts, kill switches | [Overview](flagr_overview.md), [Use cases](flagr_use_cases.md) |
+| Browser-friendly eval (`GET ?json=`) | [Use cases — GET evaluation](flagr_use_cases.md#get-evaluation-browser-friendly) |
+| Time/header targeting (`@ts`, `@http_*`) | [Built-in context injection](flagr_injected_context.md) |
+| A/B tests + trustworthy denominators | [Exposure logging](flagr_exposure.md), [Data recorders](flagr_eval_exposure_pipeline.md) |
+| Runtime config on variants | [Use cases — dynamic configuration](flagr_use_cases.md) |
+| GitOps / eval-only JSON | [JSON flag source](flagr_json_flag_spec.md) |
+| Deploy, DB, auth, recorders | [Self-hosting](flagr_self_host.md), [Environment variables](flagr_env.md) |
 
-All commands run from the **repository root**. See **`make help`** for the full list.
-
-```bash
-git clone https://github.com/openflagr/flagr.git
-cd flagr
-
-make build          # Go server → ./flagr
-make start          # Backend :18000 + UI dev :8080
-make run            # Pre-built backend only
-make run-ui         # UI dev only (proxies /api/v1 to :18000)
-```
-
-After Go code changes:
-
-```bash
-make rebuild-run    # build → stop-ui → start
-```
-
-> **`make stop-ui`** frees `:18000` and `:8080` via `lsof -ti:<port>` (not `pkill`), so other projects are unaffected.
-
-## Testing
-
-Flagr has three test layers (unit, E2E, integration), parallel test conventions,
-and CI cache strategies — all covered in the [Testing](flagr_testing.md) guide.
-
-```bash
-make test              # lint + unit tests
-make test-e2e          # UI + Playwright
-make test-integration  # API integration (local)
-```
-
-
+One small convenience worth knowing about: you can duplicate an existing flag with `POST /flags/{id}/duplicate`, or use the **Duplicate Flag** button in the UI ([#724](https://github.com/openflagr/flagr/issues/724)) — handy when you want to stage a new experiment from a known-good baseline.
 
 ## Deploy
 
-Use the `ghcr.io/openflagr/flagr` image directly and configure everything
-through environment variables. See
-[Server Configuration](flagr_env) for the full list.
+The [quick demo](#quick-demo) above is everything you need to kick the tires locally. When you're ready for production — MySQL or Postgres, Docker Compose, Kubernetes, TLS termination — the walk-through lives in **[Self-hosting](flagr_self_host.md)**. Every tunable, from database drivers to recorder types, is documented in [Environment variables](flagr_env.md#source-pkgconfigenvgo).
 
-```bash
-export HOST=0.0.0.0
-export PORT=18000
-export FLAGR_DB_DBDRIVER=mysql
-export FLAGR_DB_DBCONNECTIONSTR=root:@tcp(127.0.0.1:18100)/flagr?parseTime=true
+## Develop Flagr
 
-docker run -it -p 18000:18000 ghcr.io/openflagr/flagr
-```
-
-### Documentation site (GitHub Pages)
-
-The site at [openflagr.github.io/flagr](https://openflagr.github.io/flagr/) is the static **Docsify** tree in `docs/`. Pushes to `main` run [`.github/workflows/pages.yml`](https://github.com/openflagr/flagr/blob/main/.github/workflows/pages.yml), which uploads `docs/` and deploys with `actions/deploy-pages`. Repository **Settings → Pages → Build and deployment** must use **GitHub Actions** (not “Deploy from a branch” / legacy Jekyll). After OpenAPI changes, run `make api_docs` or `make swagger` so `docs/api_docs/bundle.yaml` stays in sync.
-
-For GitOps workflows (flags-as-code, eval-only mode), see the
-[JSON Flag Source](flagr_json_flag_spec) guide.
+Flagr is plain Go: clone the repo, run `make build`, then `make start` to bring it up and `make test` to run the suite. The full contributor guide — repo layout, testing conventions, how to add a feature — is in [Contributing](CONTRIBUTING.md). If you're working on these docs, `make serve-docs` previews them locally.

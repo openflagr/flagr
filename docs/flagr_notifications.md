@@ -11,11 +11,16 @@ whom, and (optionally) a JSON diff — so the receiver can decide whether to
 act, log, or alarm. Delivery is asynchronous and never blocks the API
 response that made the change.
 
+This is one of the operational contracts Flagr guarantees; for the full set
+of invariants integrators should internalize, see
+[Behavioral contracts](contracts.md).
+
 ## Tracked operations
 
-Notifications fire on mutations to a flag and its related entities (segments,
-variants, constraints, distributions, tags). The `operation` field identifies
-what happened:
+Every mutation that touches a flag or anything attached to it — segments,
+variants, constraints, distributions, tags — fires a notification. The
+`operation` field tells the receiver the *kind* of change, and the
+`component_type` field tells it *what* changed:
 
 | Operation | Fires when |
 |-----------|------------|
@@ -24,9 +29,10 @@ what happened:
 | `delete` | A flag is soft-deleted, **or** a segment, variant, constraint, or tag is deleted from a flag |
 | `restore` | A soft-deleted flag is restored |
 
-Duplicating a flag (`POST /api/v1/flags/{flagID}/duplicate`) emits a **`create`**
-notification on the **new** flag (`component_type: "flag"`), same as `POST /flags`.
-The source flag does not receive a snapshot or notification.
+Duplicating a flag (`POST /api/v1/flags/{flagID}/duplicate`) behaves like any
+other creation: it emits a **`create`** notification on the **new** flag
+(`component_type: "flag"`), identical to `POST /flags`. The source flag is
+untouched and receives no snapshot or notification of its own.
 
 The `component_type` field identifies **what** changed (`flag`, `segment`,
 `variant`, `constraint`, `distribution`, or `tag`).
@@ -57,39 +63,40 @@ flag change you lose is one you can't audit.
 ### Delivery behavior
 
 Flagr treats notification delivery as best-effort: the API call that changed
-the flag returns immediately, and the webhook fires in the background. This is
-a deliberate trade-off — you don't want a flaky webhook receiver to stall a
-flag update — but it means your receiver must be idempotent and observably
-reliable on its own.
+the flag returns immediately, and the webhook fires in the background. This
+is a deliberate trade-off — you don't want a flaky webhook receiver to stall
+a flag update — but it means your receiver must be idempotent and
+observably reliable on its own.
 
-- **Asynchronous** — notifications are sent in background goroutines. Failures
-  are logged but **do not affect the API response**.
-- **Concurrency** — a hardcoded semaphore limits delivery to **100** concurrent
-  notifications to prevent resource exhaustion under load.
-- **Retry** — on HTTP `5xx`, the webhook retries up to `MAX_RETRIES` times with
-  exponential backoff (delay doubling, capped at `RETRY_MAX`, with jitter).
-  `4xx` responses are treated as final (no retry).
-- **Silent fallback** — if webhooks are enabled but `FLAGR_NOTIFICATION_WEBHOOK_URL`
-  is missing, notifications are dropped. Flagr logs a warning at startup.
+- **Asynchronous** — notifications are sent in background goroutines.
+  Failures are logged but **do not affect the API response**.
+- **Concurrency** — a hardcoded semaphore limits delivery to **100**
+  concurrent notifications to prevent resource exhaustion under load.
+- **Retry** — on HTTP `5xx`, the webhook retries up to `MAX_RETRIES` times
+  with exponential backoff (delay doubling, capped at `RETRY_MAX`, with
+  jitter). `4xx` responses are treated as final (no retry).
+- **Silent fallback** — if webhooks are enabled but
+  `FLAGR_NOTIFICATION_WEBHOOK_URL` is missing, notifications are dropped.
+  Flagr logs a warning at startup.
 
 ### Observability
 
-The Statsd counter `notification.sent` is emitted for every delivery attempt,
+Every delivery attempt increments the Statsd counter `notification.sent`,
 tagged with:
 
 - `provider` — the notifier (e.g. `webhook`)
 - `operation` — `create`, `update`, `delete`, or `restore`
 - `status` — `success` or `failure`
 
-> **Note:** Flagr validates the notification configuration at startup and logs
-> a warning if `FLAGR_NOTIFICATION_WEBHOOK_URL` is not set while webhooks are
-> enabled.
+> **Note:** Flagr validates the notification configuration at startup and
+> logs a warning if `FLAGR_NOTIFICATION_WEBHOOK_URL` is not set while
+> webhooks are enabled.
 
 ## Webhook payload
 
 The payload is intentionally flat and self-describing: one JSON object per
-event, with the `operation` and `component_type` telling the receiver what
-happened and to what, and the `flag_id`/`flag_key` anchoring it to a flag your
+event, with `operation` and `component_type` telling the receiver what
+happened and to what, and `flag_id`/`flag_key` anchoring it to a flag your
 system already knows. The optional diff fields (`pre_value`, `post_value`,
 `diff`) carry the full before/after snapshot when you want rich change
 records — off by default because they roughly double the payload size.

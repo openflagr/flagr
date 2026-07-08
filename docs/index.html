@@ -12,17 +12,34 @@
     <link rel="icon" href="images/favicon.png" />
     <link
       rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@fontsource/geist-sans@5.2.5/400.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@fontsource/geist-sans@5.2.5/500.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@fontsource/geist-sans@5.2.5/600.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@fontsource/geist-sans@5.2.5/700.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@fontsource/geist-mono@5.2.5/400.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@fontsource/geist-mono@5.2.5/500.css"
+    />
+    <link
+      rel="stylesheet"
       href="//cdn.jsdelivr.net/npm/docsify@4.13.1/lib/themes/vue.css"
     />
-    <style>
-      :root {
-        --theme-color: #2e4960;
-      }
+    <link rel="stylesheet" href="flagr-docs.css" />
 
-      img {
-        margin-top: 1rem;
-      }
-    </style>
   </head>
   <body>
     <div id="app">Loading …</div>
@@ -33,11 +50,11 @@
         auto2top: true,
         loadSidebar: true,
         maxLevel: 4,
-        subMaxLevel: 2,
-        coverpage: true,
+        subMaxLevel: 0,
+        coverpage: false,
         homepage: "home.md",
         executeScript: true,
-        name: "Flagr Docs",
+        name: "Flagr",
         search: {
           noData: {
             "/": "No results!",
@@ -49,7 +66,7 @@
         },
         plugins: [
           EditOnGithubPlugin.create(
-            "https://github.com/openflagr/flagr/blob/master/docs/"
+            "https://github.com/openflagr/flagr/blob/main/docs/"
           ),
         ],
         repo: "https://github.com/openflagr/flagr",

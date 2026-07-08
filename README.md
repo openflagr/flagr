@@ -21,55 +21,49 @@
 
 ## What is Flagr?
 
-Flagr is an open-source Go service for **feature flags**, **A/B testing**, and
-**dynamic configuration**. One primitive — the *flag* — covers all three: a
-decision point in your code that the evaluation engine resolves at runtime
-based on *who* is asking.
+Flagr is an open-source **Go** service for feature flags, A/B tests, and dynamic configuration. One primitive, the **flag**, backs all three: your code calls **`POST /api/v1/evaluation`**, Flagr looks at **who** is asking (`entityID`, `entityContext`), and returns a **variant** plus optional JSON **attachment**.
 
-It exists to decouple *deploy* from *release* — turn a feature on for one user,
-a thousand, or nobody, without redeploying. Run experiments and trust the
-numbers. Change configuration without a code change or a restart.
+That lets you **decouple deploy from release** (ship code dark, turn it on per audience), run **experiments** with sticky assignment, and change **runtime config** without redeploying.
 
-`openflagr/flagr` is the community-driven home of Flagr, advancing development
-beyond the original [`checkr/flagr`](https://github.com/checkr/flagr).
+[`openflagr/flagr`](https://github.com/openflagr/flagr) is the community home of Flagr, continuing development from the original [`checkr/flagr`](https://github.com/checkr/flagr).
 
 ---
 
-## 📖 Documentation
+## Documentation
 
-**[https://openflagr.github.io/flagr](https://openflagr.github.io/flagr)**
+**Site:** [https://openflagr.github.io/flagr](https://openflagr.github.io/flagr)
 
-**Developers:** clone the repo and run **`make help`** for build, test, and UI commands (single entrypoint for CI and local work).
+**Contributors:** clone the repo and run **`make help`** (build, test, UI, CI targets).
 
 | Page | Content |
 |------|---------|
-| [Home](https://openflagr.github.io/flagr/) | Quick start, dev, testing, deploy |
+| [Behavioral contracts](https://openflagr.github.io/flagr/#/contracts) | Eval vs exposure, recording, eval-only, cache |
+| [Integration guide](https://openflagr.github.io/flagr/#/integration) | Eval, batch, exposures (client API) |
+| [Contributing](https://openflagr.github.io/flagr/#/CONTRIBUTING) | Clone, build, test, OpenAPI |
 | [Overview](https://openflagr.github.io/flagr/#/flagr_overview) | Concepts, running example, architecture |
-| [Use Cases](https://openflagr.github.io/flagr/#/flagr_use_cases) | Feature flags, A/B testing, dynamic config; **GET** `?json=` eval (see [GET evaluation](https://openflagr.github.io/flagr/#/flagr_use_cases?id=get-evaluation-browser-friendly)) |
-| [Debug Console](https://openflagr.github.io/flagr/#/flagr_debugging) | UI evaluation testing |
-| [Server Configuration](https://openflagr.github.io/flagr/#/flagr_env) | Environment variables, DB, auth, recorders |
-| [JSON Flag Source](https://openflagr.github.io/flagr/#/flagr_json_flag_spec) | GitOps, JSON format, validator |
-| [Notifications](https://openflagr.github.io/flagr/#/flagr_notifications) | Webhooks on flag changes |
-| [Exposure Logging](https://openflagr.github.io/flagr/#/flagr_exposure) | `POST /exposures` API |
-| [Data Recorders & A/B Analysis](https://openflagr.github.io/flagr/#/flagr_eval_exposure_pipeline) | Kafka, Kinesis, Pub/Sub; sample consumer; A/B analytics |
-| [Datar Analytics](https://openflagr.github.io/flagr/#/flagr_datar) | In-process eval aggregates |
-| [API Reference](https://openflagr.github.io/flagr/api_docs) | Swagger/OpenAPI spec |
+| [Use cases](https://openflagr.github.io/flagr/#/flagr_use_cases) | Flags, A/B, dynamic config; [GET `?json=` eval](https://openflagr.github.io/flagr/#/flagr_use_cases?id=get-evaluation-browser-friendly) |
+| [Built-in context injection](https://openflagr.github.io/flagr/#/flagr_injected_context) | `@ts*`, `@http_*` in `entityContext` |
+| [Self-hosting](https://openflagr.github.io/flagr/#/flagr_self_host) | Docker, DB, Compose, K8s |
+| [Environment variables](https://openflagr.github.io/flagr/#/flagr_env) | DB, auth, recorders (`pkg/config/env.go`) |
+| [Exposure logging](https://openflagr.github.io/flagr/#/flagr_exposure) | Client impressions for A/B |
+| [Data recorders](https://openflagr.github.io/flagr/#/flagr_eval_exposure_pipeline) | Kafka, Kinesis, Pub/Sub |
+| [API reference](https://openflagr.github.io/flagr/api_docs) | OpenAPI |
 
 ---
 
 ## Features
 
-- **Feature flags** — binary on/off, kill switches, targeted rollouts by audience
-- **GET evaluation** — `GET /api/v1/evaluation?json=…` with the same JSON as POST (browser/cache-friendly; POST remains primary)
-- **Duplicate flag** — clone variants, segments, constraints, distributions, and tags to a new flag (`POST /flags/{id}/duplicate` or **Flag Management** on flag detail)
-- **A/B testing** — multi-variant experiments with deterministic, sticky assignment
-- **Dynamic configuration** — per-variant JSON attachments, no redeploy or restart
-- **GitOps / Flags-as-code** — load flags from JSON or HTTP; manage in Git, validate in CI, rollback with `git revert`
-- **Exposure logging** — `POST /exposures` for client-reported impressions, the trustworthy A/B denominator
-- **Webhook notifications** — HTTP POST on every flag change, with retry and backoff
-- **Multi-database** — SQLite (dev), MySQL, PostgreSQL, and JSON sources
-- **Built-in context injection** — server-side `@ts*` (time scheduling) and configurable `@http_*` (header-based targeting) keys injected into evaluation context
-- **Vue 3 UI** — TypeScript management UI (Vite, typed REST via `ApiResult`); see `make help` for `build-ui` / `test-e2e`
+- **Feature flags** — kill switches, targeted rollouts
+- **GET evaluation** — `GET /api/v1/evaluation?json=…` (same JSON as POST; [use cases](https://openflagr.github.io/flagr/#/flagr_use_cases?id=get-evaluation-browser-friendly))
+- **Built-in context injection** — `@ts*` and `@http_*` keys merged server-side ([guide](https://openflagr.github.io/flagr/#/flagr_injected_context))
+- **Duplicate flag** — `POST /flags/{id}/duplicate` or UI **Duplicate Flag**
+- **A/B testing** — deterministic assignment; pair with exposure logging
+- **Dynamic configuration** — `variantAttachment` JSON on eval responses
+- **GitOps** — `json_file` / `json_http`; `flagr-validate` in CI
+- **Exposure logging** — `POST /exposures` for trustworthy denominators
+- **Self-hosted** — official Docker image + env vars
+- **Databases** — SQLite, MySQL, PostgreSQL, or JSON sources
+- **Vue 3 UI** — TypeScript (`browser/flagr-ui`); `make build-ui`, `make test-e2e`
 
 ## Quick start
 
@@ -77,52 +71,42 @@ beyond the original [`checkr/flagr`](https://github.com/checkr/flagr).
 docker pull ghcr.io/openflagr/flagr
 docker run -it -p 18000:18000 ghcr.io/openflagr/flagr
 
-# Open the Flagr UI
-open localhost:18000
+open http://localhost:18000
 ```
 
-Or try the hosted demo at
-[https://try-flagr.onrender.com](https://try-flagr.onrender.com) (cold starts
-may take a moment):
+Demo API: [try-flagr.onrender.com](https://try-flagr.onrender.com) (may cold-start)
 
 ```sh
-curl --request POST \
-     --url https://try-flagr.onrender.com/api/v1/evaluation \
-     --header 'content-type: application/json' \
-     --data '{
-       "entityID": "127",
-       "entityType": "user",
-       "entityContext": { "state": "NY" },
-       "flagID": 1,
-       "enableDebug": true
-     }'
+curl -sS -X POST https://try-flagr.onrender.com/api/v1/evaluation \
+  -H 'content-type: application/json' \
+  -d '{
+    "entityID": "127",
+    "entityType": "user",
+    "entityContext": { "state": "NY" },
+    "flagID": 1,
+    "enableDebug": true
+  }'
 ```
 
 ## Flagr UI
 
 <p align="center">
-    <img src="./docs/images/demo_readme.png" width="900">
+    <img src="./docs/images/demo_readme.png" width="900" alt="Flagr UI">
 </p>
 
 ## Architecture
 
-Flagr has three components:
+Three parts ([overview diagram](https://openflagr.github.io/flagr/#/flagr_overview?id=architecture), [behavioral contracts](https://openflagr.github.io/flagr/#/contracts)):
 
-- **Evaluator** — serves evaluation from an in-memory cache (`POST` or `GET /evaluation`; see [Use Cases](https://openflagr.github.io/flagr/#/flagr_use_cases?id=get-evaluation-browser-friendly)). The
-  cache refreshes periodically (default 3s) and short-circuits when nothing
-  changed, so evaluation never touches the database on the request path.
-- **Manager** — the CRUD gateway; all flag mutations flow through here.
-- **Metrics** — fans evaluation and exposure events out to your data pipeline
-  (Kafka, Kinesis, Pub/Sub) or the built-in Datar aggregates. Recording is
-  asynchronous, so a slow backend never stalls an evaluation.
+- **Evaluator** — `POST` or `GET /evaluation` reads **EvalCache** in memory (default reload **3s**; no per-request SQL). GET: [use cases](https://openflagr.github.io/flagr/#/flagr_use_cases?id=get-evaluation-browser-friendly).
+- **Manager** — CRUD + `flag_snapshot` rows; webhooks after commit.
+- **Metrics** — async recorders (Kafka, Kinesis, Pub/Sub, Datar); slow sinks do not block eval.
 
-See the [architecture overview](https://openflagr.github.io/flagr/#/flagr_overview?id=architecture)
-for diagrams, request flows, and the deterministic bucketing algorithm.
+Source: `pkg/handler/eval.go`, `eval_cache.go`, `crud.go`.
 
 ## Performance
 
-Tested with [`vegeta`](./benchmark) — 2,000 req/s sustained, sub-millisecond
-median latency:
+[`vegeta`](./benchmark) load test (~2k req/s, sub-ms median in published run):
 
 ```
 Requests      [total, rate]            56521, 2000.04
@@ -132,7 +116,7 @@ Success       [ratio]                  100.00%
 Status Codes  [code:count]             200:56521
 ```
 
-## Client Libraries
+## Client libraries
 
 | Language | Client |
 | -------- | ------ |
@@ -141,7 +125,7 @@ Status Codes  [code:count]             200:56521
 | Python | [pyflagr](https://github.com/openflagr/pyflagr) |
 | Ruby | [rbflagr](https://github.com/openflagr/rbflagr) |
 
-## License and Credit
+## License
 
 - [`openflagr/flagr`](https://github.com/openflagr/flagr) — Apache 2.0
-- [`checkr/flagr`](https://github.com/checkr/flagr) — Apache 2.0 (original project)
+- [`checkr/flagr`](https://github.com/checkr/flagr) — Apache 2.0 (original)

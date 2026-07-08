@@ -1,51 +1,77 @@
-# Flagr Overview
+# Flagr overview
 
-Every evaluation in Flagr answers one question: *given this entity, which
-variant should it get — right now?* The machinery behind that answer is
-small, deterministic, and fast. This page explains the concepts that make up
-that question, the algorithm that resolves it, and the architecture that
-serves it at low latency.
+Every evaluation answers: **given this entity, which variant right now?** Segments, constraints, distribution, and rollout implement that answer. Evaluation is deterministic (same `entityID` → same bucket) and served from memory, not per-request SQL.
+
+REST field names: [API reference](https://openflagr.github.io/flagr/api_docs). Code layout: [Contributing](CONTRIBUTING.md#where-the-code-lives).
 
 ## Concepts
 
 For the authoritative field definitions, see the
 [API doc](https://openflagr.github.io/flagr/api_docs).
 
-- **Flag** — A decision point in your application. Behind it lives the question
-  you want to answer at runtime: *who gets what?* A flag can act as a feature
-  flag (on/off), an experiment (control vs. treatment), or a configuration
-  (which JSON to serve). It is the top-level unit you evaluate against.
-- **Tag** — A descriptive label attached to a flag for easy lookup and
-  filtering. Tags let you group flags by team, surface, or lifecycle
-  ("frontend", "experiment", "ops") without encoding that into the flag key.
-- **Variant** — One possible outcome of a flag (`control`/`treatment`,
-  `green`/`yellow`/`red`). Each variant carries an **Attachment** (an
-  arbitrary JSON object) for dynamic configuration. The same variant mechanism
-  that picks a button color can also carry the hex code, a copy string, or a
-  timeout value — so the client never has to branch on business logic, only on
-  the `variantKey`.
-- **Segment** — The audience you want to target; the smallest unit you can
-  analyze in Flagr Metrics. A segment is defined by a set of **Constraints**
-  (connected by `AND`). Segments are evaluated in rank order, and an entity
-  falls into the **first** segment that matches — so ordering is how you
-  express "specific audiences first, everyone else last."
-- **Constraint** — A rule on the entity context, e.g. `state == "CA"` or
-  `age >= 21`. All constraints in a segment must match (`AND`). Constraints are
-  what make a flag *targeted* rather than global — they let you say "only
-  users in California, on mobile, over 21" without writing that logic in your
-  app.
-- **Distribution** — How matched entities are split across variants within a
-  segment. A `50/50` split of `control`/`treatment` is the bread and butter of
-  A/B testing; a `100/0` split is a rollout. Distribution turns a segment from
-  a *who* into a *who gets which*.
-- **Entity** — The context you evaluate against (`entityID`, `entityType`,
-  `entityContext`). The `entityID` is what makes evaluation **deterministic**:
-  the same ID always hashes to the same bucket, so a user sees the same variant
-  on every request. Constraints read fields from `entityContext`.
+The simplest thing Flagr knows about is a **flag**: a decision point in your
+application. Behind it lives the question you want to answer at runtime — *who
+gets what?* A single flag can act as a feature flag (on/off), an experiment
+(control vs. treatment), or a piece of dynamic configuration (which JSON to
+serve). It is the top-level unit you evaluate against, and everything else in
+Flagr exists to refine the answer that flag returns. Flags are identified by a
+unique `key` and can be turned off wholesale with `enabled: false`, which makes
+evaluation return a blank result regardless of how the rest of the flag is
+configured. You can attach **tags** to a flag — descriptive labels like
+"frontend", "experiment", or "ops" — purely for lookup and filtering, so you
+never have to encode team ownership or lifecycle stage into the flag key
+itself.
+
+A flag by itself does not know what it can return. That is the job of a
+**variant**: one possible outcome of the flag, such as `control`/`treatment` or
+`green`/`blue`/`pink`. Each variant carries an **Attachment** — an arbitrary
+JSON object — for dynamic configuration. The same variant mechanism that picks a
+button color can also carry the hex code, a copy string, or a timeout value, so
+the client never has to branch on business logic: it branches on the
+`variantKey` and reads whatever it needs from the attachment. The variant is
+what turns an abstract decision point into a concrete thing your application can
+act on.
 
 > **Note:** "Variant Attachment" in these docs refers to the `Attachment` field
 > on the `Variant` entity (type `map[string]any` — arbitrary JSON). There is no
 > separate `VariantAttachment` type.
+
+To decide which variant an entity receives, Flagr first needs to know *who* is
+asking. That is the **entity**: the context you evaluate against, made up of
+`entityID`, `entityType`, and `entityContext`. The `entityID` is what makes
+evaluation **deterministic** — the same ID always hashes to the same bucket, so
+a user sees the same variant on every request, across restarts, redeploys, and
+load-balanced instances. The `entityContext` is a free-form JSON object that
+constraints read from; this is where targeting attributes like `state`, `age`,
+or `device` live. If no `entityID` is supplied, Flagr generates a random one,
+which makes that particular evaluation non-sticky by design.
+
+With outcomes (variants) and a subject (entity) in place, the next question is
+*which entities should this flag apply to at all?* That is a **segment**: the
+audience you want to target, and the smallest unit you can analyze in Flagr
+Metrics. A segment is defined by a set of **constraints** connected by logical
+`AND`, and segments are evaluated in rank order — an entity falls into the
+**first** segment that matches, then evaluation stops. That ordering is how you
+express "specific audiences first, everyone else last." A segment with no
+constraints matches every entity, which is how you build a catch-all fallback
+or a global rollout.
+
+Constraints are the rules that make a segment *targeted* rather than global.
+A **constraint** is a single comparison against a field in `entityContext`, such
+as `state == "CA"` or `age >= 21`. All constraints in a segment must match for
+the segment to match; a single miss means the entity falls through to the next
+segment. Constraints let you say "only users in California, on mobile, over 21"
+without writing that logic in your app — the targeting lives with the flag, not
+scattered across call sites.
+
+Once a segment matches, the last question is *which variant does this matched
+entity actually get?* That is **distribution**: how matched entities are split
+across variants within a segment. A `50/50` split of `control`/`treatment` is
+the bread and butter of A/B testing; a `100/0` split is a rollout. Distribution
+turns a segment from a *who* into a *who gets which*, and it works hand in hand
+with **rollout** — the percentage of a matched segment that receives any
+variant at all, letting you expose a flag to a sliver of traffic before going
+wide.
 
 ### Constraint property access
 
@@ -74,26 +100,26 @@ segment actually receives a variant.
 **Setup** — three button-color variants (`green`, `blue`, `pink`) for a new
 checkout experience:
 
-![Flag variants for the running example](images/flagr_running_example_1.png)
-![Flag detail with segments and distributions](images/flagr_running_example_4.png)
+![Flag variants for the running example](/images/flagr_running_example_1.png)
+![Flag detail with segments and distributions](/images/flagr_running_example_4.png)
 
 **Step 1 — targeted rollout** — expose the flag to California users only
 (`state == "CA"`), with a partial rollout before going wide:
 
-![California segment with constraints](images/flagr_running_example_2.png)
+![California segment with constraints](/images/flagr_running_example_2.png)
 
 **Step 2 — geo-specific preferences** — add segments per state (and combine
 constraints, e.g. `state == "NY" AND age >= 21`):
 
-![Multiple state-based segments](images/flagr_running_example_3.png)
-![Per-segment distribution and rollout](images/flagr_running_example_5.png)
+![Multiple state-based segments](/images/flagr_running_example_3.png)
+![Per-segment distribution and rollout](/images/flagr_running_example_5.png)
 
 **Step 3 — experiment then launch** — A/B within a segment (`50/50` green/blue
 at `20%` rollout), then raise rollout and distribution to ship `100%` green
 globally:
 
-![Raised rollout on a segment](images/flagr_running_example_7.png)
-![Full launch distribution](images/flagr_running_example_6.png)
+![Raised rollout on a segment](/images/flagr_running_example_7.png)
+![Full launch distribution](/images/flagr_running_example_6.png)
 
 ## Rollout and deterministic bucketing
 
@@ -131,20 +157,7 @@ Flagr separates three concerns that scale differently:
 | **Write** (configuration) | CRUD APIs + UI | Strong (database) | Rare, not on eval path |
 | **Record** (analytics) | `AsyncRecord` fan-out | Best-effort async | Must not block eval |
 
-The diagrams below cover **database-backed** deployments (default) and
-**eval-only** JSON sources. They are **maintainer diagrams** aligned with the
-Go implementation (not generated from the old `flagr_arch.png`). When the
-diagram and code disagree, **code wins** — update this page.
-
-**Implementation map:** `pkg/handler` (`handler.go`, `eval.go`, `eval_cache.go`,
-`exposure.go`, `data_recorder*.go`, `crud.go`, `crud_duplicate.go`),
-`pkg/entity/flag_snapshot.go`, `pkg/entity/flag_template.go`,
-`pkg/config/config.go` (eval-only drivers). **Tests that encode the contract:**
-`TestReloadMapCacheShortCircuit`, `TestRecordCountsTowardDatar`,
-`TestAllMutationHandlersCallSaveFlagSnapshot`, `TestCommitFlagMutation_RollbackOnMutateFailure`
-in `pkg/handler/`.
-
-Three logical components implement the read / write / record split:
+Diagrams below: database-backed (default) and eval-only JSON. When diagram and code disagree, **code wins**. Shared rules: [Behavioral contracts](contracts.md). Handler layout: [Contributing](CONTRIBUTING.md#where-the-code-lives).
 
 ```mermaid
 flowchart TB
@@ -198,59 +211,39 @@ flowchart TB
   JH -. every poll .-> EC
 ```
 
-> **Eval-only** (`json_file` / `json_http`): no UI/CRUD path, no exposures, no
-> `flag_snapshots` — configuration flows only from JSON into **EvalCache**.
+### Paths
 
 ### How to read the diagram
 
-- **Clients / SDKs** call evaluation and (optionally) exposure APIs. Treat
-  evaluation as *assignment* and exposures as *impression* for experiments —
-  see [Exposure Logging](flagr_exposure.md).
-- **Evaluator** does not query the database per request; it uses in-memory
-  **EvalCache** (flags, segments, variants, constraints, distributions, tags).
-- **Manager** persists configuration changes and appends **`flag_snapshot`** rows
-  (webhooks may fire after commit).
-- **Metrics** receives `evalResult` asynchronously; streaming recorders accept
-  both `evaluation` and `exposure` rows; **Datar** counts evaluations only.
+- **Clients** call `POST` or `GET /evaluation` for assignment and optionally `POST /exposures` for impressions — [Exposure logging](flagr_exposure.md), [contracts](contracts.md#eval-vs-exposure).
+- **Evaluator** uses **EvalCache** only on the hot path (no per-request SQL).
+- **Manager** — CRUD + `flag_snapshot`; webhooks after commit.
+- **Metrics** — async `AsyncRecord` to stream recorders or Datar.
 
 ### Request flows
 
-**Evaluation (hot path)** — `POST` or `GET /api/v1/evaluation` (same semantics; see [Use Cases — GET evaluation](flagr_use_cases.md#get-evaluation-browser-friendly)) → **EvalCache** → segments
-in rank order → variant response → optional `AsyncRecord` (`recordSource:
-evaluation`). No record when flag is missing, disabled, or has no segments.
+**Evaluation** — `POST` or `GET /api/v1/evaluation` ([GET evaluation](flagr_use_cases.md#get-evaluation-browser-friendly)) → segments in rank order → variant → optional `AsyncRecord` (`recordSource: evaluation`). No stream when flag missing, disabled, or has no segments ([contracts](contracts.md#evalcache-freshness)).
 
-**Configuration (cold path)** — CRUD mutations run in one DB transaction with an appended `flag_snapshot` row (webhooks after commit) → on next poll, **EvalCache** reloads if `MAX(flag_snapshot.id)` changed. Read-only export paths may still call `SaveFlagSnapshot` in a separate transaction.
+**Configuration** — CRUD + snapshot → EvalCache reload on `MAX(flag_snapshot.id)` or poll interval.
 
-**Exposure** — `POST /api/v1/exposures` after render; validates against
-**EvalCache** (no constraint re-eval) → `AsyncRecord` (`recordSource: exposure`).
+**Exposure** — `POST /api/v1/exposures` → cache validation → `AsyncRecord` (`recordSource: exposure`).
+
+**Eval-only** — [contracts — eval-only](contracts.md#eval-only).
 
 ### Components
 
-**Evaluator** — `POST` or `GET /evaluation` (see [Use Cases — GET evaluation](flagr_use_cases.md#get-evaluation-browser-friendly)), batch eval, tag eval; refresh interval
-`FLAGR_EVALCACHE_REFRESHINTERVAL` (default 3s); version probe
-`GET /api/v1/flags/snapshots/max_id`.
+**Evaluator** — batch/tag eval; `FLAGR_EVALCACHE_REFRESHINTERVAL` (default 3s); `GET /api/v1/flags/snapshots/max_id`.
 
-**Manager** — CRUD for flags, segments, variants, constraints, distributions,
-tags, and **`POST /flags/{flagID}/duplicate`** (full graph clone in one transaction);
-not on the eval request path. Flag detail **Flag Management** section: **Duplicate Flag** (confirm + link toast) and **Delete Flag**.
-Mutations use **`commitFlagMutation`**: one DB transaction for the change plus a
-`flag_snapshot` row; webhooks run only after commit. Boolean create and duplicate
-share **`ApplyFlagTemplate`** (`SimpleBooleanFlagTemplate` / `SourceFlagTemplate`).
 
-**Metrics** — `FLAGR_RECORDER_ENABLED` + per-flag `dataRecordsEnabled`; combine
-backends via `FLAGR_RECORDER_TYPE` (e.g. `kafka,datar`). Details:
-[Data Recorders & A/B Analysis](flagr_eval_exposure_pipeline.md).
 
-### Eval-only mode (JSON flag sources)
+**Manager** — CRUD, **`POST /flags/{flagID}/duplicate`**, **`commitFlagMutation`** (transaction + snapshot). UI: **Duplicate Flag**, **Delete Flag**.
 
-When `FLAGR_DB_DBDRIVER` is `json_file` or `json_http`, Flagr exposes health +
-evaluation only (no CRUD, exposures, Datar APIs, or eval-cache export). JSON is
-re-fetched every poll with no snapshot short-circuit. See
-[JSON Flag Source](flagr_json_flag_spec.md).
+**Metrics** — [contracts — recording](contracts.md#recording-gates); [Data recorders & A/B analysis](flagr_eval_exposure_pipeline.md).
 
 ## Related documentation
 
-- [Use Cases](flagr_use_cases.md) — instrument apps for flags, experiments, dynamic config
-- [Exposure Logging](flagr_exposure.md) and [Data Recorders & A/B Analysis](flagr_eval_exposure_pipeline.md) — impressions and pipeline analytics
-- [Datar](flagr_datar.md) — optional built-in eval counters
-- [Environment Variables](flagr_env.md) — deployment and recorder configuration
+- [Behavioral contracts](contracts.md)
+- [Use cases](flagr_use_cases.md) — flags, experiments, dynamic config
+- [Exposure logging](flagr_exposure.md) and [Data recorders & A/B analysis](flagr_eval_exposure_pipeline.md)
+- [Datar analytics](flagr_datar.md)
+- [Environment variables](flagr_env.md)
