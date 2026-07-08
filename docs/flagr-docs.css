@@ -426,6 +426,26 @@ main {
   border: 1px solid rgba(24, 24, 27, 0.2);
   box-shadow: var(--shadow-soft);
   background: var(--flagr-pre-bg) !important;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(250, 250, 250, 0.22) var(--flagr-pre-bg);
+}
+
+.markdown-section pre::-webkit-scrollbar {
+  height: 8px;
+}
+
+.markdown-section pre::-webkit-scrollbar-track {
+  background: var(--flagr-pre-bg);
+}
+
+.markdown-section pre::-webkit-scrollbar-thumb {
+  background: rgba(250, 250, 250, 0.2);
+  border-radius: 4px;
+}
+
+.markdown-section pre::-webkit-scrollbar-thumb:hover {
+  background: rgba(250, 250, 250, 0.32);
 }
 
 .markdown-section pre > code {
@@ -435,7 +455,7 @@ main {
   background: transparent;
   border: none;
   color: var(--flagr-pre-fg);
-  padding: 0.28rem 0.95rem;
+  padding: 0.55rem 1rem;
   display: block;
 }
 .markdown-section pre > code .token {
