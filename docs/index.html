@@ -55,8 +55,8 @@
         --flagr-accent-hover: #164670;
         --flagr-accent-soft: #94b8d4;
         --flagr-accent-subtle: rgba(30, 90, 138, 0.1);
-        --flagr-code-bg: #f4f4f5;
-        --flagr-code-fg: #3f3f46;
+        --flagr-code-bg: #e4e4e7;
+        --flagr-code-fg: #18181b;
         --flagr-pre-bg: #27272a;
         --flagr-pre-fg: #fafafa;
         --theme-color: var(--flagr-accent);
@@ -407,14 +407,17 @@
         background: rgba(24, 24, 27, 0.02);
       }
 
-      .markdown-section code {
+      .markdown-section :not(pre) > code {
         font-family: var(--font-mono);
-        font-size: 0.88em;
+        font-size: 0.8em;
+        font-weight: 500;
         background: var(--flagr-code-bg);
         color: var(--flagr-code-fg);
-        padding: 0.15em 0.4em;
+        padding: 0.12em 0.38em;
         border-radius: 4px;
-        border: 1px solid var(--flagr-border);
+        border: 1px solid var(--flagr-border-strong);
+        box-decoration-break: clone;
+        -webkit-box-decoration-break: clone;
       }
 
       .markdown-section pre {
