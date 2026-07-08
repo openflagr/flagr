@@ -9,7 +9,7 @@ A kill switch cares about *who is on*. An experiment cares about *what they saw*
 > `variantID`, `variantKey`, and `variantAttachment` (camelCase), as returned
 > by `POST /evaluation` or `GET /evaluation` (same JSON body).
 
-## GET evaluation (browser-friendly)
+## GET evaluation (browser-friendly) :id=get-evaluation-browser-friendly
 
 **POST `/api/v1/evaluation`** is the **primary** integration path: server-side apps, official SDKs, large `entityContext`, batch workloads, and anything that must not live in a URL. **GET** is **secondary** — the same `evalContext` / `evaluationBatchRequest` JSON, but carried in one query parameter so browsers and caches can treat evaluation like a normal read.
 
