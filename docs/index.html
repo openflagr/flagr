@@ -39,17 +39,26 @@
     />
     <style>
       :root {
-        --flagr-bg: #f4f4f5;
+        /* Neutrals: warm zinc/stone only — no teal/cyan in surfaces (taste: one cool accent family) */
+        --flagr-canvas: #f4f4f5;
+        --flagr-bg: var(--flagr-canvas);
         --flagr-surface: #ffffff;
         --flagr-sidebar: #fafafa;
-        --flagr-border: rgba(24, 24, 27, 0.08);
-        --flagr-border-strong: rgba(24, 24, 27, 0.14);
-        --flagr-text: #52525b;
+        --flagr-muted-bg: #f4f4f5;
+        --flagr-border: rgba(24, 24, 27, 0.09);
+        --flagr-border-strong: rgba(24, 24, 27, 0.16);
+        --flagr-text: #3f3f46;
         --flagr-heading: #18181b;
         --flagr-muted: #71717a;
-        --flagr-accent: #0f766e;
-        --flagr-accent-soft: #5eead4;
+        /* Accent: desaturated steel blue — links/active only, not page chrome */
+        --flagr-accent: #1e5a8a;
+        --flagr-accent-hover: #164670;
+        --flagr-accent-soft: #94b8d4;
+        --flagr-accent-subtle: rgba(30, 90, 138, 0.1);
         --flagr-code-bg: #f4f4f5;
+        --flagr-code-fg: #3f3f46;
+        --flagr-pre-bg: #27272a;
+        --flagr-pre-fg: #fafafa;
         --theme-color: var(--flagr-accent);
         --font-sans: "Geist Sans", "Geist", system-ui, -apple-system, sans-serif;
         --font-mono: "Geist Mono", ui-monospace, monospace;
@@ -57,8 +66,8 @@
         --sidebar-width: 17.5rem;
         --radius-sm: 6px;
         --radius-md: 10px;
-        --shadow-soft: 0 1px 2px rgba(15, 23, 42, 0.04),
-          0 8px 24px -12px rgba(15, 23, 42, 0.08);
+        --shadow-soft: 0 1px 2px rgba(24, 24, 27, 0.05),
+          0 10px 28px -14px rgba(24, 24, 27, 0.1);
       }
 
       html,
@@ -141,7 +150,7 @@
       .sidebar-nav li.active > a,
       .sidebar-nav ul li.active > a {
         color: var(--flagr-accent);
-        background: rgba(15, 118, 110, 0.08);
+        background: var(--flagr-accent-subtle);
         font-weight: 600;
         border-right: none !important;
       }
@@ -169,7 +178,7 @@
 
       .sidebar-nav a:hover {
         color: var(--flagr-heading);
-        background: rgba(15, 23, 42, 0.04);
+        background: rgba(24, 24, 27, 0.04);
         text-decoration: none;
       }
 
@@ -217,7 +226,7 @@
       }
 
       .search .matching-post:hover {
-        background: rgba(15, 118, 110, 0.06);
+        background: var(--flagr-accent-subtle);
       }
 
       .search .matching-post .search-keyword {
@@ -238,6 +247,9 @@
       @media (max-width: 768px) {
         .markdown-section {
           padding: 1.75rem 1.25rem 3rem;
+          border-left: none;
+          border-right: none;
+          box-shadow: none;
         }
       }
 
@@ -318,9 +330,9 @@
       }
 
       .markdown-section a:hover {
-        color: #0f766e;
+        color: var(--flagr-accent-hover);
         text-decoration: underline;
-        text-decoration-color: rgba(13, 85, 99, 0.35);
+        text-decoration-color: rgba(30, 90, 138, 0.35);
         text-underline-offset: 2px;
       }
 
@@ -370,7 +382,7 @@
       }
 
       .markdown-section thead {
-        background: #f4f4f5;
+        background: var(--flagr-muted-bg);
       }
 
       .markdown-section th {
@@ -392,14 +404,14 @@
       }
 
       .markdown-section tr:hover td {
-        background: rgba(15, 23, 42, 0.02);
+        background: rgba(24, 24, 27, 0.02);
       }
 
       .markdown-section code {
         font-family: var(--font-mono);
         font-size: 0.88em;
         background: var(--flagr-code-bg);
-        color: #3f3f46;
+        color: var(--flagr-code-fg);
         padding: 0.15em 0.4em;
         border-radius: 4px;
         border: 1px solid var(--flagr-border);
@@ -408,9 +420,9 @@
       .markdown-section pre {
         margin: 1.15rem 0;
         border-radius: var(--radius-md);
-        border: 1px solid rgba(148, 163, 184, 0.22);
+        border: 1px solid rgba(24, 24, 27, 0.2);
         box-shadow: var(--shadow-soft);
-        background: #18181b !important;
+        background: var(--flagr-pre-bg) !important;
       }
 
       .markdown-section pre > code {
@@ -419,19 +431,19 @@
         line-height: 1.48;
         background: transparent;
         border: none;
-        color: #f4f8fc;
+        color: var(--flagr-pre-fg);
         padding: 1rem 1.15rem;
         display: block;
       }
 
-      .markdown-section pre .token.comment,
+.markdown-section pre .token.comment,
       .markdown-section pre .token.prolog,
       .markdown-section pre .token.doctype {
-        color: #9db4c8;
+        color: #a1a1aa;
       }
 
       .markdown-section pre .token.punctuation {
-        color: #c5d4e3;
+        color: #d4d4d8;
       }
 
       .markdown-section pre .token.property,
@@ -440,7 +452,7 @@
       .markdown-section pre .token.number,
       .markdown-section pre .token.constant,
       .markdown-section pre .token.symbol {
-        color: #7ee8d8;
+        color: #e4e4e7;
       }
 
       .markdown-section pre .token.selector,
@@ -448,24 +460,24 @@
       .markdown-section pre .token.string,
       .markdown-section pre .token.char,
       .markdown-section pre .token.builtin {
-        color: #b8e986;
+        color: #c8d6e5;
       }
 
       .markdown-section pre .token.operator,
       .markdown-section pre .token.entity,
       .markdown-section pre .token.url {
-        color: #f0c674;
+        color: #d4d4d8;
       }
 
       .markdown-section pre .token.atrule,
       .markdown-section pre .token.attr-value,
       .markdown-section pre .token.keyword {
-        color: #8ec8ff;
+        color: #94b8d4;
       }
 
       .markdown-section pre .token.function,
       .markdown-section pre .token.class-name {
-        color: #e8b4ff;
+        color: #fafafa;
       }
 
       .markdown-section img {
@@ -483,7 +495,7 @@
       }
 
       .markdown-section .anchor span {
-        color: var(--flagr-accent-soft);
+        color: var(--flagr-muted);
       }
 
       .github-corner {
