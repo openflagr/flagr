@@ -79,20 +79,67 @@
       }
 
       .sidebar-nav li {
-        margin: 0.15rem 0;
+        margin: 0.12rem 0;
       }
 
+      /* Top-level and nested links share one visual language */
       .sidebar-nav > ul > li > a,
       .sidebar-nav ul li a {
         font-size: 0.9rem;
         font-weight: 500;
         color: var(--flagr-muted);
         border-radius: var(--radius-sm);
-        padding: 0.4rem 0.65rem;
-        line-height: 1.3;
+        padding: 0.42rem 0.65rem;
+        line-height: 1.35;
         text-decoration: none;
         border-bottom: none;
+        display: block;
         transition: color 0.2s ease, background 0.2s ease;
+      }
+
+      /* Folder labels (e.g. "Client SDKs") — match link rows, not section headers */
+      .sidebar-nav li > strong,
+      .sidebar-nav li > p {
+        display: block;
+        font-size: 0.9rem;
+        font-weight: 500;
+        letter-spacing: normal;
+        text-transform: none;
+        color: var(--flagr-muted);
+        margin: 0.12rem 0;
+        padding: 0.42rem 0.65rem;
+        line-height: 1.35;
+        opacity: 1;
+        border-radius: var(--radius-sm);
+      }
+
+      .sidebar-nav li.open > strong,
+      .sidebar-nav li.active > strong {
+        color: var(--flagr-heading);
+        font-weight: 600;
+      }
+
+      .sidebar-nav ul ul {
+        margin: 0.1rem 0 0.35rem;
+        padding-left: 0.5rem;
+        border-left: 1px solid var(--flagr-border);
+        margin-left: 0.85rem;
+      }
+
+      .sidebar-nav ul ul li a {
+        font-size: 0.84rem;
+        font-weight: 500;
+        padding: 0.35rem 0.55rem;
+      }
+
+      .sidebar-nav a[href^="http"]::after,
+      .sidebar-nav a[href^="//"]::after {
+        content: "↗";
+        font-size: 0.72em;
+        font-weight: 600;
+        margin-left: 0.35em;
+        opacity: 0.45;
+        vertical-align: 0.05em;
       }
 
       .sidebar-nav li.active > a,
@@ -100,26 +147,24 @@
         color: var(--flagr-accent);
         background: rgba(26, 107, 122, 0.08);
         font-weight: 600;
-      }
-
-      .sidebar-nav li.active > a,
-      .sidebar-nav ul li.active > a {
         border-right: none !important;
       }
 
+      /* Section headers only: top-level list items that are direct groups (Documentation, Concepts…) */
       .sidebar-nav > ul > li > p,
-      .sidebar-nav > ul > li > strong {
+      .sidebar-nav > ul > li > strong:first-child {
         font-size: 0.68rem;
         font-weight: 600;
         letter-spacing: 0.08em;
         text-transform: uppercase;
         color: var(--flagr-muted);
         margin: 1.25rem 0.65rem 0.5rem;
+        padding: 0;
         opacity: 0.85;
       }
 
       .sidebar-nav > ul > li:first-child > p,
-      .sidebar-nav > ul > li:first-child > strong {
+      .sidebar-nav > ul > li:first-child > strong:first-child {
         margin-top: 0.25rem;
       }
 
@@ -166,6 +211,15 @@
         border-bottom: 1px solid var(--flagr-border);
         padding: 0.65rem 0.85rem;
         font-size: 0.8125rem;
+      }
+
+      .search .matching-post:hover {
+        background: rgba(26, 107, 122, 0.06);
+      }
+
+      .search .matching-post .search-keyword {
+        color: var(--flagr-accent);
+        font-weight: 600;
       }
 
       main {
@@ -219,18 +273,26 @@
         margin: 1.5rem 0 0.5rem;
       }
 
-      .markdown-section p,
-      .markdown-section li {
-        font-size: 1rem;
-        line-height: 1.58;
-        color: var(--flagr-text);
-        margin: 0.6rem 0;
-      }
-
       .markdown-section ul,
       .markdown-section ol {
         padding-left: 1.35rem;
+        margin: 0.75rem 0 1rem;
       }
+
+      .markdown-section li + li {
+        margin-top: 0.35rem;
+      }
+
+      .markdown-section p a[href^="http"]::after,
+      .markdown-section li a[href^="http"]::after,
+      .markdown-section td a[href^="http"]::after,
+      .markdown-section blockquote a[href^="http"]::after {
+        content: "↗";
+        font-size: 0.72em;
+        margin-left: 0.2em;
+        opacity: 0.5;
+      }
+
 
       .markdown-section a {
         color: var(--flagr-accent);

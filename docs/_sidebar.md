@@ -9,12 +9,12 @@
     - [Use cases](flagr_use_cases.md)
     - [Built-in context injection](flagr_injected_context.md)
     - [Debug console](flagr_debugging.md)
-    - [API reference 🔗](https://openflagr.github.io/flagr/api_docs)
-    - Client SDKs 🔗
-        - [Go 🔗](https://github.com/openflagr/goflagr)
-        - [JavaScript 🔗](https://github.com/openflagr/jsflagr)
-        - [Python 🔗](https://github.com/openflagr/pyflagr)
-        - [Ruby 🔗](https://github.com/openflagr/rbflagr)
+    - [API reference](https://openflagr.github.io/flagr/api_docs)
+    - Client SDKs
+        - [Go](https://github.com/openflagr/goflagr)
+        - [JavaScript](https://github.com/openflagr/jsflagr)
+        - [Python](https://github.com/openflagr/pyflagr)
+        - [Ruby](https://github.com/openflagr/rbflagr)
 
 - Deploy & config
     - [Self-hosting](flagr_self_host.md)
