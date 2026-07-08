@@ -1,15 +1,9 @@
-# Flagr Use Cases
+# Flagr use cases
 
-Feature flags, A/B tests, and dynamic configuration look like different
-problems — a kill switch, a marketing experiment, a runtime knob. But at the
-moment of decision, they all ask the same question: *given this entity, which
-experience should it get?* That is why Flagr consolidates them into one
-primitive — the **flag**. The difference between a feature flag and an
-experiment is not structural, it is operational: a feature flag cares about
-*who* is on, an experiment cares about *what they got* and *whether it
-mattered*. The instrumentation is identical; the analysis differs. This page
-shows the three patterns side by side so you can see how the same evaluation
-call serves all three.
+Feature flags, A/B tests, and dynamic config look like three products. In Flagr they are one **flag** and one **`POST /evaluation`**. This page follows that single primitive as it grows: from a kill switch that flips a code path on or off, through a targeted rollout, into an A/B experiment that measures which variant wins, and finally into a dynamic-config carrier that ships values instead of booleans. Every step adds capability to the same flag — no new service, no new client call, no schema migration. The shape of the decision changes; the call does not.
+
+A kill switch cares about *who is on*. An experiment cares about *what they saw* and whether it converted — same instrumentation, different analytics ([exposures](flagr_exposure.md) + your warehouse).
+
 
 > **Note:** The pseudocode below uses the actual API response field names —
 > `variantID`, `variantKey`, and `variantAttachment` (camelCase), as returned
@@ -148,22 +142,21 @@ There is **no single HTTP standard** that mandates **2048** or **8192** for ever
 
 CDNs and browsers cache GET by full URL. Use **stable JSON serialization** (consistent key order, no pretty-print) so equivalent requests share a cache key — and only when caching is safe for your data.
 
+```bash
+curl -sS -X POST "http://localhost:18000/api/v1/evaluation" \
+  -H 'Content-Type: application/json' \
+  -d '{"entityID":"user-1","entityType":"user","entityContext":{"tier":"premium"},"flagKey":"my-feature"}'
+```
+
+Response field names are camelCase: **`variantKey`**, **`variantAttachment`**, **`evalContext`**.
+
 ## Feature flagging
 
-A feature flag is the simplest decision in software: should this code path
-run, or not? The most familiar shape is the **kill switch** — a globally
-visible "off" you can throw the instant a deploy goes wrong, without
-redeploying or paging an engineer to roll back. But the same mechanism
-generalizes to **targeted rollouts**: turn a feature on for internal users
-first, then a single region, then everyone. The key property is that *deploy*
-and *release* become independent — you can ship code to production hours
-before any user sees it.
+The simplest decision in software is *should this code path run?* A feature flag is that decision, externalized so you can change the answer without redeploying. The most familiar shape is the **kill switch** — a globally visible "off" you can throw the instant a deploy goes wrong, without paging an engineer to roll back. But the same mechanism generalizes immediately to **targeted rollouts**: turn a feature on for internal users first, then a single region, then everyone. The key property is that *deploy* and *release* become independent — you can ship code to production hours before any user sees it.
 
 ### The simple boolean flag (a starting template)
 
-A simple boolean flag is the template most teams start with: two variants
-(`on`/`off`) and a single segment distributing 100% to `on`. It answers the
-question "is this feature on?" — nothing more.
+A simple boolean flag is the template most teams start with: two variants (`on`/`off`) and a single segment distributing 100% to `on`. It answers the question "is this feature on?" — nothing more.
 
 ```
 Variants
@@ -178,8 +171,7 @@ Segment
     - off: 0%
 ```
 
-Given an entity (user, request, or cookie), your application evaluates the
-flag and branches on the assigned variant:
+Given an entity (user, request, or cookie), your application evaluates the flag and branches on the assigned variant:
 
 ```js
 evaluation_result = flagr.postEvaluation(entity)
@@ -191,68 +183,35 @@ if (evaluation_result.variantKey == "on") {
 }
 ```
 
-This is just a convention, not a special flag type. The same flag can grow
-richer as your needs evolve — without changing your application code:
+This is just a convention, not a special flag type. The same flag can grow richer as your needs evolve — without changing your application code:
 
-- **Target a specific audience** — add constraints to the segment
-  (`state == "CA"`, `tier == "beta"`). Now `on` reaches only California users.
-- **Roll out gradually** — lower the rollout percent to 10%, then 50%, then
-  100%. Same flag, same variants, wider audience over time.
-- **Run an experiment** — add more variants and split the distribution
-  (`33/33/34`). The boolean flag becomes an A/B test.
-- **Serve dynamic config** — attach JSON to each variant
-  (`{"color": "#42b983"}`). The flag now carries configuration, not just on/off.
+- **Target a specific audience** — add constraints to the segment (`state == "CA"`, `tier == "beta"`). Now `on` reaches only California users.
+- **Roll out gradually** — lower the rollout percent to 10%, then 50%, then 100%. Same flag, same variants, wider audience over time.
+- **Run an experiment** — add more variants and split the distribution (`33/33/34`). The boolean flag becomes an A/B test.
+- **Serve dynamic config** — attach JSON to each variant (`{"color": "#42b983"}`). The flag now carries configuration, not just on/off.
 
-Every flag also has a top-level `enabled` toggle — separate from the variant
-pattern above. When `enabled` is `false`, the evaluator returns a blank result
-immediately, short-circuiting before any segment logic runs
-(`PUT /api/v1/flags/{id}/enabled` or the UI status switch). Use it as a global
-kill switch to turn off the entire flag regardless of segments or distributions.
+Every flag also has a top-level `enabled` toggle — separate from the variant pattern above. When `enabled` is `false`, the evaluator returns a blank result immediately, short-circuiting before any segment logic runs (`PUT /api/v1/flags/{id}/enabled` or the UI status switch). Use it as a global kill switch to turn off the entire flag regardless of segments or distributions.
 
 ![feature flagging setting demo](/images/demo_ff.png)
 
-To copy an existing flag’s segments, variants, and tags into a new flag (for example
-to fork an experiment or reuse a rollout pattern), use **`POST /api/v1/flags/{flagID}/duplicate`**
-or **Duplicate Flag** on the flag detail page in the UI. The clone gets a new key and
-` (cloned)` in the description by default; optional `key` and `description` in the API
-body override those defaults.
+To copy an existing flag’s segments, variants, and tags into a new flag (for example to fork an experiment or reuse a rollout pattern), use **`POST /api/v1/flags/{flagID}/duplicate`** or **Duplicate Flag** on the flag detail page in the UI. The clone gets a new key and ` (cloned)` in the description by default; optional `key` and `description` in the API body override those defaults.
 
 ## Experimenting — A/B testing
 
-A feature flag answers *on or off?* An experiment answers a harder question:
-*which of these is better?* To answer it you expose different variants to
-different slices of your audience and measure outcomes. Flagr's job is the
-exposure half — deterministic, sticky assignment so the same user always sees
-the same treatment. The measurement half (conversion rates, significance) is
-yours; Flagr emits the events but does not compute the verdict.
+So far the flag answers a binary question: *on or off?* The moment you add a second `on`-like variant and split the audience between them, the question shifts to *which of these is better?* That is the jump from feature flagging to experimentation — and it is the same flag, evaluated by the same `POST /evaluation`, only with more variants and a finer distribution. Flagr's job is the exposure half: deterministic, sticky assignment so the same user always sees the same treatment. The measurement half (conversion rates, significance) is yours; Flagr emits the events but does not compute the verdict.
 
 ### Variants in experiments: control and treatment
 
-The names `control` and `treatment` are **convention, not a Flagr contract**.
-Flagr treats every variant the same — `control` is no more special than `on`,
-`green`, or `version_b`. The convention comes from experimentation methodology:
+The names `control` and `treatment` are **convention, not a Flagr contract**. Flagr treats every variant the same — `control` is no more special than `on`, `green`, or `version_b`. The convention comes from experimentation methodology:
 
-- **Control** — the *baseline* experience. Usually the current production
-  behavior. This is what you compare against. If your experiment is "new
-  checkout button," control is the existing button.
-- **Treatment** — the *change* you are testing. There can be one or many:
-  `treatment1`, `treatment2`, `treatment3`. Each is a distinct alternative
-  you're measuring against the control.
+- **Control** — the *baseline* experience. Usually the current production behavior. This is what you compare against. If your experiment is "new checkout button," control is the existing button.
+- **Treatment** — the *change* you are testing. There can be one or many: `treatment1`, `treatment2`, `treatment3`. Each is a distinct alternative you're measuring against the control.
 
-The distinction matters in your **analytics**, not in Flagr. When you group
-exposure rows by `variantKey` in your warehouse, the control group is your
-baseline conversion rate; each treatment's rate is compared against it to
-measure lift. If you have no control (e.g. testing two brand-new designs),
-pick one variant as the reference — but the convention of naming a baseline
-"control" makes the analysis self-documenting.
+The distinction matters in your **analytics**, not in Flagr. When you group exposure rows by `variantKey` in your warehouse, the control group is your baseline conversion rate; each treatment's rate is compared against it to measure lift. If you have no control (e.g. testing two brand-new designs), pick one variant as the reference — but the convention of naming a baseline "control" makes the analysis self-documenting.
 
-> **Note:** Flagr does not enforce that a flag has a control variant. You can
-> run a flag with only treatments, or with no variant named "control" at all.
-> The names are for you and your analytics pipeline; Flagr only assigns and
-> records the `variantKey` you configured.
+> **Note:** Flagr does not enforce that a flag has a control variant. You can run a flag with only treatments, or with no variant named "control" at all. The names are for you and your analytics pipeline; Flagr only assigns and records the `variantKey` you configured.
 
-To run an A/B test across several variants with a targeted audience, instrument
-the code the same way and branch on the assigned variant:
+To run an A/B test across several variants with a targeted audience, instrument the code the same way and branch on the assigned variant:
 
 ```js
 evaluation_result = flagr.postEvaluation(entity)
@@ -268,9 +227,7 @@ if (evaluation_result.variantKey == "control") {
 }
 ```
 
-> **Warning:** Segment order matters. An entity falls into the **first**
-> segment whose constraints **all** match. List targeted segments before broad
-> ones.
+> **Warning:** Segment order matters. An entity falls into the **first** segment whose constraints **all** match. List targeted segments before broad ones.
 
 A typical A/B test flag in the UI:
 
@@ -305,25 +262,13 @@ Segment                         // state == "NY" AND age >= 21
 
 ### Measuring experiment outcomes
 
-Assignment from `POST /evaluation` is **not** enough to measure conversion —
-you need **impression** events. Use
-[Exposure Logging](flagr_exposure.md) when the user actually sees the
-treatment, then
-[Data Recorders & A/B Analysis](flagr_eval_exposure_pipeline.md) (or your own
-consumer on Kafka/Kinesis/Pub/Sub) to build denominators and join to business
-metrics. For quick **eval volume** only, see [Datar](flagr_datar.md).
+Assignment from `POST /evaluation` is **not** enough to measure conversion — you need **impression** events. Use [Exposure logging](flagr_exposure.md) when the user actually sees the treatment, then [Data recorders & A/B analysis](flagr_eval_exposure_pipeline.md) (or your own consumer on Kafka/Kinesis/Pub/Sub) to build denominators and join to business metrics. For quick **eval volume** only, see [Datar analytics](flagr_datar.md).
 
 ## Dynamic configuration
 
-Sometimes the decision isn't *which experience* but *what value* — the
-threshold for a cache, the copy on a button, the timeout for a retry. You
-could redeploy for each change, or you can let the variant carry the value.
-A variant's **Attachment** is an arbitrary JSON object delivered alongside the
-`variantKey`, so your code reads a configuration value the same way it reads
-an assignment — no second fetch, no separate config service, no restart.
+The progression ends where the flag stops deciding *which experience* and starts carrying *what value* — the threshold for a cache, the copy on a button, the timeout for a retry. You could redeploy for each change, or you can let the variant carry the value. A variant's **Attachment** is an arbitrary JSON object delivered alongside the `variantKey`, so your code reads a configuration value the same way it reads an assignment — no second fetch, no separate config service, no restart. The evaluation call is identical to the kill switch you started with; only the shape of what comes back has widened.
 
-Use a variant's **Attachment** (an arbitrary JSON object) to carry dynamic
-configuration:
+Use a variant's **Attachment** (an arbitrary JSON object) to carry dynamic configuration:
 
 ```js
 evaluation_result = flagr.postEvaluation(entity)
@@ -349,8 +294,4 @@ Segment
 
 ![dynamic configuration demo](/images/demo_dynamic_configuration.png)
 
-> **Note:** Prior to [v1.1.3](https://github.com/openflagr/flagr/releases/tag/1.1.3),
-> attachments supported only `string:string` key/value pairs. Current Flagr
-> stores attachments as `map[string]any`, so arbitrary JSON values are
-> supported. (The historical boundary is documented in the GitHub release
-> notes; the in-repo `CHANGELOG.md` links there.)
+> **Note:** Prior to [v1.1.3](https://github.com/openflagr/flagr/releases/tag/1.1.3), attachments supported only `string:string` key/value pairs. Current Flagr stores attachments as `map[string]any`, so arbitrary JSON values are supported. (The historical boundary is documented in the GitHub release notes; the in-repo `CHANGELOG.md` links there.)

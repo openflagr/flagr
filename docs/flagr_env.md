@@ -1,99 +1,109 @@
-# Server Configuration
+# Server configuration
 
-Flagr is a single binary with no external runtime dependencies beyond its
-database (and even that is optional). It follows the twelve-factor principle
-of **configuration via the environment**: every knob — database driver, auth
-strategy, recorder backends, cache intervals — is an environment variable,
-parsed once at startup into a single config struct. There are no YAML files,
-no config databases, no hot-reload daemons. This makes Flagr trivial to run
-in a container, easy to configure via Kubernetes secrets, and identical
-across environments when the env vars match. See
-[env.go](https://github.com/openflagr/flagr/blob/master/pkg/config/env.go)
-for the full list.
+Flagr ships with **no config file**. Every knob the server understands is an environment variable read at startup, bound to a single struct in the codebase. That struct is the source of truth: when this page and the code disagree, the code wins. So this page shows the full source first — every `env` tag, default, and comment — and then offers a short guide for the variables you actually touch in common deployments. If a variable isn't mentioned in the guide, it's still in the source above, usually because it's a niche tuning knob or a default that rarely needs changing.
 
-[env.go](https://raw.githubusercontent.com/openflagr/flagr/master/pkg/config/env.go ':include :type=code')
+For deployment recipes — Docker, Compose, Kubernetes — see [Self-hosting](flagr_self_host.md).
+
+---
+
+## Source (`pkg/config/env.go`) :id=source-pkgconfigenvgo
+
+The block below is the live source from the `main` branch, embedded directly. On feature branches, compare against your own checkout until it merges. You can also open it on GitHub.
+
+[Open on GitHub](https://github.com/openflagr/flagr/blob/main/pkg/config/env.go)
+
+[env.go](https://raw.githubusercontent.com/openflagr/flagr/main/pkg/config/env.go ':include :type=code')
+
+---
+
+## Quick start
+
+The fastest path to a running server is the [Self-hosting](flagr_self_host.md) guide, which covers Docker, Compose, and Kubernetes. If you just want the minimal environment for a MySQL-backed server, copy these four variables and go:
 
 ```sh
-# Example: set the database driver
+export HOST=0.0.0.0
+export PORT=18000
 export FLAGR_DB_DBDRIVER=mysql
-# Sets Config.DBDriver = "mysql" at runtime
+export FLAGR_DB_DBCONNECTIONSTR='user:pass@tcp(127.0.0.1:3306)/flagr?parseTime=true'
 ```
 
-## Database drivers
+If you'd rather serve flags from a static JSON file or URL with no database at all, set `FLAGR_DB_DBDRIVER` to `json_file` or `json_http`. That puts the server into eval-only mode automatically — see [contracts — eval-only](contracts.md#eval-only) and the [JSON flag source](flagr_json_flag_spec.md) spec.
 
-The driver chooses where flag state lives. For production you'll use MySQL or
-PostgreSQL — a durable, shared store that survives restarts and scales across
-instances. For local development SQLite needs no external process. The two
-`json_*` drivers are a different mode entirely: they skip the database and
-load flags from a file or URL, turning Flagr into an eval-only engine for
-GitOps workflows where Git is the source of truth.
+---
 
-| Driver | Use case |
-|--------|----------|
-| `sqlite3` | Development and testing (default, no external deps) |
-| `mysql` | Production MySQL |
-| `postgres` | Production PostgreSQL |
-| `json_file` | Load flags from a local JSON file ([format spec](flagr_json_flag_spec.md)) |
-| `json_http` | Load flags from a URL (CI artifact, S3, GCS) |
+## Guide
 
-For JSON-based workflows (GitOps, eval-only mode), see the
-[JSON Flag Source](flagr_json_flag_spec.md) guide.
+### Server & HTTP
 
-### Eval-only mode and export
+The first group of variables governs how the process binds, what it serves, and what it logs. Most of these defaults are sane for development; the only ones operators commonly touch in production are the log format (switch to `json` for structured ingestion) and the UI toggle (turn it off for a pure API backend).
 
-In eval-only mode (`json_file` or `json_http` drivers), Flagr only exposes
-the evaluation API — no CRUD operations. The eval cache export endpoint is
-available in this mode, allowing replicas to export their local cache:
+| Variable | Default | Notes |
+|----------|---------|--------|
+| `HOST` / `PORT` | `localhost` / `18000` | Bind address |
+| `FLAGR_WEB_PREFIX` | *(empty)* | UI + API base path |
+| `FLAGR_UI_ENABLED` | `true` | `false` = API-only |
+| `FLAGR_LOGRUS_LEVEL` / `FORMAT` | `info` / `text` | Use `json` in production |
+| `FLAGR_PPROF_ENABLED` | `true` | pprof endpoints |
+| `FLAGR_MIDDLEWARE_VERBOSE_LOGGER_*` | on | Exclude hot paths via `…_EXCLUDE_URLS` |
+| `FLAGR_MIDDLEWARE_GZIP_ENABLED` | `true` | |
 
-```sh
-# Export all flags from eval cache
-GET /api/v1/export/eval_cache/json
+CORS is its own family of variables under `FLAGR_CORS_*` — enabled by default with permissive origins. The full list (allowed headers, methods, origins, credentials, max age) lives in the source above; tune it only if you're locking down a browser-facing deployment.
 
-# Export only enabled flags
-GET /api/v1/export/eval_cache/json?enabled=true
+### Evaluation & cache
 
-# Export flags with specific tags (ANY - has either tag)
-GET /api/v1/export/eval_cache/json?tags=team-a,team-b
+Evaluation requests never hit the database directly. They read from an in-memory cache that the server rebuilds on a fixed interval, so the two variables that matter most here are the reload cadence and the per-fetch timeout. A third, debug, only takes effect when an evaluation request also sets `enableDebug: true` — it's a global gate on per-request segment logging, documented in the [Debug console](flagr_debugging.md) page. The batch-size caps are guardrails against oversized requests rather than tuning knobs.
 
-# Export flags with specific tags (ALL - has both tags)
-GET /api/v1/export/eval_cache/json?tags=team-a,team-b&tagsOperator=ALL
-```
+| Variable | Default | Notes |
+|----------|---------|--------|
+| `FLAGR_EVALCACHE_REFRESHINTERVAL` | `3s` | EvalCache reload period |
+| `FLAGR_EVALCACHE_REFRESHTIMEOUT` | `59s` | Single fetch timeout |
+| `FLAGR_EVAL_DEBUG_ENABLED` | `true` | + `enableDebug` on request → segment logs ([Debug console](flagr_debugging.md)) |
+| `FLAGR_EVAL_BATCH_SIZE` | `0` | `0` = unlimited batch eval (POST and GET batch) |
+| `FLAGR_EVAL_GET_MAX_URL_BYTES` | `8192` | GET `json=` query cap; `0` = off — [use cases](flagr_use_cases.md#get-evaluation-browser-friendly) |
+| `FLAGR_EXPOSURE_BATCH_SIZE` | `100` | Max rows per `POST /exposures` |
 
-The `tagsOperator` parameter controls tag matching:
-- `ANY` (default): returns flags that have **any** of the specified tags
-- `ALL`: returns flags that have **all** of the specified tags
+Because the cache is eventually consistent, a flag change won't be visible to evaluators until the next reload lands — and until it does, **`variantKey`** comes back blank for affected entities. That staleness window is a contract, not a bug; see [EvalCache freshness](contracts.md#evalcache-freshness) for why automated tests should wait at least one interval before asserting on new configuration.
 
-This matches the `flagTagsOperator` parameter used in the evaluation batch API.
+There's also an explicit `FLAGR_EVAL_ONLY_MODE` flag, though in practice eval-only is usually implied: whenever the database driver is `json_file` or `json_http`, the server enters eval-only mode on its own.
 
-This is useful for read-only replicas that need to expose their cached flag
-state without hitting the master database. See the
-[EvalCache Query Filter](plans/2026-07-03-001-eval-cache-query-filter.md) plan
-for full API documentation.
+### Database
 
-### Evaluation limits (POST and GET)
+Two variables decide where flags live: the driver and the connection string. The defaults give you a local SQLite file, which is enough for development and tests. Production wants MySQL or Postgres, and the JSON drivers exist for read-only evaluation from a file or remote URL.
 
-`FLAGR_EVAL_BATCH_SIZE` (default **0** = disabled) caps total evaluations per
-batch request for both `POST` and `GET /api/v1/evaluation/batch`.
+`FLAGR_EVAL_GET_MAX_URL_BYTES` (default **8192**, **0** = disabled) caps the **raw query string** on `GET /api/v1/evaluation` and batch GET. POST-vs-GET security, proxy limits, and examples: [Use cases — GET evaluation](flagr_use_cases.md#get-evaluation-browser-friendly).
 
-`FLAGR_EVAL_GET_MAX_URL_BYTES` (default **8192**, **0** = disabled) caps the
-**raw query string** length on `GET /api/v1/evaluation` and
-`GET /api/v1/evaluation/batch`. At default **8192**, an evalContext with a
-**8033**-character ASCII `entityContext.blob` fills the limit; **8034** chars
-returns **400**. GET puts the full request in the URL — see **Security and
-validation** and **How other stacks enforce URL / header size** in
-[Use Cases — GET evaluation](flagr_use_cases.md#get-evaluation-browser-friendly).
-Examples and POST-vs-GET guidance: same section.
+#### Built-in context injection
 
-## Authentication
+| Variable | Default | Notes |
+|----------|---------|--------|
+| `FLAGR_INJECTED_CONTEXT_ENABLED` | `false` | Merge `@ts*` and `@http_*` into `entityContext` before eval |
+| `FLAGR_INJECTED_CONTEXT_HTTP_HEADERS` | `""` | Comma-separated headers → `@http_*` keys |
+| `FLAGR_INJECTED_CONTEXT_HTTP_HEADER_PREFIXES` | `""` | Prefix match (e.g. `CF-` for Cloudflare) |
 
-By default Flagr's API is open — convenient for a local dev instance behind a
-firewall, dangerous in production. Flagr ships two opt-in auth layers: **Basic
-Auth** for the web UI, and **JWT** for API consumers. Both use *whitelists*
-rather than blanket protection: every path requires credentials *except*
-those you explicitly open. This lets you keep evaluation public (so your app
-can call it without tokens) while guarding flag mutations behind auth.
+Full guide: [Built-in context injection](flagr_injected_context.md).
 
-### Basic Auth (web interface)
+
+
+| Variable | Default |
+|----------|---------|
+| `FLAGR_DB_DBDRIVER` | `sqlite3` |
+| `FLAGR_DB_DBCONNECTIONSTR` | `flagr.sqlite` |
+
+| Driver | Role |
+|--------|------|
+| `sqlite3` | Local dev (default) |
+| `mysql` / `postgres` | Production |
+| `json_file` / `json_http` | Flags from file or URL ([JSON spec](flagr_json_flag_spec.md)) |
+
+#### Eval cache export :id=eval-cache-export
+
+A running server can dump its in-memory cache as JSON, which is useful for debugging, seeding another instance, or snapshotting what evaluators actually see. The endpoint is `GET /api/v1/export/eval_cache/json`, and it accepts optional `enabled`, `ids`, `keys`, `tags`, and `tagsOperator` (`ANY` / `ALL`) query parameters to narrow the dump.
+
+### Authentication
+
+Authentication is off by default, so a freshly started server is open until you turn something on. Flagr supports two layers that can be used independently: basic auth, which guards the UI, and JWT auth, which guards the API. Both layers let you whitelist paths so hot evaluation traffic doesn't have to authenticate — and both ship with defaults that leave `/api/v1/evaluation` and `/api/v1/exposures` open, so turning auth on won't break your integration.
+
+A minimal basic-auth setup is three variables:
 
 ```sh
 FLAGR_BASIC_AUTH_ENABLED=true
@@ -101,154 +111,56 @@ FLAGR_BASIC_AUTH_USERNAME=admin
 FLAGR_BASIC_AUTH_PASSWORD=password
 ```
 
-UI access prompts for username/password. API paths can be whitelisted to skip
-auth:
+JWT is richer. The variables cover enabling it (`FLAGR_JWT_AUTH_ENABLED`), the shared secret or PEM key (`FLAGR_JWT_AUTH_SECRET`), the signing method (`HS256` / `HS512` / `RS256`), and a set of prefix and exact whitelist paths. All of them are in the source above. JWT tokens can arrive by cookie or by `Authorization: Bearer` header; when both are present, the header wins.
 
-```sh
-FLAGR_BASIC_AUTH_WHITELIST_PATHS="/api/v1/flags,/api/v1/evaluation"
-FLAGR_BASIC_AUTH_EXACT_WHITELIST_PATHS=""
-```
+Separately, Flagr can identify *who* made a mutation for audit logging without doing full authentication. `FLAGR_HEADER_AUTH_*` reads a user identifier from a header (handy behind a corporate proxy), and `FLAGR_COOKIE_AUTH_*` reads one from a cookie (handy behind something like Cloudflare Zero Trust). These stamp `created_by` / `updated_by` on changes; they don't gate access.
 
-- `WHITELIST_PATHS` uses **prefix** matching (`/api/v1/flags` matches
-  `/api/v1/flags/123`).
-- `EXACT_WHITELIST_PATHS` uses exact path equality.
+One thing worth calling out: the default JWT whitelist allows unauthenticated exposure logging. If the integrity of your impression stream matters, narrow the whitelist to lock down `/api/v1/exposures` and rate-limit it at the edge. The [Exposure logging](flagr_exposure.md) page walks through the tradeoffs.
 
-> **Note:** The **default** `FLAGR_BASIC_AUTH_WHITELIST_PATHS` is
-> `/api/v1/health,/api/v1/flags,/api/v1/evaluation,/api/v1/exposures`, so by
-> default the flag, evaluation, and exposure endpoints bypass basic auth.
-> Basic auth applies to **every** path; only whitelisted paths skip it.
-> Remove entries from the whitelist to require credentials on those API paths.
+### Data recorders :id=data-record-destinations
 
-### JWT Auth
+Recording is opt-in by design — it always costs something, so Flagr makes you ask for each layer explicitly. The master switch is `FLAGR_RECORDER_ENABLED`, which defaults to `false`. Even with it on, nothing streams until each flag also sets **`dataRecordsEnabled: true`** in its own configuration. Those two gates cascade the same way for every recorder type.
 
-Flagr supports JWT-based authentication for API access. Configure the signing
-key and algorithm via environment variables. Key options (see
-[env.go](https://github.com/openflagr/flagr/blob/master/pkg/config/env.go) for
-the full list):
+`FLAGR_RECORDER_TYPE` selects which recorder(s) run, and it's a comma-separated list so you can combine them.
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `FLAGR_JWT_AUTH_ENABLED` | `false` | Enable JWT auth |
-| `FLAGR_JWT_AUTH_SECRET` | — | HMAC signing secret (`HS256`/`HS512`) or PEM-encoded RSA public key (`RS256`) |
-| `FLAGR_JWT_AUTH_SIGNING_METHOD` | `HS256` | `HS256`, `HS512`, or `RS256` |
-| `FLAGR_JWT_AUTH_WHITELIST_PATHS` | `/api/v1/health,/api/v1/evaluation,/api/v1/exposures,/static` | Prefix-whitelisted paths (open when JWT auth is on) |
-| `FLAGR_JWT_AUTH_EXACT_WHITELIST_PATHS` | `/,` | Exact-whitelisted paths |
-| `FLAGR_JWT_AUTH_NO_TOKEN_STATUS_CODE` | `307` | Status when no token is present |
-| `FLAGR_JWT_AUTH_NO_TOKEN_REDIRECT_URL` | — | Optional redirect URL |
+| `FLAGR_RECORDER_TYPE` | Doc |
+|------------------------|-----|
+| `kafka`, `kinesis`, `pubsub` | Eval + exposure stream — [Recorders & A/B](flagr_eval_exposure_pipeline.md) |
+| `datar` | In-process eval counts only — [Datar](flagr_datar.md) (no exposures) |
 
-## Data record destinations
+The streaming recorders ship eval and exposure rows to a broker; Datar keeps in-process evaluation counts and flushes them to the database on an interval. Combining `kafka,datar` is a common pattern — a live stream for analytics plus cheap counts for dashboards. The `FLAGR_RECORDER_FRAME_OUTPUT_MODE` variable controls how each row is framed: `payload_string` stringifies the payload (and respects encryption), while `payload_raw_json` emits the raw object (and ignores encryption).
 
-Evaluation produces a decision; analytics needs a stream of *what happened*.
-Flagr can emit **evaluation** and **exposure** rows to one or more backends —
-the same event, fanned out to every recorder you enable. This is opt-in for a
-reason: recording adds load, and not every flag needs analytics. You turn it
-on globally with `FLAGR_RECORDER_ENABLED=true`, then per-flag with
-`dataRecordsEnabled: true`, so a noisy internal flag never floods your
-Kafka topic while your production experiments stream cleanly.
-
-| Goal | Doc |
-|------|-----|
-| Exposure API (`POST /exposures`) | [Exposure Logging](flagr_exposure.md) |
-| Stream eval + exposure to your pipeline (Kafka, Kinesis, or Pub/Sub) + A/B patterns | [Data Recorders & A/B Analysis](flagr_eval_exposure_pipeline.md) |
-| Built-in eval counts only (no stream, no exposures) | [Datar Analytics](flagr_datar.md) |
-
-Exposure rows use `recordSource: "exposure"` on the same wire shape as
-evaluations. `FLAGR_EXPOSURE_BATCH_SIZE` (default **100**) caps rows per
-exposure request.
-
-Set `FLAGR_RECORDER_TYPE` to a comma-separated list (e.g. `kafka`,
-`kafka,datar`). Default: `kafka`.
-
-### Kafka (default)
+The minimal Kafka setup is four variables:
 
 ```sh
 FLAGR_RECORDER_ENABLED=true
 FLAGR_RECORDER_TYPE=kafka
-FLAGR_RECORDER_KAFKA_BROKERS=kafka1:9092,kafka2:9092
+FLAGR_RECORDER_KAFKA_BROKERS=kafka1:9092
 FLAGR_RECORDER_KAFKA_TOPIC=flagr-records
 ```
 
-Additional Kafka options include SSL/TLS (`FLAGR_RECORDER_KAFKA_CERTFILE`,
-`FLAGR_RECORDER_KAFKA_KEYFILE`, `FLAGR_RECORDER_KAFKA_CAFILE`), SASL
-authentication (`FLAGR_RECORDER_KAFKA_SASL_USERNAME`,
-`FLAGR_RECORDER_KAFKA_SASL_PASSWORD`), idempotent producers, and encryption.
-See [env.go](https://github.com/openflagr/flagr/blob/master/pkg/config/env.go)
-for the full list.
+Everything else under `FLAGR_RECORDER_*` — broker TLS and SASL, compression, Kinesis batch tuning, Pub/Sub credentials — is in the source above. Those knobs exist for production hardening; the defaults are meant to get a row onto a topic, not to survive a misconfigured cluster.
 
-For consuming eval and exposure events (any streaming recorder) and A/B
-analysis, see [Data Recorders & A/B Analysis](flagr_eval_exposure_pipeline.md).
+### Webhooks
 
-### Kinesis (AWS)
+Flagr can fire a webhook whenever a flag changes, which is how teams wire approvals, audit trails, or cache invalidation downstream. The webhook provider is one part of the notification system: you enable it, point it at a URL, give it headers, and it retries with exponential backoff. There's also a toggle for detailed diffs, so the payload can include exactly which fields changed before and after. The full variable set and the retry semantics are on the [Notifications](flagr_notifications.md) page.
 
-Authenticate with standard AWS methods:
+### Observability
 
-```sh
-AWS_ACCESS_KEY_ID=example123
-AWS_SECRET_ACCESS_KEY=example123
-AWS_DEFAULT_REGION=eu-central-1
-```
+The last group is how you watch the server once it's running. Flagr exports metrics in three shapes — Prometheus scrape, Statsd push, and two hosted APMs — and you typically pick one rather than stacking them.
 
-Other options include credentials files, container credentials, and instance
-profiles. See the
-[AWS documentation](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#config-settings-and-precedence).
+| Area | Switch |
+|------|--------|
+| Prometheus | `FLAGR_PROMETHEUS_ENABLED`, `FLAGR_PROMETHEUS_PATH` |
+| Statsd | `FLAGR_STATSD_ENABLED`, host/port/prefix |
+| Sentry / New Relic | `FLAGR_SENTRY_ENABLED`, `FLAGR_NEWRELIC_ENABLED` |
 
-Make sure the IAM key has permissions to push records to the Kinesis stream.
+Prometheus is the default choice for Kubernetes; Statsd suits traditional infrastructure; Sentry and New Relic are for error tracking and distributed tracing respectively. Each family has its own tuning variables in the source above — latency histograms for Prometheus, APM ports for Statsd, DSNs and app names for the hosted services.
 
-Kinesis and Pub/Sub use the same **record frame** as Kafka for both evaluation
-and exposure rows. See
-[Data Recorders & A/B Analysis](flagr_eval_exposure_pipeline.md).
+---
 
-### Pub/Sub (Google Cloud)
+## Maintaining this page
 
-For development:
+When you add or change variables in `pkg/config/env.go`, update the **guide** tables here only if operators need a one-line summary; the embedded **source** updates automatically on merge to `main`.
 
-```sh
-gcloud auth application-default login
-```
 
-For production, create a service account and point to the key file:
-
-```sh
-FLAGR_RECORDER_PUBSUB_PROJECT_ID=google-project-id
-FLAGR_RECORDER_PUBSUB_KEYFILE=/path/to/service/account.json
-FLAGR_RECORDER_PUBSUB_TOPIC_NAME=flagr-records
-```
-
-Alternatively, set `GOOGLE_APPLICATION_CREDENTIALS` (this affects all Google
-services in the environment).
-
-### Datar (built-in analytics)
-
-Datar is an optional in-memory aggregate analytics engine. List `datar` in
-`FLAGR_RECORDER_TYPE` alongside other recorders, or use it alone for a
-zero-dependency analytics setup:
-
-```sh
-FLAGR_RECORDER_ENABLED=true
-FLAGR_RECORDER_TYPE=datar
-FLAGR_RECORDER_DATAR_FLUSH_INTERVAL=60s
-```
-
-See [Datar Analytics](flagr_datar.md) for endpoint documentation, data model,
-and resource usage.
-
-## Built-in context injection
-
-Flagr can inject server-side and HTTP request metadata into every
-evaluation's `entityContext`. This enables time-based scheduling,
-environment scoping, and header-based targeting without application changes.
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `FLAGR_INJECTED_CONTEXT_ENABLED` | `false` | Enable built-in context injection |
-| `FLAGR_INJECTED_CONTEXT_HTTP_HEADERS` | `""` | Comma-separated header names to expose as `@http_*` keys |
-| `FLAGR_INJECTED_CONTEXT_HTTP_HEADER_PREFIXES` | `""` | Comma-separated prefixes for auto-injecting headers |
-
-```sh
-# Example: enable injection with environment header
-FLAGR_INJECTED_CONTEXT_ENABLED=true
-FLAGR_INJECTED_CONTEXT_HTTP_HEADERS="X-Environment,X-Tenant-ID"
-```
-
-See [Built-in Context Injection](flagr_injected_context.md) for full
-documentation, real-world examples, and configuration details.

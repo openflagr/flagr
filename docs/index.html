@@ -9,18 +9,449 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, minimum-scale=1.0"
     />
-    <link rel="icon" href="images/favicon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
     <link
       rel="stylesheet"
       href="//cdn.jsdelivr.net/npm/docsify@4.13.1/lib/themes/vue.css"
     />
     <style>
       :root {
-        --theme-color: #2e4960;
+        --flagr-bg: #f6f8fa;
+        --flagr-surface: #ffffff;
+        --flagr-sidebar: #f0f4f8;
+        --flagr-border: rgba(15, 23, 42, 0.08);
+        --flagr-border-strong: rgba(15, 23, 42, 0.12);
+        --flagr-text: #3d4f5f;
+        --flagr-heading: #0f1c2e;
+        --flagr-muted: #64748b;
+        --flagr-accent: #1a6b7a;
+        --flagr-accent-soft: #5ec4c0;
+        --flagr-code-bg: #eef2f6;
+        --theme-color: var(--flagr-accent);
+        --font-sans: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+        --content-max: 58rem;
+        --sidebar-width: 17.5rem;
+        --radius-sm: 6px;
+        --radius-md: 10px;
+        --shadow-soft: 0 1px 2px rgba(15, 23, 42, 0.04),
+          0 8px 24px -12px rgba(15, 23, 42, 0.08);
       }
 
-      img {
-        margin-top: 1rem;
+      html,
+      body {
+        background: var(--flagr-bg);
+        color: var(--flagr-text);
+        font-family: var(--font-sans);
+        font-size: 16px;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      body.sticky .sidebar,
+      .sidebar {
+        background: var(--flagr-sidebar);
+        border-right: 1px solid var(--flagr-border);
+        width: var(--sidebar-width);
+      }
+
+      .sidebar .app-name {
+        font-size: 0.95rem;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        color: var(--flagr-heading);
+        margin: 1.25rem 1.25rem 0.75rem;
+        padding: 0;
+      }
+
+      .sidebar .app-name-link:hover {
+        text-decoration: none;
+        color: var(--flagr-accent);
+      }
+
+      .sidebar-nav {
+        padding: 0.5rem 0.75rem 2rem;
+      }
+
+      .sidebar-nav li {
+        margin: 0.15rem 0;
+      }
+
+      .sidebar-nav > ul > li > a,
+      .sidebar-nav ul li a {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--flagr-muted);
+        border-radius: var(--radius-sm);
+        padding: 0.4rem 0.65rem;
+        line-height: 1.3;
+        text-decoration: none;
+        border-bottom: none;
+        transition: color 0.2s ease, background 0.2s ease;
+      }
+
+      .sidebar-nav li.active > a,
+      .sidebar-nav ul li.active > a {
+        color: var(--flagr-accent);
+        background: rgba(26, 107, 122, 0.08);
+        font-weight: 600;
+      }
+
+      .sidebar-nav li.active > a,
+      .sidebar-nav ul li.active > a {
+        border-right: none !important;
+      }
+
+      .sidebar-nav > ul > li > p,
+      .sidebar-nav > ul > li > strong {
+        font-size: 0.68rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--flagr-muted);
+        margin: 1.25rem 0.65rem 0.5rem;
+        opacity: 0.85;
+      }
+
+      .sidebar-nav > ul > li:first-child > p,
+      .sidebar-nav > ul > li:first-child > strong {
+        margin-top: 0.25rem;
+      }
+
+      .sidebar-nav a:hover {
+        color: var(--flagr-heading);
+        background: rgba(15, 23, 42, 0.04);
+        text-decoration: none;
+      }
+
+      .search {
+        margin: 0 0.75rem 1rem;
+        padding: 0;
+        border: none;
+      }
+
+      .search .input-wrap {
+        background: var(--flagr-surface);
+        border: 1px solid var(--flagr-border-strong);
+        border-radius: var(--radius-md);
+        box-shadow: none;
+      }
+
+      .search input {
+        font-family: var(--font-sans);
+        font-size: 0.875rem;
+        padding: 0.55rem 0.75rem 0.55rem 2rem;
+        background: transparent;
+        color: var(--flagr-heading);
+      }
+
+      .search input::placeholder {
+        color: var(--flagr-muted);
+      }
+
+      .search .results-panel {
+        border: 1px solid var(--flagr-border-strong);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-soft);
+        margin-top: 0.35rem;
+        overflow: hidden;
+      }
+
+      .search .matching-post {
+        border-bottom: 1px solid var(--flagr-border);
+        padding: 0.65rem 0.85rem;
+        font-size: 0.8125rem;
+      }
+
+      main {
+        background: var(--flagr-bg);
+      }
+
+      .markdown-section {
+        max-width: var(--content-max);
+        padding: 2.5rem 3rem 4rem;
+        margin: 0 auto;
+      }
+
+      @media (max-width: 768px) {
+        .markdown-section {
+          padding: 1.75rem 1.25rem 3rem;
+        }
+      }
+
+      .markdown-section h1 {
+        font-size: clamp(1.75rem, 3vw, 2.125rem);
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        line-height: 1.2;
+        color: var(--flagr-heading);
+        margin: 0 0 1rem;
+        border: none;
+      }
+
+      .markdown-section h2 {
+        font-size: 1.4rem;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        color: var(--flagr-heading);
+        margin: 2.15rem 0 0.75rem;
+        padding-bottom: 0;
+        border-bottom: none;
+      }
+
+      .markdown-section h3 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--flagr-heading);
+        margin: 1.65rem 0 0.55rem;
+      }
+
+      .markdown-section h4,
+      .markdown-section h5,
+      .markdown-section h6 {
+        font-weight: 600;
+        color: var(--flagr-heading);
+        margin: 1.5rem 0 0.5rem;
+      }
+
+      .markdown-section p,
+      .markdown-section li {
+        font-size: 1rem;
+        line-height: 1.58;
+        color: var(--flagr-text);
+        margin: 0.6rem 0;
+      }
+
+      .markdown-section ul,
+      .markdown-section ol {
+        padding-left: 1.35rem;
+      }
+
+      .markdown-section a {
+        color: var(--flagr-accent);
+        font-weight: 500;
+        text-decoration: none;
+        border-bottom: none;
+        transition: color 0.15s ease;
+      }
+
+      .markdown-section a:hover {
+        color: #0d5563;
+        text-decoration: underline;
+        text-decoration-color: rgba(13, 85, 99, 0.35);
+        text-underline-offset: 2px;
+      }
+
+      .markdown-section h1 a,
+      .markdown-section h2 a,
+      .markdown-section h3 a,
+      .markdown-section h4 a,
+      .sidebar-nav a,
+      .app-sub-sidebar a {
+        text-decoration: none !important;
+        border-bottom: none !important;
+      }
+
+      .markdown-section h1 a:hover,
+      .markdown-section h2 a:hover,
+      .markdown-section h3 a:hover,
+      .markdown-section h4 a:hover {
+        text-decoration: none !important;
+      }
+
+      .markdown-section blockquote {
+        margin: 1.5rem 0;
+        padding: 0.85rem 1.15rem;
+        background: var(--flagr-surface);
+        border-left: 3px solid var(--flagr-accent-soft);
+        border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+        color: var(--flagr-muted);
+        box-shadow: var(--shadow-soft);
+      }
+
+      .markdown-section blockquote p {
+        margin: 0.35rem 0;
+      }
+
+      .markdown-section table {
+        display: table;
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        margin: 1.5rem 0;
+        font-size: 0.9rem;
+        border: 1px solid var(--flagr-border-strong);
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        box-shadow: var(--shadow-soft);
+        background: var(--flagr-surface);
+      }
+
+      .markdown-section thead {
+        background: #e8eef3;
+      }
+
+      .markdown-section th {
+        font-weight: 600;
+        color: var(--flagr-heading);
+        text-align: left;
+        padding: 0.65rem 1rem;
+        border-bottom: 1px solid var(--flagr-border-strong);
+      }
+
+      .markdown-section td {
+        padding: 0.6rem 1rem;
+        border-bottom: 1px solid var(--flagr-border);
+        vertical-align: top;
+      }
+
+      .markdown-section tr:last-child td {
+        border-bottom: none;
+      }
+
+      .markdown-section tr:hover td {
+        background: rgba(15, 23, 42, 0.02);
+      }
+
+      .markdown-section code {
+        font-family: var(--font-mono);
+        font-size: 0.88em;
+        background: var(--flagr-code-bg);
+        color: #1e3a4a;
+        padding: 0.15em 0.4em;
+        border-radius: 4px;
+        border: 1px solid var(--flagr-border);
+      }
+
+      .markdown-section pre {
+        margin: 1.15rem 0;
+        border-radius: var(--radius-md);
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        box-shadow: var(--shadow-soft);
+        background: #1e2a3a !important;
+      }
+
+      .markdown-section pre > code {
+        font-family: var(--font-mono);
+        font-size: 0.875rem;
+        line-height: 1.48;
+        background: transparent;
+        border: none;
+        color: #f4f8fc;
+        padding: 1rem 1.15rem;
+        display: block;
+      }
+
+      .markdown-section pre .token.comment,
+      .markdown-section pre .token.prolog,
+      .markdown-section pre .token.doctype {
+        color: #9db4c8;
+      }
+
+      .markdown-section pre .token.punctuation {
+        color: #c5d4e3;
+      }
+
+      .markdown-section pre .token.property,
+      .markdown-section pre .token.tag,
+      .markdown-section pre .token.boolean,
+      .markdown-section pre .token.number,
+      .markdown-section pre .token.constant,
+      .markdown-section pre .token.symbol {
+        color: #7ee8d8;
+      }
+
+      .markdown-section pre .token.selector,
+      .markdown-section pre .token.attr-name,
+      .markdown-section pre .token.string,
+      .markdown-section pre .token.char,
+      .markdown-section pre .token.builtin {
+        color: #b8e986;
+      }
+
+      .markdown-section pre .token.operator,
+      .markdown-section pre .token.entity,
+      .markdown-section pre .token.url {
+        color: #f0c674;
+      }
+
+      .markdown-section pre .token.atrule,
+      .markdown-section pre .token.attr-value,
+      .markdown-section pre .token.keyword {
+        color: #8ec8ff;
+      }
+
+      .markdown-section pre .token.function,
+      .markdown-section pre .token.class-name {
+        color: #e8b4ff;
+      }
+
+      .markdown-section img {
+        margin: 1.5rem 0;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--flagr-border);
+        box-shadow: var(--shadow-soft);
+      }
+
+      .markdown-section hr {
+        border: none;
+        height: 1px;
+        background: var(--flagr-border-strong);
+        margin: 2.5rem 0;
+      }
+
+      .markdown-section .anchor span {
+        color: var(--flagr-accent-soft);
+      }
+
+      .github-corner {
+        opacity: 0.85;
+      }
+
+      .github-corner:hover {
+        opacity: 1;
+      }
+
+      .app-sub-sidebar {
+        border-left: 1px solid var(--flagr-border);
+      }
+
+      .app-sub-sidebar li a {
+        font-size: 0.82rem;
+        color: var(--flagr-muted);
+        text-decoration: none;
+        border-bottom: none;
+      }
+
+      .content {
+        padding-top: 0;
+      }
+
+      .markdown-section details {
+        margin: 1rem 0;
+        padding: 0.75rem 1rem;
+        background: var(--flagr-surface);
+        border: 1px solid var(--flagr-border);
+        border-radius: var(--radius-md);
+      }
+
+      .markdown-section summary {
+        font-weight: 600;
+        color: var(--flagr-heading);
+        cursor: pointer;
+      }
+
+      .mermaid {
+        margin: 1.5rem 0;
+        padding: 1rem;
+        background: var(--flagr-surface);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--flagr-border);
       }
     </style>
   </head>
@@ -33,11 +464,11 @@
         auto2top: true,
         loadSidebar: true,
         maxLevel: 4,
-        subMaxLevel: 2,
-        coverpage: true,
+        subMaxLevel: 0,
+        coverpage: false,
         homepage: "home.md",
         executeScript: true,
-        name: "Flagr Docs",
+        name: "Flagr",
         search: {
           noData: {
             "/": "No results!",
@@ -49,7 +480,7 @@
         },
         plugins: [
           EditOnGithubPlugin.create(
-            "https://github.com/openflagr/flagr/blob/master/docs/"
+            "https://github.com/openflagr/flagr/blob/main/docs/"
           ),
         ],
         repo: "https://github.com/openflagr/flagr",

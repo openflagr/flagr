@@ -1,44 +1,18 @@
-# Debug Console
+# Debug console
 
-Evaluations are deterministic, but the *reasoning* behind them — which segment
-matched, which constraints held, where the hash landed — is invisible from a
-raw `POST /evaluation` call. When a user reports "I'm in California but I'm
-not getting the green button," you need to see the trace, not just the answer.
-The Debug Console is that trace, built into each flag's detail page. It wraps
-the evaluation API in an interactive JSON editor so you can replay an
-evaluation with a specific entity context and inspect exactly how Flagr
-arrived at its verdict — without writing a throwaway script or hitting the
-API with curl.
+You evaluated an entity and got back the wrong variant — or no variant at all. The evaluation API tells you *what* happened; it does not tell you *why*. The **Debug Console**, available on every flag page, fills that gap. It sends an evaluation request with **`enableDebug: true`** and surfaces `evalDebugLog.segmentDebugLogs`, so you can replay an entity's context and walk through, segment by segment, exactly where evaluation stopped and what it decided.
 
-The console exercises **`POST /evaluation`** and
-**`POST /evaluation/batch`** only (not GET). For browser-friendly **`GET /evaluation?json=…`**, see [Use Cases — GET evaluation](flagr_use_cases.md#get-evaluation-browser-friendly). For production **impression** logging after
-render, see [Exposure Logging](flagr_exposure.md). For segment, constraint, and
-rollout concepts, see the [Overview](flagr_overview.md).
+The console uses **`POST /evaluation`** and **`POST /evaluation/batch`** only (not GET). For **`GET /evaluation?json=…`**, see [Use cases — GET evaluation](flagr_use_cases.md#get-evaluation-browser-friendly). It works when **`FLAGR_EVAL_DEBUG_ENABLED=true`** (default) and the request sets `enableDebug`; turn that env off in production if you do not want segment logs on eval traffic. For impressions after render, [Exposure logging](flagr_exposure.md); for concepts, [Overview](flagr_overview.md). Gating: [Behavioral contracts](contracts.md#evalcache-freshness).
 
 ![Debug Console](/images/demo_debugging_console.png)
 
-## What it does
+## What you get
 
-The Debug Console sends evaluation requests to the Flagr API and displays the
-full response, including debug logs that show how the evaluator arrived at its
-result. Each log entry is keyed to a `segmentID` and carries a free-text `msg`
-that narrates the decision: "matched all constraints" or "constraint not
-match," followed by the bucket and distribution reasoning. Read the trace top
-to bottom to see the segments Flagr considered, in order, and where it
-stopped. Use it to:
-
-- **Verify segment matching** — see which segments were checked and whether
-  each matched.
-- **Test constraint logic** — confirm entity-context values trigger the right
-  constraints.
-- **Debug distribution** — understand which variant was selected and why.
-- **Test before deploying** — simulate evaluations with different entity
-  contexts before rolling out changes.
+Each entry in `segmentDebugLogs` carries a `segmentID` and a free-text `msg` describing what the evaluator saw: which constraints matched, which did not, and — when a segment *did* match — the bucket and distribution reasoning that followed. Read the list in **segment rank order**. Evaluation walks segments from first to last and stops at the first match, so the first entry whose `msg` reports a match is your culprit; everything after it was never evaluated.
 
 ## Single evaluation
 
-The **Evaluation** panel sends a `POST /api/v1/evaluation` request with a JSON
-body you can edit inline:
+Start with a single entity when you are chasing one wrong assignment. The **Evaluation** panel sends `POST /api/v1/evaluation` with an editable body, so you can paste in the exact context your application sends and see what the server actually does with it:
 
 ```json
 {
@@ -50,29 +24,21 @@ body you can edit inline:
 }
 ```
 
-The response includes:
+The response carries three things you care about when debugging:
 
-- **`variantID` / `variantKey`** — which variant was assigned.
-- **`evalDebugLog.segmentDebugLogs`** — a per-segment trace. Each entry has:
-  - `segmentID` — the segment evaluated.
-  - `msg` — free-text reasoning: whether all constraints matched, and the
-    rollout/distribution bucket reasoning (bucket number, distribution array,
-    rollout percent).
-- **`evalContext`** — the full context that was evaluated.
+- **`variantID` / `variantKey`** — the variant that was assigned, or nothing if no segment matched.
+- **`evalDebugLog.segmentDebugLogs`** — a per-segment trace. Each entry pairs a `segmentID` with a `msg` that reports whether all constraints matched and, when they did, the rollout and distribution reasoning: the bucket number, the distribution array, and the rollout percent.
+- **`evalContext`** — the full context the server actually evaluated, echoed back so you can confirm it received what you intended to send.
 
-> **Note:** `segmentDebugLogs` is a flat list of `{ segmentID, msg }` entries,
-> not a structured breakdown. Constraint results are reported as one boolean
-> expression per segment — on mismatch the whole expression is dumped; there is
-> no per-constraint matched/didn't split.
+> **Note:** `segmentDebugLogs` is a flat list of `{ segmentID, msg }` entries, not a structured breakdown. Constraint results are reported as one boolean expression per segment — on mismatch the whole compiled expression is dumped; there is no per-constraint matched/didn't split.
 
-The console also renders a summary view showing the matched variant and a
-segment-by-segment trace.
+That compiled expression is the fastest path to the most common bug. When a segment's constraints fail, the debug text includes the expression the server compiled and the **`entityContext`** map it evaluated against. Compare the two: a property name typo, a missing field, or a JSON type mismatch (string `"30"` versus number `30`) jumps out immediately, because the expression names the field it expected and the map shows what you actually sent.
+
+The console renders a summary view alongside the raw response — the matched variant up top, and a segment-by-segment trace below — so you can scan the outcome before drilling into the JSON.
 
 ## Batch evaluation
 
-The **Batch Evaluation** panel sends a `POST /api/v1/evaluation/batch` request,
-letting you evaluate multiple entities against one or more flags in a single
-call:
+When the question is not "why did this one entity fail?" but "do my segments route the way I think they do across the board?", switch to the **Batch Evaluation** panel. It sends `POST /api/v1/evaluation/batch`, letting you evaluate multiple entities against one or more flags in a single call:
 
 ```json
 {
@@ -85,16 +51,10 @@ call:
 }
 ```
 
-This is useful for verifying that different entity contexts route to the
-correct variants across your segments.
+This is the right tool for regression-checking a constraint change: line up the entity contexts that should land in each variant, run them together, and confirm every one routed where you expected. If one did not, its `segmentDebugLogs` tells you exactly which segment rejected it and why.
 
 ## Tips
 
-- **Always set `enableDebug: true`** — without it, the response omits the debug
-  logs that make the console useful. (The server must also have
-  `FLAGR_EVAL_DEBUG_ENABLED` on, which defaults to `true`.)
-- **Use realistic entity contexts** — include the same fields your app sends
-  (e.g. `state`, `age`, `tier`) to test constraint matching accurately.
-- **Flag key or flag ID** — the console pre-fills both from the current flag
-  page. You can use either `flagID` or `flagKey` in the request; both resolve to
-  the same flag.
+- **Always set `enableDebug: true`** — without it, the response omits the debug logs that make the console useful. The server must also have `FLAGR_EVAL_DEBUG_ENABLED` on, which defaults to `true`.
+- **Use realistic entity contexts** — include the same fields your app sends (e.g. `state`, `age`, `tier`) to test constraint matching accurately.
+- **Flag key or flag ID** — the console pre-fills both from the current flag page. You can use either `flagID` or `flagKey` in the request; both resolve to the same flag.
