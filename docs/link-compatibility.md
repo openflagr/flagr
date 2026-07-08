@@ -15,12 +15,12 @@ Shared links use GitHub Pages + Docsify hash routes: `https://openflagr.github.i
 
 | `#/flagr_*` | `flagr_*.md` | Unchanged filenames |
 
-## Former bookmark routes (removed)
+## Former bookmark routes
 
 | Old route | Use instead |
 |-----------|-------------|
-| `#/USING_FLAGR` | [#/integration](integration.md) |
-| `#/DEVELOPER_GUIDE` | [#/CONTRIBUTING](CONTRIBUTING.md) (repo work) or [#/integration](integration.md) (client API) |
+| `#/USING_FLAGR` | [integration.md](integration.md) (one-line redirect page kept) |
+| `#/DEVELOPER_GUIDE` | [CONTRIBUTING.md](CONTRIBUTING.md) (repo work) or [integration.md](integration.md) (client API) |
 
 ## Deep anchors — preserved on purpose
 
@@ -31,7 +31,7 @@ Shared links use GitHub Pages + Docsify hash routes: `https://openflagr.github.i
 | `#/flagr_env?id=eval-cache-export` | Alias `:id=eval-cache-export` under Database |
 | `#/flagr_env?id=guide` | `## Guide` |
 | `#/flagr_env?id=database` | `### Database` |
-| `#/integration?id=eval-vs-exposure` | `<span id="eval-vs-exposure">` → contracts |
+| `#/integration?id=eval-vs-exposure` | [#/contracts?id=eval-vs-exposure](contracts.md#eval-vs-exposure) |
 | `#/flagr_overview?id=architecture` | `## Architecture` |
 | `#/flagr_overview?id=rollout-and-deterministic-bucketing` | Unchanged heading |
 | `#/flagr_overview?id=constraint-property-access` | Unchanged heading |

@@ -62,15 +62,9 @@ Evaluation requests never hit the database directly. They read from an in-memory
 | `FLAGR_EVAL_GET_MAX_URL_BYTES` | `8192` | GET `json=` query cap; `0` = off — [use cases](flagr_use_cases.md#get-evaluation-browser-friendly) |
 | `FLAGR_EXPOSURE_BATCH_SIZE` | `100` | Max rows per `POST /exposures` |
 
-Because the cache is eventually consistent, a flag change won't be visible to evaluators until the next reload lands — and until it does, **`variantKey`** comes back blank for affected entities. That staleness window is a contract, not a bug; see [EvalCache freshness](contracts.md#evalcache-freshness) for why automated tests should wait at least one interval before asserting on new configuration.
+Because the cache is eventually consistent, a flag change won't be visible to evaluators until the next reload lands, and **`variantKey`** comes back blank for affected entities until then. That staleness window is a contract, not a bug; see [EvalCache freshness](contracts.md#evalcache-freshness) for why automated tests should wait at least one interval before asserting on new configuration.
 
-There's also an explicit `FLAGR_EVAL_ONLY_MODE` flag, though in practice eval-only is usually implied: whenever the database driver is `json_file` or `json_http`, the server enters eval-only mode on its own.
-
-### Database
-
-Two variables decide where flags live: the driver and the connection string. The defaults give you a local SQLite file, which is enough for development and tests. Production wants MySQL or Postgres, and the JSON drivers exist for read-only evaluation from a file or remote URL.
-
-`FLAGR_EVAL_GET_MAX_URL_BYTES` (default **8192**, **0** = disabled) caps the **raw query string** on `GET /api/v1/evaluation` and batch GET. POST-vs-GET security, proxy limits, and examples: [Use cases — GET evaluation](flagr_use_cases.md#get-evaluation-browser-friendly).
+There's also an explicit `FLAGR_EVAL_ONLY_MODE` flag, though in practice eval-only is usually implied whenever the database driver is `json_file` or `json_http`.
 
 #### Built-in context injection
 
@@ -82,7 +76,13 @@ Two variables decide where flags live: the driver and the connection string. The
 
 Full guide: [Built-in context injection](flagr_injected_context.md).
 
+#### Eval cache export :id=eval-cache-export
 
+A running server can dump its in-memory cache as JSON via `GET /api/v1/export/eval_cache/json`, with optional `enabled`, `ids`, `keys`, `tags`, and `tagsOperator` (`ANY` / `ALL`) query parameters.
+
+### Database
+
+Two variables decide where flags live: the driver and the connection string. Defaults are local SQLite; production typically uses MySQL or Postgres. JSON drivers load flags from a file or URL for read-only eval.
 
 | Variable | Default |
 |----------|---------|
@@ -95,9 +95,6 @@ Full guide: [Built-in context injection](flagr_injected_context.md).
 | `mysql` / `postgres` | Production |
 | `json_file` / `json_http` | Flags from file or URL ([JSON spec](flagr_json_flag_spec.md)) |
 
-#### Eval cache export :id=eval-cache-export
-
-A running server can dump its in-memory cache as JSON, which is useful for debugging, seeding another instance, or snapshotting what evaluators actually see. The endpoint is `GET /api/v1/export/eval_cache/json`, and it accepts optional `enabled`, `ids`, `keys`, `tags`, and `tagsOperator` (`ANY` / `ALL`) query parameters to narrow the dump.
 
 ### Authentication
 

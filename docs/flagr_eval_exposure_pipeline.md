@@ -51,13 +51,7 @@ The key insight: **evaluation** and **exposure** are different events with diffe
 
 ## What gets recorded (and what doesn't)
 
-Three gates must be open before any row reaches a recorder:
-
-- `FLAGR_RECORDER_ENABLED=true` (server-wide master switch)
-- The recorder type is listed in `FLAGR_RECORDER_TYPE` (e.g. `kafka`, `kinesis`, `pubsub`, `datar`)
-- The flag has `dataRecordsEnabled: true` (per-flag, via `PUT /api/v1/flags/{id}` or the UI)
-
-When all three are on, here's exactly what happens for each path through the evaluator:
+Rows reach a recorder only when all three [recording gates](contracts.md#recording-gates) are open. When they are, here's what each path does:
 
 | What the user triggered | `recordSource` | Streamed? | Why |
 |-------------------------|----------------|-----------|-----|
