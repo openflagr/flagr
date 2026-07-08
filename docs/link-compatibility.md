@@ -54,4 +54,4 @@ Shared links use GitHub Pages + Docsify hash routes: `https://openflagr.github.i
 | `#eval-only` | `json_file` / `json_http` |
 | `#evalcache-freshness` | Reload lag, blank `variantKey` |
 
-When you change cross-cutting behavior, update **`contracts.md`** and extend this table if you add or rename ids.
+When you change cross-cutting behavior, update **`contracts.md`** and extend this table if you add or rename ids. After renaming a page or `:id=` anchor, grep the repo for the old hash (`#/old-page`, `?id=old-anchor`) and update this file.

@@ -8,6 +8,11 @@
   --flagr-muted-bg: #f4f4f5;
   --flagr-border: rgba(24, 24, 27, 0.09);
   --flagr-border-strong: rgba(24, 24, 27, 0.16);
+  --flagr-surface-hover: rgba(24, 24, 27, 0.04);
+  --flagr-table-row-hover: rgba(24, 24, 27, 0.02);
+  --flagr-pre-border: rgba(24, 24, 27, 0.2);
+  --flagr-scrollbar-thumb: rgba(250, 250, 250, 0.2);
+  --flagr-scrollbar-thumb-hover: rgba(250, 250, 250, 0.32);
   --flagr-text: #3f3f46;
   --flagr-heading: #18181b;
   --flagr-muted: #71717a;
@@ -16,6 +21,7 @@
   --flagr-accent-hover: #164670;
   --flagr-accent-soft: #94b8d4;
   --flagr-accent-subtle: rgba(30, 90, 138, 0.1);
+  --flagr-accent-underline: rgba(30, 90, 138, 0.35);
   --flagr-code-bg: #e4e4e7;
   --flagr-code-fg: #18181b;
   --flagr-pre-bg: #27272a;
@@ -158,7 +164,7 @@ body.sticky .sidebar,
 
 .sidebar-nav a:hover {
   color: var(--flagr-heading);
-  background: rgba(24, 24, 27, 0.04);
+  background: var(--flagr-surface-hover);
   text-decoration: none;
 }
 
@@ -308,7 +314,7 @@ main {
 .markdown-section a:hover {
   color: var(--flagr-accent-hover);
   text-decoration: underline;
-  text-decoration-color: rgba(30, 90, 138, 0.35);
+  text-decoration-color: var(--flagr-accent-underline);
   text-underline-offset: 2px;
 }
 
@@ -400,7 +406,7 @@ main {
 }
 
 .markdown-section tr:hover td {
-  background: rgba(24, 24, 27, 0.02);
+  background: var(--flagr-table-row-hover);
 }
 
 .markdown-section :not(pre) > code {
@@ -423,12 +429,12 @@ main {
   max-width: 100%;
   box-sizing: border-box;
   border-radius: var(--radius-md);
-  border: 1px solid rgba(24, 24, 27, 0.2);
+  border: 1px solid var(--flagr-pre-border);
   box-shadow: var(--shadow-soft);
   background: var(--flagr-pre-bg) !important;
   overflow-x: auto;
   scrollbar-width: thin;
-  scrollbar-color: rgba(250, 250, 250, 0.22) var(--flagr-pre-bg);
+  scrollbar-color: var(--flagr-scrollbar-thumb) var(--flagr-pre-bg);
 }
 
 .markdown-section pre::-webkit-scrollbar {
@@ -440,12 +446,12 @@ main {
 }
 
 .markdown-section pre::-webkit-scrollbar-thumb {
-  background: rgba(250, 250, 250, 0.2);
+  background: var(--flagr-scrollbar-thumb);
   border-radius: 4px;
 }
 
 .markdown-section pre::-webkit-scrollbar-thumb:hover {
-  background: rgba(250, 250, 250, 0.32);
+  background: var(--flagr-scrollbar-thumb-hover);
 }
 
 .markdown-section pre > code {
@@ -463,6 +469,7 @@ main {
 }
 
 
+/* Prism — scoped under pre (Docsify vue theme) */
 .markdown-section pre .token.comment,
 .markdown-section pre .token.prolog,
 .markdown-section pre .token.doctype {

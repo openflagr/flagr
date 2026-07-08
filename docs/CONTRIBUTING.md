@@ -2,18 +2,7 @@
 
 Welcome. This guide walks you through the full contributor journey: clone the repo, build it, find your way around the code, run the tests, regenerate Swagger, and touch the docs site. The commands and conventions below are the ones CI enforces, so following them from your first commit keeps PRs green and reviews short.
 
-Before you open a PR, run the checks that match what you changed:
-
-| You changed | Run |
-|-------------|-----|
-| `pkg/` or Go tests | `make test` |
-| `browser/flagr-ui/` | `make flagr-ui-check`; before push often `make test-e2e` |
-| Swagger / handlers affecting API | `make swagger` (or `make gen`) and commit `swagger/`, `docs/api_docs/bundle.yaml`, `swagger_gen/` |
-| UI + Go | `make test` and `make test-e2e` |
-
-CI mapping and PR template: [AGENTS.md](https://github.com/openflagr/flagr/blob/main/AGENTS.md), [PULL_REQUEST_TEMPLATE.md](https://github.com/openflagr/flagr/blob/main/PULL_REQUEST_TEMPLATE.md).
-
-If you're ever unsure which Make target a change needs, the full catalog is one command away:
+Before you open a PR, run the checks that match what you changed. The canonical **pre-commit / CI** matrix and Makefile mapping live in the repo root **[AGENTS.md](https://github.com/openflagr/flagr/blob/main/AGENTS.md)** (same rules CI enforces). Also see [PULL_REQUEST_TEMPLATE.md](https://github.com/openflagr/flagr/blob/main/PULL_REQUEST_TEMPLATE.md).
 
 ```bash
 make help    # full command catalog
