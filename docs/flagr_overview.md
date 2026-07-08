@@ -100,26 +100,26 @@ segment actually receives a variant.
 **Setup** — three button-color variants (`green`, `blue`, `pink`) for a new
 checkout experience:
 
-![Flag variants for the running example](images/flagr_running_example_1.png)
-![Flag detail with segments and distributions](images/flagr_running_example_4.png)
+![Flag variants for the running example](/images/flagr_running_example_1.png)
+![Flag detail with segments and distributions](/images/flagr_running_example_4.png)
 
 **Step 1 — targeted rollout** — expose the flag to California users only
 (`state == "CA"`), with a partial rollout before going wide:
 
-![California segment with constraints](images/flagr_running_example_2.png)
+![California segment with constraints](/images/flagr_running_example_2.png)
 
 **Step 2 — geo-specific preferences** — add segments per state (and combine
 constraints, e.g. `state == "NY" AND age >= 21`):
 
-![Multiple state-based segments](images/flagr_running_example_3.png)
-![Per-segment distribution and rollout](images/flagr_running_example_5.png)
+![Multiple state-based segments](/images/flagr_running_example_3.png)
+![Per-segment distribution and rollout](/images/flagr_running_example_5.png)
 
 **Step 3 — experiment then launch** — A/B within a segment (`50/50` green/blue
 at `20%` rollout), then raise rollout and distribution to ship `100%` green
 globally:
 
-![Raised rollout on a segment](images/flagr_running_example_7.png)
-![Full launch distribution](images/flagr_running_example_6.png)
+![Raised rollout on a segment](/images/flagr_running_example_7.png)
+![Full launch distribution](/images/flagr_running_example_6.png)
 
 ## Rollout and deterministic bucketing
 

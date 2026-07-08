@@ -105,6 +105,7 @@ Several pages serve specific audiences and are worth knowing as a contributor: t
 - **Deploy / topology:** edit **[flagr_self_host.md](flagr_self_host.md)**; **`flagr_env.md`** = embedded `env.go` + variable guide (no duplicate Compose/mysql runbooks).
 - **`flagr_env.md`:** embedded `pkg/config/env.go` first, then the short guide; embed tracks **`main`** on GitHub.
 - Off-site sidebar links use a subtle **↗** via CSS (`a[href^="http"]`); client SDKs are listed in [integration.md](integration.md) and README, not in `_sidebar.md`.
+- **Bookmark redirects:** keep minimal [USING_FLAGR.md](USING_FLAGR.md) and [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) stubs for old `#/USING_FLAGR` / `#/DEVELOPER_GUIDE` routes; do not remove without updating [link-compatibility.md](link-compatibility.md).
 - URL compatibility when renaming pages or anchors: [link-compatibility.md](link-compatibility.md) (not in sidebar).
 
 Whenever you change the API docs, refresh `docs/api_docs/bundle.yaml` so the hosted [API reference](https://openflagr.github.io/flagr/api_docs) stays current.

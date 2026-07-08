@@ -31,7 +31,7 @@ Shared links use GitHub Pages + Docsify hash routes: `https://openflagr.github.i
 | `#/flagr_env?id=eval-cache-export` | Alias `:id=eval-cache-export` under Database |
 | `#/flagr_env?id=guide` | `## Guide` |
 | `#/flagr_env?id=database` | `### Database` |
-| `#/integration?id=eval-vs-exposure` | [#/contracts?id=eval-vs-exposure](contracts.md#eval-vs-exposure) |
+| `#/integration?id=eval-vs-exposure` | Same id on integration (links to [contracts](contracts.md#eval-vs-exposure)) |
 | `#/flagr_overview?id=architecture` | `## Architecture` |
 | `#/flagr_overview?id=rollout-and-deterministic-bucketing` | Unchanged heading |
 | `#/flagr_overview?id=constraint-property-access` | Unchanged heading |

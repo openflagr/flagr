@@ -4,7 +4,7 @@ Your first call to Flagr is a single HTTP request: give it a flag and an entity,
 
 This page is the practical "how do I call it" walkthrough. The invariants those calls rely on (eval vs exposure, recording gates, cache lag, eval-only nodes) live in [Behavioral contracts](contracts.md) and are not repeated here. For the concepts behind flags, segments, and bucketing, read the [Overview](flagr_overview.md). For bringing up the server itself, see [Self-hosting](flagr_self_host.md). The full REST surface is in the [API reference](https://openflagr.github.io/flagr/api_docs).
 
-### Eval vs exposure
+### Eval vs exposure :id=eval-vs-exposure
 
 `POST /evaluation` assigns a variant. `POST /exposures` records that the user actually saw it. UI experiments need both; server-side branching usually needs only eval. See [Eval vs exposure](contracts.md#eval-vs-exposure).
 

@@ -1,3 +1,4 @@
+/* Flagr Docsify theme — override vue.css. Edit tokens in :root; avoid one-off font-size in rules below. */
 :root {
   /* Neutrals: warm zinc/stone only — no teal/cyan in surfaces (taste: one cool accent family) */
   --flagr-canvas: #f4f4f5;
@@ -22,6 +23,21 @@
   --theme-color: var(--flagr-accent);
   --font-sans: "Geist Sans", "Geist", system-ui, -apple-system, sans-serif;
   --font-mono: "Geist Mono", ui-monospace, monospace;
+  /* Reading scale (16px root): body 15px, secondary 14px, code 12px */
+  --flagr-text-body: 0.9375rem;
+  --flagr-text-body-lh: 1.55;
+  --flagr-text-secondary: 0.875rem;
+  --flagr-text-secondary-lh: 1.55;
+  --flagr-text-code-inline: 0.8125em;
+  --flagr-text-code-block: 0.75rem;
+  --flagr-text-code-inline-lh: 1.25;
+  --flagr-text-code-block-lh: 1.22;
+  --prism-muted: #a1a1aa;
+  --prism-fg: #e4e4e7;
+  --prism-fg-soft: #d4d4d8;
+  --prism-string: #c8d6e5;
+  --prism-keyword: #94b8d4;
+  --prism-heading: #fafafa;
   --content-max: 58rem;
   --sidebar-width: 17.5rem;
   --radius-sm: 6px;
@@ -35,7 +51,7 @@ body {
   background: var(--flagr-bg);
   color: var(--flagr-text);
   font-family: var(--font-sans);
-  font-size: 16px;
+  font-size: 1rem; /* 16px — scale via rem tokens below */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -72,12 +88,12 @@ body.sticky .sidebar,
 /* Top-level and nested links share one visual language */
 .sidebar-nav > ul > li > a,
 .sidebar-nav ul li a {
-  font-size: 0.9rem;
+  font-size: var(--flagr-text-secondary);
+  line-height: var(--flagr-text-secondary-lh);
   font-weight: 500;
   color: var(--flagr-muted);
   border-radius: var(--radius-sm);
   padding: 0.42rem 0.65rem;
-  line-height: 1.35;
   text-decoration: none;
   border-bottom: none;
   display: block;
@@ -98,12 +114,16 @@ body.sticky .sidebar,
 }
 
 .sidebar-nav a[href^="http"]::after,
-.sidebar-nav a[href^="//"]::after {
+.sidebar-nav a[href^="//"]::after,
+.markdown-section p a[href^="http"]::after,
+.markdown-section li a[href^="http"]::after,
+.markdown-section td a[href^="http"]::after,
+.markdown-section blockquote a[href^="http"]::after {
   content: "↗";
   font-size: 0.72em;
   font-weight: 600;
-  margin-left: 0.35em;
-  opacity: 0.45;
+  margin-left: 0.25em;
+  opacity: 0.5;
   vertical-align: 0.05em;
 }
 
@@ -237,19 +257,34 @@ main {
 .markdown-section h6 {
   font-weight: 600;
   color: var(--flagr-heading);
+  line-height: 1.35;
+}
+
+.markdown-section h4 {
+  font-size: 1rem;
   margin: 1.5rem 0 0.5rem;
+}
+
+.markdown-section h5 {
+  font-size: 0.9375rem;
+  margin: 1.35rem 0 0.45rem;
+}
+
+.markdown-section h6 {
+  font-size: 0.875rem;
+  margin: 1.25rem 0 0.4rem;
 }
 
 .markdown-section p,
 .markdown-section li {
-  font-size: 1rem;
-  line-height: 1.7;
+  font-size: var(--flagr-text-body);
+  line-height: var(--flagr-text-body-lh);
   color: var(--flagr-text);
 }
 
 .markdown-section p {
   margin: 0.6rem 0;
-  max-width: 65ch;
+  max-width: var(--content-max);
 }
 
 .markdown-section ul,
@@ -261,17 +296,6 @@ main {
 .markdown-section li + li {
   margin-top: 0.35rem;
 }
-
-.markdown-section p a[href^="http"]::after,
-.markdown-section li a[href^="http"]::after,
-.markdown-section td a[href^="http"]::after,
-.markdown-section blockquote a[href^="http"]::after {
-  content: "↗";
-  font-size: 0.72em;
-  margin-left: 0.2em;
-  opacity: 0.5;
-}
-
 
 .markdown-section a {
   color: var(--flagr-accent);
@@ -306,26 +330,46 @@ main {
 }
 
 .markdown-section blockquote {
-  margin: 1.5rem 0;
-  padding: 0.85rem 1.15rem;
-  background: var(--flagr-surface);
+  margin: 1.25rem 0;
+  padding: 0.65rem 1rem;
+  background: var(--flagr-muted-bg);
   border-left: 3px solid var(--flagr-accent-soft);
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  color: var(--flagr-muted);
-  box-shadow: var(--shadow-soft);
+  font-size: var(--flagr-text-body);
+  line-height: var(--flagr-text-body-lh);
+  color: var(--flagr-text);
+  box-shadow: none;
 }
 
-.markdown-section blockquote p {
-  margin: 0.35rem 0;
+.markdown-section blockquote p,
+.markdown-section blockquote li {
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+  margin: 0.3rem 0;
 }
 
+.markdown-section blockquote p:first-child,
+.markdown-section blockquote li:first-child {
+  margin-top: 0;
+}
+
+.markdown-section blockquote p:last-child,
+.markdown-section blockquote li:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-section blockquote :not(pre) > code {
+  font-size: var(--flagr-text-code-inline);
+}
 .markdown-section table {
   display: table;
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
   margin: 1.5rem 0;
-  font-size: 0.9rem;
+  font-size: var(--flagr-text-secondary);
+  line-height: var(--flagr-text-secondary-lh);
   border: 1px solid var(--flagr-border-strong);
   border-radius: var(--radius-md);
   overflow: hidden;
@@ -361,11 +405,12 @@ main {
 
 .markdown-section :not(pre) > code {
   font-family: var(--font-mono);
-  font-size: 0.8em;
+  font-size: var(--flagr-text-code-inline);
   font-weight: 500;
+  line-height: var(--flagr-text-code-inline-lh);
   background: var(--flagr-code-bg);
   color: var(--flagr-code-fg);
-  padding: 0.12em 0.38em;
+  padding: 0.08em 0.35em;
   border-radius: 4px;
   border: 1px solid var(--flagr-border-strong);
   box-decoration-break: clone;
@@ -374,6 +419,9 @@ main {
 
 .markdown-section pre {
   margin: 1.15rem 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   border-radius: var(--radius-md);
   border: 1px solid rgba(24, 24, 27, 0.2);
   box-shadow: var(--shadow-soft);
@@ -382,23 +430,30 @@ main {
 
 .markdown-section pre > code {
   font-family: var(--font-mono);
-  font-size: 0.875rem;
-  line-height: 1.48;
+  font-size: var(--flagr-text-code-block);
+  line-height: var(--flagr-text-code-block-lh);
   background: transparent;
   border: none;
   color: var(--flagr-pre-fg);
-  padding: 1rem 1.15rem;
+  padding: 0.28rem 0.95rem;
   display: block;
 }
+.markdown-section pre > code .token {
+  line-height: inherit;
+}
+
 
 .markdown-section pre .token.comment,
 .markdown-section pre .token.prolog,
 .markdown-section pre .token.doctype {
-  color: #a1a1aa;
+  color: var(--prism-muted);
 }
 
-.markdown-section pre .token.punctuation {
-  color: #d4d4d8;
+.markdown-section pre .token.punctuation,
+.markdown-section pre .token.operator,
+.markdown-section pre .token.entity,
+.markdown-section pre .token.url {
+  color: var(--prism-fg-soft);
 }
 
 .markdown-section pre .token.property,
@@ -407,7 +462,7 @@ main {
 .markdown-section pre .token.number,
 .markdown-section pre .token.constant,
 .markdown-section pre .token.symbol {
-  color: #e4e4e7;
+  color: var(--prism-fg);
 }
 
 .markdown-section pre .token.selector,
@@ -415,31 +470,30 @@ main {
 .markdown-section pre .token.string,
 .markdown-section pre .token.char,
 .markdown-section pre .token.builtin {
-  color: #c8d6e5;
-}
-
-.markdown-section pre .token.operator,
-.markdown-section pre .token.entity,
-.markdown-section pre .token.url {
-  color: #d4d4d8;
+  color: var(--prism-string);
 }
 
 .markdown-section pre .token.atrule,
 .markdown-section pre .token.attr-value,
 .markdown-section pre .token.keyword {
-  color: #94b8d4;
+  color: var(--prism-keyword);
 }
 
 .markdown-section pre .token.function,
 .markdown-section pre .token.class-name {
-  color: #fafafa;
+  color: var(--prism-heading);
 }
 
 .markdown-section img {
-  margin: 1.5rem 0;
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  margin: 1.15rem 0;
   border-radius: var(--radius-md);
-  border: 1px solid var(--flagr-border);
+  border: 1px solid var(--flagr-border-strong);
   box-shadow: var(--shadow-soft);
+  box-sizing: border-box;
 }
 
 .markdown-section hr {
@@ -482,12 +536,16 @@ main {
   background: var(--flagr-surface);
   border: 1px solid var(--flagr-border);
   border-radius: var(--radius-md);
+  font-size: var(--flagr-text-body);
+  line-height: var(--flagr-text-body-lh);
 }
 
 .markdown-section summary {
+  font-size: var(--flagr-text-body);
   font-weight: 600;
   color: var(--flagr-heading);
   cursor: pointer;
+  line-height: 1.35;
 }
 
 .mermaid {
