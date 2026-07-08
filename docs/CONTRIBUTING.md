@@ -104,7 +104,7 @@ Several pages serve specific audiences and are worth knowing as a contributor: t
 - Cross-cutting behavior (eval vs exposure, recording gates, eval-only, EvalCache lag): edit **[contracts.md](contracts.md)** first; other pages link there instead of copying paragraphs.
 - **Deploy / topology:** edit **[flagr_self_host.md](flagr_self_host.md)**; **`flagr_env.md`** = embedded `env.go` + variable guide (no duplicate Compose/mysql runbooks).
 - **`flagr_env.md`:** embedded `pkg/config/env.go` first, then the short guide; embed tracks **`main`** on GitHub.
-- Off-site sidebar links (API reference, client SDKs) use a subtle **↗** via CSS (`a[href^="http"]`); do not paste 🔗 into `_sidebar.md`.
+- Off-site sidebar links use a subtle **↗** via CSS (`a[href^="http"]`); client SDKs are listed in [integration.md](integration.md) and README, not in `_sidebar.md`.
 - URL compatibility when renaming pages or anchors: [link-compatibility.md](link-compatibility.md) (not in sidebar).
 
 Whenever you change the API docs, refresh `docs/api_docs/bundle.yaml` so the hosted [API reference](https://openflagr.github.io/flagr/api_docs) stays current.

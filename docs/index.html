@@ -9,11 +9,29 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, minimum-scale=1.0"
     />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap"
       rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@fontsource/geist-sans@5.2.5/400.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@fontsource/geist-sans@5.2.5/500.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@fontsource/geist-sans@5.2.5/600.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@fontsource/geist-sans@5.2.5/700.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@fontsource/geist-mono@5.2.5/400.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@fontsource/geist-mono@5.2.5/500.css"
     />
     <link
       rel="stylesheet"
@@ -21,20 +39,20 @@
     />
     <style>
       :root {
-        --flagr-bg: #f6f8fa;
+        --flagr-bg: #f4f4f5;
         --flagr-surface: #ffffff;
-        --flagr-sidebar: #f0f4f8;
-        --flagr-border: rgba(15, 23, 42, 0.08);
-        --flagr-border-strong: rgba(15, 23, 42, 0.12);
-        --flagr-text: #3d4f5f;
-        --flagr-heading: #0f1c2e;
-        --flagr-muted: #64748b;
-        --flagr-accent: #1a6b7a;
-        --flagr-accent-soft: #5ec4c0;
-        --flagr-code-bg: #eef2f6;
+        --flagr-sidebar: #fafafa;
+        --flagr-border: rgba(24, 24, 27, 0.08);
+        --flagr-border-strong: rgba(24, 24, 27, 0.14);
+        --flagr-text: #52525b;
+        --flagr-heading: #18181b;
+        --flagr-muted: #71717a;
+        --flagr-accent: #0f766e;
+        --flagr-accent-soft: #5eead4;
+        --flagr-code-bg: #f4f4f5;
         --theme-color: var(--flagr-accent);
-        --font-sans: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
-        --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+        --font-sans: "Geist Sans", "Geist", system-ui, -apple-system, sans-serif;
+        --font-mono: "Geist Mono", ui-monospace, monospace;
         --content-max: 58rem;
         --sidebar-width: 17.5rem;
         --radius-sm: 6px;
@@ -97,28 +115,6 @@
         transition: color 0.2s ease, background 0.2s ease;
       }
 
-      /* Folder labels (e.g. "Client SDKs") — match link rows, not section headers */
-      .sidebar-nav li > strong,
-      .sidebar-nav li > p {
-        display: block;
-        font-size: 0.9rem;
-        font-weight: 500;
-        letter-spacing: normal;
-        text-transform: none;
-        color: var(--flagr-muted);
-        margin: 0.12rem 0;
-        padding: 0.42rem 0.65rem;
-        line-height: 1.35;
-        opacity: 1;
-        border-radius: var(--radius-sm);
-      }
-
-      .sidebar-nav li.open > strong,
-      .sidebar-nav li.active > strong {
-        color: var(--flagr-heading);
-        font-weight: 600;
-      }
-
       .sidebar-nav ul ul {
         margin: 0.1rem 0 0.35rem;
         padding-left: 0.5rem;
@@ -145,14 +141,13 @@
       .sidebar-nav li.active > a,
       .sidebar-nav ul li.active > a {
         color: var(--flagr-accent);
-        background: rgba(26, 107, 122, 0.08);
+        background: rgba(15, 118, 110, 0.08);
         font-weight: 600;
         border-right: none !important;
       }
 
-      /* Section headers only: top-level list items that are direct groups (Documentation, Concepts…) */
-      .sidebar-nav > ul > li > p,
-      .sidebar-nav > ul > li > strong:first-child {
+      /* Section headers: Documentation, Concepts & API (root groups only) */
+      .sidebar-nav > ul > li > p {
         font-size: 0.68rem;
         font-weight: 600;
         letter-spacing: 0.08em;
@@ -163,15 +158,23 @@
         opacity: 0.85;
       }
 
-      .sidebar-nav > ul > li:first-child > p,
-      .sidebar-nav > ul > li:first-child > strong:first-child {
+      .sidebar-nav > ul > li:first-child > p {
         margin-top: 0.25rem;
+      }
+
+      /* vue.css: .sidebar li > p { font-weight: 700 } */
+      .sidebar-nav li > p {
+        font-weight: 500;
       }
 
       .sidebar-nav a:hover {
         color: var(--flagr-heading);
         background: rgba(15, 23, 42, 0.04);
         text-decoration: none;
+      }
+
+      .sidebar .sidebar-nav {
+        line-height: 1.45;
       }
 
       .search {
@@ -214,7 +217,7 @@
       }
 
       .search .matching-post:hover {
-        background: rgba(26, 107, 122, 0.06);
+        background: rgba(15, 118, 110, 0.06);
       }
 
       .search .matching-post .search-keyword {
@@ -273,6 +276,18 @@
         margin: 1.5rem 0 0.5rem;
       }
 
+      .markdown-section p,
+      .markdown-section li {
+        font-size: 1rem;
+        line-height: 1.7;
+        color: var(--flagr-text);
+      }
+
+      .markdown-section p {
+        margin: 0.6rem 0;
+        max-width: 65ch;
+      }
+
       .markdown-section ul,
       .markdown-section ol {
         padding-left: 1.35rem;
@@ -303,7 +318,7 @@
       }
 
       .markdown-section a:hover {
-        color: #0d5563;
+        color: #0f766e;
         text-decoration: underline;
         text-decoration-color: rgba(13, 85, 99, 0.35);
         text-underline-offset: 2px;
@@ -355,7 +370,7 @@
       }
 
       .markdown-section thead {
-        background: #e8eef3;
+        background: #f4f4f5;
       }
 
       .markdown-section th {
@@ -384,7 +399,7 @@
         font-family: var(--font-mono);
         font-size: 0.88em;
         background: var(--flagr-code-bg);
-        color: #1e3a4a;
+        color: #3f3f46;
         padding: 0.15em 0.4em;
         border-radius: 4px;
         border: 1px solid var(--flagr-border);
@@ -395,7 +410,7 @@
         border-radius: var(--radius-md);
         border: 1px solid rgba(148, 163, 184, 0.22);
         box-shadow: var(--shadow-soft);
-        background: #1e2a3a !important;
+        background: #18181b !important;
       }
 
       .markdown-section pre > code {
