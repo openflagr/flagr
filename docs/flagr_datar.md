@@ -49,7 +49,7 @@ startup. No schema migration is needed.
 ## Recording
 
 Datar shares the same recording gates as the streaming recorders described in
-[Recording gates](contracts.md#recording-gates), with one key difference: it
+[Recording gates](flagr_behavioral_contracts.md#recording-gates), with one key difference: it
 counts **evaluations only**. Rows carrying `recordSource: exposure` from
 `POST /exposures` are skipped, so impression-based experiments never reach
 Datar's counters.
@@ -58,7 +58,7 @@ The per-flag `dataRecordsEnabled` setting still applies, and you toggle it
 through `PUT /api/v1/flags/{id}` as usual. A flag must opt in before its
 evaluations are counted.
 
-> **Note:** After creating or updating a flag, wait for EvalCache to reload before evaluations count — [EvalCache freshness](contracts.md#evalcache-freshness).
+> **Note:** After creating or updating a flag, wait for EvalCache to reload before evaluations count — [EvalCache freshness](flagr_behavioral_contracts.md#evalcache-freshness).
 
 ## Endpoints
 

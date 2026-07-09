@@ -85,12 +85,12 @@ If you'd rather not remember the order, `make gen` runs all three in sequence. I
 
 The docs site is a Docsify app whose sources live right here in `docs/`, with `home.md` as the homepage. Preview it locally with `make serve-docs`; on push to `main` it publishes to GitHub Pages via the [`pages.yml`](https://github.com/openflagr/flagr/blob/main/.github/workflows/pages.yml) workflow.
 
-Several pages serve specific audiences and are worth knowing as a contributor: the [integration guide](integration.md) is the hub for integrators, the [behavioral contracts](contracts.md) hold the canonical descriptions of cross-cutting behavior, and this page is the repo guide. Design and as-built notes live in `docs/plans/` — they aren't linked in the sidebar, but they're valuable internal history.
+Several pages serve specific audiences and are worth knowing as a contributor: the [integration guide](integration.md) is the hub for integrators, the [behavioral contracts](flagr_behavioral_contracts.md) hold the canonical descriptions of cross-cutting behavior, and this page is the repo guide. Design and as-built notes live in `docs/plans/` — they aren't linked in the sidebar, but they're valuable internal history.
 
 **Docs conventions**
 
-- User-facing filenames: `flagr_*.md`, `integration.md`, `contracts.md`, `home.md`. Link text: **sentence case** (e.g. "Exposure logging", "Data recorders & A/B analysis").
-- Cross-cutting behavior (eval vs exposure, recording gates, eval-only, EvalCache lag): edit **[contracts.md](contracts.md)** first; other pages link there instead of copying paragraphs.
+- User-facing filenames: `flagr_*.md`, `integration.md`, `flagr_behavioral_contracts.md`, `home.md`. Link text: **sentence case** (e.g. "Exposure logging", "Data recorders & A/B analysis").
+- Cross-cutting behavior (eval vs exposure, recording gates, eval-only, EvalCache lag): edit **[flagr_behavioral_contracts.md](flagr_behavioral_contracts.md)** first; other pages link there instead of copying paragraphs.
 - **Deploy / topology:** edit **[flagr_self_host.md](flagr_self_host.md)**; **`flagr_env.md`** = embedded `env.go` + variable guide (no duplicate Compose/mysql runbooks).
 - **`flagr_env.md`:** embedded `pkg/config/env.go` first, then the short guide; embed tracks **`main`** on GitHub.
 - Off-site sidebar links use a subtle **↗** via CSS (`a[href^="http"]`); client SDKs are listed in [integration.md](integration.md) and README, not in `_sidebar.md`.

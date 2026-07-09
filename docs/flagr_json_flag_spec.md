@@ -1,6 +1,6 @@
 # JSON flag source
 
-Flagr can serve flags from a **JSON file or URL** instead of a database. The evaluation engine is identical; what changes is the authoring workflow. Flags live in a file you control, edits happen through pull requests, and a running Flagr instance becomes a read-only consumer that polls for updates. Because `json_file` and `json_http` both put the server into eval-only mode, the CRUD UI, exposure endpoint, and database are gone - only evaluation, health, and the export endpoint remain. The behavioral rules for that mode are on [Behavioral contracts](contracts.md#eval-only).
+Flagr can serve flags from a **JSON file or URL** instead of a database. The evaluation engine is identical; what changes is the authoring workflow. Flags live in a file you control, edits happen through pull requests, and a running Flagr instance becomes a read-only consumer that polls for updates. Because `json_file` and `json_http` both put the server into eval-only mode, the CRUD UI, exposure endpoint, and database are gone - only evaluation, health, and the export endpoint remain. The behavioral rules for that mode are on [Behavioral contracts](flagr_behavioral_contracts.md#eval-only).
 
 ## Quick start
 
@@ -27,7 +27,7 @@ export FLAGR_DB_DBDRIVER=json_file   # or json_http
 export FLAGR_DB_DBCONNECTIONSTR=/path/to/flags.json
 ```
 
-From there on, the file is the source of truth. Flagr re-fetches it on its EvalCache refresh interval, so a committed change reaches the server within that window - no restart, no deploy. The exact freshness contract and the `FLAGR_EVALCACHE_REFRESHINTERVAL` knob are on [EvalCache freshness](contracts.md#evalcache-freshness).
+From there on, the file is the source of truth. Flagr re-fetches it on its EvalCache refresh interval, so a committed change reaches the server within that window - no restart, no deploy. The exact freshness contract and the `FLAGR_EVALCACHE_REFRESHINTERVAL` knob are on [EvalCache freshness](flagr_behavioral_contracts.md#evalcache-freshness).
 
 ## Validation
 
@@ -136,7 +136,7 @@ Variants are the possible outcomes of an evaluation. Each has a unique key withi
 
 ### Segment
 
-Segments divide a flag's audience into ranked groups. `Rank` sets evaluation priority - lower ranks evaluate first, so the first segment whose **constraints match** wins and evaluation stops (rollout miss does not fall through). `RolloutPercent` gates what fraction of that matched segment's hashed range gets a variant. Details: [contracts: segment evaluation](contracts.md#segment-evaluation).
+Segments divide a flag's audience into ranked groups. `Rank` sets evaluation priority - lower ranks evaluate first, so the first segment whose **constraints match** wins and evaluation stops (rollout miss does not fall through). `RolloutPercent` gates what fraction of that matched segment's hashed range gets a variant. Details: [behavioral contracts: segment evaluation](flagr_behavioral_contracts.md#segment-evaluation).
 
 ```json
 {

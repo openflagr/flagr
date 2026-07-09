@@ -6,7 +6,7 @@ Your app calls **`POST /api/v1/evaluation`** with an `entityID` and optional `en
 
 You can run it against SQLite (local demo), MySQL, or Postgres, or as an eval-only sidecar fed from a JSON file in Git. Same flag can be a kill switch today, an experiment tomorrow, and a runtime config knob the day after, without redeploying the app.
 
-Hard rules (eval vs exposure, segment stop, blank vs stream, recording gates, cache lag): [Behavioral contracts](contracts.md). HTTP copy-paste: [Integration guide](integration.md). Just want something running? Use the demo below.
+Hard rules (eval vs exposure, segment stop, blank vs stream, recording gates, cache lag): [Behavioral contracts](flagr_behavioral_contracts.md). HTTP copy-paste: [Integration guide](integration.md). Just want something running? Use the demo below.
 
 ## Quick demo
 

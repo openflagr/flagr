@@ -4,11 +4,11 @@ Your first Flagr call is one HTTP request: flag + entity → variant. Everything
 
 Base URL: `https://<flagr-host>/api/v1` (prepend `FLAGR_WEB_PREFIX` if you set one).
 
-Invariants live in [Behavioral contracts](contracts.md) (eval vs exposure, segment evaluation, blank vs stream, recording gates, cache lag, eval-only). Concepts and bucketing: [Overview](flagr_overview.md). Deploy: [Self-hosting](flagr_self_host.md). REST: [API reference](https://openflagr.github.io/flagr/api_docs).
+Invariants live in [Behavioral contracts](flagr_behavioral_contracts.md) (eval vs exposure, segment evaluation, blank vs stream, recording gates, cache lag, eval-only). Concepts and bucketing: [Overview](flagr_overview.md). Deploy: [Self-hosting](flagr_self_host.md). REST: [API reference](https://openflagr.github.io/flagr/api_docs).
 
 ### Eval vs exposure :id=eval-vs-exposure
 
-`POST /evaluation` assigns a variant. `POST /exposures` records that the user saw it. UI experiments need both. Pure server-side branching usually needs only eval. Details: [Eval vs exposure](contracts.md#eval-vs-exposure).
+`POST /evaluation` assigns a variant. `POST /exposures` records that the user saw it. UI experiments need both. Pure server-side branching usually needs only eval. Details: [Eval vs exposure](flagr_behavioral_contracts.md#eval-vs-exposure).
 
 ## Endpoints you need
 
@@ -21,7 +21,7 @@ Invariants live in [Behavioral contracts](contracts.md) (eval vs exposure, segme
 | Log impression | `POST /exposures` | After the user **sees** the treatment |
 | Liveness | `GET /health` | Probes |
 
-Eval-only replicas (`json_file` / `json_http`) expose evaluation, health, and `GET /api/v1/export/eval_cache/json` only. See [contracts: eval-only](contracts.md#eval-only).
+Eval-only replicas (`json_file` / `json_http`) expose evaluation, health, and `GET /api/v1/export/eval_cache/json` only. See [behavioral contracts: eval-only](flagr_behavioral_contracts.md#eval-only).
 
 ## Request model
 
@@ -69,7 +69,7 @@ Nested context (constraints use dotted paths):
 
 | Field | Use |
 |-------|-----|
-| `variantKey` | Branch in app code; empty ⇒ no assignment ([EvalCache](contracts.md#evalcache-freshness)) |
+| `variantKey` | Branch in app code; empty ⇒ no assignment ([EvalCache](flagr_behavioral_contracts.md#evalcache-freshness)) |
 | `variantID` | Stable id for exposures and analytics |
 | `variantAttachment` | JSON config for this variant |
 | `flagSnapshotID` | Pass through on `POST /exposures` for warehouse joins |
@@ -115,14 +115,14 @@ By tag (`ANY` = at least one listed tag; `ALL` = every listed tag):
 
 Work cap: `len(entities) * (len(flagIDs) + len(flagKeys) + tags estimate)` against `FLAGR_EVAL_BATCH_SIZE` (`0` = unlimited). Duplicate IDs/keys are deduped before the count.
 
-**CI gotcha:** a flag you just created is not evaluable until EvalCache reloads. Poll with a real eval (this repo's **`waitForEvalReady`**) until you see a variant. See [EvalCache freshness](contracts.md#evalcache-freshness).
+**CI gotcha:** a flag you just created is not evaluable until EvalCache reloads. Poll with a real eval (this repo's **`waitForEvalReady`**) until you see a variant. See [EvalCache freshness](flagr_behavioral_contracts.md#evalcache-freshness).
 
 ## UI experiment loop
 
-For rigid A/B tests, count people who **saw** the treatment, not assignment alone ([contracts: eval vs exposure](contracts.md#eval-vs-exposure)).
+For rigid A/B tests, count people who **saw** the treatment, not assignment alone ([behavioral contracts: eval vs exposure](flagr_behavioral_contracts.md#eval-vs-exposure)).
 
 1. **`POST /evaluation`** - cache `variantKey`, `variantID`, `flagSnapshotID`.
-2. **Render** only when `variantKey` is non-empty. Low rollout on a matched segment can leave the key empty and does **not** fall through to later segments ([segment evaluation](contracts.md#segment-evaluation)).
+2. **Render** only when `variantKey` is non-empty. Low rollout on a matched segment can leave the key empty and does **not** fall through to later segments ([segment evaluation](flagr_behavioral_contracts.md#segment-evaluation)).
 3. **`POST /exposures`** when the surface is visible (mount, viewport, or unload batch).
 
 ```bash

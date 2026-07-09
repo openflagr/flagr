@@ -11,7 +11,7 @@ Requirements:
 - Server: `FLAGR_EVAL_DEBUG_ENABLED=true` (default in `pkg/config/env.go`)
 - Request: `enableDebug: true`
 
-Turn the env off in production if you do not want segment logs on eval traffic. Impressions after render: [Exposure logging](flagr_exposure.md). Concepts: [Overview](flagr_overview.md). Cache lag: [Behavioral contracts](contracts.md#evalcache-freshness).
+Turn the env off in production if you do not want segment logs on eval traffic. Impressions after render: [Exposure logging](flagr_exposure.md). Concepts: [Overview](flagr_overview.md). Cache lag: [Behavioral contracts](flagr_behavioral_contracts.md#evalcache-freshness).
 
 ![Debug Console](/images/demo_debugging_console.png)
 
@@ -19,7 +19,7 @@ Turn the env off in production if you do not want segment logs on eval traffic. 
 
 Each `segmentDebugLogs` entry has a `segmentID` and a free-text `msg`: which constraints matched, which did not, and (on a match) bucket and distribution reasoning.
 
-Read the list in **segment rank order**. Evaluation stops at the first segment whose **constraints match** (even if rollout leaves `variantKey` empty); later segments never ran. Rules: [contracts: segment evaluation](contracts.md#segment-evaluation).
+Read the list in **segment rank order**. Evaluation stops at the first segment whose **constraints match** (even if rollout leaves `variantKey` empty); later segments never ran. Rules: [behavioral contracts: segment evaluation](flagr_behavioral_contracts.md#segment-evaluation).
 
 ## Single evaluation
 
@@ -69,4 +69,4 @@ Good for regression-checking a constraint change: line up the contexts that shou
 - **Always set `enableDebug: true`**. Without it, logs are omitted. The server gate `FLAGR_EVAL_DEBUG_ENABLED` must also be on (default true).
 - **Use realistic `entityContext`**. Same fields as production (`state`, `age`, `tier`, injected headers if you rely on them).
 - **Flag key or flag ID**. Either works; the console pre-fills both from the current flag page.
-- **Blank after a config change**. Wait for EvalCache reload (default 3s) before assuming a bug ([contracts](contracts.md#evalcache-freshness)).
+- **Blank after a config change**. Wait for EvalCache reload (default 3s) before assuming a bug ([behavioral contracts](flagr_behavioral_contracts.md#evalcache-freshness)).

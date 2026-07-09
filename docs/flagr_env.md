@@ -29,7 +29,7 @@ export FLAGR_DB_DBDRIVER=mysql
 export FLAGR_DB_DBCONNECTIONSTR='user:pass@tcp(127.0.0.1:3306)/flagr?parseTime=true'
 ```
 
-If you'd rather serve flags from a static JSON file or URL with no database at all, set `FLAGR_DB_DBDRIVER` to `json_file` or `json_http`. That puts the server into eval-only mode automatically - see [contracts - eval-only](contracts.md#eval-only) and the [JSON flag source](flagr_json_flag_spec.md) spec.
+If you'd rather serve flags from a static JSON file or URL with no database at all, set `FLAGR_DB_DBDRIVER` to `json_file` or `json_http`. That puts the server into eval-only mode automatically - see [behavioral contracts - eval-only](flagr_behavioral_contracts.md#eval-only) and the [JSON flag source](flagr_json_flag_spec.md) spec.
 
 ---
 
@@ -64,9 +64,9 @@ Evaluation never hits the database on the hot path. It reads an in-memory EvalCa
 | `FLAGR_EVAL_GET_MAX_URL_BYTES` | `8192` | GET `json=` raw query cap; `0` = off - [use cases](flagr_use_cases.md#get-evaluation-browser-friendly) |
 | `FLAGR_EXPOSURE_BATCH_SIZE` | `100` | Max rows per `POST /exposures` |
 
-After a flag change, **`variantKey`** can stay blank or stale until the next reload. That lag is a contract, not a bug. See [EvalCache freshness](contracts.md#evalcache-freshness). Automated tests should wait at least one interval (this repo uses **`waitForEvalReady`**).
+After a flag change, **`variantKey`** can stay blank or stale until the next reload. That lag is a contract, not a bug. See [EvalCache freshness](flagr_behavioral_contracts.md#evalcache-freshness). Automated tests should wait at least one interval (this repo uses **`waitForEvalReady`**).
 
-Eval-only is the usual product path when `FLAGR_DB_DBDRIVER` is `json_file` or `json_http` (`setupEvalOnlyMode` in `pkg/config/config.go`). `FLAGR_EVAL_ONLY_MODE=true` can be set on other drivers as an edge case; prefer JSON drivers for eval-edge deploys. Surface: [contracts: eval-only](contracts.md#eval-only).
+Eval-only is the usual product path when `FLAGR_DB_DBDRIVER` is `json_file` or `json_http` (`setupEvalOnlyMode` in `pkg/config/config.go`). `FLAGR_EVAL_ONLY_MODE=true` can be set on other drivers as an edge case; prefer JSON drivers for eval-edge deploys. Surface: [behavioral contracts: eval-only](flagr_behavioral_contracts.md#eval-only).
 
 #### Built-in context injection
 
@@ -118,7 +118,7 @@ One thing worth calling out: the default JWT whitelist allows unauthenticated ex
 
 ### Data recorders :id=data-record-destinations
 
-Recording gates (master switch, recorder type, per-flag `dataRecordsEnabled`): [contracts: recording gates](contracts.md#recording-gates). Blank assignment vs whether a row is written: [blank vs stream](contracts.md#blank-vs-stream).
+Recording gates (master switch, recorder type, per-flag `dataRecordsEnabled`): [behavioral contracts: recording gates](flagr_behavioral_contracts.md#recording-gates). Blank assignment vs whether a row is written: [blank vs stream](flagr_behavioral_contracts.md#blank-vs-stream).
 
 `FLAGR_RECORDER_TYPE` is a comma-separated list so you can combine recorders.
 

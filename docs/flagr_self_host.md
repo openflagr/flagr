@@ -42,13 +42,13 @@ TLS uses `--scheme=https` plus the cert flags from the server bootstrap. Local f
 
 ## Deployment shapes
 
-`FLAGR_DB_DBDRIVER` largely decides the surface area. JSON drivers force [eval-only mode](contracts.md#eval-only).
+`FLAGR_DB_DBDRIVER` largely decides the surface area. JSON drivers force [eval-only mode](flagr_behavioral_contracts.md#eval-only).
 
 | Shape | Driver | Notes |
 |-------|--------|--------|
 | Demo | `sqlite3` (default) | Ephemeral unless you mount the DB path |
 | Prod UI + CRUD | `mysql` or `postgres` | Shared DB; GORM auto-migrate on boot |
-| Eval edge | `json_file` / `json_http` | [Eval-only](contracts.md#eval-only) + [JSON flag source](flagr_json_flag_spec.md) |
+| Eval edge | `json_file` / `json_http` | [Eval-only](flagr_behavioral_contracts.md#eval-only) + [JSON flag source](flagr_json_flag_spec.md) |
 | Headless API | SQL + `FLAGR_UI_ENABLED=false` | CRUD via API only |
 
 ## Database
@@ -70,7 +70,7 @@ docker run --rm -p 18000:18000 \
 
 **PostgreSQL** - libpq-style string, e.g. `sslmode=disable host=… user=… password=… dbname=flagr` (prefer `sslmode=require` where you can).
 
-**JSON HTTP** - `FLAGR_DB_DBDRIVER=json_http` and a flag URL. Freshness follows [EvalCache freshness](contracts.md#evalcache-freshness). Spec: [JSON flag source](flagr_json_flag_spec.md).
+**JSON HTTP** - `FLAGR_DB_DBDRIVER=json_http` and a flag URL. Freshness follows [EvalCache freshness](flagr_behavioral_contracts.md#evalcache-freshness). Spec: [JSON flag source](flagr_json_flag_spec.md).
 
 ## Docker Compose (MySQL + Flagr)
 
@@ -110,7 +110,7 @@ Swap credentials before any shared environment. The repo CI compose file has mor
 
 No in-repo Helm chart. Same image (or `make build` binary under systemd): inject secrets for DB, JWT, and recorders; bind `0.0.0.0:18000`; probe **`GET /api/v1/health`**.
 
-Horizontal scale: one shared flag store (SQL or one JSON URL), one EvalCache per replica. Cache reload is local. Read [EvalCache freshness](contracts.md#evalcache-freshness) before assuming a flag edit is fleet-wide.
+Horizontal scale: one shared flag store (SQL or one JSON URL), one EvalCache per replica. Cache reload is local. Read [EvalCache freshness](flagr_behavioral_contracts.md#evalcache-freshness) before assuming a flag edit is fleet-wide.
 
 ## Reverse proxy and path prefix
 
@@ -127,7 +127,7 @@ UI at `/flagr/`, API at `/flagr/api/v1/...`. Set `HOST=0.0.0.0` in containers so
 | Bind | `HOST=0.0.0.0` in containers |
 | Logs | `FLAGR_LOGRUS_FORMAT=json` |
 | Auth, CORS, recorders, pprof | [Environment variables: guide](flagr_env.md#guide) |
-| Recording | [Recording gates](contracts.md#recording-gates) |
+| Recording | [Recording gates](flagr_behavioral_contracts.md#recording-gates) |
 | Backups | SQL dump, or `GET /api/v1/export/eval_cache/json`, or Git for JSON mode |
 
 ## Verify

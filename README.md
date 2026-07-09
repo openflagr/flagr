@@ -37,7 +37,7 @@ That lets you **decouple deploy from release** (ship code dark, turn it on per a
 
 | Page | Content |
 |------|---------|
-| [Behavioral contracts](https://openflagr.github.io/flagr/#/contracts) | Eval vs exposure, recording, eval-only, cache |
+| [Behavioral contracts](https://openflagr.github.io/flagr/#/flagr_behavioral_contracts) | Eval vs exposure, recording, eval-only, cache |
 | [Integration guide](https://openflagr.github.io/flagr/#/integration) | Eval, batch, exposures (client API) |
 | [Contributing](https://openflagr.github.io/flagr/#/CONTRIBUTING) | Clone, build, test, OpenAPI |
 | [Overview](https://openflagr.github.io/flagr/#/flagr_overview) | Concepts, running example, architecture |
@@ -96,7 +96,7 @@ curl -sS -X POST https://try-flagr.onrender.com/api/v1/evaluation \
 
 ## Architecture
 
-Three parts ([overview diagram](https://openflagr.github.io/flagr/#/flagr_overview?id=architecture), [behavioral contracts](https://openflagr.github.io/flagr/#/contracts)):
+Three parts ([overview diagram](https://openflagr.github.io/flagr/#/flagr_overview?id=architecture), [behavioral contracts](https://openflagr.github.io/flagr/#/flagr_behavioral_contracts)):
 
 - **Evaluator** - `POST` or `GET /evaluation` reads **EvalCache** in memory (default reload **3s**; no per-request SQL). Bucketing and stickiness: [overview](https://openflagr.github.io/flagr/#/flagr_overview?id=rollout-and-deterministic-bucketing). GET: [use cases](https://openflagr.github.io/flagr/#/flagr_use_cases?id=get-evaluation-browser-friendly).
 - **Manager** - CRUD + `flag_snapshot` rows; webhooks after commit.

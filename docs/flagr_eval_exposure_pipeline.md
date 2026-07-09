@@ -6,9 +6,9 @@ Flagr doesn't pick your streaming backend, and it doesn't run significance tests
 
 | If you need… | Read |
 |--------------|------|
-| What "eval" vs "exposure" means | [Behavioral contracts](contracts.md#eval-vs-exposure) |
-| Segment stop / no rollout fallthrough | [contracts: segment evaluation](contracts.md#segment-evaluation) |
-| Blank `variantKey` vs stream row | [contracts: blank vs stream](contracts.md#blank-vs-stream) |
+| What "eval" vs "exposure" means | [Behavioral contracts](flagr_behavioral_contracts.md#eval-vs-exposure) |
+| Segment stop / no rollout fallthrough | [behavioral contracts: segment evaluation](flagr_behavioral_contracts.md#segment-evaluation) |
+| Blank `variantKey` vs stream row | [behavioral contracts: blank vs stream](flagr_behavioral_contracts.md#blank-vs-stream) |
 | How to call eval / exposure from your app | [Integration guide](integration.md) |
 | The exposure API itself | [Exposure logging](flagr_exposure.md) |
 | Quick eval counts without a pipeline | [Datar analytics](flagr_datar.md) |
@@ -20,7 +20,7 @@ Flagr doesn't pick your streaming backend, and it doesn't run significance tests
 
 A user lands on your checkout page. Behind the scenes, a small chain of events fires - some synchronous, some not - and the way they fit together is the whole design.
 
-1. **Your app calls `POST /evaluation`.** Flagr reads from in-memory EvalCache (no per-request SQL), walks segments in rank order per [segment evaluation](contracts.md#segment-evaluation), and returns a `variantKey` plus a `flagSnapshotID`. This is the *assignment*.
+1. **Your app calls `POST /evaluation`.** Flagr reads from in-memory EvalCache (no per-request SQL), walks segments in rank order per [segment evaluation](flagr_behavioral_contracts.md#segment-evaluation), and returns a `variantKey` plus a `flagSnapshotID`. This is the *assignment*.
 
 2. **Your app renders the surface.** If `variantKey` is empty, it doesn't render the experiment - holdout, rollout miss, or no match, not a participant.
 
@@ -53,7 +53,7 @@ The key insight: **evaluation** and **exposure** are different events with diffe
 
 ## What gets recorded (and what doesn't)
 
-Rows reach a recorder only when all three [recording gates](contracts.md#recording-gates) are open. Canonical blank-vs-stream table: [contracts](contracts.md#blank-vs-stream). When gates are open:
+Rows reach a recorder only when all three [recording gates](flagr_behavioral_contracts.md#recording-gates) are open. Canonical blank-vs-stream table: [behavioral contracts](flagr_behavioral_contracts.md#blank-vs-stream). When gates are open:
 
 | What the user triggered | `recordSource` | Streamed? | Why |
 |-------------------------|----------------|-----------|-----|
@@ -69,7 +69,7 @@ A blank-variant eval row is useful for volume and "assigned but never exposed" g
 
 **Datar** follows the same gates but silently drops `exposure` rows - evaluations only. With `kafka,datar`, Kafka gets everything; Datar gets eval counts only.
 
-After toggling `dataRecordsEnabled`, wait for EvalCache reload (~3s by default) - [EvalCache freshness](contracts.md#evalcache-freshness).
+After toggling `dataRecordsEnabled`, wait for EvalCache reload (~3s by default) - [EvalCache freshness](flagr_behavioral_contracts.md#evalcache-freshness).
 
 ---
 

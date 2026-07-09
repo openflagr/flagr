@@ -1,6 +1,6 @@
 # Exposure logging
 
-Evaluation assigns a variant. Exposure records that the user **saw** it. Eval volume is fine for many rollouts and dashboards; for **rigid A/B denominators**, log exposure after render. Full rule: [contracts: eval vs exposure](contracts.md#eval-vs-exposure).
+Evaluation assigns a variant. Exposure records that the user **saw** it. Eval volume is fine for many rollouts and dashboards; for **rigid A/B denominators**, log exposure after render. Full rule: [behavioral contracts: eval vs exposure](flagr_behavioral_contracts.md#eval-vs-exposure).
 
 Client flow when you need impressions: `POST /evaluation` → render → `POST /exposures`. Wire format and warehouse SQL: [Data recorders & A/B analysis](flagr_eval_exposure_pipeline.md). Architecture: [Overview](flagr_overview.md#architecture).
 
@@ -41,13 +41,13 @@ Integration tests: **`TestIntegration_Exposures`** requires this route on curren
 - **200** - `loggedCount`, `message`, optional `errors[]` (`index`, `message`) per row.
 - **400** - empty body or batch over limit.
 
-`loggedCount` follows [recording gates](contracts.md#recording-gates). Valid rows can return **200** with `loggedCount: 0`.
+`loggedCount` follows [recording gates](flagr_behavioral_contracts.md#recording-gates). Valid rows can return **200** with `loggedCount: 0`.
 
 ## Recording and metrics
 
 Exposure rows use the same streaming pipeline as eval with `recordSource: "exposure"`. **Datar** does not count exposures. Statsd: `exposure.ingest`, `exposure.recorded` (tags: `status`, `FlagID`, `FlagKey`).
 
-Eval-only nodes have **no** exposure API. See [contracts: eval-only](contracts.md#eval-only).
+Eval-only nodes have **no** exposure API. See [behavioral contracts: eval-only](flagr_behavioral_contracts.md#eval-only).
 
 ## Validation
 

@@ -25,15 +25,15 @@ Two variants (`on` / `off`), one segment at 100% `on`:
 
 ```
 Variants
- - on
- - off
+  - on
+  - off
 
 Segment
- - Constraints: none (everyone)
- - Rollout Percent: 100%
- - Distribution
- - on: 100%
- - off: 0%
+  - Constraints: none (everyone)
+  - Rollout Percent: 100%
+  - Distribution
+    - on: 100%
+    - off: 0%
 ```
 
 Evaluate once per entity and branch on `variantKey`:
@@ -83,34 +83,34 @@ if (result.variantKey === "control") {
 }
 ```
 
-> **Warning:** Segments run in order. The **first** segment whose constraints all match wins, then evaluation **stops** - even if rollout leaves `variantKey` empty. Put narrow rules above catch-alls. Full rule: [contracts: segment evaluation](contracts.md#segment-evaluation).
+> **Warning:** Segments run in order. The **first** segment whose constraints all match wins, then evaluation **stops** - even if rollout leaves `variantKey` empty. Put narrow rules above catch-alls. Full rule: [behavioral contracts: segment evaluation](flagr_behavioral_contracts.md#segment-evaluation).
 
 Example layout:
 
 ```
 Variants
- - control
- - treatment1
- - treatment2
- - treatment3
+  - control
+  - treatment1
+  - treatment2
+  - treatment3
 
 Segment                         // state == "CA"
- - Constraints (state == "CA")
- - Rollout Percent: 20%
- - Distribution
- - control:    25%
- - treatment1: 25%
- - treatment2: 25%
- - treatment3: 25%
+  - Constraints (state == "CA")
+  - Rollout Percent: 20%
+  - Distribution
+    - control:    25%
+    - treatment1: 25%
+    - treatment2: 25%
+    - treatment3: 25%
 
 Segment                         // state == "NY" AND age >= 21
- - Constraints (state == "NY" AND age >= 21)
- - Rollout Percent: 100%
- - Distribution
- - control:    50%
- - treatment1:  0%
- - treatment2: 25%
- - treatment3: 25%
+  - Constraints (state == "NY" AND age >= 21)
+  - Rollout Percent: 100%
+  - Distribution
+    - control:    50%
+    - treatment1:  0%
+    - treatment2: 25%
+    - treatment3: 25%
 ```
 
 ![ab testing setting demo 1](/images/demo_exp1.png)
@@ -133,17 +133,17 @@ Example flag:
 
 ```
 Variants
- - green
- - attachment: {"color_hex": "#42b983"}
- - red
- - attachment: {"color_hex": "#ff0000"}
+  - green
+    - attachment: {"color_hex": "#42b983"}
+  - red
+    - attachment: {"color_hex": "#ff0000"}
 
 Segment
- - Constraints: null
- - Rollout Percent: 100%
- - Distribution
- - green: 100%
- - red: 0%
+  - Constraints: null
+  - Rollout Percent: 100%
+  - Distribution
+    - green: 100%
+    - red: 0%
 ```
 
 ![dynamic configuration demo](/images/demo_dynamic_configuration.png)
@@ -236,6 +236,6 @@ Response fields stay camelCase: `variantKey`, `variantAttachment`, `evalContext`
 | Goal | Doc |
 |------|-----|
 | HTTP details and batch | [Integration guide](integration.md) |
-| Eval vs exposure, cache lag | [Behavioral contracts](contracts.md) |
+| Eval vs exposure, cache lag | [Behavioral contracts](flagr_behavioral_contracts.md) |
 | Segment and bucketing concepts | [Overview](flagr_overview.md) |
 | Env vars (`FLAGR_EVAL_GET_MAX_URL_BYTES`, etc.) | [Environment variables](flagr_env.md) |
