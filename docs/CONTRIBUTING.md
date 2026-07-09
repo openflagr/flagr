@@ -94,7 +94,7 @@ Several pages serve specific audiences and are worth knowing as a contributor: t
 - **Deploy / topology:** edit **[flagr_self_host.md](flagr_self_host.md)**; **`flagr_env.md`** = embedded `env.go` + variable guide (no duplicate Compose/mysql runbooks).
 - **`flagr_env.md`:** embedded `pkg/config/env.go` first, then the short guide; embed tracks **`main`** on GitHub.
 - Off-site sidebar links use a subtle **↗** via CSS (`a[href^="http"]`); client SDKs are listed in [integration.md](integration.md) and README, not in `_sidebar.md`.
-- When renaming a docs page, update links in-repo (and the README docs table). Optional thin stubs only if an external bookmark matters (e.g. `contracts.md` → `flagr_behavioral_contracts.md`).
+- When renaming a docs page, update links in-repo (and the README docs table). Prefer deleting the old file over leaving a stub.
 Whenever you change the API docs, refresh `docs/api_docs/bundle.yaml` so the hosted [API reference](https://openflagr.github.io/flagr/api_docs) stays current.
 
 ## UI architecture
