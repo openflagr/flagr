@@ -1,12 +1,8 @@
-# Built-in Context Injection
+# Built-in context injection
 
-Flagr can automatically inject server-side and HTTP request metadata into every
-evaluation's `entityContext`. This lets you write **constraint rules** against
-time, deployment environment, or proxy-injected headers — without changing your
-application code or managing separate flag configurations per environment.
+Flagr can merge server-side and HTTP request metadata into every evaluation's `entityContext`. Constraints can then target time, environment, or proxy headers without changing app code or maintaining a separate flag set per environment.
 
-Once enabled, built-in keys appear in the entity context alongside whatever
-your application sends. Constraints reference them like any other property.
+When enabled, built-in keys sit next to whatever the client sent. Constraints use them like any other property. Source: `pkg/handler/builtin_context.go`.
 
 ## Quick start
 
@@ -21,20 +17,19 @@ FLAGR_INJECTED_CONTEXT_HTTP_HEADERS="X-Environment,X-Tenant-ID"
 FLAGR_INJECTED_CONTEXT_HTTP_HEADER_PREFIXES="CF-"
 ```
 
-Restart Flagr. Now every evaluation automatically includes:
+Restart Flagr. Every evaluation then includes the core time keys, plus any configured headers:
 
 | Key | Value | Source |
 |-----|-------|--------|
-| `@ts` | `1751666400` | Unix epoch seconds (server time) |
-| `@ts_hour` | `14` | Hour of day, 0–23 UTC |
-| `@ts_weekday` | `1` | Day of week, 0=Sunday–6=Saturday |
-| `@ts_month` | `7` | Month, 1–12 |
+| `@ts` | `1751666400` | Unix epoch seconds (server UTC) as `float64` |
+| `@ts_hour` | `14` | Hour of day, 0-23 UTC |
+| `@ts_weekday` | `1` | Day of week, 0=Sunday-6=Saturday |
+| `@ts_month` | `7` | Month, 1-12 |
 | `@http_x_environment` | `"production"` | From `X-Environment` header |
 | `@http_x_tenant_id` | `"acme-corp"` | From `X-Tenant-ID` header |
 | `@http_cf_ipcountry` | `"US"` | From `CF-IPCountry` header |
 
-Your application still sends the same `entityContext` — the built-in keys are
-merged in server-side before evaluation.
+Your app still sends the same `entityContext`. Injection runs server-side in `PostEvaluation` / `GetEvaluation` / batch before constraints run.
 
 ---
 
@@ -50,9 +45,9 @@ merged in server-side before evaluation.
 
 Built-in keys follow a simple rule:
 
-- **Core keys:** `@ts`, `@ts_hour`, `@ts_weekday`, `@ts_month` — always present
+- **Core keys:** `@ts`, `@ts_hour`, `@ts_weekday`, `@ts_month` - always present
   when enabled, no configuration needed.
-- **Header keys:** `@http_<header_name>` — header name lowercased, `-` replaced
+- **Header keys:** `@http_<header_name>` - header name lowercased, `-` replaced
   with `_`. Example: `X-Environment` → `@http_x_environment`.
 
 The `@` prefix marks server-injected keys. Client-provided `entityContext`
@@ -101,8 +96,8 @@ location / {
 ```
 Flag: "new-checkout-flow"
 Variants:
-  - on
-  - off
+ - on
+ - off
 
 Segment 1 (staging only):
   Constraint: {@http_x_environment} EQ "staging"
@@ -114,7 +109,7 @@ Segment 2 (production gradual rollout):
   Rollout: 10%
   Distribution: on 100%, off 0%
 
-Segment 3 (default — off everywhere else):
+Segment 3 (default - off everywhere else):
   Rollout: 100%
   Distribution: on 0%, off 100%
 ```
@@ -142,8 +137,8 @@ activates automatically when server time passes the threshold.
 ```
 Flag: "black-friday-banner"
 Variants:
-  - show
-  - hide
+ - show
+ - hide
 
 Segment 1 (active during Black Friday week):
   Constraint: {@ts} GTE 1764038400    ← Nov 24, 2025 00:00:00 UTC
@@ -151,14 +146,14 @@ Segment 1 (active during Black Friday week):
   Rollout: 100%
   Distribution: show 100%, hide 0%
 
-Segment 2 (default — hidden):
+Segment 2 (default - hidden):
   Rollout: 100%
   Distribution: show 0%, hide 100%
 ```
 
 **Result:**
 - Before Nov 24: banner hidden
-- Nov 24 – Nov 30: banner shown
+- Nov 24 - Nov 30: banner shown
 - After Dec 1: banner hidden again
 
 The UI shows a human-readable hint when you enter `@ts` constraints:
@@ -168,7 +163,7 @@ The UI shows a human-readable hint when you enter `@ts` constraints:
 
 ### 3. Business hours targeting
 
-**Problem:** Enable a feature only during business hours (9 AM – 5 PM UTC),
+**Problem:** Enable a feature only during business hours (9 AM - 5 PM UTC),
 or run different experiments during work hours vs off-hours.
 
 **Solution:** Use `@ts_hour` for hour-of-day targeting.
@@ -178,8 +173,8 @@ or run different experiments during work hours vs off-hours.
 ```
 Flag: "live-chat-support"
 Variants:
-  - on
-  - off
+ - on
+ - off
 
 Segment 1 (business hours):
   Constraint: {@ts_weekday} GTE 1      ← Monday
@@ -189,13 +184,13 @@ Segment 1 (business hours):
   Rollout: 100%
   Distribution: on 100%, off 0%
 
-Segment 2 (default — off):
+Segment 2 (default - off):
   Rollout: 100%
   Distribution: on 0%, off 100%
 ```
 
 **Result:**
-- Weekdays 9–17 UTC: live chat enabled
+- Weekdays 9-17 UTC: live chat enabled
 - Weekends and off-hours: live chat disabled
 
 Combine with `@ts_month` for seasonal features:
@@ -226,15 +221,15 @@ proxy_set_header X-Tenant-ID "acme-corp";
 ```
 Flag: "advanced-analytics-dashboard"
 Variants:
-  - premium
-  - basic
+ - premium
+ - basic
 
 Segment 1 (premium tenants):
   Constraint: {@http_x_tenant_id} IN "acme-corp,globex-inc,initech"
   Rollout: 100%
   Distribution: premium 100%, basic 0%
 
-Segment 2 (default — basic for everyone else):
+Segment 2 (default - basic for everyone else):
   Rollout: 100%
   Distribution: premium 0%, basic 100%
 ```
@@ -264,15 +259,15 @@ FLAGR_INJECTED_CONTEXT_HTTP_HEADER_PREFIXES="CF-"
 ```
 Flag: "eu-cookie-consent-banner"
 Variants:
-  - show
-  - hide
+ - show
+ - hide
 
 Segment 1 (EU countries):
   Constraint: {@http_cf_ipcountry} IN "AT,BE,BG,HR,CY,CZ,DK,EE,FI,FR,DE,GR,HU,IE,IT,LV,LT,LU,MT,NL,PL,PT,RO,SK,SI,ES,SE"
   Rollout: 100%
   Distribution: show 100%, hide 0%
 
-Segment 2 (default — no banner):
+Segment 2 (default - no banner):
   Rollout: 100%
   Distribution: show 0%, hide 100%
 ```
@@ -295,15 +290,15 @@ canary instances. You want canary instances to test new features.
 ```
 Flag: "redesigned-homepage"
 Variants:
-  - new
-  - old
+ - new
+ - old
 
 Segment 1 (canary instances):
   Constraint: {@http_x_canary} EQ "true"
   Rollout: 100%
   Distribution: new 100%, old 0%
 
-Segment 2 (default — old for everyone):
+Segment 2 (default - old for everyone):
   Rollout: 100%
   Distribution: new 0%, old 100%
 ```
@@ -331,12 +326,11 @@ Result:             segment matches (it's 2 PM UTC)
 
 ### Performance
 
-Injection adds ~1.2µs to a 328µs evaluation — negligible overhead.
-The `@ts` keys are computed from `time.Now().UTC()` (1 allocation for the map).
-Header matching uses `sync.Once`-cached sets — the config is parsed once, not
-per-request. Header injection iterates `r.Header` directly (no `Clone()`).
-When the feature is disabled, `InjectBuiltInContext` returns the original
-context unchanged (zero cost).
+Injection is cheap on the eval hot path. When the feature is **disabled**, `InjectBuiltInContext` returns the original context unchanged.
+
+Benchmarks in `pkg/handler/builtin_context_bench_test.go` (Linux arm64, Go 1.26.x, realistic request with ~15 headers) put full injection on the order of a few microseconds, roughly **+1%** of a ~328µs p50 evaluation in the published vegeta run. Core keys alone are sub-microsecond. Header match sets are built once (`sync.Once`); header injection walks `r.Header` directly (no `Clone()`). Re-run the benches on your hardware before citing a hard number in a design review.
+
+Numeric time keys are stored as **`float64`** so they survive JSON round-trips cleanly.
 
 ### Namespace isolation
 
@@ -347,7 +341,7 @@ context unchanged (zero cost).
 | *(none)* | Client-provided | `country`, `tier` |
 
 Server-injected keys (`@` prefix) overwrite client-provided values with the
-same name. This prevents spoofing — a client cannot fake `@ts` to bypass
+same name. This prevents spoofing - a client cannot fake `@ts` to bypass
 scheduling constraints.
 
 ---
@@ -362,7 +356,7 @@ injected keys in `evalDebugLog`.
 
 **Q: What happens if a header is empty?**
 
-A: Empty headers are skipped — they don't appear in the context.
+A: Empty headers are skipped - they don't appear in the context.
 
 **Q: What if I configure a header that doesn't exist in the request?**
 
@@ -372,17 +366,17 @@ A: Silent no-op. The key simply isn't injected.
 
 A: No. Server-injected keys always overwrite client values. If your
 application sends `{"@ts": 0}`, it gets overwritten with the real server
-time. This is intentional — it prevents spoofing.
+time. This is intentional - it prevents spoofing.
 
 **Q: Does this work with batch evaluation?**
 
 A: Yes. Each entity in a batch request gets built-in context injected
-individually — same semantics as the single-eval path (in-place mutation
+individually - same semantics as the single-eval path (in-place mutation
 when the context is already a map). When disabled, no injection occurs.
 
 ## Related documentation
 
-- [Environment variables](flagr_env.md) — `FLAGR_INJECTED_CONTEXT_*` in the guide
-- [Integration guide](integration.md) — `entityContext` and eval request shape
-- [Overview — constraint property access](flagr_overview.md#constraint-property-access) — how constraints read context fields
-- [Debug console](flagr_debugging.md) — verify injected keys with `enableDebug`
+- [Environment variables](flagr_env.md) - `FLAGR_INJECTED_CONTEXT_*` in the guide
+- [Integration guide](integration.md) - `entityContext` and eval request shape
+- [Overview - constraint property access](flagr_overview.md#constraint-property-access) - how constraints read context fields
+- [Debug console](flagr_debugging.md) - verify injected keys with `enableDebug`
