@@ -118,7 +118,7 @@ Segment                         // state == "NY" AND age >= 21
 
 ### Measuring outcomes
 
-`POST /evaluation` alone is not a conversion denominator. Log an impression when the user **sees** the treatment ([Exposure logging](flagr_exposure.md)), then pipe rows through [Data recorders & A/B analysis](flagr_eval_exposure_pipeline.md) or your own consumer. For eval volume only, [Datar](flagr_datar.md) is enough.
+`POST /evaluation` alone is enough for many assignment metrics. For a **rigid A/B denominator** (who actually saw the treatment), log exposure after render ([Exposure logging](flagr_exposure.md)), then pipe rows through [Data recorders & A/B analysis](flagr_eval_exposure_pipeline.md) or your own consumer. Eval volume only: [Datar](flagr_datar.md).
 
 ## Dynamic configuration
 

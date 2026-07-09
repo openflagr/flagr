@@ -119,7 +119,7 @@ Work cap: `len(entities) * (len(flagIDs) + len(flagKeys) + tags estimate)` again
 
 ## UI experiment loop
 
-Assignment alone is not a denominator. Count people who **saw** the treatment ([contracts: eval vs exposure](contracts.md#eval-vs-exposure)).
+For rigid A/B tests, count people who **saw** the treatment, not assignment alone ([contracts: eval vs exposure](contracts.md#eval-vs-exposure)).
 
 1. **`POST /evaluation`** - cache `variantKey`, `variantID`, `flagSnapshotID`.
 2. **Render** only when `variantKey` is non-empty. Low rollout on a matched segment can leave the key empty and does **not** fall through to later segments ([segment evaluation](contracts.md#segment-evaluation)).

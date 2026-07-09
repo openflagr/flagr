@@ -8,18 +8,20 @@ These are the invariants integrators can rely on. Other pages link here instead 
 
 Evaluation is the server's **assignment**. Exposure is the client's **impression** that the user actually saw the surface.
 
-Mixing them is the fastest way to poison A/B denominators. Prefetches, disabled flags, and no-match blanks all produce evaluations. They are not participants.
+They answer different questions. Prefetches, disabled flags, and no-match blanks all produce evaluations; those rows are not "someone saw the treatment."
 
 | | **Evaluation** | **Exposure** |
 |---|----------------|--------------|
 | API | `POST /api/v1/evaluation` (and batch; GET variants exist) | `POST /api/v1/exposures` |
 | Meaning | Which variant (if any) for this entity **now** | User **saw** the experiment surface |
-| Typical use | Branch in code; cache `variantKey`, `flagSnapshotID` | A/B **denominator** after render / in-viewport |
+| Typical use | Branch in code; cache `variantKey`, `flagSnapshotID` | Impression after render / in-viewport |
 | Stream tag | `recordSource: "evaluation"` | `recordSource: "exposure"` |
 
-Never treat evaluation volume as experiment participants.
+**When is eval volume enough?** Many cases only need assignment counts: kill switches, gradual rollouts, server-side config, ops dashboards, and rough traffic splits. Eval (or [Datar](flagr_datar.md)) is fine there.
 
-Healthy UI flow: **eval → render → exposure** (batch exposures on unload if you defer). Mechanics: [Exposure logging](flagr_exposure.md), [Data recorders & A/B analysis](flagr_eval_exposure_pipeline.md).
+**When do you need exposure?** For **rigid A/B experiments** where the denominator must be people who actually saw a surface (not prefetches, not never-rendered assignments), send explicit exposure after render. Mixing eval volume into that denominator is how lift gets diluted.
+
+Healthy UI experiment flow when you need impressions: **eval → render → exposure** (batch exposures on unload if you defer). Mechanics: [Exposure logging](flagr_exposure.md), [Data recorders & A/B analysis](flagr_eval_exposure_pipeline.md).
 
 ---
 

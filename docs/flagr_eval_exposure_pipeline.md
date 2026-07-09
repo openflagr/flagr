@@ -65,7 +65,7 @@ Rows reach a recorder only when all three [recording gates](contracts.md#recordi
 | Exposure - valid row, gates off | - | **No** | HTTP 200 with `loggedCount: 0` |
 | Exposure - invalid row | - | **No** | Row error in the response; not enqueued |
 
-A blank-variant eval row is useful for volume and "assigned but never exposed" gaps. It is **not** an experiment participant.
+A blank-variant eval row is useful for volume and "assigned but never exposed" gaps. For rigid A/B denominators, count exposures (people who saw the surface), not eval volume alone.
 
 **Datar** follows the same gates but silently drops `exposure` rows - evaluations only. With `kafka,datar`, Kafka gets everything; Datar gets eval counts only.
 

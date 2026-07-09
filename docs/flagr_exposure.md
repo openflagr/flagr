@@ -1,8 +1,8 @@
 # Exposure logging
 
-Evaluation assigns a variant. Exposure records that the user **saw** it. Do not treat eval volume as experiment participants. Full rule: [contracts: eval vs exposure](contracts.md#eval-vs-exposure).
+Evaluation assigns a variant. Exposure records that the user **saw** it. Eval volume is fine for many rollouts and dashboards; for **rigid A/B denominators**, log exposure after render. Full rule: [contracts: eval vs exposure](contracts.md#eval-vs-exposure).
 
-Client flow: `POST /evaluation` → render → `POST /exposures`. Wire format and warehouse SQL: [Data recorders & A/B analysis](flagr_eval_exposure_pipeline.md). Architecture: [Overview](flagr_overview.md#architecture).
+Client flow when you need impressions: `POST /evaluation` → render → `POST /exposures`. Wire format and warehouse SQL: [Data recorders & A/B analysis](flagr_eval_exposure_pipeline.md). Architecture: [Overview](flagr_overview.md#architecture).
 
 ## Endpoint
 
