@@ -1,8 +1,10 @@
 # Flagr use cases
 
-Feature flags, A/B tests, and dynamic config often get sold as three products. In Flagr they are one **flag** and one evaluation call (`POST /api/v1/evaluation` by default). You start with a kill switch, add segments for rollouts, split variants for experiments, and hang JSON on variants when you need config. Same client call the whole way.
+Feature flags, A/B tests, and dynamic config often ship as three products. In Flagr they are one **flag** and one evaluation call (`POST /api/v1/evaluation` by default).
 
-A rollout cares who is on. An experiment cares what they saw and whether they converted. Flagr assigns; your app renders; [exposure logging](flagr_exposure.md) and your warehouse handle the rest.
+Start with a kill switch. Add segments for rollouts. Split variants for experiments. Hang JSON on variants when you need config. Same client call the whole way.
+
+A rollout cares who is on. An experiment cares what they saw and whether they converted. Flagr assigns; your app renders; [exposure logging](flagr_exposure.md) and your warehouse do the rest.
 
 | If you are building… | Start here |
 |----------------------|------------|
@@ -15,11 +17,11 @@ A rollout cares who is on. An experiment cares what they saw and whether they co
 
 ## Feature flagging
 
-The smallest useful question is whether a code path runs. A **kill switch** flips that answer from the UI without a redeploy. The same flag scales to **targeted rollouts**: staff first, one region, then everyone. Deploy and release stop being the same event.
+The smallest useful question is whether a code path runs. A **kill switch** flips that from the UI without a redeploy. The same flag scales to **targeted rollouts**: staff first, one region, then everyone. Deploy and release stop being the same event.
 
 ### Boolean on/off template
 
-Most teams begin with two variants (`on` / `off`) and one segment at 100% `on`:
+Two variants (`on` / `off`), one segment at 100% `on`:
 
 ```
 Variants
@@ -46,26 +48,26 @@ if (result.variantKey === "on") {
 }
 ```
 
-That pattern is convention, not a special flag type. You can grow the same flag without changing the call site:
+That shape is convention, not a special flag type. Grow the same flag without changing the call site:
 
-- **Audience** — constraints on `entityContext` (`state == "CA"`, `tier == "beta"`).
-- **Gradual rollout** — lower segment rollout percent (10% → 50% → 100%).
-- **Experiment** — more variants and a split distribution.
-- **Config** — JSON on each variant via **Attachment**.
+- **Audience** - constraints on `entityContext` (`state == "CA"`, `tier == "beta"`).
+- **Gradual rollout** - lower segment rollout percent (10% → 50% → 100%).
+- **Experiment** - more variants and a split distribution.
+- **Config** - JSON on each variant via **Attachment**.
 
-The flag-level **`enabled`** switch is separate. When `enabled` is `false`, evaluation returns blank before segments run (`PUT /api/v1/flags/{id}/enabled` or the UI toggle). Use it as a global off for the whole flag.
+The flag-level **`enabled`** switch is separate. When `enabled` is `false`, evaluation returns blank before segments run (`PUT /api/v1/flags/{id}/enabled` or the UI toggle).
 
 ![feature flagging setting demo](/images/demo_ff.png)
 
-To fork segments, variants, and tags, use **`POST /api/v1/flags/{flagID}/duplicate`** or **Duplicate Flag** in the UI. The clone gets a new key and ` (cloned)` in the description unless you override `key` / `description` in the body.
+To fork segments, variants, and tags: **`POST /api/v1/flags/{flagID}/duplicate`** or **Duplicate Flag** in the UI. The clone gets a new key and ` (cloned)` in the description unless you override `key` / `description` in the body.
 
-## Experimenting — A/B testing
+## Experimenting - A/B testing
 
-Add a second "on-like" variant and the question becomes *which experience wins?* Same flag, same `POST /evaluation`, more variants and a finer distribution. Flagr gives you sticky assignment (`entityID` + unchanged flag → same `variantKey`). Significance and conversion math stay in your stack; Flagr can emit events if you wire [recorders](flagr_eval_exposure_pipeline.md).
+Add another "on-like" variant and the question becomes *which experience wins?* Same flag, same `POST /evaluation`, finer distribution. Flagr gives sticky assignment (`entityID` + unchanged flag → same `variantKey`). Significance math stays in your stack; Flagr can emit events if you wire [recorders](flagr_eval_exposure_pipeline.md).
 
 ### Control and treatment (naming)
 
-`control` and `treatment` are **your** labels, not Flagr types. Every variant is equal in the evaluator. In analytics, control is usually the baseline; treatments are alternatives. Name a baseline `control` so warehouse queries stay obvious.
+`control` and `treatment` are **your** labels. The evaluator treats every variant the same. Name a baseline `control` so warehouse queries stay obvious.
 
 > **Note:** Flagr does not require a `control` variant. It only records the `variantKey` you configured.
 
@@ -81,7 +83,7 @@ if (result.variantKey === "control") {
 }
 ```
 
-> **Warning:** Segments run in order. The **first** segment whose constraints all match wins. Put narrow rules above catch-alls.
+> **Warning:** Segments run in order. The **first** segment whose constraints all match wins, then evaluation **stops** - even if rollout leaves `variantKey` empty. Put narrow rules above catch-alls. Full rule: [behavioral contracts: segment evaluation](flagr_behavioral_contracts.md#segment-evaluation).
 
 Example layout:
 
@@ -116,7 +118,7 @@ Segment                         // state == "NY" AND age >= 21
 
 ### Measuring outcomes
 
-`POST /evaluation` alone does not give you a conversion denominator. Log an impression when the user **sees** the treatment ([Exposure logging](flagr_exposure.md)), then pipe rows through [Data recorders & A/B analysis](flagr_eval_exposure_pipeline.md) or your own consumer. For eval volume only, [Datar](flagr_datar.md) is enough.
+`POST /evaluation` alone is enough for many assignment metrics. For a **rigid A/B denominator** (who actually saw the treatment), log exposure after render ([Exposure logging](flagr_exposure.md)), then pipe rows through [Data recorders & A/B analysis](flagr_eval_exposure_pipeline.md) or your own consumer. Eval volume only: [Datar](flagr_datar.md).
 
 ## Dynamic configuration
 
@@ -150,13 +152,15 @@ Segment
 
 ## GET evaluation (browser-friendly) :id=get-evaluation-browser-friendly
 
-**POST** stays the default for servers, SDKs, and large `entityContext`. **GET** is the same `evalContext` or batch body, URL-encoded in a single `json=` query param, when you need a CORS-simple request or HTTP caching in the browser. Motivation: [issue #613](https://github.com/openflagr/flagr/issues/613); shape discussion: [PR #631](https://github.com/openflagr/flagr/pull/631). The [Debug Console](flagr_debugging.md) still uses POST only.
+**POST** is the default for servers, SDKs, and large `entityContext`. **GET** carries the same `evalContext` or batch body, URL-encoded in a single `json=` query param, when you need a CORS-simple request or HTTP caching in the browser.
+
+Motivation: [issue #613](https://github.com/openflagr/flagr/issues/613). Shape: [PR #631](https://github.com/openflagr/flagr/pull/631). The [Debug Console](flagr_debugging.md) still uses POST only.
 
 | | POST (primary) | GET (secondary) |
 |--|----------------|-----------------|
 | Best for | Backends, SDKs, rich context, batch | Browser `fetch` without preflight, preload, shared links |
 | Payload | JSON body | `?json=` (length capped; see below) |
-| Privacy | Body rarely logged in URLs | Full request often in access logs, `Referer`, history |
+| Privacy | Body rarely lands in URL logs | Full request often in access logs, `Referer`, history |
 | Caching | Not by default | By full URL when safe |
 
 Use GET only with small, non-sensitive context and stable JSON serialization. When unsure, POST.
@@ -190,17 +194,19 @@ Batch: `GET /api/v1/evaluation/batch?json=${encodeURIComponent(JSON.stringify(ba
 
 ### Security and validation
 
-Everything lives in **`json=`**, so treat URLs like sensitive query strings. Avoid secrets and PII you would not put in a GET. Watch **caching**: personalized URLs can return the wrong assignment if a CDN or browser caches them. Skip `enableDebug: true` on GET URLs you might cache or forward.
+Everything lives in **`json=`**, so treat the URL like a sensitive query string. Avoid secrets and PII you would not put in a GET. Personalized GET URLs can return the wrong assignment if a CDN or browser caches them. Skip `enableDebug: true` on URLs you might cache or forward.
 
-After decode, GET runs the same **`Validate` / `ContextValidate`** as POST on `evalContext` and batch bodies. GET also enforces raw query length ≤ **`FLAGR_EVAL_GET_MAX_URL_BYTES`** (default **8192**; `0` disables). Invalid JSON → **400**. Unknown flags and non-matching segments still → **200** with empty or partial results. POST may surface **422** from go-swagger on bind; GET uses **400** with a `json is not valid …` message.
+After decode, GET runs the same **`Validate` / `ContextValidate`** as POST on `evalContext` and batch bodies. GET also enforces raw query length ≤ **`FLAGR_EVAL_GET_MAX_URL_BYTES`** (default **8192**; `0` disables the check). Invalid JSON → **400**. Unknown flags and non-matching segments still → **200** with empty or partial results. POST may surface **422** from go-swagger on bind; GET uses **400** with a `json is not valid …` message.
 
-Review auth whitelists in [Environment variables](flagr_env.md): evaluation is often open by default.
+Auth whitelists often leave evaluation open by default. Review [Environment variables](flagr_env.md).
 
 ### URL length (`FLAGR_EVAL_GET_MAX_URL_BYTES`)
 
 Flagr counts the **raw query string** only (`json=…` after encoding), not the full URL. Over the cap → **400** with a message to use POST.
 
-Typical fixtures in this repo land around **~100–250** bytes for a single eval and **~200–500** for a modest batch (a few percent of the 8192 default). The default is a guardrail aligned with common **~8 KB** request-line limits (e.g. Apache `LimitRequestLine` 8190), not a sizing target for normal traffic. For public browser-only pages, **2–4 KB total URL** is still a sane conservative design limit on old clients and proxies.
+Source of truth: `FLAGR_EVAL_GET_MAX_URL_BYTES` in `pkg/config/env.go` (default 8192). Handler: `pkg/handler/eval.go`. Size fixtures: `go test ./pkg/handler -run TestGetEvalQuerySizesDocumentsTypicalPayloads -v`.
+
+Typical fixtures in this repo land around **~100-250** bytes for a single eval and **~200-500** for a modest batch (a few percent of the 8192 default). The default lines up with common **~8 KB** request-line limits (e.g. Apache `LimitRequestLine` 8190). For public browser-only pages, **2-4 KB total URL** is still a conservative design limit on old clients and proxies.
 
 | Fixture shape | Raw query length | Share of 8192 |
 |---------------|------------------|---------------|
@@ -213,7 +219,7 @@ Typical fixtures in this repo land around **~100–250** bytes for a single eval
 
 GET fits segment fields (`state`, `tier`, `region`), not multi-kilobyte blobs in `entityContext`. Integration tests pin the boundary: **8033** ASCII chars in `entityContext.blob` → raw query **8192** (200); one byte more → **400**.
 
-Other hops (nginx header buffers, ALB 16 KB request line, Go `MaxHeaderBytes` 1 MiB) can fail earlier or later depending on your edge. If you raise `FLAGR_EVAL_GET_MAX_URL_BYTES`, check ingress and load balancers before relying on longer GET URLs. Reproduce sizes with `go test ./pkg/handler -run TestGetEvalQuerySizesDocumentsTypicalPayloads -v`.
+Other hops (nginx header buffers, ALB 16 KB request line, Go `MaxHeaderBytes` 1 MiB) can fail earlier or later. If you raise `FLAGR_EVAL_GET_MAX_URL_BYTES`, check ingress before relying on longer GET URLs.
 
 When you cache GET responses, serialize JSON consistently (key order, no pretty-print) and only cache non-personalized URLs.
 
@@ -223,13 +229,13 @@ curl -sS -X POST "http://localhost:18000/api/v1/evaluation" \
   -d '{"entityID":"user-1","entityType":"user","entityContext":{"tier":"premium"},"flagKey":"my-feature"}'
 ```
 
-Response fields remain camelCase: `variantKey`, `variantAttachment`, `evalContext`.
+Response fields stay camelCase: `variantKey`, `variantAttachment`, `evalContext`.
 
 ## Where to go next
 
 | Goal | Doc |
 |------|-----|
 | HTTP details and batch | [Integration guide](integration.md) |
-| Eval vs exposure, cache lag | [Behavioral contracts](contracts.md) |
+| Eval vs exposure, cache lag | [Behavioral contracts](flagr_behavioral_contracts.md) |
 | Segment and bucketing concepts | [Overview](flagr_overview.md) |
 | Env vars (`FLAGR_EVAL_GET_MAX_URL_BYTES`, etc.) | [Environment variables](flagr_env.md) |

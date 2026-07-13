@@ -1,18 +1,29 @@
 # Debug console
 
-You evaluated an entity and got back the wrong variant — or no variant at all. The evaluation API tells you *what* happened; it does not tell you *why*. The **Debug Console**, available on every flag page, fills that gap. It sends an evaluation request with **`enableDebug: true`** and surfaces `evalDebugLog.segmentDebugLogs`, so you can replay an entity's context and walk through, segment by segment, exactly where evaluation stopped and what it decided.
+You evaluated an entity and got the wrong variant, or no variant at all. The eval API tells you *what* happened. It does not tell you *why*.
 
-The console uses **`POST /evaluation`** and **`POST /evaluation/batch`** only (not GET). For **`GET /evaluation?json=…`**, see [Use cases — GET evaluation](flagr_use_cases.md#get-evaluation-browser-friendly). It works when **`FLAGR_EVAL_DEBUG_ENABLED=true`** (default) and the request sets `enableDebug`; turn that env off in production if you do not want segment logs on eval traffic. For impressions after render, [Exposure logging](flagr_exposure.md); for concepts, [Overview](flagr_overview.md). Gating: [Behavioral contracts](contracts.md#evalcache-freshness).
+The **Debug Console** on each flag page fills that gap. It sends evaluation with **`enableDebug: true`** and surfaces `evalDebugLog.segmentDebugLogs`, so you can replay an entity's context and walk segment by segment until evaluation stops.
+
+The console uses **`POST /evaluation`** and **`POST /evaluation/batch`** only (not GET). For browser GET eval, see [Use cases: GET evaluation](flagr_use_cases.md#get-evaluation-browser-friendly).
+
+Requirements:
+
+- Server: `FLAGR_EVAL_DEBUG_ENABLED=true` (default in `pkg/config/env.go`)
+- Request: `enableDebug: true`
+
+Turn the env off in production if you do not want segment logs on eval traffic. Impressions after render: [Exposure logging](flagr_exposure.md). Concepts: [Overview](flagr_overview.md). Cache lag: [Behavioral contracts](flagr_behavioral_contracts.md#evalcache-freshness).
 
 ![Debug Console](/images/demo_debugging_console.png)
 
 ## What you get
 
-Each entry in `segmentDebugLogs` carries a `segmentID` and a free-text `msg` describing what the evaluator saw: which constraints matched, which did not, and — when a segment *did* match — the bucket and distribution reasoning that followed. Read the list in **segment rank order**. Evaluation walks segments from first to last and stops at the first match, so the first entry whose `msg` reports a match is your culprit; everything after it was never evaluated.
+Each `segmentDebugLogs` entry has a `segmentID` and a free-text `msg`: which constraints matched, which did not, and (on a match) bucket and distribution reasoning.
+
+Read the list in **segment rank order**. Evaluation stops at the first segment whose **constraints match** (even if rollout leaves `variantKey` empty); later segments never ran. Rules: [behavioral contracts: segment evaluation](flagr_behavioral_contracts.md#segment-evaluation).
 
 ## Single evaluation
 
-Start with a single entity when you are chasing one wrong assignment. The **Evaluation** panel sends `POST /api/v1/evaluation` with an editable body, so you can paste in the exact context your application sends and see what the server actually does with it:
+Use one entity when you are chasing one wrong assignment. The **Evaluation** panel sends `POST /api/v1/evaluation` with an editable body. Paste what your app actually sends:
 
 ```json
 {
@@ -24,21 +35,21 @@ Start with a single entity when you are chasing one wrong assignment. The **Eval
 }
 ```
 
-The response carries three things you care about when debugging:
+What to look at:
 
-- **`variantID` / `variantKey`** — the variant that was assigned, or nothing if no segment matched.
-- **`evalDebugLog.segmentDebugLogs`** — a per-segment trace. Each entry pairs a `segmentID` with a `msg` that reports whether all constraints matched and, when they did, the rollout and distribution reasoning: the bucket number, the distribution array, and the rollout percent.
-- **`evalContext`** — the full context the server actually evaluated, echoed back so you can confirm it received what you intended to send.
+- **`variantID` / `variantKey`** - assigned variant, or empty if nothing matched.
+- **`evalDebugLog.segmentDebugLogs`** - per-segment trace (bucket number, distribution array, rollout percent when a segment matches).
+- **`evalContext`** - what the server evaluated, including any [injected keys](flagr_injected_context.md).
 
-> **Note:** `segmentDebugLogs` is a flat list of `{ segmentID, msg }` entries, not a structured breakdown. Constraint results are reported as one boolean expression per segment — on mismatch the whole compiled expression is dumped; there is no per-constraint matched/didn't split.
+> **Note:** `segmentDebugLogs` is a flat list of `{ segmentID, msg }`, not a structured per-constraint tree. On mismatch the compiled expression is dumped as one boolean expression.
 
-That compiled expression is the fastest path to the most common bug. When a segment's constraints fail, the debug text includes the expression the server compiled and the **`entityContext`** map it evaluated against. Compare the two: a property name typo, a missing field, or a JSON type mismatch (string `"30"` versus number `30`) jumps out immediately, because the expression names the field it expected and the map shows what you actually sent.
+That dump is the fastest path to the usual bugs: property name typo, missing field, or JSON type mismatch (`"30"` vs `30`). Compare the expression to the map you sent.
 
-The console renders a summary view alongside the raw response — the matched variant up top, and a segment-by-segment trace below — so you can scan the outcome before drilling into the JSON.
+The console shows a summary (matched variant + segment walk) next to the raw JSON.
 
 ## Batch evaluation
 
-When the question is not "why did this one entity fail?" but "do my segments route the way I think they do across the board?", switch to the **Batch Evaluation** panel. It sends `POST /api/v1/evaluation/batch`, letting you evaluate multiple entities against one or more flags in a single call:
+When the question is "do my segments route the way I think across several entities?", use **Batch Evaluation** (`POST /api/v1/evaluation/batch`):
 
 ```json
 {
@@ -51,10 +62,11 @@ When the question is not "why did this one entity fail?" but "do my segments rou
 }
 ```
 
-This is the right tool for regression-checking a constraint change: line up the entity contexts that should land in each variant, run them together, and confirm every one routed where you expected. If one did not, its `segmentDebugLogs` tells you exactly which segment rejected it and why.
+Good for regression-checking a constraint change: line up the contexts that should land in each variant, run them together, then open `segmentDebugLogs` on any miss.
 
 ## Tips
 
-- **Always set `enableDebug: true`** — without it, the response omits the debug logs that make the console useful. The server must also have `FLAGR_EVAL_DEBUG_ENABLED` on, which defaults to `true`.
-- **Use realistic entity contexts** — include the same fields your app sends (e.g. `state`, `age`, `tier`) to test constraint matching accurately.
-- **Flag key or flag ID** — the console pre-fills both from the current flag page. You can use either `flagID` or `flagKey` in the request; both resolve to the same flag.
+- **Always set `enableDebug: true`**. Without it, logs are omitted. The server gate `FLAGR_EVAL_DEBUG_ENABLED` must also be on (default true).
+- **Use realistic `entityContext`**. Same fields as production (`state`, `age`, `tier`, injected headers if you rely on them).
+- **Flag key or flag ID**. Either works; the console pre-fills both from the current flag page.
+- **Blank after a config change**. Wait for EvalCache reload (default 3s) before assuming a bug ([behavioral contracts](flagr_behavioral_contracts.md#evalcache-freshness)).

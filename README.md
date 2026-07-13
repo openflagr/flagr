@@ -37,7 +37,7 @@ That lets you **decouple deploy from release** (ship code dark, turn it on per a
 
 | Page | Content |
 |------|---------|
-| [Behavioral contracts](https://openflagr.github.io/flagr/#/contracts) | Eval vs exposure, recording, eval-only, cache |
+| [Behavioral contracts](https://openflagr.github.io/flagr/#/flagr_behavioral_contracts) | Eval vs exposure, recording, eval-only, cache |
 | [Integration guide](https://openflagr.github.io/flagr/#/integration) | Eval, batch, exposures (client API) |
 | [Contributing](https://openflagr.github.io/flagr/#/CONTRIBUTING) | Clone, build, test, OpenAPI |
 | [Overview](https://openflagr.github.io/flagr/#/flagr_overview) | Concepts, running example, architecture |
@@ -53,17 +53,17 @@ That lets you **decouple deploy from release** (ship code dark, turn it on per a
 
 ## Features
 
-- **Feature flags** — kill switches, targeted rollouts
-- **GET evaluation** — `GET /api/v1/evaluation?json=…` (same JSON as POST; [use cases](https://openflagr.github.io/flagr/#/flagr_use_cases?id=get-evaluation-browser-friendly))
-- **Built-in context injection** — `@ts*` and `@http_*` keys merged server-side ([guide](https://openflagr.github.io/flagr/#/flagr_injected_context))
-- **Duplicate flag** — `POST /flags/{id}/duplicate` or UI **Duplicate Flag**
-- **A/B testing** — deterministic assignment; pair with exposure logging
-- **Dynamic configuration** — `variantAttachment` JSON on eval responses
-- **GitOps** — `json_file` / `json_http`; `flagr-validate` in CI
-- **Exposure logging** — `POST /exposures` for trustworthy denominators
-- **Self-hosted** — official Docker image + env vars
-- **Databases** — SQLite, MySQL, PostgreSQL, or JSON sources
-- **Vue 3 UI** — TypeScript (`browser/flagr-ui`); `make build-ui`, `make test-e2e`
+- **Feature flags** - kill switches, targeted rollouts
+- **GET evaluation** - `GET /api/v1/evaluation?json=…` (same JSON as POST; [use cases](https://openflagr.github.io/flagr/#/flagr_use_cases?id=get-evaluation-browser-friendly))
+- **Built-in context injection** - `@ts*` and `@http_*` keys merged server-side ([guide](https://openflagr.github.io/flagr/#/flagr_injected_context))
+- **Duplicate flag** - `POST /flags/{id}/duplicate` or UI **Duplicate Flag**
+- **A/B testing** - deterministic assignment; pair with exposure logging
+- **Dynamic configuration** - `variantAttachment` JSON on eval responses
+- **GitOps** - `json_file` / `json_http`; `flagr-validate` in CI
+- **Exposure logging** - `POST /exposures` for trustworthy denominators
+- **Self-hosted** - official Docker image + env vars
+- **Databases** - SQLite, MySQL, PostgreSQL, or JSON sources
+- **Vue 3 UI** - TypeScript (`browser/flagr-ui`); `make build-ui`, `make test-e2e`
 
 ## Quick start
 
@@ -96,11 +96,11 @@ curl -sS -X POST https://try-flagr.onrender.com/api/v1/evaluation \
 
 ## Architecture
 
-Three parts ([overview diagram](https://openflagr.github.io/flagr/#/flagr_overview?id=architecture), [behavioral contracts](https://openflagr.github.io/flagr/#/contracts)):
+Three parts ([overview diagram](https://openflagr.github.io/flagr/#/flagr_overview?id=architecture), [behavioral contracts](https://openflagr.github.io/flagr/#/flagr_behavioral_contracts)):
 
-- **Evaluator** — `POST` or `GET /evaluation` reads **EvalCache** in memory (default reload **3s**; no per-request SQL). GET: [use cases](https://openflagr.github.io/flagr/#/flagr_use_cases?id=get-evaluation-browser-friendly).
-- **Manager** — CRUD + `flag_snapshot` rows; webhooks after commit.
-- **Metrics** — async recorders (Kafka, Kinesis, Pub/Sub, Datar); slow sinks do not block eval.
+- **Evaluator** - `POST` or `GET /evaluation` reads **EvalCache** in memory (default reload **3s**; no per-request SQL). Bucketing and stickiness: [overview](https://openflagr.github.io/flagr/#/flagr_overview?id=rollout-and-deterministic-bucketing). GET: [use cases](https://openflagr.github.io/flagr/#/flagr_use_cases?id=get-evaluation-browser-friendly).
+- **Manager** - CRUD + `flag_snapshot` rows; webhooks after commit.
+- **Metrics** - async recorders (Kafka, Kinesis, Pub/Sub, Datar); slow sinks do not block eval.
 
 Source: `pkg/handler/eval.go`, `eval_cache.go`, `crud.go`.
 
@@ -127,5 +127,5 @@ Status Codes  [code:count]             200:56521
 
 ## License
 
-- [`openflagr/flagr`](https://github.com/openflagr/flagr) — Apache 2.0
-- [`checkr/flagr`](https://github.com/checkr/flagr) — Apache 2.0 (original)
+- [`openflagr/flagr`](https://github.com/openflagr/flagr) - Apache 2.0
+- [`checkr/flagr`](https://github.com/checkr/flagr) - Apache 2.0 (original)

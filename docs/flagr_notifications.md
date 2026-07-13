@@ -13,7 +13,7 @@ response that made the change.
 
 This is one of the operational contracts Flagr guarantees; for the full set
 of invariants integrators should internalize, see
-[Behavioral contracts](contracts.md).
+[Behavioral contracts](flagr_behavioral_contracts.md).
 
 ## Tracked operations
 

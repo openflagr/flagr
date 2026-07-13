@@ -1,7 +1,7 @@
 - Documentation
     - [Home](home.md)
     - [Integration guide](integration.md)
-    - [Behavioral contracts](contracts.md)
+    - [Behavioral contracts](flagr_behavioral_contracts.md)
     - [Contributing](CONTRIBUTING.md)
 
 - Concepts & API
