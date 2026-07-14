@@ -8,7 +8,7 @@ Deploy recipes: [Self-hosting](flagr_self_host.md).
 
 ---
 
-## Source (`pkg/config/env.go`) :id=source-pkgconfigenvgo
+## Source (`pkg/config/env.go`) {#source-pkgconfigenvgo}
 
 The block below is the live source from the `main` branch, embedded directly. On feature branches, compare against your own checkout until it merges. You can also open it on GitHub.
 
@@ -78,7 +78,7 @@ Eval-only is the usual product path when `FLAGR_DB_DBDRIVER` is `json_file` or `
 
 Full guide: [Built-in context injection](flagr_injected_context.md).
 
-#### Eval cache export :id=eval-cache-export
+#### Eval cache export {#eval-cache-export}
 
 A running server can dump its in-memory cache as JSON via `GET /api/v1/export/eval_cache/json`, with optional `enabled`, `ids`, `keys`, `tags`, and `tagsOperator` (`ANY` / `ALL`) query parameters.
 
@@ -116,7 +116,7 @@ Separately, Flagr can identify *who* made a mutation for audit logging without d
 
 One thing worth calling out: the default JWT whitelist allows unauthenticated exposure logging. If the integrity of your impression stream matters, narrow the whitelist to lock down `/api/v1/exposures` and rate-limit it at the edge. The [Exposure logging](flagr_exposure.md) page walks through the tradeoffs.
 
-### Data recorders :id=data-record-destinations
+### Data recorders {#data-record-destinations}
 
 Recording gates (master switch, recorder type, per-flag `dataRecordsEnabled`): [behavioral contracts: recording gates](flagr_behavioral_contracts.md#recording-gates). Blank assignment vs whether a row is written: [blank vs stream](flagr_behavioral_contracts.md#blank-vs-stream).
 

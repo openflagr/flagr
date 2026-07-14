@@ -1,3 +1,7 @@
+---
+title: Flagr use cases
+---
+
 # Flagr use cases
 
 Feature flags, A/B tests, and dynamic config often ship as three products. In Flagr they are one **flag** and one evaluation call (`POST /api/v1/evaluation` by default).
@@ -150,7 +154,7 @@ Segment
 
 > **Note:** Before [v1.1.3](https://github.com/openflagr/flagr/releases/tag/1.1.3), attachments were `string:string` maps. Current Flagr uses `map[string]any` for arbitrary JSON.
 
-## GET evaluation (browser-friendly) :id=get-evaluation-browser-friendly
+## GET evaluation (browser-friendly) {#get-evaluation-browser-friendly}
 
 **POST** is the default for servers, SDKs, and large `entityContext`. **GET** carries the same `evalContext` or batch body, URL-encoded in a single `json=` query param, when you need a CORS-simple request or HTTP caching in the browser.
 

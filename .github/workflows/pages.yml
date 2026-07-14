@@ -1,6 +1,5 @@
-# Static Docsify site in docs/ — no Jekyll build.
+# VitePress static build of docs/ — deploys docs/.vitepress/dist to GitHub Pages.
 # Repo Settings → Pages → Build and deployment → Source: GitHub Actions
-# (not "Deploy from a branch", which triggers legacy Jekyll and can race deploy-pages.)
 name: Deploy docs to GitHub Pages
 
 on:
@@ -26,12 +25,20 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: docs/package-lock.json
+      - name: Build docs
+        run: make build-docs
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: docs
+          path: docs/.vitepress/dist
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5

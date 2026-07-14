@@ -1,10 +1,14 @@
+---
+title: Behavioral contracts
+---
+
 # Behavioral contracts
 
 These are the invariants integrators can rely on. Other pages link here instead of restating them. If another doc disagrees with this page, **this page wins**. If this page and the runtime disagree, **runtime wins** - file a docs bug.
 
 ---
 
-## Eval vs exposure :id=eval-vs-exposure
+## Eval vs exposure {#eval-vs-exposure}
 
 Evaluation is the server's **assignment**. Exposure is the client's **impression** that the user actually saw the surface.
 
@@ -25,7 +29,7 @@ Healthy UI experiment flow when you need impressions: **eval → render → expo
 
 ---
 
-## Segment evaluation :id=segment-evaluation
+## Segment evaluation {#segment-evaluation}
 
 Segments run in **rank order** (lower rank first). For each segment:
 
@@ -42,7 +46,7 @@ Bucketing algorithm (CRC32, 1000 buckets, in-range rollout): [Overview](flagr_ov
 
 ---
 
-## Recording gates :id=recording-gates
+## Recording gates {#recording-gates}
 
 Recording is opt-in. Three gates must all pass before a row leaves the process:
 
@@ -60,7 +64,7 @@ Wire format and consumer setup: [Data recorders & A/B analysis](flagr_eval_expos
 
 ---
 
-## Blank assignment vs stream rows :id=blank-vs-stream
+## Blank assignment vs stream rows {#blank-vs-stream}
 
 An empty `variantKey` is a normal evaluation outcome (HTTP 200), not a transport failure. Whether a **stream row** is enqueued is a separate question. With [recording gates](#recording-gates) open:
 
@@ -77,7 +81,7 @@ Exposure rows are independent: see [recording gates](#recording-gates) and [Expo
 
 ---
 
-## Eval-only mode :id=eval-only
+## Eval-only mode {#eval-only}
 
 **Usual path:** drivers `json_file` and `json_http` force **eval-only** mode (`setupEvalOnlyMode` in `pkg/config/config.go`). That is the supported GitOps / eval-edge shape.
 
@@ -95,7 +99,7 @@ JSON workflow: [JSON flag source](flagr_json_flag_spec.md). Route wiring: `pkg/h
 
 ---
 
-## EvalCache freshness :id=evalcache-freshness
+## EvalCache freshness {#evalcache-freshness}
 
 Hot-path evaluation reads **EvalCache** only. Reloads rebuild lookup maps from the configured fetcher (SQL, file, or HTTP).
 

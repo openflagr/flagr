@@ -38,3 +38,5 @@ progress.md
 integration-bench.txt
 
 node_modules/
+docs/.vitepress/dist/
+docs/.vitepress/cache/

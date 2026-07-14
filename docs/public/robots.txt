@@ -1,0 +1,32 @@
+# https://openflagr.github.io/flagr/
+User-agent: *
+Allow: /
+
+# AI search / answer engines (citation). Training-only crawlers may be
+# restricted separately if needed; search bots stay allowed for discoverability.
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# Optional: block pure training corpus crawler (does not block OpenAI search).
+User-agent: CCBot
+Disallow: /
+
+Sitemap: https://openflagr.github.io/flagr/sitemap.xml
