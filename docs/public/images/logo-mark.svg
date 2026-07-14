@@ -1,11 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Flagr">
-  <!-- Option D monogram traced to match brand PNG geometry -->
-  <g fill="#0B1220">
-    <!-- left fold / stem -->
-    <polygon points="28,12 48,42 48,48 36,52 48,56 48,62 28,88 18,62 38,52 18,42"/>
-    <!-- top arm -->
-    <polygon points="48,28 78,28 92,40 56,40 48,42"/>
-    <!-- middle arm -->
-    <polygon points="48,52 68,52 76,60 54,60 48,56"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" fill="none" role="img" aria-label="Flagr">
+  <!--
+    Option D monogram: geometric F = folded flag + stem.
+    Uses currentColor so hosts can recolor (UI navbar = white).
+  -->
+  <g fill="currentColor">
+    <!-- Left stem / fold -->
+    <path d="M28 12 L50 44 L50 50 L38 54 L50 58 L50 64 L28 84 L20 64 L40 54 L20 44 Z"/>
+    <!-- Top arm (flag fabric) -->
+    <path d="M50 28 H82 L94 42 H62 L50 46 Z"/>
+    <!-- Middle arm -->
+    <path d="M50 52 H72 L80 64 H56 L50 58 Z"/>
   </g>
 </svg>

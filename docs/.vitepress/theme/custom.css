@@ -1,0 +1,11 @@
+/* Keep brand SVG lockup sharp and sized in the nav. */
+.VPNavBarTitle .logo {
+  height: 1.75rem;
+  width: auto;
+  object-fit: contain;
+}
+
+.VPNavBarTitle img.logo {
+  /* SVG via <img> */
+  display: block;
+}
