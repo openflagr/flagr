@@ -1,3 +1,4 @@
+import { nextTick } from 'vue'
 import type { Router } from 'vue-router'
 import * as evalApi from '@/api/eval'
 import * as crudApi from '@/api/crud'
@@ -33,7 +34,16 @@ import {
 import { confirmAndRunApi, type ConfirmVm } from '@/helpers/runApi'
 import { materializeConstraintForApi } from '@/helpers/constraintOperatorSugar'
 import { runApi } from '@/helpers/runApi'
+import { SNAPSHOT_HIGHLIGHT_MS } from '@/helpers/copyText'
+import {
+  FLAG_TAB_CONFIG,
+  FLAG_TAB_HISTORY,
+  parseFlagDeepLink,
+  snapshotElementId,
+  type FlagTabName,
+} from '@/helpers/shareLinks'
 
+export const SNAPSHOT_NOT_FOUND_MESSAGE = 'Snapshot not found on this flag'
 
 export interface FlagPageVm extends ConfirmVm {
   $router: Router
@@ -53,9 +63,13 @@ export interface FlagPageVm extends ConfirmVm {
   selectedSegment: Segment | null
   distributionDraft: Record<string, DistributionDraft>
   loaded: boolean
+  /** Active el-tabs name: config | history. */
+  activeTab: FlagTabName
   historyLoaded: boolean
   historyKey: number
   flagSnapshots: FlagSnapshot[]
+  /** Snapshot id to scroll to after History finishes loading. */
+  pendingSnapshotScrollId: number | null
   evalContext: EvalContext
   evalResult: EvalResult
   evalSummary: EvalSummary | null
@@ -437,19 +451,83 @@ export function handleSaveDistribution(
 }
 
 export function handleHistoryTabClick(vm: FlagPageVm, tab: { props?: { name?: string } }): void {
-  if (tab.props?.name === 'history') {
-    vm.historyLoaded = true
-    vm.historyKey++
-    loadFlagSnapshots(vm)
+  if (tab.props?.name === FLAG_TAB_HISTORY) {
+    openHistoryTab(vm)
   }
+}
+
+/** Load (or reload) flag snapshots for the History tab. */
+export function openHistoryTab(vm: FlagPageVm): void {
+  vm.activeTab = FLAG_TAB_HISTORY
+  vm.historyLoaded = true
+  vm.historyKey++
+  loadFlagSnapshots(vm)
 }
 
 export function loadFlagSnapshots(vm: FlagPageVm): void {
   runApi(vm, crudApi.listFlagSnapshots(vm.flagId), {
     onSuccess: (data) => {
       vm.flagSnapshots = data
+      const pending = vm.pendingSnapshotScrollId
+      if (pending == null) return
+      vm.pendingSnapshotScrollId = null
+      void scrollToSnapshotWhenReady(vm, pending)
     },
   })
+}
+
+/** Wait for FlagHistory cards to mount, then scroll/highlight (with one short retry). */
+async function scrollToSnapshotWhenReady(vm: FlagPageVm, snapshotId: number): Promise<void> {
+  await nextTick()
+  if (scrollToSnapshot(snapshotId)) return
+  await new Promise<void>((resolve) => {
+    requestAnimationFrame(() => resolve())
+  })
+  if (scrollToSnapshot(snapshotId)) return
+  vm.$message.warning(SNAPSHOT_NOT_FOUND_MESSAGE)
+}
+
+/**
+ * Apply deep-link query (`tab`, `snapshot`) after the flag page is ready.
+ * Safe to call on every query change while loaded.
+ */
+export function applyDeepLink(
+  vm: FlagPageVm,
+  query: Record<string, unknown> | undefined | null,
+): void {
+  const link = parseFlagDeepLink(query)
+  if (link.tab === FLAG_TAB_HISTORY) {
+    if (link.snapshotId != null) {
+      vm.pendingSnapshotScrollId = link.snapshotId
+    }
+    // Always (re)open history so a fresh paste reloads + scrolls.
+    openHistoryTab(vm)
+    return
+  }
+  vm.activeTab = FLAG_TAB_CONFIG
+  vm.pendingSnapshotScrollId = null
+}
+
+/** Scroll to a snapshot card and apply a one-shot highlight. Returns whether the node existed. */
+export function scrollToSnapshot(snapshotId: number): boolean {
+  if (typeof document === 'undefined') return false
+  const el = document.getElementById(snapshotElementId(snapshotId))
+  if (!el) return false
+
+  const reduceMotion =
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  el.scrollIntoView({
+    block: 'center',
+    behavior: reduceMotion ? 'auto' : 'smooth',
+  })
+  el.classList.add('snapshot-container--highlight')
+  window.setTimeout(() => {
+    el.classList.remove('snapshot-container--highlight')
+  }, SNAPSHOT_HIGHLIGHT_MS)
+  return true
 }
 
 export function postEvaluation(vm: FlagPageVm, evalContext: EvalContext): void {
@@ -480,12 +558,14 @@ export function syncEvalContextFromFlag(vm: FlagPageVm): void {
 }
 
 /** Loads flag page context; resets route-local state and bumps load generation (route watcher). */
-export function mountFlagPage(vm: FlagPageVm): void {
+export function mountFlagPage(vm: FlagPageVm, routeQuery?: Record<string, unknown> | null): void {
   vm.flagPageLoadGen = (vm.flagPageLoadGen ?? 0) + 1
   vm.loaded = false
+  vm.activeTab = FLAG_TAB_CONFIG
   vm.historyLoaded = false
   vm.historyKey++
   vm.flagSnapshots = []
+  vm.pendingSnapshotScrollId = null
   vm.dialogDuplicateFlagVisible = false
   vm.dialogEditDistributionOpen = false
   vm.dialogCreateSegmentOpen = false
@@ -505,6 +585,9 @@ export function mountFlagPage(vm: FlagPageVm): void {
       vm.entityTypes = load.entityTypes
       vm.allowCreateEntityType = load.allowCreateEntityType
       syncEvalContextFromFlag(vm)
+      if (routeQuery) {
+        applyDeepLink(vm, routeQuery)
+      }
     },
   })
 }

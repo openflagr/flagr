@@ -3,9 +3,16 @@
     <template #header>
       <div class="el-card-header">
         <div class="flex-row">
-          <div class="flex-row-left">
+          <div class="flex-row-left flag-config-title">
             <h2>Flag</h2>
             <span class="flag-id ui-id-badge">#{{ flag.id }}</span>
+            <copy-link-button
+              v-if="flag.id != null"
+              :url="flagShareUrl"
+              aria-label="Copy flag URL"
+              tooltip="Copy flag URL"
+              test-id="copy-flag-url-btn"
+            />
           </div>
           <div class="flex-row-right">
             <el-tooltip
@@ -198,6 +205,8 @@ import {
 import { defineAsyncComponent, type PropType } from 'vue'
 import { InfoFilled, Edit, View } from '@element-plus/icons-vue'
 import { tagColor } from '@/helpers/tagColor'
+import { flagUrl } from '@/helpers/shareLinks'
+import CopyLinkButton from '@/components/CopyLinkButton.vue'
 import type { FlagView, Tag } from '@/api/types'
 
 interface EntityTypeOption {
@@ -209,6 +218,7 @@ export default {
   name: 'FlagConfigCard',
   components: {
     MarkdownEditor: defineAsyncComponent(() => import('@/components/MarkdownEditor.vue')),
+    CopyLinkButton,
     InfoFilled,
     Edit,
     View,
@@ -237,6 +247,12 @@ export default {
       newTagValue: '',
       flagDirty: false,
     }
+  },
+  computed: {
+    flagShareUrl(): string {
+      if (this.flag.id == null) return ''
+      return flagUrl(this.flag.id, window.location)
+    },
   },
   methods: {
     tagColor,
@@ -299,6 +315,13 @@ export default {
 
 .flag-notes-panel {
   min-height: 120px;
+}
+
+.flag-config-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3xs);
+  min-width: 0;
 }
 
 .flag-id {
