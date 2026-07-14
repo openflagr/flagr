@@ -68,4 +68,4 @@ make start   # backend :18000 + UI dev :8080
 make test
 ```
 
-Contributor layout, OpenAPI regen, and test conventions: [Contributing](CONTRIBUTING.md). Doc preview: `make serve-docs` (VitePress). Production build: `make build-docs`.
+Contributor layout, OpenAPI regen, and test conventions: [Contributing](CONTRIBUTING.md). Docs: `make serve-docs` → http://127.0.0.1:8080/flagr/ ; production: `make build-docs` → `docs/.vitepress/dist`.
