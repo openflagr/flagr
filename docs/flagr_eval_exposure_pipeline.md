@@ -14,8 +14,6 @@ Flagr doesn't pick your streaming backend, and it doesn't run significance tests
 | Quick eval counts without a pipeline | [Datar analytics](flagr_datar.md) |
 | Every recorder env var | [Environment variables](flagr_env.md#guide) |
 
----
-
 ## The lifecycle of an event
 
 A user lands on your checkout page. Behind the scenes, a small chain of events fires - some synchronous, some not - and the way they fit together is the whole design.
@@ -49,8 +47,6 @@ sequenceDiagram
 
 The key insight: **evaluation** and **exposure** are different events with different meanings, but they share one wire format and one set of recorders. Your consumer doesn't maintain two parsers for two topics - it branches on a single field.
 
----
-
 ## What gets recorded (and what doesn't)
 
 Rows reach a recorder only when all three [recording gates](flagr_behavioral_contracts.md#recording-gates) are open. Canonical blank-vs-stream table: [behavioral contracts](flagr_behavioral_contracts.md#blank-vs-stream). When gates are open:
@@ -70,8 +66,6 @@ A blank-variant eval row is useful for volume and "assigned but never exposed" g
 **Datar** follows the same gates but silently drops `exposure` rows - evaluations only. With `kafka,datar`, Kafka gets everything; Datar gets eval counts only.
 
 After toggling `dataRecordsEnabled`, wait for EvalCache reload (~3s by default) - [EvalCache freshness](flagr_behavioral_contracts.md#evalcache-freshness).
-
----
 
 ## The wire format
 
@@ -145,8 +139,6 @@ A full exposure example, same user five minutes later:
 
 Note the `page` key in `entityContext` - exposures can carry impression-specific context that evals don't. And `segmentID: 0` is the signal that no constraint re-evaluation happened.
 
----
-
 ## Setting up recorders
 
 Flagr supports four recorder types, and you can combine them comma-separated in `FLAGR_RECORDER_TYPE`. One `AsyncRecord` call fans out to all of them.
@@ -208,8 +200,6 @@ Optional: `FLAGR_RECORDER_PUBSUB_KEYFILE` for a service account key (otherwise `
 
 TLS, SASL, and all tuning knobs: [Environment variables - Data recorders](flagr_env.md#data-record-destinations).
 
----
-
 ## Consuming the stream
 
 Kinesis and Pub/Sub publish the same outer JSON as Kafka - only the client library changes. Parse `payload` (it's a string in `payload_string` mode, an object in `payload_raw_json` mode), then branch on `recordSource`.
@@ -265,8 +255,6 @@ if __name__ == "__main__":
 
 In production, use your org's stream processor (Flink, Spark, ksqlDB, Lambda) with the same `recordSource` branch - plus auth, dead-letter queues, and schema versioning.
 
----
-
 ## A/B analysis in the warehouse
 
 This is where the recording pays off. The trustworthy A/B loop is two tables and one join: **exposures** (who saw which variant, and when) joined to **outcomes** (who did the thing you care about). Everything else - significance, Bayesian priors, sequential stopping - runs on top of that join.
@@ -321,8 +309,6 @@ GROUP BY e.variant_key;
 Use **first exposure per entity per experiment** unless you're intentionally analyzing repeat views. Pass `flagSnapshotID` from eval through to exposures so analysis ties to the flag version active at impression time - not today's config.
 
 Evaluation rows (`recordSource: evaluation`) have a legitimate role in the warehouse too: API volume monitoring, segment distribution checks, and the sanity check of "assigned but never exposed" - the gap that reveals integration bugs, ad blockers, or never-rendered paths.
-
----
 
 ## Troubleshooting
 

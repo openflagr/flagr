@@ -6,8 +6,6 @@ This page embeds `pkg/config/env.go` from the repo tree at docs build time (ever
 
 Deploy recipes: [Self-hosting](flagr_self_host.md).
 
----
-
 ## Source (`pkg/config/env.go`) {#source-pkgconfigenvgo}
 
 The block below is the checked-in source at the commit used to build the docs site. You can also open it on GitHub.
@@ -15,8 +13,6 @@ The block below is the checked-in source at the commit used to build the docs si
 [Open on GitHub](https://github.com/openflagr/flagr/blob/main/pkg/config/env.go)
 
 <<< @/snippets/env.go{go}
-
----
 
 ## Quick start
 
@@ -30,8 +26,6 @@ export FLAGR_DB_DBCONNECTIONSTR='user:pass@tcp(127.0.0.1:3306)/flagr?parseTime=t
 ```
 
 If you'd rather serve flags from a static JSON file or URL with no database at all, set `FLAGR_DB_DBDRIVER` to `json_file` or `json_http`. That puts the server into eval-only mode automatically - see [behavioral contracts - eval-only](flagr_behavioral_contracts.md#eval-only) and the [JSON flag source](flagr_json_flag_spec.md) spec.
-
----
 
 ## Guide
 
@@ -155,8 +149,6 @@ The last group is how you watch the server once it's running. Flagr exports metr
 | Sentry / New Relic | `FLAGR_SENTRY_ENABLED`, `FLAGR_NEWRELIC_ENABLED` |
 
 Prometheus is the default choice for Kubernetes; Statsd suits traditional infrastructure; Sentry and New Relic are for error tracking and distributed tracing respectively. Each family has its own tuning variables in the source above - latency histograms for Prometheus, APM ports for Statsd, DSNs and app names for the hosted services.
-
----
 
 ## Maintaining this page
 
