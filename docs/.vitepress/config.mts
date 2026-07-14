@@ -79,6 +79,13 @@ export default withMermaid(
 
     head: [
       ['link', { rel: 'icon', href: `${BASE}favicon.png`, type: 'image/png' }],
+      [
+        'link',
+        {
+          rel: 'apple-touch-icon',
+          href: `${BASE}apple-touch-icon.png`,
+        },
+      ],
       ['meta', { name: 'theme-color', content: '#3451b2' }],
       ['meta', { name: 'author', content: 'openflagr' }],
       [
@@ -124,8 +131,13 @@ export default withMermaid(
     ],
 
     themeConfig: {
-      logo: '/images/logo.png',
-      siteTitle: 'Flagr',
+      // Option D lockup (monogram + FLAGR); hide duplicate site title text
+      logo: {
+        light: '/images/logo.png',
+        dark: '/images/logo.png',
+        alt: 'Flagr',
+      },
+      siteTitle: false,
       nav: [
         { text: 'Get started', link: '/' },
         { text: 'Use cases', link: '/flagr_use_cases' },

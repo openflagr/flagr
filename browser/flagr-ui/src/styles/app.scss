@@ -94,8 +94,25 @@ ol { margin: 0; padding-left: 20px; }
   .navbar-brand {
     color: inherit;
     text-decoration: none;
-    .logo { margin: 0; font-size: 1.2em; font-weight: var(--font-weight-bold); letter-spacing: -0.03em; }
-    .version { font-size: var(--font-size-caption); font-weight: var(--font-weight-normal); opacity: 0.7; margin-left: 6px; }
+    .logo {
+      margin: 0;
+      font-size: 1.2em;
+      font-weight: var(--font-weight-bold);
+      letter-spacing: -0.03em;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .logo-mark {
+      display: block;
+      width: 1.75rem;
+      height: 1.75rem;
+      flex-shrink: 0;
+      object-fit: contain;
+      /* black asset → white on primary navbar */
+      filter: brightness(0) invert(1);
+    }
+    .version { font-size: var(--font-size-caption); font-weight: var(--font-weight-normal); opacity: 0.7; margin-left: 0.15rem; }
   }
   .navbar-nav {
     display: flex;

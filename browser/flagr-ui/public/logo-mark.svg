@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Flagr">
+  <!-- Option D monogram traced to match brand PNG geometry -->
+  <g fill="#0B1220">
+    <!-- left fold / stem -->
+    <polygon points="28,12 48,42 48,48 36,52 48,56 48,62 28,88 18,62 38,52 18,42"/>
+    <!-- top arm -->
+    <polygon points="48,28 78,28 92,40 56,40 48,42"/>
+    <!-- middle arm -->
+    <polygon points="48,52 68,52 76,60 54,60 48,56"/>
+  </g>
+</svg>
