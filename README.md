@@ -33,7 +33,7 @@ That lets you **decouple deploy from release** (ship code dark, turn it on per a
 
 **Site:** [https://openflagr.github.io/flagr](https://openflagr.github.io/flagr) (VitePress)
 
-**Contributors:** clone the repo and run **`make help`** (build, test, UI, CI targets). Docs: `make serve-docs` / `make build-docs`.
+**Contributors:** clone the repo and run **`make help`** (build, test, UI, CI targets). Docs: `make serve-docs` (http://127.0.0.1:8080/flagr/) / `make build-docs` → `docs/.vitepress/dist`.
 
 | Page | Content |
 |------|---------|
