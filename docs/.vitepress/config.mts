@@ -13,7 +13,7 @@ const organizationJsonLd = {
   '@type': 'Organization',
   name: 'openflagr',
   url: 'https://github.com/openflagr',
-  logo: `${CANONICAL_ORIGIN}images/logo.svg`,
+  logo: `${CANONICAL_ORIGIN}images/logo.png`,
   sameAs: ['https://github.com/openflagr/flagr'],
 }
 
@@ -131,10 +131,10 @@ export default withMermaid(
     ],
 
     themeConfig: {
-      // Option D lockup (SVG monogram + FLAGR); hide duplicate site title text
+      // Option D lockup (transparent PNG monogram + FLAGR); hide duplicate title text
       logo: {
-        light: '/images/logo.svg',
-        dark: '/images/logo.svg',
+        light: '/images/logo.png',
+        dark: '/images/logo.png',
         alt: 'Flagr',
       },
       siteTitle: false,

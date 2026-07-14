@@ -1,34 +1,29 @@
 # Flagr brand assets (option D)
 
-Single approved identity: geometric **F monogram** + **FLAGR** wordmark.
+Single approved identity: geometric **F monogram** + **FLAGR** wordmark.  
+**PNG only** (no SVG). Prefer **transparent backgrounds**.
 
-## Source of truth (edit these)
+## Source files
 
-| File | Use |
-|------|-----|
-| `flagr-mark.svg` | Icon monogram (`currentColor`) |
-| `flagr-logo.svg` | Full lockup monogram + wordmark (`currentColor`) |
-
-PNG derivatives are for favicon / Open Graph only (raster fallbacks).
-
-| File | Use |
-|------|-----|
-| `favicon.png` | Browser tab icon |
-| `apple-touch-icon.png` | iOS home screen |
-| `flagr-logo.png` / `flagr-mark.png` | OG / crawlers that prefer raster |
+| File | Description |
+|------|-------------|
+| `flagr-logo.png` | Full lockup, black on transparent (docs header, OG/JSON-LD) |
+| `flagr-mark.png` | Monogram only, black on transparent |
+| `flagr-mark-on-dark.png` | Monogram white on transparent (UI navbar) |
+| `favicon.png` | 64×64 monogram (transparent) |
+| `apple-touch-icon.png` | 180×180 monogram |
 
 ## Installed copies
 
-**Docs (VitePress)**
+**Docs**
 
-- Header logo: `docs/public/images/logo.svg`
-- Monogram: `docs/public/images/logo-mark.svg`
-- Favicon: `docs/public/favicon.png`
+- `docs/public/images/logo.png` ← lockup
+- `docs/public/images/logo-mark.png` ← monogram
+- `docs/public/favicon.png`
 
-**UI (`browser/flagr-ui`)**
+**UI**
 
-- Navbar: **inline SVG** monogram in `App.vue` (matches `flagr-mark.svg`, `currentColor` on primary bar)
-- Public: `public/logo-mark.svg` kept in sync for reuse
-- Favicon: `public/favicon.png`
+- `browser/flagr-ui/public/logo-mark.png` ← white monogram on transparent
+- `browser/flagr-ui/public/favicon.png`
 
-When changing the monogram geometry, update `docs/brand/flagr-mark.svg` and the path data in `App.vue` together, then re-copy to `docs/public` / regenerate PNGs.
+Update files here first, then copy into the paths above.
