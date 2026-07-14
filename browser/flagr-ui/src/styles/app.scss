@@ -46,8 +46,9 @@ body {
   --radius-lg: 10px;
   --radius-xl: 12px;
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.06);
+  // Shadows use ink-tinted alpha so elevation feels soft, not sooty.
+  --shadow-sm: 0 1px 2px rgba(26, 38, 34, 0.05);
+  --shadow-md: 0 2px 8px rgba(26, 38, 34, 0.07);
 
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
 
@@ -63,10 +64,10 @@ body {
   // --- Domain colors (not covered by Element Plus tokens) ---
   // These are the only colors outside the --el-* system; keep them here
   // so a retheme only touches two files: this block + element/index.scss.
-  --warning-tag-text: #97700a;
-  --warning-tag-bg: #faf3e0;
-  --diff-del-bg: #ecc9c9;
-  --diff-ins-bg: #cce3d6;
+  --warning-tag-text: #8a6910;
+  --warning-tag-bg: #f5efd9;
+  --diff-del-bg: #ecd4d4;
+  --diff-ins-bg: #d0e5da;
 }
 
 h1, h2 { font-weight: var(--font-weight-semibold); }

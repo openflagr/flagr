@@ -2,56 +2,63 @@
   // --- Brand palette (single source of truth) ---
   // Named SCSS vars so the palette reads as intent, not hex.
   // Element Plus consumes these to generate --el-color-* CSS vars + light-N tints.
+  //
+  // Hallmark-aligned light theme: one teal accent; neutrals tinted toward that
+  // anchor (no pure #fff paper / cold blue-grey). Soft surfaces reduce glare;
+  // ink steps keep readable contrast for long admin sessions.
   $colors: (
     'white': #ffffff,
     'black': #000000,
     'primary': (
-      'base': #0d7d5a, // teal-green
+      'base': #0d7d5a, // teal-green — sole brand accent
     ),
     'success': (
       'base': #0d7d5a,
     ),
     'warning': (
-      'base': #c8931f, // rich amber
+      'base': #b8860b, // slightly deeper amber for contrast on soft paper
     ),
     'danger': (
-      'base': #d05858, // terracotta
+      'base': #c24b4b, // terracotta, a touch less neon
     ),
     'error': (
-      'base': #d05858,
+      'base': #c24b4b,
     ),
     'info': (
-      'base': #4a8ad6, // slate blue
+      'base': #4a7fb8, // cooler slate blue, less electric
     ),
   ),
+  // Ink scale: green-grey (anchor hue ~160°), not pure cool grey.
   $text-color: (
-    'primary': #1F2937,
-    'regular': #374151,
-    'secondary': #6B7280,
-    'placeholder': #9CA3AF,
-    'disabled': #D1D5DB,
+    'primary': #1a2622,
+    'regular': #33423c,
+    'secondary': #5a6b64,
+    'placeholder': #7d8c85,
+    'disabled': #a8b3ad,
   ),
+  // Borders slightly softer + teal-tinted so rules don't glare.
   $border-color: (
-    '': #E5E7EB,
-    'light': #F3F4F6,
-    'lighter': #F9FAFB,
-    'extra-light': #FAFAFA,
-    'dark': #D1D5DB,
-    'darker': #9CA3AF,
+    '': #d5ddd8,
+    'light': #e4eae6,
+    'lighter': #eef2ef,
+    'extra-light': #f4f6f4,
+    'dark': #b8c2bc,
+    'darker': #8f9c95,
   ),
+  // Paper: off-white with a hint of teal chroma; page a muted sage-grey.
   $bg-color: (
-    '': #FBFCFD,
-    'page': #EEF0F3,
-    'overlay': #FBFCFD,
+    '': #f5f7f5,
+    'page': #e6eae7,
+    'overlay': #f5f7f5,
   ),
   $fill-color: (
-    '': #EEF0F3,
-    'light': #F4F6F8,
-    'lighter': #FBFCFD,
-    'extra-light': #FBFCFD,
-    'dark': #E1E4E8,
-    'darker': #C8CDD3,
-    'blank': #FEFEFE,
+    '': #e6eae7,
+    'light': #eef1ef,
+    'lighter': #f5f7f5,
+    'extra-light': #f9faf8,
+    'dark': #d7ddd9,
+    'darker': #b8c2bc,
+    'blank': #f9faf8,
   ),
   $border-radius: (
     'base': 8px,

@@ -10,12 +10,12 @@ describe('tagColor', () => {
     expect(tagColor('team:payments')).not.toBe(tagColor('team:auth'))
   })
 
-  it('returns valid HSL string', () => {
+  it('returns valid soft HSL string', () => {
     const color = tagColor('test')
-    expect(color).toMatch(/^hsl\(\d+, 55%, 92%\)$/)
+    expect(color).toMatch(/^hsl\(\d+, 38%, 90%\)$/)
   })
 
   it('handles empty string', () => {
-    expect(tagColor('')).toBe('hsl(0, 55%, 92%)')
+    expect(tagColor('')).toBe('hsl(0, 38%, 90%)')
   })
 })
