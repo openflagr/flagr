@@ -73,8 +73,9 @@ export default withMermaid(
     cleanUrls: true,
     // Stock VitePress default theme, light only (no dark toggle).
     appearance: false,
-    ignoreDeadLinks: true,
-    srcExclude: ['**/plans/**', '**/api_docs/**', '**/theme/**'],
+    // Fail the build on broken internal links (plans/ are GitHub URLs, not site routes).
+    ignoreDeadLinks: false,
+    srcExclude: ['**/plans/**', '**/api_docs/**', '**/theme/**', '**/snippets/**'],
 
     head: [
       ['link', { rel: 'icon', href: `${BASE}favicon.png`, type: 'image/png' }],
@@ -113,11 +114,12 @@ export default withMermaid(
       jsonLdScript(organizationJsonLd),
       jsonLdScript(websiteJsonLd),
       jsonLdScript(softwareJsonLd),
-      // Docsify hash-route → clean path (old bookmarks / external links)
+      // Docsify hash-route → clean path (old bookmarks / external links).
+      // Maps #/page?id=section → /flagr/page#section
       [
         'script',
         {},
-        `(function(){var h=location.hash;if(!h||h.charAt(1)!=='/')return;var p=h.slice(2).replace(/\\.md$/i,'').replace(/\\/+$/,'').split('?')[0];var base='${BASE}'.replace(/\\/$/,'');if(!p||p==='home'||p==='index'){location.replace(base+'/');return;}location.replace(base+'/'+p);})();`,
+        `(function(){var h=location.hash;if(!h||h.charAt(1)!=='/')return;var raw=h.slice(2).replace(/\\.md$/i,'');var id='';var qi=raw.indexOf('?');if(qi>=0){var qs=raw.slice(qi+1);raw=raw.slice(0,qi);var m=qs.match(/(?:^|&)id=([^&]+)/);if(m)id=decodeURIComponent(m[1]);}var p=raw.replace(/\\/+$/,'');var base='${BASE}'.replace(/\\/$/,'');var url;if(!p||p==='home'||p==='index'){url=base+'/';}else{url=base+'/'+p;}if(id)url+='#'+id;location.replace(url);})();`,
       ],
     ],
 

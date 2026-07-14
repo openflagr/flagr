@@ -33,7 +33,7 @@ help:
 	@echo "  make run-ui            UI dev server on :8080"
 	@echo "  make stop-ui           Free :18000 and :8080 (lsof, not pkill)"
 	@echo "  make rebuild-run       build → stop-ui → start"
-	@echo "  make serve-docs        VitePress docs dev server (./docs)"
+	@echo "  make serve-docs        VitePress docs dev server (./docs, :8080)"
 	@echo "  make build-docs        VitePress production build → docs/.vitepress/dist"
 	@echo ""
 	@echo "Test"
@@ -117,14 +117,23 @@ rebuild-run: build stop-ui start
 
 DOCS_DIR := docs
 
-serve-docs:
-	@cd $(DOCS_DIR) && npm install && npm run docs:dev
+# Copy pkg/config/env.go into docs/snippets for VitePress code import on flagr_env.md.
+.PHONY: docs-sync-snippets
+docs-sync-snippets:
+	@mkdir -p $(DOCS_DIR)/snippets
+	@cp $(PWD)/pkg/config/env.go $(DOCS_DIR)/snippets/env.go
 
-build-docs:
-	@cd $(DOCS_DIR) && npm install && npm run docs:build
+serve-docs: docs-sync-snippets
+	@cd $(DOCS_DIR) && npm ci && npm run docs:dev -- --port 8080 --host 127.0.0.1
+
+build-docs: docs-sync-snippets
+	@cd $(DOCS_DIR) && npm ci && npm run docs:build
 	@mkdir -p $(DOCS_DIR)/.vitepress/dist/api_docs
 	@cp $(DOCS_DIR)/api_docs/bundle.yaml $(DOCS_DIR)/api_docs/index.html $(DOCS_DIR)/.vitepress/dist/api_docs/
-	@echo "Docs built to $(DOCS_DIR)/.vitepress/dist (api_docs copied)"
+	@# Append api_docs to sitemap (copied post-build, not in VitePress page graph)
+	@python3 -c "from pathlib import Path; p=Path('$(DOCS_DIR)/.vitepress/dist/sitemap.xml'); t=p.read_text(); u='https://openflagr.github.io/flagr/api_docs/';\
+	(t:=t.replace('</urlset>', f'<url><loc>{u}</loc></url></urlset>')) if u not in t else None; p.write_text(t)"
+	@echo "Docs built to $(DOCS_DIR)/.vitepress/dist (api_docs + sitemap)"
 
 # ------------------------------------------------------------------------------
 # Test

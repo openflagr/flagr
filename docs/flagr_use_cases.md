@@ -65,7 +65,7 @@ The flag-level **`enabled`** switch is separate. When `enabled` is `false`, eval
 
 To fork segments, variants, and tags: **`POST /api/v1/flags/{flagID}/duplicate`** or **Duplicate Flag** in the UI. The clone gets a new key and ` (cloned)` in the description unless you override `key` / `description` in the body.
 
-## Experimenting - A/B testing
+## Experimenting - A/B testing {#experimenting-ab-testing}
 
 Add another "on-like" variant and the question becomes *which experience wins?* Same flag, same `POST /evaluation`, finer distribution. Flagr gives sticky assignment (`entityID` + unchanged flag → same `variantKey`). Significance math stays in your stack; Flagr can emit events if you wire [recorders](flagr_eval_exposure_pipeline.md).
 

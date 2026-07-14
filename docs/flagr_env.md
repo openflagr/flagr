@@ -2,7 +2,7 @@
 
 Flagr has **no config file**. Every knob is an environment variable bound at startup to one struct: `pkg/config/env.go`. That struct is the source of truth. When this page and the code disagree, the code wins.
 
-This page embeds the live source first (every `env` tag and default), then a short operator guide for the variables you actually touch. Niche knobs may appear only in the source block.
+This page embeds `pkg/config/env.go` from the repo tree at docs build time (every `env` tag and default), then a short operator guide for the variables you actually touch. Niche knobs may appear only in the source block.
 
 Deploy recipes: [Self-hosting](flagr_self_host.md).
 
@@ -10,11 +10,11 @@ Deploy recipes: [Self-hosting](flagr_self_host.md).
 
 ## Source (`pkg/config/env.go`) {#source-pkgconfigenvgo}
 
-The block below is the live source from the `main` branch, embedded directly. On feature branches, compare against your own checkout until it merges. You can also open it on GitHub.
+The block below is the checked-in source at the commit used to build the docs site. You can also open it on GitHub.
 
 [Open on GitHub](https://github.com/openflagr/flagr/blob/main/pkg/config/env.go)
 
-[env.go](https://raw.githubusercontent.com/openflagr/flagr/main/pkg/config/env.go ':include :type=code')
+<<< @/snippets/env.go{go}
 
 ---
 
@@ -160,6 +160,6 @@ Prometheus is the default choice for Kubernetes; Statsd suits traditional infras
 
 ## Maintaining this page
 
-When you add or change variables in `pkg/config/env.go`, update the **guide** tables here only if operators need a one-line summary; the embedded **source** updates automatically on merge to `main`.
+When you add or change variables in `pkg/config/env.go`, update the **guide** tables here only if operators need a one-line summary. The embedded **source** is copied from `pkg/config/env.go` by `make build-docs` / `make serve-docs` into `docs/snippets/env.go` at build time.
 
 

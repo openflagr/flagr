@@ -99,14 +99,14 @@ Several pages serve specific audiences and are worth knowing as a contributor: t
 - **Custom heading anchors:** VitePress `{#slug}` on the heading line (not Docsify `:id=slug`). Example: `## Eval vs exposure {#eval-vs-exposure}`. Prefer stable explicit IDs for sections that other pages deep-link to.
 - Cross-cutting behavior (eval vs exposure, recording gates, eval-only, EvalCache lag): edit **[flagr_behavioral_contracts.md](flagr_behavioral_contracts.md)** first; other pages link there instead of copying paragraphs.
 - **Deploy / topology:** edit **[flagr_self_host.md](flagr_self_host.md)**; **`flagr_env.md`** = embedded `env.go` + variable guide (no duplicate Compose/mysql runbooks).
-- **`flagr_env.md`:** embedded `pkg/config/env.go` first, then the short guide; embed tracks **`main`** on GitHub.
+- **`flagr_env.md`:** embeds `pkg/config/env.go` via `docs/snippets/env.go` (copied by `make docs-sync-snippets` / `build-docs` / `serve-docs`), then the short guide.
 - Client SDKs are listed in [integration.md](integration.md) and README, not in the VitePress sidebar.
 - When renaming a docs page, update links in-repo (and the README docs table). Prefer deleting the old file over leaving a stub.
 Whenever you change the API docs, refresh `docs/api_docs/bundle.yaml` so the hosted [API reference](https://openflagr.github.io/flagr/api_docs) stays current.
 
 ## UI architecture
 
-The flagr-ui TypeScript migration laid down the patterns the UI follows today — component layout, API client structure, and the as-built decisions behind them. Read it before a non-trivial frontend change: [`docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md`](plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md).
+The flagr-ui TypeScript migration laid down the patterns the UI follows today — component layout, API client structure, and the as-built decisions behind them. Read it before a non-trivial frontend change: [`docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md`](https://github.com/openflagr/flagr/blob/main/docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md).
 
 ## Performance
 

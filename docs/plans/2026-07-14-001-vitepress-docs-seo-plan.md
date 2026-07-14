@@ -1,7 +1,7 @@
 # feat: Migrate docs site Docsify → VitePress + SEO / LLM SEO
 
 **Date:** 2026-07-14  
-**Status:** **In progress** (branch `feat/marketing-seo`)  
+**Status:** **Implemented** (branch `feat/marketing-seo`)  
 **Canonical context:** Docs site architecture, crawlable URLs, AI-readable surface.
 
 ---
