@@ -45,7 +45,7 @@ Run from **repo root**. Targets live in the root `Makefile`.
 
 | Command | What it does |
 |---------|----------------|
-| **`make serve-docs`** | `docs-sync-snippets` → `cd docs && npm ci && npm run docs:dev -- --port 8080 --host 127.0.0.1` → open **http://127.0.0.1:8080/flagr/** |
+| **`make serve-docs`** | `docs-sync-snippets` → `cd docs && npm ci && npm run docs:dev -- --port 8081 --host 127.0.0.1` → open **http://127.0.0.1:8081/flagr/** (UI stays on `:8080`) |
 | **`make build-docs`** | `docs-sync-snippets` → `cd docs && npm ci && npm run docs:build` → copy `api_docs/` into dist → append `api_docs/` to `sitemap.xml` |
 | **`make docs-sync-snippets`** | `cp pkg/config/env.go docs/snippets/env.go` (also a dependency of serve/build) |
 
@@ -133,4 +133,4 @@ Run from **repo root**. Targets live in the root `Makefile`.
 - [x] JSON-LD present in homepage head
 - [x] Old `#/flagr_overview` / `?id=` redirects to clean URL + fragment
 - [x] README / CONTRIBUTING point at VitePress workflow
-- [x] `make serve-docs` → http://127.0.0.1:8080/flagr/
+- [x] `make serve-docs` → http://127.0.0.1:8081/flagr/

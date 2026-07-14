@@ -91,7 +91,7 @@ The docs site is a **VitePress** app whose sources live in `docs/` (`index.md` i
 
 | Command | What it does |
 |---------|----------------|
-| **`make serve-docs`** | Sync env snippet, `npm ci`, VitePress dev on **http://127.0.0.1:8080/flagr/** |
+| **`make serve-docs`** | Sync env snippet, `npm ci`, VitePress dev on **http://127.0.0.1:8081/flagr/** (UI keeps `:8080`) |
 | **`make build-docs`** | Sync env snippet, `npm ci`, production build → `docs/.vitepress/dist` (+ copy `api_docs/`, patch sitemap) |
 | **`make docs-sync-snippets`** | Copy `pkg/config/env.go` → `docs/snippets/env.go` (used by serve/build) |
 

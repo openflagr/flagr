@@ -33,7 +33,7 @@ help:
 	@echo "  make run-ui            UI dev server on :8080"
 	@echo "  make stop-ui           Free :18000 and :8080 (lsof, not pkill)"
 	@echo "  make rebuild-run       build → stop-ui → start"
-	@echo "  make serve-docs        VitePress docs dev server (./docs, :8080)"
+	@echo "  make serve-docs        VitePress docs dev server (./docs, :8081)"
 	@echo "  make build-docs        VitePress production build → docs/.vitepress/dist"
 	@echo ""
 	@echo "Test"
@@ -124,7 +124,7 @@ docs-sync-snippets:
 	@cp $(PWD)/pkg/config/env.go $(DOCS_DIR)/snippets/env.go
 
 serve-docs: docs-sync-snippets
-	@cd $(DOCS_DIR) && npm ci && npm run docs:dev -- --port 8080 --host 127.0.0.1
+	@cd $(DOCS_DIR) && npm ci && npm run docs:dev -- --port 8081 --host 127.0.0.1
 
 build-docs: docs-sync-snippets
 	@cd $(DOCS_DIR) && npm ci && npm run docs:build
