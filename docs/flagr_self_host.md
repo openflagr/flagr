@@ -1,3 +1,7 @@
+---
+title: Self-hosting Flagr
+---
+
 # Self-hosting Flagr
 
 Flagr is meant to run on **your** infrastructure. Normal path: official Docker image, env vars for DB (or JSON flag source), port **18000**. No config file required for production.

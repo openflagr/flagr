@@ -1,3 +1,7 @@
+---
+title: Contributing
+---
+
 # Contributing
 
 Welcome. This guide walks you through the full contributor journey: clone the repo, build it, find your way around the code, run the tests, regenerate Swagger, and touch the docs site. The commands and conventions below are the ones CI enforces, so following them from your first commit keeps PRs green and reviews short.
@@ -83,23 +87,34 @@ If you'd rather not remember the order, `make gen` runs all three in sequence. I
 
 ## Documentation site
 
-The docs site is a Docsify app whose sources live right here in `docs/`, with `home.md` as the homepage. Preview it locally with `make serve-docs`; on push to `main` it publishes to GitHub Pages via the [`pages.yml`](https://github.com/openflagr/flagr/blob/main/.github/workflows/pages.yml) workflow.
+The docs site is a **VitePress** app whose sources live in `docs/` (`index.md` is the homepage; config under `docs/.vitepress/`).
 
-Several pages serve specific audiences and are worth knowing as a contributor: the [integration guide](integration.md) is the hub for integrators, the [behavioral contracts](flagr_behavioral_contracts.md) hold the canonical descriptions of cross-cutting behavior, and this page is the repo guide. Design and as-built notes live in `docs/plans/` — they aren't linked in the sidebar, but they're valuable internal history.
+| Command | What it does |
+|---------|----------------|
+| **`make serve-docs`** | Sync env snippet, `npm ci`, VitePress dev on **http://127.0.0.1:8081/flagr/** (UI keeps `:8080`) |
+| **`make build-docs`** | Sync env snippet, `npm ci`, production build → `docs/.vitepress/dist` (+ copy `api_docs/`, patch sitemap) |
+| **`make docs-sync-snippets`** | Copy `pkg/config/env.go` → `docs/snippets/env.go` (used by serve/build) |
+
+On push to `main`, [pages.yml](https://github.com/openflagr/flagr/blob/main/.github/workflows/pages.yml) runs `make build-docs` and deploys `docs/.vitepress/dist` to GitHub Pages.
+
+SEO / AI-readable assets live in `docs/public/` (`robots.txt`, `llms.txt`, images). OpenAPI ReDoc stays in `docs/api_docs/` and is copied into the dist on build. Full as-built: [VitePress docs SEO plan](plans/2026-07-14-001-vitepress-docs-seo-plan.md) (repo path; not on the live docs sidebar).
+
+Several pages serve specific audiences and are worth knowing as a contributor: the [integration guide](integration.md) is the hub for integrators, the [behavioral contracts](flagr_behavioral_contracts.md) hold the canonical descriptions of cross-cutting behavior, and this page is the repo guide. Design and as-built notes live in `docs/plans/` — they are excluded from the VitePress sidebar build, but remain valuable internal history.
 
 **Docs conventions**
 
-- User-facing filenames: `flagr_*.md`, `integration.md`, `flagr_behavioral_contracts.md`, `home.md`. Link text: **sentence case** (e.g. "Exposure logging", "Data recorders & A/B analysis").
+- User-facing filenames: `flagr_*.md`, `integration.md`, `flagr_behavioral_contracts.md`, `index.md` (home). Sidebar lives in `docs/.vitepress/config.mts`. Link text: **sentence case** (e.g. "Exposure logging", "Data recorders & A/B analysis").
+- **Custom heading anchors:** VitePress `{#slug}` on the heading line (not Docsify `:id=slug`). Example: `## Eval vs exposure {#eval-vs-exposure}`. Prefer stable explicit IDs for sections that other pages deep-link to.
 - Cross-cutting behavior (eval vs exposure, recording gates, eval-only, EvalCache lag): edit **[flagr_behavioral_contracts.md](flagr_behavioral_contracts.md)** first; other pages link there instead of copying paragraphs.
 - **Deploy / topology:** edit **[flagr_self_host.md](flagr_self_host.md)**; **`flagr_env.md`** = embedded `env.go` + variable guide (no duplicate Compose/mysql runbooks).
-- **`flagr_env.md`:** embedded `pkg/config/env.go` first, then the short guide; embed tracks **`main`** on GitHub.
-- Off-site sidebar links use a subtle **↗** via CSS (`a[href^="http"]`); client SDKs are listed in [integration.md](integration.md) and README, not in `_sidebar.md`.
+- **`flagr_env.md`:** embeds `pkg/config/env.go` via `docs/snippets/env.go` (copied by `make docs-sync-snippets` / `build-docs` / `serve-docs`), then the short guide.
+- Client SDKs are listed in [integration.md](integration.md) and README, not in the VitePress sidebar.
 - When renaming a docs page, update links in-repo (and the README docs table). Prefer deleting the old file over leaving a stub.
 Whenever you change the API docs, refresh `docs/api_docs/bundle.yaml` so the hosted [API reference](https://openflagr.github.io/flagr/api_docs) stays current.
 
 ## UI architecture
 
-The flagr-ui TypeScript migration laid down the patterns the UI follows today — component layout, API client structure, and the as-built decisions behind them. Read it before a non-trivial frontend change: [`docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md`](plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md).
+The flagr-ui TypeScript migration laid down the patterns the UI follows today — component layout, API client structure, and the as-built decisions behind them. Read it before a non-trivial frontend change: [`docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md`](https://github.com/openflagr/flagr/blob/main/docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md).
 
 ## Performance
 

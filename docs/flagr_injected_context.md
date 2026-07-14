@@ -31,8 +31,6 @@ Restart Flagr. Every evaluation then includes the core time keys, plus any confi
 
 Your app still sends the same `entityContext`. Injection runs server-side in `PostEvaluation` / `GetEvaluation` / batch before constraints run.
 
----
-
 ## Configuration reference
 
 | Variable | Default | Description |
@@ -61,8 +59,6 @@ Header names in config are case-insensitive. These are equivalent:
 FLAGR_INJECTED_CONTEXT_HTTP_HEADERS="X-Environment"
 FLAGR_INJECTED_CONTEXT_HTTP_HEADERS="x-environment"
 ```
-
----
 
 ## Real-world examples
 
@@ -122,8 +118,6 @@ Segment 3 (default - off everywhere else):
 No separate flag configs. No separate databases. One flag, environment-aware
 constraints.
 
----
-
 ### 2. Scheduled feature launch
 
 **Problem:** You want to enable a feature at midnight on launch day, without
@@ -158,8 +152,6 @@ Segment 2 (default - hidden):
 
 The UI shows a human-readable hint when you enter `@ts` constraints:
 `{1764038400 = Nov 24, 2025 00:00:00 UTC}`.
-
----
 
 ### 3. Business hours targeting
 
@@ -200,8 +192,6 @@ Constraint: {@ts_month} EQ 12          ← December only
 Constraint: {@ts_month} EQ 1           ← or January
 ```
 
----
-
 ### 4. Multi-tenant feature gating
 
 **Problem:** Different customers (tenants) should see different features.
@@ -237,8 +227,6 @@ Segment 2 (default - basic for everyone else):
 **Result:**
 - Acme, Globex, Initech: see advanced analytics dashboard
 - Everyone else: see basic dashboard
-
----
 
 ### 5. Country-based targeting with Cloudflare
 
@@ -276,8 +264,6 @@ Segment 2 (default - no banner):
 - EU visitors: see cookie consent banner
 - Everyone else: no banner
 
----
-
 ### 6. Canary deployment with custom headers
 
 **Problem:** Your service mesh sets `X-Canary: true` on traffic routed to
@@ -302,8 +288,6 @@ Segment 2 (default - old for everyone):
   Rollout: 100%
   Distribution: new 0%, old 100%
 ```
-
----
 
 ## How it works
 
@@ -343,8 +327,6 @@ Numeric time keys are stored as **`float64`** so they survive JSON round-trips c
 Server-injected keys (`@` prefix) overwrite client-provided values with the
 same name. This prevents spoofing - a client cannot fake `@ts` to bypass
 scheduling constraints.
-
----
 
 ## FAQ
 

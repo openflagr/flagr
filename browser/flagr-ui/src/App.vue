@@ -7,6 +7,13 @@
           class="navbar-brand"
         >
           <h3 class="logo">
+            <img
+              class="logo-mark"
+              src="/logo-mark.png"
+              width="28"
+              height="28"
+              alt=""
+            >
             Flagr <span class="version">v{{ version }}</span>
           </h3>
         </router-link>

@@ -2,21 +2,17 @@
 
 Flagr has **no config file**. Every knob is an environment variable bound at startup to one struct: `pkg/config/env.go`. That struct is the source of truth. When this page and the code disagree, the code wins.
 
-This page embeds the live source first (every `env` tag and default), then a short operator guide for the variables you actually touch. Niche knobs may appear only in the source block.
+This page embeds `pkg/config/env.go` from the repo tree at docs build time (every `env` tag and default), then a short operator guide for the variables you actually touch. Niche knobs may appear only in the source block.
 
 Deploy recipes: [Self-hosting](flagr_self_host.md).
 
----
+## Source (`pkg/config/env.go`) {#source-pkgconfigenvgo}
 
-## Source (`pkg/config/env.go`) :id=source-pkgconfigenvgo
-
-The block below is the live source from the `main` branch, embedded directly. On feature branches, compare against your own checkout until it merges. You can also open it on GitHub.
+The block below is the checked-in source at the commit used to build the docs site. You can also open it on GitHub.
 
 [Open on GitHub](https://github.com/openflagr/flagr/blob/main/pkg/config/env.go)
 
-[env.go](https://raw.githubusercontent.com/openflagr/flagr/main/pkg/config/env.go ':include :type=code')
-
----
+<<< @/snippets/env.go{go}
 
 ## Quick start
 
@@ -30,8 +26,6 @@ export FLAGR_DB_DBCONNECTIONSTR='user:pass@tcp(127.0.0.1:3306)/flagr?parseTime=t
 ```
 
 If you'd rather serve flags from a static JSON file or URL with no database at all, set `FLAGR_DB_DBDRIVER` to `json_file` or `json_http`. That puts the server into eval-only mode automatically - see [behavioral contracts - eval-only](flagr_behavioral_contracts.md#eval-only) and the [JSON flag source](flagr_json_flag_spec.md) spec.
-
----
 
 ## Guide
 
@@ -78,7 +72,7 @@ Eval-only is the usual product path when `FLAGR_DB_DBDRIVER` is `json_file` or `
 
 Full guide: [Built-in context injection](flagr_injected_context.md).
 
-#### Eval cache export :id=eval-cache-export
+#### Eval cache export {#eval-cache-export}
 
 A running server can dump its in-memory cache as JSON via `GET /api/v1/export/eval_cache/json`, with optional `enabled`, `ids`, `keys`, `tags`, and `tagsOperator` (`ANY` / `ALL`) query parameters.
 
@@ -116,7 +110,7 @@ Separately, Flagr can identify *who* made a mutation for audit logging without d
 
 One thing worth calling out: the default JWT whitelist allows unauthenticated exposure logging. If the integrity of your impression stream matters, narrow the whitelist to lock down `/api/v1/exposures` and rate-limit it at the edge. The [Exposure logging](flagr_exposure.md) page walks through the tradeoffs.
 
-### Data recorders :id=data-record-destinations
+### Data recorders {#data-record-destinations}
 
 Recording gates (master switch, recorder type, per-flag `dataRecordsEnabled`): [behavioral contracts: recording gates](flagr_behavioral_contracts.md#recording-gates). Blank assignment vs whether a row is written: [blank vs stream](flagr_behavioral_contracts.md#blank-vs-stream).
 
@@ -156,10 +150,8 @@ The last group is how you watch the server once it's running. Flagr exports metr
 
 Prometheus is the default choice for Kubernetes; Statsd suits traditional infrastructure; Sentry and New Relic are for error tracking and distributed tracing respectively. Each family has its own tuning variables in the source above - latency histograms for Prometheus, APM ports for Statsd, DSNs and app names for the hosted services.
 
----
-
 ## Maintaining this page
 
-When you add or change variables in `pkg/config/env.go`, update the **guide** tables here only if operators need a one-line summary; the embedded **source** updates automatically on merge to `main`.
+When you add or change variables in `pkg/config/env.go`, update the **guide** tables here only if operators need a one-line summary. The embedded **source** is copied from `pkg/config/env.go` by `make build-docs` / `make serve-docs` into `docs/snippets/env.go` at build time.
 
 

@@ -1,3 +1,7 @@
+---
+title: Flagr overview
+---
+
 # Flagr overview
 
 Every evaluation answers one question: **given this entity, which variant right now?**

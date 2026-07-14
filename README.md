@@ -31,22 +31,22 @@ That lets you **decouple deploy from release** (ship code dark, turn it on per a
 
 ## Documentation
 
-**Site:** [https://openflagr.github.io/flagr](https://openflagr.github.io/flagr)
+**Site:** [https://openflagr.github.io/flagr](https://openflagr.github.io/flagr) (VitePress)
 
-**Contributors:** clone the repo and run **`make help`** (build, test, UI, CI targets).
+**Contributors:** clone the repo and run **`make help`** (build, test, UI, CI targets). Docs: `make serve-docs` (http://127.0.0.1:8081/flagr/) / `make build-docs` → `docs/.vitepress/dist`.
 
 | Page | Content |
 |------|---------|
-| [Behavioral contracts](https://openflagr.github.io/flagr/#/flagr_behavioral_contracts) | Eval vs exposure, recording, eval-only, cache |
-| [Integration guide](https://openflagr.github.io/flagr/#/integration) | Eval, batch, exposures (client API) |
-| [Contributing](https://openflagr.github.io/flagr/#/CONTRIBUTING) | Clone, build, test, OpenAPI |
-| [Overview](https://openflagr.github.io/flagr/#/flagr_overview) | Concepts, running example, architecture |
-| [Use cases](https://openflagr.github.io/flagr/#/flagr_use_cases) | Flags, A/B, dynamic config; [GET `?json=` eval](https://openflagr.github.io/flagr/#/flagr_use_cases?id=get-evaluation-browser-friendly) |
-| [Built-in context injection](https://openflagr.github.io/flagr/#/flagr_injected_context) | `@ts*`, `@http_*` in `entityContext` |
-| [Self-hosting](https://openflagr.github.io/flagr/#/flagr_self_host) | Docker, DB, Compose, K8s |
-| [Environment variables](https://openflagr.github.io/flagr/#/flagr_env) | DB, auth, recorders (`pkg/config/env.go`) |
-| [Exposure logging](https://openflagr.github.io/flagr/#/flagr_exposure) | Client impressions for A/B |
-| [Data recorders](https://openflagr.github.io/flagr/#/flagr_eval_exposure_pipeline) | Kafka, Kinesis, Pub/Sub |
+| [Behavioral contracts](https://openflagr.github.io/flagr/flagr_behavioral_contracts) | Eval vs exposure, recording, eval-only, cache |
+| [Integration guide](https://openflagr.github.io/flagr/integration) | Eval, batch, exposures (client API) |
+| [Contributing](https://openflagr.github.io/flagr/CONTRIBUTING) | Clone, build, test, OpenAPI |
+| [Overview](https://openflagr.github.io/flagr/flagr_overview) | Concepts, running example, architecture |
+| [Use cases](https://openflagr.github.io/flagr/flagr_use_cases) | Flags, A/B, dynamic config; [GET `?json=` eval](https://openflagr.github.io/flagr/flagr_use_cases#get-evaluation-browser-friendly) |
+| [Built-in context injection](https://openflagr.github.io/flagr/flagr_injected_context) | `@ts*`, `@http_*` in `entityContext` |
+| [Self-hosting](https://openflagr.github.io/flagr/flagr_self_host) | Docker, DB, Compose, K8s |
+| [Environment variables](https://openflagr.github.io/flagr/flagr_env) | DB, auth, recorders (`pkg/config/env.go`) |
+| [Exposure logging](https://openflagr.github.io/flagr/flagr_exposure) | Client impressions for A/B |
+| [Data recorders](https://openflagr.github.io/flagr/flagr_eval_exposure_pipeline) | Kafka, Kinesis, Pub/Sub |
 | [API reference](https://openflagr.github.io/flagr/api_docs) | OpenAPI |
 
 ---
@@ -54,8 +54,8 @@ That lets you **decouple deploy from release** (ship code dark, turn it on per a
 ## Features
 
 - **Feature flags** - kill switches, targeted rollouts
-- **GET evaluation** - `GET /api/v1/evaluation?json=…` (same JSON as POST; [use cases](https://openflagr.github.io/flagr/#/flagr_use_cases?id=get-evaluation-browser-friendly))
-- **Built-in context injection** - `@ts*` and `@http_*` keys merged server-side ([guide](https://openflagr.github.io/flagr/#/flagr_injected_context))
+- **GET evaluation** - `GET /api/v1/evaluation?json=…` (same JSON as POST; [use cases](https://openflagr.github.io/flagr/flagr_use_cases#get-evaluation-browser-friendly))
+- **Built-in context injection** - `@ts*` and `@http_*` keys merged server-side ([guide](https://openflagr.github.io/flagr/flagr_injected_context))
 - **Duplicate flag** - `POST /flags/{id}/duplicate` or UI **Duplicate Flag**
 - **A/B testing** - deterministic assignment; pair with exposure logging
 - **Dynamic configuration** - `variantAttachment` JSON on eval responses
@@ -96,9 +96,9 @@ curl -sS -X POST https://try-flagr.onrender.com/api/v1/evaluation \
 
 ## Architecture
 
-Three parts ([overview diagram](https://openflagr.github.io/flagr/#/flagr_overview?id=architecture), [behavioral contracts](https://openflagr.github.io/flagr/#/flagr_behavioral_contracts)):
+Three parts ([overview diagram](https://openflagr.github.io/flagr/flagr_overview#architecture), [behavioral contracts](https://openflagr.github.io/flagr/flagr_behavioral_contracts)):
 
-- **Evaluator** - `POST` or `GET /evaluation` reads **EvalCache** in memory (default reload **3s**; no per-request SQL). Bucketing and stickiness: [overview](https://openflagr.github.io/flagr/#/flagr_overview?id=rollout-and-deterministic-bucketing). GET: [use cases](https://openflagr.github.io/flagr/#/flagr_use_cases?id=get-evaluation-browser-friendly).
+- **Evaluator** - `POST` or `GET /evaluation` reads **EvalCache** in memory (default reload **3s**; no per-request SQL). Bucketing and stickiness: [overview](https://openflagr.github.io/flagr/flagr_overview#rollout-and-deterministic-bucketing). GET: [use cases](https://openflagr.github.io/flagr/flagr_use_cases#get-evaluation-browser-friendly).
 - **Manager** - CRUD + `flag_snapshot` rows; webhooks after commit.
 - **Metrics** - async recorders (Kafka, Kinesis, Pub/Sub, Datar); slow sinks do not block eval.
 

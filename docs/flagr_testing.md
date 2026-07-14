@@ -22,7 +22,7 @@ The Flagr UI lives in `browser/flagr-ui` and is **TypeScript**. End-to-end cover
 make test-e2e       # build server + UI lint/typecheck + Playwright
 ```
 
-The UI's architecture and the patterns it follows are documented in [`docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md`](plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md) (As-built). Treat that plan as the source of truth for how the frontend is structured.
+The UI's architecture and the patterns it follows are documented in [`docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md`](https://github.com/openflagr/flagr/blob/main/docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md) (As-built). Treat that plan as the source of truth for how the frontend is structured.
 
 ## Integration tests (API, multi-DB)
 

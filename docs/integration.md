@@ -1,3 +1,7 @@
+---
+title: Integration guide
+---
+
 # Integration guide
 
 Your first Flagr call is one HTTP request: flag + entity → variant. Everything else on this page is the same idea at scale: many flags, many entities, or an impression after render.
@@ -6,7 +10,7 @@ Base URL: `https://<flagr-host>/api/v1` (prepend `FLAGR_WEB_PREFIX` if you set o
 
 Invariants live in [Behavioral contracts](flagr_behavioral_contracts.md) (eval vs exposure, segment evaluation, blank vs stream, recording gates, cache lag, eval-only). Concepts and bucketing: [Overview](flagr_overview.md). Deploy: [Self-hosting](flagr_self_host.md). REST: [API reference](https://openflagr.github.io/flagr/api_docs).
 
-### Eval vs exposure :id=eval-vs-exposure
+### Eval vs exposure {#eval-vs-exposure}
 
 `POST /evaluation` assigns a variant. `POST /exposures` records that the user saw it. UI experiments need both. Pure server-side branching usually needs only eval. Details: [Eval vs exposure](flagr_behavioral_contracts.md#eval-vs-exposure).
 

@@ -1,3 +1,8 @@
+---
+title: Get started
+description: Flagr is an open-source Go service for feature flags, A/B tests, and dynamic configuration. Self-hosted evaluation API with sticky variants.
+---
+
 # Get started
 
 Flagr is an open-source **Go** service for feature flags, A/B tests, and dynamic configuration.
@@ -63,4 +68,4 @@ make start   # backend :18000 + UI dev :8080
 make test
 ```
 
-Contributor layout, OpenAPI regen, and test conventions: [Contributing](CONTRIBUTING.md). Doc preview: `make serve-docs`.
+Contributor layout, OpenAPI regen, and test conventions: [Contributing](CONTRIBUTING.md). Docs: `make serve-docs` → http://127.0.0.1:8081/flagr/ ; production: `make build-docs` → `docs/.vitepress/dist`.

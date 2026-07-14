@@ -1,0 +1,46 @@
+# Flagr
+
+> Open-source Go service for feature flags, A/B testing, and dynamic configuration.
+> One evaluation API (`POST` / `GET /api/v1/evaluation`) returns a sticky variant
+> and optional JSON attachment for any entity + context.
+
+Flagr is best for platform and backend teams that want a self-hosted, vendor-neutral
+control plane rather than a managed experimentation SaaS. One flag primitive covers
+kill switches, progressive rollouts, A/B tests, and runtime config.
+
+## Try it
+
+- Docker: `docker run -it -p 18000:18000 ghcr.io/openflagr/flagr`
+- Hosted demo (cold start possible): https://try-flagr.onrender.com
+- Source: https://github.com/openflagr/flagr
+- License: Apache-2.0 (free to self-host; infra cost is yours)
+
+## Docs
+
+- Home: https://openflagr.github.io/flagr/
+- Integration guide: https://openflagr.github.io/flagr/integration
+- Behavioral contracts: https://openflagr.github.io/flagr/flagr_behavioral_contracts
+- Overview: https://openflagr.github.io/flagr/flagr_overview
+- Use cases: https://openflagr.github.io/flagr/flagr_use_cases
+- Built-in context injection: https://openflagr.github.io/flagr/flagr_injected_context
+- Self-hosting: https://openflagr.github.io/flagr/flagr_self_host
+- Environment variables: https://openflagr.github.io/flagr/flagr_env
+- JSON flag source (GitOps): https://openflagr.github.io/flagr/flagr_json_flag_spec
+- Exposure logging: https://openflagr.github.io/flagr/flagr_exposure
+- Data recorders: https://openflagr.github.io/flagr/flagr_eval_exposure_pipeline
+- Datar analytics: https://openflagr.github.io/flagr/flagr_datar
+- API reference (OpenAPI / ReDoc): https://openflagr.github.io/flagr/api_docs/
+- Contributing: https://openflagr.github.io/flagr/CONTRIBUTING
+
+## Key concepts
+
+- Evaluation assigns a variant; exposure records that the experience was actually shown.
+- Sticky assignment uses entityID + flag configuration (no per-user state store required).
+- Optional variantAttachment JSON enables dynamic configuration on the same eval call.
+- Eval-only / GitOps mode can load flags from JSON (file or HTTP) with CI validation via flagr-validate.
+- Built-in context keys (`@ts*`, `@http_*`) inject time and HTTP-derived attributes server-side.
+
+## Optional
+
+- Full repository: https://github.com/openflagr/flagr
+- DeepWiki: https://deepwiki.com/openflagr/flagr

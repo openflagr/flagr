@@ -1,10 +1,12 @@
+---
+title: Behavioral contracts
+---
+
 # Behavioral contracts
 
 These are the invariants integrators can rely on. Other pages link here instead of restating them. If another doc disagrees with this page, **this page wins**. If this page and the runtime disagree, **runtime wins** - file a docs bug.
 
----
-
-## Eval vs exposure :id=eval-vs-exposure
+## Eval vs exposure {#eval-vs-exposure}
 
 Evaluation is the server's **assignment**. Exposure is the client's **impression** that the user actually saw the surface.
 
@@ -23,9 +25,7 @@ They answer different questions. Prefetches, disabled flags, and no-match blanks
 
 Healthy UI experiment flow when you need impressions: **eval → render → exposure** (batch exposures on unload if you defer). Mechanics: [Exposure logging](flagr_exposure.md), [Data recorders & A/B analysis](flagr_eval_exposure_pipeline.md).
 
----
-
-## Segment evaluation :id=segment-evaluation
+## Segment evaluation {#segment-evaluation}
 
 Segments run in **rank order** (lower rank first). For each segment:
 
@@ -40,9 +40,7 @@ Stickiness: send a stable **`entityID`**. If the client omits it, the evaluator 
 
 Bucketing algorithm (CRC32, 1000 buckets, in-range rollout): [Overview](flagr_overview.md#rollout-and-deterministic-bucketing). Source: `pkg/handler/eval.go` (`evalSegment`), `pkg/entity/distribution.go`.
 
----
-
-## Recording gates :id=recording-gates
+## Recording gates {#recording-gates}
 
 Recording is opt-in. Three gates must all pass before a row leaves the process:
 
@@ -58,9 +56,7 @@ When gates are off, valid exposure requests still return **200** with `loggedCou
 
 Wire format and consumer setup: [Data recorders & A/B analysis](flagr_eval_exposure_pipeline.md). Env reference: [Environment variables](flagr_env.md#guide). Defaults live in `pkg/config/env.go`.
 
----
-
-## Blank assignment vs stream rows :id=blank-vs-stream
+## Blank assignment vs stream rows {#blank-vs-stream}
 
 An empty `variantKey` is a normal evaluation outcome (HTTP 200), not a transport failure. Whether a **stream row** is enqueued is a separate question. With [recording gates](#recording-gates) open:
 
@@ -75,9 +71,7 @@ An empty `variantKey` is a normal evaluation outcome (HTTP 200), not a transport
 
 Exposure rows are independent: see [recording gates](#recording-gates) and [Exposure logging](flagr_exposure.md). Full matrix and frame shape: [Data recorders & A/B analysis](flagr_eval_exposure_pipeline.md).
 
----
-
-## Eval-only mode :id=eval-only
+## Eval-only mode {#eval-only}
 
 **Usual path:** drivers `json_file` and `json_http` force **eval-only** mode (`setupEvalOnlyMode` in `pkg/config/config.go`). That is the supported GitOps / eval-edge shape.
 
@@ -93,9 +87,7 @@ Absent: CRUD UI, `POST /exposures`, Datar APIs, SQLite export, and the `flag_sna
 
 JSON workflow: [JSON flag source](flagr_json_flag_spec.md). Route wiring: `pkg/handler/handler.go`.
 
----
-
-## EvalCache freshness :id=evalcache-freshness
+## EvalCache freshness {#evalcache-freshness}
 
 Hot-path evaluation reads **EvalCache** only. Reloads rebuild lookup maps from the configured fetcher (SQL, file, or HTTP).
 
@@ -109,8 +101,6 @@ After you change a flag, **`variantKey` may stay blank or stale** until the next
 Blank assignment vs whether a stream row is written: [blank vs stream](#blank-vs-stream).
 
 Source: `pkg/handler/eval_cache.go`, `pkg/config/env.go`.
-
----
 
 ## Where to read more
 

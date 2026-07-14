@@ -1,0 +1,10 @@
+/* Brand lockup (transparent PNG) sizing in the nav. */
+.VPNavBarTitle .logo {
+  height: 1.75rem;
+  width: auto;
+  object-fit: contain;
+}
+
+.VPNavBarTitle img.logo {
+  display: block;
+}
