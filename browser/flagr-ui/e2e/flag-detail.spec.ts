@@ -353,6 +353,42 @@ test.describe('Flag detail page', () => {
     await page.locator('.el-tabs__item').filter({ hasText: 'History' }).click()
     await expect(page.locator('.snapshot-container').first()).toBeVisible({ timeout: 5000 })
   })
+
+  test('copy flag URL and deep-link to a history snapshot', async ({ page, context }) => {
+    await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+    flag = await createFlagWithVariants()
+    const putResp = await page.request.put(`${API}/flags/${flag.id}`, {
+      data: {
+        description: `deeplink-${Date.now()}`,
+        key: flag.key || '',
+        dataRecordsEnabled: false,
+        entityType: '',
+        notes: '',
+      },
+    })
+    expect(putResp.ok()).toBeTruthy()
+    const snaps = await waitForSnapshot(flag.id, { timeout: 5000 })
+    const snapshotId = snaps[0].id
+
+    await page.goto(`/#/flags/${flag.id}`)
+    await expect(page.locator('input[data-testid="flag-key-input"]')).toBeVisible({ timeout: 10000 })
+
+    await page.locator('[data-testid="copy-flag-url-btn"]').click()
+    const flagClip = await page.evaluate(() => navigator.clipboard.readText())
+    expect(flagClip).toContain(`#/flags/${flag.id}`)
+    expect(flagClip).not.toContain('tab=history')
+
+    await page.goto(`/#/flags/${flag.id}?tab=history&snapshot=${snapshotId}`)
+    const snapCard = page.locator(`[data-testid="snapshot-${snapshotId}"]`)
+    await expect(snapCard).toBeVisible({ timeout: 10000 })
+    await expect(snapCard).toHaveClass(/snapshot-container--highlight/)
+
+    await page.locator(`[data-testid="copy-snapshot-url-btn-${snapshotId}"]`).click()
+    const snapClip = await page.evaluate(() => navigator.clipboard.readText())
+    expect(snapClip).toContain(`#/flags/${flag.id}`)
+    expect(snapClip).toContain('tab=history')
+    expect(snapClip).toContain(`snapshot=${snapshotId}`)
+  })
   test('new constraint form clears after creation', async ({ page }) => {
     flag = await createFlag()
     await createSegment(flag.id, `cstr-clear-${Date.now()}`)

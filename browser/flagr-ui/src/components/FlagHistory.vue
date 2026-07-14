@@ -2,8 +2,10 @@
   <div>
     <el-card
       v-for="diff in diffs"
-      :key="diff.timestamp"
+      :id="snapshotElementId(diff.newId)"
+      :key="diff.newId"
       class="snapshot-container"
+      :data-testid="`snapshot-${diff.newId}`"
     >
       <template #header>
         <div class="el-card-header">
@@ -13,6 +15,12 @@
                 <el-tag>Snapshot ID: {{ diff.oldId }}</el-tag>
                 <el-icon><DArrowRight /></el-icon>
                 <el-tag>Snapshot ID: {{ diff.newId }}</el-tag>
+                <copy-link-button
+                  :url="snapshotShareUrl(diff.newId)"
+                  aria-label="Copy link to this change"
+                  tooltip="Copy link to this change"
+                  :test-id="`copy-snapshot-url-btn-${diff.newId}`"
+                />
               </div>
             </div>
             <div class="snapshot-header-right">
@@ -43,14 +51,20 @@
 import xss from 'xss'
 import { diffJson, convertChangesToXML } from 'diff'
 import { DArrowRight } from '@element-plus/icons-vue'
+import CopyLinkButton from '@/components/CopyLinkButton.vue'
+import { flagSnapshotUrl, snapshotElementId } from '@/helpers/shareLinks'
 import type { Flag, FlagHistoryDiffRow, FlagSnapshot } from '@/api/types'
 
 export default {
   name: 'FlagHistory',
-  components: { DArrowRight },
+  components: { DArrowRight, CopyLinkButton },
   props: {
     snapshots: {
       type: Array as () => FlagSnapshot[],
+      required: true,
+    },
+    flagId: {
+      type: [String, Number],
       required: true,
     },
   },
@@ -72,6 +86,10 @@ export default {
     },
   },
   methods: {
+    snapshotElementId,
+    snapshotShareUrl(snapshotId: number) {
+      return flagSnapshotUrl(this.flagId, snapshotId, window.location)
+    },
     getDiff(newFlag: Flag, oldFlag: Flag) {
       const o = JSON.parse(JSON.stringify(oldFlag))
       const n = JSON.parse(JSON.stringify(newFlag))
@@ -96,6 +114,12 @@ export default {
 .snapshot-header-right {
   text-align: right;
   color: var(--el-text-color-secondary);
+}
+.diff-snapshot-id-change {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3xs);
 }
 @media (max-width: 640px) {
   .snapshot-header {

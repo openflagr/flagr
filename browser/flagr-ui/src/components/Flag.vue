@@ -79,8 +79,14 @@
     </el-breadcrumb>
 
     <div v-if="loaded && flag">
-      <el-tabs @tab-click="onHistoryTabClick">
-        <el-tab-pane label="Config">
+      <el-tabs
+        v-model="activeTab"
+        @tab-click="onHistoryTabClick"
+      >
+        <el-tab-pane
+          label="Config"
+          name="config"
+        >
           <flag-config-card
             :flag="flag"
             :show-md-editor="showMdEditor"
@@ -188,6 +194,7 @@
           <flag-history
             v-if="historyLoaded"
             :key="historyKey"
+            :flag-id="flagId"
             :snapshots="flagSnapshots"
           />
         </el-tab-pane>
@@ -206,6 +213,7 @@ import SegmentsSection from '@/components/SegmentsSection.vue'
 import VariantsSection from '@/components/VariantsSection.vue'
 import type { BatchEvalContext, BatchEvalResult, DistributionDraft, EvalContext, EvalResult, EvalSummary, FlagView, Segment, Tag } from '@/api/types'
 import type { EntityTypeOption } from '@/helpers/flagModel'
+import { FLAG_TAB_CONFIG, type FlagTabName } from '@/helpers/shareLinks'
 import { castFlagPage } from '@/helpers/vuePageCast'
 import { handleHistoryTabClick, mountFlagPage } from '@/pages/flagPage'
 import * as flagPage from '@/pages/flagPage'
@@ -264,9 +272,11 @@ export default {
       distributionDraft: {} as Record<string, DistributionDraft>,
       operatorOptions: OPERATOR_UI_OPTIONS,
       showMdEditor: false,
+      activeTab: FLAG_TAB_CONFIG as FlagTabName,
       historyLoaded: false,
       historyKey: 0,
       flagSnapshots: [],
+      pendingSnapshotScrollId: null as number | null,
       evalContext: defaultEvalContext(),
       evalResult: {} as EvalResult,
       evalSummary: null as EvalSummary | null,
@@ -287,8 +297,15 @@ export default {
       handler(id: string | string[] | undefined) {
         this.flagId = String(id ?? '')
         if (this.flagId) {
-          mountFlagPage(this.page)
+          mountFlagPage(this.page, this.$route.query as Record<string, unknown>)
         }
+      },
+    },
+    // Deep-link query changes while already on this flag (e.g. in-app navigation).
+    '$route.query': {
+      handler(query: Record<string, unknown>) {
+        if (!this.loaded || !this.flagId) return
+        flagPage.applyDeepLink(this.page, query)
       },
     },
   },

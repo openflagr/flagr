@@ -239,6 +239,18 @@ ol { margin: 0; padding-left: 20px; }
 
   .el-breadcrumb { margin-bottom: var(--space-md); }
 
+  // One-shot highlight when opening a deep-linked history snapshot.
+  .snapshot-container--highlight {
+    box-shadow: 0 0 0 2px var(--el-color-primary-light-5);
+    background-color: var(--el-color-primary-light-9);
+    transition: box-shadow 150ms ease, background-color 150ms ease;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .snapshot-container--highlight {
+      transition: none;
+    }
+  }
+
   .el-input { margin-bottom: 2px; }
 
   .segment-rollout-percent input { text-align: right; }
