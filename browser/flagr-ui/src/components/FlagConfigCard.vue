@@ -132,6 +132,7 @@
               closable
               size="small"
               effect="plain"
+              disable-transitions
               :style="{ backgroundColor: tagColor(tag.value), borderColor: 'transparent' }"
               @close="$emit('delete-tag', tag)"
             >

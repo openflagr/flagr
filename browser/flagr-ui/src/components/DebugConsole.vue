@@ -245,8 +245,7 @@ export default {
   font-size: 10px;
   font-weight: 700;
   color: var(--el-color-primary);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--letter-spacing-tight);
   background: var(--el-color-primary-light-8);
   border-radius: 4px;
   padding: 2px var(--space-2xs);
@@ -256,7 +255,7 @@ export default {
   font-size: 16px;
   font-weight: 700;
   color: var(--el-text-color-primary);
-  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-family: var(--font-mono);
 }
 
 .dc-segment-log {
@@ -290,7 +289,7 @@ export default {
   font-size: 11px;
   color: var(--el-text-color-placeholder);
   line-height: 1.4;
-  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-family: var(--font-mono);
   word-break: break-all;
 }
 .dc-response-col {

@@ -30,8 +30,42 @@
         </el-button>
       </div>
 
+      <!-- Empty: no flags, or search miss -->
+      <div
+        v-if="filteredFlags.length === 0"
+        class="card--cue flags-empty"
+        data-testid="flags-empty"
+      >
+        <p class="card--cue-title">
+          {{ emptyStateTitle }}
+        </p>
+        <p class="card--cue-body">
+          {{ emptyStateBody }}
+        </p>
+        <div class="flags-empty-actions">
+          <el-button
+            v-if="hasActiveSearch"
+            size="small"
+            @click="clearSearch"
+          >
+            Clear search
+          </el-button>
+          <el-button
+            v-else
+            type="primary"
+            size="small"
+            data-testid="create-flag-empty-btn"
+            @click="showCreateModal = true"
+          >
+            <el-icon><Plus /></el-icon>
+            Create Flag
+          </el-button>
+        </div>
+      </div>
+
       <!-- Flags Table -->
       <el-card
+        v-else
         shadow="never"
         class="flags-table-card"
       >
@@ -41,7 +75,7 @@
           :default-sort="{ prop: 'id', order: 'descending' }"
           virtual-scroll
           size="small"
-          max-height="calc(100vh - 240px)"
+          max-height="calc(100dvh - 240px)"
           style="width: 100%"
           data-testid="flags-table"
           @row-click="goToRow"
@@ -80,6 +114,7 @@
                   :key="tag.id"
                   size="small"
                   effect="plain"
+                  disable-transitions
                   :style="{ backgroundColor: tagColor(tag.value), borderColor: 'transparent' }"
                 >
                   {{ tag.value }}
@@ -119,6 +154,7 @@
                 effect="light"
                 size="small"
                 round
+                disable-transitions
               >
                 {{ scope.row.enabled ? "Enabled" : "Disabled" }}
               </el-tag>
@@ -161,7 +197,7 @@
                 :default-sort="{ prop: 'id', order: 'descending' }"
                 virtual-scroll
                 size="small"
-                max-height="calc(100vh - 240px)"
+                max-height="calc(100dvh - 240px)"
                 style="width: 100%"
               >
                 <el-table-column
@@ -187,6 +223,7 @@
                       :key="tag.id"
                       size="small"
                       effect="plain"
+                      disable-transitions
                       :style="{ backgroundColor: tagColor(tag.value), borderColor: 'transparent' }"
                     >
                       {{ tag.value }}
@@ -357,6 +394,17 @@ export default {
       }
       return this.flags
     },
+    hasActiveSearch(): boolean {
+      return this.debouncedSearchTerm.trim().length > 0
+    },
+    emptyStateTitle(): string {
+      return this.hasActiveSearch ? 'No matching flags' : 'No flags yet'
+    },
+    emptyStateBody(): string {
+      return this.hasActiveSearch
+        ? 'Try a different ID, key, description, or tag — or clear the search.'
+        : 'Create a flag to start targeting. Use a boolean flag for a ready-made on/off setup.'
+    },
   },
   watch: {
     searchTerm() {
@@ -384,6 +432,10 @@ export default {
   methods: {
     goToRow(row: Flag) {
       flagsListPage.goToFlag(this.page, row)
+    },
+    clearSearch() {
+      this.searchTerm = ''
+      this.debouncedSearchTerm = ''
     },
     tagColor,
     datetimeFormatter,
@@ -418,18 +470,26 @@ export default {
 .flags-search :deep(.el-input__wrapper) {
   padding-left: 40px;
   border-radius: 24px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  box-shadow: var(--shadow-sm);
   background-color: var(--el-bg-color);
   transition: box-shadow 0.2s;
 }
 .flags-search :deep(.el-input__wrapper):hover,
 .flags-search :deep(.el-input__wrapper.is-focus) {
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  box-shadow: var(--shadow-md);
+}
+.flags-empty {
+  margin-bottom: var(--space-md);
+}
+.flags-empty-actions {
+  margin-top: var(--space-sm);
+  display: flex;
+  gap: var(--space-2xs);
 }
 .flags-table-card {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  border-radius: 12px;
+  border-radius: var(--radius-xl);
 }
 .flags-table-card :deep(.el-table) {
   border: none;
@@ -439,8 +499,7 @@ export default {
   color: var(--el-text-color-secondary);
   font-weight: 600;
   font-size: 12px;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-tight);
 }
 .flags-table-card :deep(.el-table) .el-table__row {
   cursor: pointer;
@@ -474,7 +533,7 @@ export default {
 .flag-key-tag {
   font-size: 11px;
   color: var(--el-text-color-placeholder);
-  font-family: "SF Mono", "Menlo", "Consolas", monospace;
+  font-family: var(--font-mono);
   margin-top: 1px;
 }
 .flag-tags-cell {

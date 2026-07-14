@@ -12,9 +12,13 @@
           <div class="snapshot-header">
             <div class="snapshot-header-left">
               <div class="diff-snapshot-id-change">
-                <el-tag>Snapshot ID: {{ diff.oldId }}</el-tag>
+                <el-tag disable-transitions>
+                  Snapshot ID: {{ diff.oldId }}
+                </el-tag>
                 <el-icon><DArrowRight /></el-icon>
-                <el-tag>Snapshot ID: {{ diff.newId }}</el-tag>
+                <el-tag disable-transitions>
+                  Snapshot ID: {{ diff.newId }}
+                </el-tag>
                 <copy-link-button
                   :url="snapshotShareUrl(diff.newId)"
                   aria-label="Copy link to this change"
