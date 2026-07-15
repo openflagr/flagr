@@ -73,9 +73,9 @@
 
     <el-breadcrumb separator="/">
       <el-breadcrumb-item :to="{ name: 'home' }">
-        Flags
+        Home page
       </el-breadcrumb-item>
-      <el-breadcrumb-item>Flag {{ $route.params.flagId }}</el-breadcrumb-item>
+      <el-breadcrumb-item>Flag ID: {{ $route.params.flagId }}</el-breadcrumb-item>
     </el-breadcrumb>
 
     <div v-if="loaded && flag">
