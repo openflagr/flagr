@@ -116,9 +116,7 @@ ol { margin: 0; padding-left: 20px; }
       height: 1.75rem;
       flex-shrink: 0;
       object-fit: contain;
-      /* white monogram asset — paint dark for light surface navbar */
-      filter: brightness(0) saturate(100%);
-      opacity: 0.85;
+      /* solid black PNG with white monogram (flagr-mark-on-dark) */
     }
     .version {
       font-size: var(--font-size-caption);
