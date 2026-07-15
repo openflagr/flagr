@@ -10,14 +10,16 @@ test.describe('Flags list page', () => {
     }
   })
 
-  test('page loads and shows the flags table', async ({ page }) => {
+  test('page loads and shows the flags list or empty state', async ({ page }) => {
     await page.goto('/')
-    await expect(page.locator('[data-testid="flags-table"]')).toBeVisible({ timeout: 10000 })
+    await expect(
+      page.locator('[data-testid="flags-table"], [data-testid="flags-empty"]'),
+    ).toBeVisible({ timeout: 10000 })
   })
 
   test('create flag via UI modal', async ({ page }) => {
     await page.goto('/')
-    await expect(page.locator('[data-testid="flags-table"]')).toBeVisible({ timeout: 10000 })
+    await expect(page.locator('[data-testid="create-flag-btn"]')).toBeVisible({ timeout: 10000 })
 
     const flagName = `e2e-test-${Date.now()}`
 

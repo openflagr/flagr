@@ -21,6 +21,7 @@
         size="small"
         type="info"
         effect="plain"
+        disable-transitions
         class="constraint-op-api-tag"
       >
         {{ badge }}
@@ -77,7 +78,7 @@ export default {
 .constraint-op-api-tag {
   justify-self: end;
   flex-shrink: 0;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-weight: var(--font-weight-semibold);
   border: none;
 }

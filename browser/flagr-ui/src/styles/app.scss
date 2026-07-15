@@ -46,6 +46,12 @@ body {
   --radius-lg: 10px;
   --radius-xl: 12px;
 
+  // Shadows use ink-tinted alpha so elevation feels soft, not sooty.
+  --shadow-sm: 0 1px 2px rgba(26, 38, 34, 0.05);
+  --shadow-md: 0 2px 8px rgba(26, 38, 34, 0.07);
+
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+
   --surface-inset-padding: var(--space-2xs) var(--space-xs);
   --surface-inset-radius: var(--radius-md);
 
@@ -58,11 +64,10 @@ body {
   // --- Domain colors (not covered by Element Plus tokens) ---
   // These are the only colors outside the --el-* system; keep them here
   // so a retheme only touches two files: this block + element/index.scss.
-  --navbar-text: #ffffff;
-  --warning-tag-text: #97700a;
-  --warning-tag-bg: #faf3e0;
-  --diff-del-bg: #ecc9c9;
-  --diff-ins-bg: #cce3d6;
+  --warning-tag-text: #8a6910;
+  --warning-tag-bg: #f5efd9;
+  --diff-del-bg: #ecd4d4;
+  --diff-ins-bg: #d0e5da;
 }
 
 h1, h2 { font-weight: var(--font-weight-semibold); }
@@ -71,16 +76,17 @@ ol { margin: 0; padding-left: 20px; }
 
 #app {
   color: var(--el-text-color-primary);
-  min-height: 100vh;
+  min-height: 100dvh;
   background-color: var(--el-bg-color-page);
 
   span[size="small"] { font-size: 0.85em; }
 
-  // --- Navbar ---
+  // --- Navbar (quiet surface; primary used as brand accent) ---
   .navbar {
-    background-color: var(--el-color-primary);
-    color: var(--navbar-text);
+    background-color: var(--el-bg-color);
+    color: var(--el-text-color-primary);
     padding: 0;
+    border-bottom: 1px solid var(--el-border-color);
   }
   .navbar-inner {
     max-width: var(--content-max-width);
@@ -98,26 +104,29 @@ ol { margin: 0; padding-left: 20px; }
       margin: 0;
       font-size: 1.2em;
       font-weight: var(--font-weight-bold);
-      letter-spacing: -0.03em;
+      letter-spacing: var(--letter-spacing-tight);
+      color: var(--el-color-primary);
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
     }
-    .logo-mark {
-      display: block;
-      width: 1.75rem;
-      height: 1.75rem;
-      flex-shrink: 0;
-      object-fit: contain;
-      /* solid black PNG with white monogram (flagr-mark-on-dark) */
+    .version {
+      font-size: var(--font-size-caption);
+      font-weight: var(--font-weight-normal);
+      color: var(--el-text-color-secondary);
+      margin-left: 0.15rem;
     }
-    .version { font-size: var(--font-size-caption); font-weight: var(--font-weight-normal); opacity: 0.7; margin-left: 0.15rem; }
   }
   .navbar-nav {
     display: flex;
     gap: var(--space-lg);
-    a { color: inherit; text-decoration: none; font-size: 0.9em; font-weight: var(--font-weight-medium); opacity: 0.85; }
-    a:hover { opacity: 1; }
+    a {
+      color: var(--el-text-color-secondary);
+      text-decoration: none;
+      font-size: 0.9em;
+      font-weight: var(--font-weight-medium);
+    }
+    a:hover { color: var(--el-text-color-primary); }
   }
   .router-view-container {
     max-width: var(--content-max-width);
@@ -138,11 +147,11 @@ ol { margin: 0; padding-left: 20px; }
   .container { margin: 0 auto; margin-top: var(--space-lg); }
   img { height: 60px; }
 
-  // --- Notion-style cards ---
+  // --- Cards (hairline border only — no side-stripe accent) ---
   .el-card {
     border-radius: var(--radius-xl);
     border: 1px solid var(--el-border-color);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    box-shadow: var(--shadow-sm);
     margin-bottom: var(--space-md);
 
     .el-card__header {
@@ -150,17 +159,6 @@ ol { margin: 0; padding-left: 20px; }
       color: var(--el-text-color-primary);
       border-bottom: 1px solid var(--el-border-color-light);
       padding: var(--space-xs) var(--space-md);
-      position: relative;
-      &::before {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 3px;
-        background: var(--el-color-primary);
-        border-radius: 0 2px 2px 0;
-      }
       h2 {
         margin: 0;
         color: var(--el-text-color-primary);
@@ -172,18 +170,16 @@ ol { margin: 0; padding-left: 20px; }
     .el-card__body { padding: var(--space-sm) var(--space-md); }
   }
 
-  // --- Card tier: secondary (thinner accent + slightly smaller title) ---
+  // --- Card tier: secondary (slightly smaller title) ---
   .el-card.is-card-secondary {
     .el-card__header {
-      &::before { width: 2px; }
       h2 { font-size: var(--font-size-card-title-secondary); }
     }
   }
 
-  // --- Card tier: danger (danger accent) ---
+  // --- Card tier: danger (danger title color) ---
   .el-card.is-card-danger {
     .el-card__header {
-      &::before { background: var(--el-color-danger); }
       h2 { color: var(--el-color-danger); }
     }
   }
@@ -325,11 +321,13 @@ ol { margin: 0; padding-left: 20px; }
     border-color: var(--el-button-disabled-border-color, var(--el-border-color-light));
   }
 
-  // --- Reduced motion ---
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+  // --- Reduced motion (only when the user prefers it) ---
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 
   // --- History / Snapshot page ---
@@ -401,8 +399,7 @@ ol { margin: 0; padding-left: 20px; }
   font-weight: var(--font-weight-semibold);
   color: var(--el-text-color-secondary);
   margin-bottom: var(--space-3xs);
-  text-transform: uppercase;
-  letter-spacing: var(--letter-spacing-label);
+  letter-spacing: var(--letter-spacing-tight);
 }
 
 .ui-id-badge {
@@ -412,14 +409,14 @@ ol { margin: 0; padding-left: 20px; }
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   letter-spacing: var(--letter-spacing-ui);
+  font-family: var(--font-mono);
 }
 
 .ui-section-title {
   font-size: var(--font-size-caption);
   font-weight: var(--font-weight-semibold);
   color: var(--el-text-color-secondary);
-  letter-spacing: var(--letter-spacing-ui);
-  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-tight);
 }
 // Constraint grid (global): child SFC roots use display: contents to participate in parent grid.
 .constraint-table {
