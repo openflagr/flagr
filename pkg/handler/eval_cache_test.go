@@ -24,9 +24,16 @@ func TestGetByFlagKeyOrID(t *testing.T) {
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	ec := GetEvalCache()
+	// Drop stale fetcher from prior tests; singleton reuses it across package runs.
+	ec.fetcher = nil
 	ec.lastSnapshotMaxID = 0
-	ec.reloadMapCache()
+	if err := ec.reloadMapCache(); err != nil {
+		t.Fatalf("reloadMapCache: %v", err)
+	}
 	f := ec.GetByFlagKeyOrID(fixtureFlag.ID)
+	if !assert.NotNil(t, f) {
+		return
+	}
 	assert.Equal(t, f.ID, fixtureFlag.ID)
 	assert.Equal(t, f.Tags[0].Value, fixtureFlag.Tags[0].Value)
 }
@@ -44,8 +51,12 @@ func TestGetByTags(t *testing.T) {
 	defer gostub.StubFunc(&getDB, db).Reset()
 
 	ec := GetEvalCache()
+	// Drop stale fetcher from prior tests; singleton reuses it across package runs.
+	ec.fetcher = nil
 	ec.lastSnapshotMaxID = 0
-	ec.reloadMapCache()
+	if err := ec.reloadMapCache(); err != nil {
+		t.Fatalf("reloadMapCache: %v", err)
+	}
 
 	tags := make([]string, len(fixtureFlag.Tags))
 	for i, s := range fixtureFlag.Tags {
