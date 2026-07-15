@@ -95,9 +95,9 @@ The docs site is a **VitePress** app whose sources live in `docs/` (`index.md` i
 | **`make build-docs`** | Sync env snippet, `npm ci`, production build → `docs/.vitepress/dist` (+ copy `api_docs/`, patch sitemap) |
 | **`make docs-sync-snippets`** | Copy `pkg/config/env.go` → `docs/snippets/env.go` (used by serve/build) |
 
-On push to `main`, [pages.yml](https://github.com/openflagr/flagr/blob/main/.github/workflows/pages.yml) runs `make build-docs` and deploys `docs/.vitepress/dist` to GitHub Pages.
+Every PR runs `make build-docs` in the **docs_build** CI job (same command as deploy). On push to `main`, [pages.yml](https://github.com/openflagr/flagr/blob/main/.github/workflows/pages.yml) builds again and deploys `docs/.vitepress/dist` to GitHub Pages.
 
-SEO / AI-readable assets live in `docs/public/` (`robots.txt`, `llms.txt`, images). OpenAPI ReDoc stays in `docs/api_docs/` and is copied into the dist on build. Full as-built: [VitePress docs SEO plan](plans/2026-07-14-001-vitepress-docs-seo-plan.md) (repo path; not on the live docs sidebar).
+SEO / AI-readable assets live in `docs/public/` (`robots.txt`, `llms.txt`, images). OpenAPI ReDoc stays in `docs/api_docs/` and is copied into the dist on build. Full as-built: [VitePress docs SEO plan](https://github.com/openflagr/flagr/blob/main/docs/plans/2026-07-14-001-vitepress-docs-seo-plan.md) (repo path; not on the live docs sidebar).
 
 Several pages serve specific audiences and are worth knowing as a contributor: the [integration guide](integration.md) is the hub for integrators, the [behavioral contracts](flagr_behavioral_contracts.md) hold the canonical descriptions of cross-cutting behavior, and this page is the repo guide. Design and as-built notes live in `docs/plans/` — they are excluded from the VitePress sidebar build, but remain valuable internal history.
 

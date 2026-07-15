@@ -48,6 +48,7 @@ help:
 	@echo "CI (GitHub Actions call these)"
 	@echo "  make ci                Unit test gate (lint + swagger + go test)"
 	@echo "  make ci-swagger        Regenerate swagger; fail if git dirty"
+	@echo "  make build-docs        VitePress docs build (docs_build job + Pages)"
 	@echo "  make ci-integration    Compose integration tests + benchmarks"
 	@echo ""
 	@echo "Other"
