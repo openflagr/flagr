@@ -9,6 +9,7 @@ import (
 
 	"github.com/prashantv/gostub"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGetByFlagKeyOrID(t *testing.T) {
@@ -31,9 +32,7 @@ func TestGetByFlagKeyOrID(t *testing.T) {
 		t.Fatalf("reloadMapCache: %v", err)
 	}
 	f := ec.GetByFlagKeyOrID(fixtureFlag.ID)
-	if !assert.NotNil(t, f) {
-		return
-	}
+	require.NotNil(t, f)
 	assert.Equal(t, f.ID, fixtureFlag.ID)
 	assert.Equal(t, f.Tags[0].Value, fixtureFlag.Tags[0].Value)
 }
