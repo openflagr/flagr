@@ -36,6 +36,19 @@ jobs:
           cache: 'npm'
           cache-dependency-path: browser/flagr-ui/package-lock.json
       - run: make build-ui
+  # Same build as pages.yml (make build-docs). Catches dead VitePress links and
+  # docs package/lock issues on PRs before Deploy docs to GitHub Pages runs on main.
+  docs_build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: docs/package-lock.json
+      - run: make build-docs
   integration_test:
     runs-on: ubuntu-latest
     steps:

@@ -10,6 +10,7 @@ Run **`make help`** from the repo root for the full catalog. Common targets:
 |---|---|
 | `make build` | Go server → `./flagr` |
 | `make build-ui` | UI: lint, typecheck, Vite → `browser/flagr-ui/dist/` |
+| `make build-docs` | VitePress production build → `docs/.vitepress/dist` |
 | `make start` | Backend `:18000` + UI dev `:8080` |
 | `make stop-ui` | Free ports `:18000` / `:8080` (`lsof`, not `pkill`) |
 | `make rebuild-run` | `build` → `stop-ui` → `start` |
@@ -29,6 +30,7 @@ Run from **repo root**. Match what [`.github/workflows/ci.yml`](.github/workflow
 | You changed | Run before commit | Run before push (recommended) |
 |-------------|-------------------|-------------------------------|
 | **`browser/flagr-ui/`** only | `make flagr-ui-check` | `make test-e2e` |
+| **`docs/`** (VitePress) | `make build-docs` | `make build-docs` |
 | **`pkg/`** or Go tests | `make test` | `make test` (+ `make test-integration` if handler/API behavior) |
 | **Swagger** (`swagger/`, handlers → OpenAPI) | `make swagger` then commit `swagger_gen/` + `cmd/flagr-server/main.go` | `make ci-swagger` (regen + `git diff --exit-code`) |
 | **UI + Go** or unsure | `make test` **and** `make flagr-ui-check` | `make test` + `make test-e2e` |
@@ -39,6 +41,7 @@ Run from **repo root**. Match what [`.github/workflows/ci.yml`](.github/workflow
 |--------------------|----------|
 | `unit_test` | `make ci-swagger` then `make ci` (= `make test`: **golangci-lint** + swagger validate + `go test ./pkg/...`) |
 | `ui_lint` | `make build-ui` (= `flagr-ui-check` + Vite production build) |
+| `docs_build` | `make build-docs` (VitePress; same as Pages deploy) |
 | `e2e_test` | `make test-e2e` (= `make build` + `flagr-ui-check` + Playwright) |
 | `integration_test` | `make ci-integration` (Docker Compose; usually not every UI PR) |
 
