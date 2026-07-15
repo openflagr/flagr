@@ -1,4 +1,8 @@
 <p align="center">
+    <img src="./docs/public/images/logo.png" width="280" alt="Flagr">
+</p>
+
+<p align="center">
     <a href="https://github.com/openflagr/flagr/actions/workflows/ci.yml?query=branch%3Amain+" target="_blank">
         <img src="https://github.com/openflagr/flagr/actions/workflows/ci.yml/badge.svg?branch=main">
     </a>
@@ -91,7 +95,7 @@ curl -sS -X POST https://try-flagr.onrender.com/api/v1/evaluation \
 ## Flagr UI
 
 <p align="center">
-    <img src="./docs/images/demo_readme.png" width="900" alt="Flagr UI">
+    <img src="./docs/public/images/demo_readme.png" width="900" alt="Flagr UI">
 </p>
 
 ## Architecture
