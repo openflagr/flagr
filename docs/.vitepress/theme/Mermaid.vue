@@ -113,9 +113,13 @@ function zoomBy(delta: number) {
 .wrap {
   position: relative;
   margin: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .diagram {
+  width: 100%;
   overflow-x: auto;
   text-align: center;
 }
