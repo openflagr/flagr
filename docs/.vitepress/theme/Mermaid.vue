@@ -42,6 +42,13 @@ function openViewer() {
   dialogEl.value.showModal();
 }
 
+function onDiagramKeydown(event: KeyboardEvent) {
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    openViewer();
+  }
+}
+
 function closeViewer() {
   dialogEl.value?.close();
 }
@@ -60,15 +67,16 @@ function zoomBy(delta: number) {
 
 <template>
   <div class="wrap">
-    <div ref="host" class="diagram" />
-    <button
-      v-if="svgHtml"
-      type="button"
-      class="expand"
+    <div
+      ref="host"
+      class="diagram"
+      :class="{ interactive: Boolean(svgHtml) }"
+      :role="svgHtml ? 'button' : undefined"
+      :tabindex="svgHtml ? 0 : undefined"
+      :aria-label="svgHtml ? 'Enlarge diagram' : undefined"
       @click="openViewer"
-    >
-      Enlarge
-    </button>
+      @keydown="onDiagramKeydown"
+    />
 
     <dialog
       ref="dialogEl"
@@ -113,15 +121,13 @@ function zoomBy(delta: number) {
 .wrap {
   position: relative;
   margin: 1rem 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
 }
 
 .diagram {
   width: 100%;
   overflow-x: auto;
   text-align: center;
+  border-radius: 8px;
 }
 
 .diagram :deep(svg) {
@@ -129,26 +135,20 @@ function zoomBy(delta: number) {
   height: auto;
 }
 
-.expand {
-  display: inline-flex;
-  align-items: center;
-  margin-top: 0.5rem;
-  padding: 0.25rem 0.625rem;
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 6px;
-  background: var(--vp-c-bg-soft);
-  color: var(--vp-c-text-2);
-  font-size: 0.8125rem;
-  line-height: 1.4;
-  cursor: pointer;
+.diagram.interactive {
+  cursor: zoom-in;
+  outline: 1px solid transparent;
+  transition:
+    outline-color 0.15s ease,
+    background-color 0.15s ease;
 }
 
-.expand:hover {
-  color: var(--vp-c-text-1);
-  border-color: var(--vp-c-brand-1);
+.diagram.interactive:hover {
+  outline-color: var(--vp-c-brand-1);
+  background-color: var(--vp-c-bg-soft);
 }
 
-.expand:focus-visible {
+.diagram.interactive:focus-visible {
   outline: 2px solid var(--vp-c-brand-1);
   outline-offset: 2px;
 }
