@@ -8,3 +8,14 @@
 .VPNavBarTitle img.logo {
   display: block;
 }
+
+.vp-doc .vp-mermaid {
+  margin: 1rem 0;
+  overflow-x: auto;
+  text-align: center;
+}
+
+.vp-doc .vp-mermaid > svg {
+  max-width: 100%;
+  height: auto;
+}

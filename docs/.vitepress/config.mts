@@ -243,7 +243,8 @@ export default defineConfig({
       dark: "github-dark",
     },
     languages: ["bash", "go", "js", "json", "yaml", "shell", "sh"],
-    // Turn ```mermaid fences into diagram containers (rendered client-side).
+    // ```mermaid → <Mermaid code="…" /> (theme component renders client-side).
+    // Pass source as a prop so Vue whitespace condensing cannot flatten newlines.
     config(md) {
       const defaultFence =
         md.renderer.rules.fence?.bind(md.renderer.rules) ??
@@ -254,12 +255,8 @@ export default defineConfig({
         const token = tokens[idx];
         const info = token.info.trim().split(/\s+/)[0];
         if (info === "mermaid") {
-          // Escape so raw diagram text is safe in HTML; mermaid reads textContent.
-          const graph = token.content
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;");
-          return `<div class="mermaid">${graph}</div>\n`;
+          const code = md.utils.escapeHtml(token.content.trim());
+          return `<Mermaid code="${code}" />\n`;
         }
         return defaultFence(tokens, idx, options, env, self);
       };
