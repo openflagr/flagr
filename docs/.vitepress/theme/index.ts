@@ -1,12 +1,12 @@
 import DefaultTheme from "vitepress/theme";
 import type { Theme } from "vitepress";
 import "./custom.css";
-import { useMermaid } from "./mermaid";
+import Mermaid from "./Mermaid.vue";
 
 const theme: Theme = {
   extends: DefaultTheme,
-  setup() {
-    useMermaid();
+  enhanceApp({ app }) {
+    app.component("Mermaid", Mermaid);
   },
 };
 
