@@ -5,6 +5,11 @@ import { fileURLToPath } from 'url'
 const srcDir = fileURLToPath(new URL('src', import.meta.url))
 
 export default defineConfig({
+  // Relative base so the built assets load when Flagr is served under a
+  // path prefix (FLAGR_WEB_PREFIX), e.g. https://example.com/flagr/.
+  // Safe because the router uses hash history, so the document URL always
+  // points at the app root.
+  base: './',
   plugins: [vue()],
   resolve: {
     alias: {
