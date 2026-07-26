@@ -27,8 +27,32 @@ const (
 // legacyComposePort is checkr_flagr_with_sqlite in docker-compose.yml (see README.md).
 const legacyComposePort = ":18006"
 
+// mcpComposePort is flagr_with_sqlite in docker-compose.yml — the only backend
+// with FLAGR_MCP_ENABLED=true.
+const mcpComposePort = ":18001"
+
 func isLegacyIntegrationBaseline() bool {
 	return strings.HasSuffix(baseURL, legacyComposePort)
+}
+
+// isMCPBackend is true when the server has MCP enabled. In docker-compose mode,
+// only flagr_with_sqlite (:18001) has it. In local auto-start mode, startLocalServer
+// always enables it. In BYO mode, the flag is unknown — callers should use
+// requireMCPBackend instead.
+func isMCPBackend() bool {
+	// Local auto-start: port won't be in the compose range.
+	if !strings.Contains(baseURL, "localhost:1800") {
+		return true
+	}
+	return strings.HasSuffix(baseURL, mcpComposePort)
+}
+
+// requireMCPBackend skips the test when the current server does not have MCP enabled.
+func requireMCPBackend(t *testing.T) {
+	t.Helper()
+	if !isMCPBackend() {
+		t.Skipf("MCP not enabled on %s, skipping (only enabled on %s)", baseURL, mcpComposePort)
+	}
 }
 
 // responseIndicatesRouteNotRegistered is true for swagger/router 404s ("path … was not found"),

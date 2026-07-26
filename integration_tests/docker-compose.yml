@@ -70,6 +70,7 @@ services:
       <<: *flagr-common-env
       FLAGR_DB_DBDRIVER: "sqlite3"
       FLAGR_DB_DBCONNECTIONSTR: "/tmp/flagr.sqlite3"
+      FLAGR_MCP_ENABLED: "true"
     command: sh -c "sleep 15 && ./flagr"
     ports:
       - "18001:18000"

@@ -51,6 +51,7 @@ That lets you **decouple deploy from release** (ship code dark, turn it on per a
 | [Environment variables](https://openflagr.github.io/flagr/flagr_env) | DB, auth, recorders (`pkg/config/env.go`) |
 | [Exposure logging](https://openflagr.github.io/flagr/flagr_exposure) | Client impressions for A/B |
 | [Data recorders](https://openflagr.github.io/flagr/flagr_eval_exposure_pipeline) | Kafka, Kinesis, Pub/Sub |
+| [AI & MCP integration](https://openflagr.github.io/flagr/ai-mcp) | Agent flag management |
 | [API reference](https://openflagr.github.io/flagr/api_docs) | OpenAPI |
 
 ---
@@ -119,6 +120,12 @@ Latencies     [mean, 50, 95, 99, max]  371.63µs, 327.99µs, 614.92µs, 1.39ms, 
 Success       [ratio]                  100.00%
 Status Codes  [code:count]             200:56521
 ```
+
+## AI & MCP Integration
+
+Flagr includes a built-in **MCP server** so AI coding agents can manage flags directly. Enable it with `FLAGR_MCP_ENABLED=true`. It runs on the same binary and port at `/mcp` with 27 tools covering the full flag lifecycle.
+
+See the [MCP integration guide](docs/ai-mcp.md) for setup instructions and tool reference.
 
 ## Client libraries
 
