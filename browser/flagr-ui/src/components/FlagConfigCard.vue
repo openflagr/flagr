@@ -16,6 +16,7 @@
           </div>
           <div class="flex-row-right">
             <el-tooltip
+              v-if="!readonly"
               :content="SAVE_DIRTY_TOOLTIP"
               placement="top"
               effect="light"
@@ -35,6 +36,7 @@
               :model-value="flag.enabled"
               :active-value="true"
               :inactive-value="false"
+              :disabled="readonly"
               inline-prompt
               active-text="Live"
               inactive-text="Off"
@@ -56,6 +58,7 @@
             size="small"
             placeholder="Key"
             :model-value="flag.key"
+            :disabled="readonly"
             data-testid="flag-key-input"
             @update:model-value="onUpdateFlag({ key: $event })"
           />
@@ -68,6 +71,7 @@
             size="small"
             placeholder="Description"
             :model-value="flag.description"
+            :disabled="readonly"
             data-testid="flag-desc-input"
             @update:model-value="onUpdateFlag({ description: $event })"
           />
@@ -83,6 +87,7 @@
                 :model-value="flag.dataRecordsEnabled"
                 :active-value="true"
                 :inactive-value="false"
+                :disabled="readonly"
                 data-testid="data-records-switch"
                 @update:model-value="onUpdateFlag({ dataRecordsEnabled: $event })"
               />
@@ -105,6 +110,7 @@
             <el-select
               :model-value="flag.entityType"
               size="small"
+              :disabled="readonly"
               filterable
               :allow-create="allowCreateEntityType"
               default-first-option
@@ -129,7 +135,7 @@
             <el-tag
               v-for="tag in flag.tags"
               :key="tag.id"
-              closable
+              :closable="!readonly"
               size="small"
               effect="plain"
               disable-transitions
@@ -152,7 +158,7 @@
               @keyup.esc="cancelCreateTag"
             />
             <el-button
-              v-else
+              v-else-if="!readonly"
               size="small"
               link
               type="primary"
@@ -170,6 +176,7 @@
           <div class="flag-section-header">
             <label class="flag-label ui-field-label">Notes</label>
             <el-button
+              v-if="!readonly"
               size="small"
               link
               type="primary"
@@ -226,6 +233,7 @@ export default {
   },
   props: {
     flag: { type: Object as PropType<FlagView>, required: true },
+    readonly: { type: Boolean, default: false },
     showMdEditor: Boolean,
     entityTypes: { type: Array as PropType<EntityTypeOption[]>, default: () => [] },
     allowCreateEntityType: { type: Boolean, default: true },

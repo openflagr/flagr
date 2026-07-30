@@ -3,7 +3,9 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"hash/fnv"
 	"io"
+	"math"
 	"net/http"
 	"os"
 	"slices"
@@ -109,20 +111,22 @@ func (ec *EvalCache) export(query export.GetExportEvalCacheJSONParams) EvalCache
 
 // loadAndBuildCaches fetches all flags from the configured fetcher and builds
 // the three lookup caches (idCache, keyCache, tagCache) used by the EvalCache.
-func (ec *EvalCache) loadAndBuildCaches() (idCache map[string]*entity.Flag, keyCache map[string]*entity.Flag, tagCache map[string]map[uint]*entity.Flag, err error) {
+// It also returns a content fingerprint of the fetched flags, served as the
+// change token by the read-only GetFlagSnapshotMaxID handler in eval-only mode.
+func (ec *EvalCache) loadAndBuildCaches() (*cacheContainer, int64, error) {
 	fs, err := ec.getFetcher().fetch()
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, 0, err
 	}
 
-	idCache = make(map[string]*entity.Flag)
-	keyCache = make(map[string]*entity.Flag)
-	tagCache = make(map[string]map[uint]*entity.Flag)
+	idCache := make(map[string]*entity.Flag)
+	keyCache := make(map[string]*entity.Flag)
+	tagCache := make(map[string]map[uint]*entity.Flag)
 
 	for i := range fs {
 		f := &fs[i]
 		if err := f.PrepareEvaluation(); err != nil {
-			return nil, nil, nil, err
+			return nil, 0, err
 		}
 
 		if f.ID != 0 {
@@ -140,7 +144,27 @@ func (ec *EvalCache) loadAndBuildCaches() (idCache map[string]*entity.Flag, keyC
 			}
 		}
 	}
-	return idCache, keyCache, tagCache, nil
+	cc := &cacheContainer{
+		idCache:  idCache,
+		keyCache: keyCache,
+		tagCache: tagCache,
+	}
+	return cc, flagsFingerprint(fs), nil
+}
+
+// flagsFingerprint returns a non-negative change token derived from the JSON
+// serialization of the flags (FNV-1a 64, masked to int63). Clients only
+// compare it for equality: when the JSON source changes, the token changes.
+func flagsFingerprint(fs []entity.Flag) int64 {
+	b, err := json.Marshal(fs)
+	if err != nil {
+		// Practically unreachable: the same entities marshal in the export path.
+		logrus.WithField("err", err).Warn("failed to marshal flags for content fingerprint")
+		return 0
+	}
+	h := fnv.New64a()
+	h.Write(b)
+	return int64(h.Sum64() & math.MaxInt64)
 }
 
 type evalCacheFetcher interface {

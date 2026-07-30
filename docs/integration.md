@@ -25,7 +25,7 @@ Invariants live in [Behavioral contracts](flagr_behavioral_contracts.md) (eval v
 | Log impression | `POST /exposures` | After the user **sees** the treatment |
 | Liveness | `GET /health` | Probes |
 
-Eval-only replicas (`json_file` / `json_http`) expose evaluation, health, and `GET /api/v1/export/eval_cache/json` only. See [behavioral contracts: eval-only](flagr_behavioral_contracts.md#eval-only).
+Eval-only replicas (`json_file` / `json_http`) expose evaluation, health, `GET /api/v1/export/eval_cache/json`, and read-only CRUD GETs (the UI works as a read-only browser; writes return 403). See [behavioral contracts: eval-only](flagr_behavioral_contracts.md#eval-only).
 
 ## Request model
 

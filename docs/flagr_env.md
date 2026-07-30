@@ -60,7 +60,7 @@ Evaluation never hits the database on the hot path. It reads an in-memory EvalCa
 
 After a flag change, **`variantKey`** can stay blank or stale until the next reload. That lag is a contract, not a bug. See [EvalCache freshness](flagr_behavioral_contracts.md#evalcache-freshness). Automated tests should wait at least one interval (this repo uses **`waitForEvalReady`**).
 
-Eval-only is the usual product path when `FLAGR_DB_DBDRIVER` is `json_file` or `json_http` (`setupEvalOnlyMode` in `pkg/config/config.go`). `FLAGR_EVAL_ONLY_MODE=true` can be set on other drivers as an edge case; prefer JSON drivers for eval-edge deploys. Surface: [behavioral contracts: eval-only](flagr_behavioral_contracts.md#eval-only).
+Eval-only is the usual product path when `FLAGR_DB_DBDRIVER` is `json_file` or `json_http` (`setupEvalOnlyMode` in `pkg/config/config.go`). `FLAGR_EVAL_ONLY_MODE=true` can be set on other drivers as an edge case; prefer JSON drivers for eval-edge deploys. The UI runs as a read-only browser in this mode (`GET /health` reports `evalOnlyMode: true`; write APIs return 403). Surface: [behavioral contracts: eval-only](flagr_behavioral_contracts.md#eval-only).
 
 #### Built-in context injection
 

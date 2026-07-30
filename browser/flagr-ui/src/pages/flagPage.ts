@@ -32,6 +32,7 @@ import {
   isIdentifiedSegment,
 } from '@/api/types'
 import { confirmAndRunApi, type ConfirmVm } from '@/helpers/runApi'
+import { evalOnlyMode } from '@/helpers/serverMode'
 import { materializeConstraintForApi } from '@/helpers/constraintOperatorSugar'
 import { runApi } from '@/helpers/runApi'
 import { SNAPSHOT_HIGHLIGHT_MS } from '@/helpers/copyText'
@@ -496,7 +497,9 @@ export function applyDeepLink(
   query: Record<string, unknown> | undefined | null,
 ): void {
   const link = parseFlagDeepLink(query)
-  if (link.tab === FLAG_TAB_HISTORY) {
+  // Read-only (eval-only) mode has no History tab — change history lives in
+  // Git — so a history deep link lands on Config instead of an empty pane.
+  if (link.tab === FLAG_TAB_HISTORY && !evalOnlyMode.value) {
     if (link.snapshotId != null) {
       vm.pendingSnapshotScrollId = link.snapshotId
     }

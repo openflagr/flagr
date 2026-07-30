@@ -2384,6 +2384,10 @@ func init() {
     "health": {
       "type": "object",
       "properties": {
+        "evalOnlyMode": {
+          "description": "true when the server runs in eval-only mode (e.g. json_file/json_http drivers) and flag write APIs are disabled",
+          "type": "boolean"
+        },
         "status": {
           "type": "string"
         }
@@ -5039,6 +5043,10 @@ func init() {
     "health": {
       "type": "object",
       "properties": {
+        "evalOnlyMode": {
+          "description": "true when the server runs in eval-only mode (e.g. json_file/json_http drivers) and flag write APIs are disabled",
+          "type": "boolean"
+        },
         "status": {
           "type": "string"
         }

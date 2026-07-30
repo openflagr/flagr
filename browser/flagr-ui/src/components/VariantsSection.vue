@@ -21,11 +21,15 @@
             size="small"
             placeholder="Variant Key"
             :model-value="variant.key"
+            :disabled="readonly"
             data-testid="variant-key-input"
             class="variant-key-field"
             @update:model-value="onVariantKeyInput(variant, $event)"
           />
-          <div class="variant-actions">
+          <div
+            v-if="!readonly"
+            class="variant-actions"
+          >
             <el-tooltip
               :content="SAVE_DIRTY_TOOLTIP"
               placement="top"
@@ -62,6 +66,7 @@
             </p>
             <json-editor
               :json="variant.attachment"
+              :read-only="readonly"
               :main-menu-bar="false"
               :navigation-bar="false"
               :status-bar="false"
@@ -86,7 +91,10 @@
       </p>
     </div>
 
-    <div class="variant-add-row">
+    <div
+      v-if="!readonly"
+      class="variant-add-row"
+    >
       <el-input
         v-model="newKey"
         size="small"
@@ -122,7 +130,10 @@ import type { Variant, VariantAttachment } from '@/api/types'
 export default {
   name: 'VariantsSection',
   components: { JsonEditor, Delete },
-  props: { variants: { type: Array as PropType<Variant[]>, required: true } },
+  props: {
+    variants: { type: Array as PropType<Variant[]>, required: true },
+    readonly: { type: Boolean, default: false },
+  },
   emits: [
     'update-variant-key',
     'save-variant',

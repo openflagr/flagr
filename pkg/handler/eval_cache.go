@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"cmp"
 	"maps"
+	"slices"
 	"sync"
 	"time"
 
@@ -61,6 +63,12 @@ type EvalCache struct {
 	// because every API mutation that affects eval data creates a snapshot.
 	// lastSnapshotMaxID > 0 indicates at least one successful load has occurred.
 	lastSnapshotMaxID uint
+
+	// contentFingerprint is the change token of the currently cached flags.
+	// In eval-only mode there are no flag_snapshot rows, so the read-only
+	// GetFlagSnapshotMaxID handler serves this instead; clients only compare
+	// it for equality to decide whether to refetch.
+	contentFingerprint int64
 }
 
 // GetEvalCache gets the EvalCache
@@ -162,6 +170,37 @@ func (ec *EvalCache) getByTagsALL(tags []string) map[uint]*entity.Flag {
 	return results
 }
 
+// GetAllFlags returns a copy of all flags in the cache, sorted by ID.
+// It is the data source for the read-only CRUD API served in eval-only mode.
+func (ec *EvalCache) GetAllFlags() []entity.Flag {
+	ec.cacheMutex.RLock()
+	fs := make([]entity.Flag, 0, len(ec.cache.idCache))
+	for _, f := range ec.cache.idCache {
+		fs = append(fs, *f)
+	}
+	ec.cacheMutex.RUnlock()
+
+	slices.SortFunc(fs, func(a, b entity.Flag) int {
+		return cmp.Compare(a.ID, b.ID)
+	})
+	return fs
+}
+
+// ContentFingerprint returns the change token of the currently cached flags.
+func (ec *EvalCache) ContentFingerprint() int64 {
+	ec.cacheMutex.RLock()
+	defer ec.cacheMutex.RUnlock()
+	return ec.contentFingerprint
+}
+
+// GetByFlagID gets the flag by numeric ID only, without the key fallback of
+// GetByFlagKeyOrID.
+func (ec *EvalCache) GetByFlagID(id uint) *entity.Flag {
+	ec.cacheMutex.RLock()
+	defer ec.cacheMutex.RUnlock()
+	return ec.cache.idCache[util.SafeString(id)]
+}
+
 // GetByFlagKeyOrID gets the flag by Key or ID
 func (ec *EvalCache) GetByFlagKeyOrID(keyOrID any) *entity.Flag {
 	s := util.SafeString(keyOrID)
@@ -224,18 +263,15 @@ func (ec *EvalCache) reloadMapCache() error {
 	}
 
 	_, _, err := withtimeout.Do(ec.refreshTimeout, func() (any, error) {
-		idCache, keyCache, tagCache, err := ec.loadAndBuildCaches()
+		cc, fingerprint, err := ec.loadAndBuildCaches()
 		if err != nil {
 			return nil, err
 		}
 
 		ec.cacheMutex.Lock()
-		ec.cache = &cacheContainer{
-			idCache:  idCache,
-			keyCache: keyCache,
-			tagCache: tagCache,
-		}
+		ec.cache = cc
 		ec.lastSnapshotMaxID = preFetchMaxID
+		ec.contentFingerprint = fingerprint
 		ec.cacheMutex.Unlock()
 
 		return nil, nil

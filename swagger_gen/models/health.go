@@ -14,6 +14,9 @@ import (
 // swagger:model health
 type Health struct {
 
+	// true when the server runs in eval-only mode (e.g. json_file/json_http drivers) and flag write APIs are disabled
+	EvalOnlyMode bool `json:"evalOnlyMode,omitempty"`
+
 	// status
 	Status string `json:"status,omitempty"`
 }
