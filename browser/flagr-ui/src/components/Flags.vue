@@ -20,6 +20,7 @@
           />
         </div>
         <el-button
+          v-if="!evalOnlyMode"
           type="primary"
           size="large"
           data-testid="create-flag-btn"
@@ -51,7 +52,7 @@
             Clear search
           </el-button>
           <el-button
-            v-else
+            v-else-if="!evalOnlyMode"
             type="primary"
             size="small"
             data-testid="create-flag-empty-btn"
@@ -163,8 +164,9 @@
         </el-table>
       </el-card>
 
-      <!-- Deleted Flags -->
+      <!-- Deleted Flags (not applicable in read-only mode: no soft-deletes in a JSON source) -->
       <el-card
+        v-if="!evalOnlyMode"
         shadow="never"
         class="flags-table-card"
       >
@@ -338,6 +340,7 @@ import { getFlagsCache } from '@/pages/flagsListPage'
 import helpers from '@/helpers/helpers'
 import { tagColor } from '@/helpers/tagColor'
 import { castFlagsList } from '@/helpers/vuePageCast'
+import { evalOnlyMode } from '@/helpers/serverMode'
 import * as flagsListPage from '@/pages/flagsListPage'
 import {
   datetimeFormatter,
@@ -354,6 +357,9 @@ export default {
     spinner: Spinner,
     Plus,
     Search,
+  },
+  setup() {
+    return { evalOnlyMode }
   },
   data() {
     const cached = getFlagsCache()

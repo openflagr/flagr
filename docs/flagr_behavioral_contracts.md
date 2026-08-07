@@ -79,13 +79,24 @@ Exposure rows are independent: see [recording gates](#recording-gates) and [Expo
 
 Registered surface:
 
-- `GET /api/v1/health`
+- `GET /api/v1/health` (reports `evalOnlyMode: true`)
 - Evaluation APIs (`POST` / `GET /evaluation`, batch, tag eval)
 - `GET /api/v1/export/eval_cache/json` (export)
+- **Read-only CRUD GETs**, served from the EvalCache (no DB): `GET /flags`,
+  `GET /flags/{id}`, `GET /tags`, and the per-flag segment/variant/constraint/
+  distribution reads. `GET /flags/{id}/snapshots` and `GET /flags/entity_types`
+  return empty lists (history lives in Git; entity types are DB-only).
+  `GET /flags/snapshots/max_id` serves the EvalCache **content fingerprint** —
+  an opaque change token, only equality-comparable.
 
-Absent: CRUD UI, `POST /exposures`, Datar APIs, SQLite export, and the `flag_snapshot` short-circuit. There is no DB to snapshot, so EvalCache re-fetches the JSON source every poll interval.
+**Write CRUD operations return 403** with a message pointing at the JSON
+source. The UI is served in read-only mode: it shows a banner, hides write
+affordances, and keeps the Debug Console (evaluation works). The backend 403
+is the enforcement; the UI hiding is UX.
 
-JSON workflow: [JSON flag source](flagr_json_flag_spec.md). Route wiring: `pkg/handler/handler.go`.
+Absent: `POST /exposures`, Datar APIs, SQLite export, and the `flag_snapshot` short-circuit. There is no DB to snapshot, so EvalCache re-fetches the JSON source every poll interval.
+
+JSON workflow: [JSON flag source](flagr_json_flag_spec.md). Route wiring: `pkg/handler/handler.go`; read-only handlers: `pkg/handler/crud_readonly.go`.
 
 ## EvalCache freshness {#evalcache-freshness}
 

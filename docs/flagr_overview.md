@@ -169,7 +169,7 @@ flowchart TB
 
 **Exposure** - `POST /api/v1/exposures` validates against the cache (no constraint re-run) and records `recordSource: exposure`.
 
-**Eval-only** - `json_file` / `json_http` drivers force eval-only mode: health, evaluation, and eval-cache export only. Details: [behavioral contracts: eval-only](flagr_behavioral_contracts.md#eval-only).
+**Eval-only** - `json_file` / `json_http` drivers force eval-only mode: health, evaluation, eval-cache export, and read-only CRUD GETs served from the EvalCache (the UI works as a read-only browser; writes return 403). Details: [behavioral contracts: eval-only](flagr_behavioral_contracts.md#eval-only).
 
 ### Components
 

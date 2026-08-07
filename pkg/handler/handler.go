@@ -32,6 +32,8 @@ func Setup(api *operations.FlagrAPI) {
 		setupHealth(api)
 		setupEvaluation(api)
 		setupExportEvalCache(api)
+		// Read-only CRUD serves the UI from the EvalCache; writes return 403.
+		setupCRUD(api, NewReadOnlyCRUD())
 		return
 	}
 
@@ -39,12 +41,11 @@ func Setup(api *operations.FlagrAPI) {
 	setupDatar(api)
 	setupEvaluation(api)
 	setupExposure(api)
-	setupCRUD(api)
+	setupCRUD(api, NewCRUD())
 	setupExport(api)
 }
 
-func setupCRUD(api *operations.FlagrAPI) {
-	c := NewCRUD()
+func setupCRUD(api *operations.FlagrAPI, c CRUD) {
 	api.FlagFindFlagsHandler = flag.FindFlagsHandlerFunc(c.FindFlags)
 	api.FlagCreateFlagHandler = flag.CreateFlagHandlerFunc(c.CreateFlag)
 	api.FlagDuplicateFlagHandler = flag.DuplicateFlagHandlerFunc(c.DuplicateFlag)
@@ -124,7 +125,10 @@ func setupDatar(api *operations.FlagrAPI) {
 func setupHealth(api *operations.FlagrAPI) {
 	api.HealthGetHealthHandler = health.GetHealthHandlerFunc(
 		func(health.GetHealthParams) middleware.Responder {
-			return health.NewGetHealthOK().WithPayload(&models.Health{Status: "OK"})
+			return health.NewGetHealthOK().WithPayload(&models.Health{
+				Status:       "OK",
+				EvalOnlyMode: config.Config.EvalOnlyMode,
+			})
 		},
 	)
 }

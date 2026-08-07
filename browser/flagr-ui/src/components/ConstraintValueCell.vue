@@ -5,6 +5,7 @@
       class="constraint-cell constraint-control"
       :placeholder="placeholder"
       :model-value="modelValue"
+      :disabled="disabled"
       :data-testid="dataTestid"
       @update:model-value="$emit('update:modelValue', $event)"
       @keyup="$emit('keyup', $event)"
@@ -33,6 +34,7 @@ export default {
     modelValue: { type: String, required: true },
     property: { type: String, required: true },
     placeholder: { type: String, default: '' },
+    disabled: { type: Boolean, default: false },
     dataTestid: { type: String, default: '' },
   },
   emits: ['update:modelValue', 'keyup'],

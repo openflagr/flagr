@@ -89,6 +89,7 @@
         >
           <flag-config-card
             :flag="flag"
+            :readonly="evalOnlyMode"
             :show-md-editor="showMdEditor"
             :entity-types="entityTypes"
             :allow-create-entity-type="allowCreateEntityType"
@@ -106,6 +107,7 @@
 
           <variants-section
             :variants="flag.variants"
+            :readonly="evalOnlyMode"
             @create-variant="(p) => flagPage.handleCreateVariant(page, p)"
             @update-variant-key="(p) => flagPage.handleUpdateVariantKey(page, p)"
             @save-variant="(v) => flagPage.putVariant(page, v)"
@@ -115,6 +117,7 @@
 
           <segments-section
             :segments="flag.segments ?? []"
+            :readonly="evalOnlyMode"
             :operator-options="operatorOptions"
             @reorder="(s) => flagPage.handleReorderSegments(page, s)"
             @move-up="(el, i) => flagPage.moveSegmentUp(page, el, i)"
@@ -145,6 +148,7 @@
           />
 
           <el-card
+            v-if="!evalOnlyMode"
             class="flag-management-card"
             style="margin-top: var(--space-xl);"
           >
@@ -187,7 +191,9 @@
           </el-card>
         </el-tab-pane>
 
+        <!-- No snapshots in read-only mode: change history lives in Git -->
         <el-tab-pane
+          v-if="!evalOnlyMode"
           label="History"
           name="history"
         >
@@ -215,6 +221,7 @@ import type { BatchEvalContext, BatchEvalResult, DistributionDraft, EvalContext,
 import type { EntityTypeOption } from '@/helpers/flagModel'
 import { FLAG_TAB_CONFIG, type FlagTabName } from '@/helpers/shareLinks'
 import { castFlagPage } from '@/helpers/vuePageCast'
+import { evalOnlyMode } from '@/helpers/serverMode'
 import { handleHistoryTabClick, mountFlagPage } from '@/pages/flagPage'
 import * as flagPage from '@/pages/flagPage'
 import { OPERATOR_UI_OPTIONS } from '@/helpers/constraintOperators'
@@ -249,6 +256,9 @@ export default {
     VariantsSection,
     SegmentsSection,
     Delete,
+  },
+  setup() {
+    return { evalOnlyMode }
   },
   data() {
     return {
@@ -291,6 +301,14 @@ export default {
   },
 
   watch: {
+    // The mode arrives async from /health: if it flips to read-only after a
+    // history deep link already opened the (now hidden) History tab, snap
+    // back to Config instead of leaving no active pane.
+    evalOnlyMode(readonly: boolean) {
+      if (readonly && this.activeTab !== FLAG_TAB_CONFIG) {
+        this.activeTab = FLAG_TAB_CONFIG
+      }
+    },
     // Initial load and flag switches: mountFlagPage → syncEvalContextFromFlag (not mounted-only).
     '$route.params.flagId': {
       immediate: true,

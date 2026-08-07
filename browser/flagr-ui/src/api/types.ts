@@ -233,6 +233,12 @@ export type SegmentFieldKey = 'description' | 'rolloutPercent'
 /** Editable constraint fields in SegmentsSection. */
 export type ConstraintFieldKey = 'property' | 'operator' | 'value'
 
+export interface Health {
+  status?: string
+  /** True when the server runs in eval-only mode (json_file/json_http) and write APIs are disabled. */
+  evalOnlyMode?: boolean
+}
+
 export interface FlagHistoryDiffRow {
   timestamp: string
   updatedBy?: string
