@@ -10,6 +10,7 @@ import (
 
 	"github.com/openflagr/flagr/pkg/config"
 	"github.com/openflagr/flagr/pkg/handler"
+	"github.com/openflagr/flagr/pkg/mcp"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations"
 	"github.com/sirupsen/logrus"
 
@@ -45,7 +46,23 @@ func configureAPI(api *operations.FlagrAPI) http.Handler {
 	api.ServerShutdown = config.ServerShutdown
 
 	handler.Setup(api)
-	return setupGlobalMiddleware(api.Serve(setupMiddlewares))
+
+	baseHandler := setupGlobalMiddleware(api.Serve(setupMiddlewares))
+
+	// NOTE: This is a hand-edit in generated code. If you run `make swagger`,
+	// re-apply this block: import "github.com/openflagr/flagr/pkg/mcp" and
+	// wrap baseHandler with an http.ServeMux that routes /mcp to the MCP handler.
+	// Mount MCP server on /mcp when enabled.
+	if mcp.MCPEnabled() {
+		mcpSrv := mcp.New()
+		mux := http.NewServeMux()
+		mux.Handle("/mcp", mcpSrv.Handler())
+		mux.Handle("/", baseHandler)
+		logrus.Info("mcp server enabled at /mcp (streamable HTTP)")
+		return mux
+	}
+
+	return baseHandler
 }
 
 // The TLS configuration before HTTPS server starts.

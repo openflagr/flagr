@@ -57,6 +57,7 @@ Run from **repo root**. Match what [`.github/workflows/ci.yml`](.github/workflow
 - `handler/exposure.go` — exposure (impression) logging; `handler/data_recorder*.go` — recorders (Kafka, Kinesis, Pub/Sub, Datar)
 - `entity/` — domain models (flag, segment, constraint, variant, distribution)
 - `config/env.go` — all environment variables (single source of truth)
+- `mcp/` — built-in MCP server for AI agent integrations (27 tools, HTTP at `/mcp`; off by default, enable with `FLAGR_MCP_ENABLED=true`)
 
 **Frontend (`browser/flagr-ui/src/`):**
 - `api/types.ts` — DTOs; `api/crud.ts` (flag CRUD + tags/variants/segments), `api/eval.ts` (POST /evaluation), `http.ts`

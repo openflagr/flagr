@@ -45,6 +45,10 @@ var Config = struct {
 	// UIEnabled controls whether the Flagr UI is served.
 	// Set to false for backend-only deployments where the UI is not needed.
 	UIEnabled bool `env:"FLAGR_UI_ENABLED" envDefault:"true"`
+	// MCPEnabled enables the built-in MCP server (stdio transport).
+	// When true, the Flagr binary serves both the HTTP API and an MCP server
+	// on stdin/stdout for AI agent integrations.
+	MCPEnabled bool `env:"FLAGR_MCP_ENABLED" envDefault:"false"`
 
 	// EvalBatchSize - maximum number of total evaluations allowed in a single batch request.
 	// This is calculated as: len(entities) * (len(flagIDs) + len(flagKeys) + estimated_flags_from_tags).
