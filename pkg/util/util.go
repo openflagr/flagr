@@ -84,6 +84,14 @@ func SafeString(s any) (ret string) {
 	return cast.ToString(s)
 }
 
+// SafeStringSlice safely cast to string slice
+func SafeStringSlice(s any) (ret []string) {
+	if s == nil {
+		return []string{}
+	}
+	return cast.ToStringSlice(s)
+}
+
 // SafeUint returns the uint of the value
 func SafeUint(s any) (ret uint) {
 	return cast.ToUint(s)

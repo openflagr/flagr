@@ -1,11 +1,13 @@
 package config
 
 import (
+	"context"
 	"crypto/subtle"
 	"fmt"
 	"net/http"
 	"slices"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/DataDog/datadog-go/statsd"
@@ -83,13 +85,7 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 		}))
 	}
 
-	if Config.JWTAuthEnabled {
-		n.Use(setupJWTAuthMiddleware())
-	}
-
-	if Config.BasicAuthEnabled {
-		n.Use(setupBasicAuthMiddleware())
-	}
+	setupAuthMiddleware(n)
 
 	if Config.UIEnabled {
 		n.Use(&negroni.Static{
@@ -128,6 +124,22 @@ func setupRecoveryMiddleware() *negroni.Recovery {
 	r := negroni.NewRecovery()
 	r.Logger = &recoveryLogger{}
 	return r
+}
+
+// setupAuthMiddleware wires up JWT auth, the optional JWT group-claim check,
+// and basic auth, in that order, based on the ENV config.
+func setupAuthMiddleware(n *negroni.Negroni) {
+	if Config.JWTAuthEnabled {
+		n.Use(setupJWTAuthMiddleware())
+	}
+
+	if Config.JWTAuthRequireGroupClaim != "" {
+		n.Use(setupJWTRequireGroupClaimMiddleware())
+	}
+
+	if Config.BasicAuthEnabled {
+		n.Use(setupBasicAuthMiddleware())
+	}
 }
 
 /*
@@ -199,6 +211,10 @@ type jwtAuth struct {
 func (a *jwtAuth) whitelist(req *http.Request) bool {
 	path := req.URL.Path
 
+	if Config.WebPrefix != "" {
+		path = strings.TrimPrefix(path, Config.WebPrefix)
+	}
+
 	// If we set to 401 unauthorized, let the client handles the 401 itself
 	if Config.JWTAuthNoTokenStatusCode == http.StatusUnauthorized {
 		if slices.Contains(a.ExactWhitelistPaths, path) {
@@ -214,12 +230,61 @@ func (a *jwtAuth) whitelist(req *http.Request) bool {
 	return false
 }
 
+type whiteListedCtxKey struct{}
+
 func (a *jwtAuth) ServeHTTP(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
 	if a.whitelist(req) {
+		req = req.WithContext(context.WithValue(req.Context(), whiteListedCtxKey{}, true))
 		next(w, req)
 		return
 	}
 	a.JWTMiddleware.HandlerWithNext(w, req, next)
+}
+
+/*
+setupJWTRequireGroupClaimMiddleware sets up a middleware that, when
+FLAGR_JWT_AUTH_REQUIRE_GROUP_CLAIM is set, rejects any JWT whose "groups"
+claim doesn't contain the configured group name. Requests that the JWT auth
+middleware already whitelisted (e.g. /api/v1/evaluation) are passed through
+unchecked, since they may have no JWT at all.
+*/
+func setupJWTRequireGroupClaimMiddleware() *requireGroupClaim {
+	return &requireGroupClaim{
+		Group: Config.JWTAuthRequireGroupClaim,
+	}
+}
+
+type requireGroupClaim struct {
+	Group string
+}
+
+func (c *requireGroupClaim) checkGroups(r *http.Request) bool {
+	if whiteListed, _ := r.Context().Value(whiteListedCtxKey{}).(bool); whiteListed {
+		return true
+	}
+
+	token, ok := r.Context().Value(Config.JWTAuthUserProperty).(*jwt.Token)
+	if !ok {
+		return false
+	}
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		groups := util.SafeStringSlice(claims["groups"])
+		for _, s := range groups {
+			if s == c.Group {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+func (c *requireGroupClaim) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	if !c.checkGroups(r) {
+		jwtErrorHandler(w, r, "Not member of authorized group")
+		return
+	}
+	next(w, r)
 }
 
 /*

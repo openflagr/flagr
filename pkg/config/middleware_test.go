@@ -30,6 +30,9 @@ const (
 
 	// Signed with secret: "mysecret"
 	validHS512JWTTokenWithSecret = "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.G4VTPaWRHtByF6SaHSQFTeu-896jFb2dF2KnYjJTa9MY_a6Tbb9BsO7Uu0Ju_QOGGDI_b-k6U0T6qwj9lA5_Aw"
+
+	// Signed with secret: "", groups claim: ["groupA", "admins"]
+	validHS256JWTTokenWithGroupsClaim = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmbGFncl91c2VyIjoiMTIzNDU2Nzg5MCIsImdyb3VwcyI6WyJncm91cEEiLCJhZG1pbnMiXX0.l9Qe3rVDXrqjvdhCUaQm7AmHmB1WpX6ZCZwI9C5fV6s"
 )
 
 func (o *okHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
@@ -51,6 +54,11 @@ func TestSetupGlobalMiddleware(t *testing.T) {
 	hh = SetupGlobalMiddleware(h)
 	assert.NotNil(t, hh)
 	Config.JWTAuthEnabled = false
+
+	Config.JWTAuthRequireGroupClaim = "groupA"
+	hh = SetupGlobalMiddleware(h)
+	assert.NotNil(t, hh)
+	Config.JWTAuthRequireGroupClaim = ""
 
 	Config.PProfEnabled = false
 	hh = SetupGlobalMiddleware(h)
@@ -114,6 +122,22 @@ func TestJWTAuthMiddleware(t *testing.T) {
 		res := httptest.NewRecorder()
 		res.Body = new(bytes.Buffer)
 		req, _ := http.NewRequest("GET", fmt.Sprintf("http://localhost:18000%s", Config.JWTAuthPrefixWhitelistPaths[0]), nil)
+		hh.ServeHTTP(res, req)
+		assert.Equal(t, http.StatusOK, res.Code)
+	})
+
+	t.Run("it will pass if jwt enabled but with whitelisted path, when web prefix set", func(t *testing.T) {
+		Config.JWTAuthEnabled = true
+		Config.WebPrefix = "/prefix"
+		defer func() {
+			Config.JWTAuthEnabled = false
+			Config.WebPrefix = ""
+		}()
+		hh := SetupGlobalMiddleware(h)
+
+		res := httptest.NewRecorder()
+		res.Body = new(bytes.Buffer)
+		req, _ := http.NewRequest("GET", fmt.Sprintf("http://localhost:18000/prefix%s", Config.JWTAuthPrefixWhitelistPaths[0]), nil)
 		hh.ServeHTTP(res, req)
 		assert.Equal(t, http.StatusOK, res.Code)
 	})
@@ -334,6 +358,85 @@ func TestJWTAuthMiddlewareWithUnauthorized(t *testing.T) {
 				assert.Equal(t, http.StatusUnauthorized, res.Code)
 			})
 		}
+	})
+}
+
+func TestRequireGroupClaimMiddleware(t *testing.T) {
+	h := &okHandler{}
+
+	t.Run("it will return 200 when JWT has expected group", func(t *testing.T) {
+		Config.JWTAuthEnabled = true
+		Config.JWTAuthNoTokenStatusCode = http.StatusUnauthorized
+		Config.JWTAuthRequireGroupClaim = "admins"
+		defer func() {
+			Config.JWTAuthEnabled = false
+			Config.JWTAuthNoTokenStatusCode = http.StatusTemporaryRedirect
+			Config.JWTAuthRequireGroupClaim = ""
+		}()
+
+		hh := SetupGlobalMiddleware(h)
+		res := httptest.NewRecorder()
+		res.Body = new(bytes.Buffer)
+		req, _ := http.NewRequest("GET", "http://localhost:18000/api/v1/flags", nil)
+		req.Header.Add("Authorization", "Bearer "+validHS256JWTTokenWithGroupsClaim)
+		hh.ServeHTTP(res, req)
+		assert.Equal(t, http.StatusOK, res.Code)
+	})
+
+	t.Run("it will return 401 when JWT does not have expected group", func(t *testing.T) {
+		Config.JWTAuthEnabled = true
+		Config.JWTAuthNoTokenStatusCode = http.StatusUnauthorized
+		Config.JWTAuthRequireGroupClaim = "superusers"
+		defer func() {
+			Config.JWTAuthEnabled = false
+			Config.JWTAuthNoTokenStatusCode = http.StatusTemporaryRedirect
+			Config.JWTAuthRequireGroupClaim = ""
+		}()
+
+		hh := SetupGlobalMiddleware(h)
+		res := httptest.NewRecorder()
+		res.Body = new(bytes.Buffer)
+		req, _ := http.NewRequest("GET", "http://localhost:18000/api/v1/flags", nil)
+		req.Header.Add("Authorization", "Bearer "+validHS256JWTTokenWithGroupsClaim)
+		hh.ServeHTTP(res, req)
+		assert.Equal(t, http.StatusUnauthorized, res.Code)
+	})
+
+	t.Run("it will return 401 when JWT does not have groups claim", func(t *testing.T) {
+		Config.JWTAuthEnabled = true
+		Config.JWTAuthNoTokenStatusCode = http.StatusUnauthorized
+		Config.JWTAuthRequireGroupClaim = "admins"
+		defer func() {
+			Config.JWTAuthEnabled = false
+			Config.JWTAuthNoTokenStatusCode = http.StatusTemporaryRedirect
+			Config.JWTAuthRequireGroupClaim = ""
+		}()
+
+		hh := SetupGlobalMiddleware(h)
+		res := httptest.NewRecorder()
+		res.Body = new(bytes.Buffer)
+		req, _ := http.NewRequest("GET", "http://localhost:18000/api/v1/flags", nil)
+		req.Header.Add("Authorization", "Bearer "+validHS256JWTToken)
+		hh.ServeHTTP(res, req)
+		assert.Equal(t, http.StatusUnauthorized, res.Code)
+	})
+
+	t.Run("it will return 200 for a whitelisted path even without the group claim", func(t *testing.T) {
+		Config.JWTAuthEnabled = true
+		Config.JWTAuthNoTokenStatusCode = http.StatusUnauthorized
+		Config.JWTAuthRequireGroupClaim = "admins"
+		defer func() {
+			Config.JWTAuthEnabled = false
+			Config.JWTAuthNoTokenStatusCode = http.StatusTemporaryRedirect
+			Config.JWTAuthRequireGroupClaim = ""
+		}()
+
+		hh := SetupGlobalMiddleware(h)
+		res := httptest.NewRecorder()
+		res.Body = new(bytes.Buffer)
+		req, _ := http.NewRequest("GET", fmt.Sprintf("http://localhost:18000%s", Config.JWTAuthPrefixWhitelistPaths[0]), nil)
+		hh.ServeHTTP(res, req)
+		assert.Equal(t, http.StatusOK, res.Code)
 	})
 }
 

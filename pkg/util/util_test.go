@@ -18,6 +18,14 @@ func TestSafeString(t *testing.T) {
 	assert.Equal(t, SafeString(ptr), "")
 }
 
+func TestSafeStringSlice(t *testing.T) {
+	t.Parallel()
+	assert.Equal(t, []string{"123"}, SafeStringSlice([]string{"123"}))
+	assert.Equal(t, []string{"123", "456"}, SafeStringSlice([]string{"123", "456"}))
+	assert.Equal(t, []string{}, SafeStringSlice([]string{}))
+	assert.Equal(t, []string{}, SafeStringSlice(nil))
+}
+
 func TestSafeStringWithDefault(t *testing.T) {
 	t.Parallel()
 	assert.Equal(t, SafeStringWithDefault("123", ""), "123")
