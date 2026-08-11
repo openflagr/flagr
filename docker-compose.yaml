@@ -1,0 +1,12 @@
+services:
+  flagr:
+    build:
+      context: .
+      args:
+        # Only Dockerfile ARG. Restricts entity-type choices in the UI; "null" means unrestricted.
+        FLAGR_UI_POSSIBLE_ENTITY_TYPES: ${FLAGR_UI_POSSIBLE_ENTITY_TYPES:-null}
+    container_name: flagr-local
+    env_file:
+      - .env.local
+    ports:
+      - "${FLAGR_LOCAL_PORT:-18000}:18000"
