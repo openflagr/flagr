@@ -1,0 +1,82 @@
+name: Build and Publish Container
+
+# Note: this can't use the org's shared agrimetrics/actions-dsp3/build-and-push-image action -
+# that repo is private, and agm/flagr is a public repo (it's a GitHub fork of openflagr/flagr,
+# forks can't be made private independent of their upstream). GitHub doesn't allow a public repo
+# to consume a private repo's reusable actions regardless of the private repo's access-level
+# setting, since a public repo's workflow runs/logs are visible to anyone. So this inlines the
+# same steps the shared action performs internally instead.
+
+on:
+  # via github UI - use this to publish a specific tag on demand, e.g. "1.1.1"
+  # to match whatever the dsp-argocd-config Helm chart currently expects
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Additional image tag to publish (e.g. 1.1.1). Always pushed alongside the standard branch/sha tags.'
+        required: false
+        type: string
+  push:
+    branches: ['*']
+    # Publish semver tags as releases.
+    tags: ['v*.*.*']
+  pull_request:
+    branches: ['master']
+
+env:
+  DEV_REGISTRY: agrimetricsdspdev.azurecr.io
+  PROD_REGISTRY: agrimetricsdspprod.azurecr.io
+  IMAGE_NAME: flagr
+
+jobs:
+  build-and-push:
+    name: Build and Push Image to Container Registry
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v6
+
+      - name: Log in to DEV registry
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.DEV_REGISTRY }}
+          username: ${{ secrets.DEV_DOCKER_REGISTRY_USERNAME }}
+          password: ${{ secrets.DEV_DOCKER_REGISTRY_PASSWORD }}
+
+      - name: Log in to PROD registry
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.PROD_REGISTRY }}
+          username: ${{ secrets.PROD_DOCKER_REGISTRY_USERNAME }}
+          password: ${{ secrets.PROD_DOCKER_REGISTRY_PASSWORD }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: |
+            ${{ env.DEV_REGISTRY }}/${{ env.IMAGE_NAME }}
+            ${{ env.PROD_REGISTRY }}/${{ env.IMAGE_NAME }}
+          flavor: |
+            latest=false
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=${{ inputs.tag }},enable=${{ github.event_name == 'workflow_dispatch' && inputs.tag != '' }}
+            type=schedule
+            type=ref,event=branch
+            type=ref,event=tag
+            type=ref,event=pr
+            type=sha
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ env.IMAGE_NAME }}
+          cache-to: type=gha,mode=max,scope=${{ env.IMAGE_NAME }}
