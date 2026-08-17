@@ -45,7 +45,15 @@
         </p>
         <div class="flags-empty-actions">
           <el-button
-            v-if="hasActiveSearch"
+            v-if="loadFailed"
+            size="small"
+            data-testid="retry-flags-btn"
+            @click="flagsListPage.refreshFlags(page)"
+          >
+            Retry
+          </el-button>
+          <el-button
+            v-else-if="hasActiveSearch"
             size="small"
             @click="clearSearch"
           >
@@ -366,6 +374,7 @@ export default {
     return {
       flagsListPage,
       loaded: !!cached,
+      loadFailed: false,
       flags: cached ? cached.flags : [] as Flag[],
       deletedFlagsLoaded: false,
       deletedFlags: [] as Flag[],
@@ -404,9 +413,13 @@ export default {
       return this.debouncedSearchTerm.trim().length > 0
     },
     emptyStateTitle(): string {
+      if (this.loadFailed) return 'Couldn’t load flags'
       return this.hasActiveSearch ? 'No matching flags' : 'No flags yet'
     },
     emptyStateBody(): string {
+      if (this.loadFailed) {
+        return 'The flag list failed to load — the server may be unreachable. Retry, or reload the page.'
+      }
       return this.hasActiveSearch
         ? 'Try a different ID, key, description, or tag — or clear the search.'
         : 'Create a flag to start targeting. Use a boolean flag for a ready-made on/off setup.'
@@ -415,6 +428,14 @@ export default {
   watch: {
     searchTerm() {
       this.debouncedUpdate?.()
+    },
+    // Late /health (past the 1.5s mount bound): the initial fetch went
+    // through the CRUD path, which a real eval-only server doesn't register —
+    // refetch through the export path once the mode is known.
+    evalOnlyMode(readonly: boolean) {
+      if (readonly) {
+        flagsListPage.refreshFlags(this.page)
+      }
     },
   },
 

@@ -156,9 +156,13 @@ tab, Debug Console available:
 - The app resolves the server mode **before first paint**: `main.ts` awaits
   `initServerMode()` (bounded by a 1.5s timeout) before `app.mount`, so a
   read-only deployment never flashes editable controls. If `/health` exceeds
-  the timeout, the app mounts fail-open (editable UI, backend 403 backstop);
-  the `Flag.vue` watcher and reactive refs correct the UI when the late
-  response arrives.
+  the timeout, the app mounts fail-open (editable UI, backend 403 backstop)
+  and the first fetch goes through the CRUD path, which 501s on a real
+  eval-only server. When the late health response flips `evalOnlyMode`,
+  watchers on the list and detail pages refetch through the export path, so
+  the UI self-heals instead of spinning forever (covered by the
+  "late /health" Playwright tests). `refreshFlags` also ends its loading
+  state on failure — error toast + empty state, never an endless spinner.
 - In eval-only mode the CRUD read routes return the generated 501s (same as
   main). Tooling that needs flag data from an eval edge node should read
   `GET /api/v1/export/eval_cache/json`, exactly like the UI does.

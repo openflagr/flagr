@@ -4,6 +4,7 @@ import (
 	"crypto/subtle"
 	"fmt"
 	"net/http"
+	"path"
 	"slices"
 	"strconv"
 	"strings"
@@ -297,8 +298,19 @@ func (d *evalOnlyDeny) ServeHTTP(w http.ResponseWriter, req *http.Request, next 
 	}
 
 	// Middlewares run before the WebPrefix StripPrefix on the API handler.
-	path := strings.TrimPrefix(req.URL.Path, Config.WebPrefix)
-	if path == "/api/v1/flags" || strings.HasPrefix(path, "/api/v1/flags/") {
+	// Normalize before matching — the swagger router only normalizes later,
+	// so //api/v1/flags or /api/v1/x/../flags must not slip past the deny.
+	// Both normalization orders must hold: the router strips the prefix
+	// first and cleans later, so a ".." spanning the prefix boundary
+	// (/a/b/../api/v1/flags with WebPrefix /a/b) only shows up in cleanLast;
+	// cleanFirst covers the rest (the trailing slash of WebPrefix "/" or
+	// "/flagr/" is trimmed so cleaned paths keep their leading slash).
+	isFlags := func(p string) bool {
+		return p == "/api/v1/flags" || strings.HasPrefix(p, "/api/v1/flags/")
+	}
+	cleanFirst := strings.TrimPrefix(path.Clean(req.URL.Path), strings.TrimSuffix(Config.WebPrefix, "/"))
+	cleanLast := path.Clean("/" + strings.TrimPrefix(req.URL.Path, Config.WebPrefix))
+	if isFlags(cleanFirst) || isFlags(cleanLast) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusForbidden)
 		w.Write([]byte(readOnlyDenyMsg))

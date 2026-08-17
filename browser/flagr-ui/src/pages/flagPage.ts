@@ -577,6 +577,8 @@ export function mountFlagPage(vm: FlagPageVm, routeQuery?: Record<string, unknow
 
   const flagId = vm.flagId
   const gen = vm.flagPageLoadGen ?? 0
+  // No onFailure that sets `loaded`: the Flag.vue evalOnlyMode watcher relies
+  // on `loaded` staying false to re-run this mount after a late /health.
   runApi(vm, crudApi.loadFlagPageContext(flagId), {
     onSuccess: (load) => {
       if (vm.flagId !== flagId || (vm.flagPageLoadGen ?? 0) !== gen) {

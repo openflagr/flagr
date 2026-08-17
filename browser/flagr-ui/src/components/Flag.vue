@@ -305,8 +305,15 @@ export default {
     // history deep link already opened the (now hidden) History tab, snap
     // back to Config instead of leaving no active pane.
     evalOnlyMode(readonly: boolean) {
-      if (readonly && this.activeTab !== FLAG_TAB_CONFIG) {
+      if (!readonly) return
+      if (this.activeTab !== FLAG_TAB_CONFIG) {
         this.activeTab = FLAG_TAB_CONFIG
+      }
+      // Late /health (past the 1.5s mount bound): the initial context load
+      // went through the CRUD path, which a real eval-only server doesn't
+      // register — reload through the export path.
+      if (!this.loaded && this.flagId) {
+        mountFlagPage(this.page, this.$route.query as Record<string, unknown>)
       }
     },
     // Initial load and flag switches: mountFlagPage → syncEvalContextFromFlag (not mounted-only).
