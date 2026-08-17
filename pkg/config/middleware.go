@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"slices"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/DataDog/datadog-go/statsd"
@@ -89,6 +90,10 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 
 	if Config.BasicAuthEnabled {
 		n.Use(setupBasicAuthMiddleware())
+	}
+
+	if Config.EvalOnlyMode {
+		n.Use(&evalOnlyDeny{})
 	}
 
 	if Config.UIEnabled {
@@ -269,6 +274,36 @@ func (a *basicAuth) ServeHTTP(w http.ResponseWriter, req *http.Request, next htt
 		return
 	}
 
+	next(w, req)
+}
+
+// readOnlyDenyMsg explains why write operations are rejected in eval-only mode.
+// The shape matches the swagger Error model ({"message": ...}).
+const readOnlyDenyMsg = `{"message":"Flagr is running in read-only (eval-only) mode: ` +
+	`flags are managed via the JSON source (FLAGR_DB_DBDRIVER=json_file/json_http), ` +
+	`write APIs are disabled"}`
+
+// evalOnlyDeny rejects mutating requests to the flags API with 403 in
+// eval-only mode. Every CRUD write endpoint lives under /api/v1/flags, so one
+// method+prefix check covers them all; the JSON source stays the only write
+// path. Evaluation POSTs live under /api/v1/evaluation and pass through.
+type evalOnlyDeny struct{}
+
+func (d *evalOnlyDeny) ServeHTTP(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
+	switch req.Method {
+	case http.MethodGet, http.MethodHead, http.MethodOptions:
+		next(w, req)
+		return
+	}
+
+	// Middlewares run before the WebPrefix StripPrefix on the API handler.
+	path := strings.TrimPrefix(req.URL.Path, Config.WebPrefix)
+	if path == "/api/v1/flags" || strings.HasPrefix(path, "/api/v1/flags/") {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte(readOnlyDenyMsg))
+		return
+	}
 	next(w, req)
 }
 

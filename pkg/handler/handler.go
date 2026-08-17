@@ -32,8 +32,6 @@ func Setup(api *operations.FlagrAPI) {
 		setupHealth(api)
 		setupEvaluation(api)
 		setupExportEvalCache(api)
-		// Read-only CRUD serves the UI from the EvalCache; writes return 403.
-		setupCRUD(api, NewReadOnlyCRUD())
 		return
 	}
 
@@ -41,11 +39,12 @@ func Setup(api *operations.FlagrAPI) {
 	setupDatar(api)
 	setupEvaluation(api)
 	setupExposure(api)
-	setupCRUD(api, NewCRUD())
+	setupCRUD(api)
 	setupExport(api)
 }
 
-func setupCRUD(api *operations.FlagrAPI, c CRUD) {
+func setupCRUD(api *operations.FlagrAPI) {
+	c := NewCRUD()
 	api.FlagFindFlagsHandler = flag.FindFlagsHandlerFunc(c.FindFlags)
 	api.FlagCreateFlagHandler = flag.CreateFlagHandlerFunc(c.CreateFlag)
 	api.FlagDuplicateFlagHandler = flag.DuplicateFlagHandlerFunc(c.DuplicateFlag)
