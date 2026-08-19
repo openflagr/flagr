@@ -6,7 +6,10 @@
           <div class="flex-row-left">
             <h2>Segments</h2>
           </div>
-          <div class="flex-row-right">
+          <div
+            v-if="!readonly"
+            class="flex-row-right"
+          >
             <el-tooltip
               :content="reorderDirty ? 'Unsaved reorder — click to persist' : 'Use buttons to reorder, then click to persist'"
               placement="top"
@@ -46,6 +49,7 @@
               size="small"
               placeholder="Description"
               :model-value="element.description"
+              :disabled="readonly"
               data-testid="segment-desc-input"
               @update:model-value="onSegmentFieldChange(element, 'description', $event)"
             />
@@ -54,6 +58,7 @@
               size="small"
               placeholder="0"
               :model-value="element.rolloutPercent"
+              :disabled="readonly"
               data-testid="segment-rollout-input"
               :min="0"
               :max="100"
@@ -67,7 +72,10 @@
               </template>
             </el-input>
           </div>
-          <div class="seg-header-actions">
+          <div
+            v-if="!readonly"
+            class="seg-header-actions"
+          >
             <el-button-group class="seg-reorder-group">
               <el-tooltip
                 content="Move up"
@@ -143,6 +151,7 @@
                 :key="constraint.id"
                 :constraint="constraint"
                 :index="cIdx"
+                :readonly="readonly"
                 :operator-options="operatorOptions"
                 :grouped-operator-options="groupedOperatorOptions"
                 :dirty="isConstraintDirty(element, constraint)"
@@ -154,6 +163,7 @@
                 @delete="$emit('delete-constraint', { segment: element, constraint })"
               />
               <ConstraintAddRow
+                v-if="!readonly"
                 :draft="newConstraints[element.id]"
                 :operator-options="operatorOptions"
                 :grouped-operator-options="groupedOperatorOptions"
@@ -169,6 +179,7 @@
             <div class="seg-section-title seg-section-title--with-action ui-section-title">
               <span>Distribution</span>
               <el-button
+                v-if="!readonly"
                 size="small"
                 link
                 type="primary"
@@ -255,6 +266,7 @@ export default {
   },
   props: {
     segments: { type: Array as PropType<Segment[]>, required: true },
+    readonly: { type: Boolean, default: false },
     operatorOptions: { type: Array as PropType<OperatorUiOption[]>, required: true },
   },
   emits: [

@@ -4,8 +4,10 @@ import (
 	"crypto/subtle"
 	"fmt"
 	"net/http"
+	"path"
 	"slices"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/DataDog/datadog-go/statsd"
@@ -89,6 +91,10 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 
 	if Config.BasicAuthEnabled {
 		n.Use(setupBasicAuthMiddleware())
+	}
+
+	if Config.EvalOnlyMode {
+		n.Use(&evalOnlyDeny{})
 	}
 
 	if Config.UIEnabled {
@@ -269,6 +275,47 @@ func (a *basicAuth) ServeHTTP(w http.ResponseWriter, req *http.Request, next htt
 		return
 	}
 
+	next(w, req)
+}
+
+// readOnlyDenyMsg explains why write operations are rejected in eval-only mode.
+// The shape matches the swagger Error model ({"message": ...}).
+const readOnlyDenyMsg = `{"message":"Flagr is running in read-only (eval-only) mode: ` +
+	`flags are managed via the JSON source (FLAGR_DB_DBDRIVER=json_file/json_http), ` +
+	`write APIs are disabled"}`
+
+// evalOnlyDeny rejects mutating requests to the flags API with 403 in
+// eval-only mode. Every CRUD write endpoint lives under /api/v1/flags, so one
+// method+prefix check covers them all; the JSON source stays the only write
+// path. Evaluation POSTs live under /api/v1/evaluation and pass through.
+type evalOnlyDeny struct{}
+
+func (d *evalOnlyDeny) ServeHTTP(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
+	switch req.Method {
+	case http.MethodGet, http.MethodHead, http.MethodOptions:
+		next(w, req)
+		return
+	}
+
+	// Middlewares run before the WebPrefix StripPrefix on the API handler.
+	// Normalize before matching — the swagger router only normalizes later,
+	// so //api/v1/flags or /api/v1/x/../flags must not slip past the deny.
+	// Both normalization orders must hold: the router strips the prefix
+	// first and cleans later, so a ".." spanning the prefix boundary
+	// (/a/b/../api/v1/flags with WebPrefix /a/b) only shows up in cleanLast;
+	// cleanFirst covers the rest (the trailing slash of WebPrefix "/" or
+	// "/flagr/" is trimmed so cleaned paths keep their leading slash).
+	isFlags := func(p string) bool {
+		return p == "/api/v1/flags" || strings.HasPrefix(p, "/api/v1/flags/")
+	}
+	cleanFirst := strings.TrimPrefix(path.Clean(req.URL.Path), strings.TrimSuffix(Config.WebPrefix, "/"))
+	cleanLast := path.Clean("/" + strings.TrimPrefix(req.URL.Path, Config.WebPrefix))
+	if isFlags(cleanFirst) || isFlags(cleanLast) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte(readOnlyDenyMsg))
+		return
+	}
 	next(w, req)
 }
 

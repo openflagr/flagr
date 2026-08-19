@@ -32,6 +32,7 @@ import {
   isIdentifiedSegment,
 } from '@/api/types'
 import { confirmAndRunApi, type ConfirmVm } from '@/helpers/runApi'
+import { evalOnlyMode } from '@/helpers/serverMode'
 import { materializeConstraintForApi } from '@/helpers/constraintOperatorSugar'
 import { runApi } from '@/helpers/runApi'
 import { SNAPSHOT_HIGHLIGHT_MS } from '@/helpers/copyText'
@@ -496,7 +497,9 @@ export function applyDeepLink(
   query: Record<string, unknown> | undefined | null,
 ): void {
   const link = parseFlagDeepLink(query)
-  if (link.tab === FLAG_TAB_HISTORY) {
+  // Read-only (eval-only) mode has no History tab — change history lives in
+  // Git — so a history deep link lands on Config instead of an empty pane.
+  if (link.tab === FLAG_TAB_HISTORY && !evalOnlyMode.value) {
     if (link.snapshotId != null) {
       vm.pendingSnapshotScrollId = link.snapshotId
     }
@@ -574,6 +577,8 @@ export function mountFlagPage(vm: FlagPageVm, routeQuery?: Record<string, unknow
 
   const flagId = vm.flagId
   const gen = vm.flagPageLoadGen ?? 0
+  // No onFailure that sets `loaded`: the Flag.vue evalOnlyMode watcher relies
+  // on `loaded` staying false to re-run this mount after a late /health.
   runApi(vm, crudApi.loadFlagPageContext(flagId), {
     onSuccess: (load) => {
       if (vm.flagId !== flagId || (vm.flagPageLoadGen ?? 0) !== gen) {

@@ -6,6 +6,7 @@ import {
   scrollToSnapshot,
 } from './flagPage'
 import { SNAPSHOT_HIGHLIGHT_MS } from '@/helpers/copyText'
+import { evalOnlyMode } from '@/helpers/serverMode'
 import { FLAG_TAB_CONFIG, FLAG_TAB_HISTORY, snapshotElementId } from '@/helpers/shareLinks'
 
 vi.mock('@/api/crud', () => ({
@@ -91,6 +92,20 @@ describe('applyDeepLink', () => {
 
     expect(vm.activeTab).toBe(FLAG_TAB_CONFIG)
     expect(vm.pendingSnapshotScrollId).toBeNull()
+  })
+
+  it('routes a history deep link to config in read-only mode', () => {
+    evalOnlyMode.value = true
+    try {
+      const vm = minimalVm({ historyKey: 2, historyLoaded: false })
+      applyDeepLink(vm, { tab: 'history', snapshot: '87' })
+
+      expect(vm.activeTab).toBe(FLAG_TAB_CONFIG)
+      expect(vm.historyLoaded).toBe(false)
+      expect(vm.pendingSnapshotScrollId).toBeNull()
+    } finally {
+      evalOnlyMode.value = false
+    }
   })
 })
 

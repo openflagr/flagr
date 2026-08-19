@@ -420,3 +420,135 @@ func TestBasicAuthMiddleware(t *testing.T) {
 	})
 
 }
+
+func TestEvalOnlyDenyMiddleware(t *testing.T) {
+	h := &okHandler{}
+
+	setEvalOnly := func(t *testing.T) {
+		Config.EvalOnlyMode = true
+		t.Cleanup(func() { Config.EvalOnlyMode = false })
+	}
+
+	t.Run("it will return 403 for writes under /api/v1/flags in eval-only mode", func(t *testing.T) {
+		setEvalOnly(t)
+		hh := SetupGlobalMiddleware(h)
+
+		writes := []struct {
+			method string
+			path   string
+		}{
+			{"POST", "/api/v1/flags"},
+			{"PUT", "/api/v1/flags/1"},
+			{"DELETE", "/api/v1/flags/1"},
+			{"PUT", "/api/v1/flags/1/enabled"},
+			{"POST", "/api/v1/flags/1/variants"},
+			{"PUT", "/api/v1/flags/1/segments/2/distributions"},
+			{"DELETE", "/api/v1/flags/1/segments/2/constraints/3"},
+			{"POST", "/api/v1/flags/1/tags"},
+			// Un-normalized paths must not slip past the deny — the swagger
+			// router only cleans them after the middleware chain.
+			{"POST", "//api/v1/flags"},
+			{"PUT", "//api/v1/flags/1/enabled"},
+			{"POST", "/api/v1/xx/../flags"},
+			{"DELETE", "/api/v1/flags/./1"},
+			{"POST", "/api/v1/flags/"},
+		}
+		for _, w := range writes {
+			t.Run(fmt.Sprintf("%s %s", w.method, w.path), func(t *testing.T) {
+				res := httptest.NewRecorder()
+				res.Body = new(bytes.Buffer)
+				req, _ := http.NewRequest(w.method, fmt.Sprintf("http://localhost:18000%s", w.path), nil)
+				hh.ServeHTTP(res, req)
+				assert.Equal(t, http.StatusForbidden, res.Code)
+				assert.Equal(t, "application/json", res.Header().Get("Content-Type"))
+				assert.Contains(t, res.Body.String(), "read-only (eval-only) mode")
+			})
+		}
+	})
+
+	t.Run("it will pass through reads and non-flags paths in eval-only mode", func(t *testing.T) {
+		setEvalOnly(t)
+		hh := SetupGlobalMiddleware(h)
+
+		passes := []struct {
+			method string
+			path   string
+		}{
+			{"GET", "/api/v1/flags"},
+			{"GET", "/api/v1/flags/1"},
+			{"GET", "/api/v1/export/eval_cache/json"},
+			{"GET", "/api/v1/health"},
+			{"POST", "/api/v1/evaluation"},
+			{"POST", "/api/v1/evaluation/batch"},
+			{"OPTIONS", "/api/v1/flags"},
+		}
+		for _, p := range passes {
+			t.Run(fmt.Sprintf("%s %s", p.method, p.path), func(t *testing.T) {
+				res := httptest.NewRecorder()
+				res.Body = new(bytes.Buffer)
+				req, _ := http.NewRequest(p.method, fmt.Sprintf("http://localhost:18000%s", p.path), nil)
+				hh.ServeHTTP(res, req)
+				assert.Equal(t, http.StatusOK, res.Code)
+			})
+		}
+	})
+
+	t.Run("it will honor WebPrefix when matching the flags path", func(t *testing.T) {
+		setEvalOnly(t)
+		Config.WebPrefix = "/flagr"
+		defer func() { Config.WebPrefix = "" }()
+		hh := SetupGlobalMiddleware(h)
+
+		for _, p := range []string{
+			"/flagr/api/v1/flags",
+			"/flagr//api/v1/flags",
+			"/flagr/api/v1/xx/../flags",
+		} {
+			res := httptest.NewRecorder()
+			res.Body = new(bytes.Buffer)
+			req, _ := http.NewRequest("POST", fmt.Sprintf("http://localhost:18000%s", p), nil)
+			hh.ServeHTTP(res, req)
+			assert.Equal(t, http.StatusForbidden, res.Code, p)
+		}
+	})
+
+	t.Run("it will honor a trailing-slash WebPrefix", func(t *testing.T) {
+		setEvalOnly(t)
+
+		for _, tc := range []struct {
+			prefix string
+			path   string
+		}{
+			{"/flagr/", "/flagr/api/v1/flags"},
+			{"/flagr/", "/flagr//api/v1/flags"},
+			{"/", "/api/v1/flags"},
+			{"/", "//api/v1/flags"},
+			// Dot segments spanning the prefix boundary: the router strips
+			// the prefix before cleaning, so the deny must match that order.
+			{"/a/b", "/a/b/../api/v1/flags"},
+			{"/a/b/c", "/a/b/c/../../api/v1/flags"},
+			{"/flagr//", "/flagr///api/v1/flags"},
+		} {
+			t.Run(fmt.Sprintf("prefix %q path %s", tc.prefix, tc.path), func(t *testing.T) {
+				Config.WebPrefix = tc.prefix
+				defer func() { Config.WebPrefix = "" }()
+				hh := SetupGlobalMiddleware(h)
+
+				res := httptest.NewRecorder()
+				res.Body = new(bytes.Buffer)
+				req, _ := http.NewRequest("POST", fmt.Sprintf("http://localhost:18000%s", tc.path), nil)
+				hh.ServeHTTP(res, req)
+				assert.Equal(t, http.StatusForbidden, res.Code)
+			})
+		}
+	})
+
+	t.Run("it will not block writes when eval-only mode is off", func(t *testing.T) {
+		hh := SetupGlobalMiddleware(h)
+		res := httptest.NewRecorder()
+		res.Body = new(bytes.Buffer)
+		req, _ := http.NewRequest("POST", "http://localhost:18000/api/v1/flags", nil)
+		hh.ServeHTTP(res, req)
+		assert.Equal(t, http.StatusOK, res.Code)
+	})
+}

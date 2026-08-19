@@ -124,7 +124,10 @@ func setupDatar(api *operations.FlagrAPI) {
 func setupHealth(api *operations.FlagrAPI) {
 	api.HealthGetHealthHandler = health.GetHealthHandlerFunc(
 		func(health.GetHealthParams) middleware.Responder {
-			return health.NewGetHealthOK().WithPayload(&models.Health{Status: "OK"})
+			return health.NewGetHealthOK().WithPayload(&models.Health{
+				Status:       "OK",
+				EvalOnlyMode: config.Config.EvalOnlyMode,
+			})
 		},
 	)
 }

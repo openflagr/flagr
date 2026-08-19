@@ -709,6 +709,9 @@ definitions:
     properties:
       status:
         type: string
+      evalOnlyMode:
+        description: true when the server runs in eval-only mode (e.g. json_file/json_http drivers) and flag write APIs are disabled
+        type: boolean
 
   # Default Error
   error:

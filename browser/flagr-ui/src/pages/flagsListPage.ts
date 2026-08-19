@@ -24,6 +24,8 @@ export interface FlagsListVm extends ConfirmVm {
   $router: Router
   flags: Flag[]
   loaded: boolean
+  /** Last fetch failed — the empty state shows an error + retry, not "no flags". */
+  loadFailed: boolean
   deletedFlagsLoaded: boolean
   deletedFlags: Flag[]
   showCreateModal: boolean
@@ -34,10 +36,17 @@ export function refreshFlags(vm: FlagsListVm): void {
   const cachedId = getFlagsCache()?.maxSnapshotID
   runApi(vm, crudApi.listFlagsIfStale(cachedId), {
     onSuccess: (result) => {
+      vm.loadFailed = false
       if (!result) return
       setFlagsCache(result)
       vm.flags = result.flags
       vm.loaded = true
+    },
+    // End the loading state on failure: an explicit error state beats an
+    // endless spinner, and a later evalOnlyMode flip can refetch.
+    onFailure: () => {
+      vm.loaded = true
+      vm.loadFailed = true
     },
   })
 }

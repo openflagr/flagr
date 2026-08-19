@@ -79,11 +79,22 @@ Exposure rows are independent: see [recording gates](#recording-gates) and [Expo
 
 Registered surface:
 
-- `GET /api/v1/health`
+- `GET /api/v1/health` (reports `evalOnlyMode: true`)
 - Evaluation APIs (`POST` / `GET /evaluation`, batch, tag eval)
 - `GET /api/v1/export/eval_cache/json` (export)
 
-Absent: CRUD UI, `POST /exposures`, Datar APIs, SQLite export, and the `flag_snapshot` short-circuit. There is no DB to snapshot, so EvalCache re-fetches the JSON source every poll interval.
+CRUD routes are **not registered**. Reads hit the generated 501s; **writes
+under `/api/v1/flags` return 403** with a message pointing at the JSON source
+(`evalOnlyDeny` middleware in `pkg/config/middleware.go`).
+
+The UI stays available as a **read-only flag browser**: it discovers the mode
+via `GET /health`, then reads everything from the export endpoint through a
+frontend mapper (`browser/flagr-ui/src/api/evalCache.ts`) — no CRUD API
+involved. It shows a banner, hides write affordances, and keeps the Debug
+Console (evaluation works). The backend 403 is the enforcement; the UI hiding
+is UX. Change history lives in Git, so the History tab is hidden.
+
+Absent: CRUD APIs, `POST /exposures`, Datar APIs, SQLite export, and the `flag_snapshot` short-circuit. There is no DB to snapshot, so EvalCache re-fetches the JSON source every poll interval.
 
 JSON workflow: [JSON flag source](flagr_json_flag_spec.md). Route wiring: `pkg/handler/handler.go`.
 

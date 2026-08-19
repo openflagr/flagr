@@ -6,11 +6,13 @@
       class="constraint-cell constraint-control"
       :placeholder="propertyPlaceholder"
       :model-value="constraint.property"
+      :disabled="readonly"
       data-testid="constraint-prop-input"
       @update:model-value="onField('property', $event)"
     />
     <ConstraintOperatorSelect
       :model-value="uiOperator"
+      :disabled="readonly"
       :grouped-operator-options="groupedOperatorOptions"
       :operator-options="operatorOptions"
       test-id="constraint-op-select"
@@ -20,10 +22,14 @@
       :model-value="valueForInput"
       :property="constraint.property"
       :placeholder="valuePlaceholder"
+      :disabled="readonly"
       data-testid="constraint-value-input"
       @update:model-value="onField('value', $event)"
     />
-    <div class="constraint-actions">
+    <div
+      v-if="!readonly"
+      class="constraint-actions"
+    >
       <el-tooltip
         :content="saveDirtyTooltip"
         placement="top"
@@ -77,6 +83,7 @@ export default {
   props: {
     constraint: { type: Object as PropType<Constraint>, required: true },
     index: { type: Number, required: true },
+    readonly: { type: Boolean, default: false },
     operatorOptions: {
       type: Array as PropType<OperatorUiOption[]>,
       required: true,

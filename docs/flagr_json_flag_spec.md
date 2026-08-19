@@ -1,6 +1,6 @@
 # JSON flag source
 
-Flagr can serve flags from a **JSON file or URL** instead of a database. The evaluation engine is identical; what changes is the authoring workflow. Flags live in a file you control, edits happen through pull requests, and a running Flagr instance becomes a read-only consumer that polls for updates. Because `json_file` and `json_http` both put the server into eval-only mode, the CRUD UI, exposure endpoint, and database are gone - only evaluation, health, and the export endpoint remain. The behavioral rules for that mode are on [Behavioral contracts](flagr_behavioral_contracts.md#eval-only).
+Flagr can serve flags from a **JSON file or URL** instead of a database. The evaluation engine is identical; what changes is the authoring workflow. Flags live in a file you control, edits happen through pull requests, and a running Flagr instance becomes a read-only consumer that polls for updates. Because `json_file` and `json_http` both put the server into eval-only mode, the exposure endpoint and database are gone. The UI stays available as a **read-only browser**: it shows the current flag state and the Debug Console for live evaluation, while every write API returns 403 - the JSON source is the only write path. The behavioral rules for that mode are on [Behavioral contracts](flagr_behavioral_contracts.md#eval-only).
 
 ## Quick start
 
