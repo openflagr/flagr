@@ -38,8 +38,8 @@ while all writes stay rejected.
    request under `/api/v1/flags` returns **403** with a message pointing at
    the JSON source. The deny sits inside `http.StripPrefix` and matches with
    `util.HasSafePrefix`. A `..` prefix-escape is blocked earlier by
-   `rejectDotDotPath` (400, all modes) so it cannot skip a prefix check and
-   then be Clean()'d into a write. Every CRUD write endpoint lives under
+   `rejectDotDotPath` (401) so it cannot skip a prefix check and then be
+   Clean()'d into a write. Every CRUD write endpoint lives under
    `/api/v1/flags`, so one method+prefix check covers all 19 write operations
    — no `CRUD` implementation needed. Evaluation POSTs (`/api/v1/evaluation`)
    pass through. Writes were previously unregistered (501 "not implemented");
@@ -108,9 +108,9 @@ while all writes stay rejected.
   that. The list page simply refetches the export on mount instead.
 - **403 via middleware, not handlers.** All write endpoints share one deny
   path; there is nothing per-endpoint about the denial.
-- **`..` is blocked globally.** `rejectDotDotPath` returns 400 for any path
-  containing `..`, before JWT/basic whitelist and before `evalOnlyDeny`.
-  The flags deny then only matches clean `/api/v1/flags` via `HasSafePrefix`.
+- **`..` is blocked globally with 401.** `rejectDotDotPath` runs before
+  JWT/basic whitelist and `evalOnlyDeny`. The flags deny then only matches
+  clean `/api/v1/flags` via `HasSafePrefix`.
 
 ## Files changed (as-built)
 
@@ -119,7 +119,7 @@ while all writes stay rejected.
 | `swagger/index.yaml` | `health` definition gains `evalOnlyMode` boolean |
 | `docs/api_docs/bundle.yaml`, `swagger_gen/` | regenerated (`make gen`) |
 | `pkg/handler/handler.go` | health returns `evalOnlyMode` |
-| `pkg/config/middleware.go` (+ test) | `rejectDotDotPath` (400 on `..`); `evalOnlyDeny` inside `StripPrefix` with `HasSafePrefix` |
+| `pkg/config/middleware.go` (+ test) | `rejectDotDotPath` (401 on `..`); `evalOnlyDeny` inside `StripPrefix` with `HasSafePrefix` |
 | `browser/flagr-ui/src/api/evalOnly.ts` (+ test) | eval-only read plane: export fetch + PascalCase→camelCase mapper + dump cache |
 | `browser/flagr-ui/src/api/crud.ts` (+ test) | read plane derived from `evalOnlyMode` (HTTP vs export adapter) |
 | `browser/flagr-ui/src/api/health.ts`, `api/types.ts` | `getHealth` + `Health` DTO |
@@ -167,7 +167,7 @@ tab, Debug Console available:
   "late /health" Playwright tests). `refreshFlags` ends its loading state
   on failure — error toast + empty state, never an endless spinner.
 - `rejectDotDotPath` runs before auth and the flags deny: any `..` in the
-  path is **400**. `evalOnlyDeny` then matches clean `/api/v1/flags` with
+  path is **401**. `evalOnlyDeny` then matches clean `/api/v1/flags` with
   `HasSafePrefix` inside `StripPrefix`.
 - In eval-only mode the CRUD read routes return the generated 501s (same as
   main). Tooling that needs flag data from an eval edge node should read

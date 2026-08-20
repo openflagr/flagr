@@ -285,10 +285,11 @@ func (a *basicAuth) ServeHTTP(w http.ResponseWriter, req *http.Request, next htt
 // rejectDotDotPath rejects any request whose path contains "..". That is a
 // prefix-escape (e.g. /api/v1/health/../flags): JWT/basic whitelist and
 // evalOnlyDeny both match prefixes, and the router may Clean ".." into a
-// real route. Block it once, globally, before those layers.
+// real route. 401 matches unauthenticated prefix-escape (same status JWT
+// would return for an unwhitelisted ".." path).
 func rejectDotDotPath(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
 	if strings.Contains(req.URL.Path, "..") {
-		http.Error(w, "invalid path", http.StatusBadRequest)
+		http.Error(w, "invalid path", http.StatusUnauthorized)
 		return
 	}
 	next(w, req)

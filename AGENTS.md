@@ -57,7 +57,7 @@ Run from **repo root**. Match what [`.github/workflows/ci.yml`](.github/workflow
 - `handler/exposure.go` — exposure (impression) logging; `handler/data_recorder*.go` — recorders (Kafka, Kinesis, Pub/Sub, Datar)
 - `entity/` — domain models (flag, segment, constraint, variant, distribution)
 - `config/env.go` — all environment variables (single source of truth)
-- `config/middleware.go` — `rejectDotDotPath` (400 on `..`); JWT/basic whitelist (`HasSafePrefix`); `evalOnlyDeny` (403 writes in eval-only)
+- `config/middleware.go` — `rejectDotDotPath` (401 on `..`); JWT/basic whitelist (`HasSafePrefix`); `evalOnlyDeny` (403 writes in eval-only)
 
 **Frontend (`browser/flagr-ui/src/`):**
 - `api/types.ts` — DTOs; `api/crud.ts` (flag CRUD + tags/variants/segments; eval-only reads derived from `evalOnlyMode`), `api/eval.ts` (POST /evaluation), `api/evalOnly.ts` (eval-only read-only flag reads from the export dump), `http.ts`

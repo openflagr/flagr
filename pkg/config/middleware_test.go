@@ -323,7 +323,7 @@ func TestJWTAuthMiddlewareWithUnauthorized(t *testing.T) {
 			Config.JWTAuthNoTokenStatusCode = http.StatusTemporaryRedirect
 		}()
 
-		testPaths := []string{"/api/v1/flags", "/api/v1/admin", "//api/v1/flags", "/."}
+		testPaths := []string{"/api/v1/flags", "/api/v1/health/..", "/api/v1/admin", "//api/v1/flags", "/..", "/."}
 		for _, path := range testPaths {
 			t.Run(fmt.Sprintf("path: %s", path), func(t *testing.T) {
 				hh := SetupGlobalMiddleware(h)
@@ -425,7 +425,7 @@ func TestRejectDotDotPath(t *testing.T) {
 	h := &okHandler{}
 	hh := SetupGlobalMiddleware(h)
 
-	t.Run("it rejects paths containing .. with 400", func(t *testing.T) {
+	t.Run("it rejects paths containing .. with 401", func(t *testing.T) {
 		for _, p := range []string{
 			"/api/v1/health/../flags",
 			"/api/v1/xx/../flags",
@@ -438,7 +438,7 @@ func TestRejectDotDotPath(t *testing.T) {
 				res.Body = new(bytes.Buffer)
 				req, _ := http.NewRequest("POST", fmt.Sprintf("http://localhost:18000%s", p), nil)
 				hh.ServeHTTP(res, req)
-				assert.Equal(t, http.StatusBadRequest, res.Code)
+				assert.Equal(t, http.StatusUnauthorized, res.Code)
 			})
 		}
 	})
@@ -570,7 +570,7 @@ func TestEvalOnlyDenyMiddleware(t *testing.T) {
 		}
 	})
 
-	t.Run("dot-dot paths are rejected with 400 before the flags deny", func(t *testing.T) {
+	t.Run("dot-dot paths are rejected with 401 before the flags deny", func(t *testing.T) {
 		setEvalOnly(t)
 
 		for _, tc := range []struct {
@@ -593,7 +593,7 @@ func TestEvalOnlyDenyMiddleware(t *testing.T) {
 				res.Body = new(bytes.Buffer)
 				req, _ := http.NewRequest("POST", fmt.Sprintf("http://localhost:18000%s", tc.path), nil)
 				hh.ServeHTTP(res, req)
-				assert.Equal(t, http.StatusBadRequest, res.Code)
+				assert.Equal(t, http.StatusUnauthorized, res.Code)
 			})
 		}
 	})
