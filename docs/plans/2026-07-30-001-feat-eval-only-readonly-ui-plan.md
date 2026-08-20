@@ -88,7 +88,7 @@ while all writes stay rejected.
 
 - `docs/flagr_behavioral_contracts.md` — eval-only surface stays
   "evaluation + health + export"; the UI is a client of export; writes 403
-  via `HasSafePrefix`; `..` paths are 400 globally.
+  via `HasSafePrefix`; `..` paths are 401 globally.
 - `docs/flagr_env.md`, `docs/flagr_json_flag_spec.md`, `docs/integration.md`,
   `docs/flagr_overview.md` — mention the read-only UI on eval-only deployments.
 
