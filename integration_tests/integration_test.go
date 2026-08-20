@@ -632,8 +632,13 @@ func TestIntegration_Preload(t *testing.T) {
 }
 
 func TestIntegration_Export(t *testing.T) {
-	// Export SQLite — doReqOK drains body to avoid broken pipe.
-	doReqOK(t, "GET", "/api/v1/export/sqlite", nil)
+	// Exclude snapshots: this test only needs a 2xx dump of current flags.
+	// Full snapshot export copies every flag_snapshot row into a temp SQLite
+	// file before headers are sent; on postgres9 that can exceed the default
+	// 10s client timeout after earlier tests have written many snapshots.
+	// Snapshot inclusion is covered by pkg/handler/export_test.go.
+	exportClient := &http.Client{Timeout: exportSQLiteTimeout}
+	doReqOKWithClient(t, exportClient, "GET", "/api/v1/export/sqlite?exclude_snapshots=true", nil)
 
 	// Export eval cache json (returns {"Flags": [...]})
 	var cache struct {

@@ -212,7 +212,27 @@ func deleteResource(t *testing.T, path string) {
 // doReqOK performs an HTTP request and verifies a 2xx status, discarding the body.
 func doReqOK(t *testing.T, method, path string, body any) {
 	t.Helper()
-	resp, err := doReq(method, path, body)
+	doReqOKWithClient(t, httpClient, method, path, body)
+}
+
+func doReqOKWithClient(t *testing.T, client *http.Client, method, path string, body any) {
+	t.Helper()
+	var reqBody io.Reader
+	if body != nil {
+		b, err := json.Marshal(body)
+		if err != nil {
+			t.Fatalf("json marshal: %v", err)
+		}
+		reqBody = bytes.NewReader(b)
+	}
+	req, err := http.NewRequest(method, baseURL+path, reqBody)
+	if err != nil {
+		t.Fatalf("%s %s: %v", method, path, err)
+	}
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		t.Fatalf("%s %s: %v", method, path, err)
 	}
