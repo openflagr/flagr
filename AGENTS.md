@@ -57,13 +57,16 @@ Run from **repo root**. Match what [`.github/workflows/ci.yml`](.github/workflow
 - `handler/exposure.go` — exposure (impression) logging; `handler/data_recorder*.go` — recorders (Kafka, Kinesis, Pub/Sub, Datar)
 - `entity/` — domain models (flag, segment, constraint, variant, distribution)
 - `config/env.go` — all environment variables (single source of truth)
+- `config/middleware.go` — JWT/basic whitelist (`HasSafePrefix`); `evalOnlyDeny` (403 writes in eval-only)
 
 **Frontend (`browser/flagr-ui/src/`):**
-- `api/types.ts` — DTOs; `api/crud.ts` (flag CRUD + tags/variants/segments), `api/eval.ts` (POST /evaluation), `http.ts`
+- `api/types.ts` — DTOs; `api/crud.ts` (flag CRUD + tags/variants/segments; eval-only reads derived from `evalOnlyMode`), `api/eval.ts` (POST /evaluation), `api/evalCache.ts` (export dump mapper), `http.ts`
+- `helpers/serverMode.ts` — `evalOnlyMode` (single source of truth for read-only UI)
 - `pages/flagPage.ts`, `pages/flagsListPage.ts` (incl. list snapshot cache) — orchestration; `flagPage.*(page)` / `flagsListPage.*(page)` via `castFlagPage` / `castFlagsList`
 - Composed REST in `api/crud.ts`; UI via `helpers/runApi`; eval UI helpers in `helpers/evaluation.ts`
 - Architecture: **`docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md`** (As-built)
 - Duplicate flag + transactional snapshots: **`docs/plans/2026-06-30-001-duplicate-flag-plan.md`** (As-built)
+- Eval-only read-only UI: **`docs/plans/2026-07-30-001-feat-eval-only-readonly-ui-plan.md`** (As-built)
 
 ## Swagger / OpenAPI workflow
 

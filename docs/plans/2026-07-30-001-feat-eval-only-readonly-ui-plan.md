@@ -1,6 +1,6 @@
 # feat: Read-only UI for eval-only mode (`json_file` / `json_http`)
 
-**Date:** 2026-07-30 (reworked 2026-08-17 after review)
+**Date:** 2026-07-30 (reworked 2026-08-17 after review; maintainability follow-up 2026-08-20)
 **Status:** implemented
 
 ## Summary
@@ -35,11 +35,14 @@ while all writes stay rejected.
 
 2. **Write denial: 403 middleware** (`evalOnlyDeny` in
    `pkg/config/middleware.go`). In eval-only mode, any non-GET/HEAD/OPTIONS
-   request under `<WebPrefix>/api/v1/flags` returns **403** with a message
-   pointing at the JSON source. Every CRUD write endpoint lives under
-   `/api/v1/flags`, so one method+prefix check covers all 19 write operations —
-   no `CRUD` implementation needed. Evaluation POSTs (`/api/v1/evaluation`)
-   pass through. Writes were previously unregistered (501 "not implemented");
+   request under `/api/v1/flags` returns **403** with a message pointing at
+   the JSON source. The deny sits inside `http.StripPrefix` and matches with
+   `util.HasSafePrefix` — the same primitive JWT/basic whitelist uses — so a
+   `..` prefix-escape is illegal and is not Clean()'d into a flags write.
+   Every CRUD write endpoint lives under `/api/v1/flags`, so one
+   method+prefix check covers all 19 write operations — no `CRUD`
+   implementation needed. Evaluation POSTs (`/api/v1/evaluation`) pass
+   through. Writes were previously unregistered (501 "not implemented");
    an explicit 403 with a pointer to the JSON source is the real contract.
 
 3. **Mode discovery: `evalOnlyMode` on `GET /health`**
@@ -70,8 +73,8 @@ while all writes stay rejected.
    deduped by value), and `listEntityTypes` / `listFlagSnapshots` /
    `listDeletedFlags` resolve `[]` locally. Components and pages stay
    unaware of the data plane.
-4. **Read-only rendering** — components import the ref directly (no prop
-   drilling):
+4. **Read-only rendering** — `evalOnlyMode` drives chrome; sections take a
+   `readonly` prop from the flag page:
    - Global banner: "Read-only (GitOps) mode — flags are managed via the JSON source".
    - Flags list: hide New Flag form and deleted-flags view.
    - Flag page: hide save/delete buttons, enabled toggle, tag add/remove,
@@ -84,7 +87,8 @@ while all writes stay rejected.
 ### Docs
 
 - `docs/flagr_behavioral_contracts.md` — eval-only surface stays
-  "evaluation + health + export"; the UI is a client of export; writes 403.
+  "evaluation + health + export"; the UI is a client of export; writes 403
+  via `HasSafePrefix` (`..` is not a flags write).
 - `docs/flagr_env.md`, `docs/flagr_json_flag_spec.md`, `docs/integration.md`,
   `docs/flagr_overview.md` — mention the read-only UI on eval-only deployments.
 
@@ -104,6 +108,10 @@ while all writes stay rejected.
   that. The list page simply refetches the export on mount instead.
 - **403 via middleware, not handlers.** All write endpoints share one deny
   path; there is nothing per-endpoint about the denial.
+- **`..` is not a flags write.** Matching uses `HasSafePrefix`. A path
+  containing `..` is a prefix-escape attack (the same rule as JWT/basic
+  whitelist) and is not canonicalized into `/api/v1/flags`. Extra slashes
+  and `.` still match.
 
 ## Files changed (as-built)
 
@@ -112,7 +120,7 @@ while all writes stay rejected.
 | `swagger/index.yaml` | `health` definition gains `evalOnlyMode` boolean |
 | `docs/api_docs/bundle.yaml`, `swagger_gen/` | regenerated (`make gen`) |
 | `pkg/handler/handler.go` | health returns `evalOnlyMode` |
-| `pkg/config/middleware.go` (+ test) | `evalOnlyDeny` wraps the API handler inside `StripPrefix`; 403 for non-GET under `/api/v1/flags` |
+| `pkg/config/middleware.go` (+ test) | `evalOnlyDeny` inside `StripPrefix`; `HasSafePrefix` match; `..` is not a flags write |
 | `browser/flagr-ui/src/api/evalCache.ts` (+ test) | export fetch + PascalCase→camelCase mapper + mapped-dump cache |
 | `browser/flagr-ui/src/api/crud.ts` (+ test) | read plane derived from `evalOnlyMode` (HTTP vs export adapter) |
 | `browser/flagr-ui/src/api/health.ts`, `api/types.ts` | `getHealth` + `Health` DTO |
@@ -120,7 +128,7 @@ while all writes stay rejected.
 | `browser/flagr-ui/src/main.ts` | mode resolved before first paint (1.5s AbortSignal bound, fail-open) |
 | `browser/flagr-ui/src/App.vue` | read-only banner |
 | `browser/flagr-ui/src/components/Flags.vue` | hide Create Flag + Deleted Flags in read-only |
-| `browser/flagr-ui/src/components/Flag.vue` | hide Flag Management + History tab; pass `readonly` to sections; snap to Config if mode turns read-only |
+| `browser/flagr-ui/src/components/Flag.vue` | hide Flag Management + History tab; pass `readonly` to sections |
 | `browser/flagr-ui/src/pages/flagPage.ts` (+ test) | `applyDeepLink` routes history deep links to Config in read-only mode |
 | `browser/flagr-ui/src/components/FlagConfigCard.vue` | `readonly` prop: disable inputs/switches, hide save/tag/notes-edit controls |
 | `browser/flagr-ui/src/components/VariantsSection.vue` | `readonly` prop: disable key input, read-only attachment editor, hide actions/add row |
@@ -158,6 +166,9 @@ tab, Debug Console available:
   after that decision — pages fetch once, through the path chosen at mount.
   `refreshFlags` ends its loading state on failure — error toast + empty
   state, never an endless spinner.
+- `evalOnlyDeny` sits inside `StripPrefix` and matches with `HasSafePrefix`.
+  `/../api/v1/flags` and `/api/v1/health/../flags` are prefix-escape attacks
+  (same rule as JWT/basic whitelist): illegal, not 403'd as flags writes.
 - In eval-only mode the CRUD read routes return the generated 501s (same as
   main). Tooling that needs flag data from an eval edge node should read
   `GET /api/v1/export/eval_cache/json`, exactly like the UI does.

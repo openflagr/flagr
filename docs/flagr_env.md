@@ -106,6 +106,8 @@ FLAGR_BASIC_AUTH_PASSWORD=password
 
 JWT is richer. The variables cover enabling it (`FLAGR_JWT_AUTH_ENABLED`), the shared secret or PEM key (`FLAGR_JWT_AUTH_SECRET`), the signing method (`HS256` / `HS512` / `RS256`), and a set of prefix and exact whitelist paths. All of them are in the source above. JWT tokens can arrive by cookie or by `Authorization: Bearer` header; when both are present, the header wins.
 
+Prefix whitelist matching (JWT and basic) uses `util.HasSafePrefix`. A path containing `..` never matches — it is a prefix-escape, not a cleaned equivalent of the whitelisted path. `/api/v1/health/../flags` does not count as health. Eval-only write denial uses the same primitive: [behavioral contracts: eval-only](flagr_behavioral_contracts.md#eval-only).
+
 Separately, Flagr can identify *who* made a mutation for audit logging without doing full authentication. `FLAGR_HEADER_AUTH_*` reads a user identifier from a header (handy behind a corporate proxy), and `FLAGR_COOKIE_AUTH_*` reads one from a cookie (handy behind something like Cloudflare Zero Trust). These stamp `created_by` / `updated_by` on changes; they don't gate access.
 
 One thing worth calling out: the default JWT whitelist allows unauthenticated exposure logging. If the integrity of your impression stream matters, narrow the whitelist to lock down `/api/v1/exposures` and rate-limit it at the edge. The [Exposure logging](flagr_exposure.md) page walks through the tradeoffs.

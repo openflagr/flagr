@@ -85,14 +85,20 @@ Registered surface:
 
 CRUD routes are **not registered**. Reads hit the generated 501s; **writes
 under `/api/v1/flags` return 403** with a message pointing at the JSON source
-(`evalOnlyDeny` middleware in `pkg/config/middleware.go`).
+(`evalOnlyDeny` in `pkg/config/middleware.go`). Matching uses
+`util.HasSafePrefix` — the same primitive JWT/basic whitelist uses — so a
+`..` prefix-escape (`/api/v1/health/../flags`, `/../api/v1/flags`) is
+**illegal** and is **not** treated as a flags write. Extra slashes and `.`
+are cleaned; `..` is not.
 
-The UI stays available as a **read-only flag browser**: it discovers the mode
-via `GET /health`, then reads everything from the export endpoint through a
-frontend mapper (`browser/flagr-ui/src/api/evalCache.ts`) — no CRUD API
-involved. It shows a banner, hides write affordances, and keeps the Debug
-Console (evaluation works). The backend 403 is the enforcement; the UI hiding
-is UX. Change history lives in Git, so the History tab is hidden.
+The UI stays available as a **read-only flag browser**: `evalOnlyMode` on
+`GET /health` is the single source of truth. The UI derives its chrome and
+its read plane from that flag, then reads everything from the export
+endpoint through a frontend mapper (`browser/flagr-ui/src/api/evalCache.ts`)
+— no CRUD API involved. It shows a banner, hides write affordances, and
+keeps the Debug Console (evaluation works). The backend 403 is the
+enforcement; the UI hiding is UX. Change history lives in Git, so the
+History tab is hidden.
 
 Absent: CRUD APIs, `POST /exposures`, Datar APIs, SQLite export, and the `flag_snapshot` short-circuit. There is no DB to snapshot, so EvalCache re-fetches the JSON source every poll interval.
 

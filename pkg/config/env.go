@@ -39,8 +39,8 @@ var Config = struct {
 	EvalCacheRefreshTimeout time.Duration `env:"FLAGR_EVALCACHE_REFRESHTIMEOUT" envDefault:"59s"`
 	// EvalCacheRefreshInterval - time interval of getting the flags data from DB into the in-memory evaluation cache
 	EvalCacheRefreshInterval time.Duration `env:"FLAGR_EVALCACHE_REFRESHINTERVAL" envDefault:"3s"`
-	// EvalOnlyMode - will only expose the evaluation related endpoints.
-	// This field will be derived from DBDriver
+	// EvalOnlyMode - health, evaluation, and eval-cache export only; the UI is read-only.
+	// json_file / json_http set this automatically via setupEvalOnlyMode.
 	EvalOnlyMode bool `env:"FLAGR_EVAL_ONLY_MODE" envDefault:"false"`
 	// UIEnabled controls whether the Flagr UI is served.
 	// Set to false for backend-only deployments where the UI is not needed.
