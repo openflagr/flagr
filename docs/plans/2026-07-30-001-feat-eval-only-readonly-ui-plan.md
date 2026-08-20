@@ -57,7 +57,7 @@ while all writes stay rejected.
    `src/helpers/serverMode.ts`: module-level reactive `evalOnlyMode` ref,
    fetched once at app start. Fail-open: if health can't be read, assume
    writable (a broken health check shouldn't lock the UI).
-2. **Export adapter** — `src/api/evalCache.ts`: fetches
+2. **Export adapter** — `src/api/evalOnly.ts`: fetches
    `GET /export/eval_cache/json` (the GitOps `entity.Flag` shape: PascalCase,
    `{ Flags: [...] }`) and maps it once at the API boundary to the swagger
    camelCase `Flag` the rest of the UI speaks. GORM-only fields (`DeletedAt`,
@@ -101,7 +101,7 @@ while all writes stay rejected.
   `entity.Flag` JSON and the UI's types are the swagger models — that gap is a
   mapper, not a new API. The export JSON shape is the GitOps source of truth
   and is not changed to suit the UI; all adaptation happens in
-  `evalCache.ts`. (Superseded first cut: `crud_readonly.go`, see rework note.)
+  `evalOnly.ts`. (Superseded first cut: `crud_readonly.go`, see rework note.)
 - **No server-side change token.** The first cut faked
   `GET /flags/snapshots/max_id` with a content fingerprint; swagger documents
   that endpoint as a monotonic snapshot ID, and external pollers may rely on
@@ -121,7 +121,7 @@ while all writes stay rejected.
 | `docs/api_docs/bundle.yaml`, `swagger_gen/` | regenerated (`make gen`) |
 | `pkg/handler/handler.go` | health returns `evalOnlyMode` |
 | `pkg/config/middleware.go` (+ test) | `evalOnlyDeny` inside `StripPrefix`; `HasSafePrefix` match; `..` is not a flags write |
-| `browser/flagr-ui/src/api/evalCache.ts` (+ test) | export fetch + PascalCase→camelCase mapper + mapped-dump cache |
+| `browser/flagr-ui/src/api/evalOnly.ts` (+ test) | eval-only read plane: export fetch + PascalCase→camelCase mapper + dump cache |
 | `browser/flagr-ui/src/api/crud.ts` (+ test) | read plane derived from `evalOnlyMode` (HTTP vs export adapter) |
 | `browser/flagr-ui/src/api/health.ts`, `api/types.ts` | `getHealth` + `Health` DTO |
 | `browser/flagr-ui/src/helpers/serverMode.ts` (+ test) | reactive `evalOnlyMode` ref, `initServerMode()` (fail-open) |

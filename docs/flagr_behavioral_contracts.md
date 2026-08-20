@@ -94,7 +94,7 @@ are cleaned; `..` is not.
 The UI stays available as a **read-only flag browser**: `evalOnlyMode` on
 `GET /health` is the single source of truth. The UI derives its chrome and
 its read plane from that flag, then reads everything from the export
-endpoint through a frontend mapper (`browser/flagr-ui/src/api/evalCache.ts`)
+endpoint through a frontend mapper (`browser/flagr-ui/src/api/evalOnly.ts`)
 — no CRUD API involved. It shows a banner, hides write affordances, and
 keeps the Debug Console (evaluation works). The backend 403 is the
 enforcement; the UI hiding is UX. Change history lives in Git, so the

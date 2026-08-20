@@ -7,7 +7,7 @@ import {
   listFlagSnapshots,
   listFlagsIfStale,
 } from './crud'
-import { clearDumpCache } from './evalCache'
+import { clearDumpCache } from './evalOnly'
 import { evalOnlyMode } from '@/helpers/serverMode'
 
 describe('listFlagsIfStale', () => {

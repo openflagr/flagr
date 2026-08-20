@@ -18,7 +18,7 @@ import type { ApiResult } from './result'
 import { ok } from './result'
 import { requestJson, requestVoid } from './http'
 import { evalOnlyMode } from '@/helpers/serverMode'
-import * as evalCache from './evalCache'
+import * as evalOnly from './evalOnly'
 
 type FlagId = string | number
 
@@ -59,12 +59,12 @@ async function listFlagsIfStaleFromHTTP(
   return ok({ flags: [...flagsRes.value].reverse(), maxSnapshotID: maxID })
 }
 
-async function listFlagsIfStaleFromEvalCache(): Promise<
+async function listFlagsIfStaleFromEvalOnly(): Promise<
   ApiResult<{ flags: Flag[]; maxSnapshotID: number } | null>
 > {
   // No snapshots in eval-only mode — refetch the export dump on every list
   // mount so JSON source changes show up without a change token.
-  const flagsRes = await evalCache.fetchFlags()
+  const flagsRes = await evalOnly.fetchFlags()
   if (!flagsRes.ok) return flagsRes
   return ok({ flags: [...flagsRes.value].reverse(), maxSnapshotID: 0 })
 }
@@ -78,10 +78,10 @@ const httpReads: FlagReads = {
   listEntityTypes: () => get('/flags/entity_types'),
 }
 
-const evalCacheReads: FlagReads = {
-  listFlagsIfStale: listFlagsIfStaleFromEvalCache,
-  getFlag: evalCache.getFlag,
-  listAllTags: evalCache.listAllTags,
+const evalOnlyReads: FlagReads = {
+  listFlagsIfStale: listFlagsIfStaleFromEvalOnly,
+  getFlag: evalOnly.getFlag,
+  listAllTags: evalOnly.listAllTags,
   // JSON sources have no soft-deletes; history lives in Git; entity types
   // are recorded into the DB on evaluation — none of that exists here.
   listDeletedFlags: () => Promise.resolve(ok([])),
@@ -90,7 +90,7 @@ const evalCacheReads: FlagReads = {
 }
 
 function reads(): FlagReads {
-  return evalOnlyMode.value ? evalCacheReads : httpReads
+  return evalOnlyMode.value ? evalOnlyReads : httpReads
 }
 
 export const listFlagsIfStale = (

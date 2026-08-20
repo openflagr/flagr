@@ -60,7 +60,7 @@ Run from **repo root**. Match what [`.github/workflows/ci.yml`](.github/workflow
 - `config/middleware.go` — JWT/basic whitelist (`HasSafePrefix`); `evalOnlyDeny` (403 writes in eval-only)
 
 **Frontend (`browser/flagr-ui/src/`):**
-- `api/types.ts` — DTOs; `api/crud.ts` (flag CRUD + tags/variants/segments; eval-only reads derived from `evalOnlyMode`), `api/eval.ts` (POST /evaluation), `api/evalCache.ts` (export dump mapper), `http.ts`
+- `api/types.ts` — DTOs; `api/crud.ts` (flag CRUD + tags/variants/segments; eval-only reads derived from `evalOnlyMode`), `api/eval.ts` (POST /evaluation), `api/evalOnly.ts` (eval-only read-only flag reads from the export dump), `http.ts`
 - `helpers/serverMode.ts` — `evalOnlyMode` (single source of truth for read-only UI)
 - `pages/flagPage.ts`, `pages/flagsListPage.ts` (incl. list snapshot cache) — orchestration; `flagPage.*(page)` / `flagsListPage.*(page)` via `castFlagPage` / `castFlagsList`
 - Composed REST in `api/crud.ts`; UI via `helpers/runApi`; eval UI helpers in `helpers/evaluation.ts`
