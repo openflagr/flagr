@@ -17,6 +17,7 @@ import type {
 import type { ApiResult } from './result'
 import { ok } from './result'
 import { requestJson, requestVoid } from './http'
+import { evalOnlyMode } from '@/helpers/serverMode'
 import * as evalCache from './evalCache'
 
 type FlagId = string | number
@@ -32,8 +33,6 @@ export const listFlags = (): Promise<ApiResult<Flag[]>> => get('/flags')
 
 export const getSnapshotMaxId = (): Promise<ApiResult<SnapshotMaxId>> =>
   get('/flags/snapshots/max_id')
-
-export type FlagReadSource = 'http' | 'evalCache'
 
 interface FlagReads {
   listFlagsIfStale: (
@@ -90,30 +89,23 @@ const evalCacheReads: FlagReads = {
   listEntityTypes: () => Promise.resolve(ok([])),
 }
 
-let reads: FlagReads = httpReads
-
-/** Swap the flag read plane. Called once when the server mode is known. */
-export function setFlagReadSource(source: FlagReadSource): void {
-  reads = source === 'evalCache' ? evalCacheReads : httpReads
-}
-
-export function getFlagReadSource(): FlagReadSource {
-  return reads === evalCacheReads ? 'evalCache' : 'http'
+function reads(): FlagReads {
+  return evalOnlyMode.value ? evalCacheReads : httpReads
 }
 
 export const listFlagsIfStale = (
   cachedMaxId: number | undefined,
 ): Promise<ApiResult<{ flags: Flag[]; maxSnapshotID: number } | null>> =>
-  reads.listFlagsIfStale(cachedMaxId)
+  reads().listFlagsIfStale(cachedMaxId)
 
-export const listDeletedFlags = (): Promise<ApiResult<Flag[]>> => reads.listDeletedFlags()
+export const listDeletedFlags = (): Promise<ApiResult<Flag[]>> => reads().listDeletedFlags()
 
 export const createFlag = (body: CreateFlagPayload): Promise<ApiResult<Flag>> => post('/flags', body)
 
 export const restoreFlag = (flagId: number): Promise<ApiResult<Flag>> =>
   requestJson<Flag>({ method: 'PUT', path: `${flag(flagId)}/restore` })
 
-export const getFlag = (flagId: FlagId): Promise<ApiResult<Flag>> => reads.getFlag(flagId)
+export const getFlag = (flagId: FlagId): Promise<ApiResult<Flag>> => reads().getFlag(flagId)
 
 export const duplicateFlag = (
   flagId: FlagId,
@@ -133,7 +125,7 @@ export const setFlagEnabled = (
 
 export const deleteFlag = (flagId: FlagId): Promise<ApiResult<void>> => del(flag(flagId))
 
-export const listAllTags = (): Promise<ApiResult<Tag[]>> => reads.listAllTags()
+export const listAllTags = (): Promise<ApiResult<Tag[]>> => reads().listAllTags()
 
 export const createTag = (flagId: FlagId, value: string): Promise<ApiResult<Tag>> =>
   post(`${flag(flagId)}/tags`, { value })
@@ -217,9 +209,9 @@ export const putSegmentDistributions = (
   })
 
 export const listFlagSnapshots = (flagId: FlagId): Promise<ApiResult<FlagSnapshot[]>> =>
-  reads.listFlagSnapshots(flagId)
+  reads().listFlagSnapshots(flagId)
 
-export const listEntityTypes = (): Promise<ApiResult<string[]>> => reads.listEntityTypes()
+export const listEntityTypes = (): Promise<ApiResult<string[]>> => reads().listEntityTypes()
 
 export interface FlagPageLoad {
   flag: Flag

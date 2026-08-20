@@ -64,12 +64,12 @@ while all writes stay rejected.
    sorted by ID (the export iterates a Go map — order is random per fetch);
    segment order is kept as exported because in json mode source order **is**
    evaluation order.
-3. **Read source in `crud.ts`** — `setFlagReadSource('evalCache' | 'http')`
-   selects the read plane once when the server mode is known. Eval-cache
-   reads: refetch the export on list mount (no change token), `getFlag` /
-   `listAllTags` from the mapped dump (tags deduped by value), and
-   `listEntityTypes` / `listFlagSnapshots` / `listDeletedFlags` resolve `[]`
-   locally. Components and pages stay unaware of the source.
+3. **Read plane in `crud.ts`** — derived from `evalOnlyMode` (the single
+   source of truth). Eval-cache reads: refetch the export on list mount (no
+   change token), `getFlag` / `listAllTags` from the mapped dump (tags
+   deduped by value), and `listEntityTypes` / `listFlagSnapshots` /
+   `listDeletedFlags` resolve `[]` locally. Components and pages stay
+   unaware of the data plane.
 4. **Read-only rendering** — components import the ref directly (no prop
    drilling):
    - Global banner: "Read-only (GitOps) mode — flags are managed via the JSON source".
@@ -114,7 +114,7 @@ while all writes stay rejected.
 | `pkg/handler/handler.go` | health returns `evalOnlyMode` |
 | `pkg/config/middleware.go` (+ test) | `evalOnlyDeny` wraps the API handler inside `StripPrefix`; 403 for non-GET under `/api/v1/flags` |
 | `browser/flagr-ui/src/api/evalCache.ts` (+ test) | export fetch + PascalCase→camelCase mapper + mapped-dump cache |
-| `browser/flagr-ui/src/api/crud.ts` (+ test) | `setFlagReadSource` selects HTTP vs export-adapter reads |
+| `browser/flagr-ui/src/api/crud.ts` (+ test) | read plane derived from `evalOnlyMode` (HTTP vs export adapter) |
 | `browser/flagr-ui/src/api/health.ts`, `api/types.ts` | `getHealth` + `Health` DTO |
 | `browser/flagr-ui/src/helpers/serverMode.ts` (+ test) | reactive `evalOnlyMode` ref, `initServerMode()` (fail-open) |
 | `browser/flagr-ui/src/main.ts` | mode resolved before first paint (1.5s AbortSignal bound, fail-open) |

@@ -6,9 +6,9 @@ import {
   listEntityTypes,
   listFlagSnapshots,
   listFlagsIfStale,
-  setFlagReadSource,
 } from './crud'
 import { clearDumpCache } from './evalCache'
+import { evalOnlyMode } from '@/helpers/serverMode'
 
 describe('listFlagsIfStale', () => {
   const originalFetch = globalThis.fetch
@@ -78,7 +78,7 @@ describe('eval-only mode reads', () => {
   ]
 
   beforeEach(() => {
-    setFlagReadSource('evalCache')
+    evalOnlyMode.value = true
     clearDumpCache()
     vi.stubGlobal('fetch', vi.fn())
     vi.mocked(fetch).mockImplementation((input) => {
@@ -96,7 +96,7 @@ describe('eval-only mode reads', () => {
   })
 
   afterEach(() => {
-    setFlagReadSource('http')
+    evalOnlyMode.value = false
     globalThis.fetch = originalFetch
     vi.unstubAllGlobals()
   })

@@ -1,18 +1,13 @@
 import { ref } from 'vue'
 import { getHealth } from '@/api/health'
-import { setFlagReadSource } from '@/api/crud'
 
 /**
  * Whether the server runs in eval-only (read-only) mode — the json_file /
- * json_http GitOps drivers. When true the UI hides write affordances; the
- * backend independently rejects writes with 403.
+ * json_http GitOps drivers. Single source of truth for the UI: chrome hides
+ * write affordances from this ref, and crud reads derive the data plane
+ * from it. The backend independently rejects writes with 403.
  */
 export const evalOnlyMode = ref(false)
-
-function applyMode(evalOnly: boolean): void {
-  evalOnlyMode.value = evalOnly
-  setFlagReadSource(evalOnly ? 'evalCache' : 'http')
-}
 
 /**
  * Fetch the server mode once at app start. Fail-open: an unreachable health
@@ -22,5 +17,5 @@ function applyMode(evalOnly: boolean): void {
  */
 export async function initServerMode(signal?: AbortSignal): Promise<void> {
   const res = await getHealth(signal)
-  applyMode(res.ok && res.value?.evalOnlyMode === true)
+  evalOnlyMode.value = res.ok && res.value?.evalOnlyMode === true
 }
