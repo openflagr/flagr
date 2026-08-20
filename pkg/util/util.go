@@ -47,8 +47,8 @@ func IsSafeValue(s string) (bool, string) {
 	return true, ""
 }
 
-// maxPathUnescape is how many times HasDotDot will PathUnescape a segment
-// string. One catch is Go's URL parser; two-three catch %252e double-encoding
+// maxPathUnescape is how many times decodePath will PathUnescape.
+// One catch is Go's URL parser; two-three catch %252e double-encoding
 // (OWASP path-traversal bypass). Bounded so a malformed % chain cannot loop.
 const maxPathUnescape = 3
 
@@ -58,18 +58,35 @@ const maxPathUnescape = 3
 // This checks slash/backslash-separated segments after a bounded unescape,
 // which is the same class of prefix-escape Traefik GHSA-vrch-868g-9jx5 hit.
 func HasDotDot(p string) bool {
-	return p != "" && hasDotDotSegment(decodePath(p))
+	if p == "" {
+		return false
+	}
+	// A ".." segment, or an encoding of one, must involve '.', '%', or '\'.
+	if strings.IndexByte(p, '.') < 0 &&
+		strings.IndexByte(p, '%') < 0 &&
+		strings.IndexByte(p, '\\') < 0 {
+		return false
+	}
+	return hasDotDotSegment(decodePath(p))
 }
 
 func decodePath(p string) string {
+	if strings.IndexByte(p, '%') < 0 && strings.IndexByte(p, '\\') < 0 {
+		return p
+	}
+	// Unescape first; PathUnescape does not treat '\' as special. '%'
+	// sequences (%5c → '\', %2e → '.') only become separators after
+	// unescape, so one trailing '\' → '/' pass is enough.
 	u := p
 	for range maxPathUnescape {
-		u = strings.ReplaceAll(u, `\`, "/")
 		next, err := url.PathUnescape(u)
 		if err != nil || next == u {
 			break
 		}
 		u = next
+	}
+	if strings.IndexByte(u, '\\') < 0 {
+		return u
 	}
 	return strings.ReplaceAll(u, `\`, "/")
 }
@@ -96,15 +113,19 @@ func HasSafePrefix(s string, prefix string) bool {
 	if prefix == "" {
 		return true
 	}
-
-	if s == "." || HasDotDot(s) {
+	if s == "." {
 		return false
 	}
 
-	// Decode then Clean so /api/v1/./flags and /api/v1/%2e/flags match
-	// /api/v1/flags. "." cannot leave a directory; only ".." can, and
-	// HasDotDot already rejected it. Prefix is controlled by us.
-	return strings.HasPrefix(path.Clean(decodePath(s)), prefix)
+	// Decode once: both the ".." reject and Clean need the unescaped path
+	// (/api/v1/%2e/flags → /api/v1/./flags). "." cannot leave a directory;
+	// only ".." can, and hasDotDotSegment already rejected it. Prefix is
+	// controlled by us.
+	decoded := decodePath(s)
+	if hasDotDotSegment(decoded) {
+		return false
+	}
+	return strings.HasPrefix(path.Clean(decoded), prefix)
 }
 
 // NewSecureRandomKey creates a new secure random key

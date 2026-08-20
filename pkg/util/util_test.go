@@ -218,6 +218,10 @@ func TestHasDotDot(t *testing.T) {
 		{name: "mixed encoded slash", p: "/api/v1/health/..%2fflags", want: true},
 		{name: "double-encoded parent", p: "/api/v1/%252e%252e/flags", want: true},
 		{name: "encoded backslash parent", p: `/api/v1/health%2f%2e%2e%5cflags`, want: true},
+		// Unescape-then-normalize: %5c becomes '\' only after PathUnescape.
+		{name: "encoded backslash then parent", p: `%5c%2e%2e%5c`, want: true},
+		{name: "literal backslash then encoded parent", p: `foo\%2e%2e`, want: true},
+		{name: "double-encoded backslash parent", p: `%255c%252e%252e`, want: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
