@@ -66,44 +66,6 @@ async function interceptEvalOnly(page: Page): Promise<void> {
   )
 }
 
-/**
- * A real eval-only backend: CRUD routes are unregistered (go-swagger 501s),
- * health resolves slower than main.ts's 1.5s mount bound. The UI must mount
- * fail-open, then recover through the export path once the mode arrives.
- */
-async function interceptEvalOnlyWithLateHealth(page: Page): Promise<void> {
-  await page.route('**/api/v1/**', (route) => route.abort())
-  await page.route('**/api/v1/flags**', (route) =>
-    route.fulfill({
-      status: 501,
-      contentType: 'application/json',
-      body: JSON.stringify('operation has not yet been implemented'),
-    }),
-  )
-  await page.route('**/api/v1/tags', (route) =>
-    route.fulfill({
-      status: 501,
-      contentType: 'application/json',
-      body: JSON.stringify('operation has not yet been implemented'),
-    }),
-  )
-  await page.route('**/api/v1/export/eval_cache/json', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(exportDump),
-    }),
-  )
-  await page.route('**/api/v1/health', async (route) => {
-    await new Promise((resolve) => setTimeout(resolve, 2500))
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ status: 'OK', evalOnlyMode: true }),
-    })
-  })
-}
-
 test.describe('read-only (eval-only) mode', () => {
   test.beforeEach(async ({ page }) => {
     await interceptEvalOnly(page)
@@ -155,6 +117,44 @@ test.describe('read-only (eval-only) mode', () => {
   })
 })
 
+/**
+ * A real eval-only backend: CRUD routes are unregistered (go-swagger 501s),
+ * health resolves slower than main.ts's 1.5s mount bound. The UI must mount
+ * fail-open, then recover through the export path once the mode arrives.
+ */
+async function interceptEvalOnlyWithLateHealth(page: Page): Promise<void> {
+  await page.route('**/api/v1/**', (route) => route.abort())
+  await page.route('**/api/v1/flags**', (route) =>
+    route.fulfill({
+      status: 501,
+      contentType: 'application/json',
+      body: JSON.stringify('operation has not yet been implemented'),
+    }),
+  )
+  await page.route('**/api/v1/tags', (route) =>
+    route.fulfill({
+      status: 501,
+      contentType: 'application/json',
+      body: JSON.stringify('operation has not yet been implemented'),
+    }),
+  )
+  await page.route('**/api/v1/export/eval_cache/json', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(exportDump),
+    }),
+  )
+  await page.route('**/api/v1/health', async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 2500))
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ status: 'OK', evalOnlyMode: true }),
+    })
+  })
+}
+
 test.describe('read-only mode with late /health', () => {
   test.beforeEach(async ({ page }) => {
     await interceptEvalOnlyWithLateHealth(page)
@@ -181,3 +181,4 @@ test.describe('read-only mode with late /health', () => {
     await expect(page.locator('[data-testid="readonly-banner"]')).toBeVisible()
   })
 })
+

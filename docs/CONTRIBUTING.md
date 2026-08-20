@@ -114,7 +114,7 @@ Whenever you change the API docs, refresh `docs/api_docs/bundle.yaml` so the hos
 
 ## UI architecture
 
-The flagr-ui TypeScript migration laid down the patterns the UI follows today — component layout, API client structure, and the as-built decisions behind them. Read it before a non-trivial frontend change: [`docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md`](https://github.com/openflagr/flagr/blob/main/docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md).
+The flagr-ui TypeScript migration laid down the patterns the UI follows today — component layout, API client structure, and the as-built decisions behind them. Read it before a non-trivial frontend change: [`docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md`](https://github.com/openflagr/flagr/blob/main/docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md). Eval-only (GitOps) read-only UI: [`docs/plans/2026-07-30-001-feat-eval-only-readonly-ui-plan.md`](https://github.com/openflagr/flagr/blob/main/docs/plans/2026-07-30-001-feat-eval-only-readonly-ui-plan.md).
 
 ## Performance
 

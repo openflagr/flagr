@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { clearDumpCache, fetchFlags, getFlag, getFlags, listAllTags, mapExportedFlag } from './evalCache'
+import { clearDumpCache, fetchFlags, getFlag, getFlags, listAllTags, mapExportedFlag } from './evalOnly'
 import { ApiHttpError } from './errors'
 
 /** PascalCase export fixture mirroring pkg/handler/testdata/sample_eval_cache.json. */
@@ -90,7 +90,7 @@ describe('mapExportedFlag', () => {
   })
 })
 
-describe('evalCache adapter', () => {
+describe('eval-only adapter', () => {
   const originalFetch = globalThis.fetch
 
   beforeEach(() => {

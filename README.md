@@ -63,7 +63,7 @@ That lets you **decouple deploy from release** (ship code dark, turn it on per a
 - **Duplicate flag** - `POST /flags/{id}/duplicate` or UI **Duplicate Flag**
 - **A/B testing** - deterministic assignment; pair with exposure logging
 - **Dynamic configuration** - `variantAttachment` JSON on eval responses
-- **GitOps** - `json_file` / `json_http`; `flagr-validate` in CI
+- **GitOps** - `json_file` / `json_http`; read-only UI; `flagr-validate` in CI
 - **Exposure logging** - `POST /exposures` for trustworthy denominators
 - **Self-hosted** - official Docker image + env vars
 - **Databases** - SQLite, MySQL, PostgreSQL, or JSON sources

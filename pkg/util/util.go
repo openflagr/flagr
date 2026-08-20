@@ -3,6 +3,7 @@ package util
 import (
 	"fmt"
 	"math"
+	"net/url"
 	"path"
 	"regexp"
 	"strings"
@@ -46,22 +47,85 @@ func IsSafeValue(s string) (bool, string) {
 	return true, ""
 }
 
-// HasSafePrefix checks if the given string is a safe URL path prefix
+// maxPathUnescape is how many times decodePath will PathUnescape.
+// One catch is Go's URL parser; two-three catch %252e double-encoding
+// (OWASP path-traversal bypass). Bounded so a malformed % chain cannot loop.
+const maxPathUnescape = 3
+
+// HasDotDot reports whether p contains a parent-directory path segment ("..").
+// Naive strings.Contains(p, "..") misses URL-encoded forms (%2e%2e, %252e%252e)
+// and backslash separators, and false-positives on names like "foo..bar".
+// This checks slash/backslash-separated segments after a bounded unescape,
+// which is the same class of prefix-escape Traefik GHSA-vrch-868g-9jx5 hit.
+func HasDotDot(p string) bool {
+	if p == "" {
+		return false
+	}
+	// A ".." segment, or an encoding of one, must involve '.', '%', or '\'.
+	if strings.IndexByte(p, '.') < 0 &&
+		strings.IndexByte(p, '%') < 0 &&
+		strings.IndexByte(p, '\\') < 0 {
+		return false
+	}
+	return hasDotDotSegment(decodePath(p))
+}
+
+func decodePath(p string) string {
+	if strings.IndexByte(p, '%') < 0 && strings.IndexByte(p, '\\') < 0 {
+		return p
+	}
+	// Unescape first; PathUnescape does not treat '\' as special. '%'
+	// sequences (%5c → '\', %2e → '.') only become separators after
+	// unescape, so one trailing '\' → '/' pass is enough.
+	u := p
+	for range maxPathUnescape {
+		next, err := url.PathUnescape(u)
+		if err != nil || next == u {
+			break
+		}
+		u = next
+	}
+	if strings.IndexByte(u, '\\') < 0 {
+		return u
+	}
+	return strings.ReplaceAll(u, `\`, "/")
+}
+
+func hasDotDotSegment(p string) bool {
+	for p != "" {
+		var seg string
+		if i := strings.IndexByte(p, '/'); i >= 0 {
+			seg, p = p[:i], p[i+1:]
+		} else {
+			seg, p = p, ""
+		}
+		if seg == ".." {
+			return true
+		}
+	}
+	return false
+}
+
+// HasSafePrefix checks if the given string is a safe URL path prefix.
+// A path with a ".." segment is never a safe prefix match (callers must
+// not skip JWT/basic whitelist or treat it as /api/v1/health, etc.).
 func HasSafePrefix(s string, prefix string) bool {
 	if prefix == "" {
 		return true
 	}
-
-	// Check for path traversal attempts or suspicious patterns
-	if s == "." || s == ".." || strings.Contains(s, "..") {
+	if s == "." {
 		return false
 	}
 
-	// First normalize the path (prefix is controlled by us, no need to clean it)
-	cleanedS := path.Clean(s)
-
-	// Check if the normalized path starts with the prefix
-	return strings.HasPrefix(cleanedS, prefix)
+	// Decode once: both the ".." reject and Clean need the unescaped path
+	// (/api/v1/%2e/flags → /api/v1/./flags). "." cannot leave a directory;
+	// only ".." can, and hasDotDotSegment already rejected it. Prefix is
+	// controlled by us.
+	decoded := decodePath(s)
+	if hasDotDotSegment(decoded) {
+		return false
+	}
+	return strings.HasPrefix(path.Clean(decoded), prefix)
 }
 
 // NewSecureRandomKey creates a new secure random key

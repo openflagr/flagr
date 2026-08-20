@@ -6,16 +6,21 @@ import "time"
 
 // Local auto-start server env (startLocalServer) — keep in sync with these durations.
 const (
-	integrationDatarFlushInterval     = 500 * time.Millisecond
-	integrationEvalCacheRefresh       = time.Second
-	integrationDatarFlushWaitMargin   = 100 * time.Millisecond
-	pollInterval                      = 500 * time.Millisecond
-	datarPollEvalsPerAttempt          = 5
-	datarPollTimeout                  = 30 * time.Second
-	exposureRecorderGateTimeout       = 15 * time.Second
-	serverHealthWaitTimeout           = 30 * time.Second
-	evalCacheReadyTimeout             = 20 * time.Second
-	integrationHTTPClientTimeout      = 10 * time.Second
+	integrationDatarFlushInterval   = 500 * time.Millisecond
+	integrationEvalCacheRefresh     = time.Second
+	integrationDatarFlushWaitMargin = 100 * time.Millisecond
+	pollInterval                    = 500 * time.Millisecond
+	datarPollEvalsPerAttempt        = 5
+	datarPollTimeout                = 30 * time.Second
+	exposureRecorderGateTimeout     = 15 * time.Second
+	serverHealthWaitTimeout         = 30 * time.Second
+	evalCacheReadyTimeout           = 20 * time.Second
+	integrationHTTPClientTimeout    = 10 * time.Second
+	// exportSQLiteTimeout is longer: GET /export/sqlite materializes a temp
+	// SQLite file (and, without exclude_snapshots, every flag_snapshot row)
+	// before writing response headers. Postgres 9 in Compose can exceed the
+	// default client timeout on a dirty integration DB.
+	exportSQLiteTimeout               = 30 * time.Second
 	integrationServerProcessWaitDelay = 5 * time.Second
 )
 

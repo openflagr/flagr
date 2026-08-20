@@ -10,6 +10,7 @@ describe('initServerMode', () => {
   })
 
   afterEach(() => {
+    evalOnlyMode.value = false
     globalThis.fetch = originalFetch
     vi.unstubAllGlobals()
   })

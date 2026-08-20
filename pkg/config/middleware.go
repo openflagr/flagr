@@ -4,10 +4,8 @@ import (
 	"crypto/subtle"
 	"fmt"
 	"net/http"
-	"path"
 	"slices"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/DataDog/datadog-go/statsd"
@@ -85,16 +83,16 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 		}))
 	}
 
+	// Before JWT/basic whitelist and evalOnlyDeny: a ".." path must not
+	// skip a prefix check and then get Clean()'d into a real route.
+	n.Use(negroni.HandlerFunc(rejectDotDotPath))
+
 	if Config.JWTAuthEnabled {
 		n.Use(setupJWTAuthMiddleware())
 	}
 
 	if Config.BasicAuthEnabled {
 		n.Use(setupBasicAuthMiddleware())
-	}
-
-	if Config.EvalOnlyMode {
-		n.Use(&evalOnlyDeny{})
 	}
 
 	if Config.UIEnabled {
@@ -107,6 +105,11 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 
 	n.Use(setupRecoveryMiddleware())
 
+	// Deny sits inside StripPrefix so it matches the API path the swagger
+	// router sees. ".." never reaches here (rejectDotDotPath).
+	if Config.EvalOnlyMode {
+		handler = newEvalOnlyDeny(handler)
+	}
 	if Config.WebPrefix != "" {
 		handler = http.StripPrefix(Config.WebPrefix, handler)
 	}
@@ -278,45 +281,78 @@ func (a *basicAuth) ServeHTTP(w http.ResponseWriter, req *http.Request, next htt
 	next(w, req)
 }
 
-// readOnlyDenyMsg explains why write operations are rejected in eval-only mode.
-// The shape matches the swagger Error model ({"message": ...}).
-const readOnlyDenyMsg = `{"message":"Flagr is running in read-only (eval-only) mode: ` +
-	`flags are managed via the JSON source (FLAGR_DB_DBDRIVER=json_file/json_http), ` +
-	`write APIs are disabled"}`
+// rejectDotDotPath rejects any request whose path has a ".." segment
+// (including %2e%2e / %252e%252e and backslash forms). That is a
+// prefix-escape: JWT/basic whitelist and evalOnlyDeny match prefixes, and
+// the router may Clean ".." into a real route. 401 matches the status JWT
+// already used for unwhitelisted ".." paths.
+func rejectDotDotPath(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
+	if requestHasDotDot(req) {
+		http.Error(w, "invalid path", http.StatusUnauthorized)
+		return
+	}
+	next(w, req)
+}
+
+func requestHasDotDot(req *http.Request) bool {
+	if util.HasDotDot(req.URL.Path) {
+		return true
+	}
+	// RawPath is the still-encoded form when it differs from Path (e.g. %2e%2e).
+	if req.URL.RawPath != "" && util.HasDotDot(req.URL.RawPath) {
+		return true
+	}
+	return false
+}
 
 // evalOnlyDeny rejects mutating requests to the flags API with 403 in
 // eval-only mode. Every CRUD write endpoint lives under /api/v1/flags, so one
 // method+prefix check covers them all; the JSON source stays the only write
 // path. Evaluation POSTs live under /api/v1/evaluation and pass through.
-type evalOnlyDeny struct{}
+//
+// Installed inside StripPrefix so it sees the path the swagger router sees.
+type evalOnlyDeny struct {
+	next      http.Handler
+	flagsPath string
+	denyMsg   []byte
+}
 
-func (d *evalOnlyDeny) ServeHTTP(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
+func newEvalOnlyDeny(next http.Handler) *evalOnlyDeny {
+	return &evalOnlyDeny{
+		next:      next,
+		flagsPath: "/api/v1/flags",
+		// Shape matches the swagger Error model ({"message": ...}).
+		denyMsg: []byte(`{"message":"Flagr is running in read-only (eval-only) mode: ` +
+			`flags are managed via the JSON source (FLAGR_DB_DBDRIVER=json_file/json_http), ` +
+			`write APIs are disabled"}`),
+	}
+}
+
+// isFlagsAPIPath reports whether p is a flags API path. Matching uses
+// HasSafePrefix (same primitive as JWT/basic whitelist). ".." is already
+// rejected by rejectDotDotPath; this only matches clean flags paths.
+func (d *evalOnlyDeny) isFlagsAPIPath(p string) bool {
+	// StripPrefix("/") and a trailing-slash WebPrefix leave the leftover
+	// without a leading slash.
+	if p != "" && p[0] != '/' {
+		p = "/" + p
+	}
+	return util.HasSafePrefix(p, d.flagsPath)
+}
+
+func (d *evalOnlyDeny) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case http.MethodGet, http.MethodHead, http.MethodOptions:
-		next(w, req)
+		d.next.ServeHTTP(w, req)
 		return
 	}
-
-	// Middlewares run before the WebPrefix StripPrefix on the API handler.
-	// Normalize before matching — the swagger router only normalizes later,
-	// so //api/v1/flags or /api/v1/x/../flags must not slip past the deny.
-	// Both normalization orders must hold: the router strips the prefix
-	// first and cleans later, so a ".." spanning the prefix boundary
-	// (/a/b/../api/v1/flags with WebPrefix /a/b) only shows up in cleanLast;
-	// cleanFirst covers the rest (the trailing slash of WebPrefix "/" or
-	// "/flagr/" is trimmed so cleaned paths keep their leading slash).
-	isFlags := func(p string) bool {
-		return p == "/api/v1/flags" || strings.HasPrefix(p, "/api/v1/flags/")
-	}
-	cleanFirst := strings.TrimPrefix(path.Clean(req.URL.Path), strings.TrimSuffix(Config.WebPrefix, "/"))
-	cleanLast := path.Clean("/" + strings.TrimPrefix(req.URL.Path, Config.WebPrefix))
-	if isFlags(cleanFirst) || isFlags(cleanLast) {
+	if d.isFlagsAPIPath(req.URL.Path) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusForbidden)
-		w.Write([]byte(readOnlyDenyMsg))
+		w.Write(d.denyMsg)
 		return
 	}
-	next(w, req)
+	d.next.ServeHTTP(w, req)
 }
 
 type statsdMiddleware struct {

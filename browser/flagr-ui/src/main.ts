@@ -26,7 +26,8 @@ app.directive('focus', {
 
 async function bootstrap(): Promise<void> {
   // Resolve the server mode before first paint so a read-only (eval-only)
-  // deployment never flashes editable controls.
+  // deployment never flashes editable controls. Past the bound, mount
+  // fail-open; a late /health can still flip evalOnlyMode afterward.
   await Promise.race([
     initServerMode(),
     new Promise<void>((resolve) => setTimeout(resolve, SERVER_MODE_TIMEOUT_MS)),

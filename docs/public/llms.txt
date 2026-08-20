@@ -37,7 +37,7 @@ kill switches, progressive rollouts, A/B tests, and runtime config.
 - Evaluation assigns a variant; exposure records that the experience was actually shown.
 - Sticky assignment uses entityID + flag configuration (no per-user state store required).
 - Optional variantAttachment JSON enables dynamic configuration on the same eval call.
-- Eval-only / GitOps mode can load flags from JSON (file or HTTP) with CI validation via flagr-validate.
+- Eval-only / GitOps mode can load flags from JSON (file or HTTP) with a read-only UI and CI validation via flagr-validate.
 - Built-in context keys (`@ts*`, `@http_*`) inject time and HTTP-derived attributes server-side.
 
 ## Optional

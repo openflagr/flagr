@@ -335,6 +335,31 @@ func TestJWTAuthMiddlewareWithUnauthorized(t *testing.T) {
 			})
 		}
 	})
+
+	t.Run("current-dir dots do not skip JWT whitelist", func(t *testing.T) {
+		Config.JWTAuthEnabled = true
+		Config.JWTAuthNoTokenStatusCode = http.StatusUnauthorized
+		defer func() {
+			Config.JWTAuthEnabled = false
+			Config.JWTAuthNoTokenStatusCode = http.StatusTemporaryRedirect
+		}()
+		hh := SetupGlobalMiddleware(h)
+
+		// "." / "././" collapse in place: still the whitelisted evaluation path.
+		for _, p := range []string{"/api/v1/./evaluation", "/api/v1/evaluation/./", "/api/v1/health/././"} {
+			t.Run(p+" allowed", func(t *testing.T) {
+				res := httptest.NewRecorder()
+				req, _ := http.NewRequest("GET", "http://localhost:18000"+p, nil)
+				hh.ServeHTTP(res, req)
+				assert.Equal(t, http.StatusOK, res.Code)
+			})
+		}
+		// Collapsed path is /api/v1/flags, which is not whitelisted.
+		res := httptest.NewRecorder()
+		req, _ := http.NewRequest("GET", "http://localhost:18000/api/v1/./flags", nil)
+		hh.ServeHTTP(res, req)
+		assert.Equal(t, http.StatusUnauthorized, res.Code)
+	})
 }
 
 func TestBasicAuthMiddleware(t *testing.T) {
@@ -421,6 +446,82 @@ func TestBasicAuthMiddleware(t *testing.T) {
 
 }
 
+func TestRejectDotDotPath(t *testing.T) {
+	h := &okHandler{}
+	hh := SetupGlobalMiddleware(h)
+
+	t.Run("it rejects paths containing .. with 401", func(t *testing.T) {
+		for _, p := range []string{
+			"/api/v1/health/../flags",
+			"/api/v1/xx/../flags",
+			"/../api/v1/flags",
+			"/..",
+			"/api/v1/evaluation/../evaluation",
+		} {
+			t.Run(p, func(t *testing.T) {
+				res := httptest.NewRecorder()
+				res.Body = new(bytes.Buffer)
+				req, _ := http.NewRequest("POST", fmt.Sprintf("http://localhost:18000%s", p), nil)
+				hh.ServeHTTP(res, req)
+				assert.Equal(t, http.StatusUnauthorized, res.Code)
+			})
+		}
+	})
+
+	t.Run("it ignores dots in the query string", func(t *testing.T) {
+		// GET /evaluation?json=... is a real API; ".." in the query must not
+		// be treated as a path segment (RequestURI includes the query).
+		for _, rawURL := range []string{
+			"http://localhost:18000/api/v1/evaluation?json=%7B%22p%22:%22../x%22%7D",
+			"http://localhost:18000/api/v1/evaluation?path=././foo",
+			"http://localhost:18000/api/v1/evaluation/batch?json=%2e%2e%2f",
+		} {
+			t.Run(rawURL, func(t *testing.T) {
+				res := httptest.NewRecorder()
+				req, err := http.NewRequest("GET", rawURL, nil)
+				assert.NoError(t, err)
+				hh.ServeHTTP(res, req)
+				assert.Equal(t, http.StatusOK, res.Code)
+				assert.NotContains(t, req.URL.Path, "..")
+			})
+		}
+	})
+
+	t.Run("it does not reject clean paths", func(t *testing.T) {
+		for _, p := range []string{"/api/v1/flags", "/api/v1/health", "/api/v1/evaluation", "/.", "/api/v1/foo..bar", "/api/v1/./flags", "/api/v1/././evaluation"} {
+			t.Run(p, func(t *testing.T) {
+				res := httptest.NewRecorder()
+				res.Body = new(bytes.Buffer)
+				req, _ := http.NewRequest("GET", fmt.Sprintf("http://localhost:18000%s", p), nil)
+				hh.ServeHTTP(res, req)
+				assert.Equal(t, http.StatusOK, res.Code)
+			})
+		}
+	})
+
+	t.Run("it rejects encoded and backslash parent segments", func(t *testing.T) {
+		for _, tc := range []struct {
+			path    string
+			rawPath string
+		}{
+			{path: "/api/v1/../flags", rawPath: ""},
+			{path: "/api/v1/%2e%2e/flags", rawPath: "/api/v1/%2e%2e/flags"},
+			{path: "/api/v1/%252e%252e/flags", rawPath: "/api/v1/%252e%252e/flags"},
+			{path: `/api/v1/health\..\flags`, rawPath: ""},
+		} {
+			t.Run(tc.path, func(t *testing.T) {
+				res := httptest.NewRecorder()
+				res.Body = new(bytes.Buffer)
+				req, _ := http.NewRequest("POST", "http://localhost:18000/x", nil)
+				req.URL.Path = tc.path
+				req.URL.RawPath = tc.rawPath
+				hh.ServeHTTP(res, req)
+				assert.Equal(t, http.StatusUnauthorized, res.Code)
+			})
+		}
+	})
+}
+
 func TestEvalOnlyDenyMiddleware(t *testing.T) {
 	h := &okHandler{}
 
@@ -445,12 +546,11 @@ func TestEvalOnlyDenyMiddleware(t *testing.T) {
 			{"PUT", "/api/v1/flags/1/segments/2/distributions"},
 			{"DELETE", "/api/v1/flags/1/segments/2/constraints/3"},
 			{"POST", "/api/v1/flags/1/tags"},
-			// Un-normalized paths must not slip past the deny — the swagger
-			// router only cleans them after the middleware chain.
 			{"POST", "//api/v1/flags"},
 			{"PUT", "//api/v1/flags/1/enabled"},
-			{"POST", "/api/v1/xx/../flags"},
 			{"DELETE", "/api/v1/flags/./1"},
+			{"POST", "/api/v1/./flags"},
+			{"POST", "/api/v1/././flags"},
 			{"POST", "/api/v1/flags/"},
 		}
 		for _, w := range writes {
@@ -502,7 +602,6 @@ func TestEvalOnlyDenyMiddleware(t *testing.T) {
 		for _, p := range []string{
 			"/flagr/api/v1/flags",
 			"/flagr//api/v1/flags",
-			"/flagr/api/v1/xx/../flags",
 		} {
 			res := httptest.NewRecorder()
 			res.Body = new(bytes.Buffer)
@@ -523,10 +622,6 @@ func TestEvalOnlyDenyMiddleware(t *testing.T) {
 			{"/flagr/", "/flagr//api/v1/flags"},
 			{"/", "/api/v1/flags"},
 			{"/", "//api/v1/flags"},
-			// Dot segments spanning the prefix boundary: the router strips
-			// the prefix before cleaning, so the deny must match that order.
-			{"/a/b", "/a/b/../api/v1/flags"},
-			{"/a/b/c", "/a/b/c/../../api/v1/flags"},
 			{"/flagr//", "/flagr///api/v1/flags"},
 		} {
 			t.Run(fmt.Sprintf("prefix %q path %s", tc.prefix, tc.path), func(t *testing.T) {
@@ -543,6 +638,34 @@ func TestEvalOnlyDenyMiddleware(t *testing.T) {
 		}
 	})
 
+	t.Run("dot-dot paths are rejected with 401 before the flags deny", func(t *testing.T) {
+		setEvalOnly(t)
+
+		for _, tc := range []struct {
+			prefix string
+			path   string
+		}{
+			{"", "/api/v1/xx/../flags"},
+			{"", "/api/v1/health/../flags"},
+			{"", "/../api/v1/flags"},
+			{"/flagr", "/flagr/api/v1/xx/../flags"},
+			{"/a/b", "/a/b/../api/v1/flags"},
+			{"/a/b/c", "/a/b/c/../../api/v1/flags"},
+		} {
+			t.Run(fmt.Sprintf("prefix %q path %s", tc.prefix, tc.path), func(t *testing.T) {
+				Config.WebPrefix = tc.prefix
+				defer func() { Config.WebPrefix = "" }()
+				hh := SetupGlobalMiddleware(h)
+
+				res := httptest.NewRecorder()
+				res.Body = new(bytes.Buffer)
+				req, _ := http.NewRequest("POST", fmt.Sprintf("http://localhost:18000%s", tc.path), nil)
+				hh.ServeHTTP(res, req)
+				assert.Equal(t, http.StatusUnauthorized, res.Code)
+			})
+		}
+	})
+
 	t.Run("it will not block writes when eval-only mode is off", func(t *testing.T) {
 		hh := SetupGlobalMiddleware(h)
 		res := httptest.NewRecorder()
@@ -551,4 +674,32 @@ func TestEvalOnlyDenyMiddleware(t *testing.T) {
 		hh.ServeHTTP(res, req)
 		assert.Equal(t, http.StatusOK, res.Code)
 	})
+}
+
+func TestIsFlagsAPIPath(t *testing.T) {
+	t.Parallel()
+	d := newEvalOnlyDeny(&okHandler{})
+	cases := []struct {
+		path string
+		want bool
+	}{
+		{path: "/api/v1/flags", want: true},
+		{path: "/api/v1/flags/", want: true},
+		{path: "/api/v1/flags/1", want: true},
+		{path: "//api/v1/flags", want: true},
+		{path: "/api/v1/flags/./1", want: true},
+		{path: "api/v1/flags", want: true},
+		{path: "/api/v1/evaluation", want: false},
+		{path: "/api/v1/health", want: false},
+		{path: "/api/v1/export/eval_cache/json", want: false},
+		// ".." never reaches this matcher (rejectDotDotPath). HasSafePrefix
+		// also refuses them, so they are not classified as flags writes.
+		{path: "/api/v1/health/../flags", want: false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.path, func(t *testing.T) {
+			t.Parallel()
+			assert.Equal(t, tc.want, d.isFlagsAPIPath(tc.path))
+		})
+	}
 }

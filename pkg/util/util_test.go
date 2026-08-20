@@ -193,6 +193,44 @@ func TestNewSecureRandomKey(t *testing.T) {
 	assert.True(t, ok)
 }
 
+func TestHasDotDot(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name string
+		p    string
+		want bool
+	}{
+		{name: "empty", p: "", want: false},
+		{name: "clean api path", p: "/api/v1/flags", want: false},
+		{name: "bare dots", p: "..", want: true},
+		{name: "leading parent", p: "/../api/v1/flags", want: true},
+		{name: "health prefix escape", p: "/api/v1/health/../flags", want: true},
+		{name: "nested parents", p: "/api/v1/flags/../../../etc/passwd", want: true},
+		{name: "dot segment only", p: "/api/./v1/flags", want: false},
+		{name: "repeated dot segments", p: "/api/v1/./././flags", want: false},
+		{name: "root dot", p: "/.", want: false},
+		{name: "encoded current dir", p: "/api/v1/%2e/flags", want: false},
+		{name: "dot then parent", p: "/api/v1/health/./../flags", want: true},
+		{name: "extra slashes", p: "/api///v1/flags", want: false},
+		{name: "name containing dots is not traversal", p: "/api/v1/foo..bar", want: false},
+		{name: "backslash parent", p: `/api/v1/health\..\flags`, want: true},
+		{name: "percent-encoded parent", p: "/api/v1/%2e%2e/flags", want: true},
+		{name: "mixed encoded slash", p: "/api/v1/health/..%2fflags", want: true},
+		{name: "double-encoded parent", p: "/api/v1/%252e%252e/flags", want: true},
+		{name: "encoded backslash parent", p: `/api/v1/health%2f%2e%2e%5cflags`, want: true},
+		// Unescape-then-normalize: %5c becomes '\' only after PathUnescape.
+		{name: "encoded backslash then parent", p: `%5c%2e%2e%5c`, want: true},
+		{name: "literal backslash then encoded parent", p: `foo\%2e%2e`, want: true},
+		{name: "double-encoded backslash parent", p: `%255c%252e%252e`, want: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			assert.Equal(t, tt.want, HasDotDot(tt.p), "HasDotDot(%q)", tt.p)
+		})
+	}
+}
+
 func TestHasSafePrefix(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
@@ -290,6 +328,60 @@ func TestHasSafePrefix(t *testing.T) {
 			s:      "api/v1/flags/123/settings",
 			prefix: "api/v1/flags",
 			want:   true,
+		},
+		{
+			name:   "encoded parent is not a safe prefix",
+			s:      "/api/v1/health/%2e%2e/flags",
+			prefix: "/api/v1/health",
+			want:   false,
+		},
+		{
+			name:   "double-encoded parent is not a safe prefix",
+			s:      "/api/v1/%252e%252e/flags",
+			prefix: "/api/v1",
+			want:   false,
+		},
+		{
+			name:   "dots in a file name are not traversal",
+			s:      "/api/v1/foo..bar",
+			prefix: "/api/v1",
+			want:   true,
+		},
+		{
+			name:   "current-dir dots still match evaluation whitelist",
+			s:      "/api/v1/./evaluation",
+			prefix: "/api/v1/evaluation",
+			want:   true,
+		},
+		{
+			name:   "repeated current-dir dots still match health whitelist",
+			s:      "/api/v1/health/././",
+			prefix: "/api/v1/health",
+			want:   true,
+		},
+		{
+			name:   "current-dir dots still match flags deny prefix",
+			s:      "/api/v1/././flags",
+			prefix: "/api/v1/flags",
+			want:   true,
+		},
+		{
+			name:   "encoded current-dir still matches flags",
+			s:      "/api/v1/%2e/flags",
+			prefix: "/api/v1/flags",
+			want:   true,
+		},
+		{
+			name:   "dot then parent cannot skip health whitelist",
+			s:      "/api/v1/health/./../flags",
+			prefix: "/api/v1/health",
+			want:   false,
+		},
+		{
+			name:   "dot then parent is not treated as flags via health",
+			s:      "/api/v1/health/./../flags",
+			prefix: "/api/v1/flags",
+			want:   false,
 		},
 	}
 

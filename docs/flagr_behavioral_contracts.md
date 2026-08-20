@@ -85,14 +85,23 @@ Registered surface:
 
 CRUD routes are **not registered**. Reads hit the generated 501s; **writes
 under `/api/v1/flags` return 403** with a message pointing at the JSON source
-(`evalOnlyDeny` middleware in `pkg/config/middleware.go`).
+(`evalOnlyDeny` in `pkg/config/middleware.go`). Matching uses
+`util.HasSafePrefix` (same primitive as JWT/basic whitelist).
 
-The UI stays available as a **read-only flag browser**: it discovers the mode
-via `GET /health`, then reads everything from the export endpoint through a
-frontend mapper (`browser/flagr-ui/src/api/evalCache.ts`) — no CRUD API
-involved. It shows a banner, hides write affordances, and keeps the Debug
-Console (evaluation works). The backend 403 is the enforcement; the UI hiding
-is UX. Change history lives in Git, so the History tab is hidden.
+A path with a `..` segment is a prefix-escape (`/api/v1/health/../flags`,
+`%2e%2e`, `%252e%252e`, `..\`). It is rejected with **401** by
+`rejectDotDotPath` (`util.HasDotDot`) **before** auth whitelist or the flags
+deny, so it cannot skip a prefix check and then be Clean()'d into a real
+write. Extra slashes and `.` are still cleaned by `HasSafePrefix`.
+
+The UI stays available as a **read-only flag browser**: `evalOnlyMode` on
+`GET /health` is the single source of truth. The UI derives its chrome and
+its read plane from that flag, then reads everything from the export
+endpoint through a frontend mapper (`browser/flagr-ui/src/api/evalOnly.ts`)
+— no CRUD API involved. It shows a banner, hides write affordances, and
+keeps the Debug Console (evaluation works). The backend 403 is the
+enforcement; the UI hiding is UX. Change history lives in Git, so the
+History tab is hidden.
 
 Absent: CRUD APIs, `POST /exposures`, Datar APIs, SQLite export, and the `flag_snapshot` short-circuit. There is no DB to snapshot, so EvalCache re-fetches the JSON source every poll interval.
 
