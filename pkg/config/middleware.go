@@ -4,10 +4,8 @@ import (
 	"crypto/subtle"
 	"fmt"
 	"net/http"
-	"path"
 	"slices"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/DataDog/datadog-go/statsd"
@@ -103,8 +101,8 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 
 	n.Use(setupRecoveryMiddleware())
 
-	// Deny sits inside StripPrefix so it matches the path the swagger
-	// router sees: one Clean(), no dual-order prefix games.
+	// Deny sits inside StripPrefix so it matches the API path the swagger
+	// router sees, using HasSafePrefix (same primitive as JWT/basic whitelist).
 	if Config.EvalOnlyMode {
 		handler = evalOnlyDeny(handler)
 	}
@@ -287,31 +285,23 @@ const readOnlyDenyMsg = `{"message":"Flagr is running in read-only (eval-only) m
 
 const flagsAPIPath = "/api/v1/flags"
 
-// canonicalAPIPath puts a leading slash back (StripPrefix("/") and a
-// trailing-slash WebPrefix leave the leftover without one) and Cleans
-// dot-segments so //api/v1/flags and /api/v1/x/../flags match the same.
-func canonicalAPIPath(p string) string {
-	if p == "" {
-		return "/"
-	}
-	if p[0] != '/' {
+// isFlagsAPIPath reports whether p is a flags API path. Matching uses
+// HasSafePrefix — the same primitive JWT/basic whitelist uses — so a ".."
+// prefix-escape (e.g. /../api/v1/flags after StripPrefix, or
+// /api/v1/health/../flags) is illegal and is not treated as a flags write.
+func isFlagsAPIPath(p string) bool {
+	// StripPrefix("/") and a trailing-slash WebPrefix leave the leftover
+	// without a leading slash. Restore it; do not Clean ".." into /api/v1/flags.
+	if p != "" && p[0] != '/' {
 		p = "/" + p
 	}
-	return path.Clean(p)
-}
-
-func isFlagsAPIPath(p string) bool {
-	p = canonicalAPIPath(p)
-	return p == flagsAPIPath || strings.HasPrefix(p, flagsAPIPath+"/")
+	return util.HasSafePrefix(p, flagsAPIPath)
 }
 
 // evalOnlyDeny rejects mutating requests to the flags API with 403 in
 // eval-only mode. Every CRUD write endpoint lives under /api/v1/flags, so one
 // method+prefix check covers them all; the JSON source stays the only write
 // path. Evaluation POSTs live under /api/v1/evaluation and pass through.
-//
-// Installed inside http.StripPrefix so it sees the path the swagger router
-// sees — including leftover "/../api/v1/flags" when a ".." spans the prefix.
 func evalOnlyDeny(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		switch req.Method {
