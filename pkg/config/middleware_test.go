@@ -468,6 +468,25 @@ func TestRejectDotDotPath(t *testing.T) {
 		}
 	})
 
+	t.Run("it ignores dots in the query string", func(t *testing.T) {
+		// GET /evaluation?json=... is a real API; ".." in the query must not
+		// be treated as a path segment (RequestURI includes the query).
+		for _, rawURL := range []string{
+			"http://localhost:18000/api/v1/evaluation?json=%7B%22p%22:%22../x%22%7D",
+			"http://localhost:18000/api/v1/evaluation?path=././foo",
+			"http://localhost:18000/api/v1/evaluation/batch?json=%2e%2e%2f",
+		} {
+			t.Run(rawURL, func(t *testing.T) {
+				res := httptest.NewRecorder()
+				req, err := http.NewRequest("GET", rawURL, nil)
+				assert.NoError(t, err)
+				hh.ServeHTTP(res, req)
+				assert.Equal(t, http.StatusOK, res.Code)
+				assert.NotContains(t, req.URL.Path, "..")
+			})
+		}
+	})
+
 	t.Run("it does not reject clean paths", func(t *testing.T) {
 		for _, p := range []string{"/api/v1/flags", "/api/v1/health", "/api/v1/evaluation", "/.", "/api/v1/foo..bar", "/api/v1/./flags", "/api/v1/././evaluation"} {
 			t.Run(p, func(t *testing.T) {
