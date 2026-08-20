@@ -429,6 +429,14 @@ export default {
     searchTerm() {
       this.debouncedUpdate?.()
     },
+    // Late /health (past the 1.5s mount bound): the initial fetch went
+    // through the CRUD path, which a real eval-only server doesn't register —
+    // refetch through the export path once the mode is known.
+    evalOnlyMode(readonly: boolean) {
+      if (readonly) {
+        flagsListPage.refreshFlags(this.page)
+      }
+    },
   },
 
   beforeUnmount() {

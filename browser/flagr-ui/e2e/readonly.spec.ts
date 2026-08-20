@@ -116,3 +116,69 @@ test.describe('read-only (eval-only) mode', () => {
     await expect(page.locator('#tab-config')).toHaveClass(/is-active/)
   })
 })
+
+/**
+ * A real eval-only backend: CRUD routes are unregistered (go-swagger 501s),
+ * health resolves slower than main.ts's 1.5s mount bound. The UI must mount
+ * fail-open, then recover through the export path once the mode arrives.
+ */
+async function interceptEvalOnlyWithLateHealth(page: Page): Promise<void> {
+  await page.route('**/api/v1/**', (route) => route.abort())
+  await page.route('**/api/v1/flags**', (route) =>
+    route.fulfill({
+      status: 501,
+      contentType: 'application/json',
+      body: JSON.stringify('operation has not yet been implemented'),
+    }),
+  )
+  await page.route('**/api/v1/tags', (route) =>
+    route.fulfill({
+      status: 501,
+      contentType: 'application/json',
+      body: JSON.stringify('operation has not yet been implemented'),
+    }),
+  )
+  await page.route('**/api/v1/export/eval_cache/json', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(exportDump),
+    }),
+  )
+  await page.route('**/api/v1/health', async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 2500))
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ status: 'OK', evalOnlyMode: true }),
+    })
+  })
+}
+
+test.describe('read-only mode with late /health', () => {
+  test.beforeEach(async ({ page }) => {
+    await interceptEvalOnlyWithLateHealth(page)
+  })
+
+  test('flags list recovers through the export path once the mode arrives', async ({ page }) => {
+    await page.goto('/')
+
+    // Mounts fail-open at 1.5s; the CRUD fetch 501s; once health resolves,
+    // the mode flip refetches from the export dump.
+    await expect(page.getByText('readonly e2e demo flag')).toBeVisible({ timeout: 10000 })
+    await expect(page.locator('[data-testid="readonly-banner"]')).toBeVisible()
+    await expect(page.locator('[data-testid="create-flag-btn"]')).toHaveCount(0)
+  })
+
+  test('flag detail recovers through the export path once the mode arrives', async ({ page }) => {
+    await page.goto('/#/flags/1')
+
+    await expect(page.locator('input[data-testid="flag-key-input"]')).toHaveValue(
+      'readonly_demo_flag',
+      { timeout: 10000 },
+    )
+    await expect(page.locator('#tab-history')).toHaveCount(0)
+    await expect(page.locator('[data-testid="readonly-banner"]')).toBeVisible()
+  })
+})
+

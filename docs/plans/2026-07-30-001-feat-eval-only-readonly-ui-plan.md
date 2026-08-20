@@ -128,13 +128,13 @@ while all writes stay rejected.
 | `browser/flagr-ui/src/main.ts` | mode resolved before first paint (1.5s bound, fail-open) |
 | `browser/flagr-ui/src/App.vue` | read-only banner |
 | `browser/flagr-ui/src/components/Flags.vue` | hide Create Flag + Deleted Flags in read-only |
-| `browser/flagr-ui/src/components/Flag.vue` | hide Flag Management + History tab; pass `readonly` to sections |
+| `browser/flagr-ui/src/components/Flag.vue` | hide Flag Management + History tab; pass `readonly` to sections; snap to Config if mode turns read-only |
 | `browser/flagr-ui/src/pages/flagPage.ts` (+ test) | `applyDeepLink` routes history deep links to Config in read-only mode |
 | `browser/flagr-ui/src/components/FlagConfigCard.vue` | `readonly` prop: disable inputs/switches, hide save/tag/notes-edit controls |
 | `browser/flagr-ui/src/components/VariantsSection.vue` | `readonly` prop: disable key input, read-only attachment editor, hide actions/add row |
 | `browser/flagr-ui/src/components/SegmentsSection.vue` | `readonly` prop: disable inputs, hide reorder/new/save/delete/edit-distribution |
 | `browser/flagr-ui/src/components/ConstraintExistingRow.vue`, `ConstraintValueCell.vue` | `readonly`/`disabled` props threaded to constraint cells |
-| `browser/flagr-ui/e2e/readonly.spec.ts` | Playwright: banner, hidden write affordances, disabled inputs, Debug Console present, history deep link → Config |
+| `browser/flagr-ui/e2e/readonly.spec.ts` | Playwright: banner, hidden write affordances, Debug Console, history deep link → Config, late `/health` recovery |
 | `docs/flagr_behavioral_contracts.md`, `flagr_env.md`, `flagr_json_flag_spec.md`, `integration.md`, `flagr_overview.md` | eval-only contract update |
 
 ## Screenshots (json_file source, 3 sample flags)
@@ -155,16 +155,18 @@ tab, Debug Console available:
 ## As-built notes
 
 - Deep-linking `?tab=history` on a read-only instance routes to the Config tab
-  (`applyDeepLink` guards on `evalOnlyMode`). Mode is resolved before mount,
-  so the deep link never opens a History tab that then disappears. Change
-  history for JSON-sourced flags lives in Git.
+  (`applyDeepLink` guards on `evalOnlyMode`; a `Flag.vue` watcher covers the
+  race where `/health` resolves after the deep link already opened History).
+  Change history for JSON-sourced flags lives in Git.
 - The app resolves the server mode **before first paint**: `main.ts` races
   `initServerMode()` against a 1.5s timer before `app.mount`, so a read-only
   deployment never flashes editable controls. If `/health` exceeds the bound,
-  the app mounts fail-open (editable UI, backend 403 backstop). A late health
-  response can still set `evalOnlyMode`; chrome and a Retry then use the
-  export path. `refreshFlags` ends its loading state on failure — error
-  toast + empty state, never an endless spinner.
+  the app mounts fail-open (editable UI, backend 403 backstop) and the first
+  fetch goes through the CRUD path, which 501s on a real eval-only server.
+  When the late health response flips `evalOnlyMode`, watchers on the list
+  and detail pages refetch through the export path (covered by the
+  "late /health" Playwright tests). `refreshFlags` ends its loading state
+  on failure — error toast + empty state, never an endless spinner.
 - `evalOnlyDeny` sits inside `StripPrefix` and matches with `HasSafePrefix`.
   `/../api/v1/flags` and `/api/v1/health/../flags` are prefix-escape attacks
   (same rule as JWT/basic whitelist): illegal, not 403'd as flags writes.
