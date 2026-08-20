@@ -64,15 +64,12 @@ while all writes stay rejected.
    sorted by ID (the export iterates a Go map — order is random per fetch);
    segment order is kept as exported because in json mode source order **is**
    evaluation order.
-3. **Read branch in `crud.ts`** — the read functions check `evalOnlyMode`:
-   - `listFlagsIfStale` → always refetch the export on list mount (no change
-     token; the dump is small), reverse for newest-first display.
-   - `getFlag` / `listAllTags` → from the mapped dump (tags deduped by value —
-     in the JSON source the same value on two flags is two entities).
-   - `listEntityTypes`, `listFlagSnapshots`, `listDeletedFlags` → resolve `[]`
-     locally without network (entity types are DB-only; history lives in Git;
-     JSON sources have no soft-deletes).
-   Components and pages are unchanged — the branch lives in one module.
+3. **Read source in `crud.ts`** — `setFlagReadSource('evalCache' | 'http')`
+   selects the read plane once when the server mode is known. Eval-cache
+   reads: refetch the export on list mount (no change token), `getFlag` /
+   `listAllTags` from the mapped dump (tags deduped by value), and
+   `listEntityTypes` / `listFlagSnapshots` / `listDeletedFlags` resolve `[]`
+   locally. Components and pages stay unaware of the source.
 4. **Read-only rendering** — components import the ref directly (no prop
    drilling):
    - Global banner: "Read-only (GitOps) mode — flags are managed via the JSON source".
@@ -115,12 +112,12 @@ while all writes stay rejected.
 | `swagger/index.yaml` | `health` definition gains `evalOnlyMode` boolean |
 | `docs/api_docs/bundle.yaml`, `swagger_gen/` | regenerated (`make gen`) |
 | `pkg/handler/handler.go` | health returns `evalOnlyMode` |
-| `pkg/config/middleware.go` (+ test) | `evalOnlyDeny`: 403 for non-GET under `/api/v1/flags` in eval-only mode |
+| `pkg/config/middleware.go` (+ test) | `evalOnlyDeny` wraps the API handler inside `StripPrefix`; 403 for non-GET under `/api/v1/flags` |
 | `browser/flagr-ui/src/api/evalCache.ts` (+ test) | export fetch + PascalCase→camelCase mapper + mapped-dump cache |
-| `browser/flagr-ui/src/api/crud.ts` (+ test) | read functions branch to the export adapter in eval-only mode |
+| `browser/flagr-ui/src/api/crud.ts` (+ test) | `setFlagReadSource` selects HTTP vs export-adapter reads |
 | `browser/flagr-ui/src/api/health.ts`, `api/types.ts` | `getHealth` + `Health` DTO |
 | `browser/flagr-ui/src/helpers/serverMode.ts` (+ test) | reactive `evalOnlyMode` ref, `initServerMode()` (fail-open) |
-| `browser/flagr-ui/src/main.ts` | mode resolved before first paint (1.5s bound, fail-open) |
+| `browser/flagr-ui/src/main.ts` | mode resolved before first paint (1.5s AbortSignal bound, fail-open) |
 | `browser/flagr-ui/src/App.vue` | read-only banner |
 | `browser/flagr-ui/src/components/Flags.vue` | hide Create Flag + Deleted Flags in read-only |
 | `browser/flagr-ui/src/components/Flag.vue` | hide Flag Management + History tab; pass `readonly` to sections; snap to Config if mode turns read-only |
@@ -150,19 +147,17 @@ tab, Debug Console available:
 ## As-built notes
 
 - Deep-linking `?tab=history` on a read-only instance routes to the Config tab
-  (`applyDeepLink` guards on `evalOnlyMode`; a `Flag.vue` watcher covers the
-  race where `/health` resolves after the deep link already opened History).
-  Change history for JSON-sourced flags lives in Git.
+  (`applyDeepLink` guards on `evalOnlyMode`). Mode is resolved before mount,
+  so the deep link never opens a History tab that then disappears. Change
+  history for JSON-sourced flags lives in Git.
 - The app resolves the server mode **before first paint**: `main.ts` awaits
-  `initServerMode()` (bounded by a 1.5s timeout) before `app.mount`, so a
+  `initServerMode()` with a 1.5s `AbortSignal` bound before `app.mount`, so a
   read-only deployment never flashes editable controls. If `/health` exceeds
-  the timeout, the app mounts fail-open (editable UI, backend 403 backstop)
-  and the first fetch goes through the CRUD path, which 501s on a real
-  eval-only server. When the late health response flips `evalOnlyMode`,
-  watchers on the list and detail pages refetch through the export path, so
-  the UI self-heals instead of spinning forever (covered by the
-  "late /health" Playwright tests). `refreshFlags` also ends its loading
-  state on failure — error toast + empty state, never an endless spinner.
+  the bound, the fetch is aborted and the app mounts fail-open (editable UI,
+  backend 403 backstop). A late health response cannot flip the read source
+  after that decision — pages fetch once, through the path chosen at mount.
+  `refreshFlags` ends its loading state on failure — error toast + empty
+  state, never an endless spinner.
 - In eval-only mode the CRUD read routes return the generated 501s (same as
   main). Tooling that needs flag data from an eval edge node should read
   `GET /api/v1/export/eval_cache/json`, exactly like the UI does.

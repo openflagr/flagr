@@ -17,7 +17,6 @@ import type {
 import type { ApiResult } from './result'
 import { ok } from './result'
 import { requestJson, requestVoid } from './http'
-import { evalOnlyMode } from '@/helpers/serverMode'
 import * as evalCache from './evalCache'
 
 type FlagId = string | number
@@ -34,16 +33,22 @@ export const listFlags = (): Promise<ApiResult<Flag[]>> => get('/flags')
 export const getSnapshotMaxId = (): Promise<ApiResult<SnapshotMaxId>> =>
   get('/flags/snapshots/max_id')
 
-export async function listFlagsIfStale(
+export type FlagReadSource = 'http' | 'evalCache'
+
+interface FlagReads {
+  listFlagsIfStale: (
+    cachedMaxId: number | undefined,
+  ) => Promise<ApiResult<{ flags: Flag[]; maxSnapshotID: number } | null>>
+  getFlag: (flagId: FlagId) => Promise<ApiResult<Flag>>
+  listAllTags: () => Promise<ApiResult<Tag[]>>
+  listDeletedFlags: () => Promise<ApiResult<Flag[]>>
+  listFlagSnapshots: (flagId: FlagId) => Promise<ApiResult<FlagSnapshot[]>>
+  listEntityTypes: () => Promise<ApiResult<string[]>>
+}
+
+async function listFlagsIfStaleFromHTTP(
   cachedMaxId: number | undefined,
 ): Promise<ApiResult<{ flags: Flag[]; maxSnapshotID: number } | null>> {
-  if (evalOnlyMode.value) {
-    // Eval-only mode has no snapshots — refetch the export dump on every
-    // list mount so JSON source changes show up without a change token.
-    const flagsRes = await evalCache.fetchFlags()
-    if (!flagsRes.ok) return flagsRes
-    return ok({ flags: [...flagsRes.value].reverse(), maxSnapshotID: 0 })
-  }
   const maxRes = await getSnapshotMaxId()
   if (!maxRes.ok) return maxRes
   const { maxID } = maxRes.value
@@ -55,17 +60,60 @@ export async function listFlagsIfStale(
   return ok({ flags: [...flagsRes.value].reverse(), maxSnapshotID: maxID })
 }
 
-export const listDeletedFlags = (): Promise<ApiResult<Flag[]>> =>
-  // The JSON source has no soft-deleted flags (the button is hidden anyway).
-  evalOnlyMode.value ? Promise.resolve(ok([])) : get('/flags?deleted=true')
+async function listFlagsIfStaleFromEvalCache(): Promise<
+  ApiResult<{ flags: Flag[]; maxSnapshotID: number } | null>
+> {
+  // No snapshots in eval-only mode — refetch the export dump on every list
+  // mount so JSON source changes show up without a change token.
+  const flagsRes = await evalCache.fetchFlags()
+  if (!flagsRes.ok) return flagsRes
+  return ok({ flags: [...flagsRes.value].reverse(), maxSnapshotID: 0 })
+}
+
+const httpReads: FlagReads = {
+  listFlagsIfStale: listFlagsIfStaleFromHTTP,
+  getFlag: (flagId) => get(flag(flagId)),
+  listAllTags: () => get('/tags'),
+  listDeletedFlags: () => get('/flags?deleted=true'),
+  listFlagSnapshots: (flagId) => get(`${flag(flagId)}/snapshots`),
+  listEntityTypes: () => get('/flags/entity_types'),
+}
+
+const evalCacheReads: FlagReads = {
+  listFlagsIfStale: listFlagsIfStaleFromEvalCache,
+  getFlag: evalCache.getFlag,
+  listAllTags: evalCache.listAllTags,
+  // JSON sources have no soft-deletes; history lives in Git; entity types
+  // are recorded into the DB on evaluation — none of that exists here.
+  listDeletedFlags: () => Promise.resolve(ok([])),
+  listFlagSnapshots: () => Promise.resolve(ok([])),
+  listEntityTypes: () => Promise.resolve(ok([])),
+}
+
+let reads: FlagReads = httpReads
+
+/** Swap the flag read plane. Called once when the server mode is known. */
+export function setFlagReadSource(source: FlagReadSource): void {
+  reads = source === 'evalCache' ? evalCacheReads : httpReads
+}
+
+export function getFlagReadSource(): FlagReadSource {
+  return reads === evalCacheReads ? 'evalCache' : 'http'
+}
+
+export const listFlagsIfStale = (
+  cachedMaxId: number | undefined,
+): Promise<ApiResult<{ flags: Flag[]; maxSnapshotID: number } | null>> =>
+  reads.listFlagsIfStale(cachedMaxId)
+
+export const listDeletedFlags = (): Promise<ApiResult<Flag[]>> => reads.listDeletedFlags()
 
 export const createFlag = (body: CreateFlagPayload): Promise<ApiResult<Flag>> => post('/flags', body)
 
 export const restoreFlag = (flagId: number): Promise<ApiResult<Flag>> =>
   requestJson<Flag>({ method: 'PUT', path: `${flag(flagId)}/restore` })
 
-export const getFlag = (flagId: FlagId): Promise<ApiResult<Flag>> =>
-  evalOnlyMode.value ? evalCache.getFlag(flagId) : get(flag(flagId))
+export const getFlag = (flagId: FlagId): Promise<ApiResult<Flag>> => reads.getFlag(flagId)
 
 export const duplicateFlag = (
   flagId: FlagId,
@@ -85,8 +133,7 @@ export const setFlagEnabled = (
 
 export const deleteFlag = (flagId: FlagId): Promise<ApiResult<void>> => del(flag(flagId))
 
-export const listAllTags = (): Promise<ApiResult<Tag[]>> =>
-  evalOnlyMode.value ? evalCache.listAllTags() : get('/tags')
+export const listAllTags = (): Promise<ApiResult<Tag[]>> => reads.listAllTags()
 
 export const createTag = (flagId: FlagId, value: string): Promise<ApiResult<Tag>> =>
   post(`${flag(flagId)}/tags`, { value })
@@ -170,12 +217,9 @@ export const putSegmentDistributions = (
   })
 
 export const listFlagSnapshots = (flagId: FlagId): Promise<ApiResult<FlagSnapshot[]>> =>
-  // Change history for JSON-sourced flags lives in Git (the tab is hidden anyway).
-  evalOnlyMode.value ? Promise.resolve(ok([])) : get(`${flag(flagId)}/snapshots`)
+  reads.listFlagSnapshots(flagId)
 
-export const listEntityTypes = (): Promise<ApiResult<string[]>> =>
-  // Entity types are recorded on evaluation into the DB; none exists here.
-  evalOnlyMode.value ? Promise.resolve(ok([])) : get('/flags/entity_types')
+export const listEntityTypes = (): Promise<ApiResult<string[]>> => reads.listEntityTypes()
 
 export interface FlagPageLoad {
   flag: Flag

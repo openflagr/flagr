@@ -26,11 +26,16 @@ app.directive('focus', {
 
 async function bootstrap(): Promise<void> {
   // Resolve the server mode before first paint so a read-only (eval-only)
-  // deployment never flashes editable controls.
-  await Promise.race([
-    initServerMode(),
-    new Promise<void>((resolve) => setTimeout(resolve, SERVER_MODE_TIMEOUT_MS)),
-  ])
+  // deployment never flashes editable controls. Aborting the health fetch
+  // at the bound fail-opens and prevents a late response from flipping
+  // the read source after the first paint already chose a path.
+  const ac = new AbortController()
+  const timer = window.setTimeout(() => ac.abort(), SERVER_MODE_TIMEOUT_MS)
+  try {
+    await initServerMode(ac.signal)
+  } finally {
+    window.clearTimeout(timer)
+  }
   app.mount('#app')
 }
 

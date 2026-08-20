@@ -43,7 +43,7 @@ export function refreshFlags(vm: FlagsListVm): void {
       vm.loaded = true
     },
     // End the loading state on failure: an explicit error state beats an
-    // endless spinner, and a later evalOnlyMode flip can refetch.
+    // endless spinner.
     onFailure: () => {
       vm.loaded = true
       vm.loadFailed = true

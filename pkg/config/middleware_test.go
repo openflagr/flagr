@@ -445,8 +445,7 @@ func TestEvalOnlyDenyMiddleware(t *testing.T) {
 			{"PUT", "/api/v1/flags/1/segments/2/distributions"},
 			{"DELETE", "/api/v1/flags/1/segments/2/constraints/3"},
 			{"POST", "/api/v1/flags/1/tags"},
-			// Un-normalized paths must not slip past the deny — the swagger
-			// router only cleans them after the middleware chain.
+			// Un-normalized paths must not slip past the deny.
 			{"POST", "//api/v1/flags"},
 			{"PUT", "//api/v1/flags/1/enabled"},
 			{"POST", "/api/v1/xx/../flags"},
@@ -523,8 +522,8 @@ func TestEvalOnlyDenyMiddleware(t *testing.T) {
 			{"/flagr/", "/flagr//api/v1/flags"},
 			{"/", "/api/v1/flags"},
 			{"/", "//api/v1/flags"},
-			// Dot segments spanning the prefix boundary: the router strips
-			// the prefix before cleaning, so the deny must match that order.
+			// Dot segments spanning the prefix boundary: StripPrefix leaves
+			// "/../api/v1/flags", which canonicalAPIPath must still match.
 			{"/a/b", "/a/b/../api/v1/flags"},
 			{"/a/b/c", "/a/b/c/../../api/v1/flags"},
 			{"/flagr//", "/flagr///api/v1/flags"},
@@ -551,4 +550,30 @@ func TestEvalOnlyDenyMiddleware(t *testing.T) {
 		hh.ServeHTTP(res, req)
 		assert.Equal(t, http.StatusOK, res.Code)
 	})
+}
+
+func TestIsFlagsAPIPath(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		path string
+		want bool
+	}{
+		{path: "/api/v1/flags", want: true},
+		{path: "/api/v1/flags/", want: true},
+		{path: "/api/v1/flags/1", want: true},
+		{path: "//api/v1/flags", want: true},
+		{path: "/api/v1/xx/../flags", want: true},
+		{path: "/api/v1/flags/./1", want: true},
+		{path: "api/v1/flags", want: true},
+		{path: "/../api/v1/flags", want: true},
+		{path: "/api/v1/evaluation", want: false},
+		{path: "/api/v1/health", want: false},
+		{path: "/api/v1/export/eval_cache/json", want: false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.path, func(t *testing.T) {
+			t.Parallel()
+			assert.Equal(t, tc.want, isFlagsAPIPath(tc.path))
+		})
+	}
 }

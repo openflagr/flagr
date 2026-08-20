@@ -93,10 +93,6 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 		n.Use(setupBasicAuthMiddleware())
 	}
 
-	if Config.EvalOnlyMode {
-		n.Use(&evalOnlyDeny{})
-	}
-
 	if Config.UIEnabled {
 		n.Use(&negroni.Static{
 			Dir:       http.Dir("./browser/flagr-ui/dist/"),
@@ -107,6 +103,11 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 
 	n.Use(setupRecoveryMiddleware())
 
+	// Deny sits inside StripPrefix so it matches the path the swagger
+	// router sees: one Clean(), no dual-order prefix games.
+	if Config.EvalOnlyMode {
+		handler = evalOnlyDeny(handler)
+	}
 	if Config.WebPrefix != "" {
 		handler = http.StripPrefix(Config.WebPrefix, handler)
 	}
@@ -284,39 +285,48 @@ const readOnlyDenyMsg = `{"message":"Flagr is running in read-only (eval-only) m
 	`flags are managed via the JSON source (FLAGR_DB_DBDRIVER=json_file/json_http), ` +
 	`write APIs are disabled"}`
 
+const flagsAPIPath = "/api/v1/flags"
+
+// canonicalAPIPath puts a leading slash back (StripPrefix("/") and a
+// trailing-slash WebPrefix leave the leftover without one) and Cleans
+// dot-segments so //api/v1/flags and /api/v1/x/../flags match the same.
+func canonicalAPIPath(p string) string {
+	if p == "" {
+		return "/"
+	}
+	if p[0] != '/' {
+		p = "/" + p
+	}
+	return path.Clean(p)
+}
+
+func isFlagsAPIPath(p string) bool {
+	p = canonicalAPIPath(p)
+	return p == flagsAPIPath || strings.HasPrefix(p, flagsAPIPath+"/")
+}
+
 // evalOnlyDeny rejects mutating requests to the flags API with 403 in
 // eval-only mode. Every CRUD write endpoint lives under /api/v1/flags, so one
 // method+prefix check covers them all; the JSON source stays the only write
 // path. Evaluation POSTs live under /api/v1/evaluation and pass through.
-type evalOnlyDeny struct{}
-
-func (d *evalOnlyDeny) ServeHTTP(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
-	switch req.Method {
-	case http.MethodGet, http.MethodHead, http.MethodOptions:
-		next(w, req)
-		return
-	}
-
-	// Middlewares run before the WebPrefix StripPrefix on the API handler.
-	// Normalize before matching — the swagger router only normalizes later,
-	// so //api/v1/flags or /api/v1/x/../flags must not slip past the deny.
-	// Both normalization orders must hold: the router strips the prefix
-	// first and cleans later, so a ".." spanning the prefix boundary
-	// (/a/b/../api/v1/flags with WebPrefix /a/b) only shows up in cleanLast;
-	// cleanFirst covers the rest (the trailing slash of WebPrefix "/" or
-	// "/flagr/" is trimmed so cleaned paths keep their leading slash).
-	isFlags := func(p string) bool {
-		return p == "/api/v1/flags" || strings.HasPrefix(p, "/api/v1/flags/")
-	}
-	cleanFirst := strings.TrimPrefix(path.Clean(req.URL.Path), strings.TrimSuffix(Config.WebPrefix, "/"))
-	cleanLast := path.Clean("/" + strings.TrimPrefix(req.URL.Path, Config.WebPrefix))
-	if isFlags(cleanFirst) || isFlags(cleanLast) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusForbidden)
-		w.Write([]byte(readOnlyDenyMsg))
-		return
-	}
-	next(w, req)
+//
+// Installed inside http.StripPrefix so it sees the path the swagger router
+// sees — including leftover "/../api/v1/flags" when a ".." spans the prefix.
+func evalOnlyDeny(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		switch req.Method {
+		case http.MethodGet, http.MethodHead, http.MethodOptions:
+			next.ServeHTTP(w, req)
+			return
+		}
+		if isFlagsAPIPath(req.URL.Path) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusForbidden)
+			w.Write([]byte(readOnlyDenyMsg))
+			return
+		}
+		next.ServeHTTP(w, req)
+	})
 }
 
 type statsdMiddleware struct {
