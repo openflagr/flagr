@@ -88,10 +88,11 @@ under `/api/v1/flags` return 403** with a message pointing at the JSON source
 (`evalOnlyDeny` in `pkg/config/middleware.go`). Matching uses
 `util.HasSafePrefix` (same primitive as JWT/basic whitelist).
 
-A path containing `..` is a prefix-escape (`/api/v1/health/../flags`). It is
-rejected with **401** by `rejectDotDotPath` **before** auth whitelist or the
-flags deny, so it cannot skip a prefix check and then be Clean()'d into a
-real write. Extra slashes and `.` are still cleaned by `HasSafePrefix`.
+A path with a `..` segment is a prefix-escape (`/api/v1/health/../flags`,
+`%2e%2e`, `%252e%252e`, `..\`). It is rejected with **401** by
+`rejectDotDotPath` (`util.HasDotDot`) **before** auth whitelist or the flags
+deny, so it cannot skip a prefix check and then be Clean()'d into a real
+write. Extra slashes and `.` are still cleaned by `HasSafePrefix`.
 
 The UI stays available as a **read-only flag browser**: `evalOnlyMode` on
 `GET /health` is the single source of truth. The UI derives its chrome and

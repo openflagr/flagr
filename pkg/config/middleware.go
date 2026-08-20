@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"slices"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/DataDog/datadog-go/statsd"
@@ -282,17 +281,28 @@ func (a *basicAuth) ServeHTTP(w http.ResponseWriter, req *http.Request, next htt
 	next(w, req)
 }
 
-// rejectDotDotPath rejects any request whose path contains "..". That is a
-// prefix-escape (e.g. /api/v1/health/../flags): JWT/basic whitelist and
-// evalOnlyDeny both match prefixes, and the router may Clean ".." into a
-// real route. 401 matches unauthenticated prefix-escape (same status JWT
-// would return for an unwhitelisted ".." path).
+// rejectDotDotPath rejects any request whose path has a ".." segment
+// (including %2e%2e / %252e%252e and backslash forms). That is a
+// prefix-escape: JWT/basic whitelist and evalOnlyDeny match prefixes, and
+// the router may Clean ".." into a real route. 401 matches the status JWT
+// already used for unwhitelisted ".." paths.
 func rejectDotDotPath(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
-	if strings.Contains(req.URL.Path, "..") {
+	if requestHasDotDot(req) {
 		http.Error(w, "invalid path", http.StatusUnauthorized)
 		return
 	}
 	next(w, req)
+}
+
+func requestHasDotDot(req *http.Request) bool {
+	if util.HasDotDot(req.URL.Path) {
+		return true
+	}
+	// RawPath is the still-encoded form when it differs from Path (e.g. %2e%2e).
+	if req.URL.RawPath != "" && util.HasDotDot(req.URL.RawPath) {
+		return true
+	}
+	return false
 }
 
 // evalOnlyDeny rejects mutating requests to the flags API with 403 in

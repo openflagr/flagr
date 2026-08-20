@@ -193,6 +193,36 @@ func TestNewSecureRandomKey(t *testing.T) {
 	assert.True(t, ok)
 }
 
+func TestHasDotDot(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name string
+		p    string
+		want bool
+	}{
+		{name: "empty", p: "", want: false},
+		{name: "clean api path", p: "/api/v1/flags", want: false},
+		{name: "bare dots", p: "..", want: true},
+		{name: "leading parent", p: "/../api/v1/flags", want: true},
+		{name: "health prefix escape", p: "/api/v1/health/../flags", want: true},
+		{name: "nested parents", p: "/api/v1/flags/../../../etc/passwd", want: true},
+		{name: "dot segment only", p: "/api/./v1/flags", want: false},
+		{name: "extra slashes", p: "/api///v1/flags", want: false},
+		{name: "name containing dots is not traversal", p: "/api/v1/foo..bar", want: false},
+		{name: "backslash parent", p: `/api/v1/health\..\flags`, want: true},
+		{name: "percent-encoded parent", p: "/api/v1/%2e%2e/flags", want: true},
+		{name: "mixed encoded slash", p: "/api/v1/health/..%2fflags", want: true},
+		{name: "double-encoded parent", p: "/api/v1/%252e%252e/flags", want: true},
+		{name: "encoded backslash parent", p: `/api/v1/health%2f%2e%2e%5cflags`, want: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			assert.Equal(t, tt.want, HasDotDot(tt.p), "HasDotDot(%q)", tt.p)
+		})
+	}
+}
+
 func TestHasSafePrefix(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
@@ -289,6 +319,24 @@ func TestHasSafePrefix(t *testing.T) {
 			name:   "longer path with valid prefix",
 			s:      "api/v1/flags/123/settings",
 			prefix: "api/v1/flags",
+			want:   true,
+		},
+		{
+			name:   "encoded parent is not a safe prefix",
+			s:      "/api/v1/health/%2e%2e/flags",
+			prefix: "/api/v1/health",
+			want:   false,
+		},
+		{
+			name:   "double-encoded parent is not a safe prefix",
+			s:      "/api/v1/%252e%252e/flags",
+			prefix: "/api/v1",
+			want:   false,
+		},
+		{
+			name:   "dots in a file name are not traversal",
+			s:      "/api/v1/foo..bar",
+			prefix: "/api/v1",
 			want:   true,
 		},
 	}

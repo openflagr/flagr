@@ -444,13 +444,35 @@ func TestRejectDotDotPath(t *testing.T) {
 	})
 
 	t.Run("it does not reject clean paths", func(t *testing.T) {
-		for _, p := range []string{"/api/v1/flags", "/api/v1/health", "/api/v1/evaluation", "/."} {
+		for _, p := range []string{"/api/v1/flags", "/api/v1/health", "/api/v1/evaluation", "/.", "/api/v1/foo..bar"} {
 			t.Run(p, func(t *testing.T) {
 				res := httptest.NewRecorder()
 				res.Body = new(bytes.Buffer)
 				req, _ := http.NewRequest("GET", fmt.Sprintf("http://localhost:18000%s", p), nil)
 				hh.ServeHTTP(res, req)
 				assert.Equal(t, http.StatusOK, res.Code)
+			})
+		}
+	})
+
+	t.Run("it rejects encoded and backslash parent segments", func(t *testing.T) {
+		for _, tc := range []struct {
+			path    string
+			rawPath string
+		}{
+			{path: "/api/v1/../flags", rawPath: ""},
+			{path: "/api/v1/%2e%2e/flags", rawPath: "/api/v1/%2e%2e/flags"},
+			{path: "/api/v1/%252e%252e/flags", rawPath: "/api/v1/%252e%252e/flags"},
+			{path: `/api/v1/health\..\flags`, rawPath: ""},
+		} {
+			t.Run(tc.path, func(t *testing.T) {
+				res := httptest.NewRecorder()
+				res.Body = new(bytes.Buffer)
+				req, _ := http.NewRequest("POST", "http://localhost:18000/x", nil)
+				req.URL.Path = tc.path
+				req.URL.RawPath = tc.rawPath
+				hh.ServeHTTP(res, req)
+				assert.Equal(t, http.StatusUnauthorized, res.Code)
 			})
 		}
 	})
