@@ -50,18 +50,4 @@ describe('initServerMode', () => {
     await initServerMode()
     expect(evalOnlyMode.value).toBe(false)
   })
-
-  it('fails open when the health wait is aborted', async () => {
-    const ac = new AbortController()
-    ac.abort()
-    vi.mocked(fetch).mockImplementation((_input, init) => {
-      if (init?.signal?.aborted) {
-        return Promise.reject(new DOMException('The operation was aborted.', 'AbortError'))
-      }
-      return Promise.resolve(jsonResponse({ status: 'OK', evalOnlyMode: true }))
-    })
-
-    await initServerMode(ac.signal)
-    expect(evalOnlyMode.value).toBe(false)
-  })
 })

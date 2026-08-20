@@ -11,11 +11,10 @@ export const evalOnlyMode = ref(false)
 
 /**
  * Fetch the server mode once at app start. Fail-open: an unreachable health
- * endpoint, an aborted wait, or an older server without the evalOnlyMode
- * field renders the normal editable UI — a broken health check must not
- * lock the UI.
+ * endpoint or an older server without the evalOnlyMode field renders the
+ * normal editable UI — a broken health check must not lock the UI.
  */
-export async function initServerMode(signal?: AbortSignal): Promise<void> {
-  const res = await getHealth(signal)
+export async function initServerMode(): Promise<void> {
+  const res = await getHealth()
   evalOnlyMode.value = res.ok && res.value?.evalOnlyMode === true
 }

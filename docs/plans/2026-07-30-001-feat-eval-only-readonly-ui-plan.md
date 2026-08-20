@@ -125,7 +125,7 @@ while all writes stay rejected.
 | `browser/flagr-ui/src/api/crud.ts` (+ test) | read plane derived from `evalOnlyMode` (HTTP vs export adapter) |
 | `browser/flagr-ui/src/api/health.ts`, `api/types.ts` | `getHealth` + `Health` DTO |
 | `browser/flagr-ui/src/helpers/serverMode.ts` (+ test) | reactive `evalOnlyMode` ref, `initServerMode()` (fail-open) |
-| `browser/flagr-ui/src/main.ts` | mode resolved before first paint (1.5s AbortSignal bound, fail-open) |
+| `browser/flagr-ui/src/main.ts` | mode resolved before first paint (1.5s bound, fail-open) |
 | `browser/flagr-ui/src/App.vue` | read-only banner |
 | `browser/flagr-ui/src/components/Flags.vue` | hide Create Flag + Deleted Flags in read-only |
 | `browser/flagr-ui/src/components/Flag.vue` | hide Flag Management + History tab; pass `readonly` to sections |
@@ -158,14 +158,13 @@ tab, Debug Console available:
   (`applyDeepLink` guards on `evalOnlyMode`). Mode is resolved before mount,
   so the deep link never opens a History tab that then disappears. Change
   history for JSON-sourced flags lives in Git.
-- The app resolves the server mode **before first paint**: `main.ts` awaits
-  `initServerMode()` with a 1.5s `AbortSignal` bound before `app.mount`, so a
-  read-only deployment never flashes editable controls. If `/health` exceeds
-  the bound, the fetch is aborted and the app mounts fail-open (editable UI,
-  backend 403 backstop). A late health response cannot flip the read source
-  after that decision — pages fetch once, through the path chosen at mount.
-  `refreshFlags` ends its loading state on failure — error toast + empty
-  state, never an endless spinner.
+- The app resolves the server mode **before first paint**: `main.ts` races
+  `initServerMode()` against a 1.5s timer before `app.mount`, so a read-only
+  deployment never flashes editable controls. If `/health` exceeds the bound,
+  the app mounts fail-open (editable UI, backend 403 backstop). A late health
+  response can still set `evalOnlyMode`; chrome and a Retry then use the
+  export path. `refreshFlags` ends its loading state on failure — error
+  toast + empty state, never an endless spinner.
 - `evalOnlyDeny` sits inside `StripPrefix` and matches with `HasSafePrefix`.
   `/../api/v1/flags` and `/api/v1/health/../flags` are prefix-escape attacks
   (same rule as JWT/basic whitelist): illegal, not 403'd as flags writes.

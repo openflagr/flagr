@@ -18,7 +18,6 @@ export interface RequestOptions {
   readonly method: Method
   readonly path: string
   readonly body?: unknown
-  readonly signal?: AbortSignal
 }
 
 async function parseErrorMessage(res: Response): Promise<string> {
@@ -67,7 +66,6 @@ export async function requestJson<T>(opts: RequestOptions): Promise<ApiResult<T>
     method: opts.method,
     headers: opts.body !== undefined ? { 'Content-Type': 'application/json' } : undefined,
     body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
-    signal: opts.signal,
   }
 
   let res: Response

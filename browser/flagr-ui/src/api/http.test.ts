@@ -45,18 +45,6 @@ describe('requestJson', () => {
     if (!result.ok) expect(result.error).toBeInstanceOf(ApiDecodeError)
   })
 
-  it('forwards AbortSignal to fetch', async () => {
-    const ac = new AbortController()
-    vi.mocked(fetch).mockResolvedValue(
-      new Response('{}', { status: 200, headers: { 'Content-Type': 'application/json' } }),
-    )
-    await requestJson({ method: 'GET', path: '/health', signal: ac.signal })
-    expect(fetch).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.objectContaining({ signal: ac.signal }),
-    )
-  })
-
   it('maps 500 with message to ApiHttpError', async () => {
     vi.mocked(fetch).mockResolvedValue(
       new Response(JSON.stringify({ message: 'server broke' }), { status: 500 }),
