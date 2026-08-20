@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"slices"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/DataDog/datadog-go/statsd"
@@ -83,6 +84,10 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 		}))
 	}
 
+	// Before JWT/basic whitelist and evalOnlyDeny: a ".." path must not
+	// skip a prefix check and then get Clean()'d into a real route.
+	n.Use(negroni.HandlerFunc(rejectDotDotPath))
+
 	if Config.JWTAuthEnabled {
 		n.Use(setupJWTAuthMiddleware())
 	}
@@ -102,7 +107,7 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 	n.Use(setupRecoveryMiddleware())
 
 	// Deny sits inside StripPrefix so it matches the API path the swagger
-	// router sees, using HasSafePrefix (same primitive as JWT/basic whitelist).
+	// router sees. ".." never reaches here (rejectDotDotPath).
 	if Config.EvalOnlyMode {
 		handler = evalOnlyDeny(handler)
 	}
@@ -285,13 +290,24 @@ const readOnlyDenyMsg = `{"message":"Flagr is running in read-only (eval-only) m
 
 const flagsAPIPath = "/api/v1/flags"
 
+// rejectDotDotPath rejects any request whose path contains "..". That is a
+// prefix-escape (e.g. /api/v1/health/../flags): JWT/basic whitelist and
+// evalOnlyDeny both match prefixes, and the router may Clean ".." into a
+// real route. Block it once, globally, before those layers.
+func rejectDotDotPath(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
+	if strings.Contains(req.URL.Path, "..") {
+		http.Error(w, "invalid path", http.StatusBadRequest)
+		return
+	}
+	next(w, req)
+}
+
 // isFlagsAPIPath reports whether p is a flags API path. Matching uses
-// HasSafePrefix — the same primitive JWT/basic whitelist uses — so a ".."
-// prefix-escape (e.g. /../api/v1/flags after StripPrefix, or
-// /api/v1/health/../flags) is illegal and is not treated as a flags write.
+// HasSafePrefix (same primitive as JWT/basic whitelist). ".." is already
+// rejected by rejectDotDotPath; this only matches clean flags paths.
 func isFlagsAPIPath(p string) bool {
 	// StripPrefix("/") and a trailing-slash WebPrefix leave the leftover
-	// without a leading slash. Restore it; do not Clean ".." into /api/v1/flags.
+	// without a leading slash.
 	if p != "" && p[0] != '/' {
 		p = "/" + p
 	}

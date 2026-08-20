@@ -323,7 +323,7 @@ func TestJWTAuthMiddlewareWithUnauthorized(t *testing.T) {
 			Config.JWTAuthNoTokenStatusCode = http.StatusTemporaryRedirect
 		}()
 
-		testPaths := []string{"/api/v1/flags", "/api/v1/health/..", "/api/v1/admin", "//api/v1/flags", "/..", "/."}
+		testPaths := []string{"/api/v1/flags", "/api/v1/admin", "//api/v1/flags", "/."}
 		for _, path := range testPaths {
 			t.Run(fmt.Sprintf("path: %s", path), func(t *testing.T) {
 				hh := SetupGlobalMiddleware(h)
@@ -421,6 +421,41 @@ func TestBasicAuthMiddleware(t *testing.T) {
 
 }
 
+func TestRejectDotDotPath(t *testing.T) {
+	h := &okHandler{}
+	hh := SetupGlobalMiddleware(h)
+
+	t.Run("it rejects paths containing .. with 400", func(t *testing.T) {
+		for _, p := range []string{
+			"/api/v1/health/../flags",
+			"/api/v1/xx/../flags",
+			"/../api/v1/flags",
+			"/..",
+			"/api/v1/evaluation/../evaluation",
+		} {
+			t.Run(p, func(t *testing.T) {
+				res := httptest.NewRecorder()
+				res.Body = new(bytes.Buffer)
+				req, _ := http.NewRequest("POST", fmt.Sprintf("http://localhost:18000%s", p), nil)
+				hh.ServeHTTP(res, req)
+				assert.Equal(t, http.StatusBadRequest, res.Code)
+			})
+		}
+	})
+
+	t.Run("it does not reject clean paths", func(t *testing.T) {
+		for _, p := range []string{"/api/v1/flags", "/api/v1/health", "/api/v1/evaluation", "/."} {
+			t.Run(p, func(t *testing.T) {
+				res := httptest.NewRecorder()
+				res.Body = new(bytes.Buffer)
+				req, _ := http.NewRequest("GET", fmt.Sprintf("http://localhost:18000%s", p), nil)
+				hh.ServeHTTP(res, req)
+				assert.Equal(t, http.StatusOK, res.Code)
+			})
+		}
+	})
+}
+
 func TestEvalOnlyDenyMiddleware(t *testing.T) {
 	h := &okHandler{}
 
@@ -445,8 +480,6 @@ func TestEvalOnlyDenyMiddleware(t *testing.T) {
 			{"PUT", "/api/v1/flags/1/segments/2/distributions"},
 			{"DELETE", "/api/v1/flags/1/segments/2/constraints/3"},
 			{"POST", "/api/v1/flags/1/tags"},
-			// Extra slashes and "." are cleaned by HasSafePrefix; ".." is not
-			// (see "dot-dot paths are prefix-escape attacks" below).
 			{"POST", "//api/v1/flags"},
 			{"PUT", "//api/v1/flags/1/enabled"},
 			{"DELETE", "/api/v1/flags/./1"},
@@ -537,12 +570,9 @@ func TestEvalOnlyDenyMiddleware(t *testing.T) {
 		}
 	})
 
-	t.Run("dot-dot paths are prefix-escape attacks, not flags writes", func(t *testing.T) {
+	t.Run("dot-dot paths are rejected with 400 before the flags deny", func(t *testing.T) {
 		setEvalOnly(t)
 
-		// HasSafePrefix (JWT/basic whitelist) refuses any path containing
-		// "..". The deny uses the same primitive: these are not canonicalized
-		// into /api/v1/flags and therefore are not 403'd as flags writes.
 		for _, tc := range []struct {
 			prefix string
 			path   string
@@ -563,7 +593,7 @@ func TestEvalOnlyDenyMiddleware(t *testing.T) {
 				res.Body = new(bytes.Buffer)
 				req, _ := http.NewRequest("POST", fmt.Sprintf("http://localhost:18000%s", tc.path), nil)
 				hh.ServeHTTP(res, req)
-				assert.Equal(t, http.StatusOK, res.Code, "must not treat a .. prefix-escape as a flags write")
+				assert.Equal(t, http.StatusBadRequest, res.Code)
 			})
 		}
 	})
@@ -593,12 +623,9 @@ func TestIsFlagsAPIPath(t *testing.T) {
 		{path: "/api/v1/evaluation", want: false},
 		{path: "/api/v1/health", want: false},
 		{path: "/api/v1/export/eval_cache/json", want: false},
-		// ".." is a prefix-escape attack (same as JWT HasSafePrefix). Illegal;
-		// do not treat as a flags write.
-		{path: "/api/v1/xx/../flags", want: false},
+		// ".." never reaches this matcher (rejectDotDotPath). HasSafePrefix
+		// also refuses them, so they are not classified as flags writes.
 		{path: "/api/v1/health/../flags", want: false},
-		{path: "/../api/v1/flags", want: false},
-		{path: "../api/v1/flags", want: false},
 	}
 	for _, tc := range cases {
 		t.Run(tc.path, func(t *testing.T) {

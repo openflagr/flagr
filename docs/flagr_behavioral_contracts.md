@@ -86,10 +86,13 @@ Registered surface:
 CRUD routes are **not registered**. Reads hit the generated 501s; **writes
 under `/api/v1/flags` return 403** with a message pointing at the JSON source
 (`evalOnlyDeny` in `pkg/config/middleware.go`). Matching uses
-`util.HasSafePrefix` — the same primitive JWT/basic whitelist uses — so a
-`..` prefix-escape (`/api/v1/health/../flags`, `/../api/v1/flags`) is
-**illegal** and is **not** treated as a flags write. Extra slashes and `.`
-are cleaned; `..` is not.
+`util.HasSafePrefix` (same primitive as JWT/basic whitelist).
+
+A path containing `..` is a prefix-escape (`/api/v1/health/../flags`). It is
+rejected with **400** by a global `rejectDotDotPath` middleware **before**
+auth whitelist or the flags deny, so it cannot skip a prefix check and then
+be Clean()'d into a real write. Extra slashes and `.` are still cleaned by
+`HasSafePrefix`.
 
 The UI stays available as a **read-only flag browser**: `evalOnlyMode` on
 `GET /health` is the single source of truth. The UI derives its chrome and

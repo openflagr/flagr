@@ -37,12 +37,12 @@ while all writes stay rejected.
    `pkg/config/middleware.go`). In eval-only mode, any non-GET/HEAD/OPTIONS
    request under `/api/v1/flags` returns **403** with a message pointing at
    the JSON source. The deny sits inside `http.StripPrefix` and matches with
-   `util.HasSafePrefix` — the same primitive JWT/basic whitelist uses — so a
-   `..` prefix-escape is illegal and is not Clean()'d into a flags write.
-   Every CRUD write endpoint lives under `/api/v1/flags`, so one
-   method+prefix check covers all 19 write operations — no `CRUD`
-   implementation needed. Evaluation POSTs (`/api/v1/evaluation`) pass
-   through. Writes were previously unregistered (501 "not implemented");
+   `util.HasSafePrefix`. A `..` prefix-escape is blocked earlier by
+   `rejectDotDotPath` (400, all modes) so it cannot skip a prefix check and
+   then be Clean()'d into a write. Every CRUD write endpoint lives under
+   `/api/v1/flags`, so one method+prefix check covers all 19 write operations
+   — no `CRUD` implementation needed. Evaluation POSTs (`/api/v1/evaluation`)
+   pass through. Writes were previously unregistered (501 "not implemented");
    an explicit 403 with a pointer to the JSON source is the real contract.
 
 3. **Mode discovery: `evalOnlyMode` on `GET /health`**
@@ -88,7 +88,7 @@ while all writes stay rejected.
 
 - `docs/flagr_behavioral_contracts.md` — eval-only surface stays
   "evaluation + health + export"; the UI is a client of export; writes 403
-  via `HasSafePrefix` (`..` is not a flags write).
+  via `HasSafePrefix`; `..` paths are 400 globally.
 - `docs/flagr_env.md`, `docs/flagr_json_flag_spec.md`, `docs/integration.md`,
   `docs/flagr_overview.md` — mention the read-only UI on eval-only deployments.
 
@@ -108,10 +108,9 @@ while all writes stay rejected.
   that. The list page simply refetches the export on mount instead.
 - **403 via middleware, not handlers.** All write endpoints share one deny
   path; there is nothing per-endpoint about the denial.
-- **`..` is not a flags write.** Matching uses `HasSafePrefix`. A path
-  containing `..` is a prefix-escape attack (the same rule as JWT/basic
-  whitelist) and is not canonicalized into `/api/v1/flags`. Extra slashes
-  and `.` still match.
+- **`..` is blocked globally.** `rejectDotDotPath` returns 400 for any path
+  containing `..`, before JWT/basic whitelist and before `evalOnlyDeny`.
+  The flags deny then only matches clean `/api/v1/flags` via `HasSafePrefix`.
 
 ## Files changed (as-built)
 
@@ -120,7 +119,7 @@ while all writes stay rejected.
 | `swagger/index.yaml` | `health` definition gains `evalOnlyMode` boolean |
 | `docs/api_docs/bundle.yaml`, `swagger_gen/` | regenerated (`make gen`) |
 | `pkg/handler/handler.go` | health returns `evalOnlyMode` |
-| `pkg/config/middleware.go` (+ test) | `evalOnlyDeny` inside `StripPrefix`; `HasSafePrefix` match; `..` is not a flags write |
+| `pkg/config/middleware.go` (+ test) | `rejectDotDotPath` (400 on `..`); `evalOnlyDeny` inside `StripPrefix` with `HasSafePrefix` |
 | `browser/flagr-ui/src/api/evalOnly.ts` (+ test) | eval-only read plane: export fetch + PascalCase→camelCase mapper + dump cache |
 | `browser/flagr-ui/src/api/crud.ts` (+ test) | read plane derived from `evalOnlyMode` (HTTP vs export adapter) |
 | `browser/flagr-ui/src/api/health.ts`, `api/types.ts` | `getHealth` + `Health` DTO |
@@ -167,9 +166,9 @@ tab, Debug Console available:
   and detail pages refetch through the export path (covered by the
   "late /health" Playwright tests). `refreshFlags` ends its loading state
   on failure — error toast + empty state, never an endless spinner.
-- `evalOnlyDeny` sits inside `StripPrefix` and matches with `HasSafePrefix`.
-  `/../api/v1/flags` and `/api/v1/health/../flags` are prefix-escape attacks
-  (same rule as JWT/basic whitelist): illegal, not 403'd as flags writes.
+- `rejectDotDotPath` runs before auth and the flags deny: any `..` in the
+  path is **400**. `evalOnlyDeny` then matches clean `/api/v1/flags` with
+  `HasSafePrefix` inside `StripPrefix`.
 - In eval-only mode the CRUD read routes return the generated 501s (same as
   main). Tooling that needs flag data from an eval edge node should read
   `GET /api/v1/export/eval_cache/json`, exactly like the UI does.
