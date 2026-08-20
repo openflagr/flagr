@@ -335,6 +335,31 @@ func TestJWTAuthMiddlewareWithUnauthorized(t *testing.T) {
 			})
 		}
 	})
+
+	t.Run("current-dir dots do not skip JWT whitelist", func(t *testing.T) {
+		Config.JWTAuthEnabled = true
+		Config.JWTAuthNoTokenStatusCode = http.StatusUnauthorized
+		defer func() {
+			Config.JWTAuthEnabled = false
+			Config.JWTAuthNoTokenStatusCode = http.StatusTemporaryRedirect
+		}()
+		hh := SetupGlobalMiddleware(h)
+
+		// "." / "././" collapse in place: still the whitelisted evaluation path.
+		for _, p := range []string{"/api/v1/./evaluation", "/api/v1/evaluation/./", "/api/v1/health/././"} {
+			t.Run(p+" allowed", func(t *testing.T) {
+				res := httptest.NewRecorder()
+				req, _ := http.NewRequest("GET", "http://localhost:18000"+p, nil)
+				hh.ServeHTTP(res, req)
+				assert.Equal(t, http.StatusOK, res.Code)
+			})
+		}
+		// Collapsed path is /api/v1/flags, which is not whitelisted.
+		res := httptest.NewRecorder()
+		req, _ := http.NewRequest("GET", "http://localhost:18000/api/v1/./flags", nil)
+		hh.ServeHTTP(res, req)
+		assert.Equal(t, http.StatusUnauthorized, res.Code)
+	})
 }
 
 func TestBasicAuthMiddleware(t *testing.T) {
@@ -444,7 +469,7 @@ func TestRejectDotDotPath(t *testing.T) {
 	})
 
 	t.Run("it does not reject clean paths", func(t *testing.T) {
-		for _, p := range []string{"/api/v1/flags", "/api/v1/health", "/api/v1/evaluation", "/.", "/api/v1/foo..bar"} {
+		for _, p := range []string{"/api/v1/flags", "/api/v1/health", "/api/v1/evaluation", "/.", "/api/v1/foo..bar", "/api/v1/./flags", "/api/v1/././evaluation"} {
 			t.Run(p, func(t *testing.T) {
 				res := httptest.NewRecorder()
 				res.Body = new(bytes.Buffer)
@@ -505,6 +530,8 @@ func TestEvalOnlyDenyMiddleware(t *testing.T) {
 			{"POST", "//api/v1/flags"},
 			{"PUT", "//api/v1/flags/1/enabled"},
 			{"DELETE", "/api/v1/flags/./1"},
+			{"POST", "/api/v1/./flags"},
+			{"POST", "/api/v1/././flags"},
 			{"POST", "/api/v1/flags/"},
 		}
 		for _, w := range writes {

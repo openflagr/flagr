@@ -207,6 +207,10 @@ func TestHasDotDot(t *testing.T) {
 		{name: "health prefix escape", p: "/api/v1/health/../flags", want: true},
 		{name: "nested parents", p: "/api/v1/flags/../../../etc/passwd", want: true},
 		{name: "dot segment only", p: "/api/./v1/flags", want: false},
+		{name: "repeated dot segments", p: "/api/v1/./././flags", want: false},
+		{name: "root dot", p: "/.", want: false},
+		{name: "encoded current dir", p: "/api/v1/%2e/flags", want: false},
+		{name: "dot then parent", p: "/api/v1/health/./../flags", want: true},
 		{name: "extra slashes", p: "/api///v1/flags", want: false},
 		{name: "name containing dots is not traversal", p: "/api/v1/foo..bar", want: false},
 		{name: "backslash parent", p: `/api/v1/health\..\flags`, want: true},
@@ -338,6 +342,42 @@ func TestHasSafePrefix(t *testing.T) {
 			s:      "/api/v1/foo..bar",
 			prefix: "/api/v1",
 			want:   true,
+		},
+		{
+			name:   "current-dir dots still match evaluation whitelist",
+			s:      "/api/v1/./evaluation",
+			prefix: "/api/v1/evaluation",
+			want:   true,
+		},
+		{
+			name:   "repeated current-dir dots still match health whitelist",
+			s:      "/api/v1/health/././",
+			prefix: "/api/v1/health",
+			want:   true,
+		},
+		{
+			name:   "current-dir dots still match flags deny prefix",
+			s:      "/api/v1/././flags",
+			prefix: "/api/v1/flags",
+			want:   true,
+		},
+		{
+			name:   "encoded current-dir still matches flags",
+			s:      "/api/v1/%2e/flags",
+			prefix: "/api/v1/flags",
+			want:   true,
+		},
+		{
+			name:   "dot then parent cannot skip health whitelist",
+			s:      "/api/v1/health/./../flags",
+			prefix: "/api/v1/health",
+			want:   false,
+		},
+		{
+			name:   "dot then parent is not treated as flags via health",
+			s:      "/api/v1/health/./../flags",
+			prefix: "/api/v1/flags",
+			want:   false,
 		},
 	}
 

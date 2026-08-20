@@ -106,7 +106,7 @@ FLAGR_BASIC_AUTH_PASSWORD=password
 
 JWT is richer. The variables cover enabling it (`FLAGR_JWT_AUTH_ENABLED`), the shared secret or PEM key (`FLAGR_JWT_AUTH_SECRET`), the signing method (`HS256` / `HS512` / `RS256`), and a set of prefix and exact whitelist paths. All of them are in the source above. JWT tokens can arrive by cookie or by `Authorization: Bearer` header; when both are present, the header wins.
 
-Prefix whitelist matching (JWT and basic) uses `util.HasSafePrefix`. A path containing `..` never matches a whitelist prefix. Independently, `rejectDotDotPath` rejects any `..` path with **401** before auth or the eval-only flags deny, so `/api/v1/health/../flags` cannot skip health-whitelist and land on flags. [behavioral contracts: eval-only](flagr_behavioral_contracts.md#eval-only).
+Prefix whitelist matching (JWT and basic) uses `util.HasSafePrefix`, which calls `util.HasDotDot`. A `..` path segment (including `%2e%2e` / `%252e%252e` and `..\`) never matches a whitelist prefix. Independently, `rejectDotDotPath` rejects those paths with **401** before auth or the eval-only flags deny. [behavioral contracts: eval-only](flagr_behavioral_contracts.md#eval-only).
 
 Separately, Flagr can identify *who* made a mutation for audit logging without doing full authentication. `FLAGR_HEADER_AUTH_*` reads a user identifier from a header (handy behind a corporate proxy), and `FLAGR_COOKIE_AUTH_*` reads one from a cookie (handy behind something like Cloudflare Zero Trust). These stamp `created_by` / `updated_by` on changes; they don't gate access.
 

@@ -58,28 +58,23 @@ const maxPathUnescape = 3
 // This checks slash/backslash-separated segments after a bounded unescape,
 // which is the same class of prefix-escape Traefik GHSA-vrch-868g-9jx5 hit.
 func HasDotDot(p string) bool {
-	if p == "" {
-		return false
-	}
-	if hasDotDotSegment(p) {
-		return true
-	}
+	return p != "" && hasDotDotSegment(decodePath(p))
+}
+
+func decodePath(p string) string {
 	u := p
 	for range maxPathUnescape {
+		u = strings.ReplaceAll(u, `\`, "/")
 		next, err := url.PathUnescape(u)
 		if err != nil || next == u {
 			break
 		}
 		u = next
-		if hasDotDotSegment(u) {
-			return true
-		}
 	}
-	return false
+	return strings.ReplaceAll(u, `\`, "/")
 }
 
 func hasDotDotSegment(p string) bool {
-	p = strings.ReplaceAll(p, `\`, "/")
 	for p != "" {
 		var seg string
 		if i := strings.IndexByte(p, '/'); i >= 0 {
@@ -106,9 +101,10 @@ func HasSafePrefix(s string, prefix string) bool {
 		return false
 	}
 
-	// Prefix is controlled by us, no need to clean it.
-	cleanedS := path.Clean(s)
-	return strings.HasPrefix(cleanedS, prefix)
+	// Decode then Clean so /api/v1/./flags and /api/v1/%2e/flags match
+	// /api/v1/flags. "." cannot leave a directory; only ".." can, and
+	// HasDotDot already rejected it. Prefix is controlled by us.
+	return strings.HasPrefix(path.Clean(decodePath(s)), prefix)
 }
 
 // NewSecureRandomKey creates a new secure random key
