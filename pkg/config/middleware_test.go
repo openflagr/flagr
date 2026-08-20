@@ -610,6 +610,7 @@ func TestEvalOnlyDenyMiddleware(t *testing.T) {
 
 func TestIsFlagsAPIPath(t *testing.T) {
 	t.Parallel()
+	d := newEvalOnlyDeny(&okHandler{})
 	cases := []struct {
 		path string
 		want bool
@@ -630,7 +631,7 @@ func TestIsFlagsAPIPath(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.path, func(t *testing.T) {
 			t.Parallel()
-			assert.Equal(t, tc.want, isFlagsAPIPath(tc.path))
+			assert.Equal(t, tc.want, d.isFlagsAPIPath(tc.path))
 		})
 	}
 }

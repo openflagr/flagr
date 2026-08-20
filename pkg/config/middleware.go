@@ -109,7 +109,7 @@ func SetupGlobalMiddleware(handler http.Handler) http.Handler {
 	// Deny sits inside StripPrefix so it matches the API path the swagger
 	// router sees. ".." never reaches here (rejectDotDotPath).
 	if Config.EvalOnlyMode {
-		handler = evalOnlyDeny(handler)
+		handler = newEvalOnlyDeny(handler)
 	}
 	if Config.WebPrefix != "" {
 		handler = http.StripPrefix(Config.WebPrefix, handler)
@@ -282,14 +282,6 @@ func (a *basicAuth) ServeHTTP(w http.ResponseWriter, req *http.Request, next htt
 	next(w, req)
 }
 
-// readOnlyDenyMsg explains why write operations are rejected in eval-only mode.
-// The shape matches the swagger Error model ({"message": ...}).
-const readOnlyDenyMsg = `{"message":"Flagr is running in read-only (eval-only) mode: ` +
-	`flags are managed via the JSON source (FLAGR_DB_DBDRIVER=json_file/json_http), ` +
-	`write APIs are disabled"}`
-
-const flagsAPIPath = "/api/v1/flags"
-
 // rejectDotDotPath rejects any request whose path contains "..". That is a
 // prefix-escape (e.g. /api/v1/health/../flags): JWT/basic whitelist and
 // evalOnlyDeny both match prefixes, and the router may Clean ".." into a
@@ -302,37 +294,54 @@ func rejectDotDotPath(w http.ResponseWriter, req *http.Request, next http.Handle
 	next(w, req)
 }
 
+// evalOnlyDeny rejects mutating requests to the flags API with 403 in
+// eval-only mode. Every CRUD write endpoint lives under /api/v1/flags, so one
+// method+prefix check covers them all; the JSON source stays the only write
+// path. Evaluation POSTs live under /api/v1/evaluation and pass through.
+//
+// Installed inside StripPrefix so it sees the path the swagger router sees.
+type evalOnlyDeny struct {
+	next      http.Handler
+	flagsPath string
+	denyMsg   []byte
+}
+
+func newEvalOnlyDeny(next http.Handler) *evalOnlyDeny {
+	return &evalOnlyDeny{
+		next:      next,
+		flagsPath: "/api/v1/flags",
+		// Shape matches the swagger Error model ({"message": ...}).
+		denyMsg: []byte(`{"message":"Flagr is running in read-only (eval-only) mode: ` +
+			`flags are managed via the JSON source (FLAGR_DB_DBDRIVER=json_file/json_http), ` +
+			`write APIs are disabled"}`),
+	}
+}
+
 // isFlagsAPIPath reports whether p is a flags API path. Matching uses
 // HasSafePrefix (same primitive as JWT/basic whitelist). ".." is already
 // rejected by rejectDotDotPath; this only matches clean flags paths.
-func isFlagsAPIPath(p string) bool {
+func (d *evalOnlyDeny) isFlagsAPIPath(p string) bool {
 	// StripPrefix("/") and a trailing-slash WebPrefix leave the leftover
 	// without a leading slash.
 	if p != "" && p[0] != '/' {
 		p = "/" + p
 	}
-	return util.HasSafePrefix(p, flagsAPIPath)
+	return util.HasSafePrefix(p, d.flagsPath)
 }
 
-// evalOnlyDeny rejects mutating requests to the flags API with 403 in
-// eval-only mode. Every CRUD write endpoint lives under /api/v1/flags, so one
-// method+prefix check covers them all; the JSON source stays the only write
-// path. Evaluation POSTs live under /api/v1/evaluation and pass through.
-func evalOnlyDeny(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		switch req.Method {
-		case http.MethodGet, http.MethodHead, http.MethodOptions:
-			next.ServeHTTP(w, req)
-			return
-		}
-		if isFlagsAPIPath(req.URL.Path) {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusForbidden)
-			w.Write([]byte(readOnlyDenyMsg))
-			return
-		}
-		next.ServeHTTP(w, req)
-	})
+func (d *evalOnlyDeny) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	switch req.Method {
+	case http.MethodGet, http.MethodHead, http.MethodOptions:
+		d.next.ServeHTTP(w, req)
+		return
+	}
+	if d.isFlagsAPIPath(req.URL.Path) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusForbidden)
+		w.Write(d.denyMsg)
+		return
+	}
+	d.next.ServeHTTP(w, req)
 }
 
 type statsdMiddleware struct {
