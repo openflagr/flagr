@@ -142,3 +142,30 @@ describe('eval-only mode reads', () => {
   })
 })
 
+
+describe('listFlagSnapshots (http mode)', () => {
+  const originalFetch = globalThis.fetch
+
+  beforeEach(() => {
+    vi.stubGlobal('fetch', vi.fn())
+  })
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch
+    vi.unstubAllGlobals()
+  })
+
+  it('requests one page of newest snapshots plus a diff base', async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      new Response(JSON.stringify([]), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+
+    const result = await listFlagSnapshots(42)
+    expect(result.ok).toBe(true)
+    const url = String(vi.mocked(fetch).mock.calls[0][0])
+    expect(url).toContain('/flags/42/snapshots?limit=51&sort=DESC')
+  })
+})

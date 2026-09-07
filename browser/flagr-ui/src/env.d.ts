@@ -5,6 +5,7 @@ import type { ElementMessageApi } from '@/helpers/runApi'
 interface ImportMetaEnv {
   readonly VITE_API_URL?: string
   readonly VITE_FLAGR_UI_POSSIBLE_ENTITY_TYPES?: string
+  readonly VITE_FLAGR_UI_SNAPSHOT_HISTORY_LIMIT?: string
 }
 
 interface ImportMeta {
