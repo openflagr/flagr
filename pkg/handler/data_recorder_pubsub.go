@@ -18,11 +18,13 @@ type pubsubRecorder struct {
 
 var (
 	pubsubClient = func() (*pubsub.Client, error) {
-		return pubsub.NewClient(
-			context.Background(),
-			config.Config.RecorderPubsubProjectID,
-			option.WithCredentialsFile(config.Config.RecorderPubsubKeyFile),
-		)
+		ctx := context.Background()
+		projectID := config.Config.RecorderPubsubProjectID
+		if keyFile := config.Config.RecorderPubsubKeyFile; keyFile != "" {
+			return pubsub.NewClient(ctx, projectID, option.WithAuthCredentialsFile(option.ServiceAccount, keyFile))
+		}
+		// Empty FLAGR_RECORDER_PUBSUB_KEYFILE uses Application Default Credentials.
+		return pubsub.NewClient(ctx, projectID)
 	}
 )
 
