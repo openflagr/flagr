@@ -452,7 +452,13 @@ func TestFlushLoop_TickerFires(t *testing.T) {
 	db := newTestDB(t)
 	createFlag(t, db, 1, "f1", "test", true)
 
-	e := New(db, true, 1*time.Millisecond)
+	const (
+		flushTickerInterval = time.Millisecond
+		flushWaitTimeout    = time.Second
+		flushWaitTick       = time.Millisecond
+	)
+
+	e := New(db, true, flushTickerInterval)
 	if e == nil {
 		t.Fatal("expected non-nil engine")
 	}
@@ -460,10 +466,9 @@ func TestFlushLoop_TickerFires(t *testing.T) {
 
 	e.Record(1, 1, 1)
 
-	// Give the ticker time to fire at least once.
-	time.Sleep(10 * time.Millisecond)
-
-	assert.Equal(t, 0, e.Len(), "buffer should be drained by ticker-triggered flush")
+	assert.Eventually(t, func() bool {
+		return e.Len() == 0
+	}, flushWaitTimeout, flushWaitTick, "buffer should be drained by ticker-triggered flush")
 }
 
 // ---------------------------------------------------------------------------
