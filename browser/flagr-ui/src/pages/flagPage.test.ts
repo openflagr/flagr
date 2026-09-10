@@ -2,9 +2,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { FlagPageVm } from './flagPage'
 import {
   applyDeepLink,
+  loadFlagSnapshots,
   mountFlagPage,
   scrollToSnapshot,
 } from './flagPage'
+import * as crudApi from '@/api/crud'
+import { ok } from '@/api/result'
+import type { FlagSnapshot } from '@/api/types'
 import { SNAPSHOT_HIGHLIGHT_MS } from '@/helpers/copyText'
 import { evalOnlyMode } from '@/helpers/serverMode'
 import { FLAG_TAB_CONFIG, FLAG_TAB_HISTORY, snapshotElementId } from '@/helpers/shareLinks'
@@ -12,6 +16,7 @@ import { FLAG_TAB_CONFIG, FLAG_TAB_HISTORY, snapshotElementId } from '@/helpers/
 vi.mock('@/api/crud', () => ({
   loadFlagPageContext: vi.fn(() => new Promise(() => {})),
   listFlagSnapshots: vi.fn(() => new Promise(() => {})),
+  SNAPSHOT_HISTORY_LIMIT: 50,
 }))
 
 function minimalVm(overrides: Partial<FlagPageVm> = {}): FlagPageVm {
@@ -63,6 +68,7 @@ describe('mountFlagPage', () => {
     expect(vm.historyLoaded).toBe(false)
     expect(vm.historyKey).toBe(1)
     expect(vm.flagSnapshots).toEqual([])
+    expect(vm.historyTruncated).toBe(false)
     expect(vm.pendingSnapshotScrollId).toBeNull()
     expect(vm.dialogDuplicateFlagVisible).toBe(false)
     expect(vm.dialogEditDistributionOpen).toBe(false)
@@ -152,5 +158,37 @@ describe('scrollToSnapshot', () => {
   it('returns false when the snapshot node is missing', () => {
     vi.stubGlobal('document', { getElementById: () => null })
     expect(scrollToSnapshot(999)).toBe(false)
+  })
+})
+
+describe('loadFlagSnapshots', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  function fakeSnapshots(n: number): FlagSnapshot[] {
+    return Array.from({ length: n }, (_, i) => ({
+      id: n - i,
+      flag: {},
+      updatedAt: '2026-09-07T00:00:00Z',
+    })) as FlagSnapshot[]
+  }
+
+  it('marks history truncated when the extra diff-base snapshot is present', async () => {
+    const vm = minimalVm({ historyTruncated: false })
+    vi.mocked(crudApi.listFlagSnapshots).mockResolvedValue(ok(fakeSnapshots(51)))
+
+    loadFlagSnapshots(vm)
+    await vi.waitFor(() => expect(vm.flagSnapshots).toHaveLength(51))
+    expect(vm.historyTruncated).toBe(true)
+  })
+
+  it('keeps history untruncated when the full history fits the page', async () => {
+    const vm = minimalVm({ historyTruncated: true })
+    vi.mocked(crudApi.listFlagSnapshots).mockResolvedValue(ok(fakeSnapshots(50)))
+
+    loadFlagSnapshots(vm)
+    await vi.waitFor(() => expect(vm.flagSnapshots).toHaveLength(50))
+    expect(vm.historyTruncated).toBe(false)
   })
 })

@@ -202,6 +202,7 @@
             :key="historyKey"
             :flag-id="flagId"
             :snapshots="flagSnapshots"
+            :truncated="historyTruncated"
           />
         </el-tab-pane>
       </el-tabs>
@@ -286,6 +287,7 @@ export default {
       historyLoaded: false,
       historyKey: 0,
       flagSnapshots: [],
+      historyTruncated: false,
       pendingSnapshotScrollId: null as number | null,
       evalContext: defaultEvalContext(),
       evalResult: {} as EvalResult,

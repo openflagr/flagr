@@ -48,6 +48,13 @@
       />
       <!-- eslint-enable vue/no-v-html -->
     </el-card>
+    <div
+      v-if="truncated"
+      class="history-truncated"
+      data-testid="history-truncated-note"
+    >
+      Showing the {{ diffs.length }} most recent changes. Older history is not loaded.
+    </div>
   </div>
 </template>
 
@@ -71,12 +78,23 @@ export default {
       type: [String, Number],
       required: true,
     },
+    /**
+     * True when snapshots hold a truncated history (newest first, with one
+     * extra snapshot as the diff base for the oldest visible entry). Skips the
+     * empty-flag sentinel so the tail isn't rendered as a bogus creation diff.
+     */
+    truncated: {
+      type: Boolean,
+      default: false,
+    },
   },
   computed: {
     diffs() {
       const ret: FlagHistoryDiffRow[] = []
       const snapshots = this.snapshots.slice()
-      snapshots.push({ flag: {} as Flag, id: 0 })
+      if (!this.truncated) {
+        snapshots.push({ flag: {} as Flag, id: 0 })
+      }
       for (let i = 0; i < snapshots.length - 1; i++) {
         ret.push({
           timestamp: new Date(snapshots[i].updatedAt ?? '').toLocaleString(),
@@ -118,6 +136,11 @@ export default {
 .snapshot-header-right {
   text-align: right;
   color: var(--el-text-color-secondary);
+}
+.history-truncated {
+  color: var(--el-text-color-secondary);
+  text-align: center;
+  padding: var(--space-2xs) 0;
 }
 .diff-snapshot-id-change {
   display: flex;

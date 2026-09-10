@@ -34,6 +34,13 @@ export const listFlags = (): Promise<ApiResult<Flag[]>> => get('/flags')
 export const getSnapshotMaxId = (): Promise<ApiResult<SnapshotMaxId>> =>
   get('/flags/snapshots/max_id')
 
+/**
+ * Snapshots shown in the History tab (0 = unlimited, see constants). One extra
+ * snapshot is fetched as the diff base for the oldest visible entry, so its
+ * presence also tells the UI the history was truncated.
+ */
+export const SNAPSHOT_HISTORY_LIMIT = constants.FLAGR_UI_SNAPSHOT_HISTORY_LIMIT
+
 interface FlagReads {
   listFlagsIfStale: (
     cachedMaxId: number | undefined,
@@ -74,7 +81,10 @@ const httpReads: FlagReads = {
   getFlag: (flagId) => get(flag(flagId)),
   listAllTags: () => get('/tags'),
   listDeletedFlags: () => get('/flags?deleted=true'),
-  listFlagSnapshots: (flagId) => get(`${flag(flagId)}/snapshots`),
+  listFlagSnapshots: (flagId) =>
+    SNAPSHOT_HISTORY_LIMIT > 0
+      ? get(`${flag(flagId)}/snapshots?limit=${SNAPSHOT_HISTORY_LIMIT + 1}&sort=DESC`)
+      : get(`${flag(flagId)}/snapshots`),
   listEntityTypes: () => get('/flags/entity_types'),
 }
 

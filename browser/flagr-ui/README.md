@@ -13,6 +13,6 @@ Layout: `src/api/` (`crud.ts`, `eval.ts`, `evalOnly.ts`, `types.ts`) · `src/pag
 
 DTOs: `src/api/types.ts` (aligned with `docs/api_docs/bundle.yaml`).
 
-Config: `VITE_API_URL` (default `/api/v1`) in `src/helpers/constants.ts`.
+Config: `VITE_API_URL` (default `/api/v1`) and `VITE_FLAGR_UI_SNAPSHOT_HISTORY_LIMIT` (snapshots shown in the History tab; default `50`, `0` = fetch full history) in `src/helpers/constants.ts`.
 
 **Architecture (As-built):** [`docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md`](../../docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md)

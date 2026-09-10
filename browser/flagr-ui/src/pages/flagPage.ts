@@ -69,6 +69,8 @@ export interface FlagPageVm extends ConfirmVm {
   historyLoaded: boolean
   historyKey: number
   flagSnapshots: FlagSnapshot[]
+  /** True when the flag has more snapshots than the History tab fetched. */
+  historyTruncated: boolean
   /** Snapshot id to scroll to after History finishes loading. */
   pendingSnapshotScrollId: number | null
   evalContext: EvalContext
@@ -468,6 +470,8 @@ export function openHistoryTab(vm: FlagPageVm): void {
 export function loadFlagSnapshots(vm: FlagPageVm): void {
   runApi(vm, crudApi.listFlagSnapshots(vm.flagId), {
     onSuccess: (data) => {
+      vm.historyTruncated =
+        crudApi.SNAPSHOT_HISTORY_LIMIT > 0 && data.length > crudApi.SNAPSHOT_HISTORY_LIMIT
       vm.flagSnapshots = data
       const pending = vm.pendingSnapshotScrollId
       if (pending == null) return
@@ -568,6 +572,7 @@ export function mountFlagPage(vm: FlagPageVm, routeQuery?: Record<string, unknow
   vm.historyLoaded = false
   vm.historyKey++
   vm.flagSnapshots = []
+  vm.historyTruncated = false
   vm.pendingSnapshotScrollId = null
   vm.dialogDuplicateFlagVisible = false
   vm.dialogEditDistributionOpen = false
