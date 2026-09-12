@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/openflagr/flagr/pkg/config"
 	"github.com/openflagr/flagr/pkg/entity"
 	"github.com/openflagr/flagr/pkg/mapper/entity_restapi/e2r"
 	"github.com/openflagr/flagr/pkg/mapper/entity_restapi/r2e"
@@ -213,6 +214,8 @@ func (c *crud) GetFlagSnapshots(params flag.GetFlagSnapshotsParams) middleware.R
 
 	if params.Limit != nil {
 		tx = tx.Limit(int(*params.Limit))
+	} else if config.Config.SnapshotsDefaultLimit > 0 {
+		tx = tx.Limit(config.Config.SnapshotsDefaultLimit)
 	}
 	if params.Offset != nil {
 		tx = tx.Offset(int(*params.Offset))

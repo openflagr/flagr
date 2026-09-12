@@ -10,6 +10,7 @@ import (
 
 	"encoding/json"
 
+	"github.com/openflagr/flagr/pkg/config"
 	"github.com/openflagr/flagr/pkg/entity"
 	"github.com/openflagr/flagr/swagger_gen/models"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/constraint"
@@ -161,6 +162,36 @@ func TestCrudFlags(t *testing.T) {
 		res = c.GetFlagSnapshots(flag.GetFlagSnapshotsParams{FlagID: int64(1)})
 		assert.NotZero(t, res.(*flag.GetFlagSnapshotsOK).Payload)
 
+	})
+
+	t.Run("it should apply the snapshots default limit only without an explicit limit", func(t *testing.T) {
+		// Two more mutations so flag 1 has at least three snapshots.
+		for _, desc := range []string{"snapshot limit test 1", "snapshot limit test 2"} {
+			res = c.PutFlag(flag.PutFlagParams{
+				FlagID: int64(1),
+				Body:   &models.PutFlagRequest{Description: new(desc)},
+			})
+			assert.NotZero(t, res.(*flag.PutFlagOK).Payload.ID)
+		}
+
+		res = c.GetFlagSnapshots(flag.GetFlagSnapshotsParams{FlagID: int64(1)})
+		fullHistory := len(res.(*flag.GetFlagSnapshotsOK).Payload)
+		assert.GreaterOrEqual(t, fullHistory, 3)
+
+		originalLimit := config.Config.SnapshotsDefaultLimit
+		config.Config.SnapshotsDefaultLimit = 2
+		defer func() { config.Config.SnapshotsDefaultLimit = originalLimit }()
+
+		res = c.GetFlagSnapshots(flag.GetFlagSnapshotsParams{FlagID: int64(1)})
+		assert.Len(t, res.(*flag.GetFlagSnapshotsOK).Payload, 2)
+
+		// An explicit limit from the client wins over the default.
+		res = c.GetFlagSnapshots(flag.GetFlagSnapshotsParams{FlagID: int64(1), Limit: new(int64(1))})
+		assert.Len(t, res.(*flag.GetFlagSnapshotsOK).Payload, 1)
+
+		config.Config.SnapshotsDefaultLimit = 0
+		res = c.GetFlagSnapshots(flag.GetFlagSnapshotsParams{FlagID: int64(1)})
+		assert.Len(t, res.(*flag.GetFlagSnapshotsOK).Payload, fullHistory)
 	})
 
 	t.Run("it should be able to delete the flag", func(t *testing.T) {

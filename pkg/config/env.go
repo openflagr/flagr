@@ -77,6 +77,14 @@ var Config = struct {
 	// ExposureBatchSize - maximum exposures per POST /exposures request.
 	ExposureBatchSize int `env:"FLAGR_EXPOSURE_BATCH_SIZE" envDefault:"100"`
 
+	// SnapshotsDefaultLimit - default number of newest snapshots returned by
+	// GET /flags/{flagID}/snapshots when the request carries no explicit limit.
+	// 0 (default) keeps the existing behavior of returning the full history.
+	// An explicit limit from the client always takes precedence. Heavily-edited
+	// flags accumulate hundreds of snapshots (each one a full flag JSON), so
+	// serving the full history can be slow and memory-heavy.
+	SnapshotsDefaultLimit int `env:"FLAGR_SNAPSHOTS_DEFAULT_LIMIT" envDefault:"0"`
+
 	/**
 	DBDriver and DBConnectionStr define how we can write and read flags data.
 	For databases, flagr supports sqlite3, mysql and postgres.

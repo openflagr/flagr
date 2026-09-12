@@ -38,6 +38,7 @@ How the process binds, what it serves, and what it logs. Defaults are fine for l
 | `HOST` / `PORT` | `localhost` / `18000` | Bind address (`env.go`); Docker image sets `HOST=0.0.0.0` |
 | `FLAGR_WEB_PREFIX` | *(empty)* | UI + API base path |
 | `FLAGR_UI_ENABLED` | `true` | `false` = API-only |
+| `FLAGR_SNAPSHOTS_DEFAULT_LIMIT` | `0` | Default `limit` for `GET /flags/{flagID}/snapshots` when the request has none; `0` = full history. An explicit `limit` always wins |
 | `FLAGR_LOGRUS_LEVEL` / `FORMAT` | `info` / `text` | Use `json` in production |
 | `FLAGR_PPROF_ENABLED` | `true` | pprof endpoints |
 | `FLAGR_MIDDLEWARE_VERBOSE_LOGGER_*` | on | Exclude hot paths via `…_EXCLUDE_URLS` |
