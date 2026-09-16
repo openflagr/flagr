@@ -97,7 +97,20 @@ make helm-unittest   # helm-unittest plugin v1.1.2 (CI installs it; Helm 4)
 
 Kind `helm install` + `helm test` run in `.github/workflows/helm.yml` only (path-filtered on `helm/**`). Do not add `helm.yml` as a required GitHub check while `on.paths` skips Go PRs.
 
-**Release rule:** every Flagr GitHub Release PR bumps `helm/Chart.yaml` `appVersion` to the new Flagr tag and bumps chart `version` patch (even if templates are unchanged), so a later OCI publish does not reuse a chart version.
+**Publish:** `.github/workflows/cd_helm.yml` packages `helm/` and `helm push`es to `oci://ghcr.io/openflagr/flagr/charts/flagr` on GitHub Release, on `workflow_dispatch`, and on push to `main` that touches `helm/Chart.yaml`. It fails if that chart `version` already exists on GHCR.
+
+**Release rule:** every Flagr GitHub Release PR bumps `helm/Chart.yaml` `appVersion` to the new Flagr tag and bumps chart `version` patch (even if templates are unchanged). Any chart-template change that should publish must bump `version` in the same PR.
+
+**First-time GHCR public (one-time, after the first successful `cd_helm` run):** GHCR packages are often **private** even when the git repo is public. Anonymous `helm install oci://…` 401s until this is done.
+
+1. Open the package: [ghcr.io/openflagr/flagr/charts/flagr](https://github.com/openflagr/flagr/pkgs/container/flagr%2Fcharts%2Fflagr) (org: [github.com/orgs/openflagr/packages](https://github.com/orgs/openflagr/packages)).
+2. **Package settings** → **Change visibility** → **Public**.
+3. **Connect this package to a repository** → `openflagr/flagr` if it is not already linked (then it can inherit the public repo).
+4. Confirm without login: `helm show chart oci://ghcr.io/openflagr/flagr/charts/flagr --version 1.0.0`
+
+Org owners: GitHub **Org settings → Packages** should allow public packages. Actions **GITHUB_TOKEN** needs `packages: write` (the workflow sets this). Pushing to `ghcr.io/openflagr/flagr/charts/flagr` (nested under the `flagr` repo) avoids colliding with the Docker image `ghcr.io/openflagr/flagr`.
+
+Artifact Hub is optional and separate: add an OCI repository pointing at `oci://ghcr.io/openflagr/flagr/charts/flagr` after the package is public.
 
 ## Documentation site
 

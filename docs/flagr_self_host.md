@@ -112,13 +112,16 @@ Swap credentials before any shared environment. The repo CI compose file has mor
 
 ## Kubernetes
 
-In-repo chart at [`helm/`](https://github.com/openflagr/flagr/tree/main/helm). Deployment + ClusterIP Service + probes. Configure Flagr with `env` / `envFrom` — every knob is in [Environment variables](flagr_env.md). Add your own Ingress, PVC, and HPA.
+In-repo chart at [`helm/`](https://github.com/openflagr/flagr/tree/main/helm), published as OCI to GHCR. Deployment + ClusterIP Service + probes. Configure Flagr with `env` / `envFrom` — every knob is in [Environment variables](flagr_env.md). Add your own Ingress, PVC, and HPA.
 
 ```bash
-helm install flagr ./helm --namespace flagr --create-namespace
+helm install flagr oci://ghcr.io/openflagr/flagr/charts/flagr --version 1.0.0 \
+  --namespace flagr --create-namespace
 kubectl -n flagr port-forward svc/flagr 18000:18000
 curl -sS http://127.0.0.1:18000/api/v1/health
 ```
+
+Pin `--version` to `helm/Chart.yaml` `version`. From a checkout: `helm install flagr ./helm --namespace flagr --create-namespace`. Helm cannot install from a GitHub directory URL (`…/tree/main/helm`); the chart is a subdirectory, not a packaged `.tgz`.
 
 Default is one replica, SQLite at `/data/flagr.sqlite` on an emptyDir (ephemeral). SQLite is not a shared store; for `replicaCount > 1` use postgres, mysql, or `json_http`.
 
@@ -144,7 +147,8 @@ env:
 ```bash
 kubectl create secret generic flagr-db \
   --from-literal=FLAGR_DB_DBCONNECTIONSTR='sslmode=require host=pg.example user=flagr password=… dbname=flagr'
-helm upgrade --install flagr ./helm --namespace flagr -f postgres-values.yaml
+helm upgrade --install flagr oci://ghcr.io/openflagr/flagr/charts/flagr --version 1.0.0 \
+  --namespace flagr -f postgres-values.yaml
 ```
 
 Persist SQLite: create a PVC and pass a volume named `data` (`extraVolumes`). If you set `FLAGR_WEB_PREFIX`, also override probe `httpGet.path` and `test.path`.

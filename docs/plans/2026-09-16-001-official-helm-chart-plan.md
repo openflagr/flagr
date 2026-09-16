@@ -14,7 +14,7 @@ Flagr already publishes `ghcr.io/openflagr/flagr` and documents Kubernetes as: b
 
 Add a **small application chart at repo-root `helm/`**. `helm install flagr ./helm` yields a working single-replica SQLite demo. Operators configure Flagr themselves with Kubernetes `env` / `envFrom` and the env doc — the chart does not grow a values schema for databases, Ingress, or every `FLAGR_*` key.
 
-PR 1: source + CI + self-host docs (install from git path). PR 2: OCI `oci://ghcr.io/openflagr/charts/flagr`.
+Source + CI + self-host docs + OCI publish (`oci://ghcr.io/openflagr/flagr/charts/flagr`) in one PR. Nested under the `flagr` GHCR repo so `GITHUB_TOKEN` can push and the package does not collide with the Docker image `ghcr.io/openflagr/flagr`.
 
 ---
 
@@ -47,7 +47,7 @@ The image, port, health endpoint, and env-only config are already the documented
 
 | # | Decision | Rationale |
 |---|---|---|
-| D1 | **Source at `helm/`**, not `charts/flagr/` | This already *is* the Flagr repo. `helm install flagr ./helm`. OCI remains `oci://ghcr.io/openflagr/charts/flagr` (`Chart.yaml` `name: flagr`) so GHCR packages stay grouped. |
+| D1 | **Source at `helm/`**, not `charts/flagr/` | This already *is* the Flagr repo. `helm install flagr ./helm`. OCI is `oci://ghcr.io/openflagr/flagr/charts/flagr` (nested under the app repo on GHCR; not `openflagr/charts/flagr`, which would be a different package and collide less obviously with the image). |
 | D2 | **No database subchart.** Default SQLite; SQL/JSON via `env` | Bitnami 2025–2026 catalog change burned Unleash/Flagsmith/Gitea. n8n-io: “this chart does not bundle them.” |
 | D3 | **`env` + `envFrom` + flagr_env.md, not a values schema** | ~80 keys. Operators already read the env doc. Traefik/ingress-nginx/Unleash extraEnv lists, not Authelia’s 1:1 map. |
 | D4 | **No Ingress (or HPA/PDB/NP/SM) in the chart** | Audience writes those manifests. NOTES: port-forward; “add your own Ingress.” |
@@ -194,7 +194,7 @@ Jobs: `make helm-lint` (`helm lint --strict` + `helm template`), `make helm-unit
 
 Makefile: `make helm-lint` and `make helm-unittest`. Kind stays GHA-only.
 
-PR 2: `.github/workflows/cd_helm.yml` on `release: published` + `workflow_dispatch`. Package `helm/`, fail if that chart version already exists on GHCR, `helm push` to `oci://ghcr.io/openflagr/charts/flagr`.
+`.github/workflows/cd_helm.yml` on `release: published`, `workflow_dispatch`, and push to `main` that touches `helm/Chart.yaml`. Package `helm/`, fail if that chart version already exists on GHCR, `helm push` to `oci://ghcr.io/openflagr/flagr/charts`. First merge of `Chart.yaml` `1.0.0` publishes; then make the GHCR package **public** (one-time).
 
 ---
 
@@ -236,9 +236,7 @@ JSON logs. Probes and `helm test` on `/api/v1/health`. Prometheus/`/metrics` and
 
 ## Rollout Plan
 
-**PR 1:** `helm/` + path-filtered `helm.yml` + `make helm-lint` + self-host/CONTRIBUTING/AGENTS. Install from checkout. Chart `0.1.0`.
-
-**PR 2:** `cd_helm.yml`, chart `1.0.0`, self-host primary install becomes `helm install flagr oci://ghcr.io/openflagr/charts/flagr`. Seed GHCR with `workflow_dispatch` if needed.
+**One PR:** `helm/` + path-filtered `helm.yml` + `cd_helm.yml` + chart `1.0.0`. Primary install is `helm install flagr oci://ghcr.io/openflagr/flagr/charts/flagr --version 1.0.0`. First publish is push to `main` of `helm/Chart.yaml` (or `workflow_dispatch`). Then make the GHCR package public.
 
 Rollback: `helm rollback flagr`. Bad image: `--set image.tag=…`.
 
@@ -248,7 +246,7 @@ Rollback: `helm rollback flagr`. Bad image: `--set image.tag=…`.
 
 | Topic | Decision |
 |---|---|
-| Chart path | **`helm/`** (not `charts/flagr/`). OCI `oci://ghcr.io/openflagr/charts/flagr`. |
+| Chart path | **`helm/`** (not `charts/flagr/`). OCI `oci://ghcr.io/openflagr/flagr/charts/flagr`. |
 | Values surface | No Ingress/HPA/PDB/NP/SM/extraObjects; no `database.*` / `webPrefix` / `metrics.*`; no `examples/`. |
 | Config | `env` / `envFrom` + [`flagr_env.md`](../flagr_env.md). |
 | SQLite file | `/data/flagr.sqlite`. GORM auto-migrates. Not `demo_sqlite3.db`. |
@@ -274,18 +272,10 @@ Rollback: `helm rollback flagr`. Bad image: `--set image.tag=…`.
 
 ### PR 1 — `feat: official Helm chart (helm/)`
 
-**Depends on:** nothing. Answers #781 Q1 (yes, in this repo) and Q2 (path is `helm/`, not `charts/flagr`). Q3 = not this PR.
+**Depends on:** nothing. Answers #781 Q1/Q2/Q3 in one PR (Q3 = OCI from `cd_helm.yml`, not a git-directory URL).
 
-**Files:** `helm/**`, `.github/workflows/helm.yml`, `Makefile` (`helm-lint` + help), `docs/flagr_self_host.md`, `docs/flagr_env.md` (one-line pointer), `docs/CONTRIBUTING.md` (release bump of `helm/Chart.yaml`), `AGENTS.md`, root `README.md`.
+**Files:** `helm/**` (`Chart.yaml` `1.0.0`), `.github/workflows/helm.yml`, `.github/workflows/cd_helm.yml`, `Makefile`, `docs/flagr_self_host.md`, `docs/flagr_env.md`, `docs/CONTRIBUTING.md` (release bump + GHCR public steps), `AGENTS.md`, root `README.md`.
 
-**What:** The six-file chart above. `helm test` health pod (`curlimages/curl:8.1.2`). Kind only on `helm/**`. Self-host: install from `./helm`, port-forward, curl, Postgres `env` snippet, chart-vs-process defaults (pprof/debug/json logs), SQLite is not HA.
+**What:** Minimal chart + unittest + Kind `helm test` + OCI publish to `oci://ghcr.io/openflagr/flagr/charts/flagr`. Self-host one-liner is OCI with `--version`. Ingress/SA/HPA/persistence stay out of the chart.
 
-**Reply on #781:** Deployment + ClusterIP + probes + env/Secrets + sqlite default + SQL/JSON via env + helm test + lint/template/Kind + docs. Ingress/SA/HPA/persistence are **out of the chart**; K8s-fluent operators attach them.
-
-### PR 2 — `ci: publish Helm chart to oci://ghcr.io/openflagr/charts/flagr`
-
-**Depends on:** PR 1; `packages: write` (same as `cd_docker.yml`).
-
-**Files:** `.github/workflows/cd_helm.yml`; `helm/Chart.yaml` → `1.0.0`; self-host + NOTES primary install → OCI.
-
-**Not in these PRs:** Ingress/HPA/PDB, bundled DB, Artifact Hub listing, env.go 1:1 values.
+**Not in this PR:** Artifact Hub listing, bundled DB, env.go 1:1 values.
