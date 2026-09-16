@@ -4,7 +4,7 @@ Flagr has **no config file**. Every knob is an environment variable bound at sta
 
 This page embeds `pkg/config/env.go` from the repo tree at docs build time (every `env` tag and default), then a short operator guide for the variables you actually touch. Niche knobs may appear only in the source block.
 
-Deploy recipes: [Self-hosting](flagr_self_host.md). Kubernetes: install the in-repo chart (`helm/`) and pass `FLAGR_*` via `env` / `envFrom`. SQLite vs MySQL/Postgres scaling: [Kubernetes scaling](flagr_self_host.md#kubernetes-scaling).
+Deploy recipes: [Self-hosting](flagr_self_host.md). Kubernetes: install the in-repo chart (`helm/`) and pass `FLAGR_*` via `env` / `envFrom`. SQLite HA, GitOps, and MySQL/Postgres scaling: [Kubernetes scaling](flagr_self_host.md#kubernetes-scaling).
 
 ## Source (`pkg/config/env.go`) {#source-pkgconfigenvgo}
 

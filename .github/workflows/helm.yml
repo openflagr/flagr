@@ -27,7 +27,7 @@ jobs:
       - run: make helm-lint
       - run: make helm-unittest
 
-  kind:
+  install:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

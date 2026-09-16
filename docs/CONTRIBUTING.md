@@ -41,7 +41,7 @@ Once the server is running, the next step is knowing where to make your change. 
 | `pkg/handler/data_recorder*.go` | Kafka, Kinesis, Pub/Sub, Datar |
 | `pkg/entity/` | Domain models |
 | `pkg/config/env.go` | Environment variables (documented in [flagr_env.md](flagr_env.md)) |
-| `helm/` | Official Helm chart (Deployment + Service; configure via `env`) |
+| `helm/` | Official Helm chart (SQLite, evalReplicas, gitops, SQL via `env`) |
 | `browser/flagr-ui/src/` | UI — `api/crud.ts`, `api/eval.ts`, `pages/flagPage.ts` |
 | `swagger/` → `make swagger` → `swagger_gen/` | OpenAPI; do not hand-edit `swagger_gen/` |
 | `cmd/flagr-server/` | Server entry |
@@ -71,6 +71,7 @@ Flagr runs a layered test suite: Go unit tests, Playwright browser E2E, and API 
 make test
 make test-e2e
 make test-integration
+make helm-lint && make helm-unittest   # if you touched helm/
 go test -race ./pkg/...    # when debugging flakes
 ```
 
@@ -88,7 +89,7 @@ If you'd rather not remember the order, `make gen` runs all three in sequence. I
 
 ## Helm chart
 
-The official chart lives in **`helm/`** (not `charts/flagr`). It is a small Deployment + ClusterIP Service; Flagr config is `env` / `envFrom` against [flagr_env.md](flagr_env.md).
+The official chart lives in **`helm/`** (not `charts/flagr`). It is a small Deployment + ClusterIP Service; Flagr config is `env` / `envFrom` against [flagr_env.md](flagr_env.md). Modes: default SQLite (one writer); `evalReplicas` for extra json_http readers of that writer; `gitops.enabled` for all-pods json_http (GitHub); MySQL/Postgres via `replicaCount` + `env`. Scaling: [flagr_self_host.md](flagr_self_host.md#kubernetes-scaling).
 
 ```bash
 make helm-lint       # helm lint --strict + helm template

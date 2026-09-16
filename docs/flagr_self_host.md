@@ -126,7 +126,7 @@ Pin `--version` to `helm/Chart.yaml` `version`. From a checkout: `helm install f
 
 Default install: **one** replica, SQLite at `/data/flagr.sqlite` on an emptyDir (ephemeral). Chart vs process / Docker defaults: `FLAGR_PPROF_ENABLED=false`, `FLAGR_DB_DBCONNECTION_DEBUG=false`, `FLAGR_LOGRUS_FORMAT=json`.
 
-If you set `FLAGR_WEB_PREFIX`, also override probe `httpGet.path`, `test.path`, and `evalReplicas.flagsURL`.
+If you set `FLAGR_WEB_PREFIX`, also override probe `httpGet.path`, `test.path`, and (SQLite HA) `evalReplicas.flagsURL`.
 
 Same image on a VM or systemd: inject secrets, bind `0.0.0.0:18000`, probe **`GET /api/v1/health`**.
 
@@ -134,7 +134,7 @@ Same image on a VM or systemd: inject secrets, bind `0.0.0.0:18000`, probe **`GE
 
 Evaluation is served from an in-memory EvalCache (reload is per pod). How you add replicas depends on the store — SQLite cannot take multiple writers.
 
-#### SQLite — one writer
+#### SQLite — one writer {#sqlite}
 
 Keep `replicaCount: 1`. Persist the file with a PVC mounted as volume `data`:
 
@@ -145,7 +145,7 @@ extraVolumes:
       claimName: flagr-data
 ```
 
-#### SQLite — extra eval capacity (no extra writers)
+#### SQLite — extra eval capacity (no extra writers) {#sqlite-ha}
 
 Do **not** raise `replicaCount`. Set `evalReplicas.replicaCount`. The chart keeps one SQLite primary (UI + CRUD) and adds eval-only pods that poll `GET /api/v1/export/eval_cache/json` over `json_http` (same JSON the GitOps driver reads). Those pods never open the SQLite file.
 
@@ -169,7 +169,7 @@ A flag change on the primary is visible on eval replicas within [EvalCache fresh
 
 If the primary uses `FLAGR_WEB_PREFIX`, set `evalReplicas.flagsURL` to the prefixed export URL. If you enable JWT/basic on the primary, whitelist `/api/v1/export` (or the prefixed path) so the replicas can fetch.
 
-#### MySQL / PostgreSQL — every pod uses the same DB
+#### MySQL / PostgreSQL — every pod uses the same DB {#sql}
 
 Raise `replicaCount`. Leave `evalReplicas.replicaCount` at **0**. There is one shared database, so every replica can serve eval **and** CRUD.
 
@@ -201,7 +201,7 @@ helm upgrade --install flagr oci://ghcr.io/openflagr/flagr/charts/flagr --versio
 
 MySQL is the same overlay with `FLAGR_DB_DBDRIVER=mysql` and a `parseTime=true` DSN ([guide](flagr_env.md)).
 
-#### GitOps — GitHub (or any HTTP JSON) is the source
+#### GitOps — GitHub (or any HTTP JSON) is the source {#gitops}
 
 Every pod is the same: `json_http` eval-only, no SQLite writer. Flags live in git; Flagr polls the raw URL. UI is read-only; writes under `/api/v1/flags` return 403. Spec and PAT setup: [JSON flag source](flagr_json_flag_spec.md).
 

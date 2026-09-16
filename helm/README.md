@@ -11,7 +11,11 @@ curl -sS http://127.0.0.1:18000/api/v1/health
 
 From a checkout: `helm install flagr ./helm --namespace flagr --create-namespace`.
 
-Default is one replica, SQLite at `/data/flagr.sqlite` on an emptyDir. SQLite is **one writer** — do not raise `replicaCount`. For more eval traffic with SQLite, set `evalReplicas.replicaCount` (json_http readers of the primary). For GitOps (GitHub raw JSON), set `gitops.enabled` + `gitops.flagsURL` and raise `replicaCount` (all pods identical, eval-only). For MySQL/Postgres, raise `replicaCount` and leave `evalReplicas` / `gitops` off.
+| Mode | Values | Pods |
+|------|--------|------|
+| SQLite (default) | — | 1 writer |
+| SQLite HA | `evalReplicas.replicaCount` | 1 writer + N json_http readers of the primary |
+| GitOps | `gitops.enabled` + `gitops.flagsURL` | N identical json_http pods (GitHub raw URL) |
+| MySQL / Postgres | `replicaCount` + `env` | N pods on one DB |
 
-Scaling: https://openflagr.github.io/flagr/flagr_self_host#kubernetes-scaling
-Self-hosting: https://openflagr.github.io/flagr/flagr_self_host
+`evalReplicas` and `gitops` are mutually exclusive. Details: [Kubernetes scaling](https://openflagr.github.io/flagr/flagr_self_host#kubernetes-scaling).

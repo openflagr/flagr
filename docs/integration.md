@@ -25,7 +25,7 @@ Invariants live in [Behavioral contracts](flagr_behavioral_contracts.md) (eval v
 | Log impression | `POST /exposures` | After the user **sees** the treatment |
 | Liveness | `GET /health` | Probes |
 
-Eval-only replicas (`json_file` / `json_http`) expose evaluation, health, and `GET /api/v1/export/eval_cache/json` only (the UI works as a read-only browser fed by that export; writes under `/api/v1/flags` return 403). See [behavioral contracts: eval-only](flagr_behavioral_contracts.md#eval-only).
+Eval-only replicas (`json_file` / `json_http`) expose evaluation, health, and `GET /api/v1/export/eval_cache/json` only (the UI works as a read-only browser fed by that export; writes under `/api/v1/flags` return 403). Helm: `gitops.enabled` (all pods json_http) or `evalReplicas` (json_http readers of a SQLite primary). See [behavioral contracts: eval-only](flagr_behavioral_contracts.md#eval-only) and [Kubernetes scaling](flagr_self_host.md#kubernetes-scaling).
 
 ## Request model
 

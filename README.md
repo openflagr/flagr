@@ -63,9 +63,9 @@ That lets you **decouple deploy from release** (ship code dark, turn it on per a
 - **Duplicate flag** - `POST /flags/{id}/duplicate` or UI **Duplicate Flag**
 - **A/B testing** - deterministic assignment; pair with exposure logging
 - **Dynamic configuration** - `variantAttachment` JSON on eval responses
-- **GitOps** - `json_file` / `json_http`; read-only UI; `flagr-validate` in CI
+- **GitOps** - `json_file` / `json_http`; Helm `gitops.enabled`; read-only UI; `flagr-validate` in CI
 - **Exposure logging** - `POST /exposures` for trustworthy denominators
-- **Self-hosted** - official Docker image, env vars, and in-repo Helm chart (`helm/`)
+- **Self-hosted** - Docker image, env vars, Helm (`oci://ghcr.io/openflagr/flagr/charts/flagr`)
 - **Databases** - SQLite, MySQL, PostgreSQL, or JSON sources
 - **Vue 3 UI** - TypeScript (`browser/flagr-ui`); `make build-ui`, `make test-e2e`
 
@@ -77,6 +77,15 @@ docker run -it -p 18000:18000 ghcr.io/openflagr/flagr
 
 open http://localhost:18000
 ```
+
+Kubernetes:
+
+```sh
+helm install flagr oci://ghcr.io/openflagr/flagr/charts/flagr --version 1.0.0 \
+  --namespace flagr --create-namespace
+```
+
+Scaling (SQLite HA, GitOps, MySQL/Postgres): [Self-hosting](https://openflagr.github.io/flagr/flagr_self_host#kubernetes-scaling).
 
 Demo API: [try-flagr.onrender.com](https://try-flagr.onrender.com) (may cold-start)
 

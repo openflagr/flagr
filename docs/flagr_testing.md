@@ -14,6 +14,17 @@ make test           # golangci-lint + swagger validate + go test ./pkg/...
 
 Unit tests are where most feature work begins and ends. They compile fast, run in seconds, and — because `go test ./pkg/...` already parallelizes across packages — they make good use of CI cores without any extra effort from you. When you do need to reach for parallelism *within* a package, see [Writing parallel-safe tests](#writing-parallel-safe-tests) below.
 
+## Helm chart tests
+
+The in-repo chart lives in `helm/`. Template unit tests (no cluster) and lint:
+
+```bash
+make helm-lint       # helm lint --strict + helm template
+make helm-unittest   # helm-unittest plugin against helm/tests/
+```
+
+CI (`.github/workflows/helm.yml`, path-filtered on `helm/**`) runs those, then a Kind cluster `helm install` + `helm test` (health curl). Do not add that workflow as a required check while `on.paths` skips Go PRs. See [Contributing — Helm chart](CONTRIBUTING.md#helm-chart).
+
 ## E2E tests (UI)
 
 The Flagr UI lives in `browser/flagr-ui` and is **TypeScript**. End-to-end coverage builds the server, typechecks and lints the UI, then drives it with Playwright:
