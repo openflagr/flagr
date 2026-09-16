@@ -25,8 +25,8 @@ Values you almost always override past a demo:
 |----------|-------------------------|------------------|
 | `HOST` | process default `localhost`; Docker sets `0.0.0.0` | Keep `0.0.0.0` in containers |
 | `PORT` | `18000` | As needed |
-| `FLAGR_DB_DBDRIVER` | `sqlite3` | `mysql` / `postgres` |
-| `FLAGR_DB_DBCONNECTIONSTR` | image: `/data/demo_sqlite3.db`; binary: `flagr.sqlite` | Your DSN / volume path |
+| `FLAGR_DB_DBDRIVER` | `sqlite3` | `mysql` / `postgres` / `json_http` |
+| `FLAGR_DB_DBCONNECTIONSTR` | image: `/data/demo_sqlite3.db`; binary: `flagr.sqlite` | Your DSN / volume path / flags URL |
 | `FLAGR_RECORDER_ENABLED` | `false` | When using recorders |
 
 Pin a semver tag in production, not only `latest`.
@@ -44,23 +44,29 @@ make build && ./flagr --port 18000
 
 TLS uses `--scheme=https` plus the cert flags from the server bootstrap. Local full stack: `make start` (see [AGENTS.md](https://github.com/openflagr/flagr/blob/main/AGENTS.md)).
 
-## Deployment shapes
+## Deployment strategy {#deployment-strategy}
 
-`FLAGR_DB_DBDRIVER` largely decides the surface area. JSON drivers force [eval-only mode](flagr_behavioral_contracts.md#eval-only).
+Pick **where flags live** and **how you run the process**. Evaluation is served from an in-memory EvalCache (reload is per replica). Extra replicas are only safe when they share a store — SQLite cannot take multiple writers. JSON drivers (`json_file` / `json_http`) force [eval-only mode](flagr_behavioral_contracts.md#eval-only) (read-only UI; writes under `/api/v1/flags` return 403).
 
-| Shape | Driver | How you scale |
-|-------|--------|----------------|
-| Demo | `sqlite3` (default) | **One writer.** Ephemeral unless you mount the DB path |
-| SQLite + eval replicas | primary `sqlite3`, others `json_http` | One SQLite writer; extra pods poll its export. Helm: `evalReplicas` |
-| Prod UI + CRUD | `mysql` or `postgres` | **N writers/readers** on one shared DB. Raise `replicaCount` |
-| GitOps | all pods `json_http` | Same image/env; Helm `gitops.enabled` + `flagsURL`. Scale `replicaCount` |
-| Headless API | SQL + `FLAGR_UI_ENABLED=false` | CRUD via API only |
+| Strategy | Flags live in | How you run it | Scale | Writes |
+|----------|---------------|----------------|-------|--------|
+| [Docker demo](#docker) | SQLite in the container | `docker run` | 1 | yes |
+| [Compose](#compose) | MySQL | Docker Compose | 1 Flagr + DB | yes |
+| [Helm / SQLite](#sqlite) | SQLite volume | Helm | **1 writer** | yes |
+| [Helm / SQLite HA](#sqlite-ha) | SQLite + `json_http` | Helm `evalReplicas` | 1 writer + N eval pods | primary only |
+| [Helm / GitOps](#gitops) | Git (HTTP JSON) | Helm `gitops.enabled` | N identical eval-only pods | no |
+| [Helm / MySQL or Postgres](#sql) | Shared SQL | Helm `replicaCount` + `env` | N pods, one DB | yes, every pod |
+| [VM / systemd](#vm) | any of the above | `./flagr` or the image | same rules as the store | same |
 
-## Database
+Headless API (any SQL strategy): `FLAGR_UI_ENABLED=false`. DSN shapes: [Database](#database). Helm values: in-repo [`helm/`](https://github.com/openflagr/flagr/tree/main/helm), OCI `oci://ghcr.io/openflagr/flagr/charts/flagr`.
 
-On boot, Flagr retries the connection `FLAGR_DB_DBCONNECTION_RETRY_ATTEMPTS` times (default **9**) with `FLAGR_DB_DBCONNECTION_RETRY_DELAY` (default **100ms**) between attempts. Then GORM **auto-migrate** brings schema up to date for normal upgrades.
+### Docker (SQLite demo) {#docker}
 
-**SQLite** - mount a volume so flags survive restarts:
+```bash
+docker run --rm -p 18000:18000 ghcr.io/openflagr/flagr
+```
+
+Persist flags across restarts:
 
 ```bash
 docker run --rm -p 18000:18000 \
@@ -71,13 +77,9 @@ docker run --rm -p 18000:18000 \
   ghcr.io/openflagr/flagr
 ```
 
-**MySQL** - DSN like `user:password@tcp(host:3306)/flagr?parseTime=true`. `parseTime` is required for GORM time mapping.
+Stay at one container. For more eval traffic, use [SQLite HA](#sqlite-ha) or move to SQL / GitOps.
 
-**PostgreSQL** - libpq-style string, e.g. `sslmode=disable host=… user=… password=… dbname=flagr` (prefer `sslmode=require` where you can).
-
-**JSON HTTP** - `FLAGR_DB_DBDRIVER=json_http` and a flag URL. Freshness follows [EvalCache freshness](flagr_behavioral_contracts.md#evalcache-freshness). Spec: [JSON flag source](flagr_json_flag_spec.md).
-
-## Docker Compose (MySQL + Flagr)
+### Docker Compose (MySQL) {#compose}
 
 Starting point, not a hardened blueprint:
 
@@ -91,19 +93,19 @@ services:
       MYSQL_PASSWORD: changeme
       MYSQL_ROOT_PASSWORD: changeme
     volumes:
- - mysql-data:/var/lib/mysql
+      - mysql-data:/var/lib/mysql
 
   flagr:
     image: ghcr.io/openflagr/flagr:latest
     ports:
- - "18000:18000"
+      - "18000:18000"
     environment:
       HOST: "0.0.0.0"
       FLAGR_DB_DBDRIVER: mysql
       FLAGR_DB_DBCONNECTIONSTR: "flagr:changeme@tcp(mysql:3306)/flagr?parseTime=true"
       FLAGR_LOGRUS_FORMAT: json
     depends_on:
- - mysql
+      - mysql
 
 volumes:
   mysql-data:
@@ -111,9 +113,7 @@ volumes:
 
 Swap credentials before any shared environment. The repo CI compose file has more engine examples but is tuned for tests, not production.
 
-## Kubernetes
-
-In-repo chart at [`helm/`](https://github.com/openflagr/flagr/tree/main/helm), published as OCI to GHCR. Configure Flagr with `env` / `envFrom` — every knob is in [Environment variables](flagr_env.md). Add your own Ingress, PVC, and HPA.
+### Helm / Kubernetes {#helm}
 
 ```bash
 helm install flagr oci://ghcr.io/openflagr/flagr/charts/flagr --version 1.0.0 \
@@ -124,17 +124,13 @@ curl -sS http://127.0.0.1:18000/api/v1/health
 
 Pin `--version` to `helm/Chart.yaml` `version`. From a checkout: `helm install flagr ./helm --namespace flagr --create-namespace`. Helm cannot install from a GitHub directory URL (`…/tree/main/helm`); the chart is a subdirectory, not a packaged `.tgz`.
 
+Configure Flagr with `env` / `envFrom` — every knob is in [Environment variables](flagr_env.md). Add your own Ingress, PVC, and HPA.
+
 Default install: **one** replica, SQLite at `/data/flagr.sqlite` on an emptyDir (ephemeral). Chart vs process / Docker defaults: `FLAGR_PPROF_ENABLED=false`, `FLAGR_DB_DBCONNECTION_DEBUG=false`, `FLAGR_LOGRUS_FORMAT=json`.
 
 If you set `FLAGR_WEB_PREFIX`, also override probe `httpGet.path`, `test.path`, and (SQLite HA) `evalReplicas.flagsURL`.
 
-Same image on a VM or systemd: inject secrets, bind `0.0.0.0:18000`, probe **`GET /api/v1/health`**.
-
-### Scaling {#kubernetes-scaling}
-
-Evaluation is served from an in-memory EvalCache (reload is per pod). How you add replicas depends on the store — SQLite cannot take multiple writers.
-
-#### SQLite — one writer {#sqlite}
+#### Helm / SQLite — one writer {#sqlite}
 
 Keep `replicaCount: 1`. Persist the file with a PVC mounted as volume `data`:
 
@@ -145,7 +141,7 @@ extraVolumes:
       claimName: flagr-data
 ```
 
-#### SQLite — extra eval capacity (no extra writers) {#sqlite-ha}
+#### Helm / SQLite HA — extra eval capacity, no extra writers {#sqlite-ha}
 
 Do **not** raise `replicaCount`. Set `evalReplicas.replicaCount`. The chart keeps one SQLite primary (UI + CRUD) and adds eval-only pods that poll `GET /api/v1/export/eval_cache/json` over `json_http` (same JSON the GitOps driver reads). Those pods never open the SQLite file.
 
@@ -169,39 +165,7 @@ A flag change on the primary is visible on eval replicas within [EvalCache fresh
 
 If the primary uses `FLAGR_WEB_PREFIX`, set `evalReplicas.flagsURL` to the prefixed export URL. If you enable JWT/basic on the primary, whitelist `/api/v1/export` (or the prefixed path) so the replicas can fetch.
 
-#### MySQL / PostgreSQL — every pod uses the same DB {#sql}
-
-Raise `replicaCount`. Leave `evalReplicas.replicaCount` at **0**. There is one shared database, so every replica can serve eval **and** CRUD.
-
-```yaml
-# postgres.yaml
-replicaCount: 3
-env:
-  - name: FLAGR_DB_DBDRIVER
-    value: postgres
-  - name: FLAGR_DB_DBCONNECTIONSTR
-    valueFrom:
-      secretKeyRef:
-        name: flagr-db
-        key: FLAGR_DB_DBCONNECTIONSTR
-  - name: FLAGR_DB_DBCONNECTION_RETRY_ATTEMPTS
-    value: "30"
-  - name: FLAGR_DB_DBCONNECTION_RETRY_DELAY
-    value: "2s"
-```
-
-Flagr fatals after ~900ms if the DB is down (default retries); a startupProbe cannot help. Raise retries as above.
-
-```bash
-kubectl create secret generic flagr-db \
-  --from-literal=FLAGR_DB_DBCONNECTIONSTR='sslmode=require host=pg.example user=flagr password=… dbname=flagr'
-helm upgrade --install flagr oci://ghcr.io/openflagr/flagr/charts/flagr --version 1.0.0 \
-  --namespace flagr -f postgres.yaml
-```
-
-MySQL is the same overlay with `FLAGR_DB_DBDRIVER=mysql` and a `parseTime=true` DSN ([guide](flagr_env.md)).
-
-#### GitOps — GitHub (or any HTTP JSON) is the source {#gitops}
+#### Helm / GitOps — GitHub (or any HTTP JSON) is the source {#gitops}
 
 Every pod is the same: `json_http` eval-only, no SQLite writer. Flags live in git; Flagr polls the raw URL. UI is read-only; writes under `/api/v1/flags` return 403. Spec and PAT setup: [JSON flag source](flagr_json_flag_spec.md).
 
@@ -239,6 +203,54 @@ kubectl create secret generic flagr-gitops \
 ```
 
 All traffic (UI + eval) is `svc/flagr`. A merged flags.json is visible within [EvalCache freshness](flagr_behavioral_contracts.md#evalcache-freshness).
+
+#### Helm / MySQL or PostgreSQL — every pod uses the same DB {#sql}
+
+Raise `replicaCount`. Leave `evalReplicas.replicaCount` at **0** and `gitops.enabled` off. There is one shared database, so every replica can serve eval **and** CRUD.
+
+```yaml
+# postgres.yaml
+replicaCount: 3
+env:
+  - name: FLAGR_DB_DBDRIVER
+    value: postgres
+  - name: FLAGR_DB_DBCONNECTIONSTR
+    valueFrom:
+      secretKeyRef:
+        name: flagr-db
+        key: FLAGR_DB_DBCONNECTIONSTR
+  - name: FLAGR_DB_DBCONNECTION_RETRY_ATTEMPTS
+    value: "30"
+  - name: FLAGR_DB_DBCONNECTION_RETRY_DELAY
+    value: "2s"
+```
+
+Flagr fatals after ~900ms if the DB is down (default retries); a startupProbe cannot help. Raise retries as above.
+
+```bash
+kubectl create secret generic flagr-db \
+  --from-literal=FLAGR_DB_DBCONNECTIONSTR='sslmode=require host=pg.example user=flagr password=… dbname=flagr'
+helm upgrade --install flagr oci://ghcr.io/openflagr/flagr/charts/flagr --version 1.0.0 \
+  --namespace flagr -f postgres.yaml
+```
+
+MySQL is the same overlay with `FLAGR_DB_DBDRIVER=mysql` and a `parseTime=true` DSN ([guide](flagr_env.md)).
+
+### VM / systemd {#vm}
+
+Same image or `make build` binary: inject secrets for DB, JWT, and recorders; bind `0.0.0.0:18000`; probe **`GET /api/v1/health`**. Scaling follows the store in the [matrix](#deployment-strategy) — one SQLite process, or N processes on MySQL/Postgres/json_http.
+
+## Database {#database}
+
+On boot, Flagr retries the connection `FLAGR_DB_DBCONNECTION_RETRY_ATTEMPTS` times (default **9**) with `FLAGR_DB_DBCONNECTION_RETRY_DELAY` (default **100ms**) between attempts. Then GORM **auto-migrate** brings schema up to date for normal upgrades. `json_http` / `json_file` skip GORM and load flags on the EvalCache interval.
+
+**SQLite** — file path in `FLAGR_DB_DBCONNECTIONSTR` (Helm: `/data/flagr.sqlite`).
+
+**MySQL** — DSN like `user:password@tcp(host:3306)/flagr?parseTime=true`. `parseTime` is required for GORM time mapping.
+
+**PostgreSQL** — libpq-style string, e.g. `sslmode=disable host=… user=… password=… dbname=flagr` (prefer `sslmode=require` where you can).
+
+**JSON HTTP** — `FLAGR_DB_DBDRIVER=json_http` and a flag URL. Freshness: [EvalCache freshness](flagr_behavioral_contracts.md#evalcache-freshness). Spec: [JSON flag source](flagr_json_flag_spec.md).
 
 ## Reverse proxy and path prefix
 

@@ -10,7 +10,7 @@
 
    https://openflagr.github.io/flagr/flagr_env
 
-   Scaling (https://openflagr.github.io/flagr/flagr_self_host#kubernetes-scaling):
+   Deployment strategy (https://openflagr.github.io/flagr/flagr_self_host#deployment-strategy):
 {{- if .Values.gitops.enabled }}
 
    GitOps is on: every pod is json_http eval-only (read-only UI). Scale replicaCount.
