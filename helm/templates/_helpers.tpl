@@ -85,3 +85,20 @@ Container image (tag defaults to Chart.appVersion).
 {{- define "flagr.image" -}}
 {{- printf "%s:%s" .Values.image.repository (.Values.image.tag | default .Chart.AppVersion) }}
 {{- end }}
+
+{{/*
+Fail closed on incompatible scaling modes.
+*/}}
+{{- define "flagr.validate" -}}
+{{- if and .Values.gitops.enabled (gt (int .Values.evalReplicas.replicaCount) 0) }}
+{{- fail "gitops.enabled and evalReplicas.replicaCount>0 cannot be combined: GitOps is one json_http Deployment (scale replicaCount); evalReplicas is SQLite HA only." }}
+{{- end }}
+{{- $hasDSN := not (empty .Values.gitops.flagsURL) }}
+{{- range .Values.env }}
+{{- if eq .name "FLAGR_DB_DBCONNECTIONSTR" }}{{- $hasDSN = true }}{{- end }}
+{{- end }}
+{{- if .Values.envFrom }}{{- $hasDSN = true }}{{- end }}
+{{- if and .Values.gitops.enabled (not $hasDSN) }}
+{{- fail "gitops.enabled requires gitops.flagsURL (public raw URL) or env/envFrom FLAGR_DB_DBCONNECTIONSTR (private GitHub PAT URL)." }}
+{{- end }}
+{{- end }}

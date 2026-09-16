@@ -4,10 +4,22 @@
 # Scaling:
 #   SQLite  — keep replicaCount at 1 (one writer). For more eval capacity set
 #             evalReplicas.replicaCount; those pods are json_http eval-only.
-#   MySQL/Postgres — raise replicaCount; leave evalReplicas at 0.
+#   GitOps  — gitops.enabled; all primary pods are json_http (no SQLite).
+#             Scale replicaCount. Leave evalReplicas at 0.
+#   MySQL/Postgres — raise replicaCount; leave evalReplicas and gitops off.
 
-# Primary Deployment. Stay at 1 when using the default SQLite driver.
+# Primary Deployment. Stay at 1 for SQLite. Raise for GitOps / mysql / postgres.
 replicaCount: 1
+
+# GitOps: every primary pod is json_http eval-only against one flags URL
+# (GitHub raw, gist, S3, …). No SQLite writer. UI is read-only.
+# Mutually exclusive with evalReplicas.
+gitops:
+  enabled: false
+  # Public URL, e.g. https://raw.githubusercontent.com/org/repo/main/flags.json
+  # Private GitHub: leave empty and set FLAGR_DB_DBCONNECTIONSTR via env
+  # (PAT as Basic username — see flagr_json_flag_spec).
+  flagsURL: ""
 
 # Extra eval-only pods for SQLite HA. They do not open SQLite; they poll
 # GET /api/v1/export/eval_cache/json on the primary (json_http → eval-only).
