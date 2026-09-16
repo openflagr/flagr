@@ -1,14 +1,16 @@
+{{- if gt (int .Values.evalReplicas.replicaCount) 0 }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "flagr.fullname" . }}
+  name: {{ include "flagr.evalFullname" . }}
   labels:
     {{- include "flagr.labels" . | nindent 4 }}
+    app.kubernetes.io/component: eval
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ .Values.evalReplicas.replicaCount }}
   selector:
     matchLabels:
-      {{- include "flagr.primarySelectorLabels" . | nindent 6 }}
+      {{- include "flagr.evalSelectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -16,7 +18,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "flagr.primarySelectorLabels" . | nindent 8 }}
+        {{- include "flagr.evalSelectorLabels" . | nindent 8 }}
         {{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -28,6 +30,19 @@ spec:
       {{- end }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: wait-primary
+          image: "{{ .Values.test.image.repository }}:{{ .Values.test.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - curl
+            - -fsS
+            - --retry
+            - "30"
+            - --retry-all-errors
+            - --retry-delay
+            - "2"
+            - {{ include "flagr.evalFlagsURL" . | quote }}
       containers:
         - name: flagr
           image: {{ include "flagr.image" . }}
@@ -50,42 +65,22 @@ spec:
             - name: FLAGR_PPROF_ENABLED
               value: "false"
             - name: FLAGR_DB_DBDRIVER
-              value: sqlite3
+              value: json_http
             - name: FLAGR_DB_DBCONNECTIONSTR
-              value: /data/flagr.sqlite
-            {{- with .Values.env }}
+              value: {{ include "flagr.evalFlagsURL" . | quote }}
+            {{- with .Values.evalReplicas.env }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-          {{- with .Values.envFrom }}
-          envFrom:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
           livenessProbe:
             {{- toYaml .Values.livenessProbe | nindent 12 }}
           readinessProbe:
             {{- toYaml .Values.readinessProbe | nindent 12 }}
-          volumeMounts:
-            - name: data
-              mountPath: /data
-            {{- with .Values.extraVolumeMounts }}
-            {{- toYaml . | nindent 12 }}
-            {{- end }}
-          {{- with .Values.resources }}
+          {{- $res := .Values.evalReplicas.resources }}
+          {{- if not $res }}{{ $res = .Values.resources }}{{ end }}
+          {{- with $res }}
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-      volumes:
-        {{- $hasData := false -}}
-        {{- range .Values.extraVolumes }}
-        {{- if eq .name "data" }}{{ $hasData = true }}{{ end }}
-        {{- end }}
-        {{- if not $hasData }}
-        - name: data
-          emptyDir: {}
-        {{- end }}
-        {{- with .Values.extraVolumes }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -98,3 +93,4 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+{{- end }}

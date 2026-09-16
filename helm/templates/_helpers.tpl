@@ -41,11 +41,42 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
 {{/*
-Selector labels
+Selector labels (shared).
 */}}
 {{- define "flagr.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "flagr.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{/*
+Primary (SQLite/SQL writer, or the only Deployment).
+*/}}
+{{- define "flagr.primarySelectorLabels" -}}
+{{ include "flagr.selectorLabels" . }}
+app.kubernetes.io/component: primary
+{{- end }}
+
+{{/*
+Eval-only replicas (json_http readers). Separate Service so CRUD never hits them.
+*/}}
+{{- define "flagr.evalSelectorLabels" -}}
+{{ include "flagr.selectorLabels" . }}
+app.kubernetes.io/component: eval
+{{- end }}
+
+{{- define "flagr.evalFullname" -}}
+{{- printf "%s-eval" (include "flagr.fullname" .) | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{/*
+URL eval replicas poll. Override evalReplicas.flagsURL if FLAGR_WEB_PREFIX is set.
+*/}}
+{{- define "flagr.evalFlagsURL" -}}
+{{- if .Values.evalReplicas.flagsURL }}
+{{- .Values.evalReplicas.flagsURL }}
+{{- else }}
+{{- printf "http://%s:%v/api/v1/export/eval_cache/json" (include "flagr.fullname" .) .Values.service.port }}
+{{- end }}
 {{- end }}
 
 {{/*

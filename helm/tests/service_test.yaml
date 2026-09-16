@@ -19,6 +19,9 @@ tests:
       - equal:
           path: spec.selector["app.kubernetes.io/name"]
           value: flagr
+      - equal:
+          path: spec.selector["app.kubernetes.io/component"]
+          value: primary
 
   - it: honors service type, port, and annotations
     set:
