@@ -29,6 +29,19 @@ For a large change, open an issue first so the approach can be discussed.
 
 Maintainers review PRs. Questions and requested changes are part of that review.
 
+## Helm chart
+
+The official chart lives in **`helm/`** (not `charts/flagr`). It is a small Deployment + ClusterIP Service; Flagr config is `env` / `envFrom` against [flagr_env.md](flagr_env.md).
+
+```bash
+make helm-lint       # helm lint --strict + helm template
+make helm-unittest   # helm-unittest plugin v1.1.2 (CI installs it)
+```
+
+Kind `helm install` + `helm test` run in `.github/workflows/helm.yml` only (path-filtered on `helm/**`). Do not add `helm.yml` as a required GitHub check while `on.paths` skips Go PRs.
+
+**Release rule:** every Flagr GitHub Release PR bumps `helm/Chart.yaml` `appVersion` to the new Flagr tag and bumps chart `version` patch (even if templates are unchanged), so a later OCI publish does not reuse a chart version.
+
 ## License
 
 Flagr is Apache 2.0. Contributions are licensed under the same terms.

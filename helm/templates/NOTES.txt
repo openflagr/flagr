@@ -1,0 +1,29 @@
+1. Port-forward the ClusterIP Service:
+
+   kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "flagr.fullname" . }} 18000:{{ .Values.service.port }}
+
+2. Check health:
+
+   curl -sS http://127.0.0.1:18000{{ .Values.test.path }}
+
+3. Configure Flagr with env / envFrom (every FLAGR_* key):
+
+   https://openflagr.github.io/flagr/flagr_env
+
+   Default is SQLite at /data/flagr.sqlite on an emptyDir (ephemeral).
+   SQLite is not a shared store — use postgres, mysql, or json_http for replicaCount > 1.
+
+   Persist SQLite: create a PVC and pass a volume named "data":
+
+     extraVolumes:
+       - name: data
+         persistentVolumeClaim:
+           claimName: flagr-data
+
+   Add your own Ingress / HPA / NetworkPolicy. This chart is Deployment + Service + probes.
+
+   Chart vs process defaults: FLAGR_PPROF_ENABLED=false, FLAGR_DB_DBCONNECTION_DEBUG=false,
+   FLAGR_LOGRUS_FORMAT=json. Re-enable pprof via env if you need it.
+
+   If you set FLAGR_WEB_PREFIX, also override livenessProbe/readinessProbe httpGet.path
+   and test.path (JWT/basic whitelist paths must include the prefix).

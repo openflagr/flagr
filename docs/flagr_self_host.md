@@ -110,9 +110,46 @@ volumes:
 
 Swap credentials before any shared environment. The repo CI compose file has more engine examples but is tuned for tests, not production.
 
-## Kubernetes and VMs
+## Kubernetes
 
-No in-repo Helm chart. Same image (or `make build` binary under systemd): inject secrets for DB, JWT, and recorders; bind `0.0.0.0:18000`; probe **`GET /api/v1/health`**.
+In-repo chart at [`helm/`](https://github.com/openflagr/flagr/tree/main/helm). Deployment + ClusterIP Service + probes. Configure Flagr with `env` / `envFrom` — every knob is in [Environment variables](flagr_env.md). Add your own Ingress, PVC, and HPA.
+
+```bash
+helm install flagr ./helm --namespace flagr --create-namespace
+kubectl -n flagr port-forward svc/flagr 18000:18000
+curl -sS http://127.0.0.1:18000/api/v1/health
+```
+
+Default is one replica, SQLite at `/data/flagr.sqlite` on an emptyDir (ephemeral). SQLite is not a shared store; for `replicaCount > 1` use postgres, mysql, or `json_http`.
+
+Chart vs process / Docker defaults: `FLAGR_PPROF_ENABLED=false`, `FLAGR_DB_DBCONNECTION_DEBUG=false`, `FLAGR_LOGRUS_FORMAT=json`. Re-enable pprof via `env` if you need it.
+
+Postgres (DSN in a Secret; raise retries — Flagr fatals after ~900ms if the DB is down):
+
+```yaml
+env:
+  - name: FLAGR_DB_DBDRIVER
+    value: postgres
+  - name: FLAGR_DB_DBCONNECTIONSTR
+    valueFrom:
+      secretKeyRef:
+        name: flagr-db
+        key: FLAGR_DB_DBCONNECTIONSTR
+  - name: FLAGR_DB_DBCONNECTION_RETRY_ATTEMPTS
+    value: "30"
+  - name: FLAGR_DB_DBCONNECTION_RETRY_DELAY
+    value: "2s"
+```
+
+```bash
+kubectl create secret generic flagr-db \
+  --from-literal=FLAGR_DB_DBCONNECTIONSTR='sslmode=require host=pg.example user=flagr password=… dbname=flagr'
+helm upgrade --install flagr ./helm --namespace flagr -f postgres-values.yaml
+```
+
+Persist SQLite: create a PVC and pass a volume named `data` (`extraVolumes`). If you set `FLAGR_WEB_PREFIX`, also override probe `httpGet.path` and `test.path`.
+
+Same image on a VM or systemd: inject secrets, bind `0.0.0.0:18000`, probe **`GET /api/v1/health`**.
 
 Horizontal scale: one shared flag store (SQL or one JSON URL), one EvalCache per replica. Cache reload is local. Read [EvalCache freshness](flagr_behavioral_contracts.md#evalcache-freshness) before assuming a flag edit is fleet-wide.
 
