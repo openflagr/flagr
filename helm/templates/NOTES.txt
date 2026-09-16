@@ -11,6 +11,11 @@
    https://openflagr.github.io/flagr/flagr_env
 
    Scaling (https://openflagr.github.io/flagr/flagr_self_host#kubernetes-scaling):
+{{- if .Values.gitops.enabled }}
+
+   GitOps is on: every pod is json_http eval-only (read-only UI). Scale replicaCount.
+   Flags URL: {{ .Values.gitops.flagsURL | default "(FLAGR_DB_DBCONNECTIONSTR via env)" }}
+{{- else }}
 
    - SQLite (default): keep replicaCount=1 (one writer). Persist with extraVolumes
      named "data". For more eval QPS set evalReplicas.replicaCount; those pods are
@@ -23,8 +28,12 @@
    Flags URL         → {{ include "flagr.evalFlagsURL" . }}
 {{- end }}
 
+   - GitOps: gitops.enabled + gitops.flagsURL (GitHub raw). All pods json_http;
+     scale replicaCount. Leave evalReplicas at 0.
+
    - MySQL / Postgres: raise replicaCount; leave evalReplicas at 0. Every pod
      shares the database.
+{{- end }}
 
    Add your own Ingress / HPA / NetworkPolicy.
 

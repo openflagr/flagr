@@ -53,7 +53,7 @@ TLS uses `--scheme=https` plus the cert flags from the server bootstrap. Local f
 | Demo | `sqlite3` (default) | **One writer.** Ephemeral unless you mount the DB path |
 | SQLite + eval replicas | primary `sqlite3`, others `json_http` | One SQLite writer; extra pods poll its export. Helm: `evalReplicas` |
 | Prod UI + CRUD | `mysql` or `postgres` | **N writers/readers** on one shared DB. Raise `replicaCount` |
-| Eval edge / GitOps | `json_file` / `json_http` | All pods read the same file/URL ([JSON spec](flagr_json_flag_spec.md)) |
+| GitOps | all pods `json_http` | Same image/env; Helm `gitops.enabled` + `flagsURL`. Scale `replicaCount` |
 | Headless API | SQL + `FLAGR_UI_ENABLED=false` | CRUD via API only |
 
 ## Database
@@ -201,9 +201,44 @@ helm upgrade --install flagr oci://ghcr.io/openflagr/flagr/charts/flagr --versio
 
 MySQL is the same overlay with `FLAGR_DB_DBDRIVER=mysql` and a `parseTime=true` DSN ([guide](flagr_env.md)).
 
-#### JSON GitOps (`json_file` / `json_http`)
+#### GitOps — GitHub (or any HTTP JSON) is the source
 
-All pods are already eval-only. Point `env` at the shared file or URL and raise `replicaCount`. Do not also set `evalReplicas` — that pattern exists to wrap a **SQLite primary**, not a JSON source.
+Every pod is the same: `json_http` eval-only, no SQLite writer. Flags live in git; Flagr polls the raw URL. UI is read-only; writes under `/api/v1/flags` return 403. Spec and PAT setup: [JSON flag source](flagr_json_flag_spec.md).
+
+This is the same `json_http` mechanism as SQLite `evalReplicas`, pointed at GitHub instead of the primary export — so there is only **one** Deployment (`replicaCount` may be > 1). Do not set `evalReplicas` (that fleet exists to wrap a SQLite writer).
+
+```yaml
+# gitops.yaml
+replicaCount: 3
+gitops:
+  enabled: true
+  flagsURL: https://raw.githubusercontent.com/org/flagr-config/main/flags.json
+```
+
+```bash
+helm upgrade --install flagr oci://ghcr.io/openflagr/flagr/charts/flagr --version 1.0.0 \
+  --namespace flagr -f gitops.yaml
+```
+
+Private repo: leave `flagsURL` empty and put the PAT URL in a Secret (PAT as HTTP Basic username, empty password):
+
+```yaml
+gitops:
+  enabled: true
+env:
+  - name: FLAGR_DB_DBCONNECTIONSTR
+    valueFrom:
+      secretKeyRef:
+        name: flagr-gitops
+        key: url
+```
+
+```bash
+kubectl create secret generic flagr-gitops \
+  --from-literal=url='https://github_pat_xxxx@raw.githubusercontent.com/org/flagr-config/main/flags.json'
+```
+
+All traffic (UI + eval) is `svc/flagr`. A merged flags.json is visible within [EvalCache freshness](flagr_behavioral_contracts.md#evalcache-freshness).
 
 ## Reverse proxy and path prefix
 
