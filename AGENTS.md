@@ -37,7 +37,7 @@ Run from **repo root**. Match what [`.github/workflows/ci.yml`](.github/workflow
 | **`pkg/`** or Go tests | `make test` | `make test` (+ `make test-integration` if handler/API behavior) |
 | **Swagger** (`swagger/`, handlers → OpenAPI) | `make swagger` then commit `swagger_gen/` + `cmd/flagr-server/main.go` | `make ci-swagger` (regen + `git diff --exit-code`) |
 | **UI + Go** or unsure | `make test` **and** `make flagr-ui-check` | `make test` + `make test-e2e` |
-| **`helm/`** | `make helm-lint` **and** `make helm-unittest` | same (Kind `helm test` is GHA-only) |
+| **`helm/`** | `make helm-lint` **and** `make helm-unittest` | same (cluster `helm test` is GHA-only) |
 
 **CI mapping (same commands):**
 
@@ -49,7 +49,7 @@ Run from **repo root**. Match what [`.github/workflows/ci.yml`](.github/workflow
 | `e2e_test` | `make test-e2e` (= `make build` + `flagr-ui-check` + Playwright) |
 | `integration_test` | `make ci-integration` (Docker Compose; usually not every UI PR) |
 | `helm` / `lint` | `make helm-lint` then `make helm-unittest` |
-| `helm` / `kind` | Kind `helm install` + `helm test` (GHA only; path-filtered on `helm/**`) |
+| `helm` / `install` | Kind (Kubernetes-in-Docker) `helm install` + `helm test` (GHA only; path-filtered on `helm/**`) |
 | `cd_helm` / `publish` | `helm package` + `helm push` to `oci://ghcr.io/openflagr/flagr/charts/flagr` |
 
 **Fast UI loop:** `make flagr-ui-check` ≈ ESLint + `vue-tsc` + Vitest (~10s). **Do not** rely on `make run-ui` alone — it does not lint.
@@ -65,6 +65,11 @@ Run from **repo root**. Match what [`.github/workflows/ci.yml`](.github/workflow
 - `entity/` — domain models (flag, segment, constraint, variant, distribution)
 - `config/env.go` — all environment variables (single source of truth)
 - `config/middleware.go` — `rejectDotDotPath` (401 on `..`); JWT/basic whitelist (`HasSafePrefix`); `evalOnlyDeny` (403 writes in eval-only)
+
+**Helm (`helm/`):**
+- Official chart: Deployment + ClusterIP; config via `env` / `envFrom` ([flagr_env.md](docs/flagr_env.md))
+- Modes: SQLite (one writer); `evalReplicas` (json_http readers of the primary); `gitops.enabled` (all pods json_http); MySQL/Postgres (`replicaCount` + `env`)
+- Scaling: [docs/flagr_self_host.md](docs/flagr_self_host.md#kubernetes-scaling)
 
 **Frontend (`browser/flagr-ui/src/`):**
 - `api/types.ts` — DTOs; `api/crud.ts` (flag CRUD + tags/variants/segments; eval-only reads derived from `evalOnlyMode`), `api/eval.ts` (POST /evaluation), `api/evalOnly.ts` (eval-only read-only flag reads from the export dump), `http.ts`
