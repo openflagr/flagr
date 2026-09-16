@@ -20,6 +20,8 @@ Run **`make help`** from the repo root for the full catalog. Common targets:
 | `make test-integration-compose` | Same suite vs Docker Compose (6 DBs) |
 | `make bench-integration` | HTTP eval benchmarks (local) |
 | `make swagger` | Regenerate `swagger_gen/` |
+| `make helm-lint` | `helm lint --strict helm` + `helm template` |
+| `make helm-unittest` | helm-unittest plugin against `helm/tests/` |
 
 **Go tests:** Prefer `t.Parallel()` unless the test mutates global state (`config.Config`, singletons, `os.Setenv`). See `docs/flagr_testing.md` for the decision tree.
 
@@ -34,6 +36,7 @@ Run from **repo root**. Match what [`.github/workflows/ci.yml`](.github/workflow
 | **`pkg/`** or Go tests | `make test` | `make test` (+ `make test-integration` if handler/API behavior) |
 | **Swagger** (`swagger/`, handlers → OpenAPI) | `make swagger` then commit `swagger_gen/` + `cmd/flagr-server/main.go` | `make ci-swagger` (regen + `git diff --exit-code`) |
 | **UI + Go** or unsure | `make test` **and** `make flagr-ui-check` | `make test` + `make test-e2e` |
+| **`helm/`** | `make helm-lint` **and** `make helm-unittest` | same (Kind `helm test` is GHA-only) |
 
 **CI mapping (same commands):**
 
@@ -44,6 +47,8 @@ Run from **repo root**. Match what [`.github/workflows/ci.yml`](.github/workflow
 | `docs_build` | `make build-docs` (VitePress; same as Pages deploy) |
 | `e2e_test` | `make test-e2e` (= `make build` + `flagr-ui-check` + Playwright) |
 | `integration_test` | `make ci-integration` (Docker Compose; usually not every UI PR) |
+| `helm` / `lint` | `make helm-lint` then `make helm-unittest` |
+| `helm` / `kind` | Kind `helm install` + `helm test` (GHA only; path-filtered on `helm/**`) |
 
 **Fast UI loop:** `make flagr-ui-check` ≈ ESLint + `vue-tsc` + Vitest (~10s). **Do not** rely on `make run-ui` alone — it does not lint.
 

@@ -41,6 +41,7 @@ Once the server is running, the next step is knowing where to make your change. 
 | `pkg/handler/data_recorder*.go` | Kafka, Kinesis, Pub/Sub, Datar |
 | `pkg/entity/` | Domain models |
 | `pkg/config/env.go` | Environment variables (documented in [flagr_env.md](flagr_env.md)) |
+| `helm/` | Official Helm chart (Deployment + Service; configure via `env`) |
 | `browser/flagr-ui/src/` | UI — `api/crud.ts`, `api/eval.ts`, `pages/flagPage.ts` |
 | `swagger/` → `make swagger` → `swagger_gen/` | OpenAPI; do not hand-edit `swagger_gen/` |
 | `cmd/flagr-server/` | Server entry |
@@ -84,6 +85,19 @@ The API contract starts in `swagger/index.yaml` and the files it references unde
 3. `make swagger` → `swagger_gen/`
 
 If you'd rather not remember the order, `make gen` runs all three in sequence. In CI, `make ci-swagger` fails if the generated output is dirty, so always commit regenerated files alongside your Swagger edits.
+
+## Helm chart
+
+The official chart lives in **`helm/`** (not `charts/flagr`). It is a small Deployment + ClusterIP Service; Flagr config is `env` / `envFrom` against [flagr_env.md](flagr_env.md).
+
+```bash
+make helm-lint       # helm lint --strict + helm template
+make helm-unittest   # helm-unittest plugin v1.1.2 (CI installs it)
+```
+
+Kind `helm install` + `helm test` run in `.github/workflows/helm.yml` only (path-filtered on `helm/**`). Do not add `helm.yml` as a required GitHub check while `on.paths` skips Go PRs.
+
+**Release rule:** every Flagr GitHub Release PR bumps `helm/Chart.yaml` `appVersion` to the new Flagr tag and bumps chart `version` patch (even if templates are unchanged), so a later OCI publish does not reuse a chart version.
 
 ## Documentation site
 

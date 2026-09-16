@@ -47,7 +47,7 @@ That lets you **decouple deploy from release** (ship code dark, turn it on per a
 | [Overview](https://openflagr.github.io/flagr/flagr_overview) | Concepts, running example, architecture |
 | [Use cases](https://openflagr.github.io/flagr/flagr_use_cases) | Flags, A/B, dynamic config; [GET `?json=` eval](https://openflagr.github.io/flagr/flagr_use_cases#get-evaluation-browser-friendly) |
 | [Built-in context injection](https://openflagr.github.io/flagr/flagr_injected_context) | `@ts*`, `@http_*` in `entityContext` |
-| [Self-hosting](https://openflagr.github.io/flagr/flagr_self_host) | Docker, DB, Compose, K8s |
+| [Self-hosting](https://openflagr.github.io/flagr/flagr_self_host) | Docker, DB, Compose, Helm (`helm/`) |
 | [Environment variables](https://openflagr.github.io/flagr/flagr_env) | DB, auth, recorders (`pkg/config/env.go`) |
 | [Exposure logging](https://openflagr.github.io/flagr/flagr_exposure) | Client impressions for A/B |
 | [Data recorders](https://openflagr.github.io/flagr/flagr_eval_exposure_pipeline) | Kafka, Kinesis, Pub/Sub |
@@ -65,7 +65,7 @@ That lets you **decouple deploy from release** (ship code dark, turn it on per a
 - **Dynamic configuration** - `variantAttachment` JSON on eval responses
 - **GitOps** - `json_file` / `json_http`; read-only UI; `flagr-validate` in CI
 - **Exposure logging** - `POST /exposures` for trustworthy denominators
-- **Self-hosted** - official Docker image + env vars
+- **Self-hosted** - official Docker image, env vars, and in-repo Helm chart (`helm/`)
 - **Databases** - SQLite, MySQL, PostgreSQL, or JSON sources
 - **Vue 3 UI** - TypeScript (`browser/flagr-ui`); `make build-ui`, `make test-e2e`
 

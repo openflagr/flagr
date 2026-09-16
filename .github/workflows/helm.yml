@@ -1,0 +1,41 @@
+name: helm
+
+on:
+  pull_request:
+    paths:
+      - "helm/**"
+      - ".github/workflows/helm.yml"
+  push:
+    branches: [main]
+    paths:
+      - "helm/**"
+      - ".github/workflows/helm.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.17.3
+      - name: Install helm-unittest
+        run: helm plugin install https://github.com/helm-unittest/helm-unittest.git --version v1.1.2
+      - run: make helm-lint
+      - run: make helm-unittest
+
+  kind:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.17.3
+      - uses: helm/kind-action@v1.12.0
+      - name: Install chart
+        run: helm install flagr ./helm --wait --timeout 3m
+      - name: helm test
+        run: helm test flagr --timeout 2m

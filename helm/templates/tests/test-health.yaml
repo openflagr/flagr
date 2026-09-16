@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "flagr.fullname" . }}-test-health"
+  labels:
+    {{- include "flagr.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/hook: test
+spec:
+  automountServiceAccountToken: false
+  restartPolicy: Never
+  containers:
+    - name: curl
+      image: "{{ .Values.test.image.repository }}:{{ .Values.test.image.tag }}"
+      command:
+        - curl
+        - -fsS
+        - "http://{{ include "flagr.fullname" . }}:{{ .Values.service.port }}{{ .Values.test.path }}"
