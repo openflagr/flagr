@@ -4,4 +4,5 @@
 *.md
 # helm-unittest suites at chart root only (do not ignore templates/tests/)
 /tests/
+/ci/
 charts/

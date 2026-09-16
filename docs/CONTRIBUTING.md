@@ -89,7 +89,7 @@ If you'd rather not remember the order, `make gen` runs all three in sequence. I
 
 ## Helm chart
 
-The official chart lives in **`helm/`** (not `charts/flagr`). It is a small Deployment + ClusterIP Service; Flagr config is `env` / `envFrom` against [flagr_env.md](flagr_env.md). Modes: default SQLite (one writer); `evalReplicas` for extra json_http readers of that writer; `gitops.enabled` for all-pods json_http (GitHub); MySQL/Postgres via `replicaCount` + `env`. Scaling: [flagr_self_host.md](flagr_self_host.md#kubernetes-scaling).
+The official chart lives in **`helm/`** (not `charts/flagr`). It is a small Deployment + ClusterIP Service; Flagr config is `env` / `envFrom` against [flagr_env.md](flagr_env.md). Modes: default SQLite (one writer); `evalReplicas` for extra json_http readers of that writer; `gitops.enabled` for all-pods json_http (GitHub); MySQL/Postgres via `replicaCount` + `env`. Strategies: [flagr_self_host.md](flagr_self_host.md#deployment-strategy). Kind CI installs SQLite, SQLite HA, and GitOps.
 
 ```bash
 make helm-lint       # helm lint --strict + helm template

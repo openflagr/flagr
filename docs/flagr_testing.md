@@ -23,7 +23,7 @@ make helm-lint       # helm lint --strict + helm template
 make helm-unittest   # helm-unittest plugin against helm/tests/
 ```
 
-CI (`.github/workflows/helm.yml`, path-filtered on `helm/**`) runs those, then a Kind cluster `helm install` + `helm test` (health curl). Do not add that workflow as a required check while `on.paths` skips Go PRs. See [Contributing — Helm chart](CONTRIBUTING.md#helm-chart).
+CI (`.github/workflows/helm.yml`, path-filtered on `helm/**`) runs those, then a Kind cluster that installs each Helm strategy: default SQLite, SQLite HA (`evalReplicas`), and GitOps (`json_http` against an in-cluster flags URL). Each install runs `helm test` (health curl). Do not add that workflow as a required check while `on.paths` skips Go PRs. See [Contributing — Helm chart](CONTRIBUTING.md#helm-chart) and [Deployment strategy](flagr_self_host.md#deployment-strategy).
 
 ## E2E tests (UI)
 

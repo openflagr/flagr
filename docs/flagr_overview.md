@@ -187,4 +187,4 @@ flowchart TB
 - [Exposure logging](flagr_exposure.md) and [Data recorders & A/B analysis](flagr_eval_exposure_pipeline.md)
 - [Datar analytics](flagr_datar.md)
 - [Environment variables](flagr_env.md) - source of truth: `pkg/config/env.go`
-- [Self-hosting](flagr_self_host.md) - Docker, Compose, Helm (SQLite HA, GitOps, SQL)
+- [Self-hosting](flagr_self_host.md) - [Deployment strategy](flagr_self_host.md#deployment-strategy) (Docker, Compose, Helm SQLite/HA/GitOps/SQL)

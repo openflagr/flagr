@@ -18,4 +18,4 @@ From a checkout: `helm install flagr ./helm --namespace flagr --create-namespace
 | GitOps | `gitops.enabled` + `gitops.flagsURL` | N identical json_http pods (GitHub raw URL) |
 | MySQL / Postgres | `replicaCount` + `env` | N pods on one DB |
 
-`evalReplicas` and `gitops` are mutually exclusive. Details: [Kubernetes scaling](https://openflagr.github.io/flagr/flagr_self_host#kubernetes-scaling).
+`evalReplicas` and `gitops` are mutually exclusive. Details: [Deployment strategy](https://openflagr.github.io/flagr/flagr_self_host#deployment-strategy).

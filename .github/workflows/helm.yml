@@ -35,7 +35,31 @@ jobs:
         with:
           version: v4.3.0
       - uses: helm/kind-action@v1.12.0
-      - name: Install chart
-        run: helm install flagr ./helm --wait --timeout 3m
-      - name: helm test
-        run: helm test flagr --timeout 2m
+      - name: SQLite (default, one writer)
+        run: |
+          set -euo pipefail
+          helm install flagr ./helm --wait --timeout 3m
+          helm test flagr --timeout 2m
+          helm uninstall flagr --wait
+      - name: SQLite HA (evalReplicas)
+        run: |
+          set -euo pipefail
+          helm install flagr ./helm --set evalReplicas.replicaCount=1 --wait --timeout 3m
+          helm test flagr --timeout 2m
+          kubectl wait --for=condition=available --timeout=120s deploy/flagr-eval
+          kubectl run flagr-eval-health --attach --rm --restart=Never --image=curlimages/curl:8.1.2 -- \
+            curl -fsS http://flagr-eval:18000/api/v1/health
+          helm uninstall flagr --wait
+      - name: GitOps (json_http, identical pods)
+        run: |
+          set -euo pipefail
+          kubectl apply -f helm/ci/flags-http.yaml
+          kubectl wait --for=condition=available --timeout=120s deploy/flagr-ci-flags
+          helm install flagr ./helm \
+            --set gitops.enabled=true \
+            --set gitops.flagsURL=http://flagr-ci-flags/flags.json \
+            --set replicaCount=2 \
+            --wait --timeout 3m
+          helm test flagr --timeout 2m
+          kubectl get deploy flagr -o jsonpath='{.spec.replicas}{"\n"}' | grep -x 2
+          helm uninstall flagr --wait

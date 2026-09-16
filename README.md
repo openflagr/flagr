@@ -85,7 +85,7 @@ helm install flagr oci://ghcr.io/openflagr/flagr/charts/flagr --version 1.0.0 \
   --namespace flagr --create-namespace
 ```
 
-Scaling (SQLite HA, GitOps, MySQL/Postgres): [Self-hosting](https://openflagr.github.io/flagr/flagr_self_host#kubernetes-scaling).
+Deployment strategy (Docker, Compose, Helm SQLite/HA/GitOps/SQL): [Self-hosting](https://openflagr.github.io/flagr/flagr_self_host#deployment-strategy).
 
 Demo API: [try-flagr.onrender.com](https://try-flagr.onrender.com) (may cold-start)
 
