@@ -92,7 +92,7 @@ The official chart lives in **`helm/`** (not `charts/flagr`). It is a small Depl
 
 ```bash
 make helm-lint       # helm lint --strict + helm template
-make helm-unittest   # helm-unittest plugin v1.1.2 (CI installs it)
+make helm-unittest   # helm-unittest plugin v1.1.2 (CI installs it; Helm 4)
 ```
 
 Kind `helm install` + `helm test` run in `.github/workflows/helm.yml` only (path-filtered on `helm/**`). Do not add `helm.yml` as a required GitHub check while `on.paths` skips Go PRs.

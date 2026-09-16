@@ -21,9 +21,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: azure/setup-helm@v4
         with:
-          version: v3.17.3
+          version: v4.3.0
       - name: Install helm-unittest
-        run: helm plugin install https://github.com/helm-unittest/helm-unittest.git --version v1.1.2
+        run: helm plugin install https://github.com/helm-unittest/helm-unittest.git --version v1.1.2 --verify=false
       - run: make helm-lint
       - run: make helm-unittest
 
@@ -33,7 +33,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: azure/setup-helm@v4
         with:
-          version: v3.17.3
+          version: v4.3.0
       - uses: helm/kind-action@v1.12.0
       - name: Install chart
         run: helm install flagr ./helm --wait --timeout 3m
