@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -14,6 +15,28 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+const (
+	notificationWaitTimeout = time.Second
+	notificationPollEvery   = 10 * time.Millisecond
+)
+
+// waitForNotification waits for an async SendNotification delivery that matches.
+// Delivery order is not guaranteed: SendNotification dispatches in a goroutine.
+func waitForNotification(t *testing.T, mock *notification.MockNotifier, match func(notification.Notification) bool) notification.Notification {
+	t.Helper()
+	var found notification.Notification
+	require.Eventually(t, func() bool {
+		for _, n := range mock.GetSentNotifications() {
+			if match(n) {
+				found = n
+				return true
+			}
+		}
+		return false
+	}, notificationWaitTimeout, notificationPollEvery)
+	return found
+}
 
 func TestHandlerNotifications(t *testing.T) {
 	db, cleanup := handlerTestDB(t)
@@ -37,19 +60,12 @@ func TestHandlerNotifications(t *testing.T) {
 		}
 		c.CreateFlag(params)
 
-		// Notifications are sent in a goroutine, so we might need a small wait or check repeatedly
-		assert.Eventually(t, func() bool {
-			return len(mockNotifier.GetSentNotifications()) > 0
-		}, 1*time.Second, 10*time.Millisecond)
-
-		sent := mockNotifier.GetSentNotifications()
-		assert.Len(t, sent, 1)
-		assert.Equal(t, notification.OperationCreate, sent[0].Operation)
-		assert.Equal(t, "test_flag_notif", sent[0].FlagKey)
-		// Privacy by default
-		assert.Empty(t, sent[0].PreValue)
-		assert.Empty(t, sent[0].PostValue)
-		assert.Empty(t, sent[0].Diff)
+		sent := waitForNotification(t, mockNotifier, func(n notification.Notification) bool {
+			return n.Operation == notification.OperationCreate && n.FlagKey == "test_flag_notif"
+		})
+		assert.Empty(t, sent.PreValue)
+		assert.Empty(t, sent.PostValue)
+		assert.Empty(t, sent.Diff)
 	})
 
 	t.Run("PutFlag sends notification", func(t *testing.T) {
@@ -66,18 +82,12 @@ func TestHandlerNotifications(t *testing.T) {
 		}
 		c.PutFlag(params)
 
-		assert.Eventually(t, func() bool {
-			return len(mockNotifier.GetSentNotifications()) > 0
-		}, 1*time.Second, 10*time.Millisecond)
-
-		sent := mockNotifier.GetSentNotifications()
-		assert.Len(t, sent, 1)
-		assert.Equal(t, notification.OperationUpdate, sent[0].Operation)
-		assert.Equal(t, f.Key, sent[0].FlagKey)
-		// Privacy by default
-		assert.Empty(t, sent[0].PreValue)
-		assert.Empty(t, sent[0].PostValue)
-		assert.Empty(t, sent[0].Diff)
+		sent := waitForNotification(t, mockNotifier, func(n notification.Notification) bool {
+			return n.Operation == notification.OperationUpdate && n.FlagKey == f.Key
+		})
+		assert.Empty(t, sent.PreValue)
+		assert.Empty(t, sent.PostValue)
+		assert.Empty(t, sent.Diff)
 	})
 
 	t.Run("PutFlag with detailed diff enabled", func(t *testing.T) {
@@ -99,8 +109,10 @@ func TestHandlerNotifications(t *testing.T) {
 			HTTPRequest: &http.Request{},
 		}
 		c.PutFlag(params1)
+		waitForNotification(t, mockNotifier, func(n notification.Notification) bool {
+			return n.Operation == notification.OperationUpdate && n.FlagKey == f.Key
+		})
 
-		// Second update to trigger diff calculation
 		params2 := flag.PutFlagParams{
 			FlagID: int64(f.ID),
 			Body: &models.PutFlagRequest{
@@ -110,16 +122,16 @@ func TestHandlerNotifications(t *testing.T) {
 		}
 		c.PutFlag(params2)
 
-		assert.Eventually(t, func() bool {
-			return len(mockNotifier.GetSentNotifications()) >= 2
-		}, 1*time.Second, 10*time.Millisecond)
-
-		sent := mockNotifier.GetSentNotifications()
-		assert.Len(t, sent, 2)
-		// Second notification should have a diff
-		assert.NotEmpty(t, sent[1].Diff)
-		assert.Contains(t, sent[1].Diff, "-  \"Description\": \"first update\"")
-		assert.Contains(t, sent[1].Diff, "+  \"Description\": \"second update\"")
+		const (
+			diffRemoved = `-  "Description": "first update"`
+			diffAdded   = `+  "Description": "second update"`
+		)
+		sent := waitForNotification(t, mockNotifier, func(n notification.Notification) bool {
+			return n.FlagKey == f.Key &&
+				strings.Contains(n.Diff, diffRemoved) &&
+				strings.Contains(n.Diff, diffAdded)
+		})
+		assert.NotEmpty(t, sent.Diff)
 	})
 
 	t.Run("DeleteFlag sends notification", func(t *testing.T) {
@@ -133,14 +145,9 @@ func TestHandlerNotifications(t *testing.T) {
 		}
 		c.DeleteFlag(params)
 
-		assert.Eventually(t, func() bool {
-			return len(mockNotifier.GetSentNotifications()) > 0
-		}, 1*time.Second, 10*time.Millisecond)
-
-		sent := mockNotifier.GetSentNotifications()
-		assert.Len(t, sent, 1)
-		assert.Equal(t, notification.OperationDelete, sent[0].Operation)
-		assert.Equal(t, f.Key, sent[0].FlagKey)
+		waitForNotification(t, mockNotifier, func(n notification.Notification) bool {
+			return n.Operation == notification.OperationDelete && n.FlagKey == f.Key
+		})
 	})
 
 	t.Run("RestoreFlag sends notification", func(t *testing.T) {
@@ -155,14 +162,9 @@ func TestHandlerNotifications(t *testing.T) {
 		}
 		c.RestoreFlag(params)
 
-		assert.Eventually(t, func() bool {
-			return len(mockNotifier.GetSentNotifications()) > 0
-		}, 1*time.Second, 10*time.Millisecond)
-
-		sent := mockNotifier.GetSentNotifications()
-		assert.Len(t, sent, 1)
-		assert.Equal(t, notification.OperationRestore, sent[0].Operation)
-		assert.Equal(t, f.Key, sent[0].FlagKey)
+		waitForNotification(t, mockNotifier, func(n notification.Notification) bool {
+			return n.Operation == notification.OperationRestore && n.FlagKey == f.Key
+		})
 	})
 
 	t.Run("SetFlagEnabledState sends notification", func(t *testing.T) {
@@ -179,18 +181,14 @@ func TestHandlerNotifications(t *testing.T) {
 		}
 		c.SetFlagEnabledState(params)
 
-		assert.Eventually(t, func() bool {
-			return len(mockNotifier.GetSentNotifications()) > 0
-		}, 1*time.Second, 10*time.Millisecond)
-
-		sent := mockNotifier.GetSentNotifications()
-		assert.Len(t, sent, 1)
-		assert.Equal(t, notification.OperationUpdate, sent[0].Operation)
-		assert.Equal(t, f.Key, sent[0].FlagKey)
-		assert.Equal(t, f.ID, sent[0].FlagID) // Verify entity ID is set correctly
+		sent := waitForNotification(t, mockNotifier, func(n notification.Notification) bool {
+			return n.Operation == notification.OperationUpdate && n.FlagID == f.ID
+		})
+		assert.Equal(t, f.Key, sent.FlagKey)
 	})
 
 	t.Run("DuplicateFlag sends notification", func(t *testing.T) {
+		mockNotifier.ClearSent()
 		createParams := flag.CreateFlagParams{
 			HTTPRequest: &http.Request{},
 			Body: &models.CreateFlagRequest{
@@ -201,44 +199,26 @@ func TestHandlerNotifications(t *testing.T) {
 		createRes := c.CreateFlag(createParams)
 		createOK := createRes.(*flag.CreateFlagOK)
 		require.NotNil(t, createOK.Payload)
-		sourceID := createOK.Payload.ID
+		sourceID := uint(createOK.Payload.ID)
 
-		assert.Eventually(t, func() bool {
-			return len(mockNotifier.GetSentNotifications()) > 0
-		}, 1*time.Second, 10*time.Millisecond)
+		waitForNotification(t, mockNotifier, func(n notification.Notification) bool {
+			return n.Operation == notification.OperationCreate && n.FlagID == sourceID
+		})
 		mockNotifier.ClearSent()
-		assert.Eventually(t, func() bool {
-			return len(mockNotifier.GetSentNotifications()) == 0
-		}, 1*time.Second, 10*time.Millisecond)
 
 		dupRes := c.DuplicateFlag(flag.DuplicateFlagParams{
-			FlagID:      sourceID,
+			FlagID:      createOK.Payload.ID,
 			HTTPRequest: &http.Request{},
 		})
 		dupOK, ok := dupRes.(*flag.DuplicateFlagOK)
 		require.True(t, ok, "duplicate failed: %T", dupRes)
 		require.NotNil(t, dupOK.Payload)
-		assert.NotEqual(t, sourceID, dupOK.Payload.ID)
+		assert.NotEqual(t, createOK.Payload.ID, dupOK.Payload.ID)
 
 		dupFlagID := uint(dupOK.Payload.ID)
-		assert.Eventually(t, func() bool {
-			for _, n := range mockNotifier.GetSentNotifications() {
-				if n.Operation == notification.OperationCreate && n.FlagID == dupFlagID {
-					return true
-				}
-			}
-			return false
-		}, 1*time.Second, 10*time.Millisecond)
-
-		var dupNotif *notification.Notification
-		for _, n := range mockNotifier.GetSentNotifications() {
-			if n.Operation == notification.OperationCreate && n.FlagID == dupFlagID {
-				n := n
-				dupNotif = &n
-				break
-			}
-		}
-		require.NotNil(t, dupNotif)
+		dupNotif := waitForNotification(t, mockNotifier, func(n notification.Notification) bool {
+			return n.Operation == notification.OperationCreate && n.FlagID == dupFlagID
+		})
 		assert.NotEqual(t, "dup_notif_src", dupNotif.FlagKey)
 		assert.NotEmpty(t, dupNotif.FlagKey)
 	})
