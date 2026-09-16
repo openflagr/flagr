@@ -48,11 +48,12 @@ TLS uses `--scheme=https` plus the cert flags from the server bootstrap. Local f
 
 `FLAGR_DB_DBDRIVER` largely decides the surface area. JSON drivers force [eval-only mode](flagr_behavioral_contracts.md#eval-only).
 
-| Shape | Driver | Notes |
-|-------|--------|--------|
-| Demo | `sqlite3` (default) | Ephemeral unless you mount the DB path |
-| Prod UI + CRUD | `mysql` or `postgres` | Shared DB; GORM auto-migrate on boot |
-| Eval edge | `json_file` / `json_http` | [Eval-only](flagr_behavioral_contracts.md#eval-only) + [JSON flag source](flagr_json_flag_spec.md) |
+| Shape | Driver | How you scale |
+|-------|--------|----------------|
+| Demo | `sqlite3` (default) | **One writer.** Ephemeral unless you mount the DB path |
+| SQLite + eval replicas | primary `sqlite3`, others `json_http` | One SQLite writer; extra pods poll its export. Helm: `evalReplicas` |
+| Prod UI + CRUD | `mysql` or `postgres` | **N writers/readers** on one shared DB. Raise `replicaCount` |
+| Eval edge / GitOps | `json_file` / `json_http` | All pods read the same file/URL ([JSON spec](flagr_json_flag_spec.md)) |
 | Headless API | SQL + `FLAGR_UI_ENABLED=false` | CRUD via API only |
 
 ## Database
@@ -112,7 +113,7 @@ Swap credentials before any shared environment. The repo CI compose file has mor
 
 ## Kubernetes
 
-In-repo chart at [`helm/`](https://github.com/openflagr/flagr/tree/main/helm), published as OCI to GHCR. Deployment + ClusterIP Service + probes. Configure Flagr with `env` / `envFrom` — every knob is in [Environment variables](flagr_env.md). Add your own Ingress, PVC, and HPA.
+In-repo chart at [`helm/`](https://github.com/openflagr/flagr/tree/main/helm), published as OCI to GHCR. Configure Flagr with `env` / `envFrom` — every knob is in [Environment variables](flagr_env.md). Add your own Ingress, PVC, and HPA.
 
 ```bash
 helm install flagr oci://ghcr.io/openflagr/flagr/charts/flagr --version 1.0.0 \
@@ -123,13 +124,58 @@ curl -sS http://127.0.0.1:18000/api/v1/health
 
 Pin `--version` to `helm/Chart.yaml` `version`. From a checkout: `helm install flagr ./helm --namespace flagr --create-namespace`. Helm cannot install from a GitHub directory URL (`…/tree/main/helm`); the chart is a subdirectory, not a packaged `.tgz`.
 
-Default is one replica, SQLite at `/data/flagr.sqlite` on an emptyDir (ephemeral). SQLite is not a shared store; for `replicaCount > 1` use postgres, mysql, or `json_http`.
+Default install: **one** replica, SQLite at `/data/flagr.sqlite` on an emptyDir (ephemeral). Chart vs process / Docker defaults: `FLAGR_PPROF_ENABLED=false`, `FLAGR_DB_DBCONNECTION_DEBUG=false`, `FLAGR_LOGRUS_FORMAT=json`.
 
-Chart vs process / Docker defaults: `FLAGR_PPROF_ENABLED=false`, `FLAGR_DB_DBCONNECTION_DEBUG=false`, `FLAGR_LOGRUS_FORMAT=json`. Re-enable pprof via `env` if you need it.
+If you set `FLAGR_WEB_PREFIX`, also override probe `httpGet.path`, `test.path`, and `evalReplicas.flagsURL`.
 
-Postgres (DSN in a Secret; raise retries — Flagr fatals after ~900ms if the DB is down):
+Same image on a VM or systemd: inject secrets, bind `0.0.0.0:18000`, probe **`GET /api/v1/health`**.
+
+### Scaling {#kubernetes-scaling}
+
+Evaluation is served from an in-memory EvalCache (reload is per pod). How you add replicas depends on the store — SQLite cannot take multiple writers.
+
+#### SQLite — one writer
+
+Keep `replicaCount: 1`. Persist the file with a PVC mounted as volume `data`:
 
 ```yaml
+extraVolumes:
+  - name: data
+    persistentVolumeClaim:
+      claimName: flagr-data
+```
+
+#### SQLite — extra eval capacity (no extra writers)
+
+Do **not** raise `replicaCount`. Set `evalReplicas.replicaCount`. The chart keeps one SQLite primary (UI + CRUD) and adds eval-only pods that poll `GET /api/v1/export/eval_cache/json` over `json_http` (same JSON the GitOps driver reads). Those pods never open the SQLite file.
+
+```yaml
+# sqlite-ha.yaml
+evalReplicas:
+  replicaCount: 3
+```
+
+```bash
+helm upgrade --install flagr oci://ghcr.io/openflagr/flagr/charts/flagr --version 1.0.0 \
+  --namespace flagr -f sqlite-ha.yaml
+```
+
+| Traffic | Service |
+|---------|---------|
+| UI, flag CRUD | `svc/flagr` (primary, SQLite) |
+| Evaluation (`/api/v1/evaluation`) | `svc/flagr-eval` (json_http replicas) |
+
+A flag change on the primary is visible on eval replicas within [EvalCache freshness](flagr_behavioral_contracts.md#evalcache-freshness) (default 3s). Eval pods wait for the primary export before starting.
+
+If the primary uses `FLAGR_WEB_PREFIX`, set `evalReplicas.flagsURL` to the prefixed export URL. If you enable JWT/basic on the primary, whitelist `/api/v1/export` (or the prefixed path) so the replicas can fetch.
+
+#### MySQL / PostgreSQL — every pod uses the same DB
+
+Raise `replicaCount`. Leave `evalReplicas.replicaCount` at **0**. There is one shared database, so every replica can serve eval **and** CRUD.
+
+```yaml
+# postgres.yaml
+replicaCount: 3
 env:
   - name: FLAGR_DB_DBDRIVER
     value: postgres
@@ -144,18 +190,20 @@ env:
     value: "2s"
 ```
 
+Flagr fatals after ~900ms if the DB is down (default retries); a startupProbe cannot help. Raise retries as above.
+
 ```bash
 kubectl create secret generic flagr-db \
   --from-literal=FLAGR_DB_DBCONNECTIONSTR='sslmode=require host=pg.example user=flagr password=… dbname=flagr'
 helm upgrade --install flagr oci://ghcr.io/openflagr/flagr/charts/flagr --version 1.0.0 \
-  --namespace flagr -f postgres-values.yaml
+  --namespace flagr -f postgres.yaml
 ```
 
-Persist SQLite: create a PVC and pass a volume named `data` (`extraVolumes`). If you set `FLAGR_WEB_PREFIX`, also override probe `httpGet.path` and `test.path`.
+MySQL is the same overlay with `FLAGR_DB_DBDRIVER=mysql` and a `parseTime=true` DSN ([guide](flagr_env.md)).
 
-Same image on a VM or systemd: inject secrets, bind `0.0.0.0:18000`, probe **`GET /api/v1/health`**.
+#### JSON GitOps (`json_file` / `json_http`)
 
-Horizontal scale: one shared flag store (SQL or one JSON URL), one EvalCache per replica. Cache reload is local. Read [EvalCache freshness](flagr_behavioral_contracts.md#evalcache-freshness) before assuming a flag edit is fleet-wide.
+All pods are already eval-only. Point `env` at the shared file or URL and raise `replicaCount`. Do not also set `evalReplicas` — that pattern exists to wrap a **SQLite primary**, not a JSON source.
 
 ## Reverse proxy and path prefix
 

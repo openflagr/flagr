@@ -1,9 +1,25 @@
 # Default: one replica, ClusterIP :18000, SQLite on emptyDir /data.
 # Configure Flagr with env / envFrom — see https://openflagr.github.io/flagr/flagr_env
-# SQLite is not a shared store; replicaCount > 1 needs postgres, mysql, or json_http.
+#
+# Scaling:
+#   SQLite  — keep replicaCount at 1 (one writer). For more eval capacity set
+#             evalReplicas.replicaCount; those pods are json_http eval-only.
+#   MySQL/Postgres — raise replicaCount; leave evalReplicas at 0.
 
-# replicaCount must stay 1 with the default SQLite driver.
+# Primary Deployment. Stay at 1 when using the default SQLite driver.
 replicaCount: 1
+
+# Extra eval-only pods for SQLite HA. They do not open SQLite; they poll
+# GET /api/v1/export/eval_cache/json on the primary (json_http → eval-only).
+# 0 = disabled. Do not use this when the primary is mysql/postgres — scale
+# replicaCount instead so every pod shares the DB (reads and writes).
+evalReplicas:
+  replicaCount: 0
+  # Empty = http://<primary-svc>:<port>/api/v1/export/eval_cache/json
+  # Set this if the primary uses FLAGR_WEB_PREFIX.
+  flagsURL: ""
+  env: []
+  resources: {}
 
 image:
   repository: ghcr.io/openflagr/flagr

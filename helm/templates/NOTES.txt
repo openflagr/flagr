@@ -1,4 +1,4 @@
-1. Port-forward the ClusterIP Service:
+1. Port-forward the primary Service (UI / CRUD):
 
    kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "flagr.fullname" . }} 18000:{{ .Values.service.port }}
 
@@ -10,20 +10,26 @@
 
    https://openflagr.github.io/flagr/flagr_env
 
-   Default is SQLite at /data/flagr.sqlite on an emptyDir (ephemeral).
-   SQLite is not a shared store — use postgres, mysql, or json_http for replicaCount > 1.
+   Scaling (https://openflagr.github.io/flagr/flagr_self_host#kubernetes-scaling):
 
-   Persist SQLite: create a PVC and pass a volume named "data":
+   - SQLite (default): keep replicaCount=1 (one writer). Persist with extraVolumes
+     named "data". For more eval QPS set evalReplicas.replicaCount; those pods are
+     eval-only json_http readers of this primary.
+{{- if gt (int .Values.evalReplicas.replicaCount) 0 }}
 
-     extraVolumes:
-       - name: data
-         persistentVolumeClaim:
-           claimName: flagr-data
+   Eval replicas are enabled ({{ .Values.evalReplicas.replicaCount }}).
+   UI / flag writes → svc/{{ include "flagr.fullname" . }}
+   Evaluation SDKs   → svc/{{ include "flagr.evalFullname" . }}
+   Flags URL         → {{ include "flagr.evalFlagsURL" . }}
+{{- end }}
 
-   Add your own Ingress / HPA / NetworkPolicy. This chart is Deployment + Service + probes.
+   - MySQL / Postgres: raise replicaCount; leave evalReplicas at 0. Every pod
+     shares the database.
+
+   Add your own Ingress / HPA / NetworkPolicy.
 
    Chart vs process defaults: FLAGR_PPROF_ENABLED=false, FLAGR_DB_DBCONNECTION_DEBUG=false,
    FLAGR_LOGRUS_FORMAT=json. Re-enable pprof via env if you need it.
 
-   If you set FLAGR_WEB_PREFIX, also override livenessProbe/readinessProbe httpGet.path
-   and test.path (JWT/basic whitelist paths must include the prefix).
+   If you set FLAGR_WEB_PREFIX, also override livenessProbe/readinessProbe httpGet.path,
+   test.path, and evalReplicas.flagsURL (JWT/basic whitelist paths must include the prefix).

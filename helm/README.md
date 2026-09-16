@@ -11,6 +11,7 @@ curl -sS http://127.0.0.1:18000/api/v1/health
 
 From a checkout: `helm install flagr ./helm --namespace flagr --create-namespace`.
 
-Default is one replica, SQLite at `/data/flagr.sqlite` on an emptyDir. Add your own Ingress, PVC, and HPA. SQLite is not a shared store.
+Default is one replica, SQLite at `/data/flagr.sqlite` on an emptyDir. SQLite is **one writer** — do not raise `replicaCount`. For more eval traffic with SQLite, set `evalReplicas.replicaCount` (json_http readers of the primary). For MySQL/Postgres, raise `replicaCount` and leave `evalReplicas` at 0.
 
+Scaling: https://openflagr.github.io/flagr/flagr_self_host#kubernetes-scaling
 Self-hosting: https://openflagr.github.io/flagr/flagr_self_host

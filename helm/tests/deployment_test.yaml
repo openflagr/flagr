@@ -13,6 +13,9 @@ tests:
           path: spec.template.spec.containers[0].image
           value: ghcr.io/openflagr/flagr:1.2.4
       - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/component"]
+          value: primary
+      - equal:
           path: spec.template.spec.containers[0].imagePullPolicy
           value: IfNotPresent
       - equal:
