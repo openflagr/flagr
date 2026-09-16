@@ -2,7 +2,7 @@ apiVersion: v2
 name: flagr
 description: Flagr — feature flags, A/B tests, and dynamic configuration
 type: application
-version: 0.1.0
+version: 1.0.0
 appVersion: "1.2.4"
 kubeVersion: ">=1.25.0-0"
 home: https://openflagr.github.io/flagr

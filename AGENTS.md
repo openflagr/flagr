@@ -50,6 +50,7 @@ Run from **repo root**. Match what [`.github/workflows/ci.yml`](.github/workflow
 | `integration_test` | `make ci-integration` (Docker Compose; usually not every UI PR) |
 | `helm` / `lint` | `make helm-lint` then `make helm-unittest` |
 | `helm` / `kind` | Kind `helm install` + `helm test` (GHA only; path-filtered on `helm/**`) |
+| `cd_helm` / `publish` | `helm package` + `helm push` to `oci://ghcr.io/openflagr/flagr/charts/flagr` |
 
 **Fast UI loop:** `make flagr-ui-check` ≈ ESLint + `vue-tsc` + Vitest (~10s). **Do not** rely on `make run-ui` alone — it does not lint.
 
