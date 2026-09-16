@@ -171,6 +171,10 @@ New test function
 └── ✅ Add t.Parallel()
 ```
 
+### Async assertions
+
+If the code under test returns before a side effect is visible, poll with `require.Eventually` until a *predicate* of the expected result is true. Do not `time.Sleep`, and do not assert `sent[N]` on a concurrently-filled slice — delivery order is not guaranteed. Example: `waitForNotification` in `pkg/handler/crud_notification_test.go`.
+
 ### Checking for races locally
 
 The race detector is the final safety net. Run it before you push, and repeat the suite a few times to shake out ordering-dependent flakes:
