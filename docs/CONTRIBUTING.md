@@ -41,6 +41,7 @@ Once the server is running, the next step is knowing where to make your change. 
 | `pkg/handler/data_recorder*.go` | Kafka, Kinesis, Pub/Sub, Datar |
 | `pkg/entity/` | Domain models |
 | `pkg/config/env.go` | Environment variables (documented in [flagr_env.md](flagr_env.md)) |
+| `helm/` | Official Helm chart (SQLite, evalReplicas, gitops, SQL via `env`) |
 | `browser/flagr-ui/src/` | UI — `api/crud.ts`, `api/eval.ts`, `pages/flagPage.ts` |
 | `swagger/` → `make swagger` → `swagger_gen/` | OpenAPI; do not hand-edit `swagger_gen/` |
 | `cmd/flagr-server/` | Server entry |
@@ -70,6 +71,7 @@ Flagr runs a layered test suite: Go unit tests, Playwright browser E2E, and API 
 make test
 make test-e2e
 make test-integration
+make helm-lint && make helm-unittest   # if you touched helm/
 go test -race ./pkg/...    # when debugging flakes
 ```
 
@@ -84,6 +86,32 @@ The API contract starts in `swagger/index.yaml` and the files it references unde
 3. `make swagger` → `swagger_gen/`
 
 If you'd rather not remember the order, `make gen` runs all three in sequence. In CI, `make ci-swagger` fails if the generated output is dirty, so always commit regenerated files alongside your Swagger edits.
+
+## Helm chart
+
+The official chart lives in **`helm/`** (not `charts/flagr`). It is a small Deployment + ClusterIP Service; Flagr config is `env` / `envFrom` against [flagr_env.md](flagr_env.md). Modes: default SQLite (one writer); `evalReplicas` for extra json_http readers of that writer; `gitops.enabled` for all-pods json_http (GitHub); MySQL/Postgres via `replicaCount` + `env`. Strategies: [flagr_self_host.md](flagr_self_host.md#deployment-strategy). Kind CI installs SQLite, SQLite HA, and GitOps.
+
+```bash
+make helm-lint       # helm lint --strict + helm template
+make helm-unittest   # helm-unittest plugin v1.1.2 (CI installs it; Helm 4)
+```
+
+Kind `helm install` + `helm test` run in `.github/workflows/helm.yml` only (path-filtered on `helm/**`). Do not add `helm.yml` as a required GitHub check while `on.paths` skips Go PRs.
+
+**Publish:** `.github/workflows/cd_helm.yml` packages `helm/` and `helm push`es to `oci://ghcr.io/openflagr/flagr/charts/flagr` on GitHub Release, on `workflow_dispatch`, and on push to `main` that touches `helm/Chart.yaml`. It fails if that chart `version` already exists on GHCR.
+
+**Release rule:** every Flagr GitHub Release PR bumps `helm/Chart.yaml` `appVersion` to the new Flagr tag and bumps chart `version` patch (even if templates are unchanged). Any chart-template change that should publish must bump `version` in the same PR.
+
+**First-time GHCR public (one-time, after the first successful `cd_helm` run):** GHCR packages are often **private** even when the git repo is public. Anonymous `helm install oci://…` 401s until this is done.
+
+1. Open the package: [ghcr.io/openflagr/flagr/charts/flagr](https://github.com/openflagr/flagr/pkgs/container/flagr%2Fcharts%2Fflagr) (org: [github.com/orgs/openflagr/packages](https://github.com/orgs/openflagr/packages)).
+2. **Package settings** → **Change visibility** → **Public**.
+3. **Connect this package to a repository** → `openflagr/flagr` if it is not already linked (then it can inherit the public repo).
+4. Confirm without login: `helm show chart oci://ghcr.io/openflagr/flagr/charts/flagr --version 1.0.0`
+
+Org owners: GitHub **Org settings → Packages** should allow public packages. Actions **GITHUB_TOKEN** needs `packages: write` (the workflow sets this). Pushing to `ghcr.io/openflagr/flagr/charts/flagr` (nested under the `flagr` repo) avoids colliding with the Docker image `ghcr.io/openflagr/flagr`.
+
+Artifact Hub is optional and separate: add an OCI repository pointing at `oci://ghcr.io/openflagr/flagr/charts/flagr` after the package is public.
 
 ## Documentation site
 

@@ -1,0 +1,289 @@
+suite: deployment
+templates:
+  - templates/deployment.yaml
+tests:
+  - it: renders a single-replica Deployment with the appVersion image
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: spec.replicas
+          value: 1
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: ghcr.io/openflagr/flagr:1.2.4
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/component"]
+          value: primary
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: IfNotPresent
+      - equal:
+          path: spec.template.spec.containers[0].ports[0]
+          value:
+            name: http
+            containerPort: 18000
+            protocol: TCP
+
+  - it: injects chart env invariants in order then operator env
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[0]
+          value:
+            name: HOST
+            value: "0.0.0.0"
+      - equal:
+          path: spec.template.spec.containers[0].env[1]
+          value:
+            name: PORT
+            value: "18000"
+      - equal:
+          path: spec.template.spec.containers[0].env[2]
+          value:
+            name: FLAGR_LOGRUS_FORMAT
+            value: json
+      - equal:
+          path: spec.template.spec.containers[0].env[3]
+          value:
+            name: FLAGR_DB_DBCONNECTION_DEBUG
+            value: "false"
+      - equal:
+          path: spec.template.spec.containers[0].env[4]
+          value:
+            name: FLAGR_PPROF_ENABLED
+            value: "false"
+      - equal:
+          path: spec.template.spec.containers[0].env[5]
+          value:
+            name: FLAGR_DB_DBDRIVER
+            value: sqlite3
+      - equal:
+          path: spec.template.spec.containers[0].env[6]
+          value:
+            name: FLAGR_DB_DBCONNECTIONSTR
+            value: /data/flagr.sqlite
+      - lengthEqual:
+          path: spec.template.spec.containers[0].env
+          count: 7
+
+  - it: appends operator env after invariants so last key wins
+    set:
+      env:
+        - name: FLAGR_DB_DBDRIVER
+          value: postgres
+        - name: FLAGR_DB_DBCONNECTIONSTR
+          valueFrom:
+            secretKeyRef:
+              name: flagr-db
+              key: FLAGR_DB_DBCONNECTIONSTR
+        - name: FLAGR_PPROF_ENABLED
+          value: "true"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[5]
+          value:
+            name: FLAGR_DB_DBDRIVER
+            value: sqlite3
+      - equal:
+          path: spec.template.spec.containers[0].env[7]
+          value:
+            name: FLAGR_DB_DBDRIVER
+            value: postgres
+      - equal:
+          path: spec.template.spec.containers[0].env[8]
+          value:
+            name: FLAGR_DB_DBCONNECTIONSTR
+            valueFrom:
+              secretKeyRef:
+                name: flagr-db
+                key: FLAGR_DB_DBCONNECTIONSTR
+      - equal:
+          path: spec.template.spec.containers[0].env[9]
+          value:
+            name: FLAGR_PPROF_ENABLED
+            value: "true"
+      - lengthEqual:
+          path: spec.template.spec.containers[0].env
+          count: 10
+
+  - it: renders envFrom without dropping chart env invariants
+    set:
+      envFrom:
+        - secretRef:
+            name: flagr-env
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].envFrom
+          value:
+            - secretRef:
+                name: flagr-env
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: FLAGR_DB_DBDRIVER
+            value: sqlite3
+
+  - it: does not set envFrom when empty
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].envFrom
+
+  - it: probes GET /api/v1/health on port http
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet
+          value:
+            path: /api/v1/health
+            port: http
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet
+          value:
+            path: /api/v1/health
+            port: http
+
+  - it: honors probe path overrides for FLAGR_WEB_PREFIX
+    set:
+      livenessProbe:
+        httpGet:
+          path: /flagr/api/v1/health
+          port: http
+      readinessProbe:
+        httpGet:
+          path: /flagr/api/v1/health
+          port: http
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: /flagr/api/v1/health
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
+          value: /flagr/api/v1/health
+
+  - it: mounts emptyDir at /data by default
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: data
+            emptyDir: {}
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: data
+            mountPath: /data
+
+  - it: replaces emptyDir when extraVolumes provides name data
+    set:
+      extraVolumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: flagr-sqlite
+    asserts:
+      - notContains:
+          path: spec.template.spec.volumes
+          content:
+            name: data
+            emptyDir: {}
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: data
+            persistentVolumeClaim:
+              claimName: flagr-sqlite
+
+  - it: appends extraVolumeMounts after /data
+    set:
+      extraVolumeMounts:
+        - name: flags
+          mountPath: /flags
+          readOnly: true
+      extraVolumes:
+        - name: flags
+          configMap:
+            name: flagr-flags
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: data
+            mountPath: /data
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: flags
+            mountPath: /flags
+            readOnly: true
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: flags
+            configMap:
+              name: flagr-flags
+
+  - it: uses image.tag when set
+    set:
+      image:
+        tag: "1.2.3"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: ghcr.io/openflagr/flagr:1.2.3
+
+  - it: allows replicaCount greater than 1 (sqlite HA is documented, not fail-closed)
+    set:
+      replicaCount: 2
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 2
+      - notFailedTemplate: {}
+
+  - it: runs non-root without a service account token
+    asserts:
+      - equal:
+          path: spec.template.spec.automountServiceAccountToken
+          value: false
+      - equal:
+          path: spec.template.spec.securityContext.fsGroup
+          value: 100
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsNonRoot
+          value: true
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsUser
+          value: 100
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.allowPrivilegeEscalation
+          value: false
+      - contains:
+          path: spec.template.spec.containers[0].securityContext.capabilities.drop
+          content: ALL
+
+  - it: applies scheduling and resources
+    set:
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+      nodeSelector:
+        disktype: ssd
+      tolerations:
+        - key: dedicated
+          operator: Exists
+      podAnnotations:
+        prometheus.io/scrape: "true"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: 50m
+      - equal:
+          path: spec.template.spec.nodeSelector.disktype
+          value: ssd
+      - contains:
+          path: spec.template.spec.tolerations
+          content:
+            key: dedicated
+            operator: Exists
+      - equal:
+          path: spec.template.metadata.annotations["prometheus.io/scrape"]
+          value: "true"

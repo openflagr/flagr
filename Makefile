@@ -51,6 +51,10 @@ help:
 	@echo "  make build-docs        VitePress docs build (docs_build job + Pages)"
 	@echo "  make ci-integration    Compose integration tests + benchmarks"
 	@echo ""
+	@echo "Helm (helm/)"
+	@echo "  make helm-lint         helm lint --strict + helm template"
+	@echo "  make helm-unittest     helm unittest helm/ (plugin v1.1.2)"
+	@echo ""
 	@echo "Other"
 	@echo "  make swagger           Regenerate swagger_gen/ (do not hand-edit)"
 	@echo "  make clean             Remove test binaries and build artifacts"
@@ -174,6 +178,29 @@ ci-swagger: swagger
 
 ci-integration:
 	@$(MAKE) -C $(INTEGRATION_DIR) test-and-bench
+
+# ------------------------------------------------------------------------------
+# Helm (helm/)
+# ------------------------------------------------------------------------------
+
+HELM_CHART := helm
+HELM_UNITTEST_VERSION := v1.1.2
+# Helm 4 plugin install from git requires --verify=false; Helm 3 ignores unknown flags poorly, so only pass it on v4.
+HELM_MAJOR := $(shell helm version --short 2>/dev/null | sed -n 's/^v\([0-9]*\).*/\1/p')
+HELM_UNITTEST_INSTALL_FLAGS := $(if $(filter 4,$(HELM_MAJOR)),--verify=false,)
+
+.PHONY: helm-lint helm-unittest helm-plugin-unittest
+
+helm-lint:
+	helm lint --strict $(HELM_CHART)
+	helm template flagr $(HELM_CHART) >/dev/null
+
+helm-plugin-unittest:
+	@helm plugin list 2>/dev/null | grep -q '^unittest' || \
+		helm plugin install https://github.com/helm-unittest/helm-unittest.git --version $(HELM_UNITTEST_VERSION) $(HELM_UNITTEST_INSTALL_FLAGS)
+
+helm-unittest: helm-plugin-unittest
+	helm unittest $(HELM_CHART)
 
 # ------------------------------------------------------------------------------
 # Maintenance
