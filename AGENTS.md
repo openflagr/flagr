@@ -40,7 +40,7 @@ Run from **repo root**. Match what [`.github/workflows/ci.yml`](.github/workflow
 
 | GitHub Actions job | Makefile |
 |--------------------|----------|
-| `unit_test` | `make ci-swagger` then `make ci` (= `make test`: **golangci-lint** + swagger validate + `go test ./pkg/...`) |
+| `unit_test` | Ubuntu: `make ci-swagger` then `make ci`. Windows: `make ci` (**golangci-lint** + swagger validate + `go test ./pkg/...`) |
 | `ui_lint` | `make build-ui` (= `flagr-ui-check` + Vite production build) |
 | `docs_build` | `make build-docs` (VitePress; same as Pages deploy) |
 | `e2e_test` | `make test-e2e` (= `make build` + `flagr-ui-check` + Playwright) |

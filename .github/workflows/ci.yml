@@ -9,9 +9,16 @@ permissions:
   contents: read
 jobs:
   unit_test:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     env:
       CGO_ENABLED: 0
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: Check out source code
         uses: actions/checkout@v4
@@ -20,11 +27,26 @@ jobs:
         with:
           go-version: 1.26
           cache: true
+      # Images may expose MinGW's make.exe. Chocolatey GNU Make is what the Makefile expects.
+      - name: Install GNU Make
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: choco install make --no-progress -y
+      - name: Put Git Bash and Chocolatey on PATH
+        if: runner.os == 'Windows'
+        run: |
+          echo "C:/Program Files/Git/usr/bin" >> "$GITHUB_PATH"
+          echo "C:/Program Files/Git/bin" >> "$GITHUB_PATH"
+          echo "C:/ProgramData/chocolatey/bin" >> "$GITHUB_PATH"
       - run: echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+      - run: make --version
       - run: make deps
+      # swagger_gen round-trip + git diff is Ubuntu-only (line endings on Windows).
       - run: make ci-swagger
+        if: runner.os != 'Windows'
       - run: make ci
       - uses: codecov/codecov-action@v4
+        if: runner.os == 'Linux'
   ui_lint:
     runs-on: ubuntu-latest
     steps:
