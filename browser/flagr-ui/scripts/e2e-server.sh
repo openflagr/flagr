@@ -9,11 +9,21 @@ BACKEND_PORT=18000
 FRONTEND_PORT=8080
 KILL_PORT="$ROOT_DIR/scripts/kill-port.sh"
 
+# WSL and Git Bash can both see a Windows checkout. Prefer flagr.exe only in
+# Git Bash, or when the Unix binary is absent.
 flagr_bin() {
-	if [ -f "$ROOT_DIR/flagr.exe" ]; then
-		echo "$ROOT_DIR/flagr.exe"
-	else
+	case "$(uname -s 2>/dev/null || true)" in
+	MINGW* | MSYS* | CYGWIN*)
+		if [ -f "$ROOT_DIR/flagr.exe" ]; then
+			echo "$ROOT_DIR/flagr.exe"
+			return
+		fi
+		;;
+	esac
+	if [ -f "$ROOT_DIR/flagr" ]; then
 		echo "$ROOT_DIR/flagr"
+	else
+		echo "$ROOT_DIR/flagr.exe"
 	fi
 }
 

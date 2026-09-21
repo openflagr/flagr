@@ -31,9 +31,12 @@ pids_listening() {
 		fuser -n tcp "$port" 2>/dev/null | awk '{ for (i = 1; i <= NF; i++) if ($i ~ /^[0-9]+$/) print $i }'
 		return 0
 	fi
-	# Windows netstat: "TCP  127.0.0.1:18000  0.0.0.0:0  LISTENING  1234"
+	# netstat localizes the state word (LISTENING, ABHÖREN, ÉCOUTE).
+	# A TCP listener's foreign address is 0.0.0.0:0 or [::]:0 in every locale.
 	netstat -ano 2>/dev/null | awk -v port="$port" '
-		/LISTENING/ {
+		{
+			foreign = $3
+			if (foreign != "0.0.0.0:0" && foreign != "[::]:0") next
 			addr = $2
 			sub(/.*:/, "", addr)
 			if (addr == port) print $NF
