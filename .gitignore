@@ -2,11 +2,15 @@
 *.out
 *~
 flagr
+flagr.exe
 flagr-validate
+flagr-validate.exe
 flagr.sqlite
+.configure_flagr.go.bak
 !*/
 site/
 **/*.test
+**/*.test.exe
 **/*.sublime-workspace
 /.idea/
 **/access.log

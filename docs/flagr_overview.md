@@ -8,7 +8,7 @@ Every evaluation answers one question: **given this entity, which variant right 
 
 Segments, constraints, distribution, and rollout are the machinery behind that answer. Evaluation is sticky for a stable `entityID` and an unchanged flag, and it runs from an in-memory **EvalCache**, not a SQL query on every request.
 
-Field names and request shapes live in the [API reference](https://openflagr.github.io/flagr/api_docs). Handler layout and package map: [Contributing](CONTRIBUTING.md#where-the-code-lives). Integrator invariants (eval vs exposure, segment stop rules, blank vs stream, recording gates, cache lag): [Behavioral contracts](flagr_behavioral_contracts.md).
+Field names and request shapes live in the [API reference](https://openflagr.github.io/flagr/api_docs). Handler layout and package map: [AGENTS.md](https://github.com/openflagr/flagr/blob/main/AGENTS.md) (Key Code). Integrator invariants (eval vs exposure, segment stop rules, blank vs stream, recording gates, cache lag): [Behavioral contracts](flagr_behavioral_contracts.md).
 
 ## Concepts
 

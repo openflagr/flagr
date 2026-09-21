@@ -68,4 +68,4 @@ make start   # backend :18000 + UI dev :8080
 make test
 ```
 
-Contributor layout, OpenAPI regen, and test conventions: [Contributing](CONTRIBUTING.md). Docs: `make serve-docs` → http://127.0.0.1:8081/flagr/ ; production: `make build-docs` → `docs/.vitepress/dist`.
+How to contribute: [Contributing](CONTRIBUTING.md). Local commands, code layout, and CI: [AGENTS.md](https://github.com/openflagr/flagr/blob/main/AGENTS.md). Tests: [Testing](flagr_testing.md). Docs site: `make serve-docs` → http://127.0.0.1:8081/flagr/.

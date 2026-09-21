@@ -7,11 +7,19 @@ set -e
 ROOT_DIR="$(cd "$(dirname "$0")/../../.." && pwd)"
 BACKEND_PORT=18000
 FRONTEND_PORT=8080
+KILL_PORT="$ROOT_DIR/scripts/kill-port.sh"
+
+flagr_bin() {
+	if [ -f "$ROOT_DIR/flagr.exe" ]; then
+		echo "$ROOT_DIR/flagr.exe"
+	else
+		echo "$ROOT_DIR/flagr"
+	fi
+}
 
 cleanup() {
-  kill "$(lsof -ti:"$BACKEND_PORT" 2>/dev/null)" 2>/dev/null || true
-  kill "$(lsof -ti:"$FRONTEND_PORT" 2>/dev/null)" 2>/dev/null || true
-  exit
+	sh "$KILL_PORT" "$BACKEND_PORT" "$FRONTEND_PORT" 2>/dev/null || true
+	exit
 }
 trap cleanup INT TERM
 
@@ -19,40 +27,46 @@ started_any=false
 
 # --- Backend ---
 if curl -sf "http://127.0.0.1:$BACKEND_PORT/api/v1/health" > /dev/null 2>&1; then
-  echo "e2e-server: backend already running on $BACKEND_PORT" >&2
+	echo "e2e-server: backend already running on $BACKEND_PORT" >&2
 else
-  echo "e2e-server: starting backend on $BACKEND_PORT..." >&2
-  if [ ! -x "$ROOT_DIR/flagr" ]; then
-    echo "e2e-server: make build..." >&2
-    (cd "$ROOT_DIR" && make build) >&2
-  fi
-  "$ROOT_DIR/flagr" --port "$BACKEND_PORT" &
-  for i in $(seq 1 30); do
-    if curl -sf "http://127.0.0.1:$BACKEND_PORT/api/v1/health" > /dev/null 2>&1; then
-      echo "e2e-server: backend ready" >&2
-      break
-    fi
-    sleep 1
-  done
-  started_any=true
+	echo "e2e-server: starting backend on $BACKEND_PORT..." >&2
+	BIN="$(flagr_bin)"
+	if [ ! -f "$BIN" ]; then
+		echo "e2e-server: make build..." >&2
+		(cd "$ROOT_DIR" && make build) >&2
+		BIN="$(flagr_bin)"
+	fi
+	"$BIN" --port "$BACKEND_PORT" &
+	i=1
+	while [ "$i" -le 30 ]; do
+		if curl -sf "http://127.0.0.1:$BACKEND_PORT/api/v1/health" > /dev/null 2>&1; then
+			echo "e2e-server: backend ready" >&2
+			break
+		fi
+		sleep 1
+		i=$((i + 1))
+	done
+	started_any=true
 fi
 
 # --- Frontend ---
 if curl -sf -o /dev/null "http://127.0.0.1:$FRONTEND_PORT" 2>/dev/null; then
-  echo "e2e-server: frontend already running on $FRONTEND_PORT" >&2
+	echo "e2e-server: frontend already running on $FRONTEND_PORT" >&2
 else
-  echo "e2e-server: make run-ui on $FRONTEND_PORT..." >&2
-  (cd "$ROOT_DIR" && make run-ui) &
-  for i in $(seq 1 30); do
-    if curl -sf -o /dev/null "http://127.0.0.1:$FRONTEND_PORT" 2>/dev/null; then
-      echo "e2e-server: frontend ready" >&2
-      break
-    fi
-    sleep 1
-  done
-  started_any=true
+	echo "e2e-server: make run-ui on $FRONTEND_PORT..." >&2
+	(cd "$ROOT_DIR" && make run-ui) &
+	i=1
+	while [ "$i" -le 30 ]; do
+		if curl -sf -o /dev/null "http://127.0.0.1:$FRONTEND_PORT" 2>/dev/null; then
+			echo "e2e-server: frontend ready" >&2
+			break
+		fi
+		sleep 1
+		i=$((i + 1))
+	done
+	started_any=true
 fi
 
 if [ "$started_any" = true ]; then
-  wait
+	wait
 fi

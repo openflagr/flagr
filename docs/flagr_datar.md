@@ -70,12 +70,12 @@ segment, and day.
 
 Returns flags with aggregate totals over a time window. **Only flags that have
 actual evaluation traffic in the window appear** — zero-traffic flags are
-excluded.
+excluded. Hourly buckets and the default window are UTC.
 
 | Param | Type | Default | Description |
 |-------|------|---------|-------------|
-| `from` | RFC 3339 | 7 days ago | Start of time window |
-| `to` | RFC 3339 | now | End of time window |
+| `from` | RFC 3339 | 7 days ago (UTC) | Start of time window |
+| `to` | RFC 3339 | now (UTC) | End of time window |
 | `limit` | int | 100 | Max results |
 | `offset` | int | 0 | Result offset |
 
@@ -100,12 +100,13 @@ Response:
 
 Detailed breakdown for a single flag. Returns traffic grouped by variant,
 segment, and day — all three arrays sorted (descending by count for
-variant/segment, ascending by date for day).
+variant/segment, ascending by date for day). Same UTC window as the list
+endpoint.
 
 | Param | Type | Default | Description |
 |-------|------|---------|-------------|
-| `from` | RFC 3339 | 7 days ago | Start of time window |
-| `to` | RFC 3339 | now | End of time window |
+| `from` | RFC 3339 | 7 days ago (UTC) | Start of time window |
+| `to` | RFC 3339 | now (UTC) | End of time window |
 
 Response:
 
@@ -142,7 +143,7 @@ trade-off is that you lose entity-level detail — you can't ask "which users
 saw this variant" — but you gain a tiny, fast, zero-dependency store that runs
 alongside evaluation without measurable cost.
 
-Counts are bucketed by hour using `time.Now().Truncate(time.Hour)`. Each row
+Counts are bucketed by UTC hour using `time.Now().UTC().Truncate(time.Hour)`. Each row
 in the `datar_hourly_events` table represents one unique combination of:
 
 - `flag_id` — the evaluated flag
