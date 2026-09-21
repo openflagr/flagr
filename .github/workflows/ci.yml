@@ -16,9 +16,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       CGO_ENABLED: 0
-    defaults:
-      run:
-        shell: bash
     steps:
       - name: Check out source code
         uses: actions/checkout@v4
@@ -32,18 +29,23 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: choco install make --no-progress -y
-      - name: Put Git Bash and Chocolatey on PATH
+      - name: Add tools to PATH (Windows)
         if: runner.os == 'Windows'
+        shell: pwsh
         run: |
-          echo "C:/Program Files/Git/usr/bin" >> "$GITHUB_PATH"
-          echo "C:/Program Files/Git/bin" >> "$GITHUB_PATH"
-          echo "C:/ProgramData/chocolatey/bin" >> "$GITHUB_PATH"
-      - run: echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+          Add-Content -Path $env:GITHUB_PATH -Value "C:\Program Files\Git\usr\bin"
+          Add-Content -Path $env:GITHUB_PATH -Value "C:\Program Files\Git\bin"
+          Add-Content -Path $env:GITHUB_PATH -Value "C:\ProgramData\chocolatey\bin"
+          Add-Content -Path $env:GITHUB_PATH -Value "$(go env GOPATH)\bin"
+      - name: Add GOPATH/bin to PATH
+        if: runner.os != 'Windows'
+        run: echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
       - run: make --version
       - run: make deps
       # swagger_gen round-trip + git diff is Ubuntu-only (line endings on Windows).
-      - run: make ci-swagger
+      - name: Check generated swagger is committed
         if: runner.os != 'Windows'
+        run: make ci-swagger
       - run: make ci
       - uses: codecov/codecov-action@v4
         if: runner.os == 'Linux'
