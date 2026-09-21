@@ -98,7 +98,7 @@ User-facing docs are VitePress in `docs/` (`make serve-docs`, `make build-docs`)
 - **Don't edit `swagger_gen/`** — `make swagger`
 - Dev mode uses SQLite, no external deps needed
 - Process management uses listener PIDs on `:18000` / `:8080` (`scripts/kill-port.sh`) — never `pkill` by process name
-- **Windows:** same `make` targets. GNU Make needs Git Bash `sh.exe` on PATH (`C:\Program Files\Git\bin`).
+- **Windows:** same `make` targets. Machine setup: [Develop Flagr — Windows](https://openflagr.github.io/flagr/#develop-windows) (Git Bash `sh.exe` on PATH).
 - See [deepwiki.com/openflagr/flagr](https://deepwiki.com/openflagr/flagr) and `docs/`
 - **File size & layout:** Prefer **medium-sized** files with a clear, logical split — not monoliths, not one-off micro-files for a single helper. Group by responsibility (e.g. handler `error.go` for API/handler errors and DB error classification; `validate.go` for request validation; `crud*.go` for CRUD surfaces). New code should extend an existing cohesive file when it fits; add a new file only when it names a real subsystem or API slice.
 - **No magic numbers:** Prefer named constants over inline literals. In Go, define `const` blocks for test values, timing durations, rollout percents, and HTTP status codes (use `http.StatusOK` not `200`). In CSS/SCSS, use design tokens (`--space-*`, `--font-size-*`, `--radius-*`) or component-scoped variables (`--constraint-logic-col`) instead of hardcoded `px` values. Exceptions: `0`, `1`, `-1`, and values defined in `:root` variable declarations.

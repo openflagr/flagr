@@ -7,7 +7,7 @@ description: How to contribute to Flagr — issues, pull requests, and review.
 
 Thanks for helping improve Flagr. This page is the contributor process: issues, pull requests, and review.
 
-Build, test, and code layout: **[AGENTS.md](https://github.com/openflagr/flagr/blob/main/AGENTS.md)** (`make help` from the repo root). Tests: [Testing](flagr_testing.md).
+Local setup (including Windows): [Develop Flagr](index.md#develop-flagr). Build, test, and code layout: **[AGENTS.md](https://github.com/openflagr/flagr/blob/main/AGENTS.md)** (`make help` from the repo root). Tests: [Testing](flagr_testing.md).
 
 Please follow the [Code of Conduct](https://github.com/openflagr/flagr/blob/main/CODE_OF_CONDUCT.md).
 
