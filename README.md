@@ -60,7 +60,19 @@ curl -sS -X POST https://try-flagr.onrender.com/api/v1/evaluation \
 
 ## Docs
 
-**[Documentation](https://openflagr.github.io/flagr)** covers integration, self-hosting, environment variables, and the [API reference](https://openflagr.github.io/flagr/api_docs). Load test numbers: [`benchmark/`](./benchmark).
+**[Documentation](https://openflagr.github.io/flagr)** covers integration, self-hosting, environment variables, and the [API reference](https://openflagr.github.io/flagr/api_docs).
+
+## Performance
+
+[`vegeta`](./benchmark) load test (~2k req/s, sub-ms median in published run):
+
+```
+Requests      [total, rate]            56521, 2000.04
+Duration      [total, attack, wait]    28.26s, 28.26s, 365.53µs
+Latencies     [mean, 50, 95, 99, max]  371.63µs, 327.99µs, 614.92µs, 1.39ms, 12.50ms
+Success       [ratio]                  100.00%
+Status Codes  [code:count]             200:56521
+```
 
 ## Clients
 
