@@ -10,12 +10,6 @@
       <span>
         Jev constraints call a System One model on every evaluation, which makes
         them slower than normal constraints and adds model usage cost.
-        <a
-          class="jev-notice__link"
-          href="https://docs.typesafe.ai/models"
-          target="_blank"
-          rel="noopener noreferrer"
-        >Learn more ↗</a>
       </span>
     </div>
 
@@ -600,11 +594,6 @@ export default {
   color: var(--el-color-warning);
   margin-top: 0.15em;
   flex: 0 0 auto;
-}
-.jev-notice__link {
-  color: var(--el-color-primary);
-  font-weight: var(--font-weight-medium);
-  white-space: nowrap;
 }
 .jev-row {
   display: flex;

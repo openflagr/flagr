@@ -40,15 +40,9 @@
             <template #content>
               <div class="jev-toggle-tooltip__body">
                 Turn on to back this constraint with a Jev / System One question.
-                The model answer is injected as <code>@jev.&lt;name&gt;</code> and
+                The model answer is used as <code>@jev.&lt;name&gt;</code> and
                 compared with the operator.
               </div>
-              <a
-                class="jev-toggle-tooltip__link"
-                href="https://docs.typesafe.ai/"
-                target="_blank"
-                rel="noopener noreferrer"
-              >Jev docs ↗</a>
             </template>
             <el-switch
               :model-value="jevEnabled"
