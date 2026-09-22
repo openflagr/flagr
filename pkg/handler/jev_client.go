@@ -6,12 +6,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math/rand/v2"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/openflagr/flagr/pkg/config"
 	"github.com/openflagr/flagr/pkg/entity"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -77,8 +79,10 @@ type JevResponse struct {
 	// it (Kev and oido-systemone do; the hosted API may not).
 	LatencyMs *float64 `json:"latency_ms,omitempty"`
 
-	// ClientLatencyMs is the client-measured round trip (not part of the API).
+	// ClientLatencyMs is the client-measured wall clock (including retries) and
+	// Retries is how many extra attempts were made. Neither is part of the API.
 	ClientLatencyMs float64 `json:"-"`
+	Retries         int     `json:"-"`
 }
 
 // JevUsage is the token usage of a System One call.
@@ -107,25 +111,11 @@ func (c *jevHTTPClient) SystemOne(ctx context.Context, state any, questions map[
 	}
 
 	start := time.Now()
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+jevSystemOnePath, bytes.NewReader(body))
+	resp, retries, err := c.doWithRetry(ctx, body)
 	if err != nil {
-		return nil, fmt.Errorf("building jev request: %w", err)
-	}
-	req.Header.Set("Content-Type", "application/json")
-	if c.apiKey != "" {
-		req.Header.Set("Authorization", "Bearer "+c.apiKey)
-	}
-
-	resp, err := c.http.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("calling jev: %w", err)
+		return nil, err
 	}
 	defer func() { _ = resp.Body.Close() }()
-	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
-		msg, _ := io.ReadAll(io.LimitReader(resp.Body, jevMaxErrorBodyBytes))
-		return nil, fmt.Errorf("jev systemone returned status %d: %s", resp.StatusCode, strings.TrimSpace(string(msg)))
-	}
 
 	var out JevResponse
 	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
@@ -134,6 +124,95 @@ func (c *jevHTTPClient) SystemOne(ctx context.Context, state any, questions map[
 	if out.Answers == nil {
 		return nil, fmt.Errorf("jev response contained no answers")
 	}
+	out.Retries = retries
 	out.ClientLatencyMs = float64(time.Since(start).Microseconds()) / 1000.0
 	return &out, nil
+}
+
+// doWithRetry sends the request body, retrying transient failures (network
+// errors, 5xx, 429) with exponential backoff and jitter. It stops retrying once
+// the context is done, so retries never extend the call past JevTimeout.
+//
+// It returns the successful response, the number of retries used, and an error.
+func (c *jevHTTPClient) doWithRetry(ctx context.Context, body []byte) (*http.Response, int, error) {
+	var lastErr error
+	delay := config.Config.JevRetryBase
+
+	for attempt := 0; ; attempt++ {
+		if attempt > 0 {
+			if err := sleepContext(ctx, delay); err != nil {
+				return nil, attempt - 1, fmt.Errorf("jev retry canceled: %w", err)
+			}
+		}
+
+		// A fresh request per attempt: the previous body reader is consumed.
+		req, err := c.newRequest(ctx, body)
+		if err != nil {
+			return nil, attempt, err
+		}
+
+		resp, err := c.http.Do(req)
+		switch {
+		case err != nil:
+			lastErr = fmt.Errorf("calling jev: %w", err)
+		case resp.StatusCode >= http.StatusOK && resp.StatusCode < http.StatusMultipleChoices:
+			return resp, attempt, nil
+		default:
+			msg, _ := io.ReadAll(io.LimitReader(resp.Body, jevMaxErrorBodyBytes))
+			_ = resp.Body.Close()
+			lastErr = fmt.Errorf("jev systemone returned status %d: %s", resp.StatusCode, strings.TrimSpace(string(msg)))
+			if !jevRetryableStatus(resp.StatusCode) {
+				return nil, attempt, lastErr // 4xx (except 429): retrying will not help
+			}
+		}
+
+		if attempt >= config.Config.JevMaxRetries {
+			return nil, attempt, lastErr
+		}
+		logrus.WithError(lastErr).WithField("attempt", attempt+1).Debug("retrying jev systemone call")
+		delay = nextJevDelay(delay)
+	}
+}
+
+func (c *jevHTTPClient) newRequest(ctx context.Context, body []byte) (*http.Request, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+jevSystemOnePath, bytes.NewReader(body))
+	if err != nil {
+		return nil, fmt.Errorf("building jev request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	if c.apiKey != "" {
+		req.Header.Set("Authorization", "Bearer "+c.apiKey)
+	}
+	return req, nil
+}
+
+// jevRetryableStatus reports whether an HTTP status is worth retrying.
+func jevRetryableStatus(code int) bool {
+	return code >= http.StatusInternalServerError || code == http.StatusTooManyRequests
+}
+
+// nextJevDelay returns the next retry delay with up to 50% jitter, capped at
+// JevRetryMax, to avoid a thundering herd against a recovering endpoint.
+func nextJevDelay(prev time.Duration) time.Duration {
+	next := min(2*prev, config.Config.JevRetryMax)
+	if next <= 0 {
+		return 0
+	}
+	jitter := time.Duration(rand.Int64N(int64(next)/2 + 1))
+	return next + jitter
+}
+
+// sleepContext waits for d or until the context is done, whichever comes first.
+func sleepContext(ctx context.Context, d time.Duration) error {
+	if d <= 0 {
+		return ctx.Err()
+	}
+	t := time.NewTimer(d)
+	defer t.Stop()
+	select {
+	case <-t.C:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 }

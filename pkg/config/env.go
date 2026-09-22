@@ -92,8 +92,19 @@ var Config = struct {
 	// JevModel - model or alias sent in the System One request.
 	JevModel string `env:"FLAGR_JEV_MODEL" envDefault:"jev-latest"`
 
-	// JevTimeout - per-request timeout for System One calls.
+	// JevTimeout - overall timeout for the batched System One call, including
+	// any retries. Retries only run while this budget remains.
 	JevTimeout time.Duration `env:"FLAGR_JEV_TIMEOUT" envDefault:"1s"`
+
+	// JevMaxRetries - retry attempts for transient System One failures
+	// (network errors, 5xx, 429). Retries run within JevTimeout.
+	JevMaxRetries int `env:"FLAGR_JEV_MAX_RETRIES" envDefault:"2"`
+
+	// JevRetryBase - base delay for exponential backoff between Jev retries.
+	JevRetryBase time.Duration `env:"FLAGR_JEV_RETRY_BASE" envDefault:"100ms"`
+
+	// JevRetryMax - maximum delay between Jev retries.
+	JevRetryMax time.Duration `env:"FLAGR_JEV_RETRY_MAX" envDefault:"500ms"`
 
 	// JevConfidenceThreshold - confidence gate applied to choice/score answers
 	// when a constraint does not set its own threshold. Answers below it do

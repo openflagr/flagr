@@ -26,6 +26,7 @@ type JevDebug struct {
 	// endpoint-reported inference latency when provided.
 	LatencyMs       float64  `json:"latencyMs,omitempty"`
 	ServerLatencyMs *float64 `json:"serverLatencyMs,omitempty"`
+	Retries         int      `json:"retries,omitempty"`
 	Error           string   `json:"error,omitempty"`
 }
 
@@ -69,6 +70,7 @@ func resolveJevForFlag(ctx context.Context, evalContext models.EvalContext, flag
 	debug.Usage = resp.Usage
 	debug.LatencyMs = resp.ClientLatencyMs
 	debug.ServerLatencyMs = resp.LatencyMs
+	debug.Retries = resp.Retries
 
 	answers := make(map[string]any, len(resp.Answers))
 	for name, answer := range resp.Answers {

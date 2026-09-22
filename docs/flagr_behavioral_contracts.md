@@ -55,6 +55,9 @@ A constraint can be backed by a [Jev / System One](flagr_jev.md) question. Contr
 - **Fail-closed.** If `FLAGR_JEV_ENABLED` is off, the endpoint errors, or the
   request times out, every Jev constraint evaluates **false** and the segment
   falls through. There is no fail-open mode.
+- **Bounded retries.** Transient failures (network errors, 5xx, 429) are retried
+  with exponential backoff and jitter inside `FLAGR_JEV_TIMEOUT`; retries never
+  extend the call past that budget. 4xx is not retried.
 - **Confidence gate.** A `choice` / `scale` answer below its threshold
   (per-constraint, else `FLAGR_JEV_CONFIDENCE_THRESHOLD`) is treated as a miss.
   `noul` has no separate confidence; its `P(true)` comparison is the gate.

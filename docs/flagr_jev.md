@@ -53,7 +53,10 @@ the result context.
 
 Each flag evaluation with Jev constraints makes one batched System One call. It
 is slower than a normal constraint and adds model usage cost, and Jev is
-rate-limited, so keep Jev constraints off high-QPS request paths. The eval debug
-log (`enableDebug: true`) includes the request, response, and latency.
+rate-limited, so keep Jev constraints off high-QPS request paths. Transient
+failures (network errors, 5xx, 429) are retried with exponential backoff and
+jitter within the `FLAGR_JEV_TIMEOUT` budget; once it is exhausted the constraint
+falls through. The eval debug log (`enableDebug: true`) includes the request,
+response, latency, and retry count.
 
 Design notes: [Jev constraints plan](https://github.com/openflagr/flagr/blob/main/docs/plans/2026-09-22-001-jev-calibrated-constraints-plan.md).

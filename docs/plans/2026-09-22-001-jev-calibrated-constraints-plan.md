@@ -274,6 +274,9 @@ comparison, and the question in the UI editor.
 - **Operator/type validation.** `noul` / `scale` accept `GTE`/`GT`/`LTE`/`LT`,
   `choice` accepts `EQ`/`NEQ`/`IN`/`NOTIN`, so an incompatible match is rejected
   instead of silently never matching.
+- **Bounded retries.** The System One call retries transient failures (network
+  errors, 5xx, 429) with exponential backoff and jitter, capped by the
+  `FLAGR_JEV_TIMEOUT` deadline so a retry never extends the eval past its budget.
 
 ## Risks
 
@@ -283,7 +286,8 @@ comparison, and the question in the UI editor.
 - **Cost & rate limits**: Jev is billed per input token and rate-limits requests,
   and Flagr makes one batched call per flag evaluation, so cost scales with
   `entities × flags-with-Jev × evaluations`. A high-QPS path can hit the request
-  limit; there is no retry/backoff yet, so Jev constraints stay fail-closed.
+  limit; transient failures are retried with bounded backoff inside
+  `FLAGR_JEV_TIMEOUT`, then Jev constraints stay fail-closed.
 - **Self-hosted parity**: `oido-systemone` is an independent reimplementation;
   the client tolerates missing `usage`/extra fields and only relies on the
   documented answer fields.
