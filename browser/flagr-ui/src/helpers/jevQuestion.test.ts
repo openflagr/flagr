@@ -35,6 +35,7 @@ describe('jevQuestion', () => {
     expect(jevPropertyName('dl_state')).toBe('')
     expect(jevPropertyFor('buying intent')).toBe('@jev.buying_intent')
     expect(slugifyJevName('risk-score v2')).toBe('risk_score_v2')
+    expect(slugifyJevName('123 risk')).toBe('_123_risk')
   })
 
   it('builds type-appropriate default questions', () => {

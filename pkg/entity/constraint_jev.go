@@ -3,6 +3,7 @@ package entity
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -29,6 +30,11 @@ const (
 	JevMinScoreLevels = 2
 	JevMaxScoreLevels = 10
 )
+
+// jevNamePattern is the safe charset for a question name. Names are used as
+// `@jev.<name>`, and the conditions parser treats dots as path separators and
+// rejects other punctuation, so a name must be identifier-like.
+var jevNamePattern = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
 
 // JevQuestion is the authored System One question behind a Jev constraint.
 // Instructions and Criteria are free-form JSON (string | object | array), matching
@@ -157,10 +163,23 @@ func (c *Constraint) validateJev() error {
 	if err := q.Validate(); err != nil {
 		return err
 	}
-	if !strings.HasPrefix(c.Property, JevPropertyPrefix) || c.JevName() == "" {
+	if !strings.HasPrefix(c.Property, JevPropertyPrefix) {
 		return fmt.Errorf("jev constraints require property %s<name>, got %q", JevPropertyPrefix, c.Property)
 	}
+	if err := validateJevName(c.JevName()); err != nil {
+		return err
+	}
 	return validateJevOperator(q.Type, c.Operator)
+}
+
+// validateJevName rejects question names that would not resolve as
+// `@jev.<name>`: dots are path separators in the conditions engine, and other
+// punctuation is rejected by its parser.
+func validateJevName(name string) error {
+	if !jevNamePattern.MatchString(name) {
+		return fmt.Errorf("jev question name %q must start with a letter or underscore and contain only letters, digits, and underscores", name)
+	}
+	return nil
 }
 
 // validateJevOperator enforces that the match operator makes sense for the
@@ -234,6 +253,9 @@ func (f *Flag) collectJevQuestions(s *Segment) {
 		q, err := c.JevQuestion()
 		if err == nil {
 			err = q.Validate()
+		}
+		if err == nil {
+			err = validateJevName(name)
 		}
 		if err != nil {
 			logrus.WithError(err).WithFields(logrus.Fields{

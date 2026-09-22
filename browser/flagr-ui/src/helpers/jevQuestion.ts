@@ -23,9 +23,10 @@ export function jevPropertyFor(name: string): string {
   return JEV_PROPERTY_PREFIX + slugifyJevName(name)
 }
 
-/** Restrict a question name to the safe character set. */
+/** Restrict a question name to the safe character set (`[A-Za-z_][A-Za-z0-9_]*`). */
 export function slugifyJevName(name: string): string {
-  return name.replace(/[^a-zA-Z0-9_]/g, '_')
+  const slug = name.replace(/[^a-zA-Z0-9_]/g, '_')
+  return /^[0-9]/.test(slug) ? `_${slug}` : slug
 }
 
 /** A fresh question for the given type, with the criteria shape that type needs. */

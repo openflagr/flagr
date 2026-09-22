@@ -131,7 +131,9 @@ Full list: [Environment variables](flagr_env.md#jev).
 ## 2. Add a Jev constraint
 
 1. In a segment, add a constraint and flip the **JEV** switch on.
-2. Give the question a name — the answer is used as `@jev.<name>`.
+2. Give the question a name — the answer is used as `@jev.<name>`. Names must
+   start with a letter or underscore and contain only letters, digits, and
+   underscores (the UI slugs them for you).
 3. Pick a type and write the instructions:
    - **Noul** (true / false) returns `P(true)`; match with `≥` / `<`.
    - **Choice** (pick one) — match **any of** / **none of** the choices.
