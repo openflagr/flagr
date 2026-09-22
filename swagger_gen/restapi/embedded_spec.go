@@ -2400,7 +2400,7 @@ func init() {
       }
     },
     "jevQuestion": {
-      "description": "Optional Jev / System One question backing this constraint. When present, ` + "`" + `property` + "`" + ` must be ` + "`" + `@jev.\u003cname\u003e` + "`" + `. The model answer is injected into the evaluation context under ` + "`" + `@jev.\u003cname\u003e` + "`" + ` and compared with ` + "`" + `operator` + "`" + `/` + "`" + `value` + "`" + `.\n",
+      "description": "Optional Jev / System One question backing this constraint. When present, ` + "`" + `property` + "`" + ` must be ` + "`" + `@jev.\u003cname\u003e` + "`" + `. The model answer is used as ` + "`" + `@jev.\u003cname\u003e` + "`" + ` for constraint evaluation and compared with ` + "`" + `operator` + "`" + `/` + "`" + `value` + "`" + `; it is not written into the result context.\n",
       "type": "object",
       "required": [
         "type"
@@ -2572,7 +2572,7 @@ func init() {
       "type": "object",
       "properties": {
         "jev": {
-          "description": "Jev / System One request and response for this segment (debug only). Present only when the segment has Jev constraints; ` + "`" + `questions` + "`" + ` and ` + "`" + `answers` + "`" + ` are scoped to that segment. Shape: ` + "`" + `{model, state, questions, answers, usage, latencyMs, serverLatencyMs, cached, error}` + "`" + `. ` + "`" + `latencyMs` + "`" + ` is the client round trip; ` + "`" + `serverLatencyMs` + "`" + ` is the endpoint-reported inference latency when provided. Both are omitted on cache hits.\n",
+          "description": "Jev / System One request and response for this segment (debug only). Present only when the segment has Jev constraints; ` + "`" + `questions` + "`" + ` and ` + "`" + `answers` + "`" + ` are scoped to that segment. Shape: ` + "`" + `{model, state, questions, answers, usage, latencyMs, serverLatencyMs, error}` + "`" + `. ` + "`" + `latencyMs` + "`" + ` is the client round trip; ` + "`" + `serverLatencyMs` + "`" + ` is the endpoint-reported inference latency when provided.\n",
           "type": "object"
         },
         "msg": {
@@ -5101,7 +5101,7 @@ func init() {
       }
     },
     "jevQuestion": {
-      "description": "Optional Jev / System One question backing this constraint. When present, ` + "`" + `property` + "`" + ` must be ` + "`" + `@jev.\u003cname\u003e` + "`" + `. The model answer is injected into the evaluation context under ` + "`" + `@jev.\u003cname\u003e` + "`" + ` and compared with ` + "`" + `operator` + "`" + `/` + "`" + `value` + "`" + `.\n",
+      "description": "Optional Jev / System One question backing this constraint. When present, ` + "`" + `property` + "`" + ` must be ` + "`" + `@jev.\u003cname\u003e` + "`" + `. The model answer is used as ` + "`" + `@jev.\u003cname\u003e` + "`" + ` for constraint evaluation and compared with ` + "`" + `operator` + "`" + `/` + "`" + `value` + "`" + `; it is not written into the result context.\n",
       "type": "object",
       "required": [
         "type"
@@ -5277,7 +5277,7 @@ func init() {
       "type": "object",
       "properties": {
         "jev": {
-          "description": "Jev / System One request and response for this segment (debug only). Present only when the segment has Jev constraints; ` + "`" + `questions` + "`" + ` and ` + "`" + `answers` + "`" + ` are scoped to that segment. Shape: ` + "`" + `{model, state, questions, answers, usage, latencyMs, serverLatencyMs, cached, error}` + "`" + `. ` + "`" + `latencyMs` + "`" + ` is the client round trip; ` + "`" + `serverLatencyMs` + "`" + ` is the endpoint-reported inference latency when provided. Both are omitted on cache hits.\n",
+          "description": "Jev / System One request and response for this segment (debug only). Present only when the segment has Jev constraints; ` + "`" + `questions` + "`" + ` and ` + "`" + `answers` + "`" + ` are scoped to that segment. Shape: ` + "`" + `{model, state, questions, answers, usage, latencyMs, serverLatencyMs, error}` + "`" + `. ` + "`" + `latencyMs` + "`" + ` is the client round trip; ` + "`" + `serverLatencyMs` + "`" + ` is the endpoint-reported inference latency when provided.\n",
           "type": "object"
         },
         "msg": {

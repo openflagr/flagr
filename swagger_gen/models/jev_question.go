@@ -13,7 +13,7 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// JevQuestion Optional Jev / System One question backing this constraint. When present, `property` must be `@jev.<name>`. The model answer is injected into the evaluation context under `@jev.<name>` and compared with `operator`/`value`.
+// JevQuestion Optional Jev / System One question backing this constraint. When present, `property` must be `@jev.<name>`. The model answer is used as `@jev.<name>` for constraint evaluation and compared with `operator`/`value`; it is not written into the result context.
 //
 // swagger:model jevQuestion
 type JevQuestion struct {

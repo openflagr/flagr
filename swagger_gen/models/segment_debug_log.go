@@ -17,7 +17,7 @@ import (
 // swagger:model segmentDebugLog
 type SegmentDebugLog struct {
 
-	// Jev / System One request and response for this segment (debug only). Present only when the segment has Jev constraints; `questions` and `answers` are scoped to that segment. Shape: `{model, state, questions, answers, usage, latencyMs, serverLatencyMs, cached, error}`. `latencyMs` is the client round trip; `serverLatencyMs` is the endpoint-reported inference latency when provided. Both are omitted on cache hits.
+	// Jev / System One request and response for this segment (debug only). Present only when the segment has Jev constraints; `questions` and `answers` are scoped to that segment. Shape: `{model, state, questions, answers, usage, latencyMs, serverLatencyMs, error}`. `latencyMs` is the client round trip; `serverLatencyMs` is the endpoint-reported inference latency when provided.
 	//
 	Jev any `json:"jev,omitempty"`
 

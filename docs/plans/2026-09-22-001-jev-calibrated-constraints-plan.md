@@ -10,7 +10,7 @@ Add a first-class **Jev constraint** to Flagr: an audience-targeting predicate w
 value is produced by a [TypeSafe System One model](https://docs.typesafe.ai/)
 (`noul` / `choice` / `score`) instead of a client-provided `entityContext` field.
 A Jev constraint is authored entirely in the Flagr UI, stored inline on the
-`constraint` row, and injected into the evaluation map as a synthetic property
+`constraint` row, and used as a synthetic property
 `@jev.<name>` so the existing conditions engine performs the comparison
 unchanged. It is, literally, a "fancy `if`".
 
@@ -36,8 +36,8 @@ Because Jev answers are typed values, they slot into Flagr's existing
 1. **Boolean-only semantics** — every Jev question compiles to a `true`/`false`
    gate that participates in the segment's `AND`. Variant selection and rollout
    stay entirely with Flagr. No value-returning mode in v1.
-2. **Synthetic property `@jev.<name>`** — the answer is injected under a nested
-   `@jev` map, so `{@jev.plan_tier} == "pro"` resolves via the conditions
+2. **Synthetic property `@jev.<name>`** — the answer is exposed under a nested
+   `@jev` map for constraint evaluation only, so `{@jev.plan_tier} == "pro"` resolves via the conditions
    library's existing dotted-path traversal. **Verified** against
    `conditions@v0.2.6` (see `pkg/handler/jev_eval_test.go`). No parser or
    operator changes.
@@ -53,16 +53,17 @@ Because Jev answers are typed values, they slot into Flagr's existing
    fanned out in a single `POST /v1/systemone`, leveraging Jev's parallel
    question evaluation.
 6. **Confidence gate** — `choice` / `score` carry a per-constraint
-   `confidenceThreshold`. Below it, the key is **not injected**, the expression
+   `confidenceThreshold`. Below it, the answer is omitted, the expression
    errors, and `evalSegment` already treats an error as "no match" → the segment
    falls through. `noul` has no separate confidence; its probability comparison
    *is* the gate.
-7. **Fail-closed** — Jev disabled, timed out, or erroring ⇒ no `@jev` injection ⇒
+7. **Fail-closed** — Jev disabled, timed out, or erroring ⇒ no `@jev` answers ⇒
    every Jev constraint evaluates false. There is no fail-open knob.
 8. **Env-var config** — `FLAGR_JEV_*`. No secrets in the DB, no UI settings page.
 9. **API-first** — the swagger contract is defined before the implementation.
-10. **Bounded answer cache** — `(model, state, questions)` → answers, TTL + size
-    bounded, so repeat evaluations of the same entity do not re-call Jev.
+10. **No answer cache (v1)** — the state (entityContext + entity identity) changes
+    per request, so caching answers is low value. Revisit later if a stable
+    subset can be keyed.
 
 ## API Contract (swagger)
 
@@ -73,8 +74,9 @@ jev:
   type: object
   description: >
     Optional Jev / System One question backing this constraint. When present,
-    `property` must be `@jev.<name>`. The model answer is injected into the
-    evaluation context under `@jev.<name>` and compared with `operator`/`value`.
+    `property` must be `@jev.<name>`. The model answer is used as
+    `@jev.<name>` for constraint evaluation and compared with `operator`/`value`;
+    it is not written into the result context.
   properties:
     type:
       type: string
@@ -140,14 +142,14 @@ hot path never parses JSON.
 ```
 EvalFlagWithContext
   ├─ resolve flag + entityContext
-  ├─ injectJevContext(evalContext, flag)        # new
-  │    ├─ skip if !FLAGR_JEV_ENABLED or no JeV questions
+  ├─ resolveJevForFlag(evalContext, flag)        # new, does not mutate evalContext
+  │    ├─ skip if !FLAGR_JEV_ENABLED or no Jev questions
   │    ├─ state = entityContext + entityID/entityType (minus `@jev`)
-  │    ├─ cache lookup (model, state, questions)
-  │    ├─ on miss: POST {base}/v1/systemone (Bearer key, timeout)
-  │    ├─ build @jev map; omit answers below confidenceThreshold
-  │    └─ return evalContext with a cloned map + "@jev"
-  └─ evalSegment loop (unchanged)
+  │    ├─ POST {base}/v1/systemone (Bearer key, timeout)
+  │    ├─ build answers map; omit answers below confidenceThreshold
+  │    └─ return (answers, debug); the result context stays clean
+  └─ evalSegment loop
+       ├─ merge answers under `@jev` into a private eval map
        └─ conditions.Evaluate parses {@jev.<name>} via path traversal
 ```
 
@@ -161,8 +163,6 @@ EvalFlagWithContext
 | `FLAGR_JEV_MODEL` | `jev-latest` | Model / alias |
 | `FLAGR_JEV_TIMEOUT` | `1s` | Per-request timeout |
 | `FLAGR_JEV_CONFIDENCE_THRESHOLD` | `0.5` | Default when a constraint omits one |
-| `FLAGR_JEV_CACHE_TTL` | `30s` | Answer cache TTL |
-| `FLAGR_JEV_CACHE_SIZE` | `10000` | Answer cache max entries |
 
 ## UI
 
@@ -189,14 +189,14 @@ in-editor "try this question" preview.
 - `pkg/handler/jev_client_test.go`: client against an `httptest` mock that
   implements the `oido-systemone` contract (request shape, Bearer auth, error
   mapping, timeout).
-- `pkg/handler/jev_eval_test.go`: `@jev` injection + end-to-end segment match for
-  all three types, confidence fall-through, fail-closed, cache hit.
+- `pkg/handler/jev_eval_test.go`: end-to-end segment match for all three types,
+  confidence fall-through, fail-closed, mixed plain+Jev constraints, per-segment
+  debug scoping, and that the result context is never mutated with `@jev`.
 - `pkg/handler/jev_integration_test.go`: full path (real HTTP client → mock
-  System One server → answer injection → conditions → variant) with a single
+  System One server → on-the-fly answers → conditions → variant) with a single
   batched call carrying all three question types, plus a fail-closed case.
 - `pkg/handler/crud_jev_test.go`: create/find/update through the REST CRUD
   handlers, including rejection of invalid questions and non-`@jev.` properties.
-- `pkg/handler/jev_cache_test.go`: TTL + size eviction.
 - `browser/flagr-ui/src/helpers/jevQuestion.test.ts`: criteria <-> form
   conversions and readiness validation.
 - `make test`, `make flagr-ui-check`.
@@ -238,7 +238,7 @@ comparison, and the question in the UI editor.
 
 ## Risks
 
-- **Hot-path latency**: 70–500 ms per Jev call. Mitigated by the cache, one
+- **Hot-path latency**: 70–500 ms per Jev call. Mitigated by one
   batched call per flag, and fail-closed. Documented as suitable for
   low-QPS / high-value targeting, not every request.
 - **Self-hosted parity**: `oido-systemone` is an independent reimplementation;

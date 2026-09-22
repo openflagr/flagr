@@ -100,12 +100,6 @@ var Config = struct {
 	// not match. Must be within [0,1].
 	JevConfidenceThreshold float64 `env:"FLAGR_JEV_CONFIDENCE_THRESHOLD" envDefault:"0.5"`
 
-	// JevCacheTTL - how long a System One answer is cached.
-	JevCacheTTL time.Duration `env:"FLAGR_JEV_CACHE_TTL" envDefault:"30s"`
-
-	// JevCacheSize - maximum number of cached answers. 0 disables the cache.
-	JevCacheSize int `env:"FLAGR_JEV_CACHE_SIZE" envDefault:"10000"`
-
 	// SnapshotsDefaultLimit - default number of newest snapshots returned by
 	// GET /flags/{flagID}/snapshots when the request carries no explicit limit.
 	// 0 (default) keeps the existing behavior of returning the full history.

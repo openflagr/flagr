@@ -77,7 +77,6 @@ func TestJevEndToEndWithMockServer(t *testing.T) {
 	stubThreshold := gostub.Stub(&config.Config.JevConfidenceThreshold, 0.5)
 	stubDebug := gostub.Stub(&config.Config.EvalDebugEnabled, true)
 	stubLog := gostub.StubFunc(&logEvalResult)
-	ResetJevCache()
 	t.Cleanup(func() {
 		stubBase.Reset()
 		stubEnabled.Reset()
@@ -86,7 +85,6 @@ func TestJevEndToEndWithMockServer(t *testing.T) {
 		stubThreshold.Reset()
 		stubDebug.Reset()
 		stubLog.Reset()
-		ResetJevCache()
 	})
 
 	// One segment ANDing all three question types.
@@ -155,10 +153,11 @@ func TestJevEndToEndWithMockServer(t *testing.T) {
 	require.NotNil(t, jevDebug.ServerLatencyMs)
 	assert.Equal(t, 11.0, *jevDebug.ServerLatencyMs)
 
-	// The injected answers are also visible on the eval context.
+	// Jev answers are used for evaluation only and are not written back into the
+	// result context.
 	evalCtx, ok := result.EvalContext.EntityContext.(map[string]any)
 	require.True(t, ok)
-	assert.Contains(t, evalCtx, entity.JevContextKey)
+	assert.NotContains(t, evalCtx, entity.JevContextKey)
 }
 
 // TestJevEndToEndMockServerFallThrough verifies fail-closed behavior when the
@@ -173,8 +172,6 @@ func TestJevEndToEndMockServerFallThrough(t *testing.T) {
 	defer gostub.Stub(&config.Config.JevBaseURL, server.URL).Reset()
 	defer gostub.Stub(&config.Config.JevEnabled, true).Reset()
 	defer gostub.StubFunc(&logEvalResult).Reset()
-	ResetJevCache()
-	defer ResetJevCache()
 
 	c := jevConstraint(t, "@jev.intent", models.ConstraintOperatorGTE, "0.8",
 		&entity.JevQuestion{Type: entity.JevTypeNoul, Instructions: "Is this intent?"})

@@ -54,7 +54,7 @@ func jevConstraint(t *testing.T, property, operator, value string, q *entity.Jev
 	return c
 }
 
-// setupJevTest wires a fake client, enables Jev, and resets caches around the test.
+// setupJevTest wires a fake client and enables Jev around the test.
 func setupJevTest(t *testing.T, client *fakeJevClient) {
 	t.Helper()
 	stubEnabled := gostub.Stub(&config.Config.JevEnabled, true)
@@ -62,14 +62,12 @@ func setupJevTest(t *testing.T, client *fakeJevClient) {
 	stubDebug := gostub.Stub(&config.Config.EvalDebugEnabled, true)
 	stubClient := gostub.StubFunc(&NewJevClient, JevClient(client))
 	stubLog := gostub.StubFunc(&logEvalResult)
-	ResetJevCache()
 	t.Cleanup(func() {
 		stubEnabled.Reset()
 		stubThreshold.Reset()
 		stubDebug.Reset()
 		stubClient.Reset()
 		stubLog.Reset()
-		ResetJevCache()
 	})
 }
 
@@ -235,25 +233,7 @@ func TestJevConstraintDisabledNoCall(t *testing.T) {
 	assert.Zero(t, fake.calls)
 }
 
-func TestJevConstraintCacheHit(t *testing.T) {
-	fake := &fakeJevClient{answers: map[string]JevAnswer{
-		"intent": {Type: entity.JevTypeNoul, Noul: jevF64(0.9)},
-	}}
-	setupJevTest(t, fake)
-
-	c := jevConstraint(t, "@jev.intent", models.ConstraintOperatorGTE, "0.8",
-		&entity.JevQuestion{Type: entity.JevTypeNoul, Instructions: "Is this intent?"})
-	f := jevTestFlag(t, c)
-
-	defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCacheWithFlags([]entity.Flag{f})).Reset()
-
-	ctx := models.EvalContext{FlagID: 100, EntityID: "e1", EntityContext: map[string]any{"plan": "pro"}}
-	assert.NotZero(t, EvalFlag(ctx).VariantID)
-	assert.NotZero(t, EvalFlag(ctx).VariantID)
-	assert.Equal(t, 1, fake.calls, "second evaluation should be served from cache")
-}
-
-func TestInjectJevContextKeepsBuiltInKeysAndInjects(t *testing.T) {
+func TestResolveJevForFlagDoesNotMutateContext(t *testing.T) {
 	fake := &fakeJevClient{answers: map[string]JevAnswer{
 		"intent": {Type: entity.JevTypeNoul, Noul: jevF64(0.9)},
 	}}
@@ -264,12 +244,16 @@ func TestInjectJevContextKeepsBuiltInKeysAndInjects(t *testing.T) {
 	f := jevTestFlag(t, c)
 	require.Len(t, f.FlagEvaluation.JevQuestions, 1)
 
-	out, debug := injectJevContext(models.EvalContext{
+	entityContext := map[string]any{"plan": "pro", "@ts": 123.0, "@http_host": "example.com"}
+	evalContext := models.EvalContext{
 		EntityID:      "user-42",
 		EntityType:    "account",
-		EntityContext: map[string]any{"plan": "pro", "@ts": 123.0, "@http_host": "example.com"},
-	}, &f)
+		EntityContext: entityContext,
+	}
 
+	answers, debug := resolveJevForFlag(evalContext, &f)
+
+	// The state sent to Jev carries built-ins + entity identity, never @jev.
 	state, ok := fake.lastState.(map[string]any)
 	require.True(t, ok)
 	assert.Equal(t, "pro", state["plan"])
@@ -279,15 +263,14 @@ func TestInjectJevContextKeepsBuiltInKeysAndInjects(t *testing.T) {
 	assert.Equal(t, "account", state["entityType"])
 	assert.NotContains(t, state, entity.JevContextKey, "@jev must never be fed back to the model")
 
-	injected, ok := out.EntityContext.(map[string]any)
-	require.True(t, ok)
-	assert.Equal(t, 0.9, injected[entity.JevContextKey].(map[string]any)["intent"])
+	// Answers are returned separately and the caller's context is untouched.
+	assert.Equal(t, 0.9, answers["intent"])
+	assert.NotContains(t, entityContext, entity.JevContextKey)
 
 	// The debug payload exposes the request and the response.
 	require.NotNil(t, debug)
 	assert.Equal(t, "Is this intent?", debug.Questions["intent"].Instructions)
 	require.Contains(t, debug.Answers, "intent")
-	assert.False(t, debug.Cached)
 	assert.Empty(t, debug.Error)
 }
 
@@ -401,4 +384,34 @@ func TestJevDebugScopedToJevSegments(t *testing.T) {
 	require.True(t, ok)
 	assert.Contains(t, jevDebug.Questions, "intent")
 	require.Contains(t, jevDebug.Answers, "intent")
+}
+
+// A segment can mix plain and Jev constraints: the plain one resolves from
+// entityContext, the Jev one from the answers merged in only for evaluation.
+func TestJevConstraintMixedWithPlainConstraint(t *testing.T) {
+	fake := &fakeJevClient{answers: map[string]JevAnswer{
+		"intent": {Type: entity.JevTypeNoul, Noul: jevF64(0.9)},
+	}}
+	setupJevTest(t, fake)
+
+	f := entity.GenFixtureFlag()
+	plain := entity.Constraint{Property: "dl_state", Operator: models.ConstraintOperatorEQ, Value: `"CA"`}
+	plain.ID = 500
+	plain.SegmentID = 200
+	jevC := jevConstraint(t, "@jev.intent", models.ConstraintOperatorGTE, "0.8",
+		&entity.JevQuestion{Type: entity.JevTypeNoul, Instructions: "Is this intent?"})
+	jevC.ID = 501
+	jevC.SegmentID = 200
+	f.Segments[0].Constraints = []entity.Constraint{plain, jevC}
+	require.NoError(t, f.PrepareEvaluation())
+
+	defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCacheWithFlags([]entity.Flag{f})).Reset()
+
+	r := EvalFlag(models.EvalContext{FlagID: 100, EntityID: "e1", EntityContext: map[string]any{"dl_state": "CA"}})
+	assert.NotZero(t, r.VariantID)
+
+	// The result context stays clean — no `@jev`.
+	ctx, ok := r.EvalContext.EntityContext.(map[string]any)
+	require.True(t, ok)
+	assert.NotContains(t, ctx, entity.JevContextKey)
 }

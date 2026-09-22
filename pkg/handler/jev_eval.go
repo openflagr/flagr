@@ -23,10 +23,9 @@ type JevDebug struct {
 	Answers   map[string]JevAnswer        `json:"answers,omitempty"`
 	Usage     *JevUsage                   `json:"usage,omitempty"`
 	// LatencyMs is the client-measured round trip; ServerLatencyMs is the
-	// endpoint-reported inference latency when provided. Omitted on cache hits.
+	// endpoint-reported inference latency when provided.
 	LatencyMs       float64  `json:"latencyMs,omitempty"`
 	ServerLatencyMs *float64 `json:"serverLatencyMs,omitempty"`
-	Cached          bool     `json:"cached,omitempty"`
 	Error           string   `json:"error,omitempty"`
 }
 
@@ -55,68 +54,53 @@ func newJevDebug(state any, questions map[string]entity.JevConstraintSpec) *JevD
 	}
 }
 
-// injectJevContext resolves the flag's Jev questions and injects the answers
-// into entityContext under the `@jev` key. The map is cloned so the injected
-// values do not leak across flags in a batch evaluation.
+// resolveJevForFlag evaluates the flag's Jev questions in one batched System One
+// call and returns the values to compare against, plus the request/response for
+// the debug log.
 //
-// Fail-closed: when Jev is disabled or the call fails, nothing is injected and
-// every `@jev.<name>` constraint evaluates false. The returned *JevDebug
-// carries the request/response for the eval debug log (nil when Jev is off or
-// the flag has no Jev questions).
-func injectJevContext(evalContext models.EvalContext, flag *entity.Flag) (models.EvalContext, *JevDebug) {
+// It deliberately does not modify evalContext: the answers are used only while
+// evaluating constraints and are never written back into the result context.
+//
+// Fail-closed: when Jev is disabled or the call fails, the returned map is nil
+// and every `@jev.<name>` constraint evaluates false.
+func resolveJevForFlag(evalContext models.EvalContext, flag *entity.Flag) (map[string]any, *JevDebug) {
 	questions := flag.FlagEvaluation.JevQuestions
 	if !config.Config.JevEnabled || len(questions) == 0 {
-		return evalContext, nil
+		return nil, nil
 	}
 
 	state := jevState(evalContext.EntityContext, evalContext.EntityID, evalContext.EntityType)
 	debug := newJevDebug(state, questions)
 
-	resp, cached, err := resolveJevAnswers(state, questions)
-	debug.Cached = cached
+	resp, err := NewJevClient().SystemOne(context.Background(), state, questions)
 	if err != nil {
 		debug.Error = err.Error()
 		logrus.WithError(err).WithField("flagID", flag.ID).
 			Warn("jev evaluation failed; jev constraints will not match")
-		return evalContext, debug
+		return nil, debug
 	}
-	if resp != nil {
-		if resp.Model != "" {
-			debug.Model = resp.Model
-		}
-		debug.Answers = resp.Answers
-		debug.Usage = resp.Usage
-		if !cached {
-			debug.LatencyMs = resp.ClientLatencyMs
-			debug.ServerLatencyMs = resp.LatencyMs
-		}
+	if resp.Model != "" {
+		debug.Model = resp.Model
 	}
+	debug.Answers = resp.Answers
+	debug.Usage = resp.Usage
+	debug.LatencyMs = resp.ClientLatencyMs
+	debug.ServerLatencyMs = resp.LatencyMs
 
-	injected := make(map[string]any, len(resp.Answers))
+	answers := make(map[string]any, len(resp.Answers))
 	for name, answer := range resp.Answers {
 		spec, ok := questions[name]
 		if !ok {
 			continue
 		}
 		if value, ok := jevAnswerValue(spec, answer); ok {
-			injected[name] = value
+			answers[name] = value
 		}
 	}
-	if len(injected) == 0 {
-		return evalContext, debug
+	if len(answers) == 0 {
+		return nil, debug
 	}
-
-	base, ok := evalContext.EntityContext.(map[string]any)
-	if !ok {
-		base = map[string]any{}
-	}
-	clone := make(map[string]any, len(base)+1)
-	for k, v := range base {
-		clone[k] = v
-	}
-	clone[entity.JevContextKey] = injected
-	evalContext.EntityContext = clone
-	return evalContext, debug
+	return answers, debug
 }
 
 // jevState builds the System One state from entityContext. It drops Flagr's own
@@ -145,27 +129,7 @@ func jevState(entityContext any, entityID, entityType string) any {
 	return out
 }
 
-// resolveJevAnswers returns cached answers when possible, otherwise calls
-// System One and caches the response. The bool reports a cache hit.
-func resolveJevAnswers(state any, questions map[string]entity.JevConstraintSpec) (*JevResponse, bool, error) {
-	key, err := jevCacheKey(state, questions)
-	if err == nil {
-		if cached, ok := GetJevCache().Get(key); ok {
-			return cached, true, nil
-		}
-	}
-
-	resp, err := NewJevClient().SystemOne(context.Background(), state, questions)
-	if err != nil {
-		return nil, false, err
-	}
-	if key != "" {
-		GetJevCache().Set(key, resp)
-	}
-	return resp, false, nil
-}
-
-// jevAnswerValue converts an answer into the value injected for its question.
+// jevAnswerValue converts an answer into the value used for its question.
 // choice and score answers below the confidence threshold are rejected, which
 // makes the containing constraint fall through.
 func jevAnswerValue(spec entity.JevConstraintSpec, answer JevAnswer) (any, bool) {

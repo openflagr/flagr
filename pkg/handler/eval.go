@@ -367,8 +367,9 @@ var EvalFlagWithContext = func(flag *entity.Flag, evalContext models.EvalContext
 		evalContext.EntityType = flag.EntityType
 	}
 
-	// Resolve and inject Jev answers before evaluating segments. Fail-closed.
-	evalContext, jevDebug := injectJevContext(evalContext, flag)
+	// Resolve Jev answers for the flag. They are used only while evaluating
+	// constraints and are never written back into the result context.
+	jevValues, jevDebug := resolveJevForFlag(evalContext, flag)
 
 	var vID int64
 	var sID int64
@@ -377,7 +378,7 @@ var EvalFlagWithContext = func(flag *entity.Flag, evalContext models.EvalContext
 		logs = make([]*models.SegmentDebugLog, 0, len(flag.Segments))
 	}
 	for _, segment := range flag.Segments {
-		variantID, log, evalNextSegment := evalSegment(evalContext, segment)
+		variantID, log, evalNextSegment := evalSegment(evalContext, segment, jevValues)
 		if variantID != nil {
 			vID = int64(*variantID)
 			sID = int64(segment.ID)
@@ -458,6 +459,9 @@ var logEvalResultToPrometheus = func(r *models.EvalResult) {
 var evalSegment = func(
 	evalContext models.EvalContext,
 	segment entity.Segment,
+	// jevAnswers is optional: the flag's resolved Jev answers, merged under
+	// `@jev` for constraint evaluation only. They are not stored anywhere.
+	jevAnswers ...map[string]any,
 ) (
 	vID *uint, // returns VariantID
 	log *models.SegmentDebugLog,
@@ -466,15 +470,30 @@ var evalSegment = func(
 	debug := config.Config.EvalDebugEnabled && evalContext.EnableDebug
 
 	if len(segment.Constraints) != 0 {
+		var jev map[string]any
+		if len(jevAnswers) > 0 {
+			jev = jevAnswers[0]
+		}
 		m, ok := evalContext.EntityContext.(map[string]any)
 		if !ok {
-			if debug {
-				log = &models.SegmentDebugLog{
-					Msg:       fmt.Sprintf("constraints are present in the segment_id %v, but got invalid entity_context: %s.", segment.ID, spew.Sdump(evalContext.EntityContext)),
-					SegmentID: int64(segment.ID),
+			if len(jev) == 0 {
+				if debug {
+					log = &models.SegmentDebugLog{
+						Msg:       fmt.Sprintf("constraints are present in the segment_id %v, but got invalid entity_context: %s.", segment.ID, spew.Sdump(evalContext.EntityContext)),
+						SegmentID: int64(segment.ID),
+					}
 				}
+				return nil, log, true
 			}
-			return nil, log, true
+			m = map[string]any{}
+		}
+		if len(jev) > 0 {
+			merged := make(map[string]any, len(m)+1)
+			for k, v := range m {
+				merged[k] = v
+			}
+			merged[entity.JevContextKey] = jev
+			m = merged
 		}
 
 		expr := segment.SegmentEvaluation.ConditionsExpr
