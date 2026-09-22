@@ -138,6 +138,7 @@ func TestJevEndToEndWithMockServer(t *testing.T) {
 	state, ok := received.State.(map[string]any)
 	require.True(t, ok)
 	assert.Equal(t, "pro", state["plan"])
+	assert.Equal(t, "e1", state["entityID"])
 	assert.Contains(t, state, "@ts")
 	assert.NotContains(t, state, entity.JevContextKey)
 

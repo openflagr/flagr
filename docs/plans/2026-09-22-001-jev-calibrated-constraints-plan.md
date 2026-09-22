@@ -44,9 +44,11 @@ Because Jev answers are typed values, they slot into Flagr's existing
 3. **Inline authoring** — the question lives on the `constraint` row, not in a
    separate registry. Structured fields + JSON escape hatch (`instructions` /
    `criteria` are free-form JSON, matching Jev's `EntryType`).
-4. **State = `entityContext`** — the whole evaluation context is the Jev `state`,
-   including server-injected `@ts*` and `@http_*` keys. Only Flagr's own `@jev`
-   answer namespace is excluded, so answers are never fed back to the model.
+4. **State = `entityContext` + entity identity** — the whole evaluation context is
+   the Jev `state`, including server-injected `@ts*`/`@http_*` keys, plus
+   `entityID` and `entityType` (which are not part of `entityContext`). Only
+   Flagr's own `@jev` answer namespace is excluded, so answers are never fed back
+   to the model.
 5. **One batched call per flag evaluation** — all `@jev.*` questions in a flag are
    fanned out in a single `POST /v1/systemone`, leveraging Jev's parallel
    question evaluation.
@@ -140,7 +142,7 @@ EvalFlagWithContext
   ├─ resolve flag + entityContext
   ├─ injectJevContext(evalContext, flag)        # new
   │    ├─ skip if !FLAGR_JEV_ENABLED or no JeV questions
-  │    ├─ state = entityContext minus `@jev` (keeps @ts*/@http_*)
+  │    ├─ state = entityContext + entityID/entityType (minus `@jev`)
   │    ├─ cache lookup (model, state, questions)
   │    ├─ on miss: POST {base}/v1/systemone (Bearer key, timeout)
   │    ├─ build @jev map; omit answers below confidenceThreshold

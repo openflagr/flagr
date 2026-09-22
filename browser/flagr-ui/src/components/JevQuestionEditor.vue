@@ -40,6 +40,11 @@
         data-testid="jev-instructions"
         @update:model-value="setInstructions"
       />
+      <span class="jev-hint">
+        Name state fields with backticks, e.g. <code>`message`</code> or
+        <code>`account.plan`</code>. The state also has <code>`entityID`</code>
+        and <code>`entityType`</code>.
+      </span>
     </div>
 
     <div class="jev-stack">
@@ -640,6 +645,12 @@ export default {
 .jev-hint {
   font-size: var(--font-size-caption);
   color: var(--el-text-color-placeholder);
+}
+.jev-hint code {
+  font-family: var(--font-mono);
+  background: var(--el-fill-color-light);
+  border-radius: var(--radius-sm);
+  padding: 0 0.15em;
 }
 .jev-json-actions {
   display: flex;

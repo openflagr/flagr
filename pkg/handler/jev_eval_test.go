@@ -265,6 +265,8 @@ func TestInjectJevContextKeepsBuiltInKeysAndInjects(t *testing.T) {
 	require.Len(t, f.FlagEvaluation.JevQuestions, 1)
 
 	out, debug := injectJevContext(models.EvalContext{
+		EntityID:      "user-42",
+		EntityType:    "account",
 		EntityContext: map[string]any{"plan": "pro", "@ts": 123.0, "@http_host": "example.com"},
 	}, &f)
 
@@ -273,6 +275,8 @@ func TestInjectJevContextKeepsBuiltInKeysAndInjects(t *testing.T) {
 	assert.Equal(t, "pro", state["plan"])
 	assert.Equal(t, 123.0, state["@ts"])
 	assert.Equal(t, "example.com", state["@http_host"])
+	assert.Equal(t, "user-42", state["entityID"])
+	assert.Equal(t, "account", state["entityType"])
 	assert.NotContains(t, state, entity.JevContextKey, "@jev must never be fed back to the model")
 
 	injected, ok := out.EntityContext.(map[string]any)

@@ -77,6 +77,8 @@ Full guide: [Built-in context injection](flagr_injected_context.md).
 
 Back a constraint with a typed [System One](https://docs.typesafe.ai/) question (`noul` / `choice` / `score`). The answer is injected as `@jev.<name>` and compared with ordinary operators. Point `FLAGR_JEV_BASE_URL` at the hosted API or an open-source drop-in server ([`oido-systemone`](https://github.com/Djancyp/oido-systemone), [`jeff`](https://github.com/logan-markewich/jeff)). See [Jev constraints](https://github.com/openflagr/flagr/blob/main/docs/plans/2026-09-22-001-jev-calibrated-constraints-plan.md).
 
+The Jev `state` is the full `entityContext` **plus** `entityID` and `entityType`. To also include `@ts*` (and `@http_*`), enable [built-in context injection](#built-in-context-injection) with `FLAGR_INJECTED_CONTEXT_ENABLED=true`.
+
 | Variable | Default | Notes |
 |----------|---------|-------|
 | `FLAGR_JEV_ENABLED` | `false` | Master switch. When off, Jev constraints evaluate false |

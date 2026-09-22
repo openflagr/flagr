@@ -9,6 +9,12 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// Jev entity identity keys added to the System One state.
+const (
+	JevEntityIDKey   = "entityID"
+	JevEntityTypeKey = "entityType"
+)
+
 // JevDebug captures the System One request and response for the eval debug log.
 type JevDebug struct {
 	Model     string                      `json:"model,omitempty"`
@@ -59,7 +65,7 @@ func injectJevContext(evalContext models.EvalContext, flag *entity.Flag) (models
 		return evalContext, nil
 	}
 
-	state := jevState(evalContext.EntityContext)
+	state := jevState(evalContext.EntityContext, evalContext.EntityID, evalContext.EntityType)
 	debug := newJevDebug(state, questions)
 
 	resp, cached, err := resolveJevAnswers(state, questions)
@@ -105,20 +111,28 @@ func injectJevContext(evalContext models.EvalContext, flag *entity.Flag) (models
 	return evalContext, debug
 }
 
-// jevState drops Flagr's own `@jev` answer namespace so answers are never fed
-// back into the model, and returns the rest of entityContext (including
-// server-injected `@ts*` and `@http_*` keys) as the System One state.
-func jevState(entityContext any) any {
+// jevState builds the System One state from entityContext. It drops Flagr's own
+// `@jev` answer namespace (so answers are never fed back to the model) and adds
+// the entity identity, which is not part of entityContext. Server-injected
+// `@ts*` and `@http_*` keys are kept.
+func jevState(entityContext any, entityID, entityType string) any {
 	m, ok := entityContext.(map[string]any)
 	if !ok {
-		return entityContext
+		m = map[string]any{}
 	}
-	out := make(map[string]any, len(m))
+	out := make(map[string]any, len(m)+2)
 	for k, v := range m {
 		if k == entity.JevContextKey {
 			continue
 		}
 		out[k] = v
+	}
+	// The canonical entity identity wins over any same-named entityContext key.
+	if entityID != "" {
+		out[JevEntityIDKey] = entityID
+	}
+	if entityType != "" {
+		out[JevEntityTypeKey] = entityType
 	}
 	return out
 }
