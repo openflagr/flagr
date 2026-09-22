@@ -32,7 +32,7 @@ If the client omits `entityID`, the evaluator injects a random id **before** buc
 
 A **segment** is an audience slice: constraints joined by logical **AND**, plus rollout and distribution. Segments run in **rank order**. **Match means all constraints pass** (or the segment has no constraints). The first matching segment runs distribution + rollout, then evaluation **stops** - later segments never run, even if rollout yields no variant. A segment with no constraints matches everyone (catch-all). Full rule: [behavioral contracts: segment evaluation](flagr_behavioral_contracts.md#segment-evaluation).
 
-A **constraint** is one comparison on `entityContext`, e.g. `state == "CA"`, `age >= 21`, nested paths like `user.tier`. One miss and the segment does not match; the entity falls through to the next segment.
+A **constraint** is one comparison on `entityContext`, e.g. `state == "CA"`, `age >= 21`, nested paths like `user.tier`. One miss and the segment does not match; the entity falls through to the next segment. A constraint can also be a **Jev question** — a typed model decision (`noul`, `choice`, `scale`) used as a synthetic property `@jev.<name>`; see [Jev constraints](flagr_jev.md).
 
 **Distribution** splits a matched segment across variants (50/50 control/treatment, 100/0 for a pure rollout). **Rollout** is the percent of the hashed sub-range that receives the chosen variant. Low rollout on a matched segment can leave `variantKey` empty; that is intentional holdout, **not** a fallthrough to later segments.
 
@@ -181,6 +181,8 @@ flowchart TB
 
 ## Related documentation
 
+- [Built-in context injection](flagr_injected_context.md) - `@ts*`, `@http_*` keys
+- [Jev constraints](flagr_jev.md) - model-backed (`noul` / `choice` / `scale`) audience targeting
 - [Behavioral contracts](flagr_behavioral_contracts.md)
 - [Use cases](flagr_use_cases.md) - flags, experiments, dynamic config, GET eval
 - [Integration guide](integration.md) - HTTP examples

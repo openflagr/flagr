@@ -40,6 +40,29 @@ Stickiness: send a stable **`entityID`**. If the client omits it, the evaluator 
 
 Bucketing algorithm (CRC32, 1000 buckets, in-range rollout): [Overview](flagr_overview.md#rollout-and-deterministic-bucketing). Source: `pkg/handler/eval.go` (`evalSegment`), `pkg/entity/distribution.go`.
 
+## Jev constraints {#jev-constraints}
+
+A constraint can be backed by a [Jev / System One](flagr_jev.md) question. Contract:
+
+- **Answers are not part of `entityContext`.** They are resolved per flag
+  evaluation and merged into a private map only for the constraint comparison;
+  `EvalResult.evalContext` and data records stay clean.
+- **One batched call per flag evaluation.** Every `@jev.<name>` question in a
+  flag is sent in a single `POST /v1/systemone`; extra questions do not add
+  round trips.
+- **Fail-closed.** If `FLAGR_JEV_ENABLED` is off, the endpoint errors, or the
+  request times out, every Jev constraint evaluates **false** and the segment
+  falls through. There is no fail-open mode.
+- **Confidence gate.** A `choice` / `scale` answer below its threshold
+  (per-constraint, else `FLAGR_JEV_CONFIDENCE_THRESHOLD`) is treated as a miss.
+  `noul` has no separate confidence; its `P(true)` comparison is the gate.
+- **No cache.** Answers are fetched on every evaluation; the state changes per
+  request.
+- **Debug.** With `enableDebug: true`, a segment's `jev` object carries the
+  request/response, usage, and latency.
+
+Setup and env vars: [Jev constraints](flagr_jev.md).
+
 ## Recording gates {#recording-gates}
 
 Recording is opt-in. Three gates must all pass before a row leaves the process:
@@ -128,6 +151,7 @@ Source: `pkg/handler/eval_cache.go`, `pkg/config/env.go`.
 |-------|------|
 | HTTP examples (eval, batch, exposures) | [Integration guide](integration.md) |
 | Concepts, bucketing, architecture | [Overview](flagr_overview.md) |
+| Jev / System One constraints | [Jev constraints](flagr_jev.md) |
 | Exposure API & validation | [Exposure logging](flagr_exposure.md) |
 | Recorders, frame, A/B SQL | [Data recorders & A/B analysis](flagr_eval_exposure_pipeline.md) |
 | Deploy | [Self-hosting](flagr_self_host.md) |

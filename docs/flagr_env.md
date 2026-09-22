@@ -73,9 +73,9 @@ Eval-only is the usual product path when `FLAGR_DB_DBDRIVER` is `json_file` or `
 
 Full guide: [Built-in context injection](flagr_injected_context.md).
 
-#### Jev / System One constraints
+#### Jev / System One constraints {#jev}
 
-Back a constraint with a typed [System One](https://docs.typesafe.ai/) question (`noul` / `choice` / `score`). The answer is used as `@jev.<name>` for constraint evaluation only — it is not stored in the result context — and compared with ordinary operators. Point `FLAGR_JEV_BASE_URL` at the hosted API or an open-source drop-in server ([`oido-systemone`](https://github.com/Djancyp/oido-systemone), [`jeff`](https://github.com/logan-markewich/jeff)). See [Jev constraints](https://github.com/openflagr/flagr/blob/main/docs/plans/2026-09-22-001-jev-calibrated-constraints-plan.md).
+Back a constraint with a typed [System One](https://docs.typesafe.ai/) question (`noul` / `choice` / `score`). The answer is used as `@jev.<name>` for constraint evaluation only — it is not stored in the result context — and compared with ordinary operators. Point `FLAGR_JEV_BASE_URL` at the hosted API or an open-source drop-in server ([`oido-systemone`](https://github.com/Djancyp/oido-systemone), [`jeff`](https://github.com/logan-markewich/jeff)). See [Jev constraints](flagr_jev.md) for setup and usage.
 
 The Jev `state` is the full `entityContext` **plus** `entityID` and `entityType`. To also include `@ts*` (and `@http_*`), enable [built-in context injection](#built-in-context-injection) with `FLAGR_INJECTED_CONTEXT_ENABLED=true`.
 

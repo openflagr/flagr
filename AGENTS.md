@@ -55,6 +55,7 @@ Run from **repo root**. Match what [`.github/workflows/ci.yml`](.github/workflow
 **Backend (`pkg/`):**
 - `handler/eval.go` — evaluation engine (POST/GET), batch; `handler/eval_get_test.go` — GET eval tests; `handler/crud.go` — CRUD API handlers
 - `handler/builtin_context.go` — built-in context injection (`@ts*`, `@http_*` keys into entityContext)
+- `handler/jev_client.go` + `handler/jev_eval.go` — Jev / System One constraints: HTTP client, `@jev.<name>` answer resolution (used for evaluation only, not written to the result context), confidence gate, and the debug payload. Question lives inline on `entity/constraint.go`.
 - `handler/exposure.go` — exposure (impression) logging; `handler/data_recorder*.go` — recorders (Kafka, Kinesis, Pub/Sub, Datar)
 - `entity/` — domain models (flag, segment, constraint, variant, distribution)
 - `config/env.go` — all environment variables (single source of truth)
@@ -66,8 +67,10 @@ Run from **repo root**. Match what [`.github/workflows/ci.yml`](.github/workflow
 - `pages/flagPage.ts`, `pages/flagsListPage.ts` (incl. list snapshot cache) — orchestration; `flagPage.*(page)` / `flagsListPage.*(page)` via `castFlagPage` / `castFlagsList`
 - Composed REST in `api/crud.ts`; UI via `helpers/runApi`; eval UI helpers in `helpers/evaluation.ts`
 - Architecture: **`docs/plans/2026-06-26-001-migrate-flagr-ui-js-to-ts-plan.md`** (As-built)
+- Jev constraints UI: `components/JevQuestionEditor.vue` + `helpers/jevQuestion.ts` (pure `reduceJevMatch` reducer)
 - Duplicate flag + transactional snapshots: **`docs/plans/2026-06-30-001-duplicate-flag-plan.md`** (As-built)
 - Eval-only read-only UI: **`docs/plans/2026-07-30-001-feat-eval-only-readonly-ui-plan.md`** (As-built)
+- Jev / System One constraints: **`docs/plans/2026-09-22-001-jev-calibrated-constraints-plan.md`** (As-built); user guide **`docs/flagr_jev.md`**
 
 ## Swagger / OpenAPI workflow
 
@@ -89,7 +92,7 @@ User-facing docs are VitePress in `docs/` (`make serve-docs`, `make build-docs`)
 - Link text: **sentence case** (e.g. "Exposure logging", "Data recorders & A/B analysis").
 - Custom heading anchors: VitePress `{#slug}` on the heading line. Prefer stable IDs for sections that other pages deep-link to.
 - Cross-cutting behavior (eval vs exposure, recording gates, eval-only, EvalCache lag): edit **`docs/flagr_behavioral_contracts.md`** first; other pages link there.
-- Deploy / topology: **`docs/flagr_self_host.md`**. Env vars: **`docs/flagr_env.md`** (embeds `pkg/config/env.go` via `make docs-sync-snippets`).
+- Deploy / topology: **`docs/flagr_self_host.md`**. Env vars: **`docs/flagr_env.md`** (embeds `pkg/config/env.go` via `make docs-sync-snippets`). Jev / System One constraints: **`docs/flagr_jev.md`**.
 - Client SDKs: [`docs/integration.md`](docs/integration.md) and README, not the VitePress sidebar.
 - When renaming a page, update in-repo links and [`docs/public/llms.txt`](docs/public/llms.txt).
 

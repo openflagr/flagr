@@ -17,7 +17,7 @@ Turn the env off in production if you do not want segment logs on eval traffic. 
 
 ## What you get
 
-Each `segmentDebugLogs` entry has a `segmentID` and a free-text `msg`: which constraints matched, which did not, and (on a match) bucket and distribution reasoning.
+Each `segmentDebugLogs` entry has a `segmentID` and a free-text `msg`: which constraints matched, which did not, and (on a match) bucket and distribution reasoning. When a segment has [Jev constraints](flagr_jev.md), its entry also carries a `jev` object with the System One request and response (`questions`, `answers`, `usage`, `latencyMs`, `serverLatencyMs`, `error`) — present only for segments that use Jev.
 
 Read the list in **segment rank order**. Evaluation stops at the first segment whose **constraints match** (even if rollout leaves `variantKey` empty); later segments never ran. Rules: [behavioral contracts: segment evaluation](flagr_behavioral_contracts.md#segment-evaluation).
 
@@ -41,7 +41,7 @@ What to look at:
 - **`evalDebugLog.segmentDebugLogs`** - per-segment trace (bucket number, distribution array, rollout percent when a segment matches).
 - **`evalContext`** - what the server evaluated, including any [injected keys](flagr_injected_context.md).
 
-> **Note:** `segmentDebugLogs` is a flat list of `{ segmentID, msg }`, not a structured per-constraint tree. On mismatch the compiled expression is dumped as one boolean expression.
+> **Note:** `segmentDebugLogs` is a flat list of `{ segmentID, msg }` (plus an optional `jev` object on Jev segments), not a structured per-constraint tree. On mismatch the compiled expression is dumped as one boolean expression.
 
 That dump is the fastest path to the usual bugs: property name typo, missing field, or JSON type mismatch (`"30"` vs `30`). Compare the expression to the map you sent.
 

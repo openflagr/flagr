@@ -29,6 +29,8 @@ Flagr is an open-source **Go** service for feature flags, A/B tests, and dynamic
 
 That lets you ship code dark and turn it on per audience, run experiments with sticky assignment, and change runtime config without redeploying. Self-hosted (SQLite, MySQL, PostgreSQL, or JSON/GitOps) with a Vue 3 UI and an official Docker image.
 
+Constraints are deterministic (`EQ`, `LT`, `IN`, regex, …) over `entityContext`. A constraint can also be backed by a **Jev / System One** question (`noul`, `choice`, `scale`) for calibrated, model-driven audience targeting — see [Jev constraints](https://openflagr.github.io/flagr/flagr_jev).
+
 [`openflagr/flagr`](https://github.com/openflagr/flagr) continues development from the original [`checkr/flagr`](https://github.com/checkr/flagr).
 
 ## Quick start

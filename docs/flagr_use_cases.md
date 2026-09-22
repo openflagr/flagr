@@ -242,4 +242,5 @@ Response fields stay camelCase: `variantKey`, `variantAttachment`, `evalContext`
 | HTTP details and batch | [Integration guide](integration.md) |
 | Eval vs exposure, cache lag | [Behavioral contracts](flagr_behavioral_contracts.md) |
 | Segment and bucketing concepts | [Overview](flagr_overview.md) |
+| Model-backed audience targeting (Jev) | [Jev constraints](flagr_jev.md) |
 | Env vars (`FLAGR_EVAL_GET_MAX_URL_BYTES`, etc.) | [Environment variables](flagr_env.md) |

@@ -19,6 +19,8 @@ and by open-source drop-in servers — [`oido-systemone`](https://github.com/Dja
 (Go, local GGUF) and [`jeff`](https://github.com/logan-markewich/jeff) (Python,
 GLiFormer). Flagr talks to whichever endpoint `FLAGR_JEV_BASE_URL` points at.
 
+User guide: [`docs/flagr_jev.md`](../flagr_jev.md).
+
 ## Problem Frame
 
 Flagr constraints are deterministic (`EQ`, `LT`, `IN`, regex, …) evaluated against
@@ -92,8 +94,11 @@ jev:
       maximum: 1
 ```
 
-`segmentDebugLog` gains an optional free-form `jev` object exposing the answers,
-confidence, and probabilities used while evaluating that segment (debug only).
+`segmentDebugLog` gains an optional free-form `jev` object carrying the System
+One request and response for that segment (debug only):
+`{model, state, questions, answers, usage, latencyMs, serverLatencyMs, error}`.
+It is present only when the segment has Jev constraints, and `questions` /
+`answers` are scoped to that segment.
 
 ## Data Model (`pkg/entity/constraint.go`)
 
@@ -155,26 +160,27 @@ EvalFlagWithContext
 
 ## Configuration
 
-| Env var | Default | Purpose |
-|---|---|---|
-| `FLAGR_JEV_ENABLED` | `false` | Master switch |
-| `FLAGR_JEV_BASE_URL` | `https://api.typesafe.ai` | Hosted API or self-hosted System One |
-| `FLAGR_JEV_API_KEY` | `""` | `Authorization: Bearer` (optional for some self-hosted) |
-| `FLAGR_JEV_MODEL` | `jev-latest` | Model / alias |
-| `FLAGR_JEV_TIMEOUT` | `1s` | Per-request timeout |
-| `FLAGR_JEV_CONFIDENCE_THRESHOLD` | `0.5` | Default when a constraint omits one |
+Env vars live in `pkg/config/env.go` and are documented in
+[Environment variables](../flagr_env.md#jev) and the
+[Jev guide](../flagr_jev.md). Summary: `FLAGR_JEV_ENABLED`, `FLAGR_JEV_BASE_URL`,
+`FLAGR_JEV_API_KEY`, `FLAGR_JEV_MODEL`, `FLAGR_JEV_TIMEOUT`,
+`FLAGR_JEV_CONFIDENCE_THRESHOLD`. There is no answer cache in v1.
 
 ## UI
 
-- `ConstraintAddRow.vue` / `ConstraintExistingRow.vue`: a "Jev question" source
-  toggle on the property cell.
-- New `JevQuestionEditor.vue`: type selector, `instructions`, type-specific
-  criteria (noul true/false descriptions; choice option rows; score ordered levels),
-  confidence slider, and a per-field **Edit as JSON** escape hatch.
-- `ConstraintValueCell.vue`: when the constraint is a Jev question, show the
-  match widget (probability / option select / level select) and the question
-  summary.
-- `api/types.ts` + `api/crud.ts`: `JevQuestion` DTO and wiring.
+- A subtle **JEV switch** sits in the constraint row's action area (right side).
+  The `@jev.` prefix appears on the property input when on, and toggling off
+  clears the property.
+- `JevQuestionEditor.vue` owns the whole match: type selector, `instructions`,
+  type-aware criteria (noul `true`/`false`; choice option rows; scale ordered
+  levels), and a confidence control.
+  - noul: `P(true)` threshold slider (`≥` / `<`)
+  - choice: `any of` / `none of` option multi-select + confidence
+  - scale: `at least` / `below` level + confidence
+  - `Edit as JSON` escape hatch for structured `instructions` / `criteria`
+- `helpers/jevQuestion.ts`: pure `reduceJevMatch` reducer + value/direction
+  conversions, unit-tested in `jevQuestion.test.ts`.
+- `api/types.ts`: `JevQuestion` DTO.
 
 ## Non-Goals (deferred)
 
@@ -198,7 +204,11 @@ in-editor "try this question" preview.
 - `pkg/handler/crud_jev_test.go`: create/find/update through the REST CRUD
   handlers, including rejection of invalid questions and non-`@jev.` properties.
 - `browser/flagr-ui/src/helpers/jevQuestion.test.ts`: criteria <-> form
-  conversions and readiness validation.
+  conversions, readiness validation, the `reduceJevMatch` reducer (incl. choice
+  IN/NOTIN and direction preservation), and the any-of/none-of direction mapping.
+- `TestJevConstraintQuestionTypes` (table-driven): noul/choice/scale across
+  `GTE`/`LT`, `EQ`/`NEQ`, `IN`/`NOTIN` with match and no-match cases, plus the
+  confidence gate.
 - `make test`, `make flagr-ui-check`.
 
 ### Local testing against a mock or self-hosted endpoint
@@ -235,6 +245,25 @@ FLAGR_JEV_ENABLED=true FLAGR_JEV_BASE_URL=http://localhost:8080 ./flagr
 
 Then create a segment constraint with property `@jev.<name>`, operator/value
 comparison, and the question in the UI editor.
+
+## Refinements after first implementation
+
+- **Dropped the answer cache.** The state (entityContext + entity identity)
+  changes per request, so a `(model, state, questions)` cache rarely hit. Removed
+  `FLAGR_JEV_CACHE_*`. Revisit only if a genuinely stable key exists.
+- **No `@jev` in the evaluation context.** `resolveJevForFlag` returns the answers
+  separately; `evalSegment` merges them into a private map for
+  `conditions.Evaluate`. The result context (and data records) stay clean.
+- **Entity identity in the state.** `entityID` / `entityType` are added to the
+  System One state (canonical values win over same-named context keys).
+- **Debug payload.** `segmentDebugLog.jev` carries the request/response, usage,
+  latency, and errors; it is scoped to the segment and absent for non-Jev
+  segments.
+- **`true` / `false` copy.** Noul criteria and match use Jev's `{true, false}`
+  keys (`P(true) ≥ …`).
+- **UI polish.** JEV toggle moved to the row actions as a subtle switch; the
+  editor shows a notice that Jev constraints are slower and add model cost, and
+  points at the [Jev guide](../flagr_jev.md) to set up an endpoint first.
 
 ## Risks
 

@@ -13,14 +13,9 @@ API or a self-hosted open-source server such as
 
 ## 1. Configure an endpoint (do this first)
 
-| Variable | Default | Notes |
-|----------|---------|-------|
-| `FLAGR_JEV_ENABLED` | `false` | Master switch. When off, Jev constraints evaluate false |
-| `FLAGR_JEV_BASE_URL` | `https://api.typesafe.ai` | Hosted API or a self-hosted System One server |
-| `FLAGR_JEV_API_KEY` | `""` | `Authorization: Bearer` — optional for some self-hosted servers |
-| `FLAGR_JEV_MODEL` | `jev-latest` | Model or alias |
-| `FLAGR_JEV_TIMEOUT` | `1s` | Per-request timeout |
-| `FLAGR_JEV_CONFIDENCE_THRESHOLD` | `0.5` | Default confidence gate for `choice` / `score` |
+Set at minimum `FLAGR_JEV_ENABLED=true` and point `FLAGR_JEV_BASE_URL` at a
+System One endpoint. Add `FLAGR_JEV_API_KEY` if the endpoint requires a bearer
+token, and `FLAGR_JEV_MODEL` to pin a model.
 
 ```bash
 FLAGR_JEV_ENABLED=true \
@@ -30,7 +25,7 @@ FLAGR_JEV_TIMEOUT=15s \
 ./flagr
 ```
 
-See [Environment variables](flagr_env.md) for the full list.
+Full list (including `FLAGR_JEV_CONFIDENCE_THRESHOLD`): [Environment variables](flagr_env.md#jev).
 
 ## 2. Add a Jev constraint
 
