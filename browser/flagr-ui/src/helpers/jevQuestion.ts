@@ -104,3 +104,110 @@ export function isJevQuestionReady(jev: JevQuestion | undefined): boolean {
   }
   return true
 }
+
+/** Strip surrounding JSON string quotes from a constraint value. */
+export function unquoteJevValue(value: string): string {
+  const trimmed = value.trim()
+  if (trimmed.length >= 2 && trimmed.startsWith('"') && trimmed.endsWith('"')) {
+    try {
+      return JSON.parse(trimmed) as string
+    } catch {
+      return trimmed.slice(1, -1)
+    }
+  }
+  return trimmed
+}
+
+/** Parse a choice constraint value into option names (single or JSON array). */
+export function choiceOptionsFromValue(value: string): string[] {
+  const trimmed = value.trim()
+  if (!trimmed) return []
+  if (trimmed.startsWith('[')) {
+    try {
+      const parsed: unknown = JSON.parse(trimmed)
+      if (Array.isArray(parsed)) return parsed.map((option) => String(option))
+    } catch {
+      return []
+    }
+  }
+  const single = unquoteJevValue(trimmed)
+  return single ? [single] : []
+}
+
+/** Build a choice constraint value from option names: `"a"` or `["a","b"]`. */
+export function choiceValueFromOptions(options: string[]): string {
+  if (options.length === 0) return ''
+  if (options.length === 1) return JSON.stringify(options[0])
+  return JSON.stringify(options)
+}
+
+/** Operator for a choice match: EQ/NEQ for one option, IN/NOTIN for several. */
+export function choiceOperatorFor(options: string[], negate: boolean): string {
+  if (negate) return options.length > 1 ? 'NOTIN' : 'NEQ'
+  return options.length > 1 ? 'IN' : 'EQ'
+}
+
+/** Default confidence gate when a question does not set one. */
+export const DEFAULT_JEV_CONFIDENCE = 0.5
+
+/** Human-readable symbol for a constraint operator. */
+export function operatorSymbol(operator: string): string {
+  switch (operator) {
+    case 'GTE':
+      return '≥'
+    case 'GT':
+      return '>'
+    case 'LTE':
+      return '≤'
+    case 'LT':
+      return '<'
+    case 'NEQ':
+      return '≠'
+    case 'NOTIN':
+      return 'not in'
+    case 'IN':
+      return 'in'
+    case 'EQ':
+      return '='
+    default:
+      return operator
+  }
+}
+
+/** Readable summary of the answer match, e.g. `P(yes) ≥ 0.70` or `in ["pro"]`. */
+export function formatJevMatch(
+  jev: JevQuestion | undefined,
+  operator: string,
+  value: string,
+): string {
+  const symbol = operatorSymbol(operator)
+  if (jev?.type === 'noul') return `P(yes) ${symbol} ${value}`
+  if (jev?.type === 'score') return `level ${symbol} ${value}`
+  return `${symbol} ${value}`
+}
+
+/**
+ * One-line summary for the constraint row. Noul has no separate confidence, so
+ * its probability threshold is the whole story; choice/score append the gate.
+ */
+export function formatJevSummary(
+  jev: JevQuestion | undefined,
+  operator: string,
+  value: string,
+): string {
+  const match = formatJevMatch(jev, operator, value)
+  if (!jev || jev.type === 'noul') return match
+  const confidence = jev.confidenceThreshold ?? DEFAULT_JEV_CONFIDENCE
+  return `${match} · confidence ≥ ${confidence.toFixed(2)}`
+}
+
+/** Parse a numeric constraint value (noul threshold, score level). */
+export function numberFromValue(value: string): number | null {
+  const parsed = Number(value.trim())
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+/** Operators that negate a choice/score match. */
+export function isNegatedOperator(operator: string): boolean {
+  return operator === 'NEQ' || operator === 'NOTIN' || operator === 'LT' || operator === 'LTE'
+}

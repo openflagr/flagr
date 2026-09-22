@@ -5,12 +5,16 @@
       v-if="jevEnabled"
       size="small"
       class="constraint-cell constraint-control"
-      placeholder="question name"
+      placeholder="question_name"
       :model-value="jevName"
       :disabled="readonly"
       data-testid="constraint-jev-name"
       @update:model-value="setJevName"
-    />
+    >
+      <template #prepend>
+        @jev.
+      </template>
+    </el-input>
     <el-input
       v-else
       size="small"
@@ -21,22 +25,30 @@
       data-testid="constraint-prop-input"
       @update:model-value="onField('property', $event)"
     />
-    <ConstraintOperatorSelect
-      :model-value="uiOperator"
-      :disabled="readonly"
-      :grouped-operator-options="groupedOperatorOptions"
-      :operator-options="operatorOptions"
-      test-id="constraint-op-select"
-      @update:model-value="onOperator"
-    />
-    <ConstraintValueCell
-      :model-value="valueForInput"
-      :property="constraint.property"
-      :placeholder="valuePlaceholder"
-      :disabled="readonly"
-      data-testid="constraint-value-input"
-      @update:model-value="onField('value', $event)"
-    />
+    <template v-if="jevEnabled">
+      <span
+        class="constraint-cell jev-summary"
+        data-testid="constraint-jev-summary"
+      >{{ jevSummary }}</span>
+    </template>
+    <template v-else>
+      <ConstraintOperatorSelect
+        :model-value="uiOperator"
+        :disabled="readonly"
+        :grouped-operator-options="groupedOperatorOptions"
+        :operator-options="operatorOptions"
+        test-id="constraint-op-select"
+        @update:model-value="onOperator"
+      />
+      <ConstraintValueCell
+        :model-value="valueForInput"
+        :property="constraint.property"
+        :placeholder="valuePlaceholder"
+        :disabled="readonly"
+        data-testid="constraint-value-input"
+        @update:model-value="onField('value', $event)"
+      />
+    </template>
     <div
       v-if="!readonly"
       class="constraint-actions"
@@ -87,8 +99,12 @@
     >
       <JevQuestionEditor
         :model-value="constraint.jev!"
+        :operator="constraint.operator"
+        :value="constraint.value"
         :disabled="readonly"
         @update:model-value="setJev"
+        @update:operator="onField('operator', $event)"
+        @update:value="onField('value', $event)"
       />
     </div>
   </div>
@@ -108,6 +124,7 @@ import {
 import { constraintValueForInput, resolveUiOperator } from '@/helpers/constraintOperatorSugar'
 import {
   defaultJevQuestion,
+  formatJevSummary,
   jevPropertyFor,
   jevPropertyName,
 } from '@/helpers/jevQuestion'
@@ -154,6 +171,9 @@ export default {
     jevName(): string {
       return jevPropertyName(this.constraint.property)
     },
+    jevSummary(): string {
+      return formatJevSummary(this.constraint.jev, this.constraint.operator, this.constraint.value)
+    },
     propertyPlaceholder(): string {
       return propertyPlaceholderFor(this.uiOperator, this.operatorOptions)
     },
@@ -162,7 +182,7 @@ export default {
     },
   },
   methods: {
-    onField(field: 'property' | 'value', value: string) {
+    onField(field: 'property' | 'operator' | 'value', value: string) {
       this.$emit('update-field', { field, value })
     },
     onOperator(uiOperator: string) {
@@ -174,6 +194,8 @@ export default {
           jev: this.constraint.jev ?? defaultJevQuestion('noul'),
           property: jevPropertyFor(this.jevName || 'question'),
         })
+        this.$emit('update-field', { field: 'operator', value: 'GTE' })
+        this.$emit('update-field', { field: 'value', value: '0.70' })
       } else {
         this.$emit('update-jev', { jev: undefined })
       }
@@ -198,5 +220,14 @@ export default {
 }
 .constraint-jev-toggle {
   margin-right: var(--space-3xs);
+}
+.jev-summary {
+  font-size: var(--font-size-body-sm);
+  font-family: var(--font-mono);
+  color: var(--el-text-color-regular);
+  grid-column: span 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

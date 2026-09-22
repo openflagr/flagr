@@ -20,11 +20,15 @@
         v-if="jevEnabled"
         size="small"
         class="constraint-cell constraint-control"
-        placeholder="question name (e.g. buying_intent)"
+        placeholder="question_name"
         :model-value="jevName"
         data-testid="new-constraint-jev-name"
         @update:model-value="setJevName"
-      />
+      >
+        <template #prepend>
+          @jev.
+        </template>
+      </el-input>
       <el-input
         v-else
         size="small"
@@ -34,21 +38,29 @@
         data-testid="new-constraint-prop-input"
         @update:model-value="patch('property', $event)"
       />
-      <ConstraintOperatorSelect
-        :model-value="draft.operator"
-        :grouped-operator-options="groupedOperatorOptions"
-        :operator-options="operatorOptions"
-        test-id="new-constraint-op-select"
-        @update:model-value="patch('operator', $event)"
-      />
-      <ConstraintValueCell
-        :model-value="draft.value"
-        :property="draft.property"
-        :placeholder="valuePlaceholder"
-        data-testid="new-constraint-value-input"
-        @update:model-value="patch('value', $event)"
-        @keyup.enter="canAdd && $emit('add')"
-      />
+      <template v-if="jevEnabled">
+        <span
+          class="constraint-cell jev-summary"
+          data-testid="new-constraint-jev-summary"
+        >{{ jevSummary }}</span>
+      </template>
+      <template v-else>
+        <ConstraintOperatorSelect
+          :model-value="draft.operator"
+          :grouped-operator-options="groupedOperatorOptions"
+          :operator-options="operatorOptions"
+          test-id="new-constraint-op-select"
+          @update:model-value="patch('operator', $event)"
+        />
+        <ConstraintValueCell
+          :model-value="draft.value"
+          :property="draft.property"
+          :placeholder="valuePlaceholder"
+          data-testid="new-constraint-value-input"
+          @update:model-value="patch('value', $event)"
+          @keyup.enter="canAdd && $emit('add')"
+        />
+      </template>
       <div class="constraint-actions">
         <el-tooltip
           content="Back this constraint with a Jev / System One question"
@@ -84,7 +96,11 @@
     >
       <JevQuestionEditor
         :model-value="draft.jev!"
+        :operator="draft.operator"
+        :value="draft.value"
         @update:model-value="setJev"
+        @update:operator="patch('operator', $event)"
+        @update:value="patch('value', $event)"
       />
     </div>
   </div>
@@ -102,6 +118,7 @@ import {
 } from '@/helpers/constraintOperatorUi'
 import {
   defaultJevQuestion,
+  formatJevSummary,
   isJevQuestionReady,
   jevPropertyFor,
   jevPropertyName,
@@ -144,6 +161,9 @@ export default {
     jevName(): string {
       return jevPropertyName(this.draft.property)
     },
+    jevSummary(): string {
+      return formatJevSummary(this.draft.jev, this.draft.operator, this.draft.value)
+    },
     propertyPlaceholder(): string {
       return propertyPlaceholderFor(this.draft.operator, this.operatorOptions)
     },
@@ -153,7 +173,7 @@ export default {
     canAdd(): boolean {
       const d = this.draft
       if (d.jev) {
-        return Boolean(d.operator && d.property && d.value && isJevQuestionReady(d.jev))
+        return Boolean(d.operator && d.property && isJevQuestionReady(d.jev))
       }
       return Boolean(d.operator && d.property && d.value)
     },
@@ -167,6 +187,8 @@ export default {
         this.$emit('update:draft', {
           ...this.draft,
           property: jevPropertyFor(this.jevName || 'question'),
+          operator: 'GTE',
+          value: '0.70',
           jev: this.draft.jev ?? defaultJevQuestion('noul'),
         })
       } else {
@@ -196,5 +218,14 @@ export default {
 }
 .constraint-jev-toggle {
   margin-right: var(--space-3xs);
+}
+.jev-summary {
+  font-size: var(--font-size-body-sm);
+  font-family: var(--font-mono);
+  color: var(--el-text-color-regular);
+  grid-column: span 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

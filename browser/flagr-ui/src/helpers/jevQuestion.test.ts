@@ -1,15 +1,24 @@
 import { describe, expect, it } from 'vitest'
 import {
   choiceCriteriaFromRows,
+  choiceOperatorFor,
+  choiceOptionsFromValue,
   choiceRowsFromCriteria,
+  choiceValueFromOptions,
   defaultJevQuestion,
+  formatJevMatch,
+  formatJevSummary,
   isJevQuestionReady,
+  isNegatedOperator,
   jevPropertyFor,
   jevPropertyName,
   nextChoiceName,
   noulCriteriaText,
+  numberFromValue,
+  operatorSymbol,
   scoreLevelsFromCriteria,
   slugifyJevName,
+  unquoteJevValue,
   withNoulCriteria,
 } from './jevQuestion'
 
@@ -85,5 +94,47 @@ describe('jevQuestion', () => {
     expect(
       isJevQuestionReady({ type: 'score', instructions: 'x', criteria: ['low', 'high'] }),
     ).toBe(true)
+  })
+
+  it('parses and formats choice constraint values', () => {
+    expect(unquoteJevValue('"pro"')).toBe('pro')
+    expect(choiceOptionsFromValue('"pro"')).toEqual(['pro'])
+    expect(choiceOptionsFromValue('["pro","enterprise"]')).toEqual(['pro', 'enterprise'])
+    expect(choiceOptionsFromValue('')).toEqual([])
+    expect(choiceOptionsFromValue('not json')).toEqual(['not json'])
+    expect(choiceValueFromOptions(['pro'])).toBe('"pro"')
+    expect(choiceValueFromOptions(['pro', 'enterprise'])).toBe('["pro","enterprise"]')
+    expect(choiceValueFromOptions([])).toBe('')
+  })
+
+  it('chooses choice operators from option count and negation', () => {
+    expect(choiceOperatorFor(['pro'], false)).toBe('EQ')
+    expect(choiceOperatorFor(['pro', 'enterprise'], false)).toBe('IN')
+    expect(choiceOperatorFor(['pro'], true)).toBe('NEQ')
+    expect(choiceOperatorFor(['pro', 'enterprise'], true)).toBe('NOTIN')
+    expect(isNegatedOperator('NOTIN')).toBe(true)
+    expect(isNegatedOperator('LT')).toBe(true)
+    expect(isNegatedOperator('EQ')).toBe(false)
+  })
+
+  it('parses numeric values', () => {
+    expect(numberFromValue('0.70')).toBeCloseTo(0.7)
+    expect(numberFromValue('2')).toBe(2)
+    expect(numberFromValue('nope')).toBeNull()
+  })
+
+  it('formats readable match and summary strings', () => {
+    const noul = { type: 'noul' as const, instructions: 'x' }
+    const choice = { type: 'choice' as const, instructions: 'x', criteria: { pro: 'y' } }
+    const score = { type: 'score' as const, instructions: 'x', criteria: ['a', 'b'] }
+    expect(operatorSymbol('GTE')).toBe('≥')
+    expect(formatJevMatch(noul, 'GTE', '0.70')).toBe('P(yes) ≥ 0.70')
+    expect(formatJevMatch(choice, 'IN', '["pro"]')).toBe('in ["pro"]')
+    expect(formatJevMatch(score, 'GTE', '1')).toBe('level ≥ 1')
+    expect(formatJevSummary(noul, 'GTE', '0.70')).toBe('P(yes) ≥ 0.70')
+    expect(formatJevSummary(choice, 'EQ', '"pro"')).toBe('= "pro" · confidence ≥ 0.50')
+    expect(
+      formatJevSummary({ ...choice, confidenceThreshold: 0.8 }, 'EQ', '"pro"'),
+    ).toBe('= "pro" · confidence ≥ 0.80')
   })
 })
