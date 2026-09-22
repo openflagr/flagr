@@ -241,6 +241,10 @@ comparison, and the question in the UI editor.
 - **Hot-path latency**: 70–500 ms per Jev call. Mitigated by one
   batched call per flag, and fail-closed. Documented as suitable for
   low-QPS / high-value targeting, not every request.
+- **Cost & rate limits**: Jev is billed per input token and rate-limits requests,
+  and Flagr makes one batched call per flag evaluation, so cost scales with
+  `entities × flags-with-Jev × evaluations`. A high-QPS path can hit the request
+  limit; there is no retry/backoff yet, so Jev constraints stay fail-closed.
 - **Self-hosted parity**: `oido-systemone` is an independent reimplementation;
   the client tolerates missing `usage`/extra fields and only relies on the
   documented answer fields.

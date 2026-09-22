@@ -3,6 +3,22 @@
     class="jev-editor"
     data-testid="jev-question-editor"
   >
+    <div class="jev-notice">
+      <el-icon class="jev-notice__icon">
+        <InfoFilled />
+      </el-icon>
+      <span>
+        Jev constraints call a System One model on every evaluation, which makes
+        them slower than normal constraints and adds model usage cost.
+        <a
+          class="jev-notice__link"
+          href="https://docs.typesafe.ai/models"
+          target="_blank"
+          rel="noopener noreferrer"
+        >Learn more ↗</a>
+      </span>
+    </div>
+
     <div class="jev-row">
       <span class="jev-label">Question type</span>
       <el-select
@@ -347,6 +363,7 @@
 <script lang="ts">
 import type { PropType } from 'vue'
 import type { JevQuestion, JevQuestionType } from '@/api/types'
+import { InfoFilled } from '@element-plus/icons-vue'
 import {
   choiceOptionsFromValue,
   choiceRowsFromCriteria,
@@ -366,6 +383,7 @@ const DEFAULT_CONFIDENCE = 0.5
 
 export default {
   name: 'JevQuestionEditor',
+  components: { InfoFilled },
   props: {
     modelValue: { type: Object as PropType<JevQuestion>, required: true },
     operator: { type: String, required: true },
@@ -565,6 +583,28 @@ export default {
   flex-direction: column;
   gap: var(--space-2xs);
   width: 100%;
+}
+.jev-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3xs);
+  padding: var(--space-3xs) var(--space-2xs);
+  background: var(--el-color-warning-light-9);
+  border: 1px solid var(--el-color-warning-light-7);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  color: var(--el-text-color-regular);
+  line-height: 1.5;
+}
+.jev-notice__icon {
+  color: var(--el-color-warning);
+  margin-top: 0.15em;
+  flex: 0 0 auto;
+}
+.jev-notice__link {
+  color: var(--el-color-primary);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
 }
 .jev-row {
   display: flex;

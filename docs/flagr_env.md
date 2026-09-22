@@ -79,6 +79,8 @@ Back a constraint with a typed [System One](https://docs.typesafe.ai/) question 
 
 The Jev `state` is the full `entityContext` **plus** `entityID` and `entityType`. To also include `@ts*` (and `@http_*`), enable [built-in context injection](#built-in-context-injection) with `FLAGR_INJECTED_CONTEXT_ENABLED=true`.
 
+Each flag evaluation with Jev constraints makes one batched System One call. It is slower than a normal constraint and adds model usage cost, and Jev is rate-limited, so keep Jev constraints off high-QPS request paths.
+
 | Variable | Default | Notes |
 |----------|---------|-------|
 | `FLAGR_JEV_ENABLED` | `false` | Master switch. When off, Jev constraints evaluate false |
