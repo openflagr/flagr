@@ -173,6 +173,7 @@ A constraint is a single condition on one entity property. `Value` is a JSON-enc
 | `Property` | string | yes | Entity property to evaluate (e.g. `"country"`, `"age"`) |
 | `Operator` | string | yes | Comparison operator (see below) |
 | `Value` | string | yes | Value to compare against (JSON-encoded) |
+| `JevJSON` | string | no | JSON-encoded Jev / System One question; when set, `Property` must be `@jev.<name>` (see [Jev constraints](flagr_jev.md)) |
 
 **Operators** (12 supported):
 

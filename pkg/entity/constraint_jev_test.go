@@ -139,8 +139,12 @@ func TestConstraintJevValidate(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			c := Constraint{Property: tc.property, Operator: tc.operator, Value: tc.value}
-			require.NoError(t, c.SetJevQuestion(tc.question))
-			err := c.Validate()
+			// SetJevQuestion validates the question; Validate also checks the
+			// constraint-level property prefix and match operator.
+			err := c.SetJevQuestion(tc.question)
+			if err == nil {
+				err = c.Validate()
+			}
 			if tc.wantError {
 				assert.Error(t, err)
 			} else {
@@ -160,7 +164,10 @@ func TestConstraintSetJevQuestionRoundTrip(t *testing.T) {
 		ConfidenceThreshold: f64(0.4),
 	}))
 	assert.True(t, c.IsJev())
-	named := Constraint{Property: "@jev.risk", JevType: JevTypeNoul}
+	assert.NotEmpty(t, c.JevJSON)
+
+	named := Constraint{Property: "@jev.risk"}
+	require.NoError(t, named.SetJevQuestion(&JevQuestion{Type: JevTypeNoul, Instructions: "x"}))
 	assert.Equal(t, "risk", named.JevName())
 
 	q, err := c.JevQuestion()
@@ -172,11 +179,42 @@ func TestConstraintSetJevQuestionRoundTrip(t *testing.T) {
 	require.NotNil(t, q.ConfidenceThreshold)
 	assert.Equal(t, 0.4, *q.ConfidenceThreshold)
 
-	// Clearing removes all Jev fields.
+	// Clearing removes the stored question.
 	require.NoError(t, c.SetJevQuestion(nil))
 	assert.False(t, c.IsJev())
-	assert.Empty(t, c.JevType)
-	assert.Nil(t, c.JevConfidenceThreshold)
+	assert.Empty(t, c.JevJSON)
+}
+
+func TestSetJevQuestionRejectsInvalid(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name string
+		q    *JevQuestion
+	}{
+		{"unknown type", &JevQuestion{Type: "classify", Instructions: "x"}},
+		{"missing instructions", &JevQuestion{Type: JevTypeNoul}},
+		{"empty instructions", &JevQuestion{Type: JevTypeNoul, Instructions: "  "}},
+		{"choice without criteria", &JevQuestion{Type: JevTypeChoice, Instructions: "x"}},
+		{"choice empty criteria", &JevQuestion{Type: JevTypeChoice, Instructions: "x", Criteria: map[string]any{}}},
+		{"score too few levels", &JevQuestion{Type: JevTypeScore, Instructions: "x", Criteria: []any{"only"}}},
+		{"threshold out of range", &JevQuestion{Type: JevTypeChoice, Instructions: "x", Criteria: map[string]any{"a": "b"}, ConfidenceThreshold: f64(1.5)}},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			c := Constraint{}
+			assert.Error(t, c.SetJevQuestion(tc.q))
+			assert.Empty(t, c.JevJSON, "invalid question must not be written")
+		})
+	}
+}
+
+func TestConstraintJevQuestionRejectsMalformedJSON(t *testing.T) {
+	t.Parallel()
+	c := Constraint{Property: "@jev.risk", JevJSON: "{not json"}
+	_, err := c.JevQuestion()
+	assert.Error(t, err)
+	assert.Error(t, c.Validate())
 }
 
 func TestFlagCollectJevQuestions(t *testing.T) {

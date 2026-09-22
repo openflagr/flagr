@@ -18,12 +18,9 @@ type Constraint struct {
 	Operator  string
 	Value     string `gorm:"type:text"`
 
-	// Jev / System One question backing this constraint. Empty JevType means
-	// this is a plain entityContext constraint.
-	JevType                string   `gorm:"type:varchar(16)"`
-	JevInstructions        string   `gorm:"type:text"`
-	JevCriteria            string   `gorm:"type:text"`
-	JevConfidenceThreshold *float64 // nil means no confidence gate
+	// JevJSON is the JSON-encoded JevQuestion backing this constraint.
+	// Empty means a plain entityContext constraint.
+	JevJSON string `gorm:"type:text"`
 }
 
 // ConstraintArray is an array of Constraint

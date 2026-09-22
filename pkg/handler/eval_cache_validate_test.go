@@ -727,8 +727,7 @@ func TestValidateFlags_JevConstraintIsValidated(t *testing.T) {
 					Constraints: []entity.Constraint{
 						{
 							Property: "@jev.risk", Operator: "GTE", Value: "0.5",
-							JevType:         "classify", // not a real question type
-							JevInstructions: `"How risky?"`,
+							JevJSON: `{"type":"classify","instructions":"How risky?"}`, // not a real question type
 						},
 					},
 				},
@@ -756,11 +755,11 @@ func TestValidateFlags_JevDuplicateName(t *testing.T) {
 			Segments: []entity.Segment{
 				seg(entity.Constraint{
 					Property: "@jev.risk", Operator: "GTE", Value: "0.5",
-					JevType: "score", JevInstructions: `"x"`, JevCriteria: `["low","high"]`,
+					JevJSON: `{"type":"score","instructions":"x","criteria":["low","high"]}`,
 				}),
 				seg(entity.Constraint{
 					Property: "@jev.risk", Operator: "LT", Value: "0.5",
-					JevType: "score", JevInstructions: `"x"`, JevCriteria: `["low","high"]`,
+					JevJSON: `{"type":"score","instructions":"x","criteria":["low","high"]}`,
 				}),
 			},
 		},

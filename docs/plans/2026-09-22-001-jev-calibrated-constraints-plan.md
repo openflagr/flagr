@@ -120,10 +120,8 @@ type Constraint struct {
     Operator  string
     Value     string `gorm:"type:text"`
 
-    JevType                string   `gorm:"type:varchar(16)"`
-    JevInstructions        string   `gorm:"type:text"` // JSON EntryType
-    JevCriteria            string   `gorm:"type:text"` // JSON criteria
-    JevConfidenceThreshold *float64
+    // JSON-encoded JevQuestion; "" for a plain constraint.
+    JevJSON string `gorm:"type:text"`
 }
 
 type JevQuestion struct {
@@ -134,10 +132,13 @@ type JevQuestion struct {
 }
 ```
 
-`Constraint.Validate()` rejects a `jev.type` that is not `noul|choice|score`,
-requires `property` to start with `@jev.`, requires choice criteria to be a
-JSON object with ≥1 option, score criteria to be a JSON array of 2–10 levels,
-and `confidenceThreshold` to be within `[0, 1]`.
+`Constraint.IsJev()` is simply `JevJSON != ""`. `SetJevQuestion` is the only
+writer: it runs `JevQuestion.Validate()` (type in `noul|choice|score`,
+instructions present, choice criteria a JSON object with ≥1 option, score
+criteria a JSON array of 2–10 levels, `confidenceThreshold` within `[0, 1]`)
+before marshalling, so an invalid question cannot be persisted.
+`Constraint.Validate()` additionally requires `property` to start with `@jev.`
+and the match operator to fit the question type.
 
 `Flag.PrepareEvaluation()` collects all Jev constraints into
 `FlagEvaluation.JevQuestions` so the hot path never parses JSON. A `@jev.<name>`

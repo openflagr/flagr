@@ -40,8 +40,42 @@ type JevQuestion struct {
 	ConfidenceThreshold *float64 `json:"confidenceThreshold,omitempty"`
 }
 
+// Validate checks the question in isolation: type, instructions, per-type
+// criteria shape, and confidence threshold bounds. Constraint-level concerns
+// (the `@jev.` property prefix and the match operator) live in
+// Constraint.Validate. This is the gate for writing Constraint.JevJSON.
+func (q *JevQuestion) Validate() error {
+	if q == nil {
+		return fmt.Errorf("jev question is required")
+	}
+	switch q.Type {
+	case JevTypeNoul, JevTypeChoice, JevTypeScore:
+	default:
+		return fmt.Errorf("invalid jev.type %q: must be one of %s, %s, %s",
+			q.Type, JevTypeNoul, JevTypeChoice, JevTypeScore)
+	}
+	if q.ConfidenceThreshold != nil && (*q.ConfidenceThreshold < 0 || *q.ConfidenceThreshold > 1) {
+		return fmt.Errorf("jev.confidenceThreshold must be within [0,1], got %v", *q.ConfidenceThreshold)
+	}
+	if q.Instructions == nil {
+		return fmt.Errorf("jev.instructions is required")
+	}
+	if s, ok := q.Instructions.(string); ok && strings.TrimSpace(s) == "" {
+		return fmt.Errorf("jev.instructions must not be empty")
+	}
+	switch q.Type {
+	case JevTypeNoul:
+		return validateNoulCriteria(q.Criteria)
+	case JevTypeChoice:
+		return validateChoiceCriteria(q.Criteria)
+	case JevTypeScore:
+		return validateScoreCriteria(q.Criteria)
+	}
+	return nil
+}
+
 // IsJev reports whether the constraint is backed by a Jev question.
-func (c *Constraint) IsJev() bool { return c.JevType != "" }
+func (c *Constraint) IsJev() bool { return c.JevJSON != "" }
 
 // JevName returns the `@jev.<name>` question name, or "" for a plain constraint.
 func (c *Constraint) JevName() string {
@@ -56,62 +90,36 @@ func (c *Constraint) JevQuestion() (*JevQuestion, error) {
 	if !c.IsJev() {
 		return nil, nil
 	}
-	q := &JevQuestion{Type: c.JevType, ConfidenceThreshold: c.JevConfidenceThreshold}
-	if c.JevInstructions != "" {
-		if err := json.Unmarshal([]byte(c.JevInstructions), &q.Instructions); err != nil {
-			return nil, fmt.Errorf("invalid jev instructions: %w", err)
-		}
-	}
-	if c.JevCriteria != "" {
-		if err := json.Unmarshal([]byte(c.JevCriteria), &q.Criteria); err != nil {
-			return nil, fmt.Errorf("invalid jev criteria: %w", err)
-		}
+	q := &JevQuestion{}
+	if err := json.Unmarshal([]byte(c.JevJSON), q); err != nil {
+		return nil, fmt.Errorf("invalid jev question JSON: %w", err)
 	}
 	return q, nil
 }
 
-// SetJevQuestion encodes and stores a question, or clears the Jev fields when nil.
+// SetJevQuestion validates and stores a question as JSON, or clears JevJSON when
+// nil. It is the only writer of JevJSON, so an invalid question can never be
+// persisted through the CRUD paths.
 func (c *Constraint) SetJevQuestion(q *JevQuestion) error {
 	if q == nil {
-		c.JevType = ""
-		c.JevInstructions = ""
-		c.JevCriteria = ""
-		c.JevConfidenceThreshold = nil
+		c.JevJSON = ""
 		return nil
 	}
-	instructions, err := marshalJevEntry(q.Instructions)
-	if err != nil {
-		return fmt.Errorf("invalid jev instructions: %w", err)
+	if err := q.Validate(); err != nil {
+		return err
 	}
-	criteria, err := marshalJevEntry(q.Criteria)
+	b, err := json.Marshal(q)
 	if err != nil {
-		return fmt.Errorf("invalid jev criteria: %w", err)
+		return fmt.Errorf("encoding jev question: %w", err)
 	}
-	c.JevType = q.Type
-	c.JevInstructions = instructions
-	c.JevCriteria = criteria
-	c.JevConfidenceThreshold = q.ConfidenceThreshold
+	c.JevJSON = string(b)
 	return nil
 }
 
-// CopyJevFrom copies the Jev question fields from src, so a constraint can be
-// cloned (flag template / duplicate) without silently dropping its question.
+// CopyJevFrom copies the Jev question from src, so a constraint can be cloned
+// (flag template / duplicate) without silently dropping its question.
 func (c *Constraint) CopyJevFrom(src *Constraint) {
-	c.JevType = src.JevType
-	c.JevInstructions = src.JevInstructions
-	c.JevCriteria = src.JevCriteria
-	c.JevConfidenceThreshold = src.JevConfidenceThreshold
-}
-
-func marshalJevEntry(v any) (string, error) {
-	if v == nil {
-		return "", nil
-	}
-	b, err := json.Marshal(v)
-	if err != nil {
-		return "", err
-	}
-	return string(b), nil
+	c.JevJSON = src.JevJSON
 }
 
 // DuplicateJevQuestionProperties returns the `@jev.<name>` properties used by
@@ -136,45 +144,23 @@ func DuplicateJevQuestionProperties(constraints []Constraint) []string {
 	return names
 }
 
-// validateJev validates the Jev question fields. Plain constraints are a no-op.
+// validateJev validates the stored question and its constraint-level fields.
+// Plain constraints are a no-op.
 func (c *Constraint) validateJev() error {
 	if !c.IsJev() {
 		return nil
-	}
-	switch c.JevType {
-	case JevTypeNoul, JevTypeChoice, JevTypeScore:
-	default:
-		return fmt.Errorf("invalid jev.type %q: must be one of %s, %s, %s",
-			c.JevType, JevTypeNoul, JevTypeChoice, JevTypeScore)
-	}
-	if !strings.HasPrefix(c.Property, JevPropertyPrefix) || c.JevName() == "" {
-		return fmt.Errorf("jev constraints require property %s<name>, got %q", JevPropertyPrefix, c.Property)
-	}
-	if err := validateJevOperator(c.JevType, c.Operator); err != nil {
-		return err
 	}
 	q, err := c.JevQuestion()
 	if err != nil {
 		return err
 	}
-	if q.ConfidenceThreshold != nil && (*q.ConfidenceThreshold < 0 || *q.ConfidenceThreshold > 1) {
-		return fmt.Errorf("jev.confidenceThreshold must be within [0,1], got %v", *q.ConfidenceThreshold)
+	if err := q.Validate(); err != nil {
+		return err
 	}
-	if q.Instructions == nil {
-		return fmt.Errorf("jev.instructions is required")
+	if !strings.HasPrefix(c.Property, JevPropertyPrefix) || c.JevName() == "" {
+		return fmt.Errorf("jev constraints require property %s<name>, got %q", JevPropertyPrefix, c.Property)
 	}
-	if s, ok := q.Instructions.(string); ok && strings.TrimSpace(s) == "" {
-		return fmt.Errorf("jev.instructions must not be empty")
-	}
-	switch q.Type {
-	case JevTypeNoul:
-		return validateNoulCriteria(q.Criteria)
-	case JevTypeChoice:
-		return validateChoiceCriteria(q.Criteria)
-	case JevTypeScore:
-		return validateScoreCriteria(q.Criteria)
-	}
-	return nil
+	return validateJevOperator(q.Type, c.Operator)
 }
 
 // validateJevOperator enforces that the match operator makes sense for the
@@ -237,6 +223,7 @@ func validateScoreCriteria(criteria any) error {
 // collectJevQuestions records the segment's Jev constraints on the flag's
 // evaluation state. Segments are visited in rank order, so the first
 // definition of a question name wins if it appears in more than one segment.
+// Invalid stored questions are skipped (the constraint then fails closed).
 func (f *Flag) collectJevQuestions(s *Segment) {
 	for i := range s.Constraints {
 		c := &s.Constraints[i]
@@ -245,6 +232,9 @@ func (f *Flag) collectJevQuestions(s *Segment) {
 		}
 		name := c.JevName()
 		q, err := c.JevQuestion()
+		if err == nil {
+			err = q.Validate()
+		}
 		if err != nil {
 			logrus.WithError(err).WithFields(logrus.Fields{
 				"flagID":       f.ID,

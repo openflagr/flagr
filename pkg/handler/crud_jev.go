@@ -27,7 +27,7 @@ func loadFlagJevConstraints(tx *gorm.DB, flagID, excludeID uint) ([]entity.Const
 		Joins("JOIN segments ON segments.id = constraints.segment_id").
 		Where("segments.flag_id = ?", flagID).
 		Where("segments.deleted_at IS NULL").
-		Where("constraints.jev_type <> ''")
+		Where("constraints.jev_json <> ''")
 	if excludeID != 0 {
 		q = q.Where("constraints.id <> ?", excludeID)
 	}
