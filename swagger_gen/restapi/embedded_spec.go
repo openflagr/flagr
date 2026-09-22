@@ -1716,6 +1716,9 @@ func init() {
           "minimum": 1,
           "readOnly": true
         },
+        "jev": {
+          "$ref": "#/definitions/jevQuestion"
+        },
         "operator": {
           "type": "string",
           "minLength": 1,
@@ -1753,6 +1756,9 @@ func init() {
         "value"
       ],
       "properties": {
+        "jev": {
+          "$ref": "#/definitions/jevQuestion"
+        },
         "operator": {
           "type": "string",
           "minLength": 1
@@ -2393,6 +2399,38 @@ func init() {
         }
       }
     },
+    "jevQuestion": {
+      "description": "Optional Jev / System One question backing this constraint. When present, ` + "`" + `property` + "`" + ` must be ` + "`" + `@jev.\u003cname\u003e` + "`" + `. The model answer is injected into the evaluation context under ` + "`" + `@jev.\u003cname\u003e` + "`" + ` and compared with ` + "`" + `operator` + "`" + `/` + "`" + `value` + "`" + `.\n",
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "confidenceThreshold": {
+          "description": "Minimum answer confidence required for a choice/score answer to count. Below it the constraint evaluates false. Ignored for noul. Falls back to FLAGR_JEV_CONFIDENCE_THRESHOLD when omitted.\n",
+          "type": "number",
+          "format": "double",
+          "maximum": 1
+        },
+        "criteria": {
+          "description": "Choice: a map of option name to its description. Score: an ordered array of level descriptions (2-10). Noul: optional {true, false} descriptions. Values may be strings or structured JSON.\n",
+          "type": "object"
+        },
+        "instructions": {
+          "description": "The question the model answers. A string, or structured JSON (object/array) for questions that need labelled parts or supporting data.\n",
+          "type": "object"
+        },
+        "type": {
+          "description": "The System One question type.\n  - noul: yes/no; returns P(yes) in [0,1].\n  - choice: pick one option from ` + "`" + `criteria` + "`" + `; returns the selected option.\n  - score: rate against ordered ` + "`" + `criteria` + "`" + ` levels; returns a numeric score.\n",
+          "type": "string",
+          "enum": [
+            "noul",
+            "choice",
+            "score"
+          ]
+        }
+      }
+    },
     "putDistributionsRequest": {
       "type": "object",
       "required": [
@@ -2533,6 +2571,10 @@ func init() {
     "segmentDebugLog": {
       "type": "object",
       "properties": {
+        "jev": {
+          "description": "Jev answers evaluated while processing this segment (debug only). A map of question name to {type, value, confidence, probabilities}.\n",
+          "type": "object"
+        },
         "msg": {
           "type": "string"
         },
@@ -4373,6 +4415,9 @@ func init() {
           "minimum": 1,
           "readOnly": true
         },
+        "jev": {
+          "$ref": "#/definitions/jevQuestion"
+        },
         "operator": {
           "type": "string",
           "minLength": 1,
@@ -4410,6 +4455,9 @@ func init() {
         "value"
       ],
       "properties": {
+        "jev": {
+          "$ref": "#/definitions/jevQuestion"
+        },
         "operator": {
           "type": "string",
           "minLength": 1
@@ -5052,6 +5100,39 @@ func init() {
         }
       }
     },
+    "jevQuestion": {
+      "description": "Optional Jev / System One question backing this constraint. When present, ` + "`" + `property` + "`" + ` must be ` + "`" + `@jev.\u003cname\u003e` + "`" + `. The model answer is injected into the evaluation context under ` + "`" + `@jev.\u003cname\u003e` + "`" + ` and compared with ` + "`" + `operator` + "`" + `/` + "`" + `value` + "`" + `.\n",
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "confidenceThreshold": {
+          "description": "Minimum answer confidence required for a choice/score answer to count. Below it the constraint evaluates false. Ignored for noul. Falls back to FLAGR_JEV_CONFIDENCE_THRESHOLD when omitted.\n",
+          "type": "number",
+          "format": "double",
+          "maximum": 1,
+          "minimum": 0
+        },
+        "criteria": {
+          "description": "Choice: a map of option name to its description. Score: an ordered array of level descriptions (2-10). Noul: optional {true, false} descriptions. Values may be strings or structured JSON.\n",
+          "type": "object"
+        },
+        "instructions": {
+          "description": "The question the model answers. A string, or structured JSON (object/array) for questions that need labelled parts or supporting data.\n",
+          "type": "object"
+        },
+        "type": {
+          "description": "The System One question type.\n  - noul: yes/no; returns P(yes) in [0,1].\n  - choice: pick one option from ` + "`" + `criteria` + "`" + `; returns the selected option.\n  - score: rate against ordered ` + "`" + `criteria` + "`" + ` levels; returns a numeric score.\n",
+          "type": "string",
+          "enum": [
+            "noul",
+            "choice",
+            "score"
+          ]
+        }
+      }
+    },
     "putDistributionsRequest": {
       "type": "object",
       "required": [
@@ -5195,6 +5276,10 @@ func init() {
     "segmentDebugLog": {
       "type": "object",
       "properties": {
+        "jev": {
+          "description": "Jev answers evaluated while processing this segment (debug only). A map of question name to {type, value, confidence, probabilities}.\n",
+          "type": "object"
+        },
         "msg": {
           "type": "string"
         },

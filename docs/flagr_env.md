@@ -73,6 +73,21 @@ Eval-only is the usual product path when `FLAGR_DB_DBDRIVER` is `json_file` or `
 
 Full guide: [Built-in context injection](flagr_injected_context.md).
 
+#### Jev / System One constraints
+
+Back a constraint with a typed [System One](https://docs.typesafe.ai/) question (`noul` / `choice` / `score`). The answer is injected as `@jev.<name>` and compared with ordinary operators. Point `FLAGR_JEV_BASE_URL` at the hosted API or an open-source drop-in server ([`oido-systemone`](https://github.com/Djancyp/oido-systemone), [`jeff`](https://github.com/logan-markewich/jeff)). See [Jev constraints](https://github.com/openflagr/flagr/blob/main/docs/plans/2026-09-22-001-jev-calibrated-constraints-plan.md).
+
+| Variable | Default | Notes |
+|----------|---------|-------|
+| `FLAGR_JEV_ENABLED` | `false` | Master switch. When off, Jev constraints evaluate false |
+| `FLAGR_JEV_BASE_URL` | `https://api.typesafe.ai` | Hosted API or self-hosted System One |
+| `FLAGR_JEV_API_KEY` | `""` | `Authorization: Bearer` — optional for some self-hosted servers |
+| `FLAGR_JEV_MODEL` | `jev-latest` | Model or alias |
+| `FLAGR_JEV_TIMEOUT` | `1s` | Per-request timeout |
+| `FLAGR_JEV_CONFIDENCE_THRESHOLD` | `0.5` | Default confidence gate for `choice`/`score` |
+| `FLAGR_JEV_CACHE_TTL` | `30s` | Answer cache TTL |
+| `FLAGR_JEV_CACHE_SIZE` | `10000` | Max cached answers; `0` disables the cache |
+
 #### Eval cache export {#eval-cache-export}
 
 A running server can dump its in-memory cache as JSON via `GET /api/v1/export/eval_cache/json`, with optional `enabled`, `ids`, `keys`, `tags`, and `tagsOperator` (`ANY` / `ALL`) query parameters.

@@ -4,10 +4,12 @@ package models
 
 import (
 	"context"
+	stderrors "errors"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag/jsonutils"
+	"github.com/go-openapi/swag/typeutils"
 	"github.com/go-openapi/validate"
 )
 
@@ -15,6 +17,9 @@ import (
 //
 // swagger:model createConstraintRequest
 type CreateConstraintRequest struct {
+
+	// jev
+	Jev *JevQuestion `json:"jev,omitempty"`
 
 	// operator
 	// Required: true
@@ -37,6 +42,10 @@ type CreateConstraintRequest struct {
 func (m *CreateConstraintRequest) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateJev(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateOperator(formats); err != nil {
 		res = append(res, err)
 	}
@@ -52,6 +61,29 @@ func (m *CreateConstraintRequest) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *CreateConstraintRequest) validateJev(formats strfmt.Registry) error {
+	if typeutils.IsZero(m.Jev) { // not required
+		return nil
+	}
+
+	if m.Jev != nil {
+		if err := m.Jev.Validate(formats); err != nil {
+			ve := new(errors.Validation)
+			if stderrors.As(err, &ve) {
+				return ve.ValidateName("jev")
+			}
+			ce := new(errors.CompositeError)
+			if stderrors.As(err, &ce) {
+				return ce.ValidateName("jev")
+			}
+
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -94,8 +126,42 @@ func (m *CreateConstraintRequest) validateValue(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validates this create constraint request based on context it is used
+// ContextValidate validate this create constraint request based on the context it is used
 func (m *CreateConstraintRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateJev(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *CreateConstraintRequest) contextValidateJev(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.Jev != nil {
+
+		if typeutils.IsZero(m.Jev) { // not required
+			return nil
+		}
+
+		if err := m.Jev.ContextValidate(ctx, formats); err != nil {
+			ve := new(errors.Validation)
+			if stderrors.As(err, &ve) {
+				return ve.ValidateName("jev")
+			}
+			ce := new(errors.CompositeError)
+			if stderrors.As(err, &ce) {
+				return ce.ValidateName("jev")
+			}
+
+			return err
+		}
+	}
+
 	return nil
 }
 

@@ -367,6 +367,9 @@ var EvalFlagWithContext = func(flag *entity.Flag, evalContext models.EvalContext
 		evalContext.EntityType = flag.EntityType
 	}
 
+	// Resolve and inject Jev answers before evaluating segments. Fail-closed.
+	evalContext = injectJevContext(evalContext, flag)
+
 	var vID int64
 	var sID int64
 	var logs []*models.SegmentDebugLog
@@ -459,6 +462,11 @@ var evalSegment = func(
 ) {
 	debug := config.Config.EvalDebugEnabled && evalContext.EnableDebug
 
+	var jevDebug any
+	if debug {
+		jevDebug = jevDebugAnswers(evalContext)
+	}
+
 	if len(segment.Constraints) != 0 {
 		m, ok := evalContext.EntityContext.(map[string]any)
 		if !ok {
@@ -466,6 +474,7 @@ var evalSegment = func(
 				log = &models.SegmentDebugLog{
 					Msg:       fmt.Sprintf("constraints are present in the segment_id %v, but got invalid entity_context: %s.", segment.ID, spew.Sdump(evalContext.EntityContext)),
 					SegmentID: int64(segment.ID),
+					Jev:       jevDebug,
 				}
 			}
 			return nil, log, true
@@ -478,6 +487,7 @@ var evalSegment = func(
 				log = &models.SegmentDebugLog{
 					Msg:       err.Error(),
 					SegmentID: int64(segment.ID),
+					Jev:       jevDebug,
 				}
 			}
 			return nil, log, true
@@ -487,6 +497,7 @@ var evalSegment = func(
 				log = &models.SegmentDebugLog{
 					Msg:       debugConstraintMsg(true, expr, m),
 					SegmentID: int64(segment.ID),
+					Jev:       jevDebug,
 				}
 			}
 			return nil, log, true
@@ -505,6 +516,7 @@ var evalSegment = func(
 		log = &models.SegmentDebugLog{
 			Msg:       "matched all constraints. " + debugMsg,
 			SegmentID: int64(segment.ID),
+			Jev:       jevDebug,
 		}
 	}
 

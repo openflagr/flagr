@@ -5,6 +5,7 @@ package models
 import (
 	"context"
 	"encoding/json"
+	stderrors "errors"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
@@ -22,6 +23,9 @@ type Constraint struct {
 	// Read Only: true
 	// Minimum: 1
 	ID int64 `json:"id,omitempty"`
+
+	// jev
+	Jev *JevQuestion `json:"jev,omitempty"`
 
 	// operator
 	// Required: true
@@ -46,6 +50,10 @@ func (m *Constraint) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateID(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateJev(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -74,6 +82,29 @@ func (m *Constraint) validateID(formats strfmt.Registry) error {
 
 	if err := validate.MinimumInt("id", "body", m.ID, 1, false); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (m *Constraint) validateJev(formats strfmt.Registry) error {
+	if typeutils.IsZero(m.Jev) { // not required
+		return nil
+	}
+
+	if m.Jev != nil {
+		if err := m.Jev.Validate(formats); err != nil {
+			ve := new(errors.Validation)
+			if stderrors.As(err, &ve) {
+				return ve.ValidateName("jev")
+			}
+			ce := new(errors.CompositeError)
+			if stderrors.As(err, &ce) {
+				return ce.ValidateName("jev")
+			}
+
+			return err
+		}
 	}
 
 	return nil
@@ -190,6 +221,10 @@ func (m *Constraint) ContextValidate(ctx context.Context, formats strfmt.Registr
 		res = append(res, err)
 	}
 
+	if err := m.contextValidateJev(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
@@ -200,6 +235,31 @@ func (m *Constraint) contextValidateID(ctx context.Context, formats strfmt.Regis
 
 	if err := validate.ReadOnly(ctx, "id", "body", m.ID); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (m *Constraint) contextValidateJev(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.Jev != nil {
+
+		if typeutils.IsZero(m.Jev) { // not required
+			return nil
+		}
+
+		if err := m.Jev.ContextValidate(ctx, formats); err != nil {
+			ve := new(errors.Validation)
+			if stderrors.As(err, &ve) {
+				return ve.ValidateName("jev")
+			}
+			ce := new(errors.CompositeError)
+			if stderrors.As(err, &ce) {
+				return ce.ValidateName("jev")
+			}
+
+			return err
+		}
 	}
 
 	return nil

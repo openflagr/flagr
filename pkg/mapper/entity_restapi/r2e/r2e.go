@@ -42,3 +42,20 @@ func MapAttachment(a any) (entity.Attachment, error) {
 	}
 	return e, nil
 }
+
+// MapJevQuestion maps a REST Jev question to the entity representation.
+// A nil input returns nil, which clears any Jev question on the constraint.
+func MapJevQuestion(r *models.JevQuestion) (*entity.JevQuestion, error) {
+	if r == nil {
+		return nil, nil
+	}
+	if r.Type == nil || *r.Type == "" {
+		return nil, fmt.Errorf("jev.type is required")
+	}
+	return &entity.JevQuestion{
+		Type:                *r.Type,
+		Instructions:        r.Instructions,
+		Criteria:            r.Criteria,
+		ConfidenceThreshold: r.ConfidenceThreshold,
+	}, nil
+}

@@ -77,6 +77,35 @@ var Config = struct {
 	// ExposureBatchSize - maximum exposures per POST /exposures request.
 	ExposureBatchSize int `env:"FLAGR_EXPOSURE_BATCH_SIZE" envDefault:"100"`
 
+	// JevEnabled - enables Jev / System One constraints. When false, Jev
+	// constraints evaluate false (fail-closed).
+	JevEnabled bool `env:"FLAGR_JEV_ENABLED" envDefault:"false"`
+
+	// JevBaseURL - base URL of the System One API. Point at a self-hosted
+	// open-source endpoint (e.g. oido-systemone or jeff) to keep state local.
+	JevBaseURL string `env:"FLAGR_JEV_BASE_URL" envDefault:"https://api.typesafe.ai"`
+
+	// JevAPIKey - bearer token for the System One API. Optional for
+	// self-hosted endpoints that do not set an API key.
+	JevAPIKey string `env:"FLAGR_JEV_API_KEY" envDefault:""`
+
+	// JevModel - model or alias sent in the System One request.
+	JevModel string `env:"FLAGR_JEV_MODEL" envDefault:"jev-latest"`
+
+	// JevTimeout - per-request timeout for System One calls.
+	JevTimeout time.Duration `env:"FLAGR_JEV_TIMEOUT" envDefault:"1s"`
+
+	// JevConfidenceThreshold - confidence gate applied to choice/score answers
+	// when a constraint does not set its own threshold. Answers below it do
+	// not match. Must be within [0,1].
+	JevConfidenceThreshold float64 `env:"FLAGR_JEV_CONFIDENCE_THRESHOLD" envDefault:"0.5"`
+
+	// JevCacheTTL - how long a System One answer is cached.
+	JevCacheTTL time.Duration `env:"FLAGR_JEV_CACHE_TTL" envDefault:"30s"`
+
+	// JevCacheSize - maximum number of cached answers. 0 disables the cache.
+	JevCacheSize int `env:"FLAGR_JEV_CACHE_SIZE" envDefault:"10000"`
+
 	// SnapshotsDefaultLimit - default number of newest snapshots returned by
 	// GET /flags/{flagID}/snapshots when the request carries no explicit limit.
 	// 0 (default) keeps the existing behavior of returning the full history.

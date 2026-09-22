@@ -121,6 +121,15 @@ func MapConstraint(e *entity.Constraint) *models.Constraint {
 	r.Property = new(e.Property)
 	r.Operator = new(e.Operator)
 	r.Value = new(e.Value)
+	if q, err := e.JevQuestion(); err == nil && q != nil {
+		questionType := q.Type
+		r.Jev = &models.JevQuestion{
+			Type:                &questionType,
+			Instructions:        q.Instructions,
+			Criteria:            q.Criteria,
+			ConfidenceThreshold: q.ConfidenceThreshold,
+		}
+	}
 	return r
 }
 

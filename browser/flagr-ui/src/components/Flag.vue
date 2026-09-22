@@ -130,6 +130,7 @@
             @save-constraint="(p) => flagPage.putConstraint(page, p)"
             @delete-constraint="(p) => flagPage.deleteConstraint(page, p)"
             @update-constraint-field="(p) => flagPage.handleUpdateConstraintField(page, p)"
+            @update-constraint-jev="(p) => flagPage.handleUpdateConstraintJev(page, p)"
             @edit-distribution="(s) => flagPage.handleEditDistribution(page, s)"
           />
 

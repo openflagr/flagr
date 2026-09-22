@@ -17,6 +17,7 @@ import type {
   EvalSummary,
   FlagSnapshot,
   FlagView,
+  JevQuestion,
   PutVariantBody,
   Segment,
   SegmentFieldKey,
@@ -420,6 +421,15 @@ export function handleUpdateConstraintField(
   if (field === 'property') constraint.property = value
   else if (field === 'operator') constraint.operator = value
   else if (field === 'value') constraint.value = value
+}
+
+/** Apply a Jev question edit (from the inline editor) to the constraint. */
+export function handleUpdateConstraintJev(
+  _vm: FlagPageVm,
+  payload: { constraint: Constraint; jev?: JevQuestion; property?: string },
+): void {
+  if ('jev' in payload) payload.constraint.jev = payload.jev
+  if (payload.property != null) payload.constraint.property = payload.property
 }
 
 export function handleEditDistribution(vm: FlagPageVm, segment: Segment): void {

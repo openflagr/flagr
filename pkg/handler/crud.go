@@ -646,6 +646,13 @@ func (c *crud) CreateConstraint(params constraint.CreateConstraintParams) middle
 		cons.Property = util.SafeString(params.Body.Property)
 		cons.Operator = util.SafeString(params.Body.Operator)
 		cons.Value = util.SafeString(params.Body.Value)
+		jevQuestion, err := r2e.MapJevQuestion(params.Body.Jev)
+		if err != nil {
+			return constraint.NewCreateConstraintDefault(400).WithPayload(ErrorMessage("%s", err))
+		}
+		if err = cons.SetJevQuestion(jevQuestion); err != nil {
+			return constraint.NewCreateConstraintDefault(400).WithPayload(ErrorMessage("%s", err))
+		}
 	}
 	if err := cons.Validate(); err != nil {
 		return constraint.NewCreateConstraintDefault(400).WithPayload(ErrorMessage("%s", err))
@@ -691,6 +698,13 @@ func (c *crud) PutConstraint(params constraint.PutConstraintParams) middleware.R
 		cons.Property = util.SafeString(params.Body.Property)
 		cons.Operator = util.SafeString(params.Body.Operator)
 		cons.Value = util.SafeString(params.Body.Value)
+		jevQuestion, err := r2e.MapJevQuestion(params.Body.Jev)
+		if err != nil {
+			return constraint.NewPutConstraintDefault(400).WithPayload(ErrorMessage("%s", err))
+		}
+		if err = cons.SetJevQuestion(jevQuestion); err != nil {
+			return constraint.NewPutConstraintDefault(400).WithPayload(ErrorMessage("%s", err))
+		}
 	}
 	if err := cons.Validate(); err != nil {
 		return constraint.NewPutConstraintDefault(400).WithPayload(ErrorMessage("%s", err))

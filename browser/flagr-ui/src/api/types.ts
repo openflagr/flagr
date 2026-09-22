@@ -19,11 +19,24 @@ export interface Distribution {
 /** Distribution row while editing (server id omitted on save). */
 export type DistributionDraft = Omit<Distribution, 'id'> & { bitmap?: string }
 
+export type JevQuestionType = 'noul' | 'choice' | 'score'
+
+/** Mirrors swagger_gen/models JevQuestion (System One question). */
+export interface JevQuestion {
+  type: JevQuestionType
+  /** string | object | array; free-form to match the System One EntryType contract. */
+  instructions?: unknown
+  /** choice: {option: description}; score: ordered level array; noul: {true, false}. */
+  criteria?: unknown
+  confidenceThreshold?: number
+}
+
 export interface Constraint {
   id?: number
   operator: string
   property: string
   value: string
+  jev?: JevQuestion
 }
 
 export interface IdentifiedConstraint extends Constraint {

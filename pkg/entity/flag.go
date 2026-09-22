@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/openflagr/flagr/pkg/util"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -32,6 +33,9 @@ type Flag struct {
 type FlagEvaluation struct {
 	VariantsMap map[uint]*Variant
 	TagValues   []string // denormalized tag values for eval results
+	// JevQuestions maps the `@jev.<name>` question name to its definition,
+	// collected across segments in rank order. Empty when no Jev constraints exist.
+	JevQuestions map[string]JevConstraintSpec
 }
 
 // Preloads just the tags
@@ -74,18 +78,57 @@ func (f *Flag) PrepareEvaluation() error {
 		tagValues = append(tagValues, tag.Value)
 	}
 	f.FlagEvaluation = FlagEvaluation{
-		VariantsMap: make(map[uint]*Variant),
-		TagValues:   tagValues,
+		VariantsMap:  make(map[uint]*Variant),
+		TagValues:    tagValues,
+		JevQuestions: make(map[string]JevConstraintSpec),
 	}
 	for i := range f.Segments {
 		if err := f.Segments[i].PrepareEvaluation(); err != nil {
 			return err
 		}
+		f.collectJevQuestions(&f.Segments[i])
 	}
 	for i := range f.Variants {
 		f.FlagEvaluation.VariantsMap[f.Variants[i].ID] = &f.Variants[i]
 	}
 	return nil
+}
+
+// collectJevQuestions records the segment's Jev constraints on the flag's
+// evaluation state. Segments are visited in rank order, so the first
+// definition of a question name wins if it appears in more than one segment.
+func (f *Flag) collectJevQuestions(s *Segment) {
+	for i := range s.Constraints {
+		c := &s.Constraints[i]
+		if !c.IsJev() {
+			continue
+		}
+		name := c.JevName()
+		q, err := c.JevQuestion()
+		if err != nil {
+			logrus.WithError(err).WithFields(logrus.Fields{
+				"flagID":       f.ID,
+				"segmentID":    s.ID,
+				"constraintID": c.ID,
+			}).Warn("skipping invalid jev constraint")
+			continue
+		}
+		if _, exists := f.FlagEvaluation.JevQuestions[name]; exists {
+			logrus.WithFields(logrus.Fields{
+				"flagID":    f.ID,
+				"segmentID": s.ID,
+				"question":  name,
+			}).Warn("duplicate jev question name; keeping the higher-priority definition")
+			continue
+		}
+		f.FlagEvaluation.JevQuestions[name] = JevConstraintSpec{
+			Name:                name,
+			Type:                q.Type,
+			Instructions:        q.Instructions,
+			Criteria:            q.Criteria,
+			ConfidenceThreshold: q.ConfidenceThreshold,
+		}
+	}
 }
 
 // CreateFlagKey creates the key based on the given key

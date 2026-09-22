@@ -423,6 +423,8 @@ definitions:
       value:
         type: string
         minLength: 1
+      jev:
+        $ref: "#/definitions/jevQuestion"
   createConstraintRequest:
     type: object
     required:
@@ -443,6 +445,50 @@ definitions:
       value:
         type: string
         minLength: 1
+      jev:
+        $ref: "#/definitions/jevQuestion"
+
+  # Jev / System One question
+  jevQuestion:
+    type: object
+    description: >
+      Optional Jev / System One question backing this constraint. When present,
+      `property` must be `@jev.<name>`. The model answer is injected into the
+      evaluation context under `@jev.<name>` and compared with `operator`/`value`.
+    required:
+      - type
+    properties:
+      type:
+        type: string
+        description: |
+          The System One question type.
+            - noul: yes/no; returns P(yes) in [0,1].
+            - choice: pick one option from `criteria`; returns the selected option.
+            - score: rate against ordered `criteria` levels; returns a numeric score.
+        enum:
+          - "noul"
+          - "choice"
+          - "score"
+      instructions:
+        type: object
+        description: >
+          The question the model answers. A string, or structured JSON
+          (object/array) for questions that need labelled parts or supporting data.
+      criteria:
+        type: object
+        description: >
+          Choice: a map of option name to its description. Score: an ordered
+          array of level descriptions (2-10). Noul: optional {true, false}
+          descriptions. Values may be strings or structured JSON.
+      confidenceThreshold:
+        type: number
+        format: double
+        minimum: 0
+        maximum: 1
+        description: >
+          Minimum answer confidence required for a choice/score answer to count.
+          Below it the constraint evaluates false. Ignored for noul. Falls back
+          to FLAGR_JEV_CONFIDENCE_THRESHOLD when omitted.
 
   # Distribution
   distribution:
@@ -577,6 +623,11 @@ definitions:
         minimum: 1
       msg:
         type: string
+      jev:
+        type: object
+        description: >
+          Jev answers evaluated while processing this segment (debug only).
+          A map of question name to {type, value, confidence, probabilities}.
 
   # Evaluation Batch
   evaluationEntity:

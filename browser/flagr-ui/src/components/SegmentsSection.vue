@@ -159,6 +159,7 @@
                 :save-button-type="saveButtonType(isConstraintDirty(element, constraint)) ?? ''"
                 @update-field="onConstraintFieldChange(element, constraint, $event.field, $event.value)"
                 @update-operator="onConstraintOperatorFieldChange(element, constraint, $event.uiOperator)"
+                @update-jev="onConstraintJevChange(element, constraint, $event)"
                 @save="handleSaveConstraint(element, constraint)"
                 @delete="$emit('delete-constraint', { segment: element, constraint })"
               />
@@ -245,7 +246,7 @@ import ConstraintAddRow, { type NewConstraintDraft } from '@/components/Constrai
 import ConstraintExistingRow from '@/components/ConstraintExistingRow.vue'
 import { Delete, Edit, ArrowUp, ArrowDown } from '@element-plus/icons-vue'
 import type { PropType } from 'vue'
-import type { Constraint, ConstraintFieldKey, Segment, SegmentFieldKey } from '@/api/types'
+import type { Constraint, ConstraintFieldKey, JevQuestion, Segment, SegmentFieldKey } from '@/api/types'
 import { applyUiOperatorSelection } from '@/helpers/constraintOperatorSugar'
 import { operatorOptionGroups, type OperatorUiOption } from '@/helpers/constraintOperators'
 
@@ -278,6 +279,7 @@ export default {
     'delete-segment',
     'update-segment-field',
     'update-constraint-field',
+    'update-constraint-jev',
     'save-constraint',
     'delete-constraint',
     'create-constraint',
@@ -329,6 +331,16 @@ export default {
         field: 'operator',
         value: constraint.operator,
       })
+    },
+    onConstraintJevChange(
+      segment: Segment,
+      constraint: Constraint,
+      payload: { jev?: JevQuestion; property?: string },
+    ): void {
+      if ('jev' in payload) constraint.jev = payload.jev
+      if (payload.property != null) constraint.property = payload.property
+      this.markConstraintDirty(segment, constraint)
+      this.$emit('update-constraint-jev', { segment, constraint, ...payload })
     },
     saveButtonLabel(dirty: boolean) {
       return fmtSaveLabel(dirty)
@@ -401,7 +413,7 @@ export default {
       if (!c.operator) return
       this.$emit('create-constraint', {
         segment: element,
-        constraint: { operator: c.operator, property: c.property, value: c.value },
+        constraint: { operator: c.operator, property: c.property, value: c.value, jev: c.jev },
       })
       this.newConstraints[id] = emptyNewConstraintDraft()
     },

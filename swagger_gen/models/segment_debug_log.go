@@ -17,6 +17,10 @@ import (
 // swagger:model segmentDebugLog
 type SegmentDebugLog struct {
 
+	// Jev answers evaluated while processing this segment (debug only). A map of question name to {type, value, confidence, probabilities}.
+	//
+	Jev any `json:"jev,omitempty"`
+
 	// msg
 	Msg string `json:"msg,omitempty"`
 
