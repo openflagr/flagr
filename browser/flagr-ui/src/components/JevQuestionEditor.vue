@@ -14,7 +14,7 @@
         @update:model-value="setType"
       >
         <el-option
-          label="Noul (yes / no)"
+          label="Noul (true / false)"
           value="noul"
         />
         <el-option
@@ -55,20 +55,20 @@
         class="jev-criteria"
       >
         <div class="jev-noul-row">
-          <span class="jev-noul-label">Yes</span>
+          <span class="jev-noul-label">true</span>
           <el-input
             size="small"
-            placeholder="what counts as yes"
+            placeholder="what counts as true"
             :model-value="noulTrue"
             :disabled="disabled"
             @update:model-value="setNoul('true', $event)"
           />
         </div>
         <div class="jev-noul-row">
-          <span class="jev-noul-label">No</span>
+          <span class="jev-noul-label">false</span>
           <el-input
             size="small"
-            placeholder="what counts as no"
+            placeholder="what counts as false"
             :model-value="noulFalse"
             :disabled="disabled"
             @update:model-value="setNoul('false', $event)"
@@ -178,7 +178,7 @@
       <span class="jev-label">Match</span>
 
       <template v-if="isNoul">
-        <span class="jev-hint">when P(yes) is</span>
+        <span class="jev-hint">when P(true) is</span>
         <el-select
           class="jev-op-select"
           size="small"
@@ -396,7 +396,7 @@ export default {
     },
     criteriaLabel(): string {
       if (this.isChoice) return 'Choices'
-      if (this.isNoul) return 'Criteria (yes / no)'
+      if (this.isNoul) return 'Criteria (true / false)'
       return 'Scale (low → high)'
     },
     choiceRows(): ChoiceRow[] {
@@ -442,7 +442,7 @@ export default {
     },
     matchHint(): string {
       if (this.isNoul) {
-        return 'Noul returns the probability that the answer is yes; the slider is that probability threshold.'
+        return 'Noul returns the probability that the answer is true; the slider is that probability threshold.'
       }
       if (this.isChoice) {
         return 'Matches when the model selects one of these choices with at least this confidence.'

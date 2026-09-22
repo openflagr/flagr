@@ -174,14 +174,14 @@ export function operatorSymbol(operator: string): string {
   }
 }
 
-/** Readable summary of the answer match, e.g. `P(yes) ≥ 0.70` or `in ["pro"]`. */
+/** Readable summary of the answer match, e.g. `P(true) ≥ 0.70` or `in ["pro"]`. */
 export function formatJevMatch(
   jev: JevQuestion | undefined,
   operator: string,
   value: string,
 ): string {
   const symbol = operatorSymbol(operator)
-  if (jev?.type === 'noul') return `P(yes) ${symbol} ${value}`
+  if (jev?.type === 'noul') return `P(true) ${symbol} ${value}`
   if (jev?.type === 'score') return `level ${symbol} ${value}`
   return `${symbol} ${value}`
 }

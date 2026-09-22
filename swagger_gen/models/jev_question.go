@@ -33,7 +33,7 @@ type JevQuestion struct {
 	Instructions any `json:"instructions,omitempty"`
 
 	// The System One question type.
-	//   - noul: yes/no; returns P(yes) in [0,1].
+	//   - noul: true/false; returns P(true) in [0,1].
 	//   - choice: pick one option from `criteria`; returns the selected option.
 	//   - score: rate against ordered `criteria` levels; returns a numeric score.
 	//

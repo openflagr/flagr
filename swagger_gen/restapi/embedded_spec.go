@@ -2421,7 +2421,7 @@ func init() {
           "type": "object"
         },
         "type": {
-          "description": "The System One question type.\n  - noul: yes/no; returns P(yes) in [0,1].\n  - choice: pick one option from ` + "`" + `criteria` + "`" + `; returns the selected option.\n  - score: rate against ordered ` + "`" + `criteria` + "`" + ` levels; returns a numeric score.\n",
+          "description": "The System One question type.\n  - noul: true/false; returns P(true) in [0,1].\n  - choice: pick one option from ` + "`" + `criteria` + "`" + `; returns the selected option.\n  - score: rate against ordered ` + "`" + `criteria` + "`" + ` levels; returns a numeric score.\n",
           "type": "string",
           "enum": [
             "noul",
@@ -5123,7 +5123,7 @@ func init() {
           "type": "object"
         },
         "type": {
-          "description": "The System One question type.\n  - noul: yes/no; returns P(yes) in [0,1].\n  - choice: pick one option from ` + "`" + `criteria` + "`" + `; returns the selected option.\n  - score: rate against ordered ` + "`" + `criteria` + "`" + ` levels; returns a numeric score.\n",
+          "description": "The System One question type.\n  - noul: true/false; returns P(true) in [0,1].\n  - choice: pick one option from ` + "`" + `criteria` + "`" + `; returns the selected option.\n  - score: rate against ordered ` + "`" + `criteria` + "`" + ` levels; returns a numeric score.\n",
           "type": "string",
           "enum": [
             "noul",

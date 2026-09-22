@@ -169,7 +169,7 @@ EvalFlagWithContext
 - `ConstraintAddRow.vue` / `ConstraintExistingRow.vue`: a "Jev question" source
   toggle on the property cell.
 - New `JevQuestionEditor.vue`: type selector, `instructions`, type-specific
-  criteria (noul yes/no descriptions; choice option rows; score ordered levels),
+  criteria (noul true/false descriptions; choice option rows; score ordered levels),
   confidence slider, and a per-field **Edit as JSON** escape hatch.
 - `ConstraintValueCell.vue`: when the constraint is a Jev question, show the
   match widget (probability / option select / level select) and the question

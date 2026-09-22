@@ -130,10 +130,10 @@ describe('jevQuestion', () => {
     const choice = { type: 'choice' as const, instructions: 'x', criteria: { pro: 'y' } }
     const score = { type: 'score' as const, instructions: 'x', criteria: ['a', 'b'] }
     expect(operatorSymbol('GTE')).toBe('≥')
-    expect(formatJevMatch(noul, 'GTE', '0.70')).toBe('P(yes) ≥ 0.70')
+    expect(formatJevMatch(noul, 'GTE', '0.70')).toBe('P(true) ≥ 0.70')
     expect(formatJevMatch(choice, 'IN', '["pro"]')).toBe('in ["pro"]')
     expect(formatJevMatch(score, 'GTE', '1')).toBe('level ≥ 1')
-    expect(formatJevSummary(noul, 'GTE', '0.70')).toBe('P(yes) ≥ 0.70')
+    expect(formatJevSummary(noul, 'GTE', '0.70')).toBe('P(true) ≥ 0.70')
     expect(formatJevSummary(choice, 'EQ', '"pro"')).toBe('= "pro" · confidence ≥ 0.50')
     expect(
       formatJevSummary({ ...choice, confidenceThreshold: 0.8 }, 'EQ', '"pro"'),
@@ -206,7 +206,7 @@ describe('reduceJevMatch', () => {
   })
 
   it('applies confidence per type', () => {
-    // noul: the slider is the P(yes) threshold, stored in value
+    // noul: the slider is the P(true) threshold, stored in value
     expect(reduceJevMatch(noulState(), { type: 'setConfidence', value: 0.85 }).value).toBe('0.85')
     // choice/scale: the slider is the model confidence
     expect(
