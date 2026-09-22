@@ -30,31 +30,6 @@
             class="jev-prefix"
           >@jev.</span>
         </template>
-        <template #suffix>
-          <el-tooltip
-            placement="top"
-            effect="light"
-            :enterable="true"
-            popper-class="jev-toggle-tooltip"
-          >
-            <template #content>
-              <div class="jev-toggle-tooltip__body">
-                Turn on to back this constraint with a Jev / System One question.
-                The model answer is used as <code>@jev.&lt;name&gt;</code> and
-                compared with the operator.
-              </div>
-            </template>
-            <el-switch
-              :model-value="jevEnabled"
-              size="small"
-              inline-prompt
-              active-text="JEV"
-              inactive-text="JEV"
-              data-testid="new-constraint-jev-toggle"
-              @update:model-value="toggleJev"
-            />
-          </el-tooltip>
-        </template>
       </el-input>
       <template v-if="jevEnabled">
         <span
@@ -80,6 +55,35 @@
         />
       </template>
       <div class="constraint-actions">
+        <el-tooltip
+          placement="top"
+          effect="light"
+          :enterable="true"
+          popper-class="jev-toggle-tooltip"
+        >
+          <template #content>
+            <div class="jev-toggle-tooltip__body">
+              Turn on to back this constraint with a Jev / System One question.
+              The model answer is used as <code>@jev.&lt;name&gt;</code> and
+              compared with the operator.
+            </div>
+          </template>
+          <div
+            class="constraint-jev"
+            :class="{ 'constraint-jev--on': jevEnabled }"
+          >
+            <el-switch
+              :model-value="jevEnabled"
+              size="small"
+              data-testid="new-constraint-jev-toggle"
+              @update:model-value="toggleJev"
+            />
+            <span
+              class="constraint-jev__label"
+              @click="toggleJev(!jevEnabled)"
+            >JEV</span>
+          </div>
+        </el-tooltip>
         <el-button
           size="small"
           type="primary"
@@ -230,6 +234,24 @@ export default {
 .jev-prefix {
   font-family: var(--font-mono);
   font-size: var(--font-size-body-sm);
+  color: var(--el-color-primary);
+}
+.constraint-jev {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3xs);
+  margin-right: var(--space-3xs);
+}
+.constraint-jev__label {
+  font-size: var(--font-size-micro);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  color: var(--el-text-color-placeholder);
+  cursor: pointer;
+  user-select: none;
+}
+.constraint-jev--on .constraint-jev__label {
   color: var(--el-color-primary);
 }
 .jev-summary {
