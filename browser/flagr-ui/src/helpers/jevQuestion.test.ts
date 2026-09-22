@@ -16,10 +16,12 @@ import {
   noulCriteriaText,
   numberFromValue,
   operatorSymbol,
+  reduceJevMatch,
   scoreLevelsFromCriteria,
   slugifyJevName,
   unquoteJevValue,
   withNoulCriteria,
+  type JevMatchState,
 } from './jevQuestion'
 
 describe('jevQuestion', () => {
@@ -136,5 +138,102 @@ describe('jevQuestion', () => {
     expect(
       formatJevSummary({ ...choice, confidenceThreshold: 0.8 }, 'EQ', '"pro"'),
     ).toBe('= "pro" · confidence ≥ 0.80')
+  })
+})
+
+const noulState = (): JevMatchState => ({
+  jev: { type: 'noul', instructions: 'x' },
+  operator: 'GTE',
+  value: '0.70',
+})
+const choiceState = (): JevMatchState => ({
+  jev: { type: 'choice', instructions: 'x', criteria: { pro: 'y', free: 'z' } },
+  operator: 'EQ',
+  value: '"pro"',
+})
+const scoreState = (): JevMatchState => ({
+  jev: { type: 'score', instructions: 'x', criteria: ['low', 'high'] },
+  operator: 'GTE',
+  value: '1',
+})
+
+describe('reduceJevMatch', () => {
+  it('resets the match to type-appropriate defaults on type switch', () => {
+    expect(reduceJevMatch(noulState(), { type: 'setType', questionType: 'choice' })).toMatchObject({
+      operator: 'EQ',
+      value: '',
+    })
+    expect(reduceJevMatch(noulState(), { type: 'setType', questionType: 'score' })).toMatchObject({
+      operator: 'GTE',
+      value: '0',
+    })
+    expect(reduceJevMatch(choiceState(), { type: 'setType', questionType: 'noul' })).toMatchObject({
+      operator: 'GTE',
+      value: '0.70',
+    })
+  })
+
+  it('keeps instructions across a type switch', () => {
+    expect(reduceJevMatch(noulState(), { type: 'setType', questionType: 'score' }).jev.instructions).toBe('x')
+  })
+
+  it('sets choice options and operator together (the clobbering bug)', () => {
+    const one = reduceJevMatch(choiceState(), { type: 'setChoiceOptions', options: ['pro'] })
+    expect(one.operator).toBe('EQ')
+    expect(one.value).toBe('"pro"')
+
+    const many = reduceJevMatch(choiceState(), { type: 'setChoiceOptions', options: ['pro', 'free'] })
+    expect(many.operator).toBe('IN')
+    expect(many.value).toBe('["pro","free"]')
+  })
+
+  it('toggles choice negation, keeping the options', () => {
+    const neg = reduceJevMatch(choiceState(), { type: 'setChoiceNegate', negate: true })
+    expect(neg.operator).toBe('NEQ')
+    expect(neg.value).toBe('"pro"')
+  })
+
+  it('sets the scale level and preserves negation', () => {
+    const atLeast = reduceJevMatch(scoreState(), { type: 'setScoreLevel', level: 0 })
+    expect(atLeast.operator).toBe('GTE')
+    expect(atLeast.value).toBe('0')
+
+    const below = reduceJevMatch({ ...scoreState(), operator: 'LT' }, { type: 'setScoreLevel', level: 1 })
+    expect(below.operator).toBe('LT')
+    expect(below.value).toBe('1')
+
+    expect(reduceJevMatch(scoreState(), { type: 'setScoreNegate', negate: true }).operator).toBe('LT')
+  })
+
+  it('applies confidence per type', () => {
+    // noul: the slider is the P(yes) threshold, stored in value
+    expect(reduceJevMatch(noulState(), { type: 'setConfidence', value: 0.85 }).value).toBe('0.85')
+    // choice/scale: the slider is the model confidence
+    expect(
+      reduceJevMatch(choiceState(), { type: 'setConfidence', value: 0.85 }).jev.confidenceThreshold,
+    ).toBe(0.85)
+    expect(
+      reduceJevMatch(scoreState(), { type: 'setConfidence', value: 0.3 }).jev.confidenceThreshold,
+    ).toBe(0.3)
+  })
+
+  it('sets the noul is / is not operator', () => {
+    expect(reduceJevMatch(noulState(), { type: 'setNoulOperator', operator: 'LT' }).operator).toBe('LT')
+  })
+
+  it('updates instructions and criteria', () => {
+    expect(reduceJevMatch(noulState(), { type: 'setInstructions', instructions: 'y' }).jev.instructions).toBe('y')
+    expect(
+      reduceJevMatch(noulState(), { type: 'setNoulCriteria', key: 'true', value: 'yes' }).jev.criteria,
+    ).toEqual({ true: 'yes' })
+    expect(
+      reduceJevMatch(choiceState(), {
+        type: 'setChoiceCriteria',
+        rows: [{ name: 'a', description: 'b' }],
+      }).jev.criteria,
+    ).toEqual({ a: 'b' })
+    expect(
+      reduceJevMatch(scoreState(), { type: 'setScoreLevels', levels: ['a', 'b', 'c'] }).jev.criteria,
+    ).toEqual(['a', 'b', 'c'])
   })
 })

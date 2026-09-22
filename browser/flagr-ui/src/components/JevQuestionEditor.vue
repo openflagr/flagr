@@ -3,7 +3,7 @@
     class="jev-editor"
     data-testid="jev-question-editor"
   >
-    <div class="jev-field">
+    <div class="jev-row">
       <span class="jev-label">Question type</span>
       <el-select
         :model-value="question.type"
@@ -22,19 +22,19 @@
           value="choice"
         />
         <el-option
-          label="Score (rate on a scale)"
+          label="Scale (rate)"
           value="score"
         />
       </el-select>
     </div>
 
-    <div class="jev-field jev-field--stack">
+    <div class="jev-stack">
       <span class="jev-label">Instructions</span>
       <el-input
         type="textarea"
-        :rows="2"
+        :autosize="{ minRows: 1, maxRows: 4 }"
         size="small"
-        placeholder="Question the model answers, e.g. Is `message` about billing?"
+        placeholder="e.g. Is `message` about billing?"
         :model-value="instructionsText"
         :disabled="disabled"
         data-testid="jev-instructions"
@@ -42,27 +42,33 @@
       />
     </div>
 
-    <div class="jev-field jev-field--stack">
+    <div class="jev-stack">
       <span class="jev-label">{{ criteriaLabel }}</span>
 
       <div
         v-if="isNoul"
         class="jev-criteria"
       >
-        <el-input
-          size="small"
-          placeholder="Optional: what &quot;yes&quot; means"
-          :model-value="noulTrue"
-          :disabled="disabled"
-          @update:model-value="setNoul('true', $event)"
-        />
-        <el-input
-          size="small"
-          placeholder="Optional: what &quot;no&quot; means"
-          :model-value="noulFalse"
-          :disabled="disabled"
-          @update:model-value="setNoul('false', $event)"
-        />
+        <div class="jev-noul-row">
+          <span class="jev-noul-label">Yes</span>
+          <el-input
+            size="small"
+            placeholder="what counts as yes"
+            :model-value="noulTrue"
+            :disabled="disabled"
+            @update:model-value="setNoul('true', $event)"
+          />
+        </div>
+        <div class="jev-noul-row">
+          <span class="jev-noul-label">No</span>
+          <el-input
+            size="small"
+            placeholder="what counts as no"
+            :model-value="noulFalse"
+            :disabled="disabled"
+            @update:model-value="setNoul('false', $event)"
+          />
+        </div>
       </div>
 
       <div
@@ -76,7 +82,8 @@
         >
           <el-input
             size="small"
-            placeholder="option"
+            class="jev-option-name"
+            placeholder="choice"
             :model-value="row.name"
             :disabled="disabled"
             @update:model-value="setChoiceName(i, $event)"
@@ -104,7 +111,7 @@
           data-testid="jev-add-option"
           @click="addChoice"
         >
-          Add option
+          Add choice
         </el-button>
       </div>
 
@@ -120,7 +127,7 @@
           <span class="jev-level-index">{{ i }}</span>
           <el-input
             size="small"
-            placeholder="level description (low → high)"
+            placeholder="level (low → high)"
             :model-value="level"
             :disabled="disabled"
             @update:model-value="setScoreLevelText(i, $event)"
@@ -155,95 +162,32 @@
           plain
           :disabled="disabled"
           data-testid="jev-add-level"
-          @click="addScoreLevel"
+          @click="addLevel"
         >
           Add level
         </el-button>
       </div>
     </div>
 
-    <div
-      v-if="!isNoul"
-      class="jev-field jev-field--stack"
-    >
+    <div class="jev-row jev-row--match">
       <span class="jev-label">Match</span>
-      <div class="jev-match">
-        <template v-if="isChoice">
-          <el-select
-            class="jev-choice-select"
-            size="small"
-            multiple
-            collapse-tags
-            placeholder="Pick option(s)"
-            :model-value="selectedOptions"
-            :disabled="disabled"
-            data-testid="jev-choice-options"
-            @update:model-value="setChoiceOptions"
-          >
-            <el-option
-              v-for="row in choiceRows"
-              :key="row.name"
-              :label="row.name"
-              :value="row.name"
-            />
-          </el-select>
-          <el-checkbox
-            :model-value="choiceNegate"
-            :disabled="disabled"
-            data-testid="jev-choice-negate"
-            @update:model-value="setChoiceNegate"
-          >
-            is not
-          </el-checkbox>
-        </template>
 
-        <template v-else>
-          <span class="jev-hint">{{ scoreNegate ? 'below level' : 'at least level' }}</span>
-          <el-select
-            class="jev-score-select"
-            size="small"
-            :model-value="selectedLevel"
-            :disabled="disabled"
-            data-testid="jev-score-level"
-            @update:model-value="setScoreLevel"
-          >
-            <el-option
-              v-for="(level, i) in scoreLevels"
-              :key="i"
-              :label="`${i}: ${level || '(unnamed)'}`"
-              :value="i"
-            />
-          </el-select>
-          <el-checkbox
-            :model-value="scoreNegate"
-            :disabled="disabled"
-            data-testid="jev-score-negate"
-            @update:model-value="setScoreNegate"
-          >
-            is not
-          </el-checkbox>
-        </template>
-      </div>
-    </div>
-
-    <div class="jev-field jev-field--stack">
-      <span class="jev-label">{{ confidenceLabel }} ≥ {{ confidence.toFixed(2) }}</span>
-      <div class="jev-match">
+      <template v-if="isNoul">
+        <span class="jev-hint">when P(yes) is</span>
         <el-select
-          v-if="isNoul"
           class="jev-op-select"
           size="small"
-          :model-value="noulNegate ? 'LT' : 'GTE'"
+          :model-value="noulOperator"
           :disabled="disabled"
           data-testid="jev-noul-operator"
           @update:model-value="setNoulOperator"
         >
           <el-option
-            label="is"
+            label="at least"
             value="GTE"
           />
           <el-option
-            label="is not"
+            label="less than"
             value="LT"
           />
         </el-select>
@@ -257,9 +201,110 @@
           data-testid="jev-confidence-slider"
           @update:model-value="setConfidence"
         />
-      </div>
-      <span class="jev-hint">{{ confidenceHint }}</span>
+        <span class="jev-value">{{ confidence.toFixed(2) }}</span>
+      </template>
+
+      <template v-else-if="isChoice">
+        <el-select
+          class="jev-op-select"
+          size="small"
+          :model-value="choiceDirection"
+          :disabled="disabled"
+          data-testid="jev-choice-direction"
+          @update:model-value="setChoiceDirection"
+        >
+          <el-option
+            label="one of"
+            value="include"
+          />
+          <el-option
+            label="not one of"
+            value="exclude"
+          />
+        </el-select>
+        <el-select
+          class="jev-choice-select"
+          size="small"
+          multiple
+          collapse-tags
+          collapse-tags-tooltip
+          placeholder="Pick choice(s)"
+          :model-value="selectedOptions"
+          :disabled="disabled"
+          data-testid="jev-choice-options"
+          @update:model-value="setChoiceOptions"
+        >
+          <el-option
+            v-for="row in choiceRows"
+            :key="row.name"
+            :label="row.name"
+            :value="row.name"
+          />
+        </el-select>
+        <span class="jev-label jev-label--inline">confidence</span>
+        <el-slider
+          class="jev-slider"
+          :model-value="confidence"
+          :min="0"
+          :max="1"
+          :step="0.05"
+          :disabled="disabled"
+          data-testid="jev-confidence-slider"
+          @update:model-value="setConfidence"
+        />
+        <span class="jev-value">{{ confidence.toFixed(2) }}</span>
+      </template>
+
+      <template v-else>
+        <span class="jev-hint">when the score is</span>
+        <el-select
+          class="jev-op-select"
+          size="small"
+          :model-value="scoreDirection"
+          :disabled="disabled"
+          data-testid="jev-score-direction"
+          @update:model-value="setScoreDirection"
+        >
+          <el-option
+            label="at least"
+            value="atleast"
+          />
+          <el-option
+            label="below"
+            value="below"
+          />
+        </el-select>
+        <el-select
+          class="jev-score-select"
+          size="small"
+          :model-value="selectedLevel"
+          :disabled="disabled"
+          data-testid="jev-score-level"
+          @update:model-value="setScoreLevel"
+        >
+          <el-option
+            v-for="(level, i) in scoreLevels"
+            :key="i"
+            :label="`level ${i} · ${level || 'level'}`"
+            :value="i"
+          />
+        </el-select>
+        <span class="jev-label jev-label--inline">confidence</span>
+        <el-slider
+          class="jev-slider"
+          :model-value="confidence"
+          :min="0"
+          :max="1"
+          :step="0.05"
+          :disabled="disabled"
+          data-testid="jev-confidence-slider"
+          @update:model-value="setConfidence"
+        />
+        <span class="jev-value">{{ confidence.toFixed(2) }}</span>
+      </template>
     </div>
+
+    <span class="jev-hint">{{ matchHint }}</span>
 
     <el-collapse class="jev-advanced">
       <el-collapse-item
@@ -268,7 +313,7 @@
       >
         <el-input
           type="textarea"
-          :rows="6"
+          :rows="5"
           :model-value="jsonDraft"
           :disabled="disabled"
           data-testid="jev-json"
@@ -298,19 +343,17 @@
 import type { PropType } from 'vue'
 import type { JevQuestion, JevQuestionType } from '@/api/types'
 import {
-  choiceCriteriaFromRows,
-  choiceOperatorFor,
   choiceOptionsFromValue,
   choiceRowsFromCriteria,
-  choiceValueFromOptions,
-  defaultJevQuestion,
   isNegatedOperator,
   nextChoiceName,
   noulCriteriaText,
   numberFromValue,
+  reduceJevMatch,
   scoreLevelsFromCriteria,
-  withNoulCriteria,
   type ChoiceRow,
+  type JevAction,
+  type JevMatchState,
 } from '@/helpers/jevQuestion'
 
 const DEFAULT_NOUL_THRESHOLD = 0.7
@@ -324,7 +367,9 @@ export default {
     value: { type: String, required: true },
     disabled: { type: Boolean, default: false },
   },
-  emits: ['update:modelValue', 'update:operator', 'update:value'],
+  // One atomic event: emitting operator and value separately clobbers one
+  // another because the parent's draft prop has not re-rendered yet.
+  emits: ['update:all'],
   data() {
     return {
       jsonDraft: '',
@@ -345,9 +390,9 @@ export default {
       return typeof this.question.instructions === 'string' ? this.question.instructions : ''
     },
     criteriaLabel(): string {
-      if (this.isChoice) return 'Options (name + description)'
-      if (this.isNoul) return 'Boundary (optional)'
-      return 'Levels (low → high)'
+      if (this.isChoice) return 'Choices'
+      if (this.isNoul) return 'Criteria (yes / no)'
+      return 'Scale (low → high)'
     },
     choiceRows(): ChoiceRow[] {
       return choiceRowsFromCriteria(this.question.criteria)
@@ -376,19 +421,28 @@ export default {
     noulNegate(): boolean {
       return this.operator === 'LT' || this.operator === 'LTE'
     },
+    noulOperator(): string {
+      return this.noulNegate ? 'LT' : 'GTE'
+    },
+    choiceDirection(): string {
+      return this.choiceNegate ? 'exclude' : 'include'
+    },
+    scoreDirection(): string {
+      return this.scoreNegate ? 'below' : 'atleast'
+    },
     /** noul has no model confidence; its probability threshold is the gate. */
     confidence(): number {
       if (this.isNoul) return numberFromValue(this.value) ?? DEFAULT_NOUL_THRESHOLD
       return this.question.confidenceThreshold ?? DEFAULT_CONFIDENCE
     },
-    confidenceLabel(): string {
-      return this.isNoul ? 'Confidence (P(yes))' : 'Answer confidence'
-    },
-    confidenceHint(): string {
+    matchHint(): string {
       if (this.isNoul) {
-        return 'Minimum probability that the answer is yes. Noul has no separate model confidence.'
+        return 'Noul returns the probability that the answer is yes; the slider is that probability threshold.'
       }
-      return 'Below this confidence the constraint evaluates false and the segment falls through.'
+      if (this.isChoice) {
+        return 'Matches when the model selects one of these choices with at least this confidence.'
+      }
+      return 'Matches when the model score is at least this level with at least this confidence.'
     },
   },
   watch: {
@@ -402,32 +456,23 @@ export default {
     },
   },
   methods: {
-    emitQuestion(patch: Partial<JevQuestion>): void {
-      this.$emit('update:modelValue', { ...this.question, ...patch })
+    matchState(): JevMatchState {
+      return { jev: this.question, operator: this.operator, value: this.value }
     },
-    setType(type: JevQuestionType): void {
-      const question = { ...defaultJevQuestion(type), instructions: this.question.instructions }
-      this.$emit('update:modelValue', question)
-      // Reset the match to a type-appropriate default.
-      if (type === 'choice') {
-        this.$emit('update:operator', 'EQ')
-        this.$emit('update:value', '')
-      } else if (type === 'score') {
-        this.$emit('update:operator', 'GTE')
-        this.$emit('update:value', '0')
-      } else {
-        this.$emit('update:operator', 'GTE')
-        this.$emit('update:value', DEFAULT_NOUL_THRESHOLD.toFixed(2))
-      }
+    dispatch(action: JevAction): void {
+      this.$emit('update:all', reduceJevMatch(this.matchState(), action))
     },
-    setInstructions(value: string): void {
-      this.emitQuestion({ instructions: value })
+    setType(questionType: JevQuestionType): void {
+      this.dispatch({ type: 'setType', questionType })
+    },
+    setInstructions(instructions: string): void {
+      this.dispatch({ type: 'setInstructions', instructions })
     },
     setNoul(key: 'true' | 'false', value: string): void {
-      this.emitQuestion({ criteria: withNoulCriteria(this.question.criteria, key, value) })
+      this.dispatch({ type: 'setNoulCriteria', key, value })
     },
     setChoiceCriteria(rows: ChoiceRow[]): void {
-      this.emitQuestion({ criteria: choiceCriteriaFromRows(rows) })
+      this.dispatch({ type: 'setChoiceCriteria', rows })
     },
     setChoiceName(index: number, name: string): void {
       const rows = [...this.choiceRows]
@@ -448,14 +493,14 @@ export default {
       this.setChoiceCriteria(this.choiceRows.filter((_, i) => i !== index))
     },
     setScoreLevels(levels: string[]): void {
-      this.emitQuestion({ criteria: levels })
+      this.dispatch({ type: 'setScoreLevels', levels })
     },
     setScoreLevelText(index: number, value: string): void {
       const levels = [...this.scoreLevels]
       levels[index] = value
       this.setScoreLevels(levels)
     },
-    addScoreLevel(): void {
+    addLevel(): void {
       this.setScoreLevels([...this.scoreLevels, ''])
     },
     removeScoreLevel(index: number): void {
@@ -470,28 +515,28 @@ export default {
       this.setScoreLevels(levels)
     },
     setChoiceOptions(options: string[]): void {
-      this.$emit('update:value', choiceValueFromOptions(options))
-      this.$emit('update:operator', choiceOperatorFor(options, this.choiceNegate))
+      this.dispatch({ type: 'setChoiceOptions', options })
     },
     setChoiceNegate(negate: boolean): void {
-      this.$emit('update:operator', choiceOperatorFor(this.selectedOptions, negate))
+      this.dispatch({ type: 'setChoiceNegate', negate })
+    },
+    setChoiceDirection(direction: string): void {
+      this.setChoiceNegate(direction === 'exclude')
     },
     setScoreLevel(level: number): void {
-      this.$emit('update:value', String(level))
-      this.$emit('update:operator', this.scoreNegate ? 'LT' : 'GTE')
+      this.dispatch({ type: 'setScoreLevel', level })
     },
     setScoreNegate(negate: boolean): void {
-      this.$emit('update:operator', negate ? 'LT' : 'GTE')
+      this.dispatch({ type: 'setScoreNegate', negate })
+    },
+    setScoreDirection(direction: string): void {
+      this.setScoreNegate(direction === 'below')
     },
     setNoulOperator(operator: string): void {
-      this.$emit('update:operator', operator)
+      this.dispatch({ type: 'setNoulOperator', operator })
     },
     setConfidence(value: number): void {
-      if (this.isNoul) {
-        this.$emit('update:value', value.toFixed(2))
-        return
-      }
-      this.emitQuestion({ confidenceThreshold: value })
+      this.dispatch({ type: 'setConfidence', value })
     },
     applyJson(): void {
       try {
@@ -500,7 +545,7 @@ export default {
           throw new Error('question must be an object with a type')
         }
         this.jsonError = ''
-        this.$emit('update:modelValue', parsed)
+        this.dispatch({ type: 'setJev', jev: parsed })
       } catch (err) {
         this.jsonError = err instanceof Error ? err.message : 'invalid JSON'
       }
@@ -514,18 +559,20 @@ export default {
   display: flex;
   flex-direction: column;
   gap: var(--space-3xs);
-  padding: var(--space-3xs) 0;
   width: 100%;
 }
-.jev-field {
+.jev-row {
   display: flex;
   align-items: center;
   gap: var(--space-2xs);
   flex-wrap: wrap;
 }
-.jev-field--stack {
+.jev-row--match {
+  align-items: center;
+}
+.jev-stack {
+  display: flex;
   flex-direction: column;
-  align-items: stretch;
   gap: var(--space-3xs);
 }
 .jev-label {
@@ -534,9 +581,11 @@ export default {
   color: var(--el-text-color-secondary);
   white-space: nowrap;
 }
+.jev-label--inline {
+  margin-left: var(--space-2xs);
+}
 .jev-type {
-  width: 190px;
-  flex: 0 0 auto;
+  width: 170px;
 }
 .jev-criteria {
   display: flex;
@@ -548,34 +597,49 @@ export default {
   align-items: center;
   gap: var(--space-3xs);
 }
+.jev-option-name {
+  max-width: 180px;
+}
 .jev-level-index {
-  width: 1.5em;
+  width: 1.4em;
   text-align: right;
   color: var(--el-text-color-secondary);
   font-size: var(--font-size-body-sm);
 }
-.jev-match {
+.jev-noul-row {
   display: flex;
   align-items: center;
-  gap: var(--space-2xs);
-  flex-wrap: wrap;
+  gap: var(--space-3xs);
+}
+.jev-noul-label {
+  width: 2.2em;
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--el-text-color-secondary);
 }
 .jev-choice-select {
   flex: 1;
-  min-width: 180px;
+  min-width: 160px;
 }
 .jev-score-select,
 .jev-op-select {
-  width: 180px;
+  width: 170px;
   flex: 0 0 auto;
 }
 .jev-slider {
   flex: 1;
-  min-width: 140px;
+  min-width: 120px;
+}
+.jev-value {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-body-sm);
+  color: var(--el-text-color-regular);
+  min-width: 2.6em;
+  text-align: right;
 }
 .jev-hint {
-  font-size: var(--font-size-body-sm);
-  color: var(--el-text-color-secondary);
+  font-size: var(--font-size-caption);
+  color: var(--el-text-color-placeholder);
 }
 .jev-json-actions {
   display: flex;

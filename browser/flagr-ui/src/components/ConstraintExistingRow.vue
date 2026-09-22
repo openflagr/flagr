@@ -102,9 +102,7 @@
         :operator="constraint.operator"
         :value="constraint.value"
         :disabled="readonly"
-        @update:model-value="setJev"
-        @update:operator="onField('operator', $event)"
-        @update:value="onField('value', $event)"
+        @update:all="setAll"
       />
     </div>
   </div>
@@ -193,9 +191,9 @@ export default {
         this.$emit('update-jev', {
           jev: this.constraint.jev ?? defaultJevQuestion('noul'),
           property: jevPropertyFor(this.jevName || 'question'),
+          operator: 'GTE',
+          value: '0.70',
         })
-        this.$emit('update-field', { field: 'operator', value: 'GTE' })
-        this.$emit('update-field', { field: 'value', value: '0.70' })
       } else {
         this.$emit('update-jev', { jev: undefined })
       }
@@ -203,8 +201,8 @@ export default {
     setJevName(name: string) {
       this.$emit('update-jev', { property: jevPropertyFor(name) })
     },
-    setJev(jev: JevQuestion) {
-      this.$emit('update-jev', { jev })
+    setAll(payload: { jev: JevQuestion; operator: string; value: string }) {
+      this.$emit('update-jev', payload)
     },
   },
 }

@@ -426,10 +426,18 @@ export function handleUpdateConstraintField(
 /** Apply a Jev question edit (from the inline editor) to the constraint. */
 export function handleUpdateConstraintJev(
   _vm: FlagPageVm,
-  payload: { constraint: Constraint; jev?: JevQuestion; property?: string },
+  payload: {
+    constraint: Constraint
+    jev?: JevQuestion
+    property?: string
+    operator?: string
+    value?: string
+  },
 ): void {
   if ('jev' in payload) payload.constraint.jev = payload.jev
   if (payload.property != null) payload.constraint.property = payload.property
+  if (payload.operator != null) payload.constraint.operator = payload.operator
+  if (payload.value != null) payload.constraint.value = payload.value
 }
 
 export function handleEditDistribution(vm: FlagPageVm, segment: Segment): void {

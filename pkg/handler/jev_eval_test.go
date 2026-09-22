@@ -279,3 +279,65 @@ func TestInjectJevContextKeepsBuiltInKeysAndInjects(t *testing.T) {
 	require.True(t, ok)
 	assert.Equal(t, 0.9, injected[entity.JevContextKey].(map[string]any)["intent"])
 }
+
+// The UI emits these exact value/operator shapes; keep the backend contract covered.
+
+func TestJevConstraintChoiceMultiOptionIN(t *testing.T) {
+	fake := &fakeJevClient{answers: map[string]JevAnswer{
+		"plan_tier": {Type: entity.JevTypeChoice, Choice: "enterprise", Confidence: jevF64(0.9)},
+	}}
+	setupJevTest(t, fake)
+
+	c := jevConstraint(t, "@jev.plan_tier", models.ConstraintOperatorIN, `["pro","enterprise"]`,
+		&entity.JevQuestion{
+			Type:         entity.JevTypeChoice,
+			Instructions: "Which plan?",
+			Criteria:     map[string]any{"free": "x", "pro": "y", "enterprise": "z"},
+		})
+	f := jevTestFlag(t, c)
+
+	defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCacheWithFlags([]entity.Flag{f})).Reset()
+
+	r := EvalFlag(models.EvalContext{FlagID: 100, EntityID: "e1", EntityContext: map[string]any{"plan": "enterprise"}})
+	assert.NotZero(t, r.VariantID)
+}
+
+func TestJevConstraintChoiceNegatedNOTIN(t *testing.T) {
+	fake := &fakeJevClient{answers: map[string]JevAnswer{
+		"plan_tier": {Type: entity.JevTypeChoice, Choice: "enterprise", Confidence: jevF64(0.9)},
+	}}
+	setupJevTest(t, fake)
+
+	c := jevConstraint(t, "@jev.plan_tier", models.ConstraintOperatorNOTIN, `["free"]`,
+		&entity.JevQuestion{
+			Type:         entity.JevTypeChoice,
+			Instructions: "Which plan?",
+			Criteria:     map[string]any{"free": "x", "enterprise": "z"},
+		})
+	f := jevTestFlag(t, c)
+
+	defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCacheWithFlags([]entity.Flag{f})).Reset()
+
+	r := EvalFlag(models.EvalContext{FlagID: 100, EntityID: "e1", EntityContext: map[string]any{"plan": "enterprise"}})
+	assert.NotZero(t, r.VariantID)
+}
+
+func TestJevConstraintScaleNegatedLT(t *testing.T) {
+	fake := &fakeJevClient{answers: map[string]JevAnswer{
+		"risk": {Type: entity.JevTypeScore, Score: jevF64(0.5), Confidence: jevF64(0.9)},
+	}}
+	setupJevTest(t, fake)
+
+	c := jevConstraint(t, "@jev.risk", models.ConstraintOperatorLT, "1",
+		&entity.JevQuestion{
+			Type:         entity.JevTypeScore,
+			Instructions: "How risky?",
+			Criteria:     []any{"low", "high"},
+		})
+	f := jevTestFlag(t, c)
+
+	defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCacheWithFlags([]entity.Flag{f})).Reset()
+
+	r := EvalFlag(models.EvalContext{FlagID: 100, EntityID: "e1", EntityContext: map[string]any{"amount": 1}})
+	assert.NotZero(t, r.VariantID)
+}

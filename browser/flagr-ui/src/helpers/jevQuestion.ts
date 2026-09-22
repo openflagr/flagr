@@ -211,3 +211,85 @@ export function numberFromValue(value: string): number | null {
 export function isNegatedOperator(operator: string): boolean {
   return operator === 'NEQ' || operator === 'NOTIN' || operator === 'LT' || operator === 'LTE'
 }
+
+/** Full editable state of a Jev constraint: the question plus its match. */
+export interface JevMatchState {
+  jev: JevQuestion
+  operator: string
+  value: string
+}
+
+/** Actions the Jev editor dispatches. Kept pure so every question type is testable. */
+export type JevAction =
+  | { type: 'setType'; questionType: JevQuestionType }
+  | { type: 'setInstructions'; instructions: string }
+  | { type: 'setNoulCriteria'; key: 'true' | 'false'; value: string }
+  | { type: 'setChoiceCriteria'; rows: ChoiceRow[] }
+  | { type: 'setScoreLevels'; levels: string[] }
+  | { type: 'setChoiceOptions'; options: string[] }
+  | { type: 'setChoiceNegate'; negate: boolean }
+  | { type: 'setScoreLevel'; level: number }
+  | { type: 'setScoreNegate'; negate: boolean }
+  | { type: 'setNoulOperator'; operator: string }
+  | { type: 'setConfidence'; value: number }
+  | { type: 'setJev'; jev: JevQuestion }
+
+const DEFAULT_NOUL_THRESHOLD = 0.7
+
+/**
+ * Pure state transition for the Jev editor. Emitting operator and value in one
+ * step is what keeps choice/scale edits from clobbering each other.
+ */
+export function reduceJevMatch(state: JevMatchState, action: JevAction): JevMatchState {
+  switch (action.type) {
+    case 'setType': {
+      const jev = {
+        ...defaultJevQuestion(action.questionType),
+        instructions: state.jev.instructions,
+      }
+      if (action.questionType === 'choice') return { jev, operator: 'EQ', value: '' }
+      if (action.questionType === 'score') return { jev, operator: 'GTE', value: '0' }
+      return { jev, operator: 'GTE', value: DEFAULT_NOUL_THRESHOLD.toFixed(2) }
+    }
+    case 'setInstructions':
+      return { ...state, jev: { ...state.jev, instructions: action.instructions } }
+    case 'setNoulCriteria':
+      return {
+        ...state,
+        jev: {
+          ...state.jev,
+          criteria: withNoulCriteria(state.jev.criteria, action.key, action.value),
+        },
+      }
+    case 'setChoiceCriteria':
+      return { ...state, jev: { ...state.jev, criteria: choiceCriteriaFromRows(action.rows) } }
+    case 'setScoreLevels':
+      return { ...state, jev: { ...state.jev, criteria: action.levels } }
+    case 'setChoiceOptions':
+      return {
+        ...state,
+        value: choiceValueFromOptions(action.options),
+        operator: choiceOperatorFor(action.options, isNegatedOperator(state.operator)),
+      }
+    case 'setChoiceNegate':
+      return {
+        ...state,
+        operator: choiceOperatorFor(choiceOptionsFromValue(state.value), action.negate),
+      }
+    case 'setScoreLevel':
+      return {
+        ...state,
+        value: String(action.level),
+        operator: isNegatedOperator(state.operator) ? 'LT' : 'GTE',
+      }
+    case 'setScoreNegate':
+      return { ...state, operator: action.negate ? 'LT' : 'GTE' }
+    case 'setNoulOperator':
+      return { ...state, operator: action.operator }
+    case 'setConfidence':
+      if (state.jev.type === 'noul') return { ...state, value: action.value.toFixed(2) }
+      return { ...state, jev: { ...state.jev, confidenceThreshold: action.value } }
+    case 'setJev':
+      return { ...state, jev: action.jev }
+  }
+}

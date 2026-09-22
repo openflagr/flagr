@@ -98,9 +98,7 @@
         :model-value="draft.jev!"
         :operator="draft.operator"
         :value="draft.value"
-        @update:model-value="setJev"
-        @update:operator="patch('operator', $event)"
-        @update:value="patch('value', $event)"
+        @update:all="setAll"
       />
     </div>
   </div>
@@ -198,8 +196,8 @@ export default {
     setJevName(name: string) {
       this.$emit('update:draft', { ...this.draft, property: jevPropertyFor(name) })
     },
-    setJev(jev: JevQuestion) {
-      this.$emit('update:draft', { ...this.draft, jev })
+    setAll(payload: Partial<NewConstraintDraft>) {
+      this.$emit('update:draft', { ...this.draft, ...payload })
     },
   },
 }

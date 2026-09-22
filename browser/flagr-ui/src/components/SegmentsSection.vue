@@ -335,10 +335,12 @@ export default {
     onConstraintJevChange(
       segment: Segment,
       constraint: Constraint,
-      payload: { jev?: JevQuestion; property?: string },
+      payload: { jev?: JevQuestion; property?: string; operator?: string; value?: string },
     ): void {
       if ('jev' in payload) constraint.jev = payload.jev
       if (payload.property != null) constraint.property = payload.property
+      if (payload.operator != null) constraint.operator = payload.operator
+      if (payload.value != null) constraint.value = payload.value
       this.markConstraintDirty(segment, constraint)
       this.$emit('update-constraint-jev', { segment, constraint, ...payload })
     },
