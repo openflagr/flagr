@@ -39,7 +39,9 @@ Full list (including `FLAGR_JEV_CONFIDENCE_THRESHOLD`): [Environment variables](
 5. Save.
 
 Operators are validated against the question type: `noul` / `scale` accept
-`≥` / `>` / `≤` / `<`, and `choice` accepts `=` / `≠` / `in` / `not in`.
+`≥` / `>` / `≤` / `<`, and `choice` accepts `=` / `≠` / `in` / `not in`. Each
+`@jev.<name>` may be defined by only one constraint per flag — a second
+constraint reusing the name is rejected.
 
 The **state** sent to the model is the full `entityContext` plus `entityID` and
 `entityType`. Enable built-in context injection

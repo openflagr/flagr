@@ -95,6 +95,7 @@ func validateFlag(r *ValidationResult, f entity.Flag, idx int) {
 		validateDistributions(r, segPrefix, seg, variantKeySet)
 		validateConstraints(r, segPrefix, seg)
 	}
+	validateFlagJevQuestionUniqueness(r, prefix, f.Segments)
 }
 
 func validateDistributions(r *ValidationResult, prefix string, seg entity.Segment, variantKeySet map[string]bool) {
@@ -128,15 +129,22 @@ func validateDistributions(r *ValidationResult, prefix string, seg entity.Segmen
 
 func validateConstraints(r *ValidationResult, prefix string, seg entity.Segment) {
 	for _, c := range seg.Constraints {
-		entityConstraint := entity.Constraint{
-			Property: c.Property,
-			Operator: c.Operator,
-			Value:    c.Value,
-		}
-		if err := entityConstraint.Validate(); err != nil {
+		if err := c.Validate(); err != nil {
 			r.Errors = append(r.Errors, fmt.Sprintf("%s: constraint %q %s %q is invalid: %v",
 				prefix, c.Property, c.Operator, c.Value, err))
 		}
+	}
+}
+
+// validateFlagJevQuestionUniqueness flags `@jev.<name>` names used by more than
+// one constraint in a flag.
+func validateFlagJevQuestionUniqueness(r *ValidationResult, prefix string, segments []entity.Segment) {
+	all := make([]entity.Constraint, 0)
+	for _, seg := range segments {
+		all = append(all, seg.Constraints...)
+	}
+	for _, name := range entity.DuplicateJevQuestionProperties(all) {
+		r.Errors = append(r.Errors, fmt.Sprintf("%s: jev question %q is used by more than one constraint", prefix, name))
 	}
 }
 

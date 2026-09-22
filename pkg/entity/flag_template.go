@@ -60,11 +60,13 @@ func SourceFlagTemplate(source *Flag) Flag {
 			RolloutPercent: ss.RolloutPercent,
 		}
 		for _, sc := range ss.Constraints {
-			seg.Constraints = append(seg.Constraints, Constraint{
+			nc := Constraint{
 				Property: sc.Property,
 				Operator: sc.Operator,
 				Value:    sc.Value,
-			})
+			}
+			nc.CopyJevFrom(&sc)
+			seg.Constraints = append(seg.Constraints, nc)
 		}
 		for _, sd := range ss.Distributions {
 			seg.Distributions = append(seg.Distributions, Distribution{
@@ -118,6 +120,7 @@ func ApplyFlagTemplate(tx *gorm.DB, flagID uint, template Flag) error {
 				Operator:  sc.Operator,
 				Value:     sc.Value,
 			}
+			nc.CopyJevFrom(&sc)
 			if err := nc.Validate(); err != nil {
 				return err
 			}

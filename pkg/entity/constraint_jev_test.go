@@ -195,4 +195,20 @@ func TestFlagCollectJevQuestions(t *testing.T) {
 	assert.Equal(t, "first wins", spec.Instructions)
 }
 
+func TestDuplicateJevQuestionProperties(t *testing.T) {
+	t.Parallel()
+	jev := func(property string) Constraint {
+		c := Constraint{Property: property, Operator: "GTE", Value: "0.5"}
+		require.NoError(t, c.SetJevQuestion(&JevQuestion{Type: JevTypeScore, Instructions: "x", Criteria: []any{"a", "b"}}))
+		return c
+	}
+	plain := Constraint{Property: "dl_state", Operator: "EQ", Value: `"CA"`}
+
+	assert.Empty(t, DuplicateJevQuestionProperties([]Constraint{plain}))
+	assert.Empty(t, DuplicateJevQuestionProperties([]Constraint{jev("@jev.a"), jev("@jev.b"), plain}))
+	assert.Equal(t, []string{"@jev.risk", "@jev.risk2"}, DuplicateJevQuestionProperties([]Constraint{
+		jev("@jev.risk"), jev("@jev.risk2"), jev("@jev.risk"), jev("@jev.risk2"),
+	}))
+}
+
 func f64(v float64) *float64 { return &v }

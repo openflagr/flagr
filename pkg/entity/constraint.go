@@ -3,6 +3,7 @@ package entity
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/openflagr/flagr/swagger_gen/models"
@@ -111,6 +112,15 @@ func (c *Constraint) SetJevQuestion(q *JevQuestion) error {
 	return nil
 }
 
+// CopyJevFrom copies the Jev question fields from src, so a constraint can be
+// cloned (flag template / duplicate) without silently dropping its question.
+func (c *Constraint) CopyJevFrom(src *Constraint) {
+	c.JevType = src.JevType
+	c.JevInstructions = src.JevInstructions
+	c.JevCriteria = src.JevCriteria
+	c.JevConfidenceThreshold = src.JevConfidenceThreshold
+}
+
 func marshalJevEntry(v any) (string, error) {
 	if v == nil {
 		return "", nil
@@ -120,6 +130,28 @@ func marshalJevEntry(v any) (string, error) {
 		return "", err
 	}
 	return string(b), nil
+}
+
+// DuplicateJevQuestionProperties returns the `@jev.<name>` properties used by
+// more than one constraint, sorted. A flag may define each Jev question only
+// once, so the single batched System One call has one unambiguous definition.
+func DuplicateJevQuestionProperties(constraints []Constraint) []string {
+	counts := make(map[string]int)
+	for i := range constraints {
+		c := &constraints[i]
+		if !c.IsJev() {
+			continue
+		}
+		counts[c.Property]++
+	}
+	names := make([]string, 0)
+	for name, count := range counts {
+		if count > 1 {
+			names = append(names, name)
+		}
+	}
+	sort.Strings(names)
+	return names
 }
 
 // ConstraintArray is an array of Constraint

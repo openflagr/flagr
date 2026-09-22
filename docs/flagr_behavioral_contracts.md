@@ -50,6 +50,8 @@ A constraint can be backed by a [Jev / System One](flagr_jev.md) question. Contr
 - **One batched call per flag evaluation.** Every `@jev.<name>` question in a
   flag is sent in a single `POST /v1/systemone`; extra questions do not add
   round trips.
+- **One definition per name.** A `@jev.<name>` may be used by only one constraint
+  per flag; create/update and JSON validation reject duplicates.
 - **Fail-closed.** If `FLAGR_JEV_ENABLED` is off, the endpoint errors, or the
   request times out, every Jev constraint evaluates **false** and the segment
   falls through. There is no fail-open mode.

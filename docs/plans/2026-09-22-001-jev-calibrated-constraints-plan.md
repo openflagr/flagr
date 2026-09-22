@@ -139,8 +139,9 @@ JSON object with ≥1 option, score criteria to be a JSON array of 2–10 levels
 and `confidenceThreshold` to be within `[0, 1]`.
 
 `Flag.PrepareEvaluation()` collects all Jev constraints into
-`FlagEvaluation.JevQuestions` (deduped by name, first segment-rank wins) so the
-hot path never parses JSON.
+`FlagEvaluation.JevQuestions` so the hot path never parses JSON. A `@jev.<name>`
+may be defined by only one constraint per flag (enforced on create/update and on
+JSON load); the collector keeps first-segment-rank as defense for legacy data.
 
 ## Runtime Flow (`pkg/handler/jev_*.go`, `eval.go`)
 
@@ -286,7 +287,9 @@ comparison, and the question in the UI editor.
 - **Self-hosted parity**: `oido-systemone` is an independent reimplementation;
   the client tolerates missing `usage`/extra fields and only relies on the
   documented answer fields.
-- **Question-name collisions** across segments in one flag: first segment-rank
-  wins; conflicting definitions are a known follow-up validation.
+- **Question names are unique per flag.** Create/update rejects a second
+  constraint using an existing `@jev.<name>` (400), and the JSON-source validator
+  reports it as an error. The collector still resolves collisions
+  first-rank-first as defense for pre-existing data.
 - **Model jaggedness** (Jev docs): keep arithmetic, dates, and multi-factor
   reasoning in Flagr constraints; ask atomic questions.

@@ -713,3 +713,59 @@ func TestValidateFlags_MultipleErrors(t *testing.T) {
 	assert.False(t, r.OK())
 	assert.True(t, len(r.Errors) >= 1, "should have at least one error: %v", r.Errors)
 }
+
+func TestValidateFlags_JevConstraintIsValidated(t *testing.T) {
+	t.Parallel()
+	flags := []entity.Flag{
+		{
+			Key:      "jev-flag",
+			Variants: []entity.Variant{{Key: "on"}},
+			Segments: []entity.Segment{
+				{
+					RolloutPercent: 100,
+					Distributions:  []entity.Distribution{{VariantKey: "on", Percent: 100}},
+					Constraints: []entity.Constraint{
+						{
+							Property: "@jev.risk", Operator: "GTE", Value: "0.5",
+							JevType:         "classify", // not a real question type
+							JevInstructions: `"How risky?"`,
+						},
+					},
+				},
+			},
+		},
+	}
+	r := ValidateFlags(flags)
+	assert.False(t, r.OK())
+	assert.Contains(t, strings.Join(r.Errors, "\n"), "invalid jev.type")
+}
+
+func TestValidateFlags_JevDuplicateName(t *testing.T) {
+	t.Parallel()
+	seg := func(constraint entity.Constraint) entity.Segment {
+		return entity.Segment{
+			RolloutPercent: 100,
+			Distributions:  []entity.Distribution{{VariantKey: "on", Percent: 100}},
+			Constraints:    []entity.Constraint{constraint},
+		}
+	}
+	flags := []entity.Flag{
+		{
+			Key:      "jev-flag",
+			Variants: []entity.Variant{{Key: "on"}},
+			Segments: []entity.Segment{
+				seg(entity.Constraint{
+					Property: "@jev.risk", Operator: "GTE", Value: "0.5",
+					JevType: "score", JevInstructions: `"x"`, JevCriteria: `["low","high"]`,
+				}),
+				seg(entity.Constraint{
+					Property: "@jev.risk", Operator: "LT", Value: "0.5",
+					JevType: "score", JevInstructions: `"x"`, JevCriteria: `["low","high"]`,
+				}),
+			},
+		},
+	}
+	r := ValidateFlags(flags)
+	assert.False(t, r.OK())
+	assert.Contains(t, strings.Join(r.Errors, "\n"), "used by more than one constraint")
+}
