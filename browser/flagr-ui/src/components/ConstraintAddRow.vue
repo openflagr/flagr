@@ -31,12 +31,35 @@
           >@jev.</span>
         </template>
         <template #suffix>
-          <span
-            class="jev-toggle"
-            :class="{ 'jev-toggle--on': jevEnabled }"
-            data-testid="new-constraint-jev-toggle"
-            @click.stop.prevent="toggleJev(!jevEnabled)"
-          >Jev</span>
+          <el-tooltip
+            placement="top"
+            effect="light"
+            :enterable="true"
+            popper-class="jev-toggle-tooltip"
+          >
+            <template #content>
+              <div class="jev-toggle-tooltip__body">
+                Turn on to back this constraint with a Jev / System One question.
+                The model answer is injected as <code>@jev.&lt;name&gt;</code> and
+                compared with the operator.
+              </div>
+              <a
+                class="jev-toggle-tooltip__link"
+                href="https://docs.typesafe.ai/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >Jev docs ↗</a>
+            </template>
+            <el-switch
+              :model-value="jevEnabled"
+              size="small"
+              inline-prompt
+              active-text="JEV"
+              inactive-text="JEV"
+              data-testid="new-constraint-jev-toggle"
+              @update:model-value="toggleJev"
+            />
+          </el-tooltip>
         </template>
       </el-input>
       <template v-if="jevEnabled">
@@ -180,7 +203,7 @@ export default {
           jev: this.draft.jev ?? defaultJevQuestion('noul'),
         })
       } else {
-        this.$emit('update:draft', { ...this.draft, jev: undefined })
+        this.$emit('update:draft', { ...this.draft, jev: undefined, property: '' })
       }
     },
     setJevName(name: string) {
@@ -198,36 +221,22 @@ export default {
   display: contents;
 }
 .jev-panel {
-  grid-column: 1 / -1;
+  grid-column: 2 / -1;
   margin: var(--space-3xs) 0 var(--space-2xs);
   padding: var(--space-2xs) var(--space-xs);
   background: var(--el-fill-color-lighter);
   border: 1px solid var(--el-border-color-lighter);
   border-radius: var(--radius-md);
 }
+@media (max-width: 768px) {
+  .jev-panel {
+    grid-column: 1 / -1;
+  }
+}
 .jev-prefix {
   font-family: var(--font-mono);
   font-size: var(--font-size-body-sm);
   color: var(--el-color-primary);
-}
-.jev-toggle {
-  font-size: var(--font-size-micro);
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: var(--letter-spacing-wide);
-  text-transform: uppercase;
-  line-height: 1.6;
-  padding: 0 var(--space-3xs);
-  border-radius: var(--radius-sm);
-  color: var(--el-text-color-placeholder);
-  cursor: pointer;
-  user-select: none;
-}
-.jev-toggle:hover {
-  color: var(--el-color-primary);
-}
-.jev-toggle--on {
-  color: var(--el-color-primary);
-  background: var(--el-color-primary-light-9);
 }
 .jev-summary {
   display: flex;

@@ -519,6 +519,24 @@ ol { margin: 0; padding-left: 20px; }
   align-self: center;
 }
 
+.jev-toggle-tooltip {
+  max-width: 22rem;
+}
+.jev-toggle-tooltip__body {
+  line-height: 1.5;
+  margin-bottom: var(--space-3xs);
+}
+.jev-toggle-tooltip__link {
+  color: var(--el-color-primary);
+  font-weight: var(--font-weight-medium);
+}
+.jev-toggle-tooltip code {
+  font-family: var(--font-mono);
+  background: var(--el-fill-color-light);
+  border-radius: var(--radius-sm);
+  padding: 0 0.15em;
+}
+
 @media (max-width: 768px) {
   // Constraint table: stack rows vertically
   .constraint-table {
