@@ -200,3 +200,35 @@ func jevConfidentEnough(spec entity.JevConstraintSpec, confidence *float64) bool
 	}
 	return *confidence >= threshold
 }
+
+// segmentJevQuestionNames returns the `@jev.<name>` questions a segment uses.
+func segmentJevQuestionNames(segment entity.Segment) []string {
+	names := make([]string, 0, len(segment.Constraints))
+	for i := range segment.Constraints {
+		if segment.Constraints[i].IsJev() {
+			names = append(names, segment.Constraints[i].JevName())
+		}
+	}
+	return names
+}
+
+// filterJevDebug narrows a flag-level Jev debug payload to the questions a
+// segment actually uses. It returns nil when the segment has no Jev
+// constraints, so non-Jev segments do not carry a Jev entry in their debug log.
+func filterJevDebug(debug *JevDebug, names []string) *JevDebug {
+	if debug == nil || len(names) == 0 {
+		return nil
+	}
+	filtered := *debug
+	filtered.Questions = make(map[string]JevDebugQuestion, len(names))
+	filtered.Answers = make(map[string]JevAnswer, len(names))
+	for _, name := range names {
+		if q, ok := debug.Questions[name]; ok {
+			filtered.Questions[name] = q
+		}
+		if a, ok := debug.Answers[name]; ok {
+			filtered.Answers[name] = a
+		}
+	}
+	return &filtered
+}

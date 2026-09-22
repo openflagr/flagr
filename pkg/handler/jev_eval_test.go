@@ -352,3 +352,53 @@ func TestJevConstraintScaleNegatedLT(t *testing.T) {
 	r := EvalFlag(models.EvalContext{FlagID: 100, EntityID: "e1", EntityContext: map[string]any{"amount": 1}})
 	assert.NotZero(t, r.VariantID)
 }
+
+// A segment without Jev constraints must not carry a Jev entry in its debug
+// log, and a Jev segment's entry must be scoped to its own questions.
+func TestJevDebugScopedToJevSegments(t *testing.T) {
+	fake := &fakeJevClient{answers: map[string]JevAnswer{
+		"intent": {Type: entity.JevTypeNoul, Noul: jevF64(0.9)},
+	}}
+	setupJevTest(t, fake)
+
+	// Segment 0: plain constraint that does not match, so eval falls through.
+	plainSeg := entity.GenFixtureSegment()
+	plainSeg.ID = 200
+	plainSeg.Rank = 0
+	plainSeg.Constraints = []entity.Constraint{{
+		Property: "dl_state", Operator: models.ConstraintOperatorEQ, Value: `"NY"`,
+	}}
+	plainSeg.Constraints[0].ID = 500
+
+	// Segment 1: Jev constraint that matches.
+	jevSeg := entity.GenFixtureSegment()
+	jevSeg.ID = 201
+	jevSeg.Rank = 1
+	jevC := jevConstraint(t, "@jev.intent", models.ConstraintOperatorGTE, "0.8",
+		&entity.JevQuestion{Type: entity.JevTypeNoul, Instructions: "Is this intent?"})
+	jevC.ID = 501
+	jevC.SegmentID = 201
+	jevSeg.Constraints = []entity.Constraint{jevC}
+
+	f := entity.GenFixtureFlag()
+	f.Segments = []entity.Segment{plainSeg, jevSeg}
+	require.NoError(t, f.PrepareEvaluation())
+
+	defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCacheWithFlags([]entity.Flag{f})).Reset()
+
+	r := EvalFlag(models.EvalContext{
+		EnableDebug:   true,
+		FlagID:        100,
+		EntityID:      "e1",
+		EntityContext: map[string]any{"dl_state": "CA"},
+	})
+	require.Len(t, r.EvalDebugLog.SegmentDebugLogs, 2)
+
+	// The plain segment has no Jev debug entry.
+	assert.Nil(t, r.EvalDebugLog.SegmentDebugLogs[0].Jev)
+	// The Jev segment has one, scoped to its own question.
+	jevDebug, ok := r.EvalDebugLog.SegmentDebugLogs[1].Jev.(*JevDebug)
+	require.True(t, ok)
+	assert.Contains(t, jevDebug.Questions, "intent")
+	require.Contains(t, jevDebug.Answers, "intent")
+}

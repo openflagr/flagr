@@ -384,7 +384,7 @@ var EvalFlagWithContext = func(flag *entity.Flag, evalContext models.EvalContext
 		}
 		if config.Config.EvalDebugEnabled && evalContext.EnableDebug {
 			if log != nil {
-				log.Jev = jevDebug
+				log.Jev = filterJevDebug(jevDebug, segmentJevQuestionNames(segment))
 			}
 			logs = append(logs, log)
 		}
