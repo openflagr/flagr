@@ -9,7 +9,14 @@
       </el-icon>
       <span>
         Jev constraints call a System One model on every evaluation, which makes
-        them slower than normal constraints and adds model usage cost.
+        them slower than normal constraints and adds model usage cost. Configure
+        a Jev endpoint before using them — see the
+        <a
+          class="jev-notice__link"
+          href="https://openflagr.github.io/flagr/flagr_jev"
+          target="_blank"
+          rel="noopener noreferrer"
+        >Jev setup docs</a>.
       </span>
     </div>
 
@@ -603,6 +610,11 @@ export default {
   color: var(--el-color-warning);
   margin-top: 0.15em;
   flex: 0 0 auto;
+}
+.jev-notice__link {
+  color: var(--el-color-primary);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
 }
 .jev-row {
   display: flex;

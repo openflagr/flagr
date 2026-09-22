@@ -180,6 +180,7 @@ export default defineConfig({
             text: "Built-in context injection",
             link: "/flagr_injected_context",
           },
+          { text: "Jev constraints", link: "/flagr_jev" },
           { text: "Debug console", link: "/flagr_debugging" },
           {
             text: "API reference",
