@@ -9,7 +9,11 @@ permissions:
   contents: read
 jobs:
   unit_test:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     env:
       CGO_ENABLED: 0
     steps:
@@ -20,11 +24,31 @@ jobs:
         with:
           go-version: 1.26
           cache: true
-      - run: echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+      # Images may expose MinGW's make.exe. Chocolatey GNU Make is what the Makefile expects.
+      - name: Install GNU Make
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: choco install make --no-progress -y
+      - name: Add tools to PATH (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Add-Content -Path $env:GITHUB_PATH -Value "C:\Program Files\Git\usr\bin"
+          Add-Content -Path $env:GITHUB_PATH -Value "C:\Program Files\Git\bin"
+          Add-Content -Path $env:GITHUB_PATH -Value "C:\ProgramData\chocolatey\bin"
+          Add-Content -Path $env:GITHUB_PATH -Value "$(go env GOPATH)\bin"
+      - name: Add GOPATH/bin to PATH
+        if: runner.os != 'Windows'
+        run: echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+      - run: make --version
       - run: make deps
-      - run: make ci-swagger
+      # swagger_gen round-trip + git diff is Ubuntu-only (line endings on Windows).
+      - name: Check generated swagger is committed
+        if: runner.os != 'Windows'
+        run: make ci-swagger
       - run: make ci
       - uses: codecov/codecov-action@v4
+        if: runner.os == 'Linux'
   ui_lint:
     runs-on: ubuntu-latest
     steps:

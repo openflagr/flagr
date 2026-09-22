@@ -84,9 +84,10 @@ func TestRecord_Increments(t *testing.T) {
 	assert.Equal(t, 3, e.Len()) // 3 unique (flag,variant,segment) combinations
 
 	agg := e.SnapshotAndReset()
-	assert.Equal(t, int32(2), agg[FlushKey{FlagID: 1, VariantID: 1, SegmentID: 10, Hour: time.Now().Truncate(time.Hour)}])
-	assert.Equal(t, int32(1), agg[FlushKey{FlagID: 1, VariantID: 2, SegmentID: 10, Hour: time.Now().Truncate(time.Hour)}])
-	assert.Equal(t, int32(1), agg[FlushKey{FlagID: 2, VariantID: 1, SegmentID: 20, Hour: time.Now().Truncate(time.Hour)}])
+	hour := bucketHourUTC(time.Now())
+	assert.Equal(t, int32(2), agg[FlushKey{FlagID: 1, VariantID: 1, SegmentID: 10, Hour: hour}])
+	assert.Equal(t, int32(1), agg[FlushKey{FlagID: 1, VariantID: 2, SegmentID: 10, Hour: hour}])
+	assert.Equal(t, int32(1), agg[FlushKey{FlagID: 2, VariantID: 1, SegmentID: 20, Hour: hour}])
 }
 
 func TestRecord_AfterCloseIsNoop(t *testing.T) {
@@ -187,8 +188,9 @@ func TestShutdown_FlushesRemaining(t *testing.T) {
 
 	assert.NoError(t, e.Shutdown())
 
-	// Data should be in the DB now.
-	summary, err := e.QueryFlagSummaryBreakdown(1, time.Now().Add(-time.Hour), time.Now().Add(time.Hour))
+	// Query in UTC, matching HTTP parseTimeRange and Record buckets.
+	now := time.Now().UTC()
+	summary, err := e.QueryFlagSummaryBreakdown(1, now.Add(-time.Hour), now.Add(time.Hour))
 	assert.NoError(t, err)
 	if assert.Len(t, summary.Variants, 2) {
 		assert.Equal(t, int64(2), summary.Variants[0].Count)
@@ -341,6 +343,64 @@ func TestQuerySummary_NoData(t *testing.T) {
 	rows, err := e.QuerySummary(time.Now().Add(-7*24*time.Hour), time.Now(), 100, 0)
 	assert.NoError(t, err)
 	assert.Empty(t, rows)
+}
+
+func TestBucketHourUTC_PositiveOffsetTruncatesToUTCHour(t *testing.T) {
+	t.Parallel()
+	// 16:30 at UTC+5 is 11:30 UTC → bucket 11:00 UTC.
+	loc := time.FixedZone("datar-east", 5*3600)
+	in := time.Date(2026, 9, 21, 16, 30, 0, 0, loc)
+	got := bucketHourUTC(in)
+	want := time.Date(2026, 9, 21, 11, 0, 0, 0, time.UTC)
+	assert.True(t, got.Equal(want))
+	assert.Equal(t, time.UTC, got.Location())
+}
+
+func TestRecord_HourUsesUTCLocation(t *testing.T) {
+	t.Parallel()
+	e := New(newTestDB(t), true, time.Hour)
+	if e == nil {
+		t.Fatal("expected non-nil engine")
+	}
+	defer e.Shutdown()
+
+	e.Record(1, 1, 10)
+	agg := e.SnapshotAndReset()
+	for k := range agg {
+		assert.Equal(t, time.UTC, k.Hour.Location())
+		assert.True(t, k.Hour.Equal(bucketHourUTC(time.Now())))
+	}
+}
+
+func TestQuerySummary_RecordedHourVisibleInUTCWindow(t *testing.T) {
+	t.Parallel()
+	db := newTestDB(t)
+	createFlag(t, db, 1, "f1", "flag1", true)
+
+	e := New(db, true, time.Hour)
+	if e == nil {
+		t.Fatal("expected non-nil engine")
+	}
+	defer e.Shutdown()
+
+	e.Record(1, 1, 10)
+	e.flush()
+
+	from := time.Now().UTC().Add(-7 * 24 * time.Hour)
+	to := time.Now().UTC()
+	rows, err := e.QuerySummary(from, to, 100, 0)
+	assert.NoError(t, err)
+	if len(rows) != 1 {
+		t.Fatalf("expected current-hour traffic in UTC window, got %d rows", len(rows))
+	}
+	assert.Equal(t, int64(1), rows[0].FlagID)
+	assert.Equal(t, int64(1), rows[0].TotalEvalCount)
+
+	summary, err := e.QueryFlagSummaryBreakdown(1, from, to)
+	assert.NoError(t, err)
+	if assert.NotNil(t, summary) {
+		assert.NotEmpty(t, summary.Variants)
+	}
 }
 
 func TestQuerySummary_Pagination(t *testing.T) {

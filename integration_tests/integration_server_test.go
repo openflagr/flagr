@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -134,7 +135,11 @@ func startLocalServer() string {
 	if err != nil {
 		log.Fatalf("failed to create temp dir: %v", err)
 	}
-	binPath := filepath.Join(tmpDir, "flagr")
+	binName := "flagr"
+	if runtime.GOOS == "windows" {
+		binName = "flagr.exe"
+	}
+	binPath := filepath.Join(tmpDir, binName)
 	cmd := exec.Command("go", "build", "-o", binPath, "./cmd/flagr-server/")
 	cmd.Dir = projectRoot
 	cmd.Stderr = os.Stderr

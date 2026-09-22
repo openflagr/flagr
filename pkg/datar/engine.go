@@ -17,6 +17,13 @@ const flushRetries = 3
 
 var errNilEngine = errors.New("datar: engine is nil")
 
+// bucketHourUTC truncates t to the UTC hour. SQLite stores DATETIME as a naive
+// wall-clock string, so the value's location must match parseTimeRange (UTC)
+// or the current hour is excluded on machines east of UTC.
+func bucketHourUTC(t time.Time) time.Time {
+	return t.UTC().Truncate(time.Hour)
+}
+
 // FlushKey identifies one aggregate dimension set for the in-memory buffer.
 type FlushKey struct {
 	FlagID    int64
@@ -113,7 +120,7 @@ func (e *Engine) Record(flagID, variantID, segmentID int64) {
 		FlagID:    flagID,
 		VariantID: variantID,
 		SegmentID: segmentID,
-		Hour:      time.Now().Truncate(time.Hour),
+		Hour:      bucketHourUTC(time.Now()),
 	}
 
 	actual, _ := e.buffer.LoadOrStore(key, new(int32))

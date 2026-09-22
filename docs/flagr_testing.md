@@ -2,7 +2,7 @@
 
 Flagr's test suite is layered so you can start small and widen only when you need to. The fastest feedback loop is a plain unit test against a pure function; the widest is the same integration suite run across six databases in Docker Compose. Every layer is reachable through **`make`** from the repo root (`make help` → **Test**), so you never need to remember the underlying toolchain to get feedback.
 
-CI gates and PR conventions live in [Contributing](CONTRIBUTING.md) and [AGENTS.md](https://github.com/openflagr/flagr/blob/main/AGENTS.md); this guide is about running and writing the tests themselves.
+CI gates live in [AGENTS.md](https://github.com/openflagr/flagr/blob/main/AGENTS.md). How to open a PR: [Contributing](CONTRIBUTING.md). This guide is about running and writing the tests themselves.
 
 ## Unit tests
 

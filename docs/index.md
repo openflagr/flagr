@@ -60,12 +60,44 @@ The demo above is local SQLite. Production (MySQL/Postgres, Compose, Kubernetes,
 
 ## Develop Flagr
 
-Clone the repo, then from the root:
+Same `make` targets on Linux, macOS, and Windows. Default DB is SQLite (`flagr.sqlite` in the repo root), so a clone is enough to run the stack.
+
+**Prerequisites:** Go 1.26+ (`go.mod`), Node 20+ for the UI, GNU Make. Then:
 
 ```bash
+git clone https://github.com/openflagr/flagr.git
+cd flagr
+make deps            # swagger + golangci-lint into $(go env GOPATH)/bin
 make build
-make start   # backend :18000 + UI dev :8080
+make start           # API :18000 + UI dev :8080
 make test
 ```
 
-Contributor layout, OpenAPI regen, and test conventions: [Contributing](CONTRIBUTING.md). Docs: `make serve-docs` → http://127.0.0.1:8081/flagr/ ; production: `make build-docs` → `docs/.vitepress/dist`.
+`make deps` tools must be on `PATH` (`$(go env GOPATH)/bin`). Full command catalog: `make help`. Tests: [Testing](flagr_testing.md). How to open a PR: [Contributing](CONTRIBUTING.md). Code layout and CI: [AGENTS.md](https://github.com/openflagr/flagr/blob/main/AGENTS.md). Docs site: `make serve-docs` → http://127.0.0.1:8081/flagr/.
+
+### Windows {#develop-windows}
+
+Native Windows uses the same Makefile through Git Bash (`sh.exe`). Install:
+
+1. **[Git for Windows](https://git-scm.com/download/win)** — includes Git Bash.
+2. **GNU Make 4.x**, **Go 1.26+**, **Node 20+** (winget):
+
+```powershell
+winget install --id ezwinports.make -e
+winget install --id GoLang.Go -e
+winget install --id OpenJS.NodeJS.LTS -e
+```
+
+3. Put **`C:\Program Files\Git\bin`** on your User `PATH` (ahead of `WindowsApps`, so `sh` / `bash` are Git’s). The Go installer usually adds `%USERPROFILE%\go\bin` as well; keep it so `make deps` tools resolve.
+4. Open a **new** terminal and check:
+
+```powershell
+go version          # go1.26 or newer
+node -v             # v20 or newer
+make --version      # GNU Make 4.x
+where.exe sh        # ...\Git\bin\sh.exe
+```
+
+Then the same `make deps`, `make build`, `make start`, `make test` as above. The server binary is `.\flagr.exe`. Drive the UI through `make` (`make run-ui`, `make flagr-ui-check`); PowerShell’s `npm` shim can be blocked by execution policy (`npm.cmd` works if you call npm directly).
+
+Docker Desktop is only needed for `make test-integration-compose`. `make build-docs` uses `python` (Windows) / `python3` (Unix).

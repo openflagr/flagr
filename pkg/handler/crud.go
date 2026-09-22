@@ -223,10 +223,18 @@ func (c *crud) GetFlagSnapshots(params flag.GetFlagSnapshotsParams) middleware.R
 
 	descending := params.Sort == nil || *params.Sort != "ASC"
 
+	// Secondary id order keeps rows with equal created_at stable (SQLite
+	// timestamps often tie when inserts land in the same second).
 	if err := tx.
 		Order(clause.OrderByColumn{
 			Column: clause.Column{
 				Name: "created_at",
+			},
+			Desc: descending,
+		}).
+		Order(clause.OrderByColumn{
+			Column: clause.Column{
+				Name: "id",
 			},
 			Desc: descending,
 		}).

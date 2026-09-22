@@ -42,7 +42,7 @@ git clone https://github.com/openflagr/flagr.git && cd flagr
 make build && ./flagr --port 18000
 ```
 
-TLS uses `--scheme=https` plus the cert flags from the server bootstrap. Local full stack: `make start` (see [Contributing](CONTRIBUTING.md)).
+TLS uses `--scheme=https` plus the cert flags from the server bootstrap. Local full stack: `make start` (see [AGENTS.md](https://github.com/openflagr/flagr/blob/main/AGENTS.md)).
 
 ## Deployment shapes
 
