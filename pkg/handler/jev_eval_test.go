@@ -264,7 +264,7 @@ func TestInjectJevContextKeepsBuiltInKeysAndInjects(t *testing.T) {
 	f := jevTestFlag(t, c)
 	require.Len(t, f.FlagEvaluation.JevQuestions, 1)
 
-	out := injectJevContext(models.EvalContext{
+	out, debug := injectJevContext(models.EvalContext{
 		EntityContext: map[string]any{"plan": "pro", "@ts": 123.0, "@http_host": "example.com"},
 	}, &f)
 
@@ -278,6 +278,13 @@ func TestInjectJevContextKeepsBuiltInKeysAndInjects(t *testing.T) {
 	injected, ok := out.EntityContext.(map[string]any)
 	require.True(t, ok)
 	assert.Equal(t, 0.9, injected[entity.JevContextKey].(map[string]any)["intent"])
+
+	// The debug payload exposes the request and the response.
+	require.NotNil(t, debug)
+	assert.Equal(t, "Is this intent?", debug.Questions["intent"].Instructions)
+	require.Contains(t, debug.Answers, "intent")
+	assert.False(t, debug.Cached)
+	assert.Empty(t, debug.Error)
 }
 
 // The UI emits these exact value/operator shapes; keep the backend contract covered.

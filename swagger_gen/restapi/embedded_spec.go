@@ -2572,7 +2572,7 @@ func init() {
       "type": "object",
       "properties": {
         "jev": {
-          "description": "Jev answers evaluated while processing this segment (debug only). A map of question name to {type, value, confidence, probabilities}.\n",
+          "description": "Jev / System One request and response for this evaluation (debug only): ` + "`" + `{model, state, questions, answers, usage, cached, error}` + "`" + `. ` + "`" + `questions` + "`" + ` holds the type/instructions/criteria sent; ` + "`" + `answers` + "`" + ` holds the raw answers with confidence and probabilities.\n",
           "type": "object"
         },
         "msg": {
@@ -5277,7 +5277,7 @@ func init() {
       "type": "object",
       "properties": {
         "jev": {
-          "description": "Jev answers evaluated while processing this segment (debug only). A map of question name to {type, value, confidence, probabilities}.\n",
+          "description": "Jev / System One request and response for this evaluation (debug only): ` + "`" + `{model, state, questions, answers, usage, cached, error}` + "`" + `. ` + "`" + `questions` + "`" + ` holds the type/instructions/criteria sent; ` + "`" + `answers` + "`" + ` holds the raw answers with confidence and probabilities.\n",
           "type": "object"
         },
         "msg": {

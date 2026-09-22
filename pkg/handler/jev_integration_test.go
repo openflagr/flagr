@@ -141,13 +141,15 @@ func TestJevEndToEndWithMockServer(t *testing.T) {
 	assert.Contains(t, state, "@ts")
 	assert.NotContains(t, state, entity.JevContextKey)
 
-	// Debug output carries the answers used for the segment.
+	// Debug output carries the Jev request and response.
 	require.NotEmpty(t, result.EvalDebugLog.SegmentDebugLogs)
-	jevDebug, ok := result.EvalDebugLog.SegmentDebugLogs[0].Jev.(map[string]any)
+	jevDebug, ok := result.EvalDebugLog.SegmentDebugLogs[0].Jev.(*JevDebug)
 	require.True(t, ok)
-	assert.Contains(t, jevDebug, "buying_intent")
-	assert.Contains(t, jevDebug, "plan_tier")
-	assert.Contains(t, jevDebug, "risk")
+	assert.Contains(t, jevDebug.Questions, "buying_intent")
+	assert.Contains(t, jevDebug.Questions, "plan_tier")
+	assert.Contains(t, jevDebug.Answers, "risk")
+	assert.Equal(t, "mock-jev-1.13", jevDebug.Model)
+	require.NotNil(t, jevDebug.State)
 
 	// The injected answers are also visible on the eval context.
 	evalCtx, ok := result.EvalContext.EntityContext.(map[string]any)

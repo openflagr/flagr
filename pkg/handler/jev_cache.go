@@ -11,10 +11,10 @@ import (
 	"github.com/openflagr/flagr/pkg/entity"
 )
 
-// jevCacheEntry is a cached System One answer set.
+// jevCacheEntry is a cached System One response.
 type jevCacheEntry struct {
-	answers map[string]JevAnswer
-	expires time.Time
+	response *JevResponse
+	expires  time.Time
 }
 
 // jevAnswerCache is a bounded TTL cache keyed by (model, state, questions).
@@ -53,7 +53,7 @@ func ResetJevCache() {
 	singletonJevCache = nil
 }
 
-func (c *jevAnswerCache) Get(key string) (map[string]JevAnswer, bool) {
+func (c *jevAnswerCache) Get(key string) (*JevResponse, bool) {
 	if c == nil || c.maxSize <= 0 || key == "" {
 		return nil, false
 	}
@@ -67,11 +67,11 @@ func (c *jevAnswerCache) Get(key string) (map[string]JevAnswer, bool) {
 		delete(c.entries, key)
 		return nil, false
 	}
-	return e.answers, true
+	return e.response, true
 }
 
-func (c *jevAnswerCache) Set(key string, answers map[string]JevAnswer) {
-	if c == nil || c.maxSize <= 0 || key == "" || len(answers) == 0 {
+func (c *jevAnswerCache) Set(key string, response *JevResponse) {
+	if c == nil || c.maxSize <= 0 || key == "" || response == nil || len(response.Answers) == 0 {
 		return
 	}
 	c.mu.Lock()
@@ -79,7 +79,7 @@ func (c *jevAnswerCache) Set(key string, answers map[string]JevAnswer) {
 	if len(c.entries) >= c.maxSize {
 		c.evictLocked()
 	}
-	c.entries[key] = jevCacheEntry{answers: answers, expires: time.Now().Add(c.ttl)}
+	c.entries[key] = jevCacheEntry{response: response, expires: time.Now().Add(c.ttl)}
 }
 
 func (c *jevAnswerCache) evictLocked() {
