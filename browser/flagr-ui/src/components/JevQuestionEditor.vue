@@ -183,11 +183,11 @@
           @update:model-value="setNoulOperator"
         >
           <el-option
-            label="at least"
+            label="≥"
             value="GTE"
           />
           <el-option
-            label="less than"
+            label="<"
             value="LT"
           />
         </el-select>
@@ -266,11 +266,11 @@
           @update:model-value="setScoreDirection"
         >
           <el-option
-            label="at least"
+            label="≥"
             value="atleast"
           />
           <el-option
-            label="below"
+            label="<"
             value="below"
           />
         </el-select>
@@ -558,7 +558,7 @@ export default {
 .jev-editor {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3xs);
+  gap: var(--space-2xs);
   width: 100%;
 }
 .jev-row {
@@ -623,7 +623,7 @@ export default {
 }
 .jev-score-select,
 .jev-op-select {
-  width: 170px;
+  width: 120px;
   flex: 0 0 auto;
 }
 .jev-slider {
@@ -650,5 +650,29 @@ export default {
 .jev-error {
   color: var(--el-color-danger);
   font-size: var(--font-size-body-sm);
+}
+.jev-advanced {
+  border-top: none;
+  border-bottom: none;
+
+  :deep(.el-collapse-item__header) {
+    height: auto;
+    line-height: 1.5;
+    padding: var(--space-3xs) 0;
+    background: transparent;
+    border-bottom: none;
+    font-size: var(--font-size-caption);
+    font-weight: var(--font-weight-normal);
+    color: var(--el-text-color-placeholder);
+  }
+
+  :deep(.el-collapse-item__wrap) {
+    background: transparent;
+    border-bottom: none;
+  }
+
+  :deep(.el-collapse-item__content) {
+    padding-bottom: var(--space-3xs);
+  }
 }
 </style>

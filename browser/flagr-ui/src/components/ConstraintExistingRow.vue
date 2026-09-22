@@ -2,29 +2,29 @@
   <div class="constraint-row">
     <span class="constraint-logic">{{ index === 0 ? 'IF' : 'AND' }}</span>
     <el-input
-      v-if="jevEnabled"
       size="small"
       class="constraint-cell constraint-control"
-      placeholder="question_name"
-      :model-value="jevName"
-      :disabled="readonly"
-      data-testid="constraint-jev-name"
-      @update:model-value="setJevName"
-    >
-      <template #prepend>
-        @jev.
-      </template>
-    </el-input>
-    <el-input
-      v-else
-      size="small"
-      class="constraint-cell constraint-control"
-      :placeholder="propertyPlaceholder"
-      :model-value="constraint.property"
+      :placeholder="jevEnabled ? 'question_name' : propertyPlaceholder"
+      :model-value="jevEnabled ? jevName : constraint.property"
       :disabled="readonly"
       data-testid="constraint-prop-input"
-      @update:model-value="onField('property', $event)"
-    />
+      @update:model-value="setProperty"
+    >
+      <template #prefix>
+        <span
+          v-if="jevEnabled"
+          class="jev-prefix"
+        >@jev.</span>
+      </template>
+      <template #suffix>
+        <span
+          class="jev-toggle"
+          :class="{ 'jev-toggle--on': jevEnabled }"
+          data-testid="constraint-jev-toggle"
+          @click.stop.prevent="toggleJev(!jevEnabled)"
+        >Jev</span>
+      </template>
+    </el-input>
     <template v-if="jevEnabled">
       <span
         class="constraint-cell jev-summary"
@@ -53,21 +53,6 @@
       v-if="!readonly"
       class="constraint-actions"
     >
-      <el-tooltip
-        content="Back this constraint with a Jev / System One question"
-        placement="top"
-        effect="light"
-      >
-        <el-checkbox
-          :model-value="jevEnabled"
-          size="small"
-          class="constraint-jev-toggle"
-          data-testid="constraint-jev-toggle"
-          @update:model-value="toggleJev"
-        >
-          Jev
-        </el-checkbox>
-      </el-tooltip>
       <el-tooltip
         :content="saveDirtyTooltip"
         placement="top"
@@ -183,6 +168,10 @@ export default {
     onField(field: 'property' | 'operator' | 'value', value: string) {
       this.$emit('update-field', { field, value })
     },
+    setProperty(value: string) {
+      if (this.jevEnabled) this.setJevName(value)
+      else this.onField('property', value)
+    },
     onOperator(uiOperator: string) {
       this.$emit('update-operator', { uiOperator })
     },
@@ -212,17 +201,46 @@ export default {
 .jev-panel {
   grid-column: 1 / -1;
   margin: var(--space-3xs) 0 var(--space-2xs);
-  padding: var(--space-3xs) var(--space-2xs);
-  border: 1px dashed var(--el-border-color);
+  padding: var(--space-2xs) var(--space-xs);
+  background: var(--el-fill-color-lighter);
+  border: 1px solid var(--el-border-color-lighter);
   border-radius: var(--radius-md);
 }
-.constraint-jev-toggle {
-  margin-right: var(--space-3xs);
+.jev-prefix {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-body-sm);
+  color: var(--el-color-primary);
+}
+.jev-toggle {
+  font-size: var(--font-size-micro);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  line-height: 1.6;
+  padding: 0 var(--space-3xs);
+  border-radius: var(--radius-sm);
+  color: var(--el-text-color-placeholder);
+  cursor: pointer;
+  user-select: none;
+}
+.jev-toggle:hover {
+  color: var(--el-color-primary);
+}
+.jev-toggle--on {
+  color: var(--el-color-primary);
+  background: var(--el-color-primary-light-9);
 }
 .jev-summary {
-  font-size: var(--font-size-body-sm);
+  display: flex;
+  align-items: center;
+  min-height: var(--el-component-size-small);
+  padding: 0 var(--space-2xs);
   font-family: var(--font-mono);
+  font-size: var(--font-size-body-sm);
   color: var(--el-text-color-regular);
+  background: var(--el-fill-color-lighter);
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: var(--radius-sm);
   grid-column: span 2;
   overflow: hidden;
   text-overflow: ellipsis;
