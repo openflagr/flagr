@@ -220,6 +220,7 @@
       </template>
 
       <template v-else-if="isChoice">
+        <span class="jev-hint">when the model picks</span>
         <el-select
           class="jev-op-select"
           size="small"
@@ -229,11 +230,11 @@
           @update:model-value="setChoiceDirection"
         >
           <el-option
-            label="one of"
+            label="any of"
             value="include"
           />
           <el-option
-            label="not one of"
+            label="none of"
             value="exclude"
           />
         </el-select>
@@ -457,7 +458,9 @@ export default {
         return 'Noul returns the probability that the answer is true; the slider is that probability threshold.'
       }
       if (this.isChoice) {
-        return 'Matches when the model selects one of these choices with at least this confidence.'
+        return this.choiceNegate
+          ? 'Matches when the model picks none of these choices, with at least this confidence.'
+          : 'Matches when the model picks one of these choices, with at least this confidence.'
       }
       return 'Matches when the model score is at least this level with at least this confidence.'
     },
