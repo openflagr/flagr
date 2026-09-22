@@ -2407,7 +2407,7 @@ func init() {
       ],
       "properties": {
         "confidenceThreshold": {
-          "description": "Minimum answer confidence required for a choice/score answer to count. Below it the constraint evaluates false. Ignored for noul. Falls back to FLAGR_JEV_CONFIDENCE_THRESHOLD when omitted.\n",
+          "description": "Minimum answer confidence required for a choice/score answer to count. Below it the constraint evaluates false. Ignored for noul. Omitted means no confidence gate.\n",
           "type": "number",
           "format": "double",
           "maximum": 1
@@ -5108,7 +5108,7 @@ func init() {
       ],
       "properties": {
         "confidenceThreshold": {
-          "description": "Minimum answer confidence required for a choice/score answer to count. Below it the constraint evaluates false. Ignored for noul. Falls back to FLAGR_JEV_CONFIDENCE_THRESHOLD when omitted.\n",
+          "description": "Minimum answer confidence required for a choice/score answer to count. Below it the constraint evaluates false. Ignored for noul. Omitted means no confidence gate.\n",
           "type": "number",
           "format": "double",
           "maximum": 1,

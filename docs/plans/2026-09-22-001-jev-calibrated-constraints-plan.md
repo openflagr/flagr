@@ -57,8 +57,8 @@ Because Jev answers are typed values, they slot into Flagr's existing
 6. **Confidence gate** — `choice` / `score` carry a per-constraint
    `confidenceThreshold`. Below it, the answer is omitted, the expression
    errors, and `evalSegment` already treats an error as "no match" → the segment
-   falls through. `noul` has no separate confidence; its probability comparison
-   *is* the gate.
+   falls through. A constraint without a threshold has no gate. `noul` has no
+   separate confidence; its probability comparison *is* the gate.
 7. **Fail-closed** — Jev disabled, timed out, or erroring ⇒ no `@jev` answers ⇒
    every Jev constraint evaluates false. There is no fail-open knob.
 8. **Env-var config** — `FLAGR_JEV_*`. No secrets in the DB, no UI settings page.
@@ -164,8 +164,9 @@ EvalFlagWithContext
 Env vars live in `pkg/config/env.go` and are documented in
 [Environment variables](../flagr_env.md#jev) and the
 [Jev guide](../flagr_jev.md). Summary: `FLAGR_JEV_ENABLED`, `FLAGR_JEV_BASE_URL`,
-`FLAGR_JEV_API_KEY`, `FLAGR_JEV_MODEL`, `FLAGR_JEV_TIMEOUT`,
-`FLAGR_JEV_CONFIDENCE_THRESHOLD`. There is no answer cache in v1.
+`FLAGR_JEV_API_KEY`, `FLAGR_JEV_MODEL`, `FLAGR_JEV_TIMEOUT`, and the retry knobs
+`FLAGR_JEV_MAX_RETRIES` / `FLAGR_JEV_RETRY_BASE` / `FLAGR_JEV_RETRY_MAX`. There
+is no answer cache in v1.
 
 ## UI
 
@@ -277,6 +278,9 @@ comparison, and the question in the UI editor.
 - **Bounded retries.** The System One call retries transient failures (network
   errors, 5xx, 429) with exponential backoff and jitter, capped by the
   `FLAGR_JEV_TIMEOUT` deadline so a retry never extends the eval past its budget.
+- **Per-constraint confidence only.** The global `FLAGR_JEV_CONFIDENCE_THRESHOLD`
+  fallback was removed; `confidenceThreshold` is per-constraint (the UI persists
+  its default), and an omitted threshold means no gate.
 
 ## Risks
 

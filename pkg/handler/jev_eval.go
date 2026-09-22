@@ -139,15 +139,14 @@ func jevAnswerValue(spec entity.JevQuestion, answer JevAnswer) (any, bool) {
 	}
 }
 
+// jevConfidentEnough reports whether the answer clears the question's confidence
+// gate. A question without a threshold has no gate; a missing confidence is
+// treated as untrusted.
 func jevConfidentEnough(spec entity.JevQuestion, confidence *float64) bool {
-	if confidence == nil {
-		return false
+	if spec.ConfidenceThreshold == nil {
+		return true
 	}
-	threshold := config.Config.JevConfidenceThreshold
-	if spec.ConfidenceThreshold != nil {
-		threshold = *spec.ConfidenceThreshold
-	}
-	return *confidence >= threshold
+	return confidence != nil && *confidence >= *spec.ConfidenceThreshold
 }
 
 // withJevContext returns entityContext with the resolved Jev answers merged

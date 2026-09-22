@@ -74,7 +74,6 @@ func TestJevEndToEndWithMockServer(t *testing.T) {
 	stubEnabled := gostub.Stub(&config.Config.JevEnabled, true)
 	stubModel := gostub.Stub(&config.Config.JevModel, "jev-latest")
 	stubKey := gostub.Stub(&config.Config.JevAPIKey, "test-key")
-	stubThreshold := gostub.Stub(&config.Config.JevConfidenceThreshold, 0.5)
 	stubDebug := gostub.Stub(&config.Config.EvalDebugEnabled, true)
 	stubLog := gostub.StubFunc(&logEvalResult)
 	t.Cleanup(func() {
@@ -82,7 +81,6 @@ func TestJevEndToEndWithMockServer(t *testing.T) {
 		stubEnabled.Reset()
 		stubModel.Reset()
 		stubKey.Reset()
-		stubThreshold.Reset()
 		stubDebug.Reset()
 		stubLog.Reset()
 	})

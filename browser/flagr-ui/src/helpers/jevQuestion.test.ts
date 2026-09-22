@@ -39,11 +39,17 @@ describe('jevQuestion', () => {
 
   it('builds type-appropriate default questions', () => {
     expect(defaultJevQuestion('noul')).toEqual({ type: 'noul', instructions: '' })
-    expect(defaultJevQuestion('choice')).toEqual({ type: 'choice', instructions: '', criteria: {} })
+    expect(defaultJevQuestion('choice')).toEqual({
+      type: 'choice',
+      instructions: '',
+      criteria: {},
+      confidenceThreshold: 0.5,
+    })
     expect(defaultJevQuestion('score')).toEqual({
       type: 'score',
       instructions: '',
       criteria: ['', ''],
+      confidenceThreshold: 0.5,
     })
   })
 

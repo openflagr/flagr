@@ -79,7 +79,7 @@ Back a constraint with a typed [System One](https://docs.typesafe.ai/) question 
 
 The Jev `state` is the full `entityContext` **plus** `entityID` and `entityType`. To also include `@ts*` (and `@http_*`), enable [built-in context injection](#built-in-context-injection) with `FLAGR_INJECTED_CONTEXT_ENABLED=true`.
 
-Each flag evaluation with Jev constraints makes one batched System One call. It is slower than a normal constraint and adds model usage cost, and Jev is rate-limited, so keep Jev constraints off high-QPS request paths.
+Each flag evaluation with Jev constraints makes one batched System One call. It is slower than a normal constraint and adds model usage cost, and Jev is rate-limited, so keep Jev constraints off high-QPS request paths. Transient failures are retried with bounded backoff within `FLAGR_JEV_TIMEOUT`.
 
 | Variable | Default | Notes |
 |----------|---------|-------|
@@ -87,8 +87,10 @@ Each flag evaluation with Jev constraints makes one batched System One call. It 
 | `FLAGR_JEV_BASE_URL` | `https://api.typesafe.ai` | Hosted API or self-hosted System One |
 | `FLAGR_JEV_API_KEY` | `""` | `Authorization: Bearer` — optional for some self-hosted servers |
 | `FLAGR_JEV_MODEL` | `jev-latest` | Model or alias |
-| `FLAGR_JEV_TIMEOUT` | `1s` | Per-request timeout |
-| `FLAGR_JEV_CONFIDENCE_THRESHOLD` | `0.5` | Default confidence gate for `choice`/`score` |
+| `FLAGR_JEV_TIMEOUT` | `1s` | Overall timeout for the batched call, including retries |
+| `FLAGR_JEV_MAX_RETRIES` | `2` | Retries for network errors, 5xx, 429 (not 4xx) |
+| `FLAGR_JEV_RETRY_BASE` | `100ms` | Base delay for exponential backoff |
+| `FLAGR_JEV_RETRY_MAX` | `500ms` | Maximum delay between retries |
 
 #### Eval cache export {#eval-cache-export}
 

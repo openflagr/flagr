@@ -106,11 +106,6 @@ var Config = struct {
 	// JevRetryMax - maximum delay between Jev retries.
 	JevRetryMax time.Duration `env:"FLAGR_JEV_RETRY_MAX" envDefault:"500ms"`
 
-	// JevConfidenceThreshold - confidence gate applied to choice/score answers
-	// when a constraint does not set its own threshold. Answers below it do
-	// not match. Must be within [0,1].
-	JevConfidenceThreshold float64 `env:"FLAGR_JEV_CONFIDENCE_THRESHOLD" envDefault:"0.5"`
-
 	// SnapshotsDefaultLimit - default number of newest snapshots returned by
 	// GET /flags/{flagID}/snapshots when the request carries no explicit limit.
 	// 0 (default) keeps the existing behavior of returning the full history.

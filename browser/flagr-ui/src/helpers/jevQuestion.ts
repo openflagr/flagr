@@ -3,6 +3,9 @@ import type { JevQuestion, JevQuestionType } from '@/api/types'
 /** entityContext property prefix for Jev answers: question `foo` → `@jev.foo`. */
 export const JEV_PROPERTY_PREFIX = '@jev.'
 
+/** Default confidence gate for a choice/score question. */
+export const DEFAULT_JEV_CONFIDENCE = 0.5
+
 export interface ChoiceRow {
   name: string
   description: string
@@ -27,8 +30,12 @@ export function slugifyJevName(name: string): string {
 
 /** A fresh question for the given type, with the criteria shape that type needs. */
 export function defaultJevQuestion(type: JevQuestionType): JevQuestion {
-  if (type === 'choice') return { type, instructions: '', criteria: {} }
-  if (type === 'score') return { type, instructions: '', criteria: ['', ''] }
+  if (type === 'choice') {
+    return { type, instructions: '', criteria: {}, confidenceThreshold: DEFAULT_JEV_CONFIDENCE }
+  }
+  if (type === 'score') {
+    return { type, instructions: '', criteria: ['', ''], confidenceThreshold: DEFAULT_JEV_CONFIDENCE }
+  }
   return { type, instructions: '' }
 }
 
@@ -146,9 +153,6 @@ export function choiceOperatorFor(options: string[], negate: boolean): string {
   if (negate) return options.length > 1 ? 'NOTIN' : 'NEQ'
   return options.length > 1 ? 'IN' : 'EQ'
 }
-
-/** Default confidence gate when a question does not set one. */
-export const DEFAULT_JEV_CONFIDENCE = 0.5
 
 /** Human-readable symbol for a constraint operator. */
 export function operatorSymbol(operator: string): string {

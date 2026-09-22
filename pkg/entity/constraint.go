@@ -23,7 +23,7 @@ type Constraint struct {
 	JevType                string   `gorm:"type:varchar(16)"`
 	JevInstructions        string   `gorm:"type:text"`
 	JevCriteria            string   `gorm:"type:text"`
-	JevConfidenceThreshold *float64 // nil means use the global default
+	JevConfidenceThreshold *float64 // nil means no confidence gate
 }
 
 // ConstraintArray is an array of Constraint

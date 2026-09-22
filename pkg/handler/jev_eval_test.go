@@ -58,13 +58,11 @@ func jevConstraint(t *testing.T, property, operator, value string, q *entity.Jev
 func setupJevTest(t *testing.T, client *fakeJevClient) {
 	t.Helper()
 	stubEnabled := gostub.Stub(&config.Config.JevEnabled, true)
-	stubThreshold := gostub.Stub(&config.Config.JevConfidenceThreshold, 0.5)
 	stubDebug := gostub.Stub(&config.Config.EvalDebugEnabled, true)
 	stubClient := gostub.StubFunc(&NewJevClient, JevClient(client))
 	stubLog := gostub.StubFunc(&logEvalResult)
 	t.Cleanup(func() {
 		stubEnabled.Reset()
-		stubThreshold.Reset()
 		stubDebug.Reset()
 		stubClient.Reset()
 		stubLog.Reset()
@@ -164,9 +162,10 @@ func TestJevConstraintLowConfidenceDoesNotMatch(t *testing.T) {
 
 	c := jevConstraint(t, "@jev.plan_tier", models.ConstraintOperatorEQ, `"pro"`,
 		&entity.JevQuestion{
-			Type:         entity.JevTypeChoice,
-			Instructions: "Which plan?",
-			Criteria:     map[string]any{"free": "x", "pro": "y"},
+			Type:                entity.JevTypeChoice,
+			Instructions:        "Which plan?",
+			Criteria:            map[string]any{"free": "x", "pro": "y"},
+			ConfidenceThreshold: jevF64(0.5),
 		})
 	f := jevTestFlag(t, c)
 
@@ -178,13 +177,34 @@ func TestJevConstraintLowConfidenceDoesNotMatch(t *testing.T) {
 	assert.Contains(t, r.EvalDebugLog.SegmentDebugLogs[0].Msg, "not found")
 }
 
+func TestJevConstraintWithoutThresholdHasNoGate(t *testing.T) {
+	fake := &fakeJevClient{answers: map[string]JevAnswer{
+		"plan_tier": {Type: entity.JevTypeChoice, Choice: "pro", Confidence: jevF64(0.1)},
+	}}
+	setupJevTest(t, fake)
+
+	// No confidenceThreshold means no gate: a low-confidence answer still matches.
+	c := jevConstraint(t, "@jev.plan_tier", models.ConstraintOperatorEQ, `"pro"`,
+		&entity.JevQuestion{
+			Type:         entity.JevTypeChoice,
+			Instructions: "Which plan?",
+			Criteria:     map[string]any{"free": "x", "pro": "y"},
+		})
+	f := jevTestFlag(t, c)
+
+	defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCacheWithFlags([]entity.Flag{f})).Reset()
+
+	r := EvalFlag(models.EvalContext{FlagID: 100, EntityID: "e1", EntityContext: map[string]any{"plan": "pro"}})
+	assert.NotZero(t, r.VariantID)
+}
+
 func TestJevConstraintPerConstraintThreshold(t *testing.T) {
 	fake := &fakeJevClient{answers: map[string]JevAnswer{
 		"plan_tier": {Type: entity.JevTypeChoice, Choice: "pro", Confidence: jevF64(0.6)},
 	}}
 	setupJevTest(t, fake)
 
-	// Global threshold is 0.5; a per-constraint override of 0.8 must reject 0.6.
+	// A per-constraint threshold of 0.8 must reject a 0.6-confidence answer.
 	c := jevConstraint(t, "@jev.plan_tier", models.ConstraintOperatorEQ, `"pro"`,
 		&entity.JevQuestion{
 			Type:                entity.JevTypeChoice,
@@ -424,16 +444,18 @@ func TestJevConstraintQuestionTypes(t *testing.T) {
 	}
 	choice := func() *entity.JevQuestion {
 		return &entity.JevQuestion{
-			Type:         entity.JevTypeChoice,
-			Instructions: "q?",
-			Criteria:     map[string]any{"free": "a", "pro": "b", "enterprise": "c"},
+			Type:                entity.JevTypeChoice,
+			Instructions:        "q?",
+			Criteria:            map[string]any{"free": "a", "pro": "b", "enterprise": "c"},
+			ConfidenceThreshold: jevF64(0.5),
 		}
 	}
 	scale := func() *entity.JevQuestion {
 		return &entity.JevQuestion{
-			Type:         entity.JevTypeScore,
-			Instructions: "q?",
-			Criteria:     []any{"low", "high"},
+			Type:                entity.JevTypeScore,
+			Instructions:        "q?",
+			Criteria:            []any{"low", "high"},
+			ConfidenceThreshold: jevF64(0.5),
 		}
 	}
 	noulAnswer := func(v float64) JevAnswer {

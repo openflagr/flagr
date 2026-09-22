@@ -25,7 +25,7 @@ FLAGR_JEV_TIMEOUT=15s \
 ./flagr
 ```
 
-Full list (including `FLAGR_JEV_CONFIDENCE_THRESHOLD`): [Environment variables](flagr_env.md#jev).
+Full list: [Environment variables](flagr_env.md#jev).
 
 ## 2. Add a Jev constraint
 
