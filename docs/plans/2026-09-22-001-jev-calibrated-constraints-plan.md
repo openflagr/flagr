@@ -15,8 +15,9 @@ A Jev constraint is authored entirely in the Flagr UI, stored inline on the
 unchanged. It is, literally, a "fancy `if`".
 
 The same `POST /v1/systemone` contract is implemented by the hosted TypeSafe API
-and by open-source drop-in servers — [`oido-systemone`](https://github.com/Djancyp/oido-systemone)
-(Go, local GGUF) and [`jeff`](https://github.com/logan-markewich/jeff) (Python,
+and by open-source drop-in servers — [`jaredpalmer/kev`](https://github.com/jaredpalmer/kev)
+(Python, Qwen3.5-based decision models), [`oido-systemone`](https://github.com/Djancyp/oido-systemone)
+(Go, local GGUF), and [`jeff`](https://github.com/logan-markewich/jeff) (Python,
 GLiFormer). Flagr talks to whichever endpoint `FLAGR_JEV_BASE_URL` points at.
 
 User guide: [`docs/flagr_jev.md`](../flagr_jev.md).
@@ -227,6 +228,16 @@ auth), so it doubles as the contract fixture.
 
 To exercise a real self-hosted open-source endpoint, run one of the drop-in
 servers and point Flagr at it:
+
+```bash
+# Python (Kev-4B), default http://127.0.0.1:8009
+KEV_DTYPE=bf16 uv run --extra serve python -m kev.serve --run jaredpalmer/kev-4b --port 8009
+
+FLAGR_JEV_ENABLED=true \
+FLAGR_JEV_BASE_URL=http://127.0.0.1:8009 \
+FLAGR_JEV_MODEL=kev-latest \
+./flagr
+```
 
 ```bash
 # Python (GLiFormer), default http://localhost:8000

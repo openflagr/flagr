@@ -82,7 +82,7 @@ var Config = struct {
 	JevEnabled bool `env:"FLAGR_JEV_ENABLED" envDefault:"false"`
 
 	// JevBaseURL - base URL of the System One API. Point at a self-hosted
-	// open-source endpoint (e.g. oido-systemone or jeff) to keep state local.
+	// open-source endpoint (e.g. Kev, oido-systemone, or jeff) to keep state local.
 	JevBaseURL string `env:"FLAGR_JEV_BASE_URL" envDefault:"https://api.typesafe.ai"`
 
 	// JevAPIKey - bearer token for the System One API. Optional for
