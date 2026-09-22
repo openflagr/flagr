@@ -237,6 +237,8 @@ export interface Health {
   status?: string
   /** True when the server runs in eval-only mode (json_file/json_http) and write APIs are disabled. */
   evalOnlyMode?: boolean
+  /** FLAGR_SNAPSHOTS_DEFAULT_LIMIT; 0 = full history. The History tab uses it as the page size and paginates only when > 0. */
+  snapshotsDefaultLimit?: number
 }
 
 export interface FlagHistoryDiffRow {

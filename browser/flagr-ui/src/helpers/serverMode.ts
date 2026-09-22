@@ -10,6 +10,16 @@ import { getHealth } from '@/api/health'
 export const evalOnlyMode = ref(false)
 
 /**
+ * Server-configured History page size (FLAGR_SNAPSHOTS_DEFAULT_LIMIT), read
+ * from /health. 0 (the default) means the snapshots endpoint returns the full
+ * history, so the History tab loads everything at once and does not paginate.
+ * A positive value turns on paging: the tab fetches this many newest snapshots
+ * per page and offers a "load older" control. Single knob shared with the
+ * server, so the UI never truncates history the server would have returned.
+ */
+export const snapshotsHistoryPageSize = ref(0)
+
+/**
  * Fetch the server mode once at app start. Fail-open: an unreachable health
  * endpoint or an older server without the evalOnlyMode field renders the
  * normal editable UI — a broken health check must not lock the UI.
@@ -17,4 +27,6 @@ export const evalOnlyMode = ref(false)
 export async function initServerMode(): Promise<void> {
   const res = await getHealth()
   evalOnlyMode.value = res.ok && res.value?.evalOnlyMode === true
+  const limit = res.ok ? res.value?.snapshotsDefaultLimit : undefined
+  snapshotsHistoryPageSize.value = typeof limit === 'number' && limit > 0 ? limit : 0
 }
