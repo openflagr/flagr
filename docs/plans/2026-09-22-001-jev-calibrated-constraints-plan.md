@@ -264,6 +264,15 @@ comparison, and the question in the UI editor.
 - **UI polish.** JEV toggle moved to the row actions as a subtle switch; the
   editor shows a notice that Jev constraints are slower and add model cost, and
   points at the [Jev guide](../flagr_jev.md) to set up an endpoint first.
+- **One question type everywhere.** `entity.JevQuestion` backs the flag's
+  evaluation map, the client request, and the debug payload; the transient
+  `JevConstraintSpec` / `JevDebugQuestion` wrappers were dropped.
+- **Jev-free `evalSegment`.** `EvalFlagWithContext` merges answers into a private
+  constraint context; `evalSegment` keeps its original signature and knows
+  nothing about Jev.
+- **Operator/type validation.** `noul` / `scale` accept `GTE`/`GT`/`LTE`/`LT`,
+  `choice` accepts `EQ`/`NEQ`/`IN`/`NOTIN`, so an incompatible match is rejected
+  instead of silently never matching.
 
 ## Risks
 

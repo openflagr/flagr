@@ -57,15 +57,6 @@ type JevQuestion struct {
 	ConfidenceThreshold *float64 `json:"confidenceThreshold,omitempty"`
 }
 
-// JevConstraintSpec is the evaluation-time representation of a Jev question.
-type JevConstraintSpec struct {
-	Name                string
-	Type                string
-	Instructions        any
-	Criteria            any
-	ConfidenceThreshold *float64
-}
-
 // IsJev reports whether the constraint is backed by a Jev question.
 func (c *Constraint) IsJev() bool { return c.JevType != "" }
 
@@ -227,6 +218,9 @@ func (c *Constraint) validateJev() error {
 	if !strings.HasPrefix(c.Property, JevPropertyPrefix) || c.JevName() == "" {
 		return fmt.Errorf("jev constraints require property %s<name>, got %q", JevPropertyPrefix, c.Property)
 	}
+	if err := validateJevOperator(c.JevType, c.Operator); err != nil {
+		return err
+	}
 	q, err := c.JevQuestion()
 	if err != nil {
 		return err
@@ -249,6 +243,28 @@ func (c *Constraint) validateJev() error {
 		return validateScoreCriteria(q.Criteria)
 	}
 	return nil
+}
+
+// validateJevOperator enforces that the match operator makes sense for the
+// question type, so an incompatible operator/value cannot silently never match.
+func validateJevOperator(jevType, operator string) error {
+	switch jevType {
+	case JevTypeNoul, JevTypeScore:
+		switch operator {
+		case models.ConstraintOperatorGTE, models.ConstraintOperatorGT,
+			models.ConstraintOperatorLTE, models.ConstraintOperatorLT:
+			return nil
+		}
+	case JevTypeChoice:
+		switch operator {
+		case models.ConstraintOperatorEQ, models.ConstraintOperatorNEQ,
+			models.ConstraintOperatorIN, models.ConstraintOperatorNOTIN:
+			return nil
+		}
+	default:
+		return nil // unknown type is reported by validateJev
+	}
+	return fmt.Errorf("jev %s does not support operator %q", jevType, operator)
 }
 
 func validateNoulCriteria(criteria any) error {

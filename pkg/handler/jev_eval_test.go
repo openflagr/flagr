@@ -20,10 +20,10 @@ type fakeJevClient struct {
 	err           error
 	calls         int
 	lastState     any
-	lastQuestions map[string]entity.JevConstraintSpec
+	lastQuestions map[string]entity.JevQuestion
 }
 
-func (f *fakeJevClient) SystemOne(_ context.Context, state any, questions map[string]entity.JevConstraintSpec) (*JevResponse, error) {
+func (f *fakeJevClient) SystemOne(_ context.Context, state any, questions map[string]entity.JevQuestion) (*JevResponse, error) {
 	f.calls++
 	f.lastState = state
 	f.lastQuestions = questions
@@ -251,7 +251,7 @@ func TestResolveJevForFlagDoesNotMutateContext(t *testing.T) {
 		EntityContext: entityContext,
 	}
 
-	answers, debug := resolveJevForFlag(evalContext, &f)
+	answers, debug := resolveJevForFlag(context.Background(), evalContext, &f)
 
 	// The state sent to Jev carries built-ins + entity identity, never @jev.
 	state, ok := fake.lastState.(map[string]any)

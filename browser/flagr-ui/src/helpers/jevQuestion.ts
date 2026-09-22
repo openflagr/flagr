@@ -262,6 +262,28 @@ export type JevAction =
 
 const DEFAULT_NOUL_THRESHOLD = 0.7
 
+/** Default match (operator + value) for a question type. */
+function defaultMatchFor(type: JevQuestionType): { operator: string; value: string } {
+  if (type === 'choice') return { operator: 'EQ', value: '' }
+  if (type === 'score') return { operator: 'GTE', value: '0' }
+  return { operator: 'GTE', value: DEFAULT_NOUL_THRESHOLD.toFixed(2) }
+}
+
+/**
+ * Patch applied when the JEV toggle flips on: seed a question and a
+ * type-compatible match. Shared by the add and existing constraint rows.
+ */
+export function jevEnablePatch(
+  current: JevQuestion | undefined,
+  property: string,
+): { jev: JevQuestion; property: string; operator: string; value: string } {
+  return {
+    jev: current ?? defaultJevQuestion('noul'),
+    property: jevPropertyFor(jevPropertyName(property) || 'question'),
+    ...defaultMatchFor('noul'),
+  }
+}
+
 /**
  * Pure state transition for the Jev editor. Emitting operator and value in one
  * step is what keeps choice/scale edits from clobbering each other.
@@ -273,9 +295,7 @@ export function reduceJevMatch(state: JevMatchState, action: JevAction): JevMatc
         ...defaultJevQuestion(action.questionType),
         instructions: state.jev.instructions,
       }
-      if (action.questionType === 'choice') return { jev, operator: 'EQ', value: '' }
-      if (action.questionType === 'score') return { jev, operator: 'GTE', value: '0' }
-      return { jev, operator: 'GTE', value: DEFAULT_NOUL_THRESHOLD.toFixed(2) }
+      return { jev, ...defaultMatchFor(action.questionType) }
     }
     case 'setInstructions':
       return { ...state, jev: { ...state.jev, instructions: action.instructions } }
@@ -316,6 +336,9 @@ export function reduceJevMatch(state: JevMatchState, action: JevAction): JevMatc
       if (state.jev.type === 'noul') return { ...state, value: action.value.toFixed(2) }
       return { ...state, jev: { ...state.jev, confidenceThreshold: action.value } }
     case 'setJev':
-      return { ...state, jev: action.jev }
+      // Keep the authored question; reset the match only when the type changed,
+      // so a pasted question can't keep an incompatible operator/value.
+      if (action.jev.type === state.jev.type) return { ...state, jev: action.jev }
+      return { ...state, jev: action.jev, ...defaultMatchFor(action.jev.type) }
   }
 }

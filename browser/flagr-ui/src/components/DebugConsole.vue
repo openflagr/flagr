@@ -22,24 +22,18 @@
           </el-button>
         </div>
         <div class="dc-editor-row">
-          <json-editor
-            :json-string="evalContextText"
-            :main-menu-bar="false"
-            :navigation-bar="false"
-            :status-bar="false"
-            mode="text"
+          <json-text-editor
+            :model-value="evalContext"
+            :parser="parseEvalContextJson"
             class="dc-json-editor"
-            @update:json-string="onEvalContextText"
+            @update:model-value="$emit('update:evalContext', $event)"
           />
           <div class="dc-response-col">
-            <json-editor
-              :json-string="evalResultText"
-              :main-menu-bar="false"
-              :navigation-bar="false"
-              :status-bar="false"
-              mode="text"
+            <json-text-editor
+              :model-value="evalResult"
+              :parser="parseEvalResultJson"
               class="dc-json-editor"
-              @update:json-string="onEvalResultText"
+              @update:model-value="$emit('update:evalResult', $event)"
             />
           </div>
         </div>
@@ -92,23 +86,17 @@
           <span class="dc-label">Response</span>
         </div>
         <div class="dc-editor-row">
-          <json-editor
-            :json-string="batchEvalContextText"
-            :main-menu-bar="false"
-            :navigation-bar="false"
-            :status-bar="false"
-            mode="text"
+          <json-text-editor
+            :model-value="batchEvalContext"
+            :parser="parseBatchEvalContextJson"
             class="dc-json-editor"
-            @update:json-string="onBatchEvalContextText"
+            @update:model-value="$emit('update:batchEvalContext', $event)"
           />
-          <json-editor
-            :json-string="batchEvalResultText"
-            :main-menu-bar="false"
-            :navigation-bar="false"
-            :status-bar="false"
-            mode="text"
+          <json-text-editor
+            :model-value="batchEvalResult"
+            :parser="parseBatchEvalResultJson"
             class="dc-json-editor"
-            @update:json-string="onBatchEvalResultText"
+            @update:model-value="$emit('update:batchEvalResult', $event)"
           />
         </div>
       </el-collapse-item>
@@ -117,7 +105,7 @@
 </template>
 
 <script lang="ts">
-import JsonEditor from 'vue3-ts-jsoneditor'
+import JsonTextEditor from '@/components/JsonTextEditor.vue'
 import {
   parseBatchEvalContextJson,
   parseBatchEvalResultJson,
@@ -126,14 +114,9 @@ import {
 } from '@/helpers/evaluation'
 import type { BatchEvalContext, BatchEvalResult, EvalContext, EvalResult, EvalSummary } from '@/api/types'
 
-/** Stable text form used as the editor's source of truth. */
-function toJsonText(value: unknown): string {
-  return JSON.stringify(value, null, 2)
-}
-
 export default {
   name: 'DebugConsole',
-  components: { JsonEditor },
+  components: { JsonTextEditor },
   props: {
     evalContext: { type: Object as () => EvalContext, required: true },
     evalResult: { type: Object as () => EvalResult, required: true },
@@ -149,83 +132,11 @@ export default {
     'post-evaluation',
     'post-evaluation-batch',
   ],
-  data() {
-    return {
-      evalContextText: toJsonText(this.evalContext),
-      evalResultText: toJsonText(this.evalResult),
-      batchEvalContextText: toJsonText(this.batchEvalContext),
-      batchEvalResultText: toJsonText(this.batchEvalResult),
-      // Snapshot of the last value we pushed to the parent, so the editor can
-      // ignore its own echo instead of resetting the caret on every keystroke.
-      emittedEvalContext: toJsonText(this.evalContext),
-      emittedEvalResult: toJsonText(this.evalResult),
-      emittedBatchEvalContext: toJsonText(this.batchEvalContext),
-      emittedBatchEvalResult: toJsonText(this.batchEvalResult),
-    }
-  },
-  watch: {
-    evalContext: { handler(value: EvalContext) { this.syncEvalContextFromProp(value) }, deep: true },
-    evalResult: { handler(value: EvalResult) { this.syncEvalResultFromProp(value) }, deep: true },
-    batchEvalContext: { handler(value: BatchEvalContext) { this.syncBatchEvalContextFromProp(value) }, deep: true },
-    batchEvalResult: { handler(value: BatchEvalResult) { this.syncBatchEvalResultFromProp(value) }, deep: true },
-  },
   methods: {
-    onEvalContextText(text: string) {
-      this.evalContextText = text
-      const parsed = parseEvalContextJson(text)
-      if (parsed) {
-        this.emittedEvalContext = toJsonText(parsed)
-        this.$emit('update:evalContext', parsed)
-      }
-    },
-    onEvalResultText(text: string) {
-      this.evalResultText = text
-      const parsed = parseEvalResultJson(text)
-      if (parsed) {
-        this.emittedEvalResult = toJsonText(parsed)
-        this.$emit('update:evalResult', parsed)
-      }
-    },
-    onBatchEvalContextText(text: string) {
-      this.batchEvalContextText = text
-      const parsed = parseBatchEvalContextJson(text)
-      if (parsed) {
-        this.emittedBatchEvalContext = toJsonText(parsed)
-        this.$emit('update:batchEvalContext', parsed)
-      }
-    },
-    onBatchEvalResultText(text: string) {
-      this.batchEvalResultText = text
-      const parsed = parseBatchEvalResultJson(text)
-      if (parsed) {
-        this.emittedBatchEvalResult = toJsonText(parsed)
-        this.$emit('update:batchEvalResult', parsed)
-      }
-    },
-    syncEvalContextFromProp(value: EvalContext) {
-      const text = toJsonText(value)
-      if (text === this.emittedEvalContext) return
-      this.emittedEvalContext = text
-      this.evalContextText = text
-    },
-    syncEvalResultFromProp(value: EvalResult) {
-      const text = toJsonText(value)
-      if (text === this.emittedEvalResult) return
-      this.emittedEvalResult = text
-      this.evalResultText = text
-    },
-    syncBatchEvalContextFromProp(value: BatchEvalContext) {
-      const text = toJsonText(value)
-      if (text === this.emittedBatchEvalContext) return
-      this.emittedBatchEvalContext = text
-      this.batchEvalContextText = text
-    },
-    syncBatchEvalResultFromProp(value: BatchEvalResult) {
-      const text = toJsonText(value)
-      if (text === this.emittedBatchEvalResult) return
-      this.emittedBatchEvalResult = text
-      this.batchEvalResultText = text
-    },
+    parseEvalContextJson,
+    parseEvalResultJson,
+    parseBatchEvalContextJson,
+    parseBatchEvalResultJson,
   },
 }
 </script>

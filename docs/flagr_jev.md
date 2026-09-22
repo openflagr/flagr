@@ -38,6 +38,9 @@ Full list (including `FLAGR_JEV_CONFIDENCE_THRESHOLD`): [Environment variables](
 4. Optionally set the **confidence** gate (choice / scale).
 5. Save.
 
+Operators are validated against the question type: `noul` / `scale` accept
+`≥` / `>` / `≤` / `<`, and `choice` accepts `=` / `≠` / `in` / `not in`.
+
 The **state** sent to the model is the full `entityContext` plus `entityID` and
 `entityType`. Enable built-in context injection
 (`FLAGR_INJECTED_CONTEXT_ENABLED=true`) to also include `@ts*` / `@http_*`.

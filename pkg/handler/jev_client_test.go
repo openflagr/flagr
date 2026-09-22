@@ -37,8 +37,8 @@ func TestJevClientSystemOne(t *testing.T) {
 	defer sbModel.Reset()
 
 	client := NewJevClient()
-	resp, err := client.SystemOne(context.Background(), map[string]any{"plan": "pro"}, map[string]entity.JevConstraintSpec{
-		"intent": {Name: "intent", Type: entity.JevTypeNoul, Instructions: "Is this about billing?"},
+	resp, err := client.SystemOne(context.Background(), map[string]any{"plan": "pro"}, map[string]entity.JevQuestion{
+		"intent": {Type: entity.JevTypeNoul, Instructions: "Is this about billing?"},
 	})
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -63,8 +63,8 @@ func TestJevClientSystemOneErrorStatus(t *testing.T) {
 
 	defer gostub.Stub(&config.Config.JevBaseURL, server.URL).Reset()
 
-	_, err := NewJevClient().SystemOne(context.Background(), "state", map[string]entity.JevConstraintSpec{
-		"intent": {Name: "intent", Type: entity.JevTypeNoul, Instructions: "x"},
+	_, err := NewJevClient().SystemOne(context.Background(), "state", map[string]entity.JevQuestion{
+		"intent": {Type: entity.JevTypeNoul, Instructions: "x"},
 	})
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "422")
@@ -80,8 +80,8 @@ func TestJevClientSystemOneTimeout(t *testing.T) {
 	defer gostub.Stub(&config.Config.JevBaseURL, server.URL).Reset()
 	defer gostub.Stub(&config.Config.JevTimeout, 20*time.Millisecond).Reset()
 
-	_, err := NewJevClient().SystemOne(context.Background(), "state", map[string]entity.JevConstraintSpec{
-		"intent": {Name: "intent", Type: entity.JevTypeNoul, Instructions: "x"},
+	_, err := NewJevClient().SystemOne(context.Background(), "state", map[string]entity.JevQuestion{
+		"intent": {Type: entity.JevTypeNoul, Instructions: "x"},
 	})
 	require.Error(t, err)
 }
@@ -94,8 +94,8 @@ func TestJevClientSystemOneEmptyAnswers(t *testing.T) {
 
 	defer gostub.Stub(&config.Config.JevBaseURL, server.URL).Reset()
 
-	_, err := NewJevClient().SystemOne(context.Background(), "state", map[string]entity.JevConstraintSpec{
-		"intent": {Name: "intent", Type: entity.JevTypeNoul, Instructions: "x"},
+	_, err := NewJevClient().SystemOne(context.Background(), "state", map[string]entity.JevQuestion{
+		"intent": {Type: entity.JevTypeNoul, Instructions: "x"},
 	})
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "no answers")

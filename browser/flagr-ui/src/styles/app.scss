@@ -532,6 +532,54 @@ ol { margin: 0; padding-left: 20px; }
   padding: 0 0.15em;
 }
 
+// Jev constraint cells are shared by the add and existing constraint rows.
+.jev-label {
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--el-text-color-secondary);
+  white-space: nowrap;
+}
+.jev-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3xs);
+}
+.jev-panel {
+  grid-column: 2 / -1;
+  margin: var(--space-3xs) 0 var(--space-2xs);
+  padding: var(--space-2xs) var(--space-xs);
+  background: var(--el-fill-color-lighter);
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: var(--radius-md);
+}
+.jev-prefix {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-body-sm);
+  color: var(--el-color-primary);
+}
+.jev-summary {
+  display: flex;
+  align-items: center;
+  min-height: var(--el-component-size-small);
+  padding: 0 var(--space-2xs);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-body-sm);
+  color: var(--el-text-color-regular);
+  background: var(--el-fill-color-lighter);
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: var(--radius-sm);
+  grid-column: span 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .jev-panel {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (max-width: 768px) {
   // Constraint table: stack rows vertically
   .constraint-table {

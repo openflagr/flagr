@@ -64,132 +64,11 @@
       </span>
     </div>
 
-    <div class="jev-stack">
-      <span class="jev-label">{{ criteriaLabel }}</span>
-
-      <div
-        v-if="isNoul"
-        class="jev-criteria"
-      >
-        <div class="jev-noul-row">
-          <span class="jev-noul-label">true</span>
-          <el-input
-            size="small"
-            placeholder="what counts as true"
-            :model-value="noulTrue"
-            :disabled="disabled"
-            @update:model-value="setNoul('true', $event)"
-          />
-        </div>
-        <div class="jev-noul-row">
-          <span class="jev-noul-label">false</span>
-          <el-input
-            size="small"
-            placeholder="what counts as false"
-            :model-value="noulFalse"
-            :disabled="disabled"
-            @update:model-value="setNoul('false', $event)"
-          />
-        </div>
-      </div>
-
-      <div
-        v-else-if="isChoice"
-        class="jev-criteria"
-      >
-        <div
-          v-for="(row, i) in choiceRows"
-          :key="i"
-          class="jev-option-row"
-        >
-          <el-input
-            size="small"
-            class="jev-option-name"
-            placeholder="choice"
-            :model-value="row.name"
-            :disabled="disabled"
-            @update:model-value="setChoiceName(i, $event)"
-          />
-          <el-input
-            size="small"
-            placeholder="description"
-            :model-value="row.description"
-            :disabled="disabled"
-            @update:model-value="setChoiceDescription(i, $event)"
-          />
-          <el-button
-            size="small"
-            plain
-            :disabled="disabled"
-            @click="removeChoice(i)"
-          >
-            ×
-          </el-button>
-        </div>
-        <el-button
-          size="small"
-          plain
-          :disabled="disabled"
-          data-testid="jev-add-option"
-          @click="addChoice"
-        >
-          Add choice
-        </el-button>
-      </div>
-
-      <div
-        v-else
-        class="jev-criteria"
-      >
-        <div
-          v-for="(level, i) in scoreLevels"
-          :key="i"
-          class="jev-option-row"
-        >
-          <span class="jev-level-index">{{ i }}</span>
-          <el-input
-            size="small"
-            placeholder="level (low → high)"
-            :model-value="level"
-            :disabled="disabled"
-            @update:model-value="setScoreLevelText(i, $event)"
-          />
-          <el-button
-            size="small"
-            plain
-            :disabled="disabled || i === 0"
-            @click="moveScoreLevel(i, -1)"
-          >
-            ↑
-          </el-button>
-          <el-button
-            size="small"
-            plain
-            :disabled="disabled || i === scoreLevels.length - 1"
-            @click="moveScoreLevel(i, 1)"
-          >
-            ↓
-          </el-button>
-          <el-button
-            size="small"
-            plain
-            :disabled="disabled"
-            @click="removeScoreLevel(i)"
-          >
-            ×
-          </el-button>
-        </div>
-        <el-button
-          size="small"
-          plain
-          :disabled="disabled"
-          data-testid="jev-add-level"
-          @click="addLevel"
-        >
-          Add level
-        </el-button>
-      </div>
-    </div>
+    <JevCriteriaEditor
+      :jev="question"
+      :disabled="disabled"
+      @action="dispatch"
+    />
 
     <div class="jev-row jev-row--match">
       <span class="jev-label">Match</span>
@@ -365,6 +244,7 @@
 <script lang="ts">
 import type { PropType } from 'vue'
 import type { JevQuestion, JevQuestionType } from '@/api/types'
+import JevCriteriaEditor from '@/components/JevCriteriaEditor.vue'
 import { InfoFilled } from '@element-plus/icons-vue'
 import {
   choiceDirectionFromOperator,
@@ -372,8 +252,6 @@ import {
   choiceOptionsFromValue,
   choiceRowsFromCriteria,
   isNegatedOperator,
-  nextChoiceName,
-  noulCriteriaText,
   numberFromValue,
   reduceJevMatch,
   scaleDirectionFromOperator,
@@ -391,7 +269,7 @@ const DEFAULT_CONFIDENCE = 0.5
 
 export default {
   name: 'JevQuestionEditor',
-  components: { InfoFilled },
+  components: { InfoFilled, JevCriteriaEditor },
   props: {
     modelValue: { type: Object as PropType<JevQuestion>, required: true },
     operator: { type: String, required: true },
@@ -420,22 +298,11 @@ export default {
     instructionsText(): string {
       return typeof this.question.instructions === 'string' ? this.question.instructions : ''
     },
-    criteriaLabel(): string {
-      if (this.isChoice) return 'Choices'
-      if (this.isNoul) return 'Criteria (true / false)'
-      return 'Scale (low → high)'
-    },
     choiceRows(): ChoiceRow[] {
       return choiceRowsFromCriteria(this.question.criteria)
     },
     scoreLevels(): string[] {
       return scoreLevelsFromCriteria(this.question.criteria)
-    },
-    noulTrue(): string {
-      return noulCriteriaText(this.question.criteria, 'true')
-    },
-    noulFalse(): string {
-      return noulCriteriaText(this.question.criteria, 'false')
     },
     selectedOptions(): string[] {
       return choiceOptionsFromValue(this.value)
@@ -500,52 +367,6 @@ export default {
     },
     setInstructions(instructions: string): void {
       this.dispatch({ type: 'setInstructions', instructions })
-    },
-    setNoul(key: 'true' | 'false', value: string): void {
-      this.dispatch({ type: 'setNoulCriteria', key, value })
-    },
-    setChoiceCriteria(rows: ChoiceRow[]): void {
-      this.dispatch({ type: 'setChoiceCriteria', rows })
-    },
-    setChoiceName(index: number, name: string): void {
-      const rows = [...this.choiceRows]
-      rows[index] = { ...rows[index], name }
-      this.setChoiceCriteria(rows)
-    },
-    setChoiceDescription(index: number, description: string): void {
-      const rows = [...this.choiceRows]
-      rows[index] = { ...rows[index], description }
-      this.setChoiceCriteria(rows)
-    },
-    addChoice(): void {
-      const rows = [...this.choiceRows]
-      rows.push({ name: nextChoiceName(rows), description: '' })
-      this.setChoiceCriteria(rows)
-    },
-    removeChoice(index: number): void {
-      this.setChoiceCriteria(this.choiceRows.filter((_, i) => i !== index))
-    },
-    setScoreLevels(levels: string[]): void {
-      this.dispatch({ type: 'setScoreLevels', levels })
-    },
-    setScoreLevelText(index: number, value: string): void {
-      const levels = [...this.scoreLevels]
-      levels[index] = value
-      this.setScoreLevels(levels)
-    },
-    addLevel(): void {
-      this.setScoreLevels([...this.scoreLevels, ''])
-    },
-    removeScoreLevel(index: number): void {
-      this.setScoreLevels(this.scoreLevels.filter((_, i) => i !== index))
-    },
-    moveScoreLevel(index: number, delta: number): void {
-      const levels = [...this.scoreLevels]
-      const target = index + delta
-      if (target < 0 || target >= levels.length) return
-      const [moved] = levels.splice(index, 1)
-      levels.splice(target, 0, moved)
-      this.setScoreLevels(levels)
     },
     setChoiceOptions(options: string[]): void {
       this.dispatch({ type: 'setChoiceOptions', options })
@@ -625,52 +446,11 @@ export default {
 .jev-row--match {
   align-items: center;
 }
-.jev-stack {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3xs);
-}
-.jev-label {
-  font-size: var(--font-size-body-sm);
-  font-weight: var(--font-weight-semibold);
-  color: var(--el-text-color-secondary);
-  white-space: nowrap;
-}
 .jev-label--inline {
   margin-left: var(--space-2xs);
 }
 .jev-type {
   width: 170px;
-}
-.jev-criteria {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3xs);
-}
-.jev-option-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3xs);
-}
-.jev-option-name {
-  max-width: 180px;
-}
-.jev-level-index {
-  width: 1.4em;
-  text-align: right;
-  color: var(--el-text-color-secondary);
-  font-size: var(--font-size-body-sm);
-}
-.jev-noul-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3xs);
-}
-.jev-noul-label {
-  width: 2.2em;
-  font-size: var(--font-size-body-sm);
-  font-weight: var(--font-weight-semibold);
-  color: var(--el-text-color-secondary);
 }
 .jev-choice-select {
   flex: 1;

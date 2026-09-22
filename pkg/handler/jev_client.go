@@ -24,7 +24,7 @@ const (
 
 // JevClient evaluates typed questions against a state on a System One endpoint.
 type JevClient interface {
-	SystemOne(ctx context.Context, state any, questions map[string]entity.JevConstraintSpec) (*JevResponse, error)
+	SystemOne(ctx context.Context, state any, questions map[string]entity.JevQuestion) (*JevResponse, error)
 }
 
 // NewJevClient builds the client from config. Overridable in tests.
@@ -87,17 +87,17 @@ type JevUsage struct {
 	OutputTokens int64 `json:"output_tokens"`
 }
 
-func (c *jevHTTPClient) SystemOne(ctx context.Context, state any, questions map[string]entity.JevConstraintSpec) (*JevResponse, error) {
+func (c *jevHTTPClient) SystemOne(ctx context.Context, state any, questions map[string]entity.JevQuestion) (*JevResponse, error) {
 	payload := jevRequestPayload{
 		State:     state,
 		Model:     c.model,
 		Questions: make(map[string]jevQuestionPayload, len(questions)),
 	}
-	for name, spec := range questions {
+	for name, q := range questions {
 		payload.Questions[name] = jevQuestionPayload{
-			Type:         spec.Type,
-			Instructions: spec.Instructions,
-			Criteria:     spec.Criteria,
+			Type:         q.Type,
+			Instructions: q.Instructions,
+			Criteria:     q.Criteria,
 		}
 	}
 

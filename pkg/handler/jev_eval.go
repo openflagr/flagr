@@ -17,11 +17,11 @@ const (
 
 // JevDebug captures the System One request and response for the eval debug log.
 type JevDebug struct {
-	Model     string                      `json:"model,omitempty"`
-	State     any                         `json:"state,omitempty"`
-	Questions map[string]JevDebugQuestion `json:"questions,omitempty"`
-	Answers   map[string]JevAnswer        `json:"answers,omitempty"`
-	Usage     *JevUsage                   `json:"usage,omitempty"`
+	Model     string                        `json:"model,omitempty"`
+	State     any                           `json:"state,omitempty"`
+	Questions map[string]entity.JevQuestion `json:"questions,omitempty"`
+	Answers   map[string]JevAnswer          `json:"answers,omitempty"`
+	Usage     *JevUsage                     `json:"usage,omitempty"`
 	// LatencyMs is the client-measured round trip; ServerLatencyMs is the
 	// endpoint-reported inference latency when provided.
 	LatencyMs       float64  `json:"latencyMs,omitempty"`
@@ -29,28 +29,11 @@ type JevDebug struct {
 	Error           string   `json:"error,omitempty"`
 }
 
-// JevDebugQuestion is the request-side view of one question.
-type JevDebugQuestion struct {
-	Type                string   `json:"type"`
-	Instructions        any      `json:"instructions,omitempty"`
-	Criteria            any      `json:"criteria,omitempty"`
-	ConfidenceThreshold *float64 `json:"confidenceThreshold,omitempty"`
-}
-
-func newJevDebug(state any, questions map[string]entity.JevConstraintSpec) *JevDebug {
-	debugQuestions := make(map[string]JevDebugQuestion, len(questions))
-	for name, spec := range questions {
-		debugQuestions[name] = JevDebugQuestion{
-			Type:                spec.Type,
-			Instructions:        spec.Instructions,
-			Criteria:            spec.Criteria,
-			ConfidenceThreshold: spec.ConfidenceThreshold,
-		}
-	}
+func newJevDebug(state any, questions map[string]entity.JevQuestion) *JevDebug {
 	return &JevDebug{
 		Model:     config.Config.JevModel,
 		State:     state,
-		Questions: debugQuestions,
+		Questions: questions,
 	}
 }
 
@@ -63,7 +46,7 @@ func newJevDebug(state any, questions map[string]entity.JevConstraintSpec) *JevD
 //
 // Fail-closed: when Jev is disabled or the call fails, the returned map is nil
 // and every `@jev.<name>` constraint evaluates false.
-func resolveJevForFlag(evalContext models.EvalContext, flag *entity.Flag) (map[string]any, *JevDebug) {
+func resolveJevForFlag(ctx context.Context, evalContext models.EvalContext, flag *entity.Flag) (map[string]any, *JevDebug) {
 	questions := flag.FlagEvaluation.JevQuestions
 	if !config.Config.JevEnabled || len(questions) == 0 {
 		return nil, nil
@@ -72,7 +55,7 @@ func resolveJevForFlag(evalContext models.EvalContext, flag *entity.Flag) (map[s
 	state := jevState(evalContext.EntityContext, evalContext.EntityID, evalContext.EntityType)
 	debug := newJevDebug(state, questions)
 
-	resp, err := NewJevClient().SystemOne(context.Background(), state, questions)
+	resp, err := NewJevClient().SystemOne(ctx, state, questions)
 	if err != nil {
 		debug.Error = err.Error()
 		logrus.WithError(err).WithField("flagID", flag.ID).
@@ -132,7 +115,7 @@ func jevState(entityContext any, entityID, entityType string) any {
 // jevAnswerValue converts an answer into the value used for its question.
 // choice and score answers below the confidence threshold are rejected, which
 // makes the containing constraint fall through.
-func jevAnswerValue(spec entity.JevConstraintSpec, answer JevAnswer) (any, bool) {
+func jevAnswerValue(spec entity.JevQuestion, answer JevAnswer) (any, bool) {
 	switch spec.Type {
 	case entity.JevTypeNoul:
 		if answer.Noul == nil {
@@ -154,7 +137,7 @@ func jevAnswerValue(spec entity.JevConstraintSpec, answer JevAnswer) (any, bool)
 	}
 }
 
-func jevConfidentEnough(spec entity.JevConstraintSpec, confidence *float64) bool {
+func jevConfidentEnough(spec entity.JevQuestion, confidence *float64) bool {
 	if confidence == nil {
 		return false
 	}
@@ -163,6 +146,19 @@ func jevConfidentEnough(spec entity.JevConstraintSpec, confidence *float64) bool
 		threshold = *spec.ConfidenceThreshold
 	}
 	return *confidence >= threshold
+}
+
+// withJevContext returns entityContext with the resolved Jev answers merged
+// under `@jev`, so constraints can reference them without mutating the caller's
+// context. The result context (and data records) stay clean.
+func withJevContext(entityContext any, jev map[string]any) map[string]any {
+	m, _ := entityContext.(map[string]any)
+	merged := make(map[string]any, len(m)+1)
+	for k, v := range m {
+		merged[k] = v
+	}
+	merged[entity.JevContextKey] = jev
+	return merged
 }
 
 // segmentJevQuestionNames returns the `@jev.<name>` questions a segment uses.
@@ -184,7 +180,7 @@ func filterJevDebug(debug *JevDebug, names []string) *JevDebug {
 		return nil
 	}
 	filtered := *debug
-	filtered.Questions = make(map[string]JevDebugQuestion, len(names))
+	filtered.Questions = make(map[string]entity.JevQuestion, len(names))
 	filtered.Answers = make(map[string]JevAnswer, len(names))
 	for _, name := range names {
 		if q, ok := debug.Questions[name]; ok {

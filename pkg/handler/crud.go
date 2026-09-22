@@ -637,6 +637,15 @@ func (c *crud) DeleteSegment(params segment.DeleteSegmentParams) middleware.Resp
 	return segment.NewDeleteSegmentOK()
 }
 
+// applyJevQuestion maps and stores the optional Jev question from a constraint request.
+func applyJevQuestion(cons *entity.Constraint, r *models.JevQuestion) error {
+	q, err := r2e.MapJevQuestion(r)
+	if err != nil {
+		return err
+	}
+	return cons.SetJevQuestion(q)
+}
+
 func (c *crud) CreateConstraint(params constraint.CreateConstraintParams) middleware.Responder {
 	flagID := util.SafeUint(params.FlagID)
 	subject := getSubjectFromRequest(params.HTTPRequest)
@@ -646,11 +655,7 @@ func (c *crud) CreateConstraint(params constraint.CreateConstraintParams) middle
 		cons.Property = util.SafeString(params.Body.Property)
 		cons.Operator = util.SafeString(params.Body.Operator)
 		cons.Value = util.SafeString(params.Body.Value)
-		jevQuestion, err := r2e.MapJevQuestion(params.Body.Jev)
-		if err != nil {
-			return constraint.NewCreateConstraintDefault(400).WithPayload(ErrorMessage("%s", err))
-		}
-		if err = cons.SetJevQuestion(jevQuestion); err != nil {
+		if err := applyJevQuestion(cons, params.Body.Jev); err != nil {
 			return constraint.NewCreateConstraintDefault(400).WithPayload(ErrorMessage("%s", err))
 		}
 	}
@@ -698,11 +703,7 @@ func (c *crud) PutConstraint(params constraint.PutConstraintParams) middleware.R
 		cons.Property = util.SafeString(params.Body.Property)
 		cons.Operator = util.SafeString(params.Body.Operator)
 		cons.Value = util.SafeString(params.Body.Value)
-		jevQuestion, err := r2e.MapJevQuestion(params.Body.Jev)
-		if err != nil {
-			return constraint.NewPutConstraintDefault(400).WithPayload(ErrorMessage("%s", err))
-		}
-		if err = cons.SetJevQuestion(jevQuestion); err != nil {
+		if err := applyJevQuestion(cons, params.Body.Jev); err != nil {
 			return constraint.NewPutConstraintDefault(400).WithPayload(ErrorMessage("%s", err))
 		}
 	}

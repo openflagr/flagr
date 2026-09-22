@@ -55,35 +55,11 @@
         />
       </template>
       <div class="constraint-actions">
-        <el-tooltip
-          placement="top"
-          effect="light"
-          :enterable="true"
-          popper-class="jev-toggle-tooltip"
-        >
-          <template #content>
-            <div class="jev-toggle-tooltip__body">
-              Turn on to back this constraint with a Jev / System One question.
-              The model answer is used as <code>@jev.&lt;name&gt;</code> and
-              compared with the operator.
-            </div>
-          </template>
-          <div
-            class="constraint-jev"
-            :class="{ 'constraint-jev--on': jevEnabled }"
-          >
-            <el-switch
-              :model-value="jevEnabled"
-              size="small"
-              data-testid="new-constraint-jev-toggle"
-              @update:model-value="toggleJev"
-            />
-            <span
-              class="constraint-jev__label"
-              @click="toggleJev(!jevEnabled)"
-            >JEV</span>
-          </div>
-        </el-tooltip>
+        <JevToggleSwitch
+          :enabled="jevEnabled"
+          test-id="new-constraint-jev-toggle"
+          @update:enabled="toggleJev"
+        />
         <el-button
           size="small"
           type="primary"
@@ -117,14 +93,15 @@ import type { JevQuestion } from '@/api/types'
 import ConstraintValueCell from '@/components/ConstraintValueCell.vue'
 import ConstraintOperatorSelect from '@/components/ConstraintOperatorSelect.vue'
 import JevQuestionEditor from '@/components/JevQuestionEditor.vue'
+import JevToggleSwitch from '@/components/JevToggleSwitch.vue'
 import {
   propertyPlaceholderFor,
   valuePlaceholderFor,
 } from '@/helpers/constraintOperatorUi'
 import {
-  defaultJevQuestion,
   formatJevSummary,
   isJevQuestionReady,
+  jevEnablePatch,
   jevPropertyFor,
   jevPropertyName,
 } from '@/helpers/jevQuestion'
@@ -143,6 +120,7 @@ export default {
     ConstraintOperatorSelect,
     ConstraintValueCell,
     JevQuestionEditor,
+    JevToggleSwitch,
   },
   props: {
     draft: { type: Object as PropType<NewConstraintDraft>, required: true },
@@ -195,10 +173,7 @@ export default {
       if (enabled) {
         this.$emit('update:draft', {
           ...this.draft,
-          property: jevPropertyFor(this.jevName || 'question'),
-          operator: 'GTE',
-          value: '0.70',
-          jev: this.draft.jev ?? defaultJevQuestion('noul'),
+          ...jevEnablePatch(this.draft.jev, this.draft.property),
         })
       } else {
         this.$emit('update:draft', { ...this.draft, jev: undefined, property: '' })
@@ -217,57 +192,5 @@ export default {
 <style scoped>
 .constraint-add-block {
   display: contents;
-}
-.jev-panel {
-  grid-column: 2 / -1;
-  margin: var(--space-3xs) 0 var(--space-2xs);
-  padding: var(--space-2xs) var(--space-xs);
-  background: var(--el-fill-color-lighter);
-  border: 1px solid var(--el-border-color-lighter);
-  border-radius: var(--radius-md);
-}
-@media (max-width: 768px) {
-  .jev-panel {
-    grid-column: 1 / -1;
-  }
-}
-.jev-prefix {
-  font-family: var(--font-mono);
-  font-size: var(--font-size-body-sm);
-  color: var(--el-color-primary);
-}
-.constraint-jev {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3xs);
-  margin-right: var(--space-3xs);
-}
-.constraint-jev__label {
-  font-size: var(--font-size-micro);
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: var(--letter-spacing-wide);
-  text-transform: uppercase;
-  color: var(--el-text-color-placeholder);
-  cursor: pointer;
-  user-select: none;
-}
-.constraint-jev--on .constraint-jev__label {
-  color: var(--el-color-primary);
-}
-.jev-summary {
-  display: flex;
-  align-items: center;
-  min-height: var(--el-component-size-small);
-  padding: 0 var(--space-2xs);
-  font-family: var(--font-mono);
-  font-size: var(--font-size-body-sm);
-  color: var(--el-text-color-regular);
-  background: var(--el-fill-color-lighter);
-  border: 1px solid var(--el-border-color-lighter);
-  border-radius: var(--radius-sm);
-  grid-column: span 2;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 </style>

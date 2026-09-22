@@ -12,6 +12,7 @@ import {
   formatJevSummary,
   isJevQuestionReady,
   isNegatedOperator,
+  jevEnablePatch,
   jevPropertyFor,
   jevPropertyName,
   nextChoiceName,
@@ -180,6 +181,23 @@ const scoreState = (): JevMatchState => ({
   value: '1',
 })
 
+describe('jevEnablePatch', () => {
+  it('seeds a noul question and an @jev property when enabling', () => {
+    expect(jevEnablePatch(undefined, '')).toEqual({
+      jev: { type: 'noul', instructions: '' },
+      property: '@jev.question',
+      operator: 'GTE',
+      value: '0.70',
+    })
+    expect(jevEnablePatch(undefined, '@jev.buying_intent').property).toBe('@jev.buying_intent')
+  })
+
+  it('keeps an existing question when re-enabling', () => {
+    const existing = { type: 'choice' as const, instructions: 'x', criteria: { pro: 'y' } }
+    expect(jevEnablePatch(existing, '@jev.plan').jev).toBe(existing)
+  })
+})
+
 describe('reduceJevMatch', () => {
   it('resets the match to type-appropriate defaults on type switch', () => {
     expect(reduceJevMatch(noulState(), { type: 'setType', questionType: 'choice' })).toMatchObject({
@@ -194,6 +212,24 @@ describe('reduceJevMatch', () => {
       operator: 'GTE',
       value: '0.70',
     })
+  })
+
+  it('keeps the match when setJev keeps the same type', () => {
+    const next = { type: 'noul' as const, instructions: 'changed' }
+    const result = reduceJevMatch(noulState(), { type: 'setJev', jev: next })
+    expect(result.jev).toBe(next)
+    expect(result.operator).toBe('GTE')
+    expect(result.value).toBe('0.70')
+  })
+
+  it('resets the match to type defaults when setJev changes the type', () => {
+    const result = reduceJevMatch(noulState(), {
+      type: 'setJev',
+      jev: { type: 'choice', instructions: 'x', criteria: { pro: 'y' } },
+    })
+    expect(result.jev.type).toBe('choice')
+    expect(result.operator).toBe('EQ')
+    expect(result.value).toBe('')
   })
 
   it('keeps instructions across a type switch', () => {

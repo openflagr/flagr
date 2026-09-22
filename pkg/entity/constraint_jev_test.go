@@ -103,6 +103,22 @@ func TestConstraintJevValidate(t *testing.T) {
 			wantError: true,
 		},
 		{
+			name:      "choice with numeric operator",
+			property:  "@jev.plan",
+			operator:  "GTE",
+			value:     `"pro"`,
+			question:  newChoice(),
+			wantError: true,
+		},
+		{
+			name:      "noul with set operator",
+			property:  "@jev.intent",
+			operator:  "IN",
+			value:     `["x"]`,
+			question:  &JevQuestion{Type: JevTypeNoul, Instructions: "x"},
+			wantError: true,
+		},
+		{
 			name:      "threshold above one",
 			property:  "@jev.plan",
 			operator:  "EQ",

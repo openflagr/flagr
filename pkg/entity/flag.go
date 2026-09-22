@@ -35,7 +35,7 @@ type FlagEvaluation struct {
 	TagValues   []string // denormalized tag values for eval results
 	// JevQuestions maps the `@jev.<name>` question name to its definition,
 	// collected across segments in rank order. Empty when no Jev constraints exist.
-	JevQuestions map[string]JevConstraintSpec
+	JevQuestions map[string]JevQuestion
 }
 
 // Preloads just the tags
@@ -80,7 +80,7 @@ func (f *Flag) PrepareEvaluation() error {
 	f.FlagEvaluation = FlagEvaluation{
 		VariantsMap:  make(map[uint]*Variant),
 		TagValues:    tagValues,
-		JevQuestions: make(map[string]JevConstraintSpec),
+		JevQuestions: make(map[string]JevQuestion),
 	}
 	for i := range f.Segments {
 		if err := f.Segments[i].PrepareEvaluation(); err != nil {
@@ -121,13 +121,7 @@ func (f *Flag) collectJevQuestions(s *Segment) {
 			}).Warn("duplicate jev question name; keeping the higher-priority definition")
 			continue
 		}
-		f.FlagEvaluation.JevQuestions[name] = JevConstraintSpec{
-			Name:                name,
-			Type:                q.Type,
-			Instructions:        q.Instructions,
-			Criteria:            q.Criteria,
-			ConfidenceThreshold: q.ConfidenceThreshold,
-		}
+		f.FlagEvaluation.JevQuestions[name] = *q
 	}
 }
 

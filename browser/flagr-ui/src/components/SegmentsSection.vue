@@ -337,10 +337,7 @@ export default {
       constraint: Constraint,
       payload: { jev?: JevQuestion; property?: string; operator?: string; value?: string },
     ): void {
-      if ('jev' in payload) constraint.jev = payload.jev
-      if (payload.property != null) constraint.property = payload.property
-      if (payload.operator != null) constraint.operator = payload.operator
-      if (payload.value != null) constraint.value = payload.value
+      // The page owns the mutation; here we only mark the constraint dirty.
       this.markConstraintDirty(segment, constraint)
       this.$emit('update-constraint-jev', { segment, constraint, ...payload })
     },
