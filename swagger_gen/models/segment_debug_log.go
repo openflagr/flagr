@@ -17,7 +17,7 @@ import (
 // swagger:model segmentDebugLog
 type SegmentDebugLog struct {
 
-	// Jev / System One request and response for this evaluation (debug only): `{model, state, questions, answers, usage, cached, error}`. `questions` holds the type/instructions/criteria sent; `answers` holds the raw answers with confidence and probabilities.
+	// Jev / System One request and response for this evaluation (debug only): `{model, state, questions, answers, usage, latencyMs, serverLatencyMs, cached, error}`. `questions` holds the type/instructions/criteria sent; `answers` holds the raw answers with confidence and probabilities. `latencyMs` is the client round trip; `serverLatencyMs` is the endpoint-reported inference latency when provided. Both are omitted on cache hits.
 	//
 	Jev any `json:"jev,omitempty"`
 

@@ -66,7 +66,7 @@ func TestJevEndToEndWithMockServer(t *testing.T) {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("x-typesafe-request-id", "req-123")
-		_ = json.NewEncoder(w).Encode(JevResponse{Model: "mock-jev-1.13", Answers: answers})
+		_ = json.NewEncoder(w).Encode(JevResponse{Model: "mock-jev-1.13", Answers: answers, LatencyMs: jevF64(11.0)})
 	}))
 	defer server.Close()
 
@@ -151,6 +151,9 @@ func TestJevEndToEndWithMockServer(t *testing.T) {
 	assert.Contains(t, jevDebug.Answers, "risk")
 	assert.Equal(t, "mock-jev-1.13", jevDebug.Model)
 	require.NotNil(t, jevDebug.State)
+	assert.GreaterOrEqual(t, jevDebug.LatencyMs, 0.0)
+	require.NotNil(t, jevDebug.ServerLatencyMs)
+	assert.Equal(t, 11.0, *jevDebug.ServerLatencyMs)
 
 	// The injected answers are also visible on the eval context.
 	evalCtx, ok := result.EvalContext.EntityContext.(map[string]any)

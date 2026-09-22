@@ -25,7 +25,7 @@ func TestJevClientSystemOne(t *testing.T) {
 		gotPath = r.URL.Path
 		_ = json.NewDecoder(r.Body).Decode(&gotBody)
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"model":"jev-1.13.0","answers":{"intent":{"type":"noul","noul":0.82}},"usage":{"input_tokens":10,"output_tokens":0}}`))
+		_, _ = w.Write([]byte(`{"model":"jev-1.13.0","answers":{"intent":{"type":"noul","noul":0.82}},"usage":{"input_tokens":10,"output_tokens":0},"latency_ms":12.5}`))
 	}))
 	defer server.Close()
 
@@ -49,6 +49,9 @@ func TestJevClientSystemOne(t *testing.T) {
 	assert.Equal(t, "Is this about billing?", gotBody.Questions["intent"].Instructions)
 	require.NotNil(t, resp.Answers["intent"].Noul)
 	assert.Equal(t, 0.82, *resp.Answers["intent"].Noul)
+	require.NotNil(t, resp.LatencyMs)
+	assert.Equal(t, 12.5, *resp.LatencyMs)
+	assert.GreaterOrEqual(t, resp.ClientLatencyMs, 0.0)
 }
 
 func TestJevClientSystemOneErrorStatus(t *testing.T) {

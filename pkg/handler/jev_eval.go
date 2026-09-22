@@ -22,8 +22,12 @@ type JevDebug struct {
 	Questions map[string]JevDebugQuestion `json:"questions,omitempty"`
 	Answers   map[string]JevAnswer        `json:"answers,omitempty"`
 	Usage     *JevUsage                   `json:"usage,omitempty"`
-	Cached    bool                        `json:"cached,omitempty"`
-	Error     string                      `json:"error,omitempty"`
+	// LatencyMs is the client-measured round trip; ServerLatencyMs is the
+	// endpoint-reported inference latency when provided. Omitted on cache hits.
+	LatencyMs       float64  `json:"latencyMs,omitempty"`
+	ServerLatencyMs *float64 `json:"serverLatencyMs,omitempty"`
+	Cached          bool     `json:"cached,omitempty"`
+	Error           string   `json:"error,omitempty"`
 }
 
 // JevDebugQuestion is the request-side view of one question.
@@ -82,6 +86,10 @@ func injectJevContext(evalContext models.EvalContext, flag *entity.Flag) (models
 		}
 		debug.Answers = resp.Answers
 		debug.Usage = resp.Usage
+		if !cached {
+			debug.LatencyMs = resp.ClientLatencyMs
+			debug.ServerLatencyMs = resp.LatencyMs
+		}
 	}
 
 	injected := make(map[string]any, len(resp.Answers))

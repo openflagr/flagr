@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/openflagr/flagr/pkg/config"
 	"github.com/openflagr/flagr/pkg/entity"
@@ -72,6 +73,12 @@ type JevResponse struct {
 	Model   string               `json:"model,omitempty"`
 	Answers map[string]JevAnswer `json:"answers"`
 	Usage   *JevUsage            `json:"usage,omitempty"`
+	// LatencyMs is server-reported inference latency, when the endpoint provides
+	// it (Kev and oido-systemone do; the hosted API may not).
+	LatencyMs *float64 `json:"latency_ms,omitempty"`
+
+	// ClientLatencyMs is the client-measured round trip (not part of the API).
+	ClientLatencyMs float64 `json:"-"`
 }
 
 // JevUsage is the token usage of a System One call.
@@ -99,6 +106,8 @@ func (c *jevHTTPClient) SystemOne(ctx context.Context, state any, questions map[
 		return nil, fmt.Errorf("encoding jev request: %w", err)
 	}
 
+	start := time.Now()
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+jevSystemOnePath, bytes.NewReader(body))
 	if err != nil {
 		return nil, fmt.Errorf("building jev request: %w", err)
@@ -113,7 +122,6 @@ func (c *jevHTTPClient) SystemOne(ctx context.Context, state any, questions map[
 		return nil, fmt.Errorf("calling jev: %w", err)
 	}
 	defer func() { _ = resp.Body.Close() }()
-
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
 		msg, _ := io.ReadAll(io.LimitReader(resp.Body, jevMaxErrorBodyBytes))
 		return nil, fmt.Errorf("jev systemone returned status %d: %s", resp.StatusCode, strings.TrimSpace(string(msg)))
@@ -126,5 +134,6 @@ func (c *jevHTTPClient) SystemOne(ctx context.Context, state any, questions map[
 	if out.Answers == nil {
 		return nil, fmt.Errorf("jev response contained no answers")
 	}
+	out.ClientLatencyMs = float64(time.Since(start).Microseconds()) / 1000.0
 	return &out, nil
 }
