@@ -150,6 +150,131 @@ The **state** sent to the model is the full `entityContext` plus `entityID` and
 Answers are used for constraint evaluation only and are never written back into
 the result context.
 
+## 3. How it works
+
+### The state sent to the model
+
+Flagr builds the System One `state` from the evaluation's `entityContext`, then
+adds the entity identity and drops its own answer namespace:
+
+- starts from `entityContext`,
+- adds `entityID` and `entityType` (canonical values win over same-named
+  `entityContext` keys),
+- removes `@jev` (answers are never fed back to the model),
+- keeps server-injected `@ts*` / `@http_*` keys when
+  [`FLAGR_INJECTED_CONTEXT_ENABLED`](flagr_injected_context.md) is on — injection
+  runs before Jev.
+
+Given this evaluation request:
+
+```json
+{
+  "flagID": 42,
+  "entityID": "user-4711",
+  "entityType": "account",
+  "entityContext": {
+    "message": "I was charged twice for my subscription",
+    "plan": "pro"
+  }
+}
+```
+
+the model receives:
+
+```json
+{
+  "message": "I was charged twice for my subscription",
+  "plan": "pro",
+  "entityID": "user-4711",
+  "entityType": "account"
+}
+```
+
+With built-in context injection enabled it also carries `@ts`, `@ts_hour`,
+`@ts_weekday`, `@ts_month`, and any configured `@http_*` header keys. Because the
+state is an object, questions can point at nested values by name in backticks,
+e.g. <code>`account.plan`</code>.
+
+### One batched call per flag
+
+Every `@jev.<name>` question in the flag is collected once at flag-load time and
+sent in a single `POST /v1/systemone` (questions are answered in parallel):
+
+```json
+{
+  "model": "jev-latest",
+  "state": { "message": "...", "plan": "pro", "entityID": "user-4711", "entityType": "account" },
+  "questions": {
+    "billing":  { "type": "choice", "instructions": "Which team should handle this message?", "criteria": { "billing": "Charges, invoices, payments", "shipping": "Deliveries", "returns": "Exchanges and refunds" } },
+    "escalate": { "type": "noul", "instructions": "Does this need urgent human attention?" },
+    "urgency":  { "type": "score", "instructions": "How urgent is this message?", "criteria": ["Not urgent", "Somewhat urgent", "Very urgent"] }
+  }
+}
+```
+
+Answers come back under the same keys:
+
+```json
+{
+  "model": "jev-latest",
+  "answers": {
+    "billing":  { "type": "choice", "choice": "billing", "confidence": 0.91 },
+    "escalate": { "type": "noul", "noul": 0.87 },
+    "urgency":  { "type": "score", "score": 2.1, "confidence": 0.78 }
+  },
+  "usage": { "input_tokens": 96, "output_tokens": 12 },
+  "latency_ms": 210
+}
+```
+
+### How the constraint is evaluated
+
+Flagr turns the answers into a synthetic `@jev` object and merges it into a
+**private copy** of the context, used only for that segment's constraint
+expression:
+
+```json
+{ "@jev": { "billing": "billing", "escalate": 0.87, "urgency": 2.1 } }
+```
+
+Each constraint's `property` is `@jev.<name>`, so the existing conditions engine
+resolves it like any dotted path. A segment with these constraints:
+
+| Property | Operator | Value |
+|---|---|---|
+| `@jev.billing` | `=` | `"billing"` |
+| `@jev.escalate` | `≥` | `0.8` |
+| `@jev.urgency` | `≥` | `2` |
+
+compiles to one AND expression:
+
+```text
+({@jev.billing} == "billing") AND ({@jev.escalate} >= 0.8) AND ({@jev.urgency} >= 2)
+```
+
+which evaluates to `true AND true AND true` → the segment matches, and Flagr runs
+its rollout and distribution to pick a variant. A miss (or an error) falls
+through to the next segment, exactly like a normal constraint. The answers are
+**never written back** into `EvalResult.evalContext` or data records — they exist
+only for the constraint comparison.
+
+### Confidence, errors, and fail-closed
+
+- **Confidence gate** — for `choice` / `score`, an answer whose confidence is
+  below the constraint's `confidenceThreshold` is dropped. The property is then
+  missing, the expression errors, and the segment falls through. `noul` has no
+  separate confidence: its `P(true)` is the value you compare.
+- **Fail-closed** — if `FLAGR_JEV_ENABLED` is off, the endpoint errors, or the
+  call times out, there are no `@jev` answers, so every Jev constraint is
+  `false`. There is no fail-open mode.
+- **Bounded retries** — transient failures (network errors, 5xx, 429) are
+  retried with backoff inside `FLAGR_JEV_TIMEOUT`; a failure after that still
+  fails closed.
+
+Turn on the [Debug Console](flagr_debugging.md) (`enableDebug: true`) to see the
+`state`, `questions`, `answers`, `latencyMs`, `retries`, and any `error` for each
+segment.
+
 ## Cost & limits
 
 Each flag evaluation with Jev constraints makes one batched System One call. It
