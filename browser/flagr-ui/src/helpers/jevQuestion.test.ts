@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
   choiceCriteriaFromRows,
+  choiceDirectionFromOperator,
+  choiceNegateFromDirection,
   choiceOperatorFor,
   choiceOptionsFromValue,
   choiceRowsFromCriteria,
@@ -17,6 +19,8 @@ import {
   numberFromValue,
   operatorSymbol,
   reduceJevMatch,
+  scaleDirectionFromOperator,
+  scaleNegateFromDirection,
   scoreLevelsFromCriteria,
   slugifyJevName,
   unquoteJevValue,
@@ -119,6 +123,25 @@ describe('jevQuestion', () => {
     expect(isNegatedOperator('EQ')).toBe(false)
   })
 
+  it('maps choice operators to any of / none of and back', () => {
+    expect(choiceDirectionFromOperator('EQ')).toBe('include')
+    expect(choiceDirectionFromOperator('IN')).toBe('include')
+    expect(choiceDirectionFromOperator('NEQ')).toBe('exclude')
+    expect(choiceDirectionFromOperator('NOTIN')).toBe('exclude')
+    expect(choiceNegateFromDirection('include')).toBe(false)
+    expect(choiceNegateFromDirection('exclude')).toBe(true)
+    expect(choiceNegateFromDirection('other')).toBe(false)
+  })
+
+  it('maps scale operators to at least / below and back', () => {
+    expect(scaleDirectionFromOperator('GTE')).toBe('atleast')
+    expect(scaleDirectionFromOperator('GT')).toBe('atleast')
+    expect(scaleDirectionFromOperator('LT')).toBe('below')
+    expect(scaleDirectionFromOperator('LTE')).toBe('below')
+    expect(scaleNegateFromDirection('atleast')).toBe(false)
+    expect(scaleNegateFromDirection('below')).toBe(true)
+  })
+
   it('parses numeric values', () => {
     expect(numberFromValue('0.70')).toBeCloseTo(0.7)
     expect(numberFromValue('2')).toBe(2)
@@ -191,6 +214,33 @@ describe('reduceJevMatch', () => {
     const neg = reduceJevMatch(choiceState(), { type: 'setChoiceNegate', negate: true })
     expect(neg.operator).toBe('NEQ')
     expect(neg.value).toBe('"pro"')
+  })
+
+  it('uses IN/NOTIN for multiple options and preserves the direction', () => {
+    const any = reduceJevMatch(choiceState(), {
+      type: 'setChoiceOptions',
+      options: ['pro', 'free'],
+    })
+    expect(any.operator).toBe('IN')
+    expect(any.value).toBe('["pro","free"]')
+
+    const none = reduceJevMatch(
+      { ...choiceState(), operator: 'NOTIN', value: '["free"]' },
+      { type: 'setChoiceOptions', options: ['pro', 'free'] },
+    )
+    expect(none.operator).toBe('NOTIN')
+    expect(none.value).toBe('["pro","free"]')
+  })
+
+  it('toggles none-of with multiple options to NOTIN', () => {
+    const multi: JevMatchState = {
+      jev: { type: 'choice', instructions: 'x', criteria: { pro: 'y', free: 'z' } },
+      operator: 'IN',
+      value: '["pro","free"]',
+    }
+    const neg = reduceJevMatch(multi, { type: 'setChoiceNegate', negate: true })
+    expect(neg.operator).toBe('NOTIN')
+    expect(neg.value).toBe('["pro","free"]')
   })
 
   it('sets the scale level and preserves negation', () => {

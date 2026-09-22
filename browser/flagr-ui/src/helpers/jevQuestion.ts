@@ -212,6 +212,32 @@ export function isNegatedOperator(operator: string): boolean {
   return operator === 'NEQ' || operator === 'NOTIN' || operator === 'LT' || operator === 'LTE'
 }
 
+/** Direction of a choice match as shown in the UI: any of / none of. */
+export type ChoiceDirection = 'include' | 'exclude'
+
+/** Direction of a scale match as shown in the UI: at least / below. */
+export type ScaleDirection = 'atleast' | 'below'
+
+/** Map a choice operator to its UI direction (any of = include, none of = exclude). */
+export function choiceDirectionFromOperator(operator: string): ChoiceDirection {
+  return isNegatedOperator(operator) ? 'exclude' : 'include'
+}
+
+/** Map the UI choice direction back to the negate flag. */
+export function choiceNegateFromDirection(direction: string): boolean {
+  return direction === 'exclude'
+}
+
+/** Map a scale operator to its UI direction (≥ = at least, < = below). */
+export function scaleDirectionFromOperator(operator: string): ScaleDirection {
+  return operator === 'LT' || operator === 'LTE' ? 'below' : 'atleast'
+}
+
+/** Map the UI scale direction back to the negate flag. */
+export function scaleNegateFromDirection(direction: string): boolean {
+  return direction === 'below'
+}
+
 /** Full editable state of a Jev constraint: the question plus its match. */
 export interface JevMatchState {
   jev: JevQuestion

@@ -415,3 +415,89 @@ func TestJevConstraintMixedWithPlainConstraint(t *testing.T) {
 	require.True(t, ok)
 	assert.NotContains(t, ctx, entity.JevContextKey)
 }
+
+// Table-driven coverage of every question type and comparison direction,
+// including the choice any-of / none-of logic and the confidence gate.
+func TestJevConstraintQuestionTypes(t *testing.T) {
+	noul := func() *entity.JevQuestion {
+		return &entity.JevQuestion{Type: entity.JevTypeNoul, Instructions: "q?"}
+	}
+	choice := func() *entity.JevQuestion {
+		return &entity.JevQuestion{
+			Type:         entity.JevTypeChoice,
+			Instructions: "q?",
+			Criteria:     map[string]any{"free": "a", "pro": "b", "enterprise": "c"},
+		}
+	}
+	scale := func() *entity.JevQuestion {
+		return &entity.JevQuestion{
+			Type:         entity.JevTypeScore,
+			Instructions: "q?",
+			Criteria:     []any{"low", "high"},
+		}
+	}
+	noulAnswer := func(v float64) JevAnswer {
+		return JevAnswer{Type: entity.JevTypeNoul, Noul: jevF64(v)}
+	}
+	choiceAnswer := func(picked string, confidence float64) JevAnswer {
+		return JevAnswer{Type: entity.JevTypeChoice, Choice: picked, Confidence: jevF64(confidence)}
+	}
+	scaleAnswer := func(score, confidence float64) JevAnswer {
+		return JevAnswer{Type: entity.JevTypeScore, Score: jevF64(score), Confidence: jevF64(confidence)}
+	}
+
+	cases := []struct {
+		name      string
+		question  *entity.JevQuestion
+		operator  string
+		value     string
+		answer    JevAnswer
+		wantMatch bool
+	}{
+		// noul: P(true) threshold
+		{"noul gte match", noul(), models.ConstraintOperatorGTE, "0.8", noulAnswer(0.9), true},
+		{"noul gte no match", noul(), models.ConstraintOperatorGTE, "0.8", noulAnswer(0.5), false},
+		{"noul lt match", noul(), models.ConstraintOperatorLT, "0.5", noulAnswer(0.2), true},
+		{"noul lt no match", noul(), models.ConstraintOperatorLT, "0.5", noulAnswer(0.9), false},
+
+		// choice single: any of (EQ) / none of (NEQ)
+		{"choice eq match", choice(), models.ConstraintOperatorEQ, `"pro"`, choiceAnswer("pro", 0.9), true},
+		{"choice eq no match", choice(), models.ConstraintOperatorEQ, `"pro"`, choiceAnswer("free", 0.9), false},
+		{"choice neq match", choice(), models.ConstraintOperatorNEQ, `"free"`, choiceAnswer("pro", 0.9), true},
+		{"choice neq no match", choice(), models.ConstraintOperatorNEQ, `"free"`, choiceAnswer("free", 0.9), false},
+
+		// choice multiple: any of (IN) / none of (NOTIN)
+		{"choice in match", choice(), models.ConstraintOperatorIN, `["pro","enterprise"]`, choiceAnswer("enterprise", 0.9), true},
+		{"choice in no match", choice(), models.ConstraintOperatorIN, `["pro","enterprise"]`, choiceAnswer("free", 0.9), false},
+		{"choice notin match", choice(), models.ConstraintOperatorNOTIN, `["free"]`, choiceAnswer("enterprise", 0.9), true},
+		{"choice notin no match", choice(), models.ConstraintOperatorNOTIN, `["free"]`, choiceAnswer("free", 0.9), false},
+
+		// scale: at least (GTE) / below (LT)
+		{"scale gte match", scale(), models.ConstraintOperatorGTE, "1", scaleAnswer(1.5, 0.9), true},
+		{"scale gte no match", scale(), models.ConstraintOperatorGTE, "1", scaleAnswer(0.5, 0.9), false},
+		{"scale lt match", scale(), models.ConstraintOperatorLT, "1", scaleAnswer(0.5, 0.9), true},
+		{"scale lt no match", scale(), models.ConstraintOperatorLT, "1", scaleAnswer(1.5, 0.9), false},
+
+		// confidence gate (choice / scale); noul has no separate confidence
+		{"choice low confidence", choice(), models.ConstraintOperatorEQ, `"pro"`, choiceAnswer("pro", 0.2), false},
+		{"scale low confidence", scale(), models.ConstraintOperatorGTE, "0", scaleAnswer(1.5, 0.2), false},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			fake := &fakeJevClient{answers: map[string]JevAnswer{"q": tc.answer}}
+			setupJevTest(t, fake)
+
+			c := jevConstraint(t, "@jev.q", tc.operator, tc.value, tc.question)
+			f := jevTestFlag(t, c)
+			defer gostub.StubFunc(&GetEvalCache, GenFixtureEvalCacheWithFlags([]entity.Flag{f})).Reset()
+
+			r := EvalFlag(models.EvalContext{FlagID: 100, EntityID: "e1", EntityContext: map[string]any{"x": 1}})
+			if tc.wantMatch {
+				assert.NotZero(t, r.VariantID, tc.name)
+			} else {
+				assert.Zero(t, r.VariantID, tc.name)
+			}
+		})
+	}
+}

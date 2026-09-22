@@ -360,6 +360,8 @@ import type { PropType } from 'vue'
 import type { JevQuestion, JevQuestionType } from '@/api/types'
 import { InfoFilled } from '@element-plus/icons-vue'
 import {
+  choiceDirectionFromOperator,
+  choiceNegateFromDirection,
   choiceOptionsFromValue,
   choiceRowsFromCriteria,
   isNegatedOperator,
@@ -367,10 +369,14 @@ import {
   noulCriteriaText,
   numberFromValue,
   reduceJevMatch,
+  scaleDirectionFromOperator,
+  scaleNegateFromDirection,
   scoreLevelsFromCriteria,
+  type ChoiceDirection,
   type ChoiceRow,
   type JevAction,
   type JevMatchState,
+  type ScaleDirection,
 } from '@/helpers/jevQuestion'
 
 const DEFAULT_NOUL_THRESHOLD = 0.7
@@ -442,11 +448,11 @@ export default {
     noulOperator(): string {
       return this.noulNegate ? 'LT' : 'GTE'
     },
-    choiceDirection(): string {
-      return this.choiceNegate ? 'exclude' : 'include'
+    choiceDirection(): ChoiceDirection {
+      return choiceDirectionFromOperator(this.operator)
     },
-    scoreDirection(): string {
-      return this.scoreNegate ? 'below' : 'atleast'
+    scoreDirection(): ScaleDirection {
+      return scaleDirectionFromOperator(this.operator)
     },
     /** noul has no model confidence; its probability threshold is the gate. */
     confidence(): number {
@@ -541,7 +547,7 @@ export default {
       this.dispatch({ type: 'setChoiceNegate', negate })
     },
     setChoiceDirection(direction: string): void {
-      this.setChoiceNegate(direction === 'exclude')
+      this.setChoiceNegate(choiceNegateFromDirection(direction))
     },
     setScoreLevel(level: number): void {
       this.dispatch({ type: 'setScoreLevel', level })
@@ -550,7 +556,7 @@ export default {
       this.dispatch({ type: 'setScoreNegate', negate })
     },
     setScoreDirection(direction: string): void {
-      this.setScoreNegate(direction === 'below')
+      this.setScoreNegate(scaleNegateFromDirection(direction))
     },
     setNoulOperator(operator: string): void {
       this.dispatch({ type: 'setNoulOperator', operator })
