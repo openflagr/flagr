@@ -55,7 +55,7 @@ Run from **repo root**. Match what [`.github/workflows/ci.yml`](.github/workflow
 **Backend (`pkg/`):**
 - `handler/eval.go` — evaluation engine (POST/GET), batch; `handler/eval_get_test.go` — GET eval tests; `handler/crud.go` — CRUD API handlers
 - `handler/builtin_context.go` — built-in context injection (`@ts*`, `@http_*` keys into entityContext)
-- `handler/jev_client.go` + `handler/jev_eval.go` — Jev / System One constraints: HTTP client, `@jev.<name>` answer resolution (used for evaluation only, not written to the result context), confidence gate, and the debug payload. Question lives inline on `entity/constraint.go`.
+- `entity/constraint_jev.go` + `handler/jev_client.go`, `handler/jev_eval.go`, `handler/crud_jev.go` — Jev / System One constraints: the inline question + validation (`entity/constraint_jev.go`), CRUD helpers (`crud_jev.go`), the System One HTTP client, `@jev.<name>` answer resolution (used for evaluation only, not written to the result context), confidence gate, and the debug payload.
 - `handler/exposure.go` — exposure (impression) logging; `handler/data_recorder*.go` — recorders (Kafka, Kinesis, Pub/Sub, Datar)
 - `entity/` — domain models (flag, segment, constraint, variant, distribution)
 - `config/env.go` — all environment variables (single source of truth)

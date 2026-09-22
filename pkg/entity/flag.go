@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/openflagr/flagr/pkg/util"
-	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -92,37 +91,6 @@ func (f *Flag) PrepareEvaluation() error {
 		f.FlagEvaluation.VariantsMap[f.Variants[i].ID] = &f.Variants[i]
 	}
 	return nil
-}
-
-// collectJevQuestions records the segment's Jev constraints on the flag's
-// evaluation state. Segments are visited in rank order, so the first
-// definition of a question name wins if it appears in more than one segment.
-func (f *Flag) collectJevQuestions(s *Segment) {
-	for i := range s.Constraints {
-		c := &s.Constraints[i]
-		if !c.IsJev() {
-			continue
-		}
-		name := c.JevName()
-		q, err := c.JevQuestion()
-		if err != nil {
-			logrus.WithError(err).WithFields(logrus.Fields{
-				"flagID":       f.ID,
-				"segmentID":    s.ID,
-				"constraintID": c.ID,
-			}).Warn("skipping invalid jev constraint")
-			continue
-		}
-		if _, exists := f.FlagEvaluation.JevQuestions[name]; exists {
-			logrus.WithFields(logrus.Fields{
-				"flagID":    f.ID,
-				"segmentID": s.ID,
-				"question":  name,
-			}).Warn("duplicate jev question name; keeping the higher-priority definition")
-			continue
-		}
-		f.FlagEvaluation.JevQuestions[name] = *q
-	}
 }
 
 // CreateFlagKey creates the key based on the given key

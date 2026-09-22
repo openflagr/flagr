@@ -100,7 +100,7 @@ One request and response for that segment (debug only):
 It is present only when the segment has Jev constraints, and `questions` /
 `answers` are scoped to that segment.
 
-## Data Model (`pkg/entity/constraint.go`)
+## Data Model (`pkg/entity/constraint_jev.go`)
 
 ```go
 const (
