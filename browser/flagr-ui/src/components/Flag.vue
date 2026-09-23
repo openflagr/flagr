@@ -115,10 +115,19 @@
             @attachment-change="(p) => flagPage.handleVariantAttachmentChange(page, p)"
           />
 
+          <context-enrichers-card
+            :enrichers="flag.enrichers"
+            :readonly="evalOnlyMode"
+            @create-enricher="(p) => flagPage.createEnricher(page, p)"
+            @save-enricher="(p) => flagPage.saveEnricher(page, p)"
+            @delete-enricher="(ns) => flagPage.deleteEnricher(page, ns)"
+          />
+
           <segments-section
             :segments="flag.segments ?? []"
             :readonly="evalOnlyMode"
             :operator-options="operatorOptions"
+            :property-groups="propertyGroups"
             @reorder="(s) => flagPage.handleReorderSegments(page, s)"
             @move-up="(el, i) => flagPage.moveSegmentUp(page, el, i)"
             @move-down="(el, i) => flagPage.moveSegmentDown(page, el, i)"
@@ -212,6 +221,7 @@
 <script lang="ts">
 import { Delete } from '@element-plus/icons-vue'
 import DebugConsole from '@/components/DebugConsole.vue'
+import ContextEnrichersCard from '@/components/ContextEnrichersCard.vue'
 import DistributionDialog from '@/components/DistributionDialog.vue'
 import FlagConfigCard from '@/components/FlagConfigCard.vue'
 import FlagHistory from '@/components/FlagHistory.vue'
@@ -225,6 +235,7 @@ import { evalOnlyMode } from '@/helpers/serverMode'
 import { handleHistoryTabClick, mountFlagPage } from '@/pages/flagPage'
 import * as flagPage from '@/pages/flagPage'
 import { OPERATOR_UI_OPTIONS } from '@/helpers/constraintOperators'
+import { enricherPropertyGroups } from '@/helpers/enricherOptions'
 
 function defaultEvalContext(): EvalContext {
   return {
@@ -253,6 +264,7 @@ export default {
     FlagHistory,
     DistributionDialog,
     FlagConfigCard,
+    ContextEnrichersCard,
     VariantsSection,
     SegmentsSection,
     Delete,
@@ -275,7 +287,7 @@ export default {
       allTags: [] as Tag[],
       allowCreateEntityType: true,
       tagInputVisible: false,
-      flag: { description: '', tags: [], variants: [], segments: [] } as FlagView,
+      flag: { description: '', tags: [], variants: [], segments: [], enrichers: [] } as FlagView,
       newSegment: { ...flagPage.DEFAULT_SEGMENT },
       newTag: { ...flagPage.DEFAULT_TAG },
       selectedSegment: null as Segment | null,
@@ -297,6 +309,9 @@ export default {
   computed: {
     page() {
       return castFlagPage(this)
+    },
+    propertyGroups() {
+      return enricherPropertyGroups(this.flag.enrichers)
     },
   },
 
