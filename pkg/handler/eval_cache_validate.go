@@ -95,6 +95,27 @@ func validateFlag(r *ValidationResult, f entity.Flag, idx int) {
 		validateDistributions(r, segPrefix, seg, variantKeySet)
 		validateConstraints(r, segPrefix, seg)
 	}
+
+	validateFlagEnrichers(r, f, prefix)
+}
+
+// validateFlagEnrichers validates the flag's enricher definitions (strict) and
+// warns about constraint references no effective enricher provides (warn-only).
+func validateFlagEnrichers(r *ValidationResult, f entity.Flag, prefix string) {
+	namespaces := make([]string, 0, len(f.Enrichers))
+	for i := range f.Enrichers {
+		e := &f.Enrichers[i]
+		namespaces = append(namespaces, e.Namespace)
+		if err := validateEnricher(e); err != nil {
+			r.Errors = append(r.Errors, fmt.Sprintf("%s: enricher %q is invalid: %v", prefix, e.Namespace, err))
+		}
+	}
+	for _, d := range duplicates(namespaces) {
+		r.Errors = append(r.Errors, fmt.Sprintf("%s: duplicate enricher namespace %q", prefix, d))
+	}
+	for _, p := range unknownEnrichedProperties(&f) {
+		r.Warnings = append(r.Warnings, fmt.Sprintf("%s: constraint references enriched property %q that no enricher provides", prefix, p))
+	}
 }
 
 func validateDistributions(r *ValidationResult, prefix string, seg entity.Segment, variantKeySet map[string]bool) {
