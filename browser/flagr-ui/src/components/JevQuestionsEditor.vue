@@ -47,6 +47,14 @@
         </el-button>
       </div>
 
+      <div class="jev-question-meta">
+        <code
+          class="jev-prop"
+          data-testid="jev-property-preview"
+        >{{ propertyFor(row) }}</code>
+        <span class="jev-value-hint">{{ valueHint(row.type) }}</span>
+      </div>
+
       <el-input
         v-model="row.instructions"
         type="textarea"
@@ -154,7 +162,7 @@
           data-testid="jev-question-confidence"
           @update:model-value="setThreshold(index, $event)"
         />
-        <span class="jev-confidence-hint">below this, the answer is dropped</span>
+        <span class="jev-confidence-hint">below this the answer is dropped and the constraint falls through</span>
       </div>
     </div>
 
@@ -179,6 +187,7 @@ import {
   choiceCriteriaFromRows,
   choiceRowsFromCriteria,
   defaultJevQuestion,
+  jevPropertyFor,
   nextChoiceName,
 } from '@/helpers/jevQuestion'
 
@@ -243,6 +252,24 @@ export default {
     }
   },
   methods: {
+    /** The constraint property this question will populate, e.g. `@jev_plan_tier`. */
+    propertyFor(row: EditRow): string {
+      return row.name.trim() ? jevPropertyFor(row.name) : '@jev_<name>'
+    },
+    /**
+     * What the answer becomes in the evaluation context, and how to match it.
+     * Kept in lockstep with jevAnswerValue in pkg/handler/jev_client.go.
+     */
+    valueHint(type: JevQuestionType): string {
+      switch (type) {
+        case 'choice':
+          return 'value is the chosen option label — match with = / ≠ / in / not in'
+        case 'score':
+          return 'value is the level number — match with ≥ / > / ≤ / <'
+        default:
+          return 'value is P(true), 0–1 — match with ≥ / > / ≤ / <'
+      }
+    },
     sync() {
       this.$emit('update:modelValue', toQuestions(this.rows))
     },
@@ -327,6 +354,23 @@ export default {
 .jev-name {
   flex: 1;
   max-width: 240px;
+}
+
+.jev-question-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2xs);
+  font-size: var(--font-size-caption);
+}
+
+.jev-prop {
+  font-family: var(--el-font-family-mono, monospace);
+  color: var(--el-color-primary);
+}
+
+.jev-value-hint {
+  color: var(--el-text-color-secondary);
 }
 
 .jev-type {

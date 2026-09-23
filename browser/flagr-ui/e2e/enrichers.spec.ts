@@ -26,6 +26,10 @@ test.describe('Context enrichers', () => {
     await expect(row.locator('[data-testid="jev-question-name"]')).toHaveValue('example_question')
     await expect(row.locator('[data-testid="jev-question-instructions"]')).not.toHaveValue('')
 
+    // The editor teaches the mapping: property preview plus the value shape.
+    await expect(row.locator('[data-testid="jev-property-preview"]')).toHaveText('@jev_example_question')
+    await expect(row.locator('.jev-value-hint')).toContainText('P(true)')
+
     // Persisted, and its enriched property is in the effective catalog.
     let r = await page.request.get(`${API}/flags/${flag.id}`)
     let data = await r.json()
@@ -35,6 +39,7 @@ test.describe('Context enrichers', () => {
 
     // Rename, save, and verify the property follows.
     await row.locator('[data-testid="jev-question-name"]').fill('plan_tier')
+    await expect(row.locator('[data-testid="jev-property-preview"]')).toHaveText('@jev_plan_tier')
     await expect(row.locator('[data-testid="save-enricher-jev"]')).toBeEnabled()
     await row.locator('[data-testid="save-enricher-jev"]').click()
     await expect(page.locator('.el-message--success:has-text("enricher saved")')).toBeVisible({ timeout: 5000 })
