@@ -367,6 +367,12 @@ var EvalFlagWithContext = func(flag *entity.Flag, evalContext models.EvalContext
 		evalContext.EntityType = flag.EntityType
 	}
 
+	// Enrich the evaluation context with the flag's flag-scoped enrichers. The
+	// global built-in enrichers (@ts*, @http_*) already ran at the request
+	// boundary, so flag enrichers see them. No-op when the flag declares none.
+	evalContext.EntityContext = enrichFlagContext(
+		evalContext.EntityContext, flag, evalContext.EntityID, evalContext.EntityType)
+
 	var vID int64
 	var sID int64
 	var logs []*models.SegmentDebugLog
