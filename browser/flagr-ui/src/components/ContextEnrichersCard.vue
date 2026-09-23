@@ -1,26 +1,26 @@
 <template>
-  <el-card
-    class="enrichers-card"
-    shadow="never"
-  >
+  <el-card class="enrichers-card is-card-secondary">
     <template #header>
-      <div class="enrichers-header">
-        <span class="ui-section-title">Context enrichers</span>
-        <el-button
-          v-if="!readonly && !hasFlagEnricher"
-          size="small"
-          type="primary"
-          plain
-          data-testid="add-jev-enricher-btn"
-          @click="addJev"
-        >
-          + Jev
-        </el-button>
+      <div class="el-card-header">
+        <div class="enrichers-header">
+          <h2>Context enrichers</h2>
+          <el-button
+            v-if="!readonly && !hasFlagEnricher"
+            size="small"
+            type="primary"
+            plain
+            data-testid="add-jev-enricher-btn"
+            @click="addJev"
+          >
+            + Jev
+          </el-button>
+        </div>
       </div>
-      <p class="enrichers-hint">
-        Properties injected into the evaluation context before constraints run. Pick them when adding a constraint.
-      </p>
     </template>
+
+    <p class="enrichers-hint">
+      Properties injected into the evaluation context before constraints run. Pick them when adding a constraint.
+    </p>
 
     <div
       v-if="!enrichers.length"
@@ -92,7 +92,7 @@
 
         <div
           v-if="!readonly && enricher.scope === 'flag'"
-          class="enricher-edit ui-surface-inset"
+          class="enricher-edit"
         >
           <JevQuestionsEditor
             v-if="enricher.namespace === 'jev'"
@@ -203,7 +203,8 @@ export default {
 
 <style scoped>
 .enrichers-card {
-  margin-bottom: var(--space-md);
+  --enricher-help-width: 280px;
+  --enricher-line-min-height: var(--space-lg);
 }
 
 .enrichers-header {
@@ -214,9 +215,10 @@ export default {
 }
 
 .enrichers-hint {
-  margin: var(--space-3xs) 0 0;
+  margin: 0 0 var(--space-2xs);
   color: var(--el-text-color-secondary);
   font-size: var(--font-size-caption);
+  line-height: var(--line-height-ui);
 }
 
 .enricher-list {
@@ -228,7 +230,7 @@ export default {
 .enricher-row {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2xs);
+  gap: var(--space-3xs);
 }
 
 .enricher-row--flag {
@@ -241,32 +243,18 @@ export default {
   align-items: center;
   flex-wrap: wrap;
   gap: var(--space-2xs);
+  min-height: var(--enricher-line-min-height);
 }
 
 .enricher-ns {
-  font-family: var(--el-font-family-mono, monospace);
+  font-family: var(--font-mono);
   font-size: var(--font-size-body-sm);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   cursor: help;
   border-bottom: 1px dotted var(--el-border-color);
 }
 
 .enricher-ns--disabled {
-  color: var(--el-color-warning);
-}
-
-.enricher-help {
-  max-width: 280px;
-  font-size: var(--font-size-caption);
-  line-height: 1.5;
-}
-
-.enricher-help p {
-  margin: 0;
-}
-
-.enricher-help-warn {
-  margin-top: var(--space-3xs) !important;
   color: var(--el-color-warning);
 }
 
@@ -302,5 +290,20 @@ export default {
 .enricher-problem {
   color: var(--el-color-danger);
   font-size: var(--font-size-caption);
+}
+
+.enricher-help {
+  max-width: var(--enricher-help-width);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-ui);
+}
+
+.enricher-help p {
+  margin: 0;
+}
+
+.enricher-help-warn {
+  margin-top: var(--space-3xs) !important;
+  color: var(--el-color-warning);
 }
 </style>

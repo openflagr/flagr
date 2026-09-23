@@ -41,6 +41,7 @@
           size="small"
           link
           type="danger"
+          class="jev-remove"
           :disabled="disabled || rows.length <= 1"
           :data-testid="`jev-remove-question-${index}`"
           @click="removeQuestion(index)"
@@ -70,7 +71,7 @@
         v-if="row.type === 'noul'"
         class="jev-criteria"
       >
-        <div class="jev-criteria-row">
+        <div class="jev-criteria-row jev-criteria-row--noul">
           <span class="jev-criteria-label">True means</span>
           <el-input
             v-model="row.trueText"
@@ -80,7 +81,7 @@
             @update:model-value="sync()"
           />
         </div>
-        <div class="jev-criteria-row">
+        <div class="jev-criteria-row jev-criteria-row--noul">
           <span class="jev-criteria-label">False means</span>
           <el-input
             v-model="row.falseText"
@@ -93,13 +94,13 @@
       </div>
 
       <div
-        v-if="row.type === 'choice'"
+        v-else-if="row.type === 'choice'"
         class="jev-criteria"
       >
         <div
           v-for="(choice, choiceIndex) in row.choices"
           :key="choiceIndex"
-          class="jev-criteria-row"
+          class="jev-criteria-row jev-criteria-row--choice"
         >
           <el-input
             v-model="choice.name"
@@ -143,7 +144,7 @@
         <div
           v-for="(level, levelIndex) in row.levels"
           :key="levelIndex"
-          class="jev-criteria-row"
+          class="jev-criteria-row jev-criteria-row--score"
         >
           <el-input
             v-model="row.levels[levelIndex]"
@@ -190,7 +191,7 @@
           data-testid="jev-question-confidence"
           @update:model-value="setThreshold(index, $event)"
         />
-        <span class="jev-confidence-hint">below this the answer is dropped and the constraint falls through</span>
+        <span class="jev-confidence-hint">below this the answer is dropped</span>
       </div>
     </div>
 
@@ -198,6 +199,7 @@
       size="small"
       link
       type="primary"
+      class="jev-add-question"
       data-testid="jev-add-question-btn"
       :disabled="disabled"
       @click="addQuestion"
@@ -308,11 +310,11 @@ export default {
     valueHint(type: JevQuestionType): string {
       switch (type) {
         case 'choice':
-          return 'value is the chosen option label — match with = / ≠ / in / not in'
+          return 'value is the option label · match = / ≠ / in / not in'
         case 'score':
-          return 'value is the level number — match with ≥ / > / ≤ / <'
+          return 'value is the level number · match ≥ / > / ≤ / <'
         default:
-          return 'value is P(true), 0–1 — match with ≥ / > / ≤ / <'
+          return 'value is P(true), 0–1 · match ≥ / > / ≤ / <'
       }
     },
     /**
@@ -384,6 +386,13 @@ export default {
 
 <style scoped>
 .jev-editor {
+  --jev-name-width: 220px;
+  --jev-type-width: 118px;
+  --jev-criteria-label-width: 74px;
+  --jev-noul-row-width: 520px;
+  --jev-choice-row-width: 560px;
+  --jev-score-row-width: 320px;
+
   display: flex;
   flex-direction: column;
   gap: var(--space-2xs);
@@ -393,62 +402,80 @@ export default {
   display: flex;
   flex-direction: column;
   gap: var(--space-3xs);
-  padding-bottom: var(--space-2xs);
-  border-bottom: 1px solid var(--el-border-color-lighter);
-}
-
-.jev-question:last-of-type {
-  border-bottom: none;
-  padding-bottom: 0;
+  padding: var(--space-2xs) var(--space-xs);
+  background: var(--el-fill-color-lighter);
+  border: 1px solid var(--el-border-color-light);
+  border-radius: var(--radius-md);
 }
 
 .jev-question-head {
   display: flex;
   align-items: center;
-  gap: var(--space-3xs);
+  gap: var(--space-2xs);
 }
 
 .jev-name {
-  flex: 1;
-  max-width: 240px;
+  flex: 0 1 var(--jev-name-width);
+}
+
+.jev-type {
+  flex: 0 0 var(--jev-type-width);
+}
+
+.jev-remove {
+  margin-left: auto;
 }
 
 .jev-question-meta {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   flex-wrap: wrap;
-  gap: var(--space-2xs);
+  gap: var(--space-3xs) var(--space-2xs);
   font-size: var(--font-size-caption);
+  line-height: var(--line-height-tight);
 }
 
 .jev-prop {
-  font-family: var(--el-font-family-mono, monospace);
-  color: var(--el-color-primary);
-}
-
-.jev-value-hint {
+  font-family: var(--font-mono);
   color: var(--el-text-color-secondary);
 }
 
-.jev-type {
-  width: 110px;
+.jev-value-hint {
+  color: var(--el-text-color-placeholder);
 }
 
 .jev-criteria {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: var(--space-3xs);
-  padding-left: var(--space-sm);
 }
 
 .jev-criteria-row {
   display: flex;
   align-items: center;
   gap: var(--space-3xs);
+  width: 100%;
+}
+
+.jev-criteria-row--noul {
+  max-width: var(--jev-noul-row-width);
+}
+
+.jev-criteria-row--choice {
+  max-width: var(--jev-choice-row-width);
+}
+
+.jev-criteria-row--score {
+  max-width: var(--jev-score-row-width);
+}
+
+.jev-criteria-row .el-input {
+  flex: 1;
 }
 
 .jev-criteria-label {
-  flex: 0 0 80px;
+  flex: 0 0 var(--jev-criteria-label-width);
   color: var(--el-text-color-secondary);
   font-size: var(--font-size-caption);
 }
@@ -457,12 +484,15 @@ export default {
   display: flex;
   align-items: center;
   gap: var(--space-2xs);
-  padding-left: var(--space-sm);
 }
 
 .jev-confidence-label,
 .jev-confidence-hint {
   color: var(--el-text-color-secondary);
   font-size: var(--font-size-caption);
+}
+
+.jev-add-question {
+  align-self: flex-start;
 }
 </style>
