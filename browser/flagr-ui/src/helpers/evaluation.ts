@@ -58,16 +58,17 @@ export function evalSummaryFromResult(result: EvalResult): EvalSummary | null {
   }
 }
 
-/** vue3-ts-jsoneditor emits untyped JSON; narrow at the component edge. */
-export function asJsonObject(value: unknown): Record<string, unknown> | null {
-  if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
-    return value as Record<string, unknown>
-  }
-  return null
+/** Pretty text form used as a text-mode editor's source of truth. */
+export function toJsonText(value: unknown): string {
+  return JSON.stringify(value, null, 2) ?? ''
 }
 
-export function asBatchEvalResult(value: unknown): BatchEvalResult | null {
-  const o = asJsonObject(value)
-  if (!o || !Array.isArray(o.evaluationResults)) return null
-  return { evaluationResults: o.evaluationResults as EvalResult[] }
+/**
+ * Text a text-mode editor should show for `value`, given the last text it
+ * emitted. Returns null when the prop is just the editor's own edit echoing
+ * back, so the caller can keep the current text (and caret) untouched.
+ */
+export function editorTextFromValue(value: unknown, emittedText: string): string | null {
+  const text = toJsonText(value)
+  return text === emittedText ? null : text
 }
