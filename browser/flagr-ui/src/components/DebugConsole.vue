@@ -22,26 +22,18 @@
           </el-button>
         </div>
         <div class="dc-editor-row">
-          <json-editor
-            :json="evalContext"
-            :main-menu-bar="false"
-            :navigation-bar="false"
-            :status-bar="false"
-            mode="text"
+          <json-text-editor
+            :model-value="evalContext"
+            :parser="parseEvalContextJson"
             class="dc-json-editor"
-            @update:json="onEvalContextJson"
-            @update:json-string="syncEvalContext"
+            @update:model-value="$emit('update:evalContext', $event)"
           />
           <div class="dc-response-col">
-            <json-editor
-              :json="evalResult"
-              :main-menu-bar="false"
-              :navigation-bar="false"
-              :status-bar="false"
-              mode="text"
+            <json-text-editor
+              :model-value="evalResult"
+              :parser="parseEvalResultJson"
               class="dc-json-editor"
-              @update:json="onEvalResultJson"
-              @update:json-string="syncEvalResult"
+              @update:model-value="$emit('update:evalResult', $event)"
             />
           </div>
         </div>
@@ -94,25 +86,17 @@
           <span class="dc-label">Response</span>
         </div>
         <div class="dc-editor-row">
-          <json-editor
-            :json="batchEvalContext"
-            :main-menu-bar="false"
-            :navigation-bar="false"
-            :status-bar="false"
-            mode="text"
+          <json-text-editor
+            :model-value="batchEvalContext"
+            :parser="parseBatchEvalContextJson"
             class="dc-json-editor"
-            @update:json="onBatchEvalContextJson"
-            @update:json-string="syncBatchEvalContext"
+            @update:model-value="$emit('update:batchEvalContext', $event)"
           />
-          <json-editor
-            :json="batchEvalResult"
-            :main-menu-bar="false"
-            :navigation-bar="false"
-            :status-bar="false"
-            mode="text"
+          <json-text-editor
+            :model-value="batchEvalResult"
+            :parser="parseBatchEvalResultJson"
             class="dc-json-editor"
-            @update:json="onBatchEvalResultJson"
-            @update:json-string="syncBatchEvalResult"
+            @update:model-value="$emit('update:batchEvalResult', $event)"
           />
         </div>
       </el-collapse-item>
@@ -121,10 +105,8 @@
 </template>
 
 <script lang="ts">
-import JsonEditor from 'vue3-ts-jsoneditor'
+import JsonTextEditor from '@/components/JsonTextEditor.vue'
 import {
-  asBatchEvalResult,
-  asJsonObject,
   parseBatchEvalContextJson,
   parseBatchEvalResultJson,
   parseEvalContextJson,
@@ -134,7 +116,7 @@ import type { BatchEvalContext, BatchEvalResult, EvalContext, EvalResult, EvalSu
 
 export default {
   name: 'DebugConsole',
-  components: { JsonEditor },
+  components: { JsonTextEditor },
   props: {
     evalContext: { type: Object as () => EvalContext, required: true },
     evalResult: { type: Object as () => EvalResult, required: true },
@@ -151,38 +133,10 @@ export default {
     'post-evaluation-batch',
   ],
   methods: {
-    onEvalContextJson(v: unknown) {
-      const o = asJsonObject(v)
-      if (o) this.$emit('update:evalContext', o as EvalContext)
-    },
-    onEvalResultJson(v: unknown) {
-      const o = asJsonObject(v)
-      if (o) this.$emit('update:evalResult', o as EvalResult)
-    },
-    onBatchEvalContextJson(v: unknown) {
-      const o = asJsonObject(v)
-      if (o) this.$emit('update:batchEvalContext', o as BatchEvalContext)
-    },
-    onBatchEvalResultJson(v: unknown) {
-      const parsed = asBatchEvalResult(v)
-      if (parsed) this.$emit('update:batchEvalResult', parsed)
-    },
-    syncEvalContext(text: string) {
-      const parsed = parseEvalContextJson(text)
-      if (parsed) this.$emit('update:evalContext', parsed)
-    },
-    syncEvalResult(text: string) {
-      const parsed = parseEvalResultJson(text)
-      if (parsed) this.$emit('update:evalResult', parsed)
-    },
-    syncBatchEvalContext(text: string) {
-      const parsed = parseBatchEvalContextJson(text)
-      if (parsed) this.$emit('update:batchEvalContext', parsed)
-    },
-    syncBatchEvalResult(text: string) {
-      const parsed = parseBatchEvalResultJson(text)
-      if (parsed) this.$emit('update:batchEvalResult', parsed)
-    },
+    parseEvalContextJson,
+    parseEvalResultJson,
+    parseBatchEvalContextJson,
+    parseBatchEvalResultJson,
   },
 }
 </script>
