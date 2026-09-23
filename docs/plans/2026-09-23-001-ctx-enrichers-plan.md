@@ -1,7 +1,7 @@
 # feat: Context Enrichers — Unified Evaluation-Context Enrichment
 
 **Date:** 2026-09-23
-**Status:** draft (→ as-built on completion)
+**Status:** as-built
 **Branch:** `zz/ctx-enrich`
 **Supersedes:** PR [#790](https://github.com/openflagr/flagr/pull/790) *Jev / System One calibrated constraints* (open, unreleased) — redesigned before merge into a general concept.
 
@@ -299,3 +299,16 @@ the constraint-embedded swagger hunks, `segmentDebugLog.jev`.
   eval pipeline, while `effectiveEnrichers` (all namespaces) is used for
   warn-only reference validation so a disabled namespace does not produce false
   "unknown property" warnings.
+
+## Post-as-built deltas
+
+- **Per-eval `enrichers` debug section (decision 12) is not implemented.** The
+  flag read model exposes the effective catalog, but `evalDebugLog` does not yet
+  carry per-enricher provenance (which enricher ran, keys added, latency, error).
+  Follow-up.
+- **UI authoring** ships the flag-page "Context enrichers" card with a rich
+  per-question editor. The enriched-property picker is on the add-constraint row;
+  existing constraint rows still accept free text.
+- **`entity.Enricher` JSON** still serializes `ConfigJSON` as an escaped string
+  in the JSON flag source and snapshots. Follow-up: custom `MarshalJSON` so the
+  config round-trips as a nested `config` object.
