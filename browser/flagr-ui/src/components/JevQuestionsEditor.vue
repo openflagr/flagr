@@ -9,6 +9,8 @@
       <div class="jev-question-head">
         <el-input
           v-model="row.name"
+          :formatter="formatJevName"
+          :parser="formatJevName"
           size="small"
           class="jev-name"
           placeholder="question_name"
@@ -216,6 +218,7 @@ import {
   jevPropertyFor,
   nextChoiceName,
   noulCriteriaText,
+  slugifyJevName,
   withNoulCriteria,
 } from '@/helpers/jevQuestion'
 
@@ -311,6 +314,14 @@ export default {
         default:
           return 'value is P(true), 0–1 — match with ≥ / > / ≤ / <'
       }
+    },
+    /**
+     * Keep the name in the canonical `@jev_<name>` form as the user types. Used
+     * as both formatter and parser so the native input is re-synced even when a
+     * keystroke does not change the model (e.g. a second stray separator).
+     */
+    formatJevName(value: string | number): string {
+      return slugifyJevName(String(value))
     },
     sync() {
       this.$emit('update:modelValue', toQuestions(this.rows))

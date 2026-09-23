@@ -6,6 +6,7 @@ import {
   defaultJevQuestion,
   jevQuestionProblems,
   noulCriteriaText,
+  slugifyJevName,
   withNoulCriteria,
 } from './jevQuestion'
 
@@ -28,6 +29,22 @@ describe('defaultJevQuestion', () => {
       }
     },
   )
+})
+
+describe('slugifyJevName', () => {
+  it.each([
+    ['plan_tier', 'plan_tier'],
+    ['Plan Tier', 'plan_tier'],
+    ['Plan-Tier', 'plan_tier'],
+    ['X-Environment', 'x_environment'],
+    ['plan  tier', 'plan_tier'],
+    ['2fa', '_2fa'],
+    ['!!!', '_'],
+  ])('normalizes %s to %s', (input, want) => {
+    expect(slugifyJevName(input)).toBe(want)
+    // Idempotent, so applying it on every keystroke is stable.
+    expect(slugifyJevName(want)).toBe(want)
+  })
 })
 
 describe('noul criteria', () => {
@@ -61,6 +78,11 @@ describe('jevQuestionProblems', () => {
     const problems = jevQuestionProblems({ 'plan-tier': validNoul })
     expect(problems).toHaveLength(1)
     expect(problems[0]).toContain('plan-tier')
+  })
+
+  it('rejects a name with no letters or digits', () => {
+    const problems = jevQuestionProblems({ ___: { type: 'noul', instructions: 'x' } })
+    expect(problems).toEqual(['Question name "___" needs at least one letter or digit.'])
   })
 
   it('rejects blank instructions', () => {

@@ -18,7 +18,7 @@ export const DEFAULT_JEV_INSTRUCTIONS: Record<JevQuestionType, string> = {
 }
 
 /** Question names become `@jev_<name>` properties, so they must be identifier-like. */
-export const JEV_NAME_PATTERN = /^[A-Za-z_][A-Za-z0-9_]*$/
+export const JEV_NAME_PATTERN = /^[a-z_][a-z0-9_]*$/
 
 export interface ChoiceRow {
   name: string
@@ -37,9 +37,16 @@ export function jevPropertyFor(name: string): string {
   return JEV_PROPERTY_PREFIX + slugifyJevName(name)
 }
 
-/** Restrict a question name to the safe character set (`[A-Za-z_][A-Za-z0-9_]*`). */
+/**
+ * Canonicalize a question name to the `@jev_` property form: lowercased, every
+ * run of characters outside `[a-z0-9_]` collapsed to `_`, and `_`-prefixed when
+ * it would otherwise start with a digit. Mirrors NormalizeJevName in the Go
+ * server, so the input box and the API agree. It does not trim, so it is safe to
+ * apply on every keystroke (trimming would eat a separator before the next
+ * letter).
+ */
 export function slugifyJevName(name: string): string {
-  const slug = name.replace(/[^a-zA-Z0-9_]/g, '_')
+  const slug = name.toLowerCase().replace(/[^a-z0-9_]+/g, '_')
   return /^[0-9]/.test(slug) ? `_${slug}` : slug
 }
 
@@ -77,8 +84,12 @@ export function jevQuestionProblems(questions: Record<string, JevQuestion>): str
   for (const name of names) {
     if (!JEV_NAME_PATTERN.test(name)) {
       problems.push(
-        `Question name "${name}" must start with a letter or underscore and use only letters, digits, and underscores.`,
+        `Question name "${name}" must be lowercase, start with a letter or underscore, and use only letters, digits, and underscores.`,
       )
+      continue
+    }
+    if (!/[a-z0-9]/.test(name)) {
+      problems.push(`Question name "${name}" needs at least one letter or digit.`)
       continue
     }
     const question = questions[name]

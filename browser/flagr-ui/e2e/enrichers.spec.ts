@@ -46,8 +46,10 @@ test.describe('Context enrichers', () => {
     expect(jev).toBeTruthy()
     expect(jev.properties).toContain('@jev_example_question')
 
-    // Rename, describe what true/false mean, and save.
-    await row.locator('[data-testid="jev-question-name"]').fill('plan_tier')
+    // Rename (the input canonicalizes to snake_case as you type), describe what
+    // true/false mean, and save.
+    await row.locator('[data-testid="jev-question-name"]').fill('Plan Tier')
+    await expect(row.locator('[data-testid="jev-question-name"]')).toHaveValue('plan_tier')
     await expect(row.locator('[data-testid="jev-property-preview"]')).toHaveText('@jev_plan_tier')
     await row.locator('[data-testid="jev-noul-true"]').fill('is about billing')
     await row.locator('[data-testid="jev-noul-false"]').fill('anything else')

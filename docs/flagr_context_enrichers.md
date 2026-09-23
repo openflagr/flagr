@@ -62,7 +62,9 @@ The same `POST /v1/systemone` contract is implemented by the hosted TypeSafe API
 
 In the UI, a flag has a **Context enrichers** card. Add a Jev enricher and author one or more questions: a name, a type, instructions, type-specific criteria, and — for `choice` / `score` — an optional confidence threshold. The editor shows the property each question will produce (`@jev_<name>`) and a one-line reminder of its value shape as you type.
 
-Each question name becomes the constraint property `@jev_<name>`. Ask **atomic** questions: the model answers one question at a time, so keep arithmetic, dates, and multi-factor logic in Flagr constraints.
+Each question name becomes the constraint property `@jev_<name>`. Names are normalized to the same lowercase, underscore-joined form as the `@http_*` keys: `Plan Tier` becomes `plan_tier`, so the property is `@jev_plan_tier`. The input box canonicalizes as you type, and the API applies the same normalization on write, so a name sent by a script or a hand-edited JSON flag source lands on the same property. Two names that normalize to the same property are rejected.
+
+Ask **atomic** questions: the model answers one question at a time, so keep arithmetic, dates, and multi-factor logic in Flagr constraints.
 
 ### How answers become context
 
