@@ -48,20 +48,36 @@
       />
       <!-- eslint-enable vue/no-v-html -->
     </el-card>
+    <div
+      v-if="hasMore"
+      class="history-load-older"
+    >
+      <el-button
+        class="load-older-btn"
+        :loading="loadingOlder"
+        data-testid="load-older-snapshots-btn"
+        @click="$emit('load-older')"
+      >
+        Load older changes
+        <el-icon class="el-icon--right">
+          <ArrowDown />
+        </el-icon>
+      </el-button>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
 import xss from 'xss'
 import { diffJson, convertChangesToXML } from 'diff'
-import { DArrowRight } from '@element-plus/icons-vue'
+import { ArrowDown, DArrowRight } from '@element-plus/icons-vue'
 import CopyLinkButton from '@/components/CopyLinkButton.vue'
 import { flagSnapshotUrl, snapshotElementId } from '@/helpers/shareLinks'
 import type { Flag, FlagHistoryDiffRow, FlagSnapshot } from '@/api/types'
 
 export default {
   name: 'FlagHistory',
-  components: { DArrowRight, CopyLinkButton },
+  components: { ArrowDown, DArrowRight, CopyLinkButton },
   props: {
     snapshots: {
       type: Array as () => FlagSnapshot[],
@@ -71,12 +87,29 @@ export default {
       type: [String, Number],
       required: true,
     },
+    /**
+     * True when snapshots hold only the newest pages of a longer history.
+     * Skips the empty-flag sentinel (the oldest loaded snapshot is withheld
+     * as the diff base instead of being rendered as a bogus creation diff)
+     * and shows the "load older" control.
+     */
+    hasMore: {
+      type: Boolean,
+      default: false,
+    },
+    loadingOlder: {
+      type: Boolean,
+      default: false,
+    },
   },
+  emits: ['load-older'],
   computed: {
     diffs() {
       const ret: FlagHistoryDiffRow[] = []
       const snapshots = this.snapshots.slice()
-      snapshots.push({ flag: {} as Flag, id: 0 })
+      if (!this.hasMore) {
+        snapshots.push({ flag: {} as Flag, id: 0 })
+      }
       for (let i = 0; i < snapshots.length - 1; i++) {
         ret.push({
           timestamp: new Date(snapshots[i].updatedAt ?? '').toLocaleString(),
@@ -118,6 +151,16 @@ export default {
 .snapshot-header-right {
   text-align: right;
   color: var(--el-text-color-secondary);
+}
+.history-load-older {
+  text-align: center;
+  // The card above already carries a bottom margin; pull the button up so the
+  // gap doesn't read as a dead band, and give it room below.
+  margin-top: -10px;
+  padding-bottom: var(--space-sm);
+}
+.load-older-btn {
+  min-width: 240px;
 }
 .diff-snapshot-id-change {
   display: flex;
