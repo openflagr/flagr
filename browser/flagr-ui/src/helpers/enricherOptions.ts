@@ -10,15 +10,14 @@ export interface EnricherPropertyGroup {
 /**
  * Groups the enriched properties of a flag's effective enricher catalog by
  * namespace, so the constraint picker can offer `@jev_plan_tier`,
- * `@ts_hour`, `@http_*`, ... without the user reading the docs. Built-in
- * (global) enrichers are labelled as such.
+ * `@ts_hour`, `@http_*`, ... without the user reading the docs.
  */
 export function enricherPropertyGroups(enrichers: Enricher[] | undefined): EnricherPropertyGroup[] {
   return (enrichers ?? [])
     .filter((enricher) => (enricher.properties ?? []).length > 0)
     .map((enricher) => ({
       namespace: enricher.namespace,
-      label: enricher.scope === 'global' ? `${enricher.namespace} (built-in)` : enricher.namespace,
+      label: enricher.namespace,
       options: [...(enricher.properties ?? [])].sort(),
     }))
 }

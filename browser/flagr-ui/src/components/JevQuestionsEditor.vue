@@ -23,7 +23,7 @@
           @update:model-value="setType(index, $event)"
         >
           <el-option
-            label="Yes / No"
+            label="True / False"
             value="noul"
           />
           <el-option
@@ -63,6 +63,32 @@
         data-testid="jev-question-instructions"
         @update:model-value="sync()"
       />
+
+      <div
+        v-if="row.type === 'noul'"
+        class="jev-criteria"
+      >
+        <div class="jev-criteria-row">
+          <span class="jev-criteria-label">True means</span>
+          <el-input
+            v-model="row.trueText"
+            size="small"
+            placeholder="optional — e.g. about billing"
+            data-testid="jev-noul-true"
+            @update:model-value="sync()"
+          />
+        </div>
+        <div class="jev-criteria-row">
+          <span class="jev-criteria-label">False means</span>
+          <el-input
+            v-model="row.falseText"
+            size="small"
+            placeholder="optional — e.g. unrelated to billing"
+            data-testid="jev-noul-false"
+            @update:model-value="sync()"
+          />
+        </div>
+      </div>
 
       <div
         v-if="row.type === 'choice'"
@@ -189,6 +215,8 @@ import {
   defaultJevQuestion,
   jevPropertyFor,
   nextChoiceName,
+  noulCriteriaText,
+  withNoulCriteria,
 } from '@/helpers/jevQuestion'
 
 type JevQuestionType = 'noul' | 'choice' | 'score'
@@ -198,6 +226,8 @@ interface EditRow {
   type: JevQuestionType
   instructions: string
   threshold?: number
+  trueText: string
+  falseText: string
   choices: ChoiceRow[]
   levels: string[]
 }
@@ -212,6 +242,8 @@ function toRows(questions: Record<string, JevQuestion>): EditRow[] {
     type: (question.type as JevQuestionType) ?? 'noul',
     instructions: instructionsText(question.instructions),
     threshold: question.confidenceThreshold,
+    trueText: noulCriteriaText(question.criteria, 'true'),
+    falseText: noulCriteriaText(question.criteria, 'false'),
     choices: choiceRowsFromCriteria(question.criteria),
     levels: Array.isArray(question.criteria) ? question.criteria.map((level) => String(level)) : [],
   }))
@@ -225,6 +257,16 @@ function toQuestions(rows: EditRow[]): Record<string, JevQuestion> {
     const question: JevQuestion = {
       type: row.type,
       instructions: row.instructions,
+    }
+    if (row.type === 'noul') {
+      // `criteria` is optional: describe what true and false mean so the model
+      // resolves the boundary the way you intend.
+      const criteria = withNoulCriteria(
+        withNoulCriteria(undefined, 'true', row.trueText),
+        'false',
+        row.falseText,
+      )
+      if (criteria) question.criteria = criteria
     }
     if (row.type === 'choice') question.criteria = choiceCriteriaFromRows(row.choices)
     if (row.type === 'score') question.criteria = row.levels.filter((level) => level.trim() !== '')
@@ -280,6 +322,8 @@ export default {
         type,
         instructions: this.rows[index].instructions || instructionsText(fresh.instructions),
         threshold: this.rows[index].threshold,
+        trueText: '',
+        falseText: '',
         choices: choiceRowsFromCriteria(fresh.criteria),
         levels: Array.isArray(fresh.criteria) ? fresh.criteria.map((level) => String(level)) : [],
       }
@@ -291,6 +335,8 @@ export default {
         name: `question_${this.rows.length + 1}`,
         type: 'noul',
         instructions: instructionsText(fresh.instructions),
+        trueText: '',
+        falseText: '',
         choices: [],
         levels: [],
       })
@@ -388,6 +434,12 @@ export default {
   display: flex;
   align-items: center;
   gap: var(--space-3xs);
+}
+
+.jev-criteria-label {
+  flex: 0 0 80px;
+  color: var(--el-text-color-secondary);
+  font-size: var(--font-size-caption);
 }
 
 .jev-confidence {

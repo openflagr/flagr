@@ -41,24 +41,27 @@
         :data-testid="`enricher-row-${enricher.namespace}`"
       >
         <div class="enricher-line">
-          <code class="enricher-ns">{{ enricher.namespace }}</code>
-          <el-tag
-            size="small"
-            effect="plain"
-            :type="enricher.scope === 'global' ? 'info' : 'primary'"
+          <el-tooltip
+            placement="top"
+            effect="dark"
           >
-            {{ enricher.scope === 'global' ? 'built-in' : 'flag' }}
-          </el-tag>
-          <el-tag
-            v-if="enricher.enabled === false"
-            size="small"
-            type="warning"
-            effect="plain"
-            data-testid="enricher-disabled-tag"
-            title="This namespace is not enabled on this server; its constraints fail closed."
-          >
-            disabled
-          </el-tag>
+            <code
+              class="enricher-ns"
+              :class="{ 'enricher-ns--disabled': enricher.enabled === false }"
+              :data-testid="`enricher-ns-${enricher.namespace}`"
+            >{{ enricher.namespace }}</code>
+            <template #content>
+              <div class="enricher-help">
+                <p>{{ namespaceHelp(enricher.namespace) }}</p>
+                <p
+                  v-if="enricher.enabled === false"
+                  class="enricher-help-warn"
+                >
+                  Not enabled on this server — constraints using its properties fail closed.
+                </p>
+              </div>
+            </template>
+          </el-tooltip>
           <span class="enricher-props">
             <el-tag
               v-for="property in enricher.properties"
@@ -168,6 +171,19 @@ export default {
     problemsFor(namespace: string): string[] {
       return jevQuestionProblems(this.questions[namespace] ?? {})
     },
+    /** What a namespace injects, shown as the namespace's tooltip. */
+    namespaceHelp(namespace: string): string {
+      switch (namespace) {
+        case 'ts':
+          return 'Built-in time context: @ts (unix seconds), @ts_hour, @ts_weekday, @ts_month.'
+        case 'http':
+          return 'Built-in request headers: @http_<header> for each header exposed by FLAGR_INJECTED_CONTEXT_HTTP_HEADERS / _HTTP_HEADER_PREFIXES.'
+        case 'jev':
+          return 'Model answers from a System One endpoint: one @jev_<question> property per question authored below.'
+        default:
+          return `Context enricher namespace "${namespace}".`
+      }
+    },
     save(namespace: string) {
       this.$emit('save-enricher', {
         namespace,
@@ -231,6 +247,27 @@ export default {
   font-family: var(--el-font-family-mono, monospace);
   font-size: var(--font-size-body-sm);
   font-weight: 600;
+  cursor: help;
+  border-bottom: 1px dotted var(--el-border-color);
+}
+
+.enricher-ns--disabled {
+  color: var(--el-color-warning);
+}
+
+.enricher-help {
+  max-width: 280px;
+  font-size: var(--font-size-caption);
+  line-height: 1.5;
+}
+
+.enricher-help p {
+  margin: 0;
+}
+
+.enricher-help-warn {
+  margin-top: var(--space-3xs) !important;
+  color: var(--el-color-warning);
 }
 
 .enricher-props {

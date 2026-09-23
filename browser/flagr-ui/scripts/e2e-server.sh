@@ -62,6 +62,15 @@ else
 		FLAGR_DB_DBCONNECTIONSTR="file:flagr.sqlite?_pragma=busy_timeout(10000)&_pragma=journal_mode(WAL)&_txlock=immediate"
 		export FLAGR_DB_DBCONNECTIONSTR
 	fi
+	# Exercise the built-in enrichers too, so the enrichers card lists ts/http.
+	if [ -z "${FLAGR_INJECTED_CONTEXT_ENABLED:-}" ]; then
+		FLAGR_INJECTED_CONTEXT_ENABLED=true
+		export FLAGR_INJECTED_CONTEXT_ENABLED
+	fi
+	if [ -z "${FLAGR_INJECTED_CONTEXT_HTTP_HEADERS:-}" ]; then
+		FLAGR_INJECTED_CONTEXT_HTTP_HEADERS=X-Environment
+		export FLAGR_INJECTED_CONTEXT_HTTP_HEADERS
+	fi
 	# Redirect to a file: a surviving grandchild must not hold Playwright's
 	# piped stdout open, or its Windows webServer teardown hangs forever.
 	"$BIN" --port "$BACKEND_PORT" >"$BACKEND_LOG" 2>&1 &

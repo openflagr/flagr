@@ -5,6 +5,8 @@ import {
   DEFAULT_JEV_INSTRUCTIONS,
   defaultJevQuestion,
   jevQuestionProblems,
+  noulCriteriaText,
+  withNoulCriteria,
 } from './jevQuestion'
 
 const validNoul: JevQuestion = { type: 'noul', instructions: 'Is the plan enterprise?' }
@@ -26,6 +28,24 @@ describe('defaultJevQuestion', () => {
       }
     },
   )
+})
+
+describe('noul criteria', () => {
+  it('round-trips true/false descriptions', () => {
+    const criteria = withNoulCriteria(
+      withNoulCriteria(undefined, 'true', 'about billing'),
+      'false',
+      'anything else',
+    )
+    expect(criteria).toEqual({ true: 'about billing', false: 'anything else' })
+    expect(noulCriteriaText(criteria, 'true')).toBe('about billing')
+    expect(noulCriteriaText(criteria, 'false')).toBe('anything else')
+  })
+
+  it('omits a blank description and returns undefined when both are blank', () => {
+    expect(withNoulCriteria(undefined, 'true', '   ')).toBeUndefined()
+    expect(withNoulCriteria(undefined, 'true', 'about billing')).toEqual({ true: 'about billing' })
+  })
 })
 
 describe('jevQuestionProblems', () => {
@@ -86,7 +106,7 @@ describe('jevQuestionProblems', () => {
     expect(jevQuestionProblems({ q: question })).toEqual(['Question "q" confidence must be between 0 and 1.'])
   })
 
-  it('rejects a confidence threshold on a yes/no question', () => {
+  it('rejects a confidence threshold on a true/false question', () => {
     const problems = jevQuestionProblems({ q: { ...validNoul, confidenceThreshold: 0.5 } })
     expect(problems).toHaveLength(1)
     expect(problems[0]).toContain('already a 0-1 probability')

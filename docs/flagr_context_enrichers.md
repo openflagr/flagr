@@ -70,15 +70,32 @@ The endpoint returns a typed answer per question, and Flagr maps it to exactly o
 
 | Type | Response field | Property value | Confidence gate | Operators |
 |------|----------------|----------------|-----------------|-----------|
-| `noul` (yes/no) | `noul` | a number in `[0,1]` — **P(true)** | none | `GTE` `GT` `LTE` `LT` |
+| `noul` (true/false) | `noul` | a number in `[0,1]` — **P(true)** | none | `GTE` `GT` `LTE` `LT` |
 | `choice` | `choice` | the chosen **option label** (string) | yes | `EQ` `NEQ` `IN` `NOT IN` |
 | `score` | `score` | the **level number** | yes | `GTE` `GT` `LTE` `LT` |
 
-`noul` is **not** a boolean. It is the probability that the answer is yes, so you pick the cut-off yourself with a comparison (`@jev_billing GTE 0.7`). That is also why `noul` has **no confidence threshold** — the comparison *is* the threshold. Setting one is rejected rather than silently ignored.
+`noul` is **not** a boolean. It is the probability that the answer is true, so you pick the cut-off yourself with a comparison (`@jev_billing GTE 0.7`). That is also why `noul` has **no confidence threshold** — the comparison *is* the threshold. Setting one is rejected rather than silently ignored.
+
+You can define what true and false mean for the model with optional `criteria`, which sharpens the boundary:
+
+```json
+{
+  "type": "noul",
+  "instructions": "Is this message about billing?",
+  "criteria": {
+    "true": "Payments, invoices, refunds, or charges",
+    "false": "Anything else"
+  }
+}
+```
+
+Either key may be omitted; `criteria` itself is optional. The UI shows these as the question's **True means** / **False means** fields.
 
 For `choice` and `score`, the model also reports a self-assessed `confidence`. If it is below the question's threshold (or missing), Flagr **drops the property** — it is not defaulted. A constraint referencing it then errors and the segment falls through (fail-closed). A question with no threshold has no gate.
 
 A `choice` answer is a **single** option label with a single confidence. The per-option `probabilities` an endpoint may return are not exposed: one question yields one comparable value. To branch on a second option, ask a second `noul` question (or use a `score`).
+
+Limits: `choice` accepts up to 255 options; `score` needs 2 to 10 levels; `noul` needs no criteria.
 
 #### Worked example
 

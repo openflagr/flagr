@@ -9,10 +9,10 @@ const catalog: Enricher[] = [
 ]
 
 describe('enricherPropertyGroups', () => {
-  it('groups by namespace, sorts options, and labels built-ins', () => {
+  it('groups by namespace and sorts options', () => {
     expect(enricherPropertyGroups(catalog)).toEqual([
-      { namespace: 'ts', label: 'ts (built-in)', options: ['@ts', '@ts_hour'] },
-      { namespace: 'http', label: 'http (built-in)', options: ['@http_x_env'] },
+      { namespace: 'ts', label: 'ts', options: ['@ts', '@ts_hour'] },
+      { namespace: 'http', label: 'http', options: ['@http_x_env'] },
       { namespace: 'jev', label: 'jev', options: ['@jev_churn', '@jev_plan_tier'] },
     ])
   })

@@ -16,6 +16,15 @@ test.describe('Context enrichers', () => {
     await page.goto(`/#/flags/${flag.id}`)
     await expect(page.locator('input[data-testid="flag-key-input"]')).toBeVisible({ timeout: 10000 })
 
+    // Namespaces carry a tooltip instead of a built-in/flag scope tag.
+    await expect(page.getByText('built-in', { exact: true })).toHaveCount(0)
+    await expect(page.getByText('flag', { exact: true })).toHaveCount(0)
+
+    await page.locator('[data-testid="enricher-ns-ts"]').hover()
+    await expect(page.locator('.el-popper').filter({ hasText: 'Built-in time context' })).toBeVisible()
+    await page.locator('[data-testid="enricher-ns-http"]').hover()
+    await expect(page.locator('.el-popper').filter({ hasText: 'Built-in request headers' })).toBeVisible()
+
     // Regression: this used to POST a question with blank instructions, which the
     // server rejected with a 400, leaving the button looking broken.
     await page.locator('[data-testid="add-jev-enricher-btn"]').click()
@@ -37,9 +46,11 @@ test.describe('Context enrichers', () => {
     expect(jev).toBeTruthy()
     expect(jev.properties).toContain('@jev_example_question')
 
-    // Rename, save, and verify the property follows.
+    // Rename, describe what true/false mean, and save.
     await row.locator('[data-testid="jev-question-name"]').fill('plan_tier')
     await expect(row.locator('[data-testid="jev-property-preview"]')).toHaveText('@jev_plan_tier')
+    await row.locator('[data-testid="jev-noul-true"]').fill('is about billing')
+    await row.locator('[data-testid="jev-noul-false"]').fill('anything else')
     await expect(row.locator('[data-testid="save-enricher-jev"]')).toBeEnabled()
     await row.locator('[data-testid="save-enricher-jev"]').click()
     await expect(page.locator('.el-message--success:has-text("enricher saved")')).toBeVisible({ timeout: 5000 })
@@ -49,6 +60,7 @@ test.describe('Context enrichers', () => {
     jev = data.enrichers.find((e) => e.namespace === 'jev')
     expect(jev.properties).toContain('@jev_plan_tier')
     expect(jev.properties).not.toContain('@jev_example_question')
+    expect(jev.config.questions.plan_tier.criteria).toEqual({ true: 'is about billing', false: 'anything else' })
   })
 
   test('blocks save and explains an invalid question', async ({ page }) => {
