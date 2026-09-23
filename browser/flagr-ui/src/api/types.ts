@@ -27,8 +27,10 @@ export interface Constraint {
 }
 
 /** Jev / System One question authored on a flag-scoped jev enricher. */
+export type JevQuestionType = 'noul' | 'choice' | 'score'
+
 export interface JevQuestion {
-  type: string
+  type: JevQuestionType
   instructions?: unknown
   criteria?: unknown
   confidenceThreshold?: number

@@ -61,14 +61,11 @@
         v-if="!readonly && enricher.scope === 'flag'"
         class="enricher-edit"
       >
-        <el-input
-          v-model="drafts[enricher.namespace]"
-          type="textarea"
-          :rows="6"
-          :data-testid="`enricher-config-${enricher.namespace}`"
+        <JevQuestionsEditor
+          v-if="enricher.namespace === 'jev'"
+          v-model="questions[enricher.namespace]"
         />
         <div class="enricher-actions">
-          <span class="enricher-error">{{ errors[enricher.namespace] }}</span>
           <el-button
             size="small"
             type="primary"
@@ -98,24 +95,13 @@
 
 <script lang="ts">
 import type { PropType } from 'vue'
-import type { Enricher } from '@/api/types'
-
-/** Minimal starting config so the editor is never empty. */
-const DEFAULT_JEV_CONFIG = JSON.stringify(
-  {
-    questions: {
-      example_question: {
-        type: 'noul',
-        instructions: 'Describe the atomic yes/no question for the model.',
-      },
-    },
-  },
-  null,
-  2,
-)
+import type { Enricher, JevQuestion } from '@/api/types'
+import JevQuestionsEditor from '@/components/JevQuestionsEditor.vue'
+import { defaultJevQuestion } from '@/helpers/jevQuestion'
 
 export default {
   name: 'ContextEnrichersCard',
+  components: { JevQuestionsEditor },
   props: {
     enrichers: { type: Array as PropType<Enricher[]>, default: () => [] },
     readonly: { type: Boolean, default: false },
@@ -123,8 +109,7 @@ export default {
   emits: ['create-enricher', 'save-enricher', 'delete-enricher'],
   data() {
     return {
-      drafts: {} as Record<string, string>,
-      errors: {} as Record<string, string>,
+      questions: {} as Record<string, Record<string, JevQuestion>>,
     }
   },
   computed: {
@@ -136,41 +121,30 @@ export default {
     enrichers: {
       immediate: true,
       handler() {
-        this.seedDrafts()
+        this.seedQuestions()
       },
     },
   },
   methods: {
-    seedDrafts() {
+    seedQuestions() {
       for (const enricher of this.enrichers) {
-        if (enricher.scope === 'flag' && this.drafts[enricher.namespace] === undefined) {
-          this.drafts[enricher.namespace] = JSON.stringify(enricher.config ?? {}, null, 2)
-        }
+        if (enricher.scope !== 'flag' || this.questions[enricher.namespace] !== undefined) continue
+        const config = enricher.config as { questions?: Record<string, JevQuestion> } | undefined
+        this.questions[enricher.namespace] = { ...(config?.questions ?? {}) }
       }
     },
     save(namespace: string) {
-      const config = this.parseConfig(namespace)
-      if (config === undefined) return
-      this.$emit('save-enricher', { namespace, config })
+      this.$emit('save-enricher', {
+        namespace,
+        config: { questions: this.questions[namespace] ?? {} },
+      })
     },
     addJev() {
-      let config: unknown
-      try {
-        config = JSON.parse(DEFAULT_JEV_CONFIG)
-      } catch {
-        config = {}
-      }
-      this.$emit('create-enricher', { namespace: 'jev', config })
-    },
-    parseConfig(namespace: string): unknown | undefined {
-      try {
-        const config = JSON.parse(this.drafts[namespace] ?? '{}')
-        this.errors[namespace] = ''
-        return config
-      } catch (error) {
-        this.errors[namespace] = `Invalid JSON: ${(error as Error).message}`
-        return undefined
-      }
+      const fresh = defaultJevQuestion('noul')
+      this.$emit('create-enricher', {
+        namespace: 'jev',
+        config: { questions: { example_question: fresh } },
+      })
     },
   },
 }
@@ -232,11 +206,6 @@ export default {
   align-items: center;
   justify-content: flex-end;
   gap: var(--space-sm);
-}
-
-.enricher-error {
-  color: var(--el-color-danger);
-  font-size: var(--font-size-caption);
 }
 
 .enricher-add {
