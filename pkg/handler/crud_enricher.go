@@ -7,7 +7,6 @@ import (
 
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/openflagr/flagr/pkg/entity"
-	"github.com/openflagr/flagr/pkg/mapper/entity_restapi/e2r"
 	"github.com/openflagr/flagr/pkg/notification"
 	"github.com/openflagr/flagr/pkg/util"
 	enricherapi "github.com/openflagr/flagr/swagger_gen/restapi/operations/enricher"
@@ -89,7 +88,7 @@ func (c *crud) CreateEnricher(params enricherapi.CreateEnricherParams) middlewar
 	}
 
 	resp := enricherapi.NewCreateEnricherOK()
-	resp.SetPayload(e2r.MapEnricher(created))
+	resp.SetPayload(enricherResponse(created))
 	return resp
 }
 
@@ -123,7 +122,7 @@ func (c *crud) PutEnricher(params enricherapi.PutEnricherParams) middleware.Resp
 	}
 
 	resp := enricherapi.NewPutEnricherOK()
-	resp.SetPayload(e2r.MapEnricher(updated))
+	resp.SetPayload(enricherResponse(updated))
 	return resp
 }
 

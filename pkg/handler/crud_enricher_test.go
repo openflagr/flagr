@@ -55,6 +55,10 @@ func TestCrudEnrichers(t *testing.T) {
 	require.True(t, ok, "expected create to succeed")
 	assert.Equal(t, "jev", *created.Payload.Namespace)
 	assert.Equal(t, "flag", created.Payload.Scope)
+	// The write response carries the derived catalog, same shape as the flag read.
+	assert.Contains(t, created.Payload.Properties, "@jev_plan_tier")
+	require.NotNil(t, created.Payload.Enabled)
+	assert.True(t, *created.Payload.Enabled)
 
 	// GET flag returns the effective catalog (flag-scoped + enabled globals).
 	got := c.GetFlag(flag.GetFlagParams{FlagID: 1}).(*flag.GetFlagOK).Payload

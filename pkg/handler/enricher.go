@@ -201,6 +201,35 @@ func validateEnricher(e *entity.Enricher) error {
 	return nil
 }
 
+// enricherModel maps a resolved enricher to the API read model.
+func enricherModel(e *enricher) *models.Enricher {
+	namespace := e.namespace
+	enabled := e.enabled
+	return &models.Enricher{
+		Namespace:  &namespace,
+		Scope:      string(e.scope),
+		Enabled:    &enabled,
+		Properties: e.properties,
+		Config:     e.config,
+	}
+}
+
+// enricherResponse maps a stored flag enricher to the API read model with the
+// derived scope/enabled/properties filled in, so a create/update response has
+// the same shape as the flag catalog. Unknown namespaces and invalid configs
+// fall back to the stored mapping.
+func enricherResponse(e *entity.Enricher) *models.Enricher {
+	build, ok := enricherBuilders[e.Namespace]
+	if !ok {
+		return e2r.MapEnricher(e)
+	}
+	built, err := build(e.ConfigJSON)
+	if err != nil {
+		return e2r.MapEnricher(e)
+	}
+	return enricherModel(built)
+}
+
 // effectiveEnricherModels maps a flag's visible effective enrichers to the API
 // read model: its own flag-scoped enrichers (even disabled ones) plus the
 // enabled server built-ins.
@@ -208,16 +237,7 @@ func effectiveEnricherModels(flag *entity.Flag) []*models.Enricher {
 	entries := visibleEnrichers(effectiveEnrichers(flag))
 	out := make([]*models.Enricher, 0, len(entries))
 	for i := range entries {
-		e := &entries[i]
-		namespace := e.namespace
-		enabled := e.enabled
-		out = append(out, &models.Enricher{
-			Namespace:  &namespace,
-			Scope:      string(e.scope),
-			Enabled:    &enabled,
-			Properties: e.properties,
-			Config:     e.config,
-		})
+		out = append(out, enricherModel(&entries[i]))
 	}
 	return out
 }
