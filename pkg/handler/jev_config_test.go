@@ -113,6 +113,26 @@ func TestJevEnricherConfigValidation(t *testing.T) {
 			}},
 			wantErr: true,
 		},
+		{
+			// noul's answer is already a 0-1 probability; a confidence gate on top of
+			// it would be silently ignored, so it is rejected instead.
+			name: "noul threshold unsupported",
+			cfg: &JevEnricherConfig{Questions: map[string]JevQuestion{
+				"q": {Type: JevTypeNoul, Instructions: "x", ConfidenceThreshold: ptrFloat(0.5)},
+			}},
+			wantErr: true,
+		},
+		{
+			name: "choice threshold allowed",
+			cfg: &JevEnricherConfig{Questions: map[string]JevQuestion{
+				"q": {
+					Type:                JevTypeChoice,
+					Instructions:        "x",
+					Criteria:            map[string]any{"a": "A"},
+					ConfidenceThreshold: ptrFloat(0.5),
+				},
+			}},
+		},
 	}
 
 	for _, tt := range tests {

@@ -119,6 +119,9 @@ func (q *JevQuestion) Validate() error {
 	if q.ConfidenceThreshold != nil && (*q.ConfidenceThreshold < 0 || *q.ConfidenceThreshold > 1) {
 		return fmt.Errorf("jev.confidenceThreshold must be within [0,1], got %v", *q.ConfidenceThreshold)
 	}
+	if q.Type == JevTypeNoul && q.ConfidenceThreshold != nil {
+		return fmt.Errorf("jev.confidenceThreshold is not supported for noul; the answer is already a 0-1 probability, so compare it instead (e.g. @jev_<name> >= 0.7)")
+	}
 	if q.Instructions == nil {
 		return fmt.Errorf("jev.instructions is required")
 	}

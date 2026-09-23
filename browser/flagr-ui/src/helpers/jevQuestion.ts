@@ -105,8 +105,14 @@ export function jevQuestionProblems(questions: Record<string, JevQuestion>): str
       }
     }
     const threshold = question.confidenceThreshold
-    if (threshold !== undefined && threshold !== null && (threshold < 0 || threshold > 1)) {
-      problems.push(`Question "${name}" confidence must be between 0 and 1.`)
+    if (threshold !== undefined && threshold !== null) {
+      if (question.type === 'noul') {
+        problems.push(
+          `Question "${name}" is yes/no: the answer is already a 0-1 probability, so compare it (e.g. @jev_${name} GTE 0.7) instead of setting a confidence threshold.`,
+        )
+      } else if (threshold < 0 || threshold > 1) {
+        problems.push(`Question "${name}" confidence must be between 0 and 1.`)
+      }
     }
   }
   return problems

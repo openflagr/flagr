@@ -51,8 +51,9 @@ A **context enricher** contributes properties to `entityContext` before constrai
 5. **Public context** - enriched properties appear in `EvalResult.evalContext` and data records. A `jev` enricher writes only its answers, never the request state it sent to the model.
 6. **Isolation** - flag-scoped enrichment never mutates the shared request context, so one flag's answers cannot leak into another flag in batch or tag evaluation.
 7. **Warn-only references** - a constraint on an unknown enriched property is accepted (a warning from `flagr-validate`) and fails closed at evaluation.
+8. **Jev answer mapping** - `noul` becomes P(true) in `[0,1]` (no confidence gate; compare it), `choice` becomes the chosen option label (string), and `score` becomes the level number. A `choice` / `score` answer below the question's confidence threshold is dropped, so the property is absent and the constraint fails closed. Per-option `probabilities` are not exposed; one question yields one comparable value.
 
-Source: `pkg/handler/enricher.go`, `enricher_pipeline.go`, `enricher_builtin.go`, `enricher_jev.go`, `crud_enricher.go`.
+Source: `pkg/handler/enricher.go`, `enricher_pipeline.go`, `enricher_builtin.go`, `enricher_jev.go`, `jev_client.go`, `crud_enricher.go`.
 
 ## Recording gates {#recording-gates}
 

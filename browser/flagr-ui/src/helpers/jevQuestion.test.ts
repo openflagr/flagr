@@ -77,7 +77,28 @@ describe('jevQuestionProblems', () => {
   })
 
   it('rejects a confidence threshold outside [0,1]', () => {
-    const problems = jevQuestionProblems({ q: { ...validNoul, confidenceThreshold: 2 } })
-    expect(problems).toEqual(['Question "q" confidence must be between 0 and 1.'])
+    const question: JevQuestion = {
+      type: 'choice',
+      instructions: 'Pick one.',
+      criteria: { pro: 'Pro' },
+      confidenceThreshold: 2,
+    }
+    expect(jevQuestionProblems({ q: question })).toEqual(['Question "q" confidence must be between 0 and 1.'])
+  })
+
+  it('rejects a confidence threshold on a yes/no question', () => {
+    const problems = jevQuestionProblems({ q: { ...validNoul, confidenceThreshold: 0.5 } })
+    expect(problems).toHaveLength(1)
+    expect(problems[0]).toContain('already a 0-1 probability')
+  })
+
+  it('allows a confidence threshold on a choice question', () => {
+    const question: JevQuestion = {
+      type: 'choice',
+      instructions: 'Pick one.',
+      criteria: { pro: 'Pro' },
+      confidenceThreshold: 0.5,
+    }
+    expect(jevQuestionProblems({ q: question })).toEqual([])
   })
 })

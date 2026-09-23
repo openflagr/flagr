@@ -60,19 +60,78 @@ The same `POST /v1/systemone` contract is implemented by the hosted TypeSafe API
 
 ### Author questions
 
-In the UI, a flag has a **Context enrichers** card. Add a Jev enricher and author one or more questions: a name, a type, instructions, type-specific criteria, and an optional confidence threshold.
+In the UI, a flag has a **Context enrichers** card. Add a Jev enricher and author one or more questions: a name, a type, instructions, type-specific criteria, and — for `choice` / `score` — an optional confidence threshold. The editor shows the property each question will produce (`@jev_<name>`) and a one-line reminder of its value shape as you type.
 
-| Type | Answer | Typical match |
-|------|--------|---------------|
-| `noul` | `true` / `false` probability | `@jev_<name> GTE 0.7` |
-| `choice` | one option label | `@jev_<name> EQ "pro"` / `IN "pro,enterprise"` |
-| `score` | a level | `@jev_<name> GTE 3` |
+Each question name becomes the constraint property `@jev_<name>`. Ask **atomic** questions: the model answers one question at a time, so keep arithmetic, dates, and multi-factor logic in Flagr constraints.
 
-Each question name becomes the constraint property `@jev_<name>`. Ask **atomic** questions; keep arithmetic, dates, and multi-factor logic in Flagr constraints.
+### How answers become context
+
+The endpoint returns a typed answer per question, and Flagr maps it to exactly one property value:
+
+| Type | Response field | Property value | Confidence gate | Operators |
+|------|----------------|----------------|-----------------|-----------|
+| `noul` (yes/no) | `noul` | a number in `[0,1]` — **P(true)** | none | `GTE` `GT` `LTE` `LT` |
+| `choice` | `choice` | the chosen **option label** (string) | yes | `EQ` `NEQ` `IN` `NOT IN` |
+| `score` | `score` | the **level number** | yes | `GTE` `GT` `LTE` `LT` |
+
+`noul` is **not** a boolean. It is the probability that the answer is yes, so you pick the cut-off yourself with a comparison (`@jev_billing GTE 0.7`). That is also why `noul` has **no confidence threshold** — the comparison *is* the threshold. Setting one is rejected rather than silently ignored.
+
+For `choice` and `score`, the model also reports a self-assessed `confidence`. If it is below the question's threshold (or missing), Flagr **drops the property** — it is not defaulted. A constraint referencing it then errors and the segment falls through (fail-closed). A question with no threshold has no gate.
+
+A `choice` answer is a **single** option label with a single confidence. The per-option `probabilities` an endpoint may return are not exposed: one question yields one comparable value. To branch on a second option, ask a second `noul` question (or use a `score`).
+
+#### Worked example
+
+The endpoint answers four questions:
+
+```json
+{
+  "answers": {
+    "billing":   {"type": "noul",   "noul": 0.82},
+    "plan_tier": {"type": "choice", "choice": "pro", "confidence": 0.91,
+                  "probabilities": {"pro": 0.91, "free": 0.06, "enterprise": 0.03}},
+    "unsure":    {"type": "choice", "choice": "pro", "confidence": 0.31},
+    "sentiment": {"type": "score",  "score": 4, "confidence": 0.77}
+  }
+}
+```
+
+With thresholds `plan_tier: 0.5`, `unsure: 0.5`, `sentiment: 0.5`, the evaluation context becomes:
+
+```json
+{
+  "message": "charged twice",
+  "@ts_hour": 17,
+  "@jev_billing": 0.82,
+  "@jev_plan_tier": "pro",
+  "@jev_sentiment": 4
+}
+```
+
+`@jev_unsure` is **absent** (confidence `0.31 < 0.5`), while `@jev_billing` is present because `noul` has no gate.
+
+Constraints and outcomes:
+
+```
+Segment "enterprise":
+  {@jev_plan_tier} EQ "pro"     → true   (value is the label "pro")
+  {@jev_billing} GTE 0.7        → true   (0.82 ≥ 0.7)
+  {@jev_sentiment} GTE 3        → true   (4 ≥ 3)
+
+Segment "unsure":
+  {@jev_unsure} EQ "pro"        → error: argument @jev_unsure not found
+                                        → segment falls through
+```
+
+Value syntax in constraints:
+
+- `choice` values are strings, so quote them: `EQ "pro"`, `IN "pro,enterprise"`.
+- `noul` / `score` values are numbers, so do not quote them: `GTE 0.7`, `GTE 3`.
+- The property is `@jev_<question name>` — flat and underscore-joined, like `@ts_hour` / `@http_x_env`.
 
 ### Match
 
-Add a normal constraint on `@jev_<question>` with an ordinary operator:
+Add a normal constraint on `@jev_<name>`; the operator family must fit the type (see the table above). A mismatched operator is reported by `flagr-validate` and fails closed.
 
 ```
 Segment "likely enterprise":
@@ -80,7 +139,7 @@ Segment "likely enterprise":
   Constraint: {@jev_churn_risk} LT 0.3
 ```
 
-The confidence threshold is per question. When a `choice`/`score` answer is below it, the property is omitted and the constraint falls through. A question without a threshold has no gate.
+Because a `choice` / `score` answer below its threshold is dropped, a segment built only on such a question can be *silently* unreachable. The Debug Console reports `argument: @jev_<name> not found` for a dropped answer.
 
 ## API
 
