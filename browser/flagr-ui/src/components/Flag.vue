@@ -148,14 +148,6 @@
             @post-evaluation-batch="(ctx) => flagPage.postEvaluationBatch(page, ctx)"
           />
 
-          <context-enrichers-card
-            :enrichers="flag.enrichers"
-            :readonly="evalOnlyMode"
-            @create-enricher="(p) => flagPage.createEnricher(page, p)"
-            @save-enricher="(p) => flagPage.saveEnricher(page, p)"
-            @delete-enricher="(ns) => flagPage.deleteEnricher(page, ns)"
-          />
-
           <el-card
             v-if="!evalOnlyMode"
             class="flag-management-card"
@@ -196,6 +188,14 @@
                   Delete Flag
                 </el-button>
               </div>
+
+              <context-enrichers-section
+                :enrichers="flag.enrichers"
+                :readonly="evalOnlyMode"
+                @create-enricher="(p) => flagPage.createEnricher(page, p)"
+                @save-enricher="(p) => flagPage.saveEnricher(page, p)"
+                @delete-enricher="(ns) => flagPage.deleteEnricher(page, ns)"
+              />
             </div>
           </el-card>
         </el-tab-pane>
@@ -221,7 +221,7 @@
 <script lang="ts">
 import { Delete } from '@element-plus/icons-vue'
 import DebugConsole from '@/components/DebugConsole.vue'
-import ContextEnrichersCard from '@/components/ContextEnrichersCard.vue'
+import ContextEnrichersSection from '@/components/ContextEnrichersSection.vue'
 import DistributionDialog from '@/components/DistributionDialog.vue'
 import FlagConfigCard from '@/components/FlagConfigCard.vue'
 import FlagHistory from '@/components/FlagHistory.vue'
@@ -264,7 +264,7 @@ export default {
     FlagHistory,
     DistributionDialog,
     FlagConfigCard,
-    ContextEnrichersCard,
+    ContextEnrichersSection,
     VariantsSection,
     SegmentsSection,
     Delete,

@@ -1,48 +1,41 @@
 <template>
-  <el-card
-    class="enrichers-card is-card-secondary"
-    :class="{ 'enrichers-card--collapsed': !expanded }"
-  >
-    <template #header>
-      <div class="el-card-header">
-        <div class="enrichers-header">
-          <div
-            class="enrichers-title"
-            role="button"
-            tabindex="0"
-            :aria-expanded="expanded"
-            data-testid="toggle-enrichers-btn"
-            @click="expanded = !expanded"
-            @keydown.enter.prevent="expanded = !expanded"
-            @keydown.space.prevent="expanded = !expanded"
-          >
-            <el-icon
-              class="enrichers-chevron"
-              :class="{ 'enrichers-chevron--open': expanded }"
-            >
-              <ArrowRight />
-            </el-icon>
-            <h2>Context enrichers</h2>
-          </div>
-          <el-tooltip
-            v-if="!readonly && !hasFlagEnricher"
-            content="Add a Jev (System One) enricher. Its answers become @jev_<name> properties you can match in constraints."
-            placement="top"
-            effect="light"
-          >
-            <el-button
-              size="small"
-              type="primary"
-              plain
-              data-testid="add-jev-enricher-btn"
-              @click="addJev"
-            >
-              + Jev
-            </el-button>
-          </el-tooltip>
-        </div>
+  <div class="enrichers-section">
+    <div class="enrichers-header">
+      <div
+        class="enrichers-title"
+        role="button"
+        tabindex="0"
+        :aria-expanded="expanded"
+        data-testid="toggle-enrichers-btn"
+        @click="expanded = !expanded"
+        @keydown.enter.prevent="expanded = !expanded"
+        @keydown.space.prevent="expanded = !expanded"
+      >
+        <el-icon
+          class="enrichers-chevron"
+          :class="{ 'enrichers-chevron--open': expanded }"
+        >
+          <ArrowRight />
+        </el-icon>
+        <span class="enrichers-heading">Context enrichers</span>
       </div>
-    </template>
+      <el-tooltip
+        v-if="!readonly && !hasFlagEnricher"
+        content="Add a Jev (System One) enricher. Its answers become @jev_<name> properties you can match in constraints."
+        placement="top"
+        effect="light"
+      >
+        <el-button
+          size="small"
+          type="primary"
+          plain
+          data-testid="add-jev-enricher-btn"
+          @click="addJev"
+        >
+          + Jev
+        </el-button>
+      </el-tooltip>
+    </div>
 
     <div
       v-if="expanded"
@@ -149,7 +142,7 @@
         </div>
       </div>
     </div>
-  </el-card>
+  </div>
 </template>
 
 <script lang="ts">
@@ -160,7 +153,7 @@ import JevQuestionsEditor from '@/components/JevQuestionsEditor.vue'
 import { defaultJevQuestion, jevQuestionProblems } from '@/helpers/jevQuestion'
 
 export default {
-  name: 'ContextEnrichersCard',
+  name: 'ContextEnrichersSection',
   components: { JevQuestionsEditor, ArrowRight },
   props: {
     enrichers: { type: Array as PropType<Enricher[]>, default: () => [] },
@@ -236,18 +229,15 @@ export default {
 </script>
 
 <style scoped>
-.enrichers-card {
+.enrichers-section {
   --enricher-help-width: 280px;
   --enricher-line-min-height: var(--space-lg);
-}
 
-/* Collapsed: hide the body entirely, and the header's divider with it. */
-.enrichers-card--collapsed :deep(.el-card__body) {
-  display: none;
-}
-
-.enrichers-card--collapsed :deep(.el-card__header) {
-  border-bottom: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--el-border-color-lighter);
 }
 
 .enrichers-header {
@@ -284,6 +274,12 @@ export default {
   .enrichers-chevron {
     transition: none;
   }
+}
+
+.enrichers-heading {
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--el-text-color-primary);
 }
 
 .enrichers-body {
