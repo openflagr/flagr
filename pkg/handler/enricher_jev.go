@@ -30,6 +30,7 @@ func buildJevEnricher(configJSON string) (*enricher, error) {
 		scope:      scopeFlag,
 		prefix:     JevPropertyPrefix,
 		properties: cfg.Properties(),
+		config:     cfg,
 		enabled:    config.Config.InjectedContextJevBaseURL != "",
 		run: func(in enrichInput) (map[string]any, error) {
 			if len(cfg.Questions) == 0 {

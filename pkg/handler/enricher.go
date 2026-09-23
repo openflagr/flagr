@@ -2,11 +2,14 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"sort"
 	"strings"
 
 	"github.com/openflagr/flagr/pkg/entity"
+	"github.com/openflagr/flagr/pkg/mapper/entity_restapi/e2r"
+	"github.com/openflagr/flagr/swagger_gen/models"
 	"github.com/sirupsen/logrus"
 )
 
@@ -37,6 +40,8 @@ type enricher struct {
 	scope      enricherScope
 	prefix     string
 	properties []string
+	// config is the decoded namespace-specific config, exposed by the read model.
+	config any
 	// enabled reflects the namespace's env switch. Disabled enrichers are not
 	// listed and contribute nothing.
 	enabled bool
@@ -157,4 +162,71 @@ func propertyProvided(entries []enricher, property string) bool {
 		}
 	}
 	return false
+}
+
+// validateEnricher validates an enricher definition for a write: the namespace
+// must be a registered flag-scoped one and its config must pass the namespace's
+// validation. Unknown or global namespaces are rejected (they are server-owned
+// or nonexistent, and never stored on a flag).
+func validateEnricher(e *entity.Enricher) error {
+	if e == nil {
+		return fmt.Errorf("enricher is required")
+	}
+	build, ok := enricherBuilders[e.Namespace]
+	if !ok {
+		return fmt.Errorf("unknown enricher namespace %q", e.Namespace)
+	}
+	built, err := build(e.ConfigJSON)
+	if err != nil {
+		return err
+	}
+	if built.scope != scopeFlag {
+		return fmt.Errorf("enricher namespace %q is not flag-scoped", e.Namespace)
+	}
+	return nil
+}
+
+// effectiveEnricherModels maps a flag's enabled effective enrichers to the API
+// read model: its own flag-scoped enrichers plus the enabled server built-ins.
+func effectiveEnricherModels(flag *entity.Flag) []*models.Enricher {
+	entries := enabledEnrichers(effectiveEnrichers(flag))
+	out := make([]*models.Enricher, 0, len(entries))
+	for i := range entries {
+		e := &entries[i]
+		namespace := e.namespace
+		enabled := e.enabled
+		out = append(out, &models.Enricher{
+			Namespace:  &namespace,
+			Scope:      string(e.scope),
+			Enabled:    &enabled,
+			Properties: e.properties,
+			Config:     e.config,
+		})
+	}
+	return out
+}
+
+// mapFlagWithEnrichers maps a flag and attaches its effective enricher catalog.
+// It is the default for the e2rMapFlag indirection in crud.go; tests can still
+// stub that var to bypass mapping entirely.
+func mapFlagWithEnrichers(f *entity.Flag) (*models.Flag, error) {
+	r, err := e2r.MapFlag(f)
+	if err != nil {
+		return nil, err
+	}
+	r.Enrichers = effectiveEnricherModels(f)
+	return r, nil
+}
+
+// mapFlagsWithEnrichers maps flags and attaches each effective enricher catalog.
+func mapFlagsWithEnrichers(fs []entity.Flag) ([]*models.Flag, error) {
+	ret := make([]*models.Flag, len(fs))
+	for i := range fs {
+		r, err := mapFlagWithEnrichers(&fs[i])
+		if err != nil {
+			return nil, err
+		}
+		ret[i] = r
+	}
+	return ret, nil
 }

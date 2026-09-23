@@ -65,6 +65,10 @@ paths:
     $ref: ./flag_duplicate.yaml
   /flags/{flagID}/enabled:
     $ref: ./flag_enabled.yaml
+  /flags/{flagID}/enrichers:
+    $ref: ./flag_enrichers.yaml
+  /flags/{flagID}/enrichers/{namespace}:
+    $ref: ./flag_enricher.yaml
   /flags/{flagID}/tags:
     $ref: ./flag_tags.yaml
   /flags/{flagID}/tags/{tagID}:
@@ -146,6 +150,15 @@ definitions:
         type: array
         items:
           $ref: "#/definitions/variant"
+      enrichers:
+        description: >
+          Effective context enrichers for this flag: its own flag-scoped
+          enrichers plus the enabled server built-ins (ts, http). Read-only;
+          flag-scoped enrichers are managed via /flags/{flagID}/enrichers.
+        type: array
+        readOnly: true
+        items:
+          $ref: "#/definitions/enricher"
       dataRecordsEnabled:
         description: when true and FLAGR_RECORDER_ENABLED is set, evaluation and exposure rows are written to configured data recorders (e.g. kafka).
         type: boolean
@@ -217,6 +230,80 @@ definitions:
     properties:
       enabled:
         type: boolean
+
+  # Context enricher
+  enricher:
+    type: object
+    required:
+      - namespace
+    properties:
+      namespace:
+        description: enricher identity; a flag declares at most one per namespace
+        type: string
+        minLength: 1
+      scope:
+        description: global enrichers are built into the server; flag enrichers are declared on the flag
+        type: string
+        enum:
+          - global
+          - flag
+        readOnly: true
+      enabled:
+        description: whether the namespace is enabled by server configuration
+        type: boolean
+        readOnly: true
+      properties:
+        description: exact enriched property names this enricher contributes (e.g. @jev_plan_tier)
+        type: array
+        readOnly: true
+        items:
+          type: string
+      config:
+        description: namespace-specific configuration; the jev namespace expects an object with a questions map
+        type: object
+  jevQuestion:
+    type: object
+    required:
+      - type
+      - instructions
+    properties:
+      type:
+        type: string
+        enum:
+          - noul
+          - choice
+          - score
+      instructions:
+        description: free-form model instructions as a string, object, or array
+        type: object
+      criteria:
+        description: choice expects an object of option to description; score expects an array of levels
+        type: object
+      confidenceThreshold:
+        type: number
+        format: double
+        minimum: 0
+        maximum: 1
+  createEnricherRequest:
+    type: object
+    required:
+      - namespace
+      - config
+    properties:
+      namespace:
+        type: string
+        minLength: 1
+      config:
+        description: namespace-specific configuration; the jev namespace expects an object with a questions map
+        type: object
+  putEnricherRequest:
+    type: object
+    required:
+      - config
+    properties:
+      config:
+        description: namespace-specific configuration; the jev namespace expects an object with a questions map
+        type: object
 
   # Flag Snapshot
   flagSnapshot:
