@@ -37,10 +37,14 @@
               <el-button
                 size="small"
                 :icon="ArrowDown"
+                title="Any eval-context property works — these injected ones are already populated."
                 data-testid="pick-enriched-property-btn"
               />
             </template>
             <div class="enricher-picker">
+              <p class="enricher-picker-hint">
+                Any property in the evaluation context works — type it directly. The injected properties below are already populated.
+              </p>
               <div
                 v-for="group in propertyGroups"
                 :key="group.namespace"
@@ -171,6 +175,13 @@ export default {
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
+}
+
+.enricher-picker-hint {
+  margin: 0;
+  color: var(--el-text-color-secondary);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-ui);
 }
 
 .enricher-picker-label {

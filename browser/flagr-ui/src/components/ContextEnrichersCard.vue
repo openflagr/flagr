@@ -1,119 +1,150 @@
 <template>
-  <el-card class="enrichers-card is-card-secondary">
+  <el-card
+    class="enrichers-card is-card-secondary"
+    :class="{ 'enrichers-card--collapsed': !expanded }"
+  >
     <template #header>
       <div class="el-card-header">
         <div class="enrichers-header">
-          <h2>Context enrichers</h2>
-          <el-button
-            v-if="!readonly && !hasFlagEnricher"
-            size="small"
-            type="primary"
-            plain
-            data-testid="add-jev-enricher-btn"
-            @click="addJev"
+          <div
+            class="enrichers-title"
+            role="button"
+            tabindex="0"
+            :aria-expanded="expanded"
+            data-testid="toggle-enrichers-btn"
+            @click="expanded = !expanded"
+            @keydown.enter.prevent="expanded = !expanded"
+            @keydown.space.prevent="expanded = !expanded"
           >
-            + Jev
-          </el-button>
+            <el-icon
+              class="enrichers-chevron"
+              :class="{ 'enrichers-chevron--open': expanded }"
+            >
+              <ArrowRight />
+            </el-icon>
+            <h2>Context enrichers</h2>
+          </div>
+          <el-tooltip
+            v-if="!readonly && !hasFlagEnricher"
+            content="Add a Jev (System One) enricher. Its answers become @jev_<name> properties you can match in constraints."
+            placement="top"
+            effect="light"
+          >
+            <el-button
+              size="small"
+              type="primary"
+              plain
+              data-testid="add-jev-enricher-btn"
+              @click="addJev"
+            >
+              + Jev
+            </el-button>
+          </el-tooltip>
         </div>
       </div>
     </template>
 
-    <p class="enrichers-hint">
-      Properties injected into the evaluation context before constraints run. Pick them when adding a constraint.
-    </p>
-
     <div
-      v-if="!enrichers.length"
-      class="card--empty"
+      v-if="expanded"
+      class="enrichers-body"
     >
-      No enrichers enabled. Enable built-ins with <code>FLAGR_INJECTED_CONTEXT_ENABLED</code>, or add a Jev enricher.
-    </div>
+      <p class="enrichers-hint">
+        Properties injected into the evaluation context before constraints run. Pick them when adding a constraint.
+      </p>
 
-    <div
-      v-else
-      class="enricher-list"
-    >
       <div
-        v-for="enricher in enrichers"
-        :key="enricher.namespace"
-        class="enricher-row"
-        :class="{ 'enricher-row--flag': enricher.scope === 'flag' }"
-        :data-testid="`enricher-row-${enricher.namespace}`"
+        v-if="!enrichers.length"
+        class="card--empty"
       >
-        <div class="enricher-line">
-          <el-tooltip
-            placement="top"
-            effect="dark"
-          >
-            <code
-              class="enricher-ns"
-              :class="{ 'enricher-ns--disabled': enricher.enabled === false }"
-              :data-testid="`enricher-ns-${enricher.namespace}`"
-            >{{ enricher.namespace }}</code>
-            <template #content>
-              <div class="enricher-help">
-                <p>{{ namespaceHelp(enricher.namespace) }}</p>
-                <p
-                  v-if="enricher.enabled === false"
-                  class="enricher-help-warn"
-                >
-                  Not enabled on this server — constraints using its properties fail closed.
-                </p>
-              </div>
-            </template>
-          </el-tooltip>
-          <span class="enricher-props">
-            <el-tag
-              v-for="property in enricher.properties"
-              :key="property"
-              size="small"
-              effect="plain"
-              type="info"
-            >
-              {{ property }}
-            </el-tag>
-            <span
-              v-if="!(enricher.properties ?? []).length"
-              class="enricher-no-props"
-            >no properties</span>
-          </span>
-          <el-button
-            v-if="!readonly && enricher.scope === 'flag'"
-            size="small"
-            link
-            type="danger"
-            class="enricher-delete"
-            :data-testid="`delete-enricher-${enricher.namespace}`"
-            @click="$emit('delete-enricher', enricher.namespace)"
-          >
-            Delete
-          </el-button>
-        </div>
+        No enrichers enabled. Enable built-ins with <code>FLAGR_INJECTED_CONTEXT_ENABLED</code>, or add a Jev enricher.
+      </div>
 
+      <div
+        v-else
+        class="enricher-list"
+      >
         <div
-          v-if="!readonly && enricher.scope === 'flag'"
-          class="enricher-edit"
+          v-for="enricher in enrichers"
+          :key="enricher.namespace"
+          class="enricher-row"
+          :class="{ 'enricher-row--flag': enricher.scope === 'flag' }"
+          :data-testid="`enricher-row-${enricher.namespace}`"
         >
-          <JevQuestionsEditor
-            v-if="enricher.namespace === 'jev'"
-            v-model="questions[enricher.namespace]"
-          />
-          <div class="enricher-actions">
-            <span
-              v-if="problemsFor(enricher.namespace).length"
-              class="enricher-problem"
+          <div class="enricher-line">
+            <el-tooltip
+              placement="top"
+              effect="dark"
             >
-              {{ problemsFor(enricher.namespace)[0] }}
+              <code
+                class="enricher-ns"
+                :class="{ 'enricher-ns--disabled': enricher.enabled === false }"
+                :data-testid="`enricher-ns-${enricher.namespace}`"
+              >{{ enricher.namespace }}</code>
+              <template #content>
+                <div class="enricher-help">
+                  <p>{{ namespaceHelp(enricher.namespace) }}</p>
+                  <p
+                    v-if="enricher.enabled === false"
+                    class="enricher-help-warn"
+                  >
+                    Not enabled on this server — constraints using its properties fail closed.
+                  </p>
+                </div>
+              </template>
+            </el-tooltip>
+            <span class="enricher-props">
+              <el-tag
+                v-for="property in enricher.properties"
+                :key="property"
+                size="small"
+                effect="plain"
+                type="info"
+              >
+                {{ property }}
+              </el-tag>
+              <span
+                v-if="!(enricher.properties ?? []).length"
+                class="enricher-no-props"
+              >no properties</span>
             </span>
             <el-button
+              v-if="!readonly && enricher.scope === 'flag'"
               size="small"
-              type="primary"
-              :disabled="problemsFor(enricher.namespace).length > 0"
-              :data-testid="`save-enricher-${enricher.namespace}`"
-              @click="save(enricher.namespace)"
+              link
+              type="danger"
+              class="enricher-delete"
+              :data-testid="`delete-enricher-${enricher.namespace}`"
+              @click="$emit('delete-enricher', enricher.namespace)"
             >
-              Save
+              Delete
             </el-button>
+          </div>
+
+          <div
+            v-if="!readonly && enricher.scope === 'flag'"
+            class="enricher-edit"
+          >
+            <JevQuestionsEditor
+              v-if="enricher.namespace === 'jev'"
+              v-model="questions[enricher.namespace]"
+            />
+            <div class="enricher-actions">
+              <span
+                v-if="problemsFor(enricher.namespace).length"
+                class="enricher-problem"
+              >
+                {{ problemsFor(enricher.namespace)[0] }}
+              </span>
+              <el-button
+                size="small"
+                type="primary"
+                :disabled="problemsFor(enricher.namespace).length > 0"
+                :data-testid="`save-enricher-${enricher.namespace}`"
+                @click="save(enricher.namespace)"
+              >
+                Save
+              </el-button>
+            </div>
           </div>
         </div>
       </div>
@@ -123,13 +154,14 @@
 
 <script lang="ts">
 import type { PropType } from 'vue'
+import { ArrowRight } from '@element-plus/icons-vue'
 import type { Enricher, JevQuestion } from '@/api/types'
 import JevQuestionsEditor from '@/components/JevQuestionsEditor.vue'
 import { defaultJevQuestion, jevQuestionProblems } from '@/helpers/jevQuestion'
 
 export default {
   name: 'ContextEnrichersCard',
-  components: { JevQuestionsEditor },
+  components: { JevQuestionsEditor, ArrowRight },
   props: {
     enrichers: { type: Array as PropType<Enricher[]>, default: () => [] },
     readonly: { type: Boolean, default: false },
@@ -137,6 +169,8 @@ export default {
   emits: ['create-enricher', 'save-enricher', 'delete-enricher'],
   data() {
     return {
+      // Advanced, env-dependent configuration: collapsed until asked for.
+      expanded: false,
       questions: {} as Record<string, Record<string, JevQuestion>>,
     }
   },
@@ -207,6 +241,15 @@ export default {
   --enricher-line-min-height: var(--space-lg);
 }
 
+/* Collapsed: hide the body entirely, and the header's divider with it. */
+.enrichers-card--collapsed :deep(.el-card__body) {
+  display: none;
+}
+
+.enrichers-card--collapsed :deep(.el-card__header) {
+  border-bottom: none;
+}
+
 .enrichers-header {
   display: flex;
   align-items: center;
@@ -214,8 +257,43 @@ export default {
   gap: var(--space-sm);
 }
 
+.enrichers-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  cursor: pointer;
+  user-select: none;
+}
+
+.enrichers-title:focus-visible {
+  outline: 2px solid var(--el-color-primary-light-5);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.enrichers-chevron {
+  color: var(--el-text-color-secondary);
+  transition: transform 150ms ease;
+}
+
+.enrichers-chevron--open {
+  transform: rotate(90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .enrichers-chevron {
+    transition: none;
+  }
+}
+
+.enrichers-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+}
+
 .enrichers-hint {
-  margin: 0 0 var(--space-2xs);
+  margin: 0;
   color: var(--el-text-color-secondary);
   font-size: var(--font-size-caption);
   line-height: var(--line-height-ui);

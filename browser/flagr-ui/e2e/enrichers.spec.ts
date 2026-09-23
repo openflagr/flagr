@@ -16,6 +16,12 @@ test.describe('Context enrichers', () => {
     await page.goto(`/#/flags/${flag.id}`)
     await expect(page.locator('input[data-testid="flag-key-input"]')).toBeVisible({ timeout: 10000 })
 
+    // The enrichers card is a collapsed advanced section; expand it.
+    const toggle = page.locator('[data-testid="toggle-enrichers-btn"]')
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    await toggle.click()
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true')
+
     // Namespaces carry a tooltip instead of a built-in/flag scope tag.
     await expect(page.getByText('built-in', { exact: true })).toHaveCount(0)
     await expect(page.getByText('flag', { exact: true })).toHaveCount(0)
@@ -70,6 +76,7 @@ test.describe('Context enrichers', () => {
     await page.goto(`/#/flags/${flag.id}`)
     await expect(page.locator('input[data-testid="flag-key-input"]')).toBeVisible({ timeout: 10000 })
 
+    await page.locator('[data-testid="toggle-enrichers-btn"]').click()
     await page.locator('[data-testid="add-jev-enricher-btn"]').click()
     await expect(page.locator('.el-message--success:has-text("enricher created")')).toBeVisible({ timeout: 5000 })
 

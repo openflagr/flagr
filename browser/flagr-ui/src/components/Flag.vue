@@ -115,14 +115,6 @@
             @attachment-change="(p) => flagPage.handleVariantAttachmentChange(page, p)"
           />
 
-          <context-enrichers-card
-            :enrichers="flag.enrichers"
-            :readonly="evalOnlyMode"
-            @create-enricher="(p) => flagPage.createEnricher(page, p)"
-            @save-enricher="(p) => flagPage.saveEnricher(page, p)"
-            @delete-enricher="(ns) => flagPage.deleteEnricher(page, ns)"
-          />
-
           <segments-section
             :segments="flag.segments ?? []"
             :readonly="evalOnlyMode"
@@ -154,6 +146,14 @@
             @update:batch-eval-result="batchEvalResult = $event"
             @post-evaluation="(ctx) => flagPage.postEvaluation(page, ctx)"
             @post-evaluation-batch="(ctx) => flagPage.postEvaluationBatch(page, ctx)"
+          />
+
+          <context-enrichers-card
+            :enrichers="flag.enrichers"
+            :readonly="evalOnlyMode"
+            @create-enricher="(p) => flagPage.createEnricher(page, p)"
+            @save-enricher="(p) => flagPage.saveEnricher(page, p)"
+            @delete-enricher="(ns) => flagPage.deleteEnricher(page, ns)"
           />
 
           <el-card
