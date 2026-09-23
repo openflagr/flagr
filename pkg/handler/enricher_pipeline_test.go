@@ -261,6 +261,45 @@ func TestEnabledEnrichersRespectsEnv(t *testing.T) {
 	assert.Equal(t, entity.EnricherNamespaceJev, got[0].namespace)
 }
 
+func TestVisibleEnrichersKeepsDisabledFlagScoped(t *testing.T) {
+	origEnabled := config.Config.InjectedContextEnabled
+	origJevURL := config.Config.InjectedContextJevBaseURL
+	defer func() {
+		config.Config.InjectedContextEnabled = origEnabled
+		config.Config.InjectedContextJevBaseURL = origJevURL
+	}()
+
+	flag := setJevConfig(t, validJevConfig())
+
+	// Nothing enabled: the flag-scoped declaration stays visible so the UI can
+	// still author it, but it is marked disabled and never runs.
+	config.Config.InjectedContextEnabled = false
+	config.Config.InjectedContextJevBaseURL = ""
+	got := visibleEnrichers(effectiveEnrichers(flag))
+	require.Len(t, got, 1)
+	assert.Equal(t, entity.EnricherNamespaceJev, got[0].namespace)
+	assert.False(t, got[0].enabled)
+	assert.Empty(t, enabledEnrichers(effectiveEnrichers(flag)))
+
+	models := effectiveEnricherModels(flag)
+	require.Len(t, models, 1)
+	assert.Equal(t, entity.EnricherNamespaceJev, *models[0].Namespace)
+	require.NotNil(t, models[0].Enabled)
+	assert.False(t, *models[0].Enabled)
+	assert.Contains(t, models[0].Properties, "@jev_plan_tier")
+
+	// Globals appear only once enabled, ahead of the flag-scoped entries.
+	config.Config.InjectedContextEnabled = true
+	config.Config.InjectedContextJevBaseURL = ""
+	namespaces := make([]string, 0, 3)
+	for _, e := range effectiveEnricherModels(flag) {
+		namespaces = append(namespaces, *e.Namespace)
+	}
+	assert.Equal(t,
+		[]string{entity.EnricherNamespaceTs, entity.EnricherNamespaceHTTP, entity.EnricherNamespaceJev},
+		namespaces)
+}
+
 func TestEnrichFlagContextDoesNotMutateCallerContext(t *testing.T) {
 	origURL := config.Config.InjectedContextJevBaseURL
 	origNew := NewJevClient

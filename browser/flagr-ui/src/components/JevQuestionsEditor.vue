@@ -3,7 +3,8 @@
     <div
       v-for="(row, index) in rows"
       :key="index"
-      class="jev-question ui-surface-inset"
+      class="jev-question"
+      :data-testid="`jev-question-${index}`"
     >
       <div class="jev-question-head">
         <el-input
@@ -39,6 +40,7 @@
           link
           type="danger"
           :disabled="disabled || rows.length <= 1"
+          :data-testid="`jev-remove-question-${index}`"
           @click="removeQuestion(index)"
         >
           Remove
@@ -48,7 +50,7 @@
       <el-input
         v-model="row.instructions"
         type="textarea"
-        :rows="2"
+        :autosize="{ minRows: 1, maxRows: 3 }"
         placeholder="Instructions for the model (keep it atomic)"
         data-testid="jev-question-instructions"
         @update:model-value="sync()"
@@ -67,12 +69,14 @@
             v-model="choice.name"
             size="small"
             placeholder="option"
+            data-testid="jev-choice-name"
             @update:model-value="sync()"
           />
           <el-input
             v-model="choice.description"
             size="small"
             placeholder="description"
+            data-testid="jev-choice-description"
             @update:model-value="sync()"
           />
           <el-button
@@ -109,6 +113,7 @@
             v-model="row.levels[levelIndex]"
             size="small"
             placeholder="level (low to high)"
+            data-testid="jev-score-level"
             @update:model-value="sync()"
           />
           <el-button
@@ -132,7 +137,10 @@
         </el-button>
       </div>
 
-      <div class="jev-confidence">
+      <div
+        v-if="row.type !== 'noul'"
+        class="jev-confidence"
+      >
         <span class="jev-confidence-label">Confidence ≥</span>
         <el-input-number
           :model-value="row.threshold"
@@ -141,6 +149,7 @@
           :step="0.05"
           :precision="2"
           size="small"
+          controls-position="right"
           :disabled="disabled"
           data-testid="jev-question-confidence"
           @update:model-value="setThreshold(index, $event)"
@@ -151,6 +160,8 @@
 
     <el-button
       size="small"
+      link
+      type="primary"
       data-testid="jev-add-question-btn"
       :disabled="disabled"
       @click="addQuestion"
@@ -214,6 +225,11 @@ function toQuestions(rows: EditRow[]): Record<string, JevQuestion> {
   return out
 }
 
+/**
+ * Editor for a `jev` enricher's questions. The rows are the source of truth
+ * once mounted — the parent re-mounts this component (via `:key`) when it swaps
+ * in a different enricher, so there is no prop watcher to fight with typing.
+ */
 export default {
   name: 'JevQuestionsEditor',
   props: {
@@ -225,14 +241,6 @@ export default {
     return {
       rows: toRows(this.modelValue) as EditRow[],
     }
-  },
-  watch: {
-    modelValue: {
-      handler(value: Record<string, JevQuestion>) {
-        this.rows = toRows(value ?? {})
-      },
-      deep: true,
-    },
   },
   methods: {
     sync() {
@@ -294,33 +302,42 @@ export default {
 .jev-editor {
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
+  gap: var(--space-2xs);
 }
 
 .jev-question {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
+  gap: var(--space-3xs);
+  padding-bottom: var(--space-2xs);
+  border-bottom: 1px solid var(--el-border-color-lighter);
+}
+
+.jev-question:last-of-type {
+  border-bottom: none;
+  padding-bottom: 0;
 }
 
 .jev-question-head {
   display: flex;
   align-items: center;
-  gap: var(--space-xs);
+  gap: var(--space-3xs);
 }
 
 .jev-name {
   flex: 1;
+  max-width: 240px;
 }
 
 .jev-type {
-  width: 120px;
+  width: 110px;
 }
 
 .jev-criteria {
   display: flex;
   flex-direction: column;
   gap: var(--space-3xs);
+  padding-left: var(--space-sm);
 }
 
 .jev-criteria-row {
@@ -332,15 +349,13 @@ export default {
 .jev-confidence {
   display: flex;
   align-items: center;
-  gap: var(--space-xs);
+  gap: var(--space-2xs);
+  padding-left: var(--space-sm);
 }
 
-.jev-confidence-label {
-  font-size: var(--font-size-caption);
-}
-
+.jev-confidence-label,
 .jev-confidence-hint {
   color: var(--el-text-color-secondary);
-  font-size: var(--font-size-micro);
+  font-size: var(--font-size-caption);
 }
 </style>

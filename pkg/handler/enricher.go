@@ -112,11 +112,26 @@ func effectiveEnrichers(flag *entity.Flag) []enricher {
 }
 
 // enabledEnrichers filters to enrichers whose env switch is on. This is the
-// catalog the UI lists and the set the eval pipeline runs.
+// set the eval pipeline runs; a disabled enricher contributes nothing.
 func enabledEnrichers(entries []enricher) []enricher {
 	out := make([]enricher, 0, len(entries))
 	for i := range entries {
 		if entries[i].enabled {
+			out = append(out, entries[i])
+		}
+	}
+	return out
+}
+
+// visibleEnrichers is the catalog the API lists: enabled enrichers plus
+// flag-scoped declarations even when their namespace is disabled server-side.
+// A flag may declare a Jev enricher before the deployment has a System One
+// endpoint; hiding it would make the declaration unmanageable. Disabled
+// entries carry enabled=false and are still skipped by the eval pipeline.
+func visibleEnrichers(entries []enricher) []enricher {
+	out := make([]enricher, 0, len(entries))
+	for i := range entries {
+		if entries[i].enabled || entries[i].scope == scopeFlag {
 			out = append(out, entries[i])
 		}
 	}
@@ -186,10 +201,11 @@ func validateEnricher(e *entity.Enricher) error {
 	return nil
 }
 
-// effectiveEnricherModels maps a flag's enabled effective enrichers to the API
-// read model: its own flag-scoped enrichers plus the enabled server built-ins.
+// effectiveEnricherModels maps a flag's visible effective enrichers to the API
+// read model: its own flag-scoped enrichers (even disabled ones) plus the
+// enabled server built-ins.
 func effectiveEnricherModels(flag *entity.Flag) []*models.Enricher {
-	entries := enabledEnrichers(effectiveEnrichers(flag))
+	entries := visibleEnrichers(effectiveEnrichers(flag))
 	out := make([]*models.Enricher, 0, len(entries))
 	for i := range entries {
 		e := &entries[i]

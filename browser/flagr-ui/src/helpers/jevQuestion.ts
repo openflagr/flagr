@@ -6,6 +6,20 @@ export const JEV_PROPERTY_PREFIX = '@jev_'
 /** Default confidence gate for a choice/score question. */
 export const DEFAULT_JEV_CONFIDENCE = 0.5
 
+/**
+ * Type-appropriate starter instructions. A Jev question is invalid without
+ * non-empty instructions, so a freshly added question must be born valid —
+ * otherwise "Add Jev enricher" fails with a 400 before the user can type.
+ */
+export const DEFAULT_JEV_INSTRUCTIONS: Record<JevQuestionType, string> = {
+  noul: 'Answer whether the statement is true.',
+  choice: 'Pick the single best option.',
+  score: 'Rate the item on the scale from low to high.',
+}
+
+/** Question names become `@jev_<name>` properties, so they must be identifier-like. */
+export const JEV_NAME_PATTERN = /^[A-Za-z_][A-Za-z0-9_]*$/
+
 export interface ChoiceRow {
   name: string
   description: string
@@ -32,12 +46,70 @@ export function slugifyJevName(name: string): string {
 /** A fresh question for the given type, with the criteria shape that type needs. */
 export function defaultJevQuestion(type: JevQuestionType): JevQuestion {
   if (type === 'choice') {
-    return { type, instructions: '', criteria: {}, confidenceThreshold: DEFAULT_JEV_CONFIDENCE }
+    return {
+      type,
+      instructions: DEFAULT_JEV_INSTRUCTIONS.choice,
+      criteria: {},
+      confidenceThreshold: DEFAULT_JEV_CONFIDENCE,
+    }
   }
   if (type === 'score') {
-    return { type, instructions: '', criteria: ['', ''], confidenceThreshold: DEFAULT_JEV_CONFIDENCE }
+    return {
+      type,
+      instructions: DEFAULT_JEV_INSTRUCTIONS.score,
+      criteria: ['', ''],
+      confidenceThreshold: DEFAULT_JEV_CONFIDENCE,
+    }
   }
-  return { type, instructions: '' }
+  return { type, instructions: DEFAULT_JEV_INSTRUCTIONS.noul }
+}
+
+/**
+ * Client-side mirror of the server's Jev config validation, so the editor can
+ * disable Save and explain the problem instead of surfacing a raw 400. Keep in
+ * sync with `JevEnricherConfig.Validate` in `pkg/handler/jev_config.go`.
+ */
+export function jevQuestionProblems(questions: Record<string, JevQuestion>): string[] {
+  const names = Object.keys(questions)
+  if (names.length === 0) return ['Add at least one question.']
+
+  const problems: string[] = []
+  for (const name of names) {
+    if (!JEV_NAME_PATTERN.test(name)) {
+      problems.push(
+        `Question name "${name}" must start with a letter or underscore and use only letters, digits, and underscores.`,
+      )
+      continue
+    }
+    const question = questions[name]
+    const instructions = typeof question.instructions === 'string' ? question.instructions.trim() : ''
+    if (!instructions) {
+      problems.push(`Question "${name}" needs instructions.`)
+      continue
+    }
+    if (question.type === 'choice') {
+      const criteria =
+        question.criteria && typeof question.criteria === 'object' && !Array.isArray(question.criteria)
+          ? (question.criteria as Record<string, unknown>)
+          : {}
+      if (Object.keys(criteria).filter((option) => option.trim() !== '').length === 0) {
+        problems.push(`Question "${name}" needs at least one option.`)
+      }
+    }
+    if (question.type === 'score') {
+      const levels = Array.isArray(question.criteria)
+        ? question.criteria.filter((level) => String(level).trim() !== '')
+        : []
+      if (levels.length < 2 || levels.length > 10) {
+        problems.push(`Question "${name}" needs between 2 and 10 levels.`)
+      }
+    }
+    const threshold = question.confidenceThreshold
+    if (threshold !== undefined && threshold !== null && (threshold < 0 || threshold > 1)) {
+      problems.push(`Question "${name}" confidence must be between 0 and 1.`)
+    }
+  }
+  return problems
 }
 
 /** Choice criteria (`{option: description}`) → editable rows. */
