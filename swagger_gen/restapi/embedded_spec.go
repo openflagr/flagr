@@ -2585,36 +2585,6 @@ func init() {
         }
       }
     },
-    "jevQuestion": {
-      "type": "object",
-      "required": [
-        "type",
-        "instructions"
-      ],
-      "properties": {
-        "confidenceThreshold": {
-          "type": "number",
-          "format": "double",
-          "maximum": 1
-        },
-        "criteria": {
-          "description": "choice expects an object of option to description; score expects an array of levels",
-          "type": "object"
-        },
-        "instructions": {
-          "description": "free-form model instructions as a string, object, or array",
-          "type": "object"
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "noul",
-            "choice",
-            "score"
-          ]
-        }
-      }
-    },
     "putDistributionsRequest": {
       "type": "object",
       "required": [
@@ -5475,37 +5445,6 @@ func init() {
         },
         "status": {
           "type": "string"
-        }
-      }
-    },
-    "jevQuestion": {
-      "type": "object",
-      "required": [
-        "type",
-        "instructions"
-      ],
-      "properties": {
-        "confidenceThreshold": {
-          "type": "number",
-          "format": "double",
-          "maximum": 1,
-          "minimum": 0
-        },
-        "criteria": {
-          "description": "choice expects an object of option to description; score expects an array of levels",
-          "type": "object"
-        },
-        "instructions": {
-          "description": "free-form model instructions as a string, object, or array",
-          "type": "object"
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "noul",
-            "choice",
-            "score"
-          ]
         }
       }
     },

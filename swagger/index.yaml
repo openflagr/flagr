@@ -261,29 +261,6 @@ definitions:
       config:
         description: namespace-specific configuration; the jev namespace expects an object with a questions map
         type: object
-  jevQuestion:
-    type: object
-    required:
-      - type
-      - instructions
-    properties:
-      type:
-        type: string
-        enum:
-          - noul
-          - choice
-          - score
-      instructions:
-        description: free-form model instructions as a string, object, or array
-        type: object
-      criteria:
-        description: choice expects an object of option to description; score expects an array of levels
-        type: object
-      confidenceThreshold:
-        type: number
-        format: double
-        minimum: 0
-        maximum: 1
   createEnricherRequest:
     type: object
     required:
