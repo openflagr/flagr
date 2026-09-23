@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -8,6 +9,15 @@ import (
 )
 
 func ptrFloat(v float64) *float64 { return &v }
+
+// manyChoiceOptions returns one more option than the System One cap.
+func manyChoiceOptions() map[string]any {
+	m := make(map[string]any, JevMaxChoiceOptions+1)
+	for i := 0; i <= JevMaxChoiceOptions; i++ {
+		m[fmt.Sprintf("option_%d", i)] = "desc"
+	}
+	return m
+}
 
 func validJevConfig() *JevEnricherConfig {
 	return &JevEnricherConfig{
@@ -132,6 +142,30 @@ func TestJevEnricherConfigValidation(t *testing.T) {
 					ConfidenceThreshold: ptrFloat(0.5),
 				},
 			}},
+		},
+		{
+			name: "noul criteria true/false",
+			cfg: &JevEnricherConfig{Questions: map[string]JevQuestion{
+				"q": {
+					Type:         JevTypeNoul,
+					Instructions: "x",
+					Criteria:     map[string]any{"true": "about billing", "false": "anything else"},
+				},
+			}},
+		},
+		{
+			name: "noul criteria bad key",
+			cfg: &JevEnricherConfig{Questions: map[string]JevQuestion{
+				"q": {Type: JevTypeNoul, Instructions: "x", Criteria: map[string]any{"maybe": "?"}},
+			}},
+			wantErr: true,
+		},
+		{
+			name: "choice too many options",
+			cfg: &JevEnricherConfig{Questions: map[string]JevQuestion{
+				"q": {Type: JevTypeChoice, Instructions: "x", Criteria: manyChoiceOptions()},
+			}},
+			wantErr: true,
 		},
 	}
 

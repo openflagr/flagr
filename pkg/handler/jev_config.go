@@ -10,6 +10,8 @@ import (
 
 // Jev / System One question types, mirroring the System One API contract.
 const (
+	// JevTypeNoul is a true/false question: the answer is P(true), a number in
+	// [0,1]. It carries no confidence value, so it has no confidence threshold.
 	JevTypeNoul   = "noul"
 	JevTypeChoice = "choice"
 	JevTypeScore  = "score"
@@ -24,6 +26,8 @@ const JevPropertyPrefix = "@jev_"
 const (
 	JevMinScoreLevels = 2
 	JevMaxScoreLevels = 10
+	// JevMaxChoiceOptions is the System One cap on choice options.
+	JevMaxChoiceOptions = 255
 )
 
 // jevNamePattern is the safe charset for a question name. Names become
@@ -165,8 +169,14 @@ func validateNoulCriteria(criteria any) error {
 	if criteria == nil {
 		return nil
 	}
-	if _, ok := criteria.(map[string]any); !ok {
-		return fmt.Errorf("jev noul criteria must be a JSON object with true/false descriptions")
+	m, ok := criteria.(map[string]any)
+	if !ok {
+		return fmt.Errorf("jev noul criteria must be a JSON object with \"true\" and \"false\" descriptions")
+	}
+	for key := range m {
+		if key != "true" && key != "false" {
+			return fmt.Errorf("jev noul criteria keys must be \"true\" or \"false\", got %q", key)
+		}
 	}
 	return nil
 }
@@ -175,6 +185,9 @@ func validateChoiceCriteria(criteria any) error {
 	m, ok := criteria.(map[string]any)
 	if !ok || len(m) == 0 {
 		return fmt.Errorf("jev choice criteria must be a non-empty JSON object of option to description")
+	}
+	if len(m) > JevMaxChoiceOptions {
+		return fmt.Errorf("jev choice criteria must have at most %d options, got %d", JevMaxChoiceOptions, len(m))
 	}
 	for name := range m {
 		if strings.TrimSpace(name) == "" {
