@@ -30,9 +30,39 @@ const (
 	JevMaxChoiceOptions = 255
 )
 
-// jevNamePattern is the safe charset for a question name. Names become
+// jevNamePattern is the canonical form of a question name after normalization:
+// lowercase and underscore-joined, like the `@http_*` keys. Names become
 // `@jev_<name>` properties, so they must be identifier-like.
-var jevNamePattern = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
+var jevNamePattern = regexp.MustCompile(`^[a-z_][a-z0-9_]*$`)
+
+// NormalizeJevName converts a raw question name into the canonical property
+// form: lowercased, every run of characters outside [a-z0-9_] collapsed to a
+// single `_`, and `_`-prefixed when it would otherwise start with a digit. It
+// mirrors slugifyJevName in the UI, so the name a user types is the name the
+// server stores. It does not trim, so it is safe to apply on every keystroke
+// (trimming would eat a separator before the next letter). The result is empty
+// when the name has no usable characters.
+func NormalizeJevName(name string) string {
+	var b strings.Builder
+	prevUnderscore := false
+	for _, r := range strings.ToLower(name) {
+		switch {
+		case r >= 'a' && r <= 'z', r >= '0' && r <= '9':
+			b.WriteRune(r)
+			prevUnderscore = false
+		default:
+			if !prevUnderscore {
+				b.WriteByte('_')
+				prevUnderscore = true
+			}
+		}
+	}
+	out := b.String()
+	if out != "" && out[0] >= '0' && out[0] <= '9' {
+		out = "_" + out
+	}
+	return out
+}
 
 // JevQuestion is an authored System One question. Instructions and Criteria are
 // free-form JSON (string | object | array), matching the System One `EntryType`
@@ -84,6 +114,24 @@ func (c *JevEnricherConfig) Properties() []string {
 		props = append(props, JevProperty(name))
 	}
 	return props
+}
+
+// Normalize rewrites every question name into the canonical property form,
+// rejecting two names that collapse to the same one. It is idempotent.
+func (c *JevEnricherConfig) Normalize() error {
+	if c == nil || c.Questions == nil {
+		return nil
+	}
+	out := make(map[string]JevQuestion, len(c.Questions))
+	for name, q := range c.Questions {
+		normalized := NormalizeJevName(name)
+		if _, exists := out[normalized]; exists {
+			return fmt.Errorf("jev question name %q collides with another name after normalization to %q", name, normalized)
+		}
+		out[normalized] = q
+	}
+	c.Questions = out
+	return nil
 }
 
 // Validate checks every question name and definition. A declared Jev enricher
@@ -143,7 +191,9 @@ func (q *JevQuestion) Validate() error {
 	return nil
 }
 
-// DecodeJevConfig decodes and validates a stored Jev enricher config.
+// DecodeJevConfig decodes, normalizes, and validates a stored Jev enricher
+// config. Normalizing here keeps property naming consistent even for configs
+// written by an older client or a hand-edited JSON flag source.
 func DecodeJevConfig(configJSON string) (*JevEnricherConfig, error) {
 	if strings.TrimSpace(configJSON) == "" {
 		return nil, fmt.Errorf("jev enricher config is required")
@@ -151,6 +201,9 @@ func DecodeJevConfig(configJSON string) (*JevEnricherConfig, error) {
 	cfg := &JevEnricherConfig{}
 	if err := json.Unmarshal([]byte(configJSON), cfg); err != nil {
 		return nil, fmt.Errorf("invalid jev enricher config: %w", err)
+	}
+	if err := cfg.Normalize(); err != nil {
+		return nil, err
 	}
 	if err := cfg.Validate(); err != nil {
 		return nil, err
@@ -160,7 +213,10 @@ func DecodeJevConfig(configJSON string) (*JevEnricherConfig, error) {
 
 func validateJevName(name string) error {
 	if !jevNamePattern.MatchString(name) {
-		return fmt.Errorf("jev question name %q must start with a letter or underscore and contain only letters, digits, and underscores", name)
+		return fmt.Errorf("jev question name %q must be lowercase, start with a letter or underscore, and contain only letters, digits, and underscores", name)
+	}
+	if !strings.ContainsAny(name, "abcdefghijklmnopqrstuvwxyz0123456789") {
+		return fmt.Errorf("jev question name %q must contain at least one letter or digit", name)
 	}
 	return nil
 }

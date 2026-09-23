@@ -225,3 +225,54 @@ func TestJevAnswerValue(t *testing.T) {
 		})
 	}
 }
+
+func TestNormalizeJevName(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct{ in, want string }{
+		{"plan_tier", "plan_tier"},
+		{"Plan Tier", "plan_tier"},
+		{"Plan-Tier", "plan_tier"},
+		{"X-Environment", "x_environment"},
+		{"plan  tier", "plan_tier"},
+		{"2fa", "_2fa"},
+		{"trailing!", "trailing_"},
+		{"", ""},
+		{"!!!", "_"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.in, func(t *testing.T) {
+			t.Parallel()
+			assert.Equal(t, tt.want, NormalizeJevName(tt.in))
+			// Idempotent: normalizing the result must not change it.
+			assert.Equal(t, tt.want, NormalizeJevName(tt.want))
+		})
+	}
+}
+
+func TestNormalizeJevConfig(t *testing.T) {
+	t.Parallel()
+
+	cfg := &JevEnricherConfig{Questions: map[string]JevQuestion{
+		"Plan Tier":  {Type: JevTypeNoul, Instructions: "x"},
+		"churn-risk": {Type: JevTypeScore, Instructions: "y", Criteria: []any{"a", "b"}},
+	}}
+	require.NoError(t, cfg.Normalize())
+	assert.Equal(t, []string{"churn_risk", "plan_tier"}, cfg.QuestionNames())
+	assert.Equal(t, []string{"@jev_churn_risk", "@jev_plan_tier"}, cfg.Properties())
+
+	// Two raw names that collapse to the same property would be ambiguous.
+	collide := &JevEnricherConfig{Questions: map[string]JevQuestion{
+		"Plan Tier": {Type: JevTypeNoul, Instructions: "x"},
+		"plan_tier": {Type: JevTypeNoul, Instructions: "y"},
+	}}
+	assert.Error(t, collide.Normalize())
+}
+
+func TestDecodeJevConfigNormalizesNames(t *testing.T) {
+	t.Parallel()
+
+	cfg, err := DecodeJevConfig(`{"questions":{"Plan Tier":{"type":"noul","instructions":"x"}}}`)
+	require.NoError(t, err)
+	assert.Equal(t, []string{"plan_tier"}, cfg.QuestionNames())
+}

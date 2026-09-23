@@ -14,6 +14,24 @@ import (
 	"gorm.io/gorm"
 )
 
+// normalizeEnricherConfig rewrites a jev config's question names into the
+// canonical `@jev_<name>` form before it is stored, so persisted property names
+// do not depend on what the caller sent. Other namespaces pass through.
+func normalizeEnricherConfig(namespace, configJSON string) (string, error) {
+	if namespace != entity.EnricherNamespaceJev {
+		return configJSON, nil
+	}
+	cfg, err := DecodeJevConfig(configJSON)
+	if err != nil {
+		return "", err
+	}
+	b, err := json.Marshal(cfg)
+	if err != nil {
+		return "", fmt.Errorf("encoding jev enricher config: %w", err)
+	}
+	return string(b), nil
+}
+
 // marshalEnricherConfig encodes a create/put request config into the stored
 // JSON and validates the enricher definition (namespace + config schema).
 func marshalEnricherConfig(flagID uint, namespace string, config any) (*entity.Enricher, error) {
@@ -21,10 +39,14 @@ func marshalEnricherConfig(flagID uint, namespace string, config any) (*entity.E
 	if err != nil {
 		return nil, fmt.Errorf("encoding enricher config: %w", err)
 	}
+	normalized, err := normalizeEnricherConfig(namespace, string(b))
+	if err != nil {
+		return nil, err
+	}
 	e := &entity.Enricher{
 		FlagID:     flagID,
 		Namespace:  namespace,
-		ConfigJSON: string(b),
+		ConfigJSON: normalized,
 	}
 	if err := validateEnricher(e); err != nil {
 		return nil, err
