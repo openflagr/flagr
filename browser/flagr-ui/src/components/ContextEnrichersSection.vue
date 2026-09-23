@@ -1,40 +1,40 @@
 <template>
   <div class="enrichers-section">
-    <div class="enrichers-header">
-      <div
-        class="enrichers-title"
-        role="button"
-        tabindex="0"
-        :aria-expanded="expanded"
-        data-testid="toggle-enrichers-btn"
-        @click="expanded = !expanded"
-        @keydown.enter.prevent="expanded = !expanded"
-        @keydown.space.prevent="expanded = !expanded"
-      >
+    <div
+      class="enrichers-header"
+      role="button"
+      tabindex="0"
+      :aria-expanded="expanded"
+      data-testid="toggle-enrichers-btn"
+      @click="expanded = !expanded"
+      @keydown.enter.prevent="expanded = !expanded"
+      @keydown.space.prevent="expanded = !expanded"
+    >
+      <span class="enrichers-heading">Context enrichers</span>
+      <span class="enrichers-trailing">
+        <el-tooltip
+          v-if="!readonly && !hasFlagEnricher"
+          content="Add a Jev (System One) enricher. Its answers become @jev_<name> properties you can match in constraints."
+          placement="top"
+          effect="light"
+        >
+          <el-button
+            size="small"
+            type="primary"
+            plain
+            data-testid="add-jev-enricher-btn"
+            @click.stop="addJev"
+          >
+            + Jev
+          </el-button>
+        </el-tooltip>
         <el-icon
           class="enrichers-chevron"
           :class="{ 'enrichers-chevron--open': expanded }"
         >
           <ArrowRight />
         </el-icon>
-        <span class="enrichers-heading">Context enrichers</span>
-      </div>
-      <el-tooltip
-        v-if="!readonly && !hasFlagEnricher"
-        content="Add a Jev (System One) enricher. Its answers become @jev_<name> properties you can match in constraints."
-        placement="top"
-        effect="light"
-      >
-        <el-button
-          size="small"
-          type="primary"
-          plain
-          data-testid="add-jev-enricher-btn"
-          @click="addJev"
-        >
-          + Jev
-        </el-button>
-      </el-tooltip>
+      </span>
     </div>
 
     <div
@@ -245,20 +245,26 @@ export default {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-sm);
-}
-
-.enrichers-title {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2xs);
   cursor: pointer;
   user-select: none;
 }
 
-.enrichers-title:focus-visible {
+.enrichers-header:focus-visible {
   outline: 2px solid var(--el-color-primary-light-5);
   outline-offset: 2px;
   border-radius: var(--radius-sm);
+}
+
+.enrichers-heading {
+  font-size: var(--font-size-body-sm);
+  line-height: var(--line-height-ui);
+  color: var(--el-text-color-secondary);
+}
+
+.enrichers-trailing {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
 }
 
 .enrichers-chevron {
@@ -274,12 +280,6 @@ export default {
   .enrichers-chevron {
     transition: none;
   }
-}
-
-.enrichers-heading {
-  font-size: var(--font-size-body-sm);
-  font-weight: var(--font-weight-semibold);
-  color: var(--el-text-color-primary);
 }
 
 .enrichers-body {
