@@ -178,20 +178,24 @@
         v-if="row.type !== 'noul'"
         class="jev-confidence"
       >
-        <span class="jev-confidence-label">Confidence ≥</span>
-        <el-input-number
-          :model-value="row.threshold"
-          :min="0"
-          :max="1"
-          :step="0.05"
-          :precision="2"
-          size="small"
-          controls-position="right"
-          :disabled="disabled"
-          data-testid="jev-question-confidence"
-          @update:model-value="setThreshold(index, $event)"
-        />
-        <span class="jev-confidence-hint">below this the answer is dropped</span>
+        <div class="jev-confidence-line">
+          <span class="jev-confidence-label">Only keep the answer if confidence is at least</span>
+          <el-input-number
+            :model-value="row.threshold"
+            :min="0"
+            :max="1"
+            :step="0.05"
+            :precision="2"
+            size="small"
+            controls-position="right"
+            :disabled="disabled"
+            data-testid="jev-question-confidence"
+            @update:model-value="setThreshold(index, $event)"
+          />
+        </div>
+        <p class="jev-confidence-hint">
+          Below this, the answer is ignored and the constraint won't match.
+        </p>
       </div>
     </div>
 
@@ -482,14 +486,26 @@ export default {
 
 .jev-confidence {
   display: flex;
+  flex-direction: column;
+  gap: var(--space-3xs);
+}
+
+.jev-confidence-line {
+  display: flex;
   align-items: center;
   gap: var(--space-2xs);
 }
 
-.jev-confidence-label,
-.jev-confidence-hint {
+.jev-confidence-label {
   color: var(--el-text-color-secondary);
   font-size: var(--font-size-caption);
+}
+
+.jev-confidence-hint {
+  margin: 0;
+  color: var(--el-text-color-placeholder);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-tight);
 }
 
 .jev-add-question {
