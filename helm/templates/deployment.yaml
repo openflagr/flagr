@@ -1,0 +1,133 @@
+{{- include "flagr.validate" . }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "flagr.fullname" . }}
+  labels:
+    {{- include "flagr.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "flagr.primarySelectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "flagr.primarySelectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      automountServiceAccountToken: false
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- if and .Values.gitops.enabled .Values.gitops.flagsURL }}
+      initContainers:
+        - name: wait-flags
+          image: "{{ .Values.test.image.repository }}:{{ .Values.test.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - curl
+            - -fsS
+            - --retry
+            - "30"
+            - --retry-all-errors
+            - --retry-delay
+            - "2"
+            - {{ .Values.gitops.flagsURL | quote }}
+      {{- end }}
+      containers:
+        - name: flagr
+          image: {{ include "flagr.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          env:
+            - name: HOST
+              value: "0.0.0.0"
+            - name: PORT
+              value: {{ .Values.service.port | quote }}
+            - name: FLAGR_LOGRUS_FORMAT
+              value: json
+            - name: FLAGR_DB_DBCONNECTION_DEBUG
+              value: "false"
+            - name: FLAGR_PPROF_ENABLED
+              value: "false"
+            {{- if .Values.gitops.enabled }}
+            - name: FLAGR_DB_DBDRIVER
+              value: json_http
+            {{- if .Values.gitops.flagsURL }}
+            - name: FLAGR_DB_DBCONNECTIONSTR
+              value: {{ .Values.gitops.flagsURL | quote }}
+            {{- end }}
+            {{- else }}
+            - name: FLAGR_DB_DBDRIVER
+              value: sqlite3
+            - name: FLAGR_DB_DBCONNECTIONSTR
+              value: /data/flagr.sqlite
+            {{- end }}
+            {{- with .Values.env }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.envFrom }}
+          envFrom:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          {{- if or (not .Values.gitops.enabled) .Values.extraVolumeMounts }}
+          volumeMounts:
+            {{- if not .Values.gitops.enabled }}
+            - name: data
+              mountPath: /data
+            {{- end }}
+            {{- with .Values.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- end }}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- if or (not .Values.gitops.enabled) .Values.extraVolumes }}
+      volumes:
+        {{- if not .Values.gitops.enabled }}
+        {{- $hasData := false -}}
+        {{- range .Values.extraVolumes }}
+        {{- if eq .name "data" }}{{ $hasData = true }}{{ end }}
+        {{- end }}
+        {{- if not $hasData }}
+        - name: data
+          emptyDir: {}
+        {{- end }}
+        {{- end }}
+        {{- with .Values.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

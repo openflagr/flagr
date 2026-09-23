@@ -1,0 +1,47 @@
+# In-cluster flags.json for Kind GitOps installs (not part of the chart).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: flagr-ci-flags
+data:
+  flags.json: |
+    {"Flags":[]}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flagr-ci-flags
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flagr-ci-flags
+  template:
+    metadata:
+      labels:
+        app: flagr-ci-flags
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.27-alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: flags
+              mountPath: /usr/share/nginx/html
+              readOnly: true
+      volumes:
+        - name: flags
+          configMap:
+            name: flagr-ci-flags
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flagr-ci-flags
+spec:
+  selector:
+    app: flagr-ci-flags
+  ports:
+    - port: 80
+      targetPort: 80
