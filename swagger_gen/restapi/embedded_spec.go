@@ -2388,6 +2388,11 @@ func init() {
           "description": "true when the server runs in eval-only mode (e.g. json_file/json_http drivers) and flag write APIs are disabled",
           "type": "boolean"
         },
+        "snapshotsDefaultLimit": {
+          "description": "value of FLAGR_SNAPSHOTS_DEFAULT_LIMIT; 0 means the snapshots endpoint returns the full history by default. The UI uses it as the History tab page size and only paginates when it is greater than 0.",
+          "type": "integer",
+          "format": "int64"
+        },
         "status": {
           "type": "string"
         }
@@ -5046,6 +5051,11 @@ func init() {
         "evalOnlyMode": {
           "description": "true when the server runs in eval-only mode (e.g. json_file/json_http drivers) and flag write APIs are disabled",
           "type": "boolean"
+        },
+        "snapshotsDefaultLimit": {
+          "description": "value of FLAGR_SNAPSHOTS_DEFAULT_LIMIT; 0 means the snapshots endpoint returns the full history by default. The UI uses it as the History tab page size and only paginates when it is greater than 0.",
+          "type": "integer",
+          "format": "int64"
         },
         "status": {
           "type": "string"

@@ -131,6 +131,7 @@ describe('eval-only mode reads', () => {
 
   it('snapshots, entity types, and deleted flags resolve empty without network', async () => {
     const [snapshots, entityTypes, deleted] = await Promise.all([
+      listFlagSnapshots(1, { limit: 50, offset: 0 }),
       listFlagSnapshots(1),
       listEntityTypes(),
       listDeletedFlags(),
@@ -142,3 +143,41 @@ describe('eval-only mode reads', () => {
   })
 })
 
+
+describe('listFlagSnapshots (http mode)', () => {
+  const originalFetch = globalThis.fetch
+
+  beforeEach(() => {
+    vi.stubGlobal('fetch', vi.fn())
+  })
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch
+    vi.unstubAllGlobals()
+  })
+
+  function stubEmptyJson() {
+    vi.mocked(fetch).mockResolvedValue(
+      new Response(JSON.stringify([]), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+  }
+
+  it('requests one newest-first page with explicit limit and offset', async () => {
+    stubEmptyJson()
+    const result = await listFlagSnapshots(42, { limit: 50, offset: 100 })
+    expect(result.ok).toBe(true)
+    const url = String(vi.mocked(fetch).mock.calls[0][0])
+    expect(url).toContain('/flags/42/snapshots?limit=50&offset=100&sort=DESC')
+  })
+
+  it('requests the full history when no page is given', async () => {
+    stubEmptyJson()
+    const result = await listFlagSnapshots(42)
+    expect(result.ok).toBe(true)
+    const url = String(vi.mocked(fetch).mock.calls[0][0])
+    expect(url).toMatch(/\/flags\/42\/snapshots$/)
+  })
+})
