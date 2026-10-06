@@ -2,6 +2,8 @@
 
 Flagr can merge server-side and HTTP request metadata into every evaluation's `entityContext`. Constraints can then target time, environment, or proxy headers without changing app code or maintaining a separate flag set per environment.
 
+> `@ts*` and `@http_*` are the **global context enrichers**. For the general concept — ordering, fail-closed behavior, and the model-backed `@jev` enricher — see [Context enrichers](flagr_context_enrichers.md).
+
 When enabled, built-in keys sit next to whatever the client sent. Constraints use them like any other property. Source: `pkg/handler/builtin_context.go`.
 
 ## Quick start

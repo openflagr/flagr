@@ -63,6 +63,7 @@ export function normalizeFlag(flag: Flag): FlagView {
   if (!f.tags) f.tags = []
   if (!f.variants) f.variants = []
   if (!f.segments) f.segments = []
+  if (!f.enrichers) f.enrichers = []
   f.variants.forEach((v) => processVariant(v))
   for (const segment of f.segments) {
     normalizeSegment(segment)

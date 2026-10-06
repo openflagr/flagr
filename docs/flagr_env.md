@@ -73,6 +73,20 @@ Eval-only is the usual product path when `FLAGR_DB_DBDRIVER` is `json_file` or `
 
 Full guide: [Built-in context injection](flagr_injected_context.md).
 
+#### Context enrichers {#context-enrichers}
+
+Every injected property comes from a context enricher. Built-ins (`ts`, `http`) are global; a flag can also declare flag-scoped enrichers. See [Context enrichers](flagr_context_enrichers.md).
+
+| Variable | Default | Notes |
+|----------|---------|--------|
+| `FLAGR_INJECTED_CONTEXT_JEV_BASE_URL` | `""` | System One endpoint. A **non-empty** value enables the `jev` enricher |
+| `FLAGR_INJECTED_CONTEXT_JEV_API_KEY` | `""` | Bearer token (optional for self-hosted endpoints) |
+| `FLAGR_INJECTED_CONTEXT_JEV_MODEL` | `jev-latest` | Model or alias sent in the request |
+| `FLAGR_INJECTED_CONTEXT_JEV_TIMEOUT` | `1s` | Per-call budget, including retries |
+| `FLAGR_INJECTED_CONTEXT_JEV_MAX_RETRIES` | `2` | Retries for transient failures (network, 5xx, 429) |
+| `FLAGR_INJECTED_CONTEXT_JEV_RETRY_BASE` | `100ms` | Base backoff between retries |
+| `FLAGR_INJECTED_CONTEXT_JEV_RETRY_MAX` | `500ms` | Maximum backoff between retries |
+
 #### Eval cache export {#eval-cache-export}
 
 A running server can dump its in-memory cache as JSON via `GET /api/v1/export/eval_cache/json`, with optional `enabled`, `ids`, `keys`, `tags`, and `tagsOperator` (`ANY` / `ALL`) query parameters.

@@ -18,6 +18,7 @@ import (
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/constraint"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/datar"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/distribution"
+	"github.com/openflagr/flagr/swagger_gen/restapi/operations/enricher"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/evaluation"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/export"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/exposure"
@@ -57,6 +58,12 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 			return middleware.NotImplemented("operation constraint.CreateConstraint has not yet been implemented")
 		}),
 
+		EnricherCreateEnricherHandler: enricher.CreateEnricherHandlerFunc(func(params enricher.CreateEnricherParams) middleware.Responder {
+			_ = params
+
+			return middleware.NotImplemented("operation enricher.CreateEnricher has not yet been implemented")
+		}),
+
 		FlagCreateFlagHandler: flag.CreateFlagHandlerFunc(func(params flag.CreateFlagParams) middleware.Responder {
 			_ = params
 
@@ -85,6 +92,12 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 			_ = params
 
 			return middleware.NotImplemented("operation constraint.DeleteConstraint has not yet been implemented")
+		}),
+
+		EnricherDeleteEnricherHandler: enricher.DeleteEnricherHandlerFunc(func(params enricher.DeleteEnricherParams) middleware.Responder {
+			_ = params
+
+			return middleware.NotImplemented("operation enricher.DeleteEnricher has not yet been implemented")
 		}),
 
 		FlagDeleteFlagHandler: flag.DeleteFlagHandlerFunc(func(params flag.DeleteFlagParams) middleware.Responder {
@@ -255,6 +268,12 @@ func NewFlagrAPI(spec *loads.Document) *FlagrAPI {
 			return middleware.NotImplemented("operation distribution.PutDistributions has not yet been implemented")
 		}),
 
+		EnricherPutEnricherHandler: enricher.PutEnricherHandlerFunc(func(params enricher.PutEnricherParams) middleware.Responder {
+			_ = params
+
+			return middleware.NotImplemented("operation enricher.PutEnricher has not yet been implemented")
+		}),
+
 		FlagPutFlagHandler: flag.PutFlagHandlerFunc(func(params flag.PutFlagParams) middleware.Responder {
 			_ = params
 
@@ -332,6 +351,8 @@ type FlagrAPI struct {
 
 	// ConstraintCreateConstraintHandler sets the operation handler for the create constraint operation
 	ConstraintCreateConstraintHandler constraint.CreateConstraintHandler
+	// EnricherCreateEnricherHandler sets the operation handler for the create enricher operation
+	EnricherCreateEnricherHandler enricher.CreateEnricherHandler
 	// FlagCreateFlagHandler sets the operation handler for the create flag operation
 	FlagCreateFlagHandler flag.CreateFlagHandler
 	// SegmentCreateSegmentHandler sets the operation handler for the create segment operation
@@ -342,6 +363,8 @@ type FlagrAPI struct {
 	VariantCreateVariantHandler variant.CreateVariantHandler
 	// ConstraintDeleteConstraintHandler sets the operation handler for the delete constraint operation
 	ConstraintDeleteConstraintHandler constraint.DeleteConstraintHandler
+	// EnricherDeleteEnricherHandler sets the operation handler for the delete enricher operation
+	EnricherDeleteEnricherHandler enricher.DeleteEnricherHandler
 	// FlagDeleteFlagHandler sets the operation handler for the delete flag operation
 	FlagDeleteFlagHandler flag.DeleteFlagHandler
 	// SegmentDeleteSegmentHandler sets the operation handler for the delete segment operation
@@ -398,6 +421,8 @@ type FlagrAPI struct {
 	ConstraintPutConstraintHandler constraint.PutConstraintHandler
 	// DistributionPutDistributionsHandler sets the operation handler for the put distributions operation
 	DistributionPutDistributionsHandler distribution.PutDistributionsHandler
+	// EnricherPutEnricherHandler sets the operation handler for the put enricher operation
+	EnricherPutEnricherHandler enricher.PutEnricherHandler
 	// FlagPutFlagHandler sets the operation handler for the put flag operation
 	FlagPutFlagHandler flag.PutFlagHandler
 	// SegmentPutSegmentHandler sets the operation handler for the put segment operation
@@ -493,6 +518,9 @@ func (o *FlagrAPI) Validate() error {
 	if o.ConstraintCreateConstraintHandler == nil {
 		unregistered = append(unregistered, "constraint.CreateConstraintHandler")
 	}
+	if o.EnricherCreateEnricherHandler == nil {
+		unregistered = append(unregistered, "enricher.CreateEnricherHandler")
+	}
 	if o.FlagCreateFlagHandler == nil {
 		unregistered = append(unregistered, "flag.CreateFlagHandler")
 	}
@@ -507,6 +535,9 @@ func (o *FlagrAPI) Validate() error {
 	}
 	if o.ConstraintDeleteConstraintHandler == nil {
 		unregistered = append(unregistered, "constraint.DeleteConstraintHandler")
+	}
+	if o.EnricherDeleteEnricherHandler == nil {
+		unregistered = append(unregistered, "enricher.DeleteEnricherHandler")
 	}
 	if o.FlagDeleteFlagHandler == nil {
 		unregistered = append(unregistered, "flag.DeleteFlagHandler")
@@ -591,6 +622,9 @@ func (o *FlagrAPI) Validate() error {
 	}
 	if o.DistributionPutDistributionsHandler == nil {
 		unregistered = append(unregistered, "distribution.PutDistributionsHandler")
+	}
+	if o.EnricherPutEnricherHandler == nil {
+		unregistered = append(unregistered, "enricher.PutEnricherHandler")
 	}
 	if o.FlagPutFlagHandler == nil {
 		unregistered = append(unregistered, "flag.PutFlagHandler")
@@ -710,6 +744,10 @@ func (o *FlagrAPI) initHandlerCache() {
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
+	o.handlers["POST"]["/flags/{flagID}/enrichers"] = enricher.NewCreateEnricher(o.context, o.EnricherCreateEnricherHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
 	o.handlers["POST"]["/flags"] = flag.NewCreateFlag(o.context, o.FlagCreateFlagHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
@@ -727,6 +765,10 @@ func (o *FlagrAPI) initHandlerCache() {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
 	o.handlers["DELETE"]["/flags/{flagID}/segments/{segmentID}/constraints/{constraintID}"] = constraint.NewDeleteConstraint(o.context, o.ConstraintDeleteConstraintHandler)
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/flags/{flagID}/enrichers/{namespace}"] = enricher.NewDeleteEnricher(o.context, o.EnricherDeleteEnricherHandler)
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
@@ -839,6 +881,10 @@ func (o *FlagrAPI) initHandlerCache() {
 		o.handlers["PUT"] = make(map[string]http.Handler)
 	}
 	o.handlers["PUT"]["/flags/{flagID}/segments/{segmentID}/distributions"] = distribution.NewPutDistributions(o.context, o.DistributionPutDistributionsHandler)
+	if o.handlers["PUT"] == nil {
+		o.handlers["PUT"] = make(map[string]http.Handler)
+	}
+	o.handlers["PUT"]["/flags/{flagID}/enrichers/{namespace}"] = enricher.NewPutEnricher(o.context, o.EnricherPutEnricherHandler)
 	if o.handlers["PUT"] == nil {
 		o.handlers["PUT"] = make(map[string]http.Handler)
 	}

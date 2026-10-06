@@ -60,19 +60,49 @@ var Config = struct {
 	// Set to 0 to disable (default 8192). Exceeding the limit returns 400; use POST when payloads are large.
 	EvalGetMaxURLBytes int `env:"FLAGR_EVAL_GET_MAX_URL_BYTES" envDefault:"8192"`
 
-	// InjectedContextEnabled - enables built-in context injection into entityContext.
-	// When true, @ts, @ts_hour, @ts_weekday, @ts_month are always injected.
-	// HTTP headers listed in InjectedContextHTTPHeaders are injected as @http_* keys.
+	// ===== Context enrichers (env family: FLAGR_INJECTED_CONTEXT_*) =====
+	// "Injected context" is the env-facing name; in code these are context
+	// enrichers. Global enrichers (ts, http) are built into the server;
+	// flag-scoped enrichers (jev) are declared per flag.
+
+	// InjectedContextEnabled - enables the global built-in enrichers: ts (@ts,
+	// @ts_hour, @ts_weekday, @ts_month) and http (@http_<header> keys).
 	InjectedContextEnabled bool `env:"FLAGR_INJECTED_CONTEXT_ENABLED" envDefault:"false"`
 
-	// InjectedContextHTTPHeaders - comma-separated list of HTTP header names to expose as @http_* context keys.
-	// Example: "X-Environment,X-Tenant-ID,Host"
+	// InjectedContextHTTPHeaders - comma-separated list of HTTP header names to expose
+	// as @http_* context keys. Example: "X-Environment,X-Tenant-ID,Host"
 	InjectedContextHTTPHeaders []string `env:"FLAGR_INJECTED_CONTEXT_HTTP_HEADERS" envDefault:"" envSeparator:","`
 
-	// InjectedContextHTTPHeaderPrefixes - comma-separated list of HTTP header prefixes to auto-inject as @http_* keys.
-	// Any header starting with these prefixes is injected.
-	// Example: "CF-,X-Flagr-"
+	// InjectedContextHTTPHeaderPrefixes - comma-separated list of HTTP header prefixes
+	// to auto-inject as @http_* keys. Example: "CF-,X-Flagr-"
 	InjectedContextHTTPHeaderPrefixes []string `env:"FLAGR_INJECTED_CONTEXT_HTTP_HEADER_PREFIXES" envDefault:"" envSeparator:","`
+
+	// InjectedContextJevBaseURL - base URL of the System One API. Setting a
+	// non-empty value enables the jev enricher; leave empty (default) to disable
+	// it. Point at a self-hosted open-source endpoint (e.g. Kev, oido-systemone,
+	// or jeff) to keep state local, or at the hosted TypeSafe API.
+	InjectedContextJevBaseURL string `env:"FLAGR_INJECTED_CONTEXT_JEV_BASE_URL" envDefault:""`
+
+	// InjectedContextJevAPIKey - bearer token for the System One API. Optional for
+	// self-hosted endpoints that do not set an API key.
+	InjectedContextJevAPIKey string `env:"FLAGR_INJECTED_CONTEXT_JEV_API_KEY" envDefault:""`
+
+	// InjectedContextJevModel - model or alias sent in the System One request.
+	InjectedContextJevModel string `env:"FLAGR_INJECTED_CONTEXT_JEV_MODEL" envDefault:"jev-latest"`
+
+	// InjectedContextJevTimeout - overall timeout for the batched System One call,
+	// including any retries. Retries only run while this budget remains.
+	InjectedContextJevTimeout time.Duration `env:"FLAGR_INJECTED_CONTEXT_JEV_TIMEOUT" envDefault:"1s"`
+
+	// InjectedContextJevMaxRetries - retry attempts for transient System One failures
+	// (network errors, 5xx, 429). Retries run within InjectedContextJevTimeout.
+	InjectedContextJevMaxRetries int `env:"FLAGR_INJECTED_CONTEXT_JEV_MAX_RETRIES" envDefault:"2"`
+
+	// InjectedContextJevRetryBase - base delay for exponential backoff between retries.
+	InjectedContextJevRetryBase time.Duration `env:"FLAGR_INJECTED_CONTEXT_JEV_RETRY_BASE" envDefault:"100ms"`
+
+	// InjectedContextJevRetryMax - maximum delay between retries.
+	InjectedContextJevRetryMax time.Duration `env:"FLAGR_INJECTED_CONTEXT_JEV_RETRY_MAX" envDefault:"500ms"`
 
 	// ExposureBatchSize - maximum exposures per POST /exposures request.
 	ExposureBatchSize int `env:"FLAGR_EXPOSURE_BATCH_SIZE" envDefault:"100"`

@@ -757,6 +757,134 @@ func init() {
         }
       }
     },
+    "/flags/{flagID}/enrichers": {
+      "post": {
+        "tags": [
+          "enricher"
+        ],
+        "operationId": "createEnricher",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the flag",
+            "name": "flagID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "create a context enricher on the flag",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/createEnricherRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "enricher just created",
+            "schema": {
+              "$ref": "#/definitions/enricher"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
+    "/flags/{flagID}/enrichers/{namespace}": {
+      "put": {
+        "tags": [
+          "enricher"
+        ],
+        "operationId": "putEnricher",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the flag",
+            "name": "flagID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "minLength": 1,
+            "type": "string",
+            "description": "namespace of the enricher to update",
+            "name": "namespace",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "update the enricher config",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/putEnricherRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "enricher just updated",
+            "schema": {
+              "$ref": "#/definitions/enricher"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "enricher"
+        ],
+        "operationId": "deleteEnricher",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the flag",
+            "name": "flagID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "minLength": 1,
+            "type": "string",
+            "description": "namespace of the enricher to delete",
+            "name": "namespace",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "deleted"
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
     "/flags/{flagID}/restore": {
       "put": {
         "tags": [
@@ -1768,6 +1896,23 @@ func init() {
         }
       }
     },
+    "createEnricherRequest": {
+      "type": "object",
+      "required": [
+        "namespace",
+        "config"
+      ],
+      "properties": {
+        "config": {
+          "description": "namespace-specific configuration; the jev namespace expects an object with a questions map",
+          "type": "object"
+        },
+        "namespace": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
     "createFlagRequest": {
       "type": "object",
       "required": [
@@ -1976,6 +2121,45 @@ func init() {
         "key": {
           "description": "unique key for the new flag; auto-generated if omitted or empty",
           "type": "string"
+        }
+      }
+    },
+    "enricher": {
+      "type": "object",
+      "required": [
+        "namespace"
+      ],
+      "properties": {
+        "config": {
+          "description": "namespace-specific configuration; the jev namespace expects an object with a questions map",
+          "type": "object"
+        },
+        "enabled": {
+          "description": "whether the namespace is enabled by server configuration",
+          "type": "boolean",
+          "readOnly": true
+        },
+        "namespace": {
+          "description": "enricher identity; a flag declares at most one per namespace",
+          "type": "string",
+          "minLength": 1
+        },
+        "properties": {
+          "description": "exact enriched property names this enricher contributes (e.g. @jev_plan_tier)",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "readOnly": true
+        },
+        "scope": {
+          "description": "global enrichers are built into the server; flag enrichers are declared on the flag",
+          "type": "string",
+          "enum": [
+            "global",
+            "flag"
+          ],
+          "readOnly": true
         }
       }
     },
@@ -2301,6 +2485,14 @@ func init() {
         "enabled": {
           "type": "boolean"
         },
+        "enrichers": {
+          "description": "Effective context enrichers for this flag: its own flag-scoped enrichers plus the enabled server built-ins (ts, http). Read-only; flag-scoped enrichers are managed via /flags/{flagID}/enrichers.\n",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/enricher"
+          },
+          "readOnly": true
+        },
         "entityType": {
           "description": "it will override the entityType in the evaluation logs if it's not empty",
           "type": "string"
@@ -2404,6 +2596,18 @@ func init() {
           "items": {
             "$ref": "#/definitions/distribution"
           }
+        }
+      }
+    },
+    "putEnricherRequest": {
+      "type": "object",
+      "required": [
+        "config"
+      ],
+      "properties": {
+        "config": {
+          "description": "namespace-specific configuration; the jev namespace expects an object with a questions map",
+          "type": "object"
         }
       }
     },
@@ -3414,6 +3618,134 @@ func init() {
         }
       }
     },
+    "/flags/{flagID}/enrichers": {
+      "post": {
+        "tags": [
+          "enricher"
+        ],
+        "operationId": "createEnricher",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the flag",
+            "name": "flagID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "create a context enricher on the flag",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/createEnricherRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "enricher just created",
+            "schema": {
+              "$ref": "#/definitions/enricher"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
+    "/flags/{flagID}/enrichers/{namespace}": {
+      "put": {
+        "tags": [
+          "enricher"
+        ],
+        "operationId": "putEnricher",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the flag",
+            "name": "flagID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "minLength": 1,
+            "type": "string",
+            "description": "namespace of the enricher to update",
+            "name": "namespace",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "update the enricher config",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/putEnricherRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "enricher just updated",
+            "schema": {
+              "$ref": "#/definitions/enricher"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "enricher"
+        ],
+        "operationId": "deleteEnricher",
+        "parameters": [
+          {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int64",
+            "description": "numeric ID of the flag",
+            "name": "flagID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "minLength": 1,
+            "type": "string",
+            "description": "namespace of the enricher to delete",
+            "name": "namespace",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "deleted"
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
     "/flags/{flagID}/restore": {
       "put": {
         "tags": [
@@ -4425,6 +4757,23 @@ func init() {
         }
       }
     },
+    "createEnricherRequest": {
+      "type": "object",
+      "required": [
+        "namespace",
+        "config"
+      ],
+      "properties": {
+        "config": {
+          "description": "namespace-specific configuration; the jev namespace expects an object with a questions map",
+          "type": "object"
+        },
+        "namespace": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
     "createFlagRequest": {
       "type": "object",
       "required": [
@@ -4635,6 +4984,45 @@ func init() {
         "key": {
           "description": "unique key for the new flag; auto-generated if omitted or empty",
           "type": "string"
+        }
+      }
+    },
+    "enricher": {
+      "type": "object",
+      "required": [
+        "namespace"
+      ],
+      "properties": {
+        "config": {
+          "description": "namespace-specific configuration; the jev namespace expects an object with a questions map",
+          "type": "object"
+        },
+        "enabled": {
+          "description": "whether the namespace is enabled by server configuration",
+          "type": "boolean",
+          "readOnly": true
+        },
+        "namespace": {
+          "description": "enricher identity; a flag declares at most one per namespace",
+          "type": "string",
+          "minLength": 1
+        },
+        "properties": {
+          "description": "exact enriched property names this enricher contributes (e.g. @jev_plan_tier)",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "readOnly": true
+        },
+        "scope": {
+          "description": "global enrichers are built into the server; flag enrichers are declared on the flag",
+          "type": "string",
+          "enum": [
+            "global",
+            "flag"
+          ],
+          "readOnly": true
         }
       }
     },
@@ -4960,6 +5348,14 @@ func init() {
         "enabled": {
           "type": "boolean"
         },
+        "enrichers": {
+          "description": "Effective context enrichers for this flag: its own flag-scoped enrichers plus the enabled server built-ins (ts, http). Read-only; flag-scoped enrichers are managed via /flags/{flagID}/enrichers.\n",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/enricher"
+          },
+          "readOnly": true
+        },
         "entityType": {
           "description": "it will override the entityType in the evaluation logs if it's not empty",
           "type": "string"
@@ -5063,6 +5459,18 @@ func init() {
           "items": {
             "$ref": "#/definitions/distribution"
           }
+        }
+      }
+    },
+    "putEnricherRequest": {
+      "type": "object",
+      "required": [
+        "config"
+      ],
+      "properties": {
+        "config": {
+          "description": "namespace-specific configuration; the jev namespace expects an object with a questions map",
+          "type": "object"
         }
       }
     },

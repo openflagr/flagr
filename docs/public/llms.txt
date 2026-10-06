@@ -23,6 +23,7 @@ kill switches, progressive rollouts, A/B tests, and runtime config.
 - Overview: https://openflagr.github.io/flagr/flagr_overview
 - Use cases: https://openflagr.github.io/flagr/flagr_use_cases
 - Built-in context injection: https://openflagr.github.io/flagr/flagr_injected_context
+- Context enrichers: https://openflagr.github.io/flagr/flagr_context_enrichers
 - Self-hosting: https://openflagr.github.io/flagr/flagr_self_host
 - Environment variables: https://openflagr.github.io/flagr/flagr_env
 - JSON flag source (GitOps): https://openflagr.github.io/flagr/flagr_json_flag_spec

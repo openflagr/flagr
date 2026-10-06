@@ -33,6 +33,7 @@ var AutoMigrateTables = []any{
 	Tag{},
 	FlagEntityType{},
 	HourlyEvent{},
+	Enricher{},
 }
 
 func connectDB() (db *gorm.DB, err error) {
