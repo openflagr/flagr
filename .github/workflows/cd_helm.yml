@@ -1,0 +1,41 @@
+name: cd_helm
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+  push:
+    branches: [main]
+    paths:
+      - helm/Chart.yaml
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+        with:
+          version: v4.3.0
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u "${{ github.actor }}" --password-stdin
+      - name: Package and push
+        env:
+          OCI_REPO: oci://ghcr.io/${{ github.repository }}/charts
+        run: |
+          set -euo pipefail
+          VERSION=$(awk '/^version:/{print $2; exit}' helm/Chart.yaml | tr -d '"')
+          CHART="${OCI_REPO}/flagr"
+          echo "Publishing ${CHART}:${VERSION}"
+          if helm show chart "${CHART}" --version "${VERSION}" >/dev/null 2>&1; then
+            echo "Chart version ${VERSION} already exists on ${CHART}. Bump helm/Chart.yaml version."
+            exit 1
+          fi
+          helm package helm/
+          helm push "flagr-${VERSION}.tgz" "${OCI_REPO}"

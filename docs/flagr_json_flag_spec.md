@@ -44,6 +44,8 @@ It checks the JSON shape, required fields, key uniqueness, distribution sums (**
 
 The full GitOps loop is: **author** flags in a Git repository → **review** every change in a pull request → **validate** in CI with `flagr-validate` → **serve** via `json_http` pointed at the raw file URL. Flagr polls that URL on its refresh interval, so a merged PR reaches the server without a deploy. If a change is wrong, rollback is a `git revert` - the same one-command undo you already trust for code.
 
+On Kubernetes, the Helm chart’s `gitops.enabled` + `gitops.flagsURL` does this for every replica (one Deployment, no SQLite writer). Values and a private-repo Secret: [Self-hosting — GitOps](flagr_self_host.md#gitops).
+
 ### Setup
 
 You need a fine-grained personal access token with **Contents: read** scope on the config repository, and a Flagr instance pointed at the raw content URL:

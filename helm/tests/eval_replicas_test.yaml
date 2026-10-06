@@ -1,0 +1,109 @@
+suite: eval replicas (SQLite HA)
+templates:
+  - templates/deployment-eval.yaml
+  - templates/service-eval.yaml
+tests:
+  - it: renders nothing when evalReplicas.replicaCount is 0
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: deploys json_http eval-only pods that poll the primary export
+    set:
+      evalReplicas:
+        replicaCount: 3
+    template: templates/deployment-eval.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Deployment
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-flagr-eval
+      - equal:
+          path: spec.replicas
+          value: 3
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/component"]
+          value: eval
+      - equal:
+          path: spec.template.spec.containers[0].env[5]
+          value:
+            name: FLAGR_DB_DBDRIVER
+            value: json_http
+      - equal:
+          path: spec.template.spec.containers[0].env[6]
+          value:
+            name: FLAGR_DB_DBCONNECTIONSTR
+            value: http://RELEASE-NAME-flagr:18000/api/v1/export/eval_cache/json
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: wait-primary
+      - contains:
+          path: spec.template.spec.initContainers[0].command
+          content: http://RELEASE-NAME-flagr:18000/api/v1/export/eval_cache/json
+      - notExists:
+          path: spec.template.spec.volumes
+
+  - it: honors flagsURL override (FLAGR_WEB_PREFIX)
+    set:
+      evalReplicas:
+        replicaCount: 1
+        flagsURL: http://RELEASE-NAME-flagr:18000/flagr/api/v1/export/eval_cache/json
+    template: templates/deployment-eval.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[6].value
+          value: http://RELEASE-NAME-flagr:18000/flagr/api/v1/export/eval_cache/json
+
+  - it: does not inherit primary FLAGR_DB_* env (eval must stay json_http)
+    set:
+      env:
+        - name: FLAGR_DB_DBDRIVER
+          value: postgres
+      evalReplicas:
+        replicaCount: 1
+        env:
+          - name: FLAGR_EVALCACHE_REFRESHINTERVAL
+            value: 5s
+    template: templates/deployment-eval.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: FLAGR_DB_DBDRIVER
+            value: json_http
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: FLAGR_DB_DBDRIVER
+            value: postgres
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: FLAGR_EVALCACHE_REFRESHINTERVAL
+            value: 5s
+
+  - it: exposes a separate ClusterIP for eval traffic
+    set:
+      evalReplicas:
+        replicaCount: 2
+    template: templates/service-eval.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-flagr-eval
+      - equal:
+          path: spec.type
+          value: ClusterIP
+      - equal:
+          path: spec.selector["app.kubernetes.io/component"]
+          value: eval
+      - notEqual:
+          path: spec.selector["app.kubernetes.io/component"]
+          value: primary
