@@ -3,44 +3,47 @@ module github.com/openflagr/flagr
 go 1.27
 
 require (
-	cloud.google.com/go v0.123.0 // indirect
+	cloud.google.com/go/pubsub/v2 v2.0.0
 	github.com/DataDog/datadog-go v4.8.3+incompatible
 	github.com/Shopify/sarama v1.38.0
 	github.com/a8m/kinesis-producer v0.2.1-0.20240916120605-7e5fa98d32a5
 	github.com/auth0/go-jwt-middleware v1.0.2-0.20210804140707-b4090e955b98
 	github.com/avast/retry-go v3.0.0+incompatible
+	github.com/aws/aws-sdk-go-v2/config v1.32.5
+	github.com/aws/aws-sdk-go-v2/service/kinesis v1.43.5
 	github.com/brandur/simplebox v0.1.0
 	github.com/bsm/ratelimit v2.0.0+incompatible
 	github.com/caarlos0/env v3.5.0+incompatible
-	github.com/certifi/gocertifi v0.0.0-20210507211836-431795d63e8d // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/dchest/uniuri v1.2.0
 	github.com/evalphobia/logrus_sentry v0.8.2
 	github.com/form3tech-oss/jwt-go v3.2.5+incompatible
 	github.com/getsentry/raven-go v0.2.0
-	github.com/go-openapi/analysis v0.25.2 // indirect
+	github.com/glebarez/sqlite v1.6.0
 	github.com/go-openapi/errors v0.22.8
-	github.com/go-openapi/jsonreference v0.21.6 // indirect
 	github.com/go-openapi/loads v0.24.0
 	github.com/go-openapi/runtime v0.32.3
 	github.com/go-openapi/spec v0.22.5
 	github.com/go-openapi/strfmt v0.26.3
+	github.com/go-openapi/swag/cmdutils v0.26.1
+	github.com/go-openapi/swag/conv v0.26.1
+	github.com/go-openapi/swag/jsonutils v0.26.1
+	github.com/go-openapi/swag/netutils v0.26.1
+	github.com/go-openapi/swag/stringutils v0.26.1
+	github.com/go-openapi/swag/typeutils v0.26.1
 	github.com/go-openapi/validate v0.25.3
 	github.com/gohttp/pprof v0.0.0-20141119085724-c9d246cbb3ba
 	github.com/jessevdk/go-flags v1.6.1
-	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/meatballhat/negroni-logrus v1.1.1
-	github.com/philhofer/fwd v1.1.2 // indirect
+	github.com/newrelic/go-agent v2.1.0+incompatible
 	github.com/phyber/negroni-gzip v1.0.0
+	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2
 	github.com/prashantv/gostub v1.1.0
 	github.com/prometheus/client_golang v1.20.4
-	github.com/prometheus/client_model v0.6.2 // indirect
-	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/rs/cors v1.11.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cast v1.10.0
 	github.com/stretchr/testify v1.11.1
-	github.com/tinylib/msgp v1.1.8 // indirect
 	github.com/urfave/negroni v1.0.0
 	github.com/yadvendar/negroni-newrelic-go-agent v0.0.0-20160803090806-3dc58758cb67
 	github.com/zhouzhuojie/conditions v0.2.6
@@ -49,30 +52,13 @@ require (
 	google.golang.org/api v0.264.0
 	google.golang.org/grpc v1.83.2
 	gopkg.in/DataDog/dd-trace-go.v1 v1.46.0
-)
-
-require (
-	github.com/glebarez/sqlite v1.6.0
-	github.com/newrelic/go-agent v2.1.0+incompatible
 	gorm.io/driver/mysql v1.4.5
 	gorm.io/driver/postgres v1.4.6
 	gorm.io/gorm v1.24.3 // we will need to fix unscoped preload before upgrading gorm
 )
 
 require (
-	cloud.google.com/go/pubsub/v2 v2.0.0
-	github.com/aws/aws-sdk-go-v2/config v1.32.5
-	github.com/aws/aws-sdk-go-v2/service/kinesis v1.43.5
-	github.com/go-openapi/swag/cmdutils v0.26.1
-	github.com/go-openapi/swag/conv v0.26.1
-	github.com/go-openapi/swag/jsonutils v0.26.1
-	github.com/go-openapi/swag/netutils v0.26.1
-	github.com/go-openapi/swag/stringutils v0.26.1
-	github.com/go-openapi/swag/typeutils v0.26.1
-	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2
-)
-
-require (
+	cloud.google.com/go v0.123.0 // indirect
 	cloud.google.com/go/auth v0.18.2 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
 	cloud.google.com/go/compute/metadata v0.9.0 // indirect
@@ -98,6 +84,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.41.5 // indirect
 	github.com/aws/smithy-go v1.24.2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/certifi/gocertifi v0.0.0-20210507211836-431795d63e8d // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/dgraph-io/ristretto v0.1.1 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
@@ -109,7 +96,9 @@ require (
 	github.com/glebarez/go-sqlite v1.21.2 // indirect
 	github.com/go-logr/logr v1.4.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
+	github.com/go-openapi/analysis v0.25.2 // indirect
 	github.com/go-openapi/jsonpointer v0.23.1 // indirect
+	github.com/go-openapi/jsonreference v0.21.6 // indirect
 	github.com/go-openapi/runtime/server-middleware v0.30.0 // indirect
 	github.com/go-openapi/swag/fileutils v0.26.1 // indirect
 	github.com/go-openapi/swag/jsonname v0.26.1 // indirect
@@ -139,17 +128,22 @@ require (
 	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
-	github.com/klauspost/compress v1.18.0 // indirect
+	github.com/jpillora/backoff v1.0.0 // indirect
+	github.com/klauspost/compress v1.18.7 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/oklog/ulid/v2 v2.1.1 // indirect
+	github.com/philhofer/fwd v1.1.2 // indirect
 	github.com/pierrec/lz4/v4 v4.1.17 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/prometheus/client_model v0.6.2 // indirect
 	github.com/prometheus/common v0.66.1 // indirect
+	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/secure-systems-lab/go-securesystemslib v0.4.0 // indirect
 	github.com/stretchr/objx v0.5.3 // indirect
+	github.com/tinylib/msgp v1.1.8 // indirect
 	go.einride.tech/aip v0.73.0 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
