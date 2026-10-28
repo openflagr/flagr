@@ -94,7 +94,7 @@ help:
 
 deps:
 	@CGO_ENABLED=0 go install github.com/go-swagger/go-swagger/cmd/swagger@v0.34.1
-	@CGO_ENABLED=0 go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.13.2
+	@CGO_ENABLED=0 go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.15.0
 
 gen: api_docs swagger
 
