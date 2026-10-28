@@ -49,14 +49,14 @@ One evaluation primitive covers several jobs. Use the map below as a routing tab
 | Time / header targeting (`@ts`, `@http_*`) | [Built-in context injection](flagr_injected_context.md) |
 | A/B tests + trustworthy denominators | [Exposure logging](flagr_exposure.md), [Data recorders](flagr_eval_exposure_pipeline.md) |
 | Runtime config on variants | [Use cases: dynamic configuration](flagr_use_cases.md#dynamic-configuration) |
-| GitOps / eval-only JSON | [JSON flag source](flagr_json_flag_spec.md) |
-| Deploy, DB, auth, recorders | [Self-hosting](flagr_self_host.md), [Environment variables](flagr_env.md) |
+| GitOps / eval-only JSON | [JSON flag source](flagr_json_flag_spec.md), [Helm GitOps](flagr_self_host.md#gitops) |
+| Deploy, DB, auth, recorders | [Self-hosting](flagr_self_host.md) (Docker, Compose, Helm), [Environment variables](flagr_env.md) |
 
 To clone an existing flag (segments, variants, tags), use `POST /api/v1/flags/{id}/duplicate` or **Duplicate Flag** in the UI ([#724](https://github.com/openflagr/flagr/issues/724)).
 
 ## Deploy
 
-The demo above is local SQLite. Production (MySQL/Postgres, Compose, Kubernetes, TLS) is in **[Self-hosting](flagr_self_host.md)**. Every env knob lives in [Environment variables](flagr_env.md#source-pkgconfigenvgo). The struct in `pkg/config/env.go` is the source of truth.
+The demo above is local SQLite. Production (MySQL/Postgres, Compose, Helm/Kubernetes, TLS) is in **[Self-hosting](flagr_self_host.md)**. Kubernetes one-liner: `helm install flagr oci://ghcr.io/openflagr/flagr/charts/flagr --version 1.0.0`. Every env knob lives in [Environment variables](flagr_env.md#source-pkgconfigenvgo). The struct in `pkg/config/env.go` is the source of truth.
 
 ## Develop Flagr
 
