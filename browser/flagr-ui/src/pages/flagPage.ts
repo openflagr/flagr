@@ -208,6 +208,43 @@ export function deleteTag(vm: FlagPageVm, tag: Tag): void {
   })
 }
 
+export function createEnricher(
+  vm: FlagPageVm,
+  { namespace, config }: { namespace: string; config: unknown },
+): void {
+  runApi(vm, crudApi.createEnricherAndReload(vm.flagId, namespace, config), {
+    successMessage: 'enricher created',
+    onSuccess: (flag) => {
+      vm.flag = normalizeFlag(flag)
+    },
+  })
+}
+
+export function saveEnricher(
+  vm: FlagPageVm,
+  { namespace, config }: { namespace: string; config: unknown },
+): void {
+  runApi(vm, crudApi.putEnricherAndReload(vm.flagId, namespace, config), {
+    successMessage: 'enricher saved',
+    onSuccess: (flag) => {
+      vm.flag = normalizeFlag(flag)
+    },
+  })
+}
+
+export function deleteEnricher(vm: FlagPageVm, namespace: string): void {
+  confirmAndRunApi(
+    vm,
+    `Are you sure you want to delete the ${namespace} enricher?`,
+    crudApi.deleteEnricherAndReload(vm.flagId, namespace), {
+      successMessage: 'enricher deleted',
+      onSuccess: (flag) => {
+        vm.flag = normalizeFlag(flag)
+      },
+    },
+  )
+}
+
 export function handleCreateVariant(vm: FlagPageVm, { key }: { key: string }): void {
   runApi(vm, crudApi.createVariant(vm.flagId, key), {
     successMessage: 'new variant created',

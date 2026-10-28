@@ -35,13 +35,23 @@ func SimpleBooleanFlagTemplate() Flag {
 // Variant keys and distribution variant keys are preserved; entity IDs and flag scalars are omitted.
 func SourceFlagTemplate(source *Flag) Flag {
 	out := Flag{
-		Variants: make([]Variant, 0, len(source.Variants)),
-		Tags:     make([]Tag, 0, len(source.Tags)),
+		Variants:  make([]Variant, 0, len(source.Variants)),
+		Tags:      make([]Tag, 0, len(source.Tags)),
+		Enrichers: make([]Enricher, 0, len(source.Enrichers)),
 	}
 	for _, sv := range source.Variants {
 		out.Variants = append(out.Variants, Variant{
 			Key:        sv.Key,
 			Attachment: sv.Attachment,
+		})
+	}
+	// Flag-scoped enrichers travel with the flag so duplicated/copied flags keep
+	// their `@jev_*` question definitions (otherwise the copied constraints
+	// would dangle).
+	for _, se := range source.Enrichers {
+		out.Enrichers = append(out.Enrichers, Enricher{
+			Namespace:  se.Namespace,
+			ConfigJSON: se.ConfigJSON,
 		})
 	}
 

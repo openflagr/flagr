@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"encoding/json"
+	"strings"
 
 	"github.com/go-openapi/strfmt"
 	"github.com/openflagr/flagr/pkg/entity"
@@ -27,8 +28,38 @@ func MapFlag(e *entity.Flag) (*models.Flag, error) {
 	r.Segments = MapSegments(e.Segments)
 	r.Variants = MapVariants(e.Variants)
 	r.Tags = MapTags(e.Tags)
+	r.Enrichers = MapEnrichers(e.Enrichers)
 
 	return r, nil
+}
+
+// MapEnricher maps a stored flag-scoped enricher to its API model. Scope is
+// "flag" and the stored config is decoded into an object. The handler replaces
+// Scope/Enabled/Properties with the effective values for flag responses.
+func MapEnricher(e *entity.Enricher) *models.Enricher {
+	r := &models.Enricher{
+		Namespace: new(e.Namespace),
+		Scope:     "flag",
+	}
+	if strings.TrimSpace(e.ConfigJSON) != "" {
+		var cfg any
+		if err := json.Unmarshal([]byte(e.ConfigJSON), &cfg); err == nil {
+			r.Config = cfg
+		}
+	}
+	return r
+}
+
+// MapEnrichers maps stored flag-scoped enrichers.
+func MapEnrichers(e []entity.Enricher) []*models.Enricher {
+	if len(e) == 0 {
+		return nil
+	}
+	ret := make([]*models.Enricher, len(e))
+	for i := range e {
+		ret[i] = MapEnricher(&e[i])
+	}
+	return ret
 }
 
 // MapFlags maps flags

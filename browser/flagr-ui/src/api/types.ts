@@ -26,6 +26,25 @@ export interface Constraint {
   value: string
 }
 
+/** Jev / System One question authored on a flag-scoped jev enricher. */
+export type JevQuestionType = 'noul' | 'choice' | 'score'
+
+export interface JevQuestion {
+  type: JevQuestionType
+  instructions?: unknown
+  criteria?: unknown
+  confidenceThreshold?: number
+}
+
+/** Context enricher (effective catalog entry returned on a flag). */
+export interface Enricher {
+  namespace: string
+  scope?: string
+  enabled?: boolean
+  properties?: string[]
+  config?: Record<string, unknown>
+}
+
 export interface IdentifiedConstraint extends Constraint {
   id: number
 }
@@ -81,13 +100,15 @@ export interface Flag {
   tags?: Tag[]
   variants: Variant[]
   segments?: Segment[]
+  enrichers?: Enricher[]
 }
 
 /** Flag after `normalizeFlag` (empty arrays materialized; variants may carry UI validation state). */
-export type FlagView = Omit<Flag, 'tags' | 'variants' | 'segments'> & {
+export type FlagView = Omit<Flag, 'tags' | 'variants' | 'segments' | 'enrichers'> & {
   tags: Tag[]
   variants: Variant[]
   segments: Segment[]
+  enrichers: Enricher[]
 }
 
 export interface CreateFlagPayload {

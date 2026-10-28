@@ -180,6 +180,7 @@ export default defineConfig({
             text: "Built-in context injection",
             link: "/flagr_injected_context",
           },
+          { text: "Context enrichers", link: "/flagr_context_enrichers" },
           { text: "Debug console", link: "/flagr_debugging" },
           {
             text: "API reference",

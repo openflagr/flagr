@@ -167,6 +167,7 @@
                 :draft="newConstraints[element.id]"
                 :operator-options="operatorOptions"
                 :grouped-operator-options="groupedOperatorOptions"
+                :property-groups="propertyGroups"
                 :show-divider="(element.constraints ?? []).length > 0"
                 show-caption
                 :caption="(element.constraints ?? []).length ? 'Add another constraint' : 'Add a constraint'"
@@ -248,6 +249,7 @@ import type { PropType } from 'vue'
 import type { Constraint, ConstraintFieldKey, Segment, SegmentFieldKey } from '@/api/types'
 import { applyUiOperatorSelection } from '@/helpers/constraintOperatorSugar'
 import { operatorOptionGroups, type OperatorUiOption } from '@/helpers/constraintOperators'
+import type { EnricherPropertyGroup } from '@/helpers/enricherOptions'
 
 function emptyNewConstraintDraft(): NewConstraintDraft {
   return { operator: '', property: '', value: '' }
@@ -268,6 +270,10 @@ export default {
     segments: { type: Array as PropType<Segment[]>, required: true },
     readonly: { type: Boolean, default: false },
     operatorOptions: { type: Array as PropType<OperatorUiOption[]>, required: true },
+    propertyGroups: {
+      type: Array as PropType<EnricherPropertyGroup[]>,
+      default: () => [],
+    },
   },
   emits: [
     'move-up',

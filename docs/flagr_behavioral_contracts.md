@@ -40,6 +40,21 @@ Stickiness: send a stable **`entityID`**. If the client omits it, the evaluator 
 
 Bucketing algorithm (CRC32, 1000 buckets, in-range rollout): [Overview](flagr_overview.md#rollout-and-deterministic-bucketing). Source: `pkg/handler/eval.go` (`evalSegment`), `pkg/entity/distribution.go`.
 
+## Context enrichers {#context-enrichers}
+
+A **context enricher** contributes properties to `entityContext` before constraints run. `@ts*` / `@http_*` (global, built-in) and `@jev_*` (flag-scoped) are all enrichers. Full guide: [Context enrichers](flagr_context_enrichers.md).
+
+1. **Order** - global enrichers run first, then flag-scoped in declaration order. An enricher sees the accumulated context (so `@jev` can use `@ts*` / `@http_*`), with its own properties masked out.
+2. **Declaration = execution** - every declared enricher runs on every evaluation of that flag. No reference-scanning; an enricher may be declared purely to decorate the logged context.
+3. **Overwrite** - enriched properties overwrite client keys of the same name. Clients cannot spoof `@`-prefixed properties.
+4. **Fail-closed** - a disabled, timed-out, or erroring enricher contributes nothing; a constraint referencing a missing property errors and the segment falls through. There is no fail-open.
+5. **Public context** - enriched properties appear in `EvalResult.evalContext` and data records. A `jev` enricher writes only its answers, never the request state it sent to the model.
+6. **Isolation** - flag-scoped enrichment never mutates the shared request context, so one flag's answers cannot leak into another flag in batch or tag evaluation.
+7. **Warn-only references** - a constraint on an unknown enriched property is accepted (a warning from `flagr-validate`) and fails closed at evaluation.
+8. **Jev answer mapping** - `noul` becomes P(true) in `[0,1]` (no confidence gate; compare it), `choice` becomes the chosen option label (string), and `score` becomes the level number. A `choice` / `score` answer below the question's confidence threshold is dropped, so the property is absent and the constraint fails closed. Per-option `probabilities` are not exposed; one question yields one comparable value.
+
+Source: `pkg/handler/enricher.go`, `enricher_pipeline.go`, `enricher_builtin.go`, `enricher_jev.go`, `jev_client.go`, `crud_enricher.go`.
+
 ## Recording gates {#recording-gates}
 
 Recording is opt-in. Three gates must all pass before a row leaves the process:
