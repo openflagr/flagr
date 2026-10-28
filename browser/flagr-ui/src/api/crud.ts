@@ -34,6 +34,15 @@ export const listFlags = (): Promise<ApiResult<Flag[]>> => get('/flags')
 export const getSnapshotMaxId = (): Promise<ApiResult<SnapshotMaxId>> =>
   get('/flags/snapshots/max_id')
 
+/**
+ * A page of snapshot history. When omitted, the whole history is fetched in one
+ * request (the server's default when FLAGR_SNAPSHOTS_DEFAULT_LIMIT is 0).
+ */
+export interface SnapshotPage {
+  limit: number
+  offset: number
+}
+
 interface FlagReads {
   listFlagsIfStale: (
     cachedMaxId: number | undefined,
@@ -41,7 +50,7 @@ interface FlagReads {
   getFlag: (flagId: FlagId) => Promise<ApiResult<Flag>>
   listAllTags: () => Promise<ApiResult<Tag[]>>
   listDeletedFlags: () => Promise<ApiResult<Flag[]>>
-  listFlagSnapshots: (flagId: FlagId) => Promise<ApiResult<FlagSnapshot[]>>
+  listFlagSnapshots: (flagId: FlagId, page?: SnapshotPage) => Promise<ApiResult<FlagSnapshot[]>>
   listEntityTypes: () => Promise<ApiResult<string[]>>
 }
 
@@ -74,7 +83,10 @@ const httpReads: FlagReads = {
   getFlag: (flagId) => get(flag(flagId)),
   listAllTags: () => get('/tags'),
   listDeletedFlags: () => get('/flags?deleted=true'),
-  listFlagSnapshots: (flagId) => get(`${flag(flagId)}/snapshots`),
+  listFlagSnapshots: (flagId, page) =>
+    page
+      ? get(`${flag(flagId)}/snapshots?limit=${page.limit}&offset=${page.offset}&sort=DESC`)
+      : get(`${flag(flagId)}/snapshots`),
   listEntityTypes: () => get('/flags/entity_types'),
 }
 
@@ -208,8 +220,10 @@ export const putSegmentDistributions = (
     body: { distributions },
   })
 
-export const listFlagSnapshots = (flagId: FlagId): Promise<ApiResult<FlagSnapshot[]>> =>
-  reads().listFlagSnapshots(flagId)
+export const listFlagSnapshots = (
+  flagId: FlagId,
+  page?: SnapshotPage,
+): Promise<ApiResult<FlagSnapshot[]>> => reads().listFlagSnapshots(flagId, page)
 
 export const listEntityTypes = (): Promise<ApiResult<string[]>> => reads().listEntityTypes()
 

@@ -17,6 +17,9 @@ type Health struct {
 	// true when the server runs in eval-only mode (e.g. json_file/json_http drivers) and flag write APIs are disabled
 	EvalOnlyMode bool `json:"evalOnlyMode,omitempty"`
 
+	// value of FLAGR_SNAPSHOTS_DEFAULT_LIMIT; 0 means the snapshots endpoint returns the full history by default. The UI uses it as the History tab page size and only paginates when it is greater than 0.
+	SnapshotsDefaultLimit int64 `json:"snapshotsDefaultLimit,omitempty"`
+
 	// status
 	Status string `json:"status,omitempty"`
 }
