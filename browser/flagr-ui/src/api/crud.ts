@@ -5,6 +5,7 @@ import type {
   CreateFlagPayload,
   DuplicateFlagPayload,
   Distribution,
+  Enricher,
   Flag,
   FlagSnapshot,
   PutVariantBody,
@@ -129,6 +130,55 @@ export const listAllTags = (): Promise<ApiResult<Tag[]>> => reads().listAllTags(
 
 export const createTag = (flagId: FlagId, value: string): Promise<ApiResult<Tag>> =>
   post(`${flag(flagId)}/tags`, { value })
+
+export const createEnricher = (
+  flagId: FlagId,
+  body: { namespace: string; config: unknown },
+): Promise<ApiResult<Enricher>> => post(`${flag(flagId)}/enrichers`, body)
+
+export const putEnricher = (
+  flagId: FlagId,
+  namespace: string,
+  config: unknown,
+): Promise<ApiResult<Enricher>> =>
+  requestJson<Enricher>({
+    method: 'PUT',
+    path: `${flag(flagId)}/enrichers/${encodeURIComponent(namespace)}`,
+    body: { config },
+  })
+
+export const deleteEnricher = (flagId: FlagId, namespace: string): Promise<ApiResult<void>> =>
+  del(`${flag(flagId)}/enrichers/${encodeURIComponent(namespace)}`)
+
+/** Create/update/delete an enricher, then reload the flag (effective catalog changes). */
+export async function createEnricherAndReload(
+  flagId: FlagId,
+  namespace: string,
+  config: unknown,
+): Promise<ApiResult<Flag>> {
+  const res = await createEnricher(flagId, { namespace, config })
+  if (!res.ok) return res
+  return getFlag(flagId)
+}
+
+export async function putEnricherAndReload(
+  flagId: FlagId,
+  namespace: string,
+  config: unknown,
+): Promise<ApiResult<Flag>> {
+  const res = await putEnricher(flagId, namespace, config)
+  if (!res.ok) return res
+  return getFlag(flagId)
+}
+
+export async function deleteEnricherAndReload(
+  flagId: FlagId,
+  namespace: string,
+): Promise<ApiResult<Flag>> {
+  const res = await deleteEnricher(flagId, namespace)
+  if (!res.ok) return res
+  return getFlag(flagId)
+}
 
 export async function createTagAndRefreshAllTags(
   flagId: FlagId,

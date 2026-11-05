@@ -278,6 +278,93 @@ paths:
           description: generic error response
           schema:
             $ref: '#/definitions/error'
+  /flags/{flagID}/enrichers:
+    post:
+      tags:
+        - enricher
+      operationId: createEnricher
+      parameters:
+        - in: path
+          name: flagID
+          description: numeric ID of the flag
+          required: true
+          type: integer
+          format: int64
+          minimum: 1
+        - in: body
+          name: body
+          description: create a context enricher on the flag
+          required: true
+          schema:
+            $ref: '#/definitions/createEnricherRequest'
+      responses:
+        '200':
+          description: enricher just created
+          schema:
+            $ref: '#/definitions/enricher'
+        default:
+          description: generic error response
+          schema:
+            $ref: '#/definitions/error'
+  /flags/{flagID}/enrichers/{namespace}:
+    put:
+      tags:
+        - enricher
+      operationId: putEnricher
+      parameters:
+        - in: path
+          name: flagID
+          description: numeric ID of the flag
+          required: true
+          type: integer
+          format: int64
+          minimum: 1
+        - in: path
+          name: namespace
+          description: namespace of the enricher to update
+          required: true
+          type: string
+          minLength: 1
+        - in: body
+          name: body
+          description: update the enricher config
+          required: true
+          schema:
+            $ref: '#/definitions/putEnricherRequest'
+      responses:
+        '200':
+          description: enricher just updated
+          schema:
+            $ref: '#/definitions/enricher'
+        default:
+          description: generic error response
+          schema:
+            $ref: '#/definitions/error'
+    delete:
+      tags:
+        - enricher
+      operationId: deleteEnricher
+      parameters:
+        - in: path
+          name: flagID
+          description: numeric ID of the flag
+          required: true
+          type: integer
+          format: int64
+          minimum: 1
+        - in: path
+          name: namespace
+          description: namespace of the enricher to delete
+          required: true
+          type: string
+          minLength: 1
+      responses:
+        '200':
+          description: deleted
+        default:
+          description: generic error response
+          schema:
+            $ref: '#/definitions/error'
   /flags/{flagID}/tags:
     get:
       tags:
@@ -1259,6 +1346,15 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/variant'
+      enrichers:
+        description: >
+          Effective context enrichers for this flag: its own flag-scoped
+          enrichers plus the enabled server built-ins (ts, http). Read-only;
+          flag-scoped enrichers are managed via /flags/{flagID}/enrichers.
+        type: array
+        readOnly: true
+        items:
+          $ref: '#/definitions/enricher'
       dataRecordsEnabled:
         description: >-
           when true and FLAGR_RECORDER_ENABLED is set, evaluation and exposure
@@ -1337,6 +1433,65 @@ definitions:
     properties:
       enabled:
         type: boolean
+  enricher:
+    type: object
+    required:
+      - namespace
+    properties:
+      namespace:
+        description: enricher identity; a flag declares at most one per namespace
+        type: string
+        minLength: 1
+      scope:
+        description: >-
+          global enrichers are built into the server; flag enrichers are
+          declared on the flag
+        type: string
+        enum:
+          - global
+          - flag
+        readOnly: true
+      enabled:
+        description: whether the namespace is enabled by server configuration
+        type: boolean
+        readOnly: true
+      properties:
+        description: >-
+          exact enriched property names this enricher contributes (e.g.
+          @jev_plan_tier)
+        type: array
+        readOnly: true
+        items:
+          type: string
+      config:
+        description: >-
+          namespace-specific configuration; the jev namespace expects an object
+          with a questions map
+        type: object
+  createEnricherRequest:
+    type: object
+    required:
+      - namespace
+      - config
+    properties:
+      namespace:
+        type: string
+        minLength: 1
+      config:
+        description: >-
+          namespace-specific configuration; the jev namespace expects an object
+          with a questions map
+        type: object
+  putEnricherRequest:
+    type: object
+    required:
+      - config
+    properties:
+      config:
+        description: >-
+          namespace-specific configuration; the jev namespace expects an object
+          with a questions map
+        type: object
   flagSnapshot:
     type: object
     required:

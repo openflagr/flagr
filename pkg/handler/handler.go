@@ -12,6 +12,7 @@ import (
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/constraint"
 	datarapi "github.com/openflagr/flagr/swagger_gen/restapi/operations/datar"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/distribution"
+	enricherapi "github.com/openflagr/flagr/swagger_gen/restapi/operations/enricher"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/evaluation"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/export"
 	exposureapi "github.com/openflagr/flagr/swagger_gen/restapi/operations/exposure"
@@ -61,6 +62,10 @@ func setupCRUD(api *operations.FlagrAPI) {
 	api.TagDeleteTagHandler = tag.DeleteTagHandlerFunc(c.DeleteTag)
 	api.TagFindTagsHandler = tag.FindTagsHandlerFunc(c.FindTags)
 	api.TagFindAllTagsHandler = tag.FindAllTagsHandlerFunc(c.FindAllTags)
+
+	api.EnricherCreateEnricherHandler = enricherapi.CreateEnricherHandlerFunc(c.CreateEnricher)
+	api.EnricherPutEnricherHandler = enricherapi.PutEnricherHandlerFunc(c.PutEnricher)
+	api.EnricherDeleteEnricherHandler = enricherapi.DeleteEnricherHandlerFunc(c.DeleteEnricher)
 
 	api.SegmentCreateSegmentHandler = segment.CreateSegmentHandlerFunc(c.CreateSegment)
 	api.SegmentFindSegmentsHandler = segment.FindSegmentsHandlerFunc(c.FindSegments)

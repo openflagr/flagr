@@ -2,11 +2,13 @@ package handler
 
 import (
 	"net/http"
+	"sort"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/openflagr/flagr/pkg/config"
+	"github.com/openflagr/flagr/pkg/entity"
 )
 
 // Built-in context key constants.
@@ -22,33 +24,84 @@ const (
 // httpHeaderPrefix is the prefix used for HTTP header context keys.
 const httpHeaderPrefix = "@http_"
 
-// InjectBuiltInContext enriches entityContext with server-side and HTTP request
-// metadata. Core keys (@ts, @ts_hour, @ts_weekday, @ts_month) are always injected
-// when enabled. HTTP headers matching the configured lists are injected as
-// @http_* keys.
-// Server-injected keys (@ts_* and @http_*) overwrite any client-provided values
-func InjectBuiltInContext(entityContext any, r *http.Request) any {
-	if !config.Config.InjectedContextEnabled {
-		return entityContext
+// tsProperties is the exact property set the ts enricher contributes.
+var tsProperties = []string{
+	BuiltInKeyTs,
+	BuiltInKeyTsHour,
+	BuiltInKeyTsWeekday,
+	BuiltInKeyTsMonth,
+}
+
+// buildTsEnricher builds the server-time enricher. It contributes the bare @ts
+// and the @ts_* derivations; values are float64 so they survive JSON
+// round-trips. Gated by FLAGR_INJECTED_CONTEXT_ENABLED.
+func buildTsEnricher(string) (*enricher, error) {
+	return &enricher{
+		namespace:  entity.EnricherNamespaceTs,
+		scope:      scopeGlobal,
+		prefix:     BuiltInKeyTs,
+		properties: tsProperties,
+		enabled:    config.Config.InjectedContextEnabled,
+		run: func(in enrichInput) (map[string]any, error) {
+			now := time.Now().UTC()
+			return map[string]any{
+				BuiltInKeyTs:        float64(now.Unix()),
+				BuiltInKeyTsHour:    float64(now.Hour()),
+				BuiltInKeyTsWeekday: float64(now.Weekday()),
+				BuiltInKeyTsMonth:   float64(now.Month()),
+			}, nil
+		},
+	}, nil
+}
+
+// buildHTTPEnricher builds the request-header enricher. It contributes
+// @http_<header> keys for the headers allowed by
+// FLAGR_INJECTED_CONTEXT_HTTP_HEADERS / _PREFIXES.
+func buildHTTPEnricher(string) (*enricher, error) {
+	return &enricher{
+		namespace:  entity.EnricherNamespaceHTTP,
+		scope:      scopeGlobal,
+		prefix:     httpHeaderPrefix,
+		properties: httpEnricherProperties(),
+		enabled:    config.Config.InjectedContextEnabled,
+		run: func(in enrichInput) (map[string]any, error) {
+			if in.request == nil {
+				return nil, nil
+			}
+			out := make(map[string]any)
+			injectHTTPHeaders(out, in.request)
+			return out, nil
+		},
+	}, nil
+}
+
+// httpEnricherProperties lists the exact configured header properties for the
+// picker. Prefix-matched headers are intentionally omitted (request-dependent).
+// It reads config directly rather than getHeaderMatchSets so it never primes
+// the sync.Once match cache before a request is available.
+func httpEnricherProperties() []string {
+	props := make([]string, 0, len(config.Config.InjectedContextHTTPHeaders))
+	seen := map[string]bool{}
+	for _, header := range config.Config.InjectedContextHTTPHeaders {
+		trimmed := strings.TrimSpace(header)
+		if trimmed == "" {
+			continue
+		}
+		p := httpHeaderPrefix + normalizeHeaderKey(trimmed)
+		if seen[p] {
+			continue
+		}
+		seen[p] = true
+		props = append(props, p)
 	}
+	sort.Strings(props)
+	return props
+}
 
-	ctx, ok := entityContext.(map[string]any)
-	if !ok {
-		ctx = make(map[string]any)
-	}
-
-	now := time.Now().UTC()
-	// All values are float64 to survive JSON round-tripping (int64 → float64).
-	ctx[BuiltInKeyTs] = float64(now.Unix())
-	ctx[BuiltInKeyTsHour] = float64(now.Hour())
-	ctx[BuiltInKeyTsWeekday] = float64(now.Weekday())
-	ctx[BuiltInKeyTsMonth] = float64(now.Month())
-
-	if r != nil {
-		injectHTTPHeaders(ctx, r)
-	}
-
-	return ctx
+// normalizeHeaderKey maps a header name to its context key fragment: lowercase
+// with "-" replaced by "_".
+func normalizeHeaderKey(name string) string {
+	return strings.ToLower(strings.ReplaceAll(name, "-", "_"))
 }
 
 // injectHTTPHeaders injects matching HTTP headers as @http_* context keys.
@@ -87,7 +140,7 @@ func injectHTTPHeaders(ctx map[string]any, r *http.Request) {
 		}
 
 		// Build context key: lowercase, replace - with _, prefix @http_
-		key := httpHeaderPrefix + strings.ToLower(strings.ReplaceAll(name, "-", "_"))
+		key := httpHeaderPrefix + normalizeHeaderKey(name)
 
 		// Join multi-value headers with ", "
 		if len(values) == 1 {

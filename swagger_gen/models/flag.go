@@ -35,6 +35,11 @@ type Flag struct {
 	// Required: true
 	Enabled *bool `json:"enabled"`
 
+	// Effective context enrichers for this flag: its own flag-scoped enrichers plus the enabled server built-ins (ts, http). Read-only; flag-scoped enrichers are managed via /flags/{flagID}/enrichers.
+	//
+	// Read Only: true
+	Enrichers []*Enricher `json:"enrichers"`
+
 	// it will override the entityType in the evaluation logs if it's not empty
 	EntityType string `json:"entityType,omitempty"`
 
@@ -80,6 +85,10 @@ func (m *Flag) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateEnabled(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateEnrichers(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -139,6 +148,36 @@ func (m *Flag) validateEnabled(formats strfmt.Registry) error {
 
 	if err := validate.Required("enabled", "body", m.Enabled); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (m *Flag) validateEnrichers(formats strfmt.Registry) error {
+	if typeutils.IsZero(m.Enrichers) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.Enrichers); i++ {
+		if typeutils.IsZero(m.Enrichers[i]) { // not required
+			continue
+		}
+
+		if m.Enrichers[i] != nil {
+			if err := m.Enrichers[i].Validate(formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("enrichers" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("enrichers" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
 	}
 
 	return nil
@@ -274,6 +313,10 @@ func (m *Flag) validateVariants(formats strfmt.Registry) error {
 func (m *Flag) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.contextValidateEnrichers(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.contextValidateID(ctx, formats); err != nil {
 		res = append(res, err)
 	}
@@ -293,6 +336,39 @@ func (m *Flag) ContextValidate(ctx context.Context, formats strfmt.Registry) err
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *Flag) contextValidateEnrichers(ctx context.Context, formats strfmt.Registry) error {
+
+	if err := validate.ReadOnly(ctx, "enrichers", "body", m.Enrichers); err != nil {
+		return err
+	}
+
+	for i := 0; i < len(m.Enrichers); i++ {
+
+		if m.Enrichers[i] != nil {
+
+			if typeutils.IsZero(m.Enrichers[i]) { // not required
+				return nil
+			}
+
+			if err := m.Enrichers[i].ContextValidate(ctx, formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("enrichers" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("enrichers" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 

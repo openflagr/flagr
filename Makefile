@@ -176,10 +176,14 @@ test: verifiers
 	@go test -covermode=atomic -coverprofile=coverage.txt github.com/openflagr/flagr/pkg/...
 
 test-e2e: build flagr-ui-check
+	@# Free 18000/8080 first: Playwright reuses an existing server, which may be
+	@# a stale build from another worktree. Then clean up after (Playwright cannot
+	@# gracefully stop the webServer on Windows, so its children survive it).
+	@$(MAKE) stop-ui
 	@echo "Installing Playwright browsers (chromium)..."
 	@cd $(FLAGR_UI_DIR) && npx playwright install chromium
 	@echo "Running Flagr UI e2e tests..."
-	@cd $(FLAGR_UI_DIR) && npx playwright test
+	@cd $(FLAGR_UI_DIR) && npx playwright test; rc=$$?; $(MAKE) -C $(CURDIR) stop-ui >/dev/null 2>&1; exit $$rc
 
 test-integration: build
 	@echo "Running Go integration tests (local auto-start mode)..."

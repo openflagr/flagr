@@ -19,6 +19,7 @@ type Flag struct {
 	Segments    []Segment
 	Variants    []Variant
 	Tags        []Tag `gorm:"many2many:flags_tags;"`
+	Enrichers   []Enricher
 	SnapshotID  uint
 	Notes       string `gorm:"type:text"`
 
@@ -53,6 +54,9 @@ func PreloadSegmentsVariantsTags(db *gorm.DB) *gorm.DB {
 			return db.Order("id")
 		}).
 		Preload("Tags", func(db *gorm.DB) *gorm.DB {
+			return db.Order("id")
+		}).
+		Preload("Enrichers", func(db *gorm.DB) *gorm.DB {
 			return db.Order("id")
 		})
 }

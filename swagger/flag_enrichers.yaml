@@ -1,0 +1,27 @@
+post:
+  tags:
+    - enricher
+  operationId: createEnricher
+  parameters:
+    - in: path
+      name: flagID
+      description: numeric ID of the flag
+      required: true
+      type: integer
+      format: int64
+      minimum: 1
+    - in: body
+      name: body
+      description: create a context enricher on the flag
+      required: true
+      schema:
+        $ref: "#/definitions/createEnricherRequest"
+  responses:
+    200:
+      description: enricher just created
+      schema:
+        $ref: "#/definitions/enricher"
+    default:
+      description: generic error response
+      schema:
+        $ref: "#/definitions/error"
