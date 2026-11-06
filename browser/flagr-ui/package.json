@@ -40,6 +40,9 @@
         "vue-eslint-parser": "^10.4.1",
         "vue-tsc": "^3.3.7"
     },
+    "overrides": {
+        "katex": "^0.19.1"
+    },
     "browserslist": [
         "> 1%",
         "last 2 versions"
