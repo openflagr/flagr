@@ -62,7 +62,7 @@ The demo above is local SQLite. Production (MySQL/Postgres, Compose, Kubernetes,
 
 Same `make` targets on Linux, macOS, and Windows. Default DB is SQLite (`flagr.sqlite` in the repo root), so a clone is enough to run the stack.
 
-**Prerequisites:** Go 1.26+ (`go.mod`), Node 26+ for the UI, GNU Make. Then:
+**Prerequisites:** Go 1.27+ (`go.mod`), Node 26+ for the UI, GNU Make. Then:
 
 ```bash
 git clone https://github.com/openflagr/flagr.git
@@ -80,7 +80,7 @@ make test
 Native Windows uses the same Makefile through Git Bash (`sh.exe`). Install:
 
 1. **[Git for Windows](https://git-scm.com/download/win)** — includes Git Bash.
-2. **GNU Make 4.x**, **Go 1.26+**, **Node 26+** (winget):
+2. **GNU Make 4.x**, **Go 1.27+**, **Node 26+** (winget):
 
 ```powershell
 winget install --id ezwinports.make -e
@@ -92,7 +92,7 @@ winget install --id OpenJS.NodeJS.LTS -e
 4. Open a **new** terminal and check:
 
 ```powershell
-go version          # go1.26 or newer
+go version          # go1.27 or newer
 node -v             # v26 or newer
 make --version      # GNU Make 4.x
 where.exe sh        # ...\Git\bin\sh.exe
