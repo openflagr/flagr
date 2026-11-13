@@ -258,10 +258,14 @@ var Config = struct {
 	CookieAuthUserFieldJWTClaim string `env:"FLAGR_COOKIE_AUTH_USER_FIELD_JWT_CLAIM" envDefault:"email"`
 
 	// Authenticate with basic auth
+	// Prefix whitelist entries match on path only, not HTTP method, and
+	// /api/v1/flags also covers the flag management write API. It is
+	// intentionally absent from the default whitelist. /static (UI assets)
+	// matches the JWT default.
 	BasicAuthEnabled              bool     `env:"FLAGR_BASIC_AUTH_ENABLED" envDefault:"false"`
 	BasicAuthUsername             string   `env:"FLAGR_BASIC_AUTH_USERNAME" envDefault:""`
 	BasicAuthPassword             string   `env:"FLAGR_BASIC_AUTH_PASSWORD" envDefault:""`
-	BasicAuthPrefixWhitelistPaths []string `env:"FLAGR_BASIC_AUTH_WHITELIST_PATHS" envDefault:"/api/v1/health,/api/v1/flags,/api/v1/evaluation,/api/v1/exposures" envSeparator:","`
+	BasicAuthPrefixWhitelistPaths []string `env:"FLAGR_BASIC_AUTH_WHITELIST_PATHS" envDefault:"/api/v1/health,/api/v1/evaluation,/api/v1/exposures,/static" envSeparator:","`
 	BasicAuthExactWhitelistPaths  []string `env:"FLAGR_BASIC_AUTH_EXACT_WHITELIST_PATHS" envDefault:"" envSeparator:","`
 
 	// ===== Notification - Global Settings =====

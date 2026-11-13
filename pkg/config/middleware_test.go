@@ -392,9 +392,75 @@ func TestBasicAuthMiddleware(t *testing.T) {
 		hh := SetupGlobalMiddleware(h)
 		res := httptest.NewRecorder()
 		res.Body = new(bytes.Buffer)
-		req, _ := http.NewRequest("GET", "http://localhost:18000/api/v1/flags", nil)
+		req, _ := http.NewRequest("GET", "http://localhost:18000/api/v1/evaluation", nil)
 		hh.ServeHTTP(res, req)
 		assert.Equal(t, http.StatusOK, res.Code)
+	})
+
+	t.Run("it will return 401 for the flags API by default when basic auth is enabled", func(t *testing.T) {
+		Config.BasicAuthEnabled = true
+		Config.BasicAuthUsername = "admin"
+		Config.BasicAuthPassword = "password"
+		defer func() {
+			Config.BasicAuthEnabled = false
+			Config.BasicAuthUsername = ""
+			Config.BasicAuthPassword = ""
+		}()
+
+		hh := SetupGlobalMiddleware(h)
+
+		for _, tc := range []struct{ method, path string }{
+			{"GET", "/api/v1/flags"},
+			{"POST", "/api/v1/flags"},
+			{"PUT", "/api/v1/flags/1"},
+			{"DELETE", "/api/v1/flags/1"},
+			{"PUT", "/api/v1/flags/1/enabled"},
+			{"POST", "/api/v1/flags/1/variants"},
+		} {
+			t.Run(fmt.Sprintf("%s %s", tc.method, tc.path), func(t *testing.T) {
+				res := httptest.NewRecorder()
+				res.Body = new(bytes.Buffer)
+				req, _ := http.NewRequest(tc.method, fmt.Sprintf("http://localhost:18000%s", tc.path), nil)
+				hh.ServeHTTP(res, req)
+				assert.Equal(t, http.StatusUnauthorized, res.Code)
+			})
+		}
+
+		// Evaluation remains open so existing integrations keep working.
+		for _, method := range []string{"GET", "POST"} {
+			t.Run(method+" /api/v1/evaluation allowed", func(t *testing.T) {
+				res := httptest.NewRecorder()
+				res.Body = new(bytes.Buffer)
+				req, _ := http.NewRequest(method, "http://localhost:18000/api/v1/evaluation", nil)
+				hh.ServeHTTP(res, req)
+				assert.Equal(t, http.StatusOK, res.Code)
+			})
+		}
+	})
+
+	t.Run("it will return 200 for static UI assets by default when basic auth is enabled", func(t *testing.T) {
+		Config.BasicAuthEnabled = true
+		Config.BasicAuthUsername = "admin"
+		Config.BasicAuthPassword = "password"
+		defer func() {
+			Config.BasicAuthEnabled = false
+			Config.BasicAuthUsername = ""
+			Config.BasicAuthPassword = ""
+		}()
+
+		hh := SetupGlobalMiddleware(h)
+
+		// UI assets stay open like the JWT default; the document itself
+		// still requires basic auth.
+		for _, p := range []string{"/static", "/static/", "/static/app.js"} {
+			t.Run(p+" allowed", func(t *testing.T) {
+				res := httptest.NewRecorder()
+				res.Body = new(bytes.Buffer)
+				req, _ := http.NewRequest("GET", "http://localhost:18000"+p, nil)
+				hh.ServeHTTP(res, req)
+				assert.Equal(t, http.StatusOK, res.Code)
+			})
+		}
 	})
 
 	t.Run("it will return 401 for web paths when enabled and no basic auth passed", func(t *testing.T) {
@@ -407,7 +473,7 @@ func TestBasicAuthMiddleware(t *testing.T) {
 			Config.BasicAuthPassword = ""
 		}()
 
-		testPaths := []string{"/", "", "/#", "/#/", "/static", "/static/"}
+		testPaths := []string{"/", "", "/#", "/#/"}
 		for _, path := range testPaths {
 			t.Run(fmt.Sprintf("path: %s", path), func(t *testing.T) {
 				hh := SetupGlobalMiddleware(h)
