@@ -105,7 +105,7 @@ FLAGR_BASIC_AUTH_USERNAME=admin
 FLAGR_BASIC_AUTH_PASSWORD=password
 ```
 
-Whitelist entries match the request path only, not the HTTP method, and the flag-management write endpoints share the `/api/v1/flags` prefix with flag reads. Keep that prefix off the whitelist. The defaults leave only `/api/v1/health`, `/api/v1/evaluation`, and `/api/v1/exposures` open.
+Whitelist entries match the request path only, not the HTTP method, and the flag-management write endpoints share the `/api/v1/flags` prefix with flag reads. Keep that prefix off the whitelist. The defaults leave `/api/v1/health`, `/api/v1/evaluation`, `/api/v1/exposures`, and the UI bundle under `/static` open; the UI document itself is not whitelisted, so basic auth still challenges it.
 
 JWT is richer. The variables cover enabling it (`FLAGR_JWT_AUTH_ENABLED`), the shared secret or PEM key (`FLAGR_JWT_AUTH_SECRET`), the signing method (`HS256` / `HS512` / `RS256`), and a set of prefix and exact whitelist paths. All of them are in the source above. JWT tokens can arrive by cookie or by `Authorization: Bearer` header; when both are present, the header wins.
 
