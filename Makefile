@@ -54,7 +54,8 @@ help:
 	@echo ""
 	@echo "Build"
 	@echo "  make build             Go server → ./$(FLAGR_BIN)"
-	@echo "  make build-ui          UI: npm install, lint, typecheck, Vite → dist/"
+	@echo "  make build-ui          UI: npm install, lint, typecheck, tests, Vite → dist/"
+	@echo "  make flagr-ui-dist     UI: npm install + Vite → dist/ (no checks; used by Docker)"
 	@echo "  make rebuild           gen + build (server only)"
 	@echo ""
 	@echo "Run (dev)"
@@ -107,7 +108,7 @@ vendor:
 # Build
 # ------------------------------------------------------------------------------
 
-.PHONY: build build-ui rebuild
+.PHONY: build build-ui flagr-ui-dist rebuild
 
 build:
 	@echo "Building Flagr Server to $(CURDIR)/$(FLAGR_BIN) ..."
@@ -119,9 +120,13 @@ flagr-ui-npm:
 flagr-ui-check: flagr-ui-npm
 	@cd $(FLAGR_UI_DIR) && npm run lint && npm run typecheck && npm run test
 
-build-ui: flagr-ui-check
+# Artifact only, no checks: the Dockerfile builds dist/ with this so the image
+# build does not need the test suite. CI covers lint/typecheck/tests via build-ui.
+flagr-ui-dist: flagr-ui-npm
 	@echo "Building Flagr UI ..."
 	@cd $(FLAGR_UI_DIR) && npm run build
+
+build-ui: flagr-ui-check flagr-ui-dist
 
 rebuild: gen build
 

@@ -4,7 +4,7 @@ Flagr — Go feature flag service with Vue 3 UI.
 
 ## Commands
 
-Run **`make help`** from the repo root for the full catalog. **Prerequisites:** Go 1.26+ (`go.mod`), Node 20+ for UI, GNU Make. On Windows, install Git for Windows and put `C:\Program Files\Git\bin` on PATH so GNU Make can find `sh.exe`. Common targets:
+Run **`make help`** from the repo root for the full catalog. **Prerequisites:** Go 1.26+ (`go.mod`), Node 26+ for UI, GNU Make. On Windows, install Git for Windows and put `C:\Program Files\Git\bin` on PATH so GNU Make can find `sh.exe`. Common targets:
 
 | Command | What it does |
 |---|---|

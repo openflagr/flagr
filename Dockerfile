@@ -1,17 +1,22 @@
 ######################################
 # Prepare npm_builder
 ######################################
-FROM node:20-alpine as npm_builder
+# $BUILDPLATFORM keeps npm install + Vite on the native builder instead of the
+# target arch: running node under QEMU (linux/arm64 on an amd64 runner) dies with
+# "qemu: uncaught target signal 4 (Illegal instruction)". The UI is a static
+# artifact, so one native build serves every platform.
+FROM --platform=$BUILDPLATFORM node:26-alpine AS npm_builder
 WORKDIR /go/src/github.com/openflagr/flagr
 ADD . .
 ARG FLAGR_UI_POSSIBLE_ENTITY_TYPES=null
 ENV VITE_FLAGR_UI_POSSIBLE_ENTITY_TYPES ${FLAGR_UI_POSSIBLE_ENTITY_TYPES}
-RUN apk add --no-cache make && make build-ui
+# Dist only. Lint/typecheck/tests run in CI (make build-ui), not in the image build.
+RUN apk add --no-cache make && make flagr-ui-dist
 
 ######################################
 # Prepare go_builder
 ######################################
-FROM golang:1.27-alpine as go_builder
+FROM golang:1.27-alpine AS go_builder
 WORKDIR /go/src/github.com/openflagr/flagr
 
 RUN apk add --no-cache git make build-base
