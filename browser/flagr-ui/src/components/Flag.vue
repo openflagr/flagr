@@ -202,6 +202,9 @@
             :key="historyKey"
             :flag-id="flagId"
             :snapshots="flagSnapshots"
+            :has-more="historyHasMore"
+            :loading-older="historyLoadingOlder"
+            @load-older="onLoadOlderSnapshots"
           />
         </el-tab-pane>
       </el-tabs>
@@ -222,7 +225,7 @@ import type { EntityTypeOption } from '@/helpers/flagModel'
 import { FLAG_TAB_CONFIG, type FlagTabName } from '@/helpers/shareLinks'
 import { castFlagPage } from '@/helpers/vuePageCast'
 import { evalOnlyMode } from '@/helpers/serverMode'
-import { handleHistoryTabClick, mountFlagPage } from '@/pages/flagPage'
+import { handleHistoryTabClick, loadOlderFlagSnapshots, mountFlagPage } from '@/pages/flagPage'
 import * as flagPage from '@/pages/flagPage'
 import { OPERATOR_UI_OPTIONS } from '@/helpers/constraintOperators'
 
@@ -286,6 +289,8 @@ export default {
       historyLoaded: false,
       historyKey: 0,
       flagSnapshots: [],
+      historyHasMore: false,
+      historyLoadingOlder: false,
       pendingSnapshotScrollId: null as number | null,
       evalContext: defaultEvalContext(),
       evalResult: {} as EvalResult,
@@ -337,6 +342,9 @@ export default {
   methods: {
     onHistoryTabClick(tab: { props?: { name?: string } }) {
       handleHistoryTabClick(this.page, tab)
+    },
+    onLoadOlderSnapshots() {
+      loadOlderFlagSnapshots(this.page)
     },
   },
 }

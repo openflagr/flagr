@@ -2,11 +2,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { FlagPageVm } from './flagPage'
 import {
   applyDeepLink,
+  loadFlagSnapshots,
+  loadOlderFlagSnapshots,
   mountFlagPage,
   scrollToSnapshot,
 } from './flagPage'
+import * as crudApi from '@/api/crud'
+import { ok } from '@/api/result'
+import type { ApiResult } from '@/api/result'
+import type { FlagSnapshot } from '@/api/types'
 import { SNAPSHOT_HIGHLIGHT_MS } from '@/helpers/copyText'
-import { evalOnlyMode } from '@/helpers/serverMode'
+import { evalOnlyMode, snapshotsHistoryPageSize } from '@/helpers/serverMode'
 import { FLAG_TAB_CONFIG, FLAG_TAB_HISTORY, snapshotElementId } from '@/helpers/shareLinks'
 
 vi.mock('@/api/crud', () => ({
@@ -63,6 +69,8 @@ describe('mountFlagPage', () => {
     expect(vm.historyLoaded).toBe(false)
     expect(vm.historyKey).toBe(1)
     expect(vm.flagSnapshots).toEqual([])
+    expect(vm.historyHasMore).toBe(false)
+    expect(vm.historyLoadingOlder).toBe(false)
     expect(vm.pendingSnapshotScrollId).toBeNull()
     expect(vm.dialogDuplicateFlagVisible).toBe(false)
     expect(vm.dialogEditDistributionOpen).toBe(false)
@@ -152,5 +160,110 @@ describe('scrollToSnapshot', () => {
   it('returns false when the snapshot node is missing', () => {
     vi.stubGlobal('document', { getElementById: () => null })
     expect(scrollToSnapshot(999)).toBe(false)
+  })
+})
+
+describe('snapshot paging', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    snapshotsHistoryPageSize.value = 0
+  })
+
+  afterEach(() => {
+    snapshotsHistoryPageSize.value = 0
+  })
+
+  function fakeSnapshots(n: number, startId: number): FlagSnapshot[] {
+    return Array.from({ length: n }, (_, i) => ({
+      id: startId - i,
+      flag: {},
+      updatedAt: '2026-09-22T00:00:00Z',
+    })) as FlagSnapshot[]
+  }
+
+  it('fetches the whole history and shows no button when the server limit is 0', async () => {
+    snapshotsHistoryPageSize.value = 0
+    const vm = minimalVm({ flagSnapshots: [], historyHasMore: true, historyLoadingOlder: false })
+    vi.mocked(crudApi.listFlagSnapshots).mockResolvedValue(ok(fakeSnapshots(130, 130)))
+
+    loadFlagSnapshots(vm)
+    await vi.waitFor(() => expect(vm.flagSnapshots).toHaveLength(130))
+    // undefined page => full-history request
+    expect(crudApi.listFlagSnapshots).toHaveBeenCalledWith('42', undefined)
+    expect(vm.historyHasMore).toBe(false)
+  })
+
+  it('loadFlagSnapshots fetches the first page and flags a longer history', async () => {
+    snapshotsHistoryPageSize.value = 50
+    const vm = minimalVm({ flagSnapshots: [], historyHasMore: false, historyLoadingOlder: false })
+    vi.mocked(crudApi.listFlagSnapshots).mockResolvedValue(ok(fakeSnapshots(50, 100)))
+
+    loadFlagSnapshots(vm)
+    await vi.waitFor(() => expect(vm.flagSnapshots).toHaveLength(50))
+    expect(crudApi.listFlagSnapshots).toHaveBeenCalledWith('42', { limit: 50, offset: 0 })
+    expect(vm.historyHasMore).toBe(true)
+  })
+
+  it('loadFlagSnapshots keeps hasMore off for a short history', async () => {
+    snapshotsHistoryPageSize.value = 50
+    const vm = minimalVm({ flagSnapshots: [], historyHasMore: true, historyLoadingOlder: false })
+    vi.mocked(crudApi.listFlagSnapshots).mockResolvedValue(ok(fakeSnapshots(3, 3)))
+
+    loadFlagSnapshots(vm)
+    await vi.waitFor(() => expect(vm.flagSnapshots).toHaveLength(3))
+    expect(vm.historyHasMore).toBe(false)
+  })
+
+  it('loadOlderFlagSnapshots appends the next page at the current offset', async () => {
+    snapshotsHistoryPageSize.value = 50
+    const vm = minimalVm({
+      flagSnapshots: fakeSnapshots(50, 100),
+      historyHasMore: true,
+      historyLoadingOlder: false,
+    })
+    vi.mocked(crudApi.listFlagSnapshots).mockResolvedValue(ok(fakeSnapshots(10, 50)))
+
+    loadOlderFlagSnapshots(vm)
+    await vi.waitFor(() => expect(vm.flagSnapshots).toHaveLength(60))
+    expect(crudApi.listFlagSnapshots).toHaveBeenCalledWith('42', { limit: 50, offset: 50 })
+    // A short page means the history is exhausted.
+    expect(vm.historyHasMore).toBe(false)
+    expect(vm.historyLoadingOlder).toBe(false)
+  })
+
+  it('loadOlderFlagSnapshots is a no-op while loading, when nothing is left, or unpaginated', () => {
+    snapshotsHistoryPageSize.value = 50
+    const loading = minimalVm({ historyHasMore: true, historyLoadingOlder: true })
+    loadOlderFlagSnapshots(loading)
+    const exhausted = minimalVm({ historyHasMore: false, historyLoadingOlder: false })
+    loadOlderFlagSnapshots(exhausted)
+    snapshotsHistoryPageSize.value = 0
+    const unpaged = minimalVm({ historyHasMore: true, historyLoadingOlder: false })
+    loadOlderFlagSnapshots(unpaged)
+    expect(crudApi.listFlagSnapshots).not.toHaveBeenCalled()
+  })
+
+  it('loadOlderFlagSnapshots drops a stale page after the list was reloaded', async () => {
+    snapshotsHistoryPageSize.value = 50
+    const vm = minimalVm({
+      flagSnapshots: fakeSnapshots(50, 100),
+      historyHasMore: true,
+      historyLoadingOlder: false,
+    })
+    let resolvePage: (v: ApiResult<FlagSnapshot[]>) => void = () => {}
+    vi.mocked(crudApi.listFlagSnapshots).mockReturnValue(
+      new Promise<ApiResult<FlagSnapshot[]>>((resolve) => {
+        resolvePage = resolve
+      }),
+    )
+
+    loadOlderFlagSnapshots(vm)
+    // History reloads (e.g. the tab is reopened) while the page is in flight.
+    vm.historyKey++
+    vm.flagSnapshots = fakeSnapshots(50, 200)
+    resolvePage(ok(fakeSnapshots(50, 50)))
+
+    await vi.waitFor(() => expect(vm.historyLoadingOlder).toBe(false))
+    expect(vm.flagSnapshots).toHaveLength(50)
   })
 })

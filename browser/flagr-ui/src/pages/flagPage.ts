@@ -32,7 +32,7 @@ import {
   isIdentifiedSegment,
 } from '@/api/types'
 import { confirmAndRunApi, type ConfirmVm } from '@/helpers/runApi'
-import { evalOnlyMode } from '@/helpers/serverMode'
+import { evalOnlyMode, snapshotsHistoryPageSize } from '@/helpers/serverMode'
 import { materializeConstraintForApi } from '@/helpers/constraintOperatorSugar'
 import { runApi } from '@/helpers/runApi'
 import { SNAPSHOT_HIGHLIGHT_MS } from '@/helpers/copyText'
@@ -69,6 +69,10 @@ export interface FlagPageVm extends ConfirmVm {
   historyLoaded: boolean
   historyKey: number
   flagSnapshots: FlagSnapshot[]
+  /** True when older snapshots remain beyond the pages fetched so far. */
+  historyHasMore: boolean
+  /** True while a "load older" page request is in flight. */
+  historyLoadingOlder: boolean
   /** Snapshot id to scroll to after History finishes loading. */
   pendingSnapshotScrollId: number | null
   evalContext: EvalContext
@@ -466,13 +470,39 @@ export function openHistoryTab(vm: FlagPageVm): void {
 }
 
 export function loadFlagSnapshots(vm: FlagPageVm): void {
-  runApi(vm, crudApi.listFlagSnapshots(vm.flagId), {
+  // Page size 0 (the server default) means fetch the whole history at once.
+  const limit = snapshotsHistoryPageSize.value
+  const page = limit > 0 ? { limit, offset: 0 } : undefined
+  runApi(vm, crudApi.listFlagSnapshots(vm.flagId, page), {
     onSuccess: (data) => {
       vm.flagSnapshots = data
+      vm.historyHasMore = limit > 0 && data.length === limit
+      vm.historyLoadingOlder = false
       const pending = vm.pendingSnapshotScrollId
       if (pending == null) return
       vm.pendingSnapshotScrollId = null
       void scrollToSnapshotWhenReady(vm, pending)
+    },
+  })
+}
+
+/** Fetch the next (older) page of snapshots and append it to the History tab. */
+export function loadOlderFlagSnapshots(vm: FlagPageVm): void {
+  const limit = snapshotsHistoryPageSize.value
+  if (vm.historyLoadingOlder || !vm.historyHasMore || limit <= 0) return
+  vm.historyLoadingOlder = true
+  const offset = vm.flagSnapshots.length
+  // historyKey bumps on every history (re)load; a stale page must not append.
+  const gen = vm.historyKey
+  runApi(vm, crudApi.listFlagSnapshots(vm.flagId, { limit, offset }), {
+    onSuccess: (data) => {
+      vm.historyLoadingOlder = false
+      if (vm.historyKey !== gen) return
+      vm.flagSnapshots = vm.flagSnapshots.concat(data)
+      vm.historyHasMore = data.length === limit
+    },
+    onFailure: () => {
+      vm.historyLoadingOlder = false
     },
   })
 }
@@ -568,6 +598,8 @@ export function mountFlagPage(vm: FlagPageVm, routeQuery?: Record<string, unknow
   vm.historyLoaded = false
   vm.historyKey++
   vm.flagSnapshots = []
+  vm.historyHasMore = false
+  vm.historyLoadingOlder = false
   vm.pendingSnapshotScrollId = null
   vm.dialogDuplicateFlagVisible = false
   vm.dialogEditDistributionOpen = false
