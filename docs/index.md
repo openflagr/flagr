@@ -47,6 +47,7 @@ One evaluation primitive covers several jobs. Use the map below as a routing tab
 | Feature flags, rollouts, kill switches | [Overview](flagr_overview.md), [Use cases](flagr_use_cases.md) |
 | Browser-friendly eval (`GET ?json=`) | [Use cases: GET evaluation](flagr_use_cases.md#get-evaluation-browser-friendly) |
 | Time / header targeting (`@ts`, `@http_*`) | [Built-in context injection](flagr_injected_context.md) |
+| Model-calibrated context (`@jev_*`) | [Context enrichers](flagr_context_enrichers.md) |
 | A/B tests + trustworthy denominators | [Exposure logging](flagr_exposure.md), [Data recorders](flagr_eval_exposure_pipeline.md) |
 | Runtime config on variants | [Use cases: dynamic configuration](flagr_use_cases.md#dynamic-configuration) |
 | GitOps / eval-only JSON | [JSON flag source](flagr_json_flag_spec.md) |

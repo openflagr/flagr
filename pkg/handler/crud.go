@@ -14,6 +14,7 @@ import (
 	"github.com/openflagr/flagr/swagger_gen/models"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/constraint"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/distribution"
+	enricherapi "github.com/openflagr/flagr/swagger_gen/restapi/operations/enricher"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/flag"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/segment"
 	"github.com/openflagr/flagr/swagger_gen/restapi/operations/tag"
@@ -78,6 +79,11 @@ type CRUD interface {
 	FindTags(tag.FindTagsParams) middleware.Responder
 	FindAllTags(params tag.FindAllTagsParams) middleware.Responder
 
+	// Enrichers
+	CreateEnricher(enricherapi.CreateEnricherParams) middleware.Responder
+	PutEnricher(enricherapi.PutEnricherParams) middleware.Responder
+	DeleteEnricher(enricherapi.DeleteEnricherParams) middleware.Responder
+
 	// Segments
 	CreateSegment(segment.CreateSegmentParams) middleware.Responder
 	FindSegments(segment.FindSegmentsParams) middleware.Responder
@@ -110,8 +116,10 @@ func NewCRUD() CRUD {
 type crud struct{}
 
 var (
-	e2rMapFlag          = e2r.MapFlag
-	e2rMapFlags         = e2r.MapFlags
+	// Flag responses carry the effective enricher catalog (flag-declared plus
+	// enabled server built-ins); snapshots keep the stored flag-scoped set.
+	e2rMapFlag          = mapFlagWithEnrichers
+	e2rMapFlags         = mapFlagsWithEnrichers
 	e2rMapFlagSnapshots = e2r.MapFlagSnapshots
 
 	r2eMapAttachment    = r2e.MapAttachment

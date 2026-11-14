@@ -6,6 +6,7 @@ flagr.exe
 flagr-validate
 flagr-validate.exe
 flagr.sqlite
+flagr.sqlite-*
 .configure_flagr.go.bak
 !*/
 site/

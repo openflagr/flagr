@@ -32,6 +32,7 @@ const (
 	ComponentConstraint   ComponentType = "constraint"
 	ComponentDistribution ComponentType = "distribution"
 	ComponentTag          ComponentType = "tag"
+	ComponentEnricher     ComponentType = "enricher"
 )
 
 type Notification struct {
