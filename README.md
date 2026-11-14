@@ -19,7 +19,7 @@
         <img src="https://codecov.io/gh/openflagr/flagr/branch/main/graph/badge.svg?token=iwjv26grrN">
     </a>
     <a href="https://deepwiki.com/openflagr/flagr">
-        <img src="https://deepwiki.com/badge.svg?color=green" alt="Ask DeepWiki">
+        <img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki">
     </a>
 </p>
 
