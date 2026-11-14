@@ -1,0 +1,18 @@
+apiVersion: v2
+name: flagr
+description: Flagr — feature flags, A/B tests, and dynamic configuration
+type: application
+version: 1.0.0
+appVersion: "1.2.4"
+kubeVersion: ">=1.25.0-0"
+home: https://openflagr.github.io/flagr
+icon: https://openflagr.github.io/flagr/images/logo.png
+sources:
+  - https://github.com/openflagr/flagr
+keywords:
+  - flagr
+  - feature-flags
+  - ab-testing
+maintainers:
+  - name: openflagr
+    url: https://github.com/openflagr

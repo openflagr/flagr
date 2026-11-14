@@ -1,0 +1,79 @@
+suite: gitops (json_http to GitHub)
+templates:
+  - templates/deployment.yaml
+tests:
+  - it: makes every primary pod json_http eval-only against flagsURL
+    set:
+      replicaCount: 3
+      gitops:
+        enabled: true
+        flagsURL: https://raw.githubusercontent.com/org/repo/main/flags.json
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 3
+      - equal:
+          path: spec.template.spec.containers[0].env[5]
+          value:
+            name: FLAGR_DB_DBDRIVER
+            value: json_http
+      - equal:
+          path: spec.template.spec.containers[0].env[6]
+          value:
+            name: FLAGR_DB_DBCONNECTIONSTR
+            value: https://raw.githubusercontent.com/org/repo/main/flags.json
+      - notExists:
+          path: spec.template.spec.volumes
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: wait-flags
+      - contains:
+          path: spec.template.spec.initContainers[0].command
+          content: https://raw.githubusercontent.com/org/repo/main/flags.json
+
+  - it: allows DSN from env for a private GitHub PAT URL
+    set:
+      gitops:
+        enabled: true
+        flagsURL: ""
+      env:
+        - name: FLAGR_DB_DBCONNECTIONSTR
+          valueFrom:
+            secretKeyRef:
+              name: flagr-gitops
+              key: url
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: FLAGR_DB_DBDRIVER
+            value: json_http
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: FLAGR_DB_DBCONNECTIONSTR
+            valueFrom:
+              secretKeyRef:
+                name: flagr-gitops
+                key: url
+      - notExists:
+          path: spec.template.spec.initContainers
+
+  - it: fails if gitops is enabled with no flags URL and no env DSN
+    set:
+      gitops:
+        enabled: true
+    asserts:
+      - failedTemplate:
+          errorPattern: "gitops.enabled requires gitops.flagsURL"
+
+  - it: fails if gitops is combined with evalReplicas
+    set:
+      gitops:
+        enabled: true
+        flagsURL: https://example.com/flags.json
+      evalReplicas:
+        replicaCount: 2
+    asserts:
+      - failedTemplate:
+          errorPattern: "cannot be combined"

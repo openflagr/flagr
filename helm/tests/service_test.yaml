@@ -1,0 +1,42 @@
+suite: service
+templates:
+  - templates/service.yaml
+tests:
+  - it: renders ClusterIP on 18000 targeting port http
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: spec.type
+          value: ClusterIP
+      - equal:
+          path: spec.ports[0]
+          value:
+            port: 18000
+            targetPort: http
+            protocol: TCP
+            name: http
+      - equal:
+          path: spec.selector["app.kubernetes.io/name"]
+          value: flagr
+      - equal:
+          path: spec.selector["app.kubernetes.io/component"]
+          value: primary
+
+  - it: honors service type, port, and annotations
+    set:
+      service:
+        type: NodePort
+        port: 80
+        annotations:
+          service.beta.kubernetes.io/aws-load-balancer-internal: "true"
+    asserts:
+      - equal:
+          path: spec.type
+          value: NodePort
+      - equal:
+          path: spec.ports[0].port
+          value: 80
+      - equal:
+          path: metadata.annotations["service.beta.kubernetes.io/aws-load-balancer-internal"]
+          value: "true"

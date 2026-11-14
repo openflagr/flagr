@@ -1,0 +1,128 @@
+# Default: one replica, ClusterIP :18000, SQLite on emptyDir /data.
+# Configure Flagr with env / envFrom — see https://openflagr.github.io/flagr/flagr_env
+#
+# Scaling:
+#   SQLite  — keep replicaCount at 1 (one writer). For more eval capacity set
+#             evalReplicas.replicaCount; those pods are json_http eval-only.
+#   GitOps  — gitops.enabled; all primary pods are json_http (no SQLite).
+#             Scale replicaCount. Leave evalReplicas at 0.
+#   MySQL/Postgres — raise replicaCount; leave evalReplicas and gitops off.
+
+# Primary Deployment. Stay at 1 for SQLite. Raise for GitOps / mysql / postgres.
+replicaCount: 1
+
+# GitOps: every primary pod is json_http eval-only against one flags URL
+# (GitHub raw, gist, S3, …). No SQLite writer. UI is read-only.
+# Mutually exclusive with evalReplicas.
+gitops:
+  enabled: false
+  # Public URL, e.g. https://raw.githubusercontent.com/org/repo/main/flags.json
+  # Private GitHub: leave empty and set FLAGR_DB_DBCONNECTIONSTR via env
+  # (PAT as Basic username — see flagr_json_flag_spec).
+  flagsURL: ""
+
+# Extra eval-only pods for SQLite HA. They do not open SQLite; they poll
+# GET /api/v1/export/eval_cache/json on the primary (json_http → eval-only).
+# 0 = disabled. Do not use this when the primary is mysql/postgres — scale
+# replicaCount instead so every pod shares the DB (reads and writes).
+evalReplicas:
+  replicaCount: 0
+  # Empty = http://<primary-svc>:<port>/api/v1/export/eval_cache/json
+  # Set this if the primary uses FLAGR_WEB_PREFIX.
+  flagsURL: ""
+  env: []
+  resources: {}
+
+image:
+  repository: ghcr.io/openflagr/flagr
+  pullPolicy: IfNotPresent
+  # Empty = Chart.appVersion.
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# Alpine adduser -S appuser is uid/gid 100 (confirm with:
+# docker run --rm --entrypoint id ghcr.io/openflagr/flagr).
+podSecurityContext:
+  fsGroup: 100
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  runAsNonRoot: true
+  runAsUser: 100
+  runAsGroup: 100
+
+service:
+  type: ClusterIP
+  port: 18000
+  annotations: {}
+
+# Extra container env (list of core/v1 EnvVar). Appended after chart
+# invariants; last duplicate key wins. Use this to set FLAGR_DB_*,
+# FLAGR_WEB_PREFIX, JWT, retries, etc.
+env: []
+# - name: FLAGR_DB_DBDRIVER
+#   value: postgres
+# - name: FLAGR_DB_DBCONNECTIONSTR
+#   valueFrom:
+#     secretKeyRef:
+#       name: flagr-db
+#       key: FLAGR_DB_DBCONNECTIONSTR
+
+# envFrom Secret/ConfigMap bags. Kubernetes applies envFrom first, so
+# these cannot override chart invariants or env.
+envFrom: []
+# - secretRef:
+#     name: flagr-env
+
+# Additional volumes. A volume named "data" replaces the default emptyDir
+# (use a PVC for persistent SQLite).
+extraVolumes: []
+extraVolumeMounts: []
+
+resources: {}
+# limits:
+#   cpu: 500m
+#   memory: 256Mi
+# requests:
+#   cpu: 50m
+#   memory: 64Mi
+
+livenessProbe:
+  httpGet:
+    path: /api/v1/health
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 2
+  failureThreshold: 6
+
+readinessProbe:
+  httpGet:
+    path: /api/v1/health
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  timeoutSeconds: 2
+  failureThreshold: 6
+
+nodeSelector: {}
+affinity: {}
+tolerations: []
+podAnnotations: {}
+podLabels: {}
+
+# helm test pod. Pin the tag; never :latest.
+test:
+  image:
+    repository: curlimages/curl
+    tag: "8.1.2"
+  # Override with FLAGR_WEB_PREFIX (and probe paths) if you set a prefix.
+  path: /api/v1/health
